@@ -168,7 +168,7 @@
                                                 @endphp
                                                 @if($hour < 12)
                                                     <tr style="border-bottom: 1px solid #D3D3D3;" data-tag="{{ $trip->tags }}">
-                                                        <td class="px-0 py-2 text-sm" style="min-width: 200px;">{{ $trip->operatorName }}</td>
+                                                        <td class="px-0 py-2 text-sm text-wrap">{{ $trip->operatorName }}</td>
                                                         <td class="px-4">{{ $trip->departureTime }}</td>
                                                         @if($trip->tripFreeSpots == 0)
                                                             <td class="text-center">-</td>
@@ -310,7 +310,7 @@
                                                 @endphp
                                                 @if($hour >= 12)
                                                     <tr style="border-bottom: 1px solid #D3D3D3;" data-tag="{{ $trip->tags }}">
-                                                        <td class="d-flex px-0 py-2 text-sm" style="min-width: 200px;">{{ $trip->operatorName }}</td>
+                                                        <td class="d-flex px-0 py-2 text-sm text-wrap">{{ $trip->operatorName }}</td>
                                                         <td class="px-4">{{ $trip->departureTime }}</td>
                                                         @if($trip->tripFreeSpots == 0)
                                                             <td class="text-center">-</td>
