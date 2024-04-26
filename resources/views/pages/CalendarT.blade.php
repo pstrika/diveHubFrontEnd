@@ -6,181 +6,161 @@
         <!-- Navbar -->
         <x-auth.navbars.navs.auth pageTitle="Technical Calendar {{ $currentMonthS}}-{{ $year }}"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
-        <div class="container-fluid py-4">
-            
-            <div class="card">
-                <div class="card-header bg-gradient-info">
-                
-                    
-                    
-                    <div style="float: left;">
-                        <h2 class="card-title text-white">{{ $currentMonthS }}-{{ $year }}</h2>
-                        <h4 class="card-category text-white">Technical Calendar</h4>
-                    </div>
+            <div class="container-fluid py-4">
+                <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('/assets/img/illustrations/calendar.jpg');">
+                    <span class="mask  bg-gradient-info  opacity-4"></span>
+                </div>
 
-                    {{-----------------NAV to next day}} --}}
-                    <div class="mt-4" style="float: right;">
-                        <a type="button" href="/CalendarT/{{ $prevMonthS }}/" class="btn btn-info tex-end">
-                            <span class="material-icons" style="font-size :30pt;">keyboard_arrow_left</span>
-                        </a>
+                <div class="card p-0 position-relative mt-n7 mx-3 z-index-2">
+            
+                    <div class="p-0 mt-n4 mx-2 border-radius-lg py-3 pe-1">
+                        <div style="float: left;">
+                            <h2 class="card-title text-info mx-3 mt-4">{{ $currentMonthS }}-{{ $year }}</h2>
+                            <h4 class="card-category text-info mx-4">Technical Calendar</h4>
+                        </div>
+
+                        {{-----------------NAV to next day}} --}}
+                        <div class="mt-5" style="float: right;">
+                            <a type="button" href="/CalendarT/{{ $prevMonthS }}/" class="btn btn-info tex-end">
+                                <span class="material-icons" style="font-size :30pt;">keyboard_arrow_left</span>
+                            </a>
+                            
+                            <a type="button" href="/CalendarT/{{ $nextMonthS }}/" class="btn btn-info tex-end">
+                                <span class="material-icons" style="font-size :30pt;">keyboard_arrow_right</span>
+                            </a>
+                        </div>
+                        <div style="clear: both;"></div>
                         
-                        <a type="button" href="/CalendarT/{{ $nextMonthS }}/" class="btn btn-info tex-end">
-                            <span class="material-icons" style="font-size :30pt;">keyboard_arrow_right</span>
-                        </a>
-                    </div>
-                    <div style="clear: both;"></div>
-                    {{---------------------------------------}}
-                </div>
-
-                {{-- Calendar --}}
-                <div class="row">
-                    
-                    <div class="col-md-12 ">             
-                        <div class="card card-calendar">
-                            {{-- Table for filters--}}
-                            <table class="table align-items-center mb-0">
-                                <tr>
-                                    <td class="w-20">
-                                        <div class="dropdown">
-                                            <select class="btn bg-info dropdown-toggle w-100 text-white" type="button" id="filterCalendarOp" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <option value="all">Show All</option>
-                                                <option value="opId=1">South Florida Diving HQ</option>
-                                                <option value="opId=3">Pura Vida Divers</option>
-                                                <option value="opId=8">Diver Paradise</option>
-                                                <option value="opId=9">Horizon Divers</option>
-                                                
-                                            </select>
-                                            <p class="text-xs font-weight-bold mb-0 mt-n3">dive operator</p>
-                                        </div>
-                                    </td>
-
-                                    <td class="w-20">
-                                        <div class="dropdown">
-                                            <select class="btn bg-info dropdown-toggle w-100 text-white" type="button" id="filterCalendarAv" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <option value="all">Show All</option>
-                                                <option value="isAvail=Y">Available</option>
-                                                <option value="isAvail=N">Sold-out</option>    
-                                            </select>
-                                            <p class="text-xs font-weight-bold mb-0 mt-n3">availability</p>
-                                        </div>
-                                    </td>
-
-                                    <td>
-                                        
-                                    </td>
-                                </tr> 
-                            </table>
-                            {{-------------------------}}
-
-
-                            <div class="card-body p-3">
-                                <div class="calendar" data-bs-toggle="calendar" id="calendar"></div>
-                            </div>
-                        </div>
                     </div>
                 </div>
-                {{------------------------}}
+            
 
-                
-                <div class="row">
-                    {{-- Dive conditions card AM --}}
-                    <div class="col-md-12">
-                        <div class="card p-0 position-relative mt-3 mx-3 z-index-2">
-                            <div class="card-header bg-gradient-info">
-                                    <h2 class="card-title text-white">Technical dives</h4>
-                                    
-                            </div>
-
-                            <div class="card-body">
-                                <div class="table-responsive">
-
-                                    {{-- Table for filters--}}
-                                    <table class="table align-items-center mb-0">
-                                        <tr>
-                                            <td class="w-20">
-                                                <div class="dropdown">
-                                                    <select class="btn bg-info dropdown-toggle w-100 text-white" type="button" id="filterLocAM" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        <option value="all">Show All</option>
-                                                        <option value="MIA">miami beach</option>
-                                                        <option value="FLL">fort lauderdale</option>
-                                                        <option value="POM">pompano beach</option>
-                                                        <option value="DEB">deerfield beach</option>
-                                                        <option value="WPB">west pam beach</option>
-                                                        <option value="KLA">key largo</option>
-                                                    </select>
-                                                    <p class="text-xs font-weight-bold mb-0 mt-n3">location</p>
-                                                </div>
-                                            </td>
-                                            <td class="w-20">
-                                                <div class="dropdown">
-                                                    <select class="btn bg-info dropdown-toggle w-100 text-white" type="button" id="filterAvAM" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        <option value="all">Show All</option>
-                                                        <option value="AVA">Available</option>
-                                                        <option value="NAV">Sold-out</option>    
-                                                    </select>
-                                                    <p class="text-xs font-weight-bold mb-0 mt-n3">availability</p>
-                                                </div>
-                                            </td>
+                <div class="col-md-12">                        
+                    <div class="card card-calendar p-0 position-relative mt-4 mx-0 z-index-2 mb-0">
+                        {{-- Table for filters--}}
+                        <table class="table align-items-center mb-0 mx-3">
+                            <tr>
+                                <td class="w-1">
+                                    <div class="dropdown">
+                                        <select class="btn bg-info dropdown-toggle text-white" type="button" id="filterCalendarOp" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <option value="all">Show All</option>
+                                            <option value="opId=1">South Florida Diving HQ</option>
+                                            <option value="opId=3">Pura Vida Divers</option>
+                                            <option value="opId=8">Diver Paradise</option>
+                                            <option value="opId=9">Horizon Divers</option>
                                             
-
-                                            <td>
-                                                
-                                            </td>
-                                        </tr> 
-                                    </table>
-                                    {{-------------------------}}
-                                    <div class="table-responsive">
-                                        <table id="tableTripsAM">
-                                            <thead class="text-info">
-                                                <th class="px-4 align-top">
-                                                    Date
-                                                </th>
-                                                <th class="align-top">
-                                                    Operator
-                                                </th>
-                                                <th class="px-4 align-top">
-                                                    Time
-                                                </th>
-                                                    <th class="py-0">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
-                                                </th>
-                                                <th class="px-4 align-top">
-                                                    Site / Trip Name
-                                                </th>
-                                            </thead>
-                                            <tbody >
-                                                @foreach($trips as $trip)
-                                                    <tr style="border-bottom: 1px solid #D3D3D3;" data-tag="{{ $trip->tags }}">
-                                                    <td class="px-4">{{ $trip->date }}</td>
-                                                        <td class="px-0 py-2 text-sm" style="min-width: 200px;">{{ $trip->operatorName }}</td>
-                                                        <td class="px-4">{{ $trip->departureTime }}</td>
-                                                        @if($trip->tripFreeSpots == 0)
-                                                            <td class="text-center">-</td>
-                                                        @else
-                                                            <td class="text-center"> <a href="{{ $trip->linkToBook }}" target="_blank">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</a></td>
-                                                        @endif
-                                                        <td class="px-4 text-sm">{{ $trip->tripName }}</td>
-                                                    </tr>
-                                                @endforeach          
-                                            </tbody>
-                                        </table>
+                                        </select>
+                                        <p class="text-xs font-weight-bold mb-0 mt-n3">dive operator</p>
                                     </div>
-                                </div>    
+                                </td>
+
+                                <td class="w-20">
+                                    <div class="dropdown">
+                                        <select class="btn bg-info dropdown-toggle text-white" type="button" id="filterCalendarAv" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <option value="all">Show All</option>
+                                            <option value="isAvail=Y">Available</option>
+                                            <option value="isAvail=N">Sold-out</option>    
+                                        </select>
+                                        <p class="text-xs font-weight-bold mb-0 mt-n3">availability</p>
+                                    </div>
+                                </td>
+
+                            </tr> 
+                        </table>
+                        {{-------------------------}}
+
+                        {{--Calendar--}}
+                        <div class="card-body p-3">
+                            <div class="calendar" data-bs-toggle="calendar" id="calendar"></div>
+                        </div>
+                        {{--------------------------}}
+                    </div>
+                </div>
+
+                <div class="col-md-7">             
+                    <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h2 class="card-title text-white mx-4">Tech Dives {{ $currentMonthS }}-{{ $year }}</h2>
                             </div>
                         </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                {{-- Table for filters--}}
+                                <table class="table align-items-center mb-0">
+                                    <tr>
+                                        <td class="w-20">
+                                            <div class="dropdown">
+                                                <select class="btn bg-info dropdown-toggle text-white" type="button" id="filterLocAM" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <option value="all">Show All</option>
+                                                    <option value="MIA">miami beach</option>
+                                                    <option value="FLL">fort lauderdale</option>
+                                                    <option value="POM">pompano beach</option>
+                                                    <option value="DEB">deerfield beach</option>
+                                                    <option value="WPB">west pam beach</option>
+                                                    <option value="KLA">key largo</option>
+                                                </select>
+                                                <p class="text-xs font-weight-bold mb-0 mt-n3">location</p>
+                                            </div>
+                                        </td>
+                                        <td class="w-20">
+                                            <div class="dropdown">
+                                                <select class="btn bg-info dropdown-toggle text-white" type="button" id="filterAvAM" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <option value="all">Show All</option>
+                                                    <option value="AVA">Available</option>
+                                                    <option value="NAV">Sold-out</option>    
+                                                </select>
+                                                <p class="text-xs font-weight-bold mb-0 mt-n3">availability</p>
+                                            </div>
+                                        </td>
+                                        
+
+                                        <td>
+                                            
+                                        </td>
+                                    </tr> 
+                                </table>
+                                {{-------------------------}}
+                                <div class="table-responsive">
+                                    <table id="tableTripsAM">
+                                        <thead class="text-info">
+                                            <th class="px-4 align-top">
+                                                Date
+                                            </th>
+                                            <th class="align-top">
+                                                Operator
+                                            </th>
+                                            <th class="px-4 align-top">
+                                                Time
+                                            </th>
+                                                <th class="py-0">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
+                                            </th>
+                                            <th class="px-4 align-top">
+                                                Site / Trip Name
+                                            </th>
+                                        </thead>
+                                        <tbody >
+                                            @foreach($trips as $trip)
+                                                <tr style="border-bottom: 1px solid #D3D3D3;" data-tag="{{ $trip->tags }}">
+                                                <td class="px-4">{{ $trip->date }}</td>
+                                                    <td class="px-0 py-2 text-sm text-wrap">{{ $trip->operatorName }}</td>
+                                                    <td class="px-4">{{ $trip->departureTime }}</td>
+                                                    @if($trip->tripFreeSpots == 0)
+                                                        <td class="text-center">-</td>
+                                                    @else
+                                                        <td class="text-center"> <a href="{{ $trip->linkToBook }}" target="_blank">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</a></td>
+                                                    @endif
+                                                    <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}</a></td>
+                                                </tr>
+                                            @endforeach          
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>    
+                        </div>
                     </div>
-                    {{-----------------------------}}
-                    
-                    
-                    
                 </div>
-                
-            </div>
-                
-
-
-                
-            
-            
+            </div>      
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>
     </main>
