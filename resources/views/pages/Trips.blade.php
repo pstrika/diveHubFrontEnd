@@ -3,11 +3,24 @@
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+        <style>
+            .flatpickr-day.selected {
+                background: #03a9f4; /* Replace #yourColor with the hex code of the color you want */
+                
+            },
+            .flatpickr-calendar {
+                background: #03a9f4; /* Replace #yourColor with the hex code of the color you want */
+            }
+        </style>
         <!-- Navbar -->
         <x-auth.navbars.navs.auth pageTitle="Dive Trips"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
         <div class="container-fluid py-0">
-            
+
+        
+
+
+
             <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('/assets/img/illustrations/divers_jumping.avif');">
                 <span class="mask  bg-gradient-info  opacity-4"></span>
             </div>
@@ -35,6 +48,16 @@
                             <a type="button" href="/Trips/" class="btn btn-info tex-end">
                                 <span class="material-icons" style="font-size :30pt;">calendar_today</span>
                             </a>
+
+                            
+                            <div type="button" class="btn btn-info tex-end">
+                                
+                                <input id="datePicker" placeholder=" Select date..." class="text-info opacity-0 z-index-5 position-absolute" style="width: 120%;">              
+                                <span class="material-icons z-index-1" style="font-size :30pt;">calendar_month</span>
+                            </div>
+
+
+                            
                             <a type="button" href="/Trips/{{ $nextDay }}/" class="btn btn-info tex-end">
                                 <span class="material-icons" style="font-size :30pt;">keyboard_arrow_right</span>
                             </a>
@@ -55,12 +78,13 @@
                                 <div class="table-responsive">
                                     
                                 </div>       
-                                <p class="card-category text-white mx-4">Dive Conditions (beta) - Trips</p>
+                                <p class="card-category text-white mx-4">{{ $weathers->isNotEmpty() ? "Dive Conditions (beta) - " : ""}}Trips</p>
                             </div>
                         </div>
 
                         <div class="card-body">
                             <div class="table-responsive">
+                                @if ($weathers->isNotEmpty())
                                 <table class="table align-items-center mb-0">
                                     {{--<thead>
                                             <th class="align-middle text-center text-sm">LOCATION</th>
@@ -103,6 +127,7 @@
                                         <tr> <td> </td></tr>
                                     </tbody>    
                                 </table>
+                                @endif
 
                                 {{-- Table for filters--}}
                                 <table class="table align-items-center mb-0">
@@ -155,9 +180,9 @@
                                             <th class="px-4 align-top">
                                                 Time
                                             </th>
-                                                <th class="py-0">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
+                                                <th class="py-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the numbers below to go to trip booking page" data-container="body" data-animation="true">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
                                             </th>
-                                            <th class="px-4 align-top">
+                                            <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">
                                                 Site / Trip Name<p class="text-xs mt-0 px-1">click for details</p>
                                             </th>
                                         </thead>
@@ -197,13 +222,15 @@
                                 
                                 <div class="table-responsive">
                                     
-                                </div>       
-                                <p class="card-category text-white mx-4">Dive Conditions (beta) - Trips</p>
+                                </div>
+                                       
+                                <p class="card-category text-white mx-4">{{ $weathers->isNotEmpty() ? "Dive Conditions (beta) - " : ""}}Trips</p>
                             </div>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
                                 
+                                @if($weathers->isNotEmpty())
                                 <table class="table align-items-center mb-0">
                                     {{--<thead>
                                             <th class="align-middle text-center text-sm">LOCATION</th>
@@ -247,6 +274,7 @@
 
                                     </tbody>    
                                 </table>
+                                @endif
                                 {{-- Table for filters--}}
                                 <table class="table align-items-center mb-1">
                                     <tr>
@@ -297,10 +325,10 @@
                                             <th class="px-4 align-top">
                                                 Time
                                             </th>
-                                                <th class="py-0">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
+                                            <th class="py-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the numbers below to go to trip booking page" data-container="body" data-animation="true">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
                                             </th>
-                                            <th class="px-4 align-top">
-                                                Site / Trip Name
+                                            <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">
+                                                Site / Trip Name<p class="text-xs mt-0 px-1">click for details</p>
                                             </th>
                                         </thead>
                                         <tbody>
@@ -348,7 +376,29 @@
     <x-plugins></x-plugins>
     
     @push('js')
+    
+    <script src="{{ asset('assets') }}/js/plugins/flatpickr.min.js"></script>
 
+    <script>
+      
+
+    flatpickr("#datePicker", {
+        altInput: true,
+        altFormat: "F j, Y",
+        dateFormat: "Y-m-d",
+        minDate: "today",
+        
+        maxDate: new Date().fp_incr(90),
+        onChange: function(selectedDates, dateStr, instance) {
+            window.location.href = `/Trips/${dateStr}`;
+        }
+    });
+
+    
+
+
+
+    </script>
     {{--Handler for tripAM table: filter by location--}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {

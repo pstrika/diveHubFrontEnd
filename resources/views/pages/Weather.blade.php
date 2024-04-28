@@ -273,14 +273,41 @@
                                         <tr> {{--winds--}}
                                             <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">wind (mph)</td>
                                             @foreach($weathers as $weather)
-                                                <td><div class="container"><div class="row"><div class="col-sm text-center"><span>({{ $weather->wind_dir_AM }}) {{ $weather->wind_speed_AM }}</span></div><div class="col-sm text-center"><span>({{ $weather->wind_dir_PM }}) {{ $weather->wind_speed_PM }}</span></div></div></div></td>    
+                                                @php
+                                                    $compassPoints = [
+                                                        'N' => 0,
+                                                        'NNE' => 22,
+                                                        'NE' => 45,
+                                                        'ENE' => 67,
+                                                        'E' => 90,
+                                                        'ESE' => 112,
+                                                        'SE' => 135,
+                                                        'SSE' => 157,
+                                                        'S' => 180,
+                                                        'SSW' => 202,
+                                                        'SW' => 225,
+                                                        'WSW' => 247,
+                                                        'W' => 270,
+                                                        'WNW' => 292,
+                                                        'NW' => 315,
+                                                        'NNW' => 337
+                                                    ];
+                                                    $rotationAM = $compassPoints[@$weather->wind_dir_AM];
+                                                    $rotationPM = $compassPoints[@$weather->wind_dir_PM];
+
+                                                @endphp
+                                                {{--<td> <i class="material-icons rotate-icon" style="transform: rotate(45deg);">arrow_upward</i></td> --}}
+                                                {{--<td><div class="container"><div class="row"><div class="col-sm text-center"><span>({{ $weather->wind_dir_AM }}) {{ $weather->wind_speed_AM }}</span></div><div class="col-sm text-center"><span>({{ $weather->wind_dir_PM }}) {{ $weather->wind_speed_PM }}</span></div></div></div></td>--}}
+                                                <td><div class="container"><div class="row"><div class="col-sm text-center"><span>
+                                                <i class="material-icons rotate-icon" style="transform: rotate({{ $rotationAM + 180 }}deg);">navigation</i> {{ $weather->wind_speed_AM }}</span></div><div class="col-sm text-center"><span>
+                                                <i class="material-icons rotate-icon" style="transform: rotate({{ $rotationPM +180  }}deg);">navigation</i> {{ $weather->wind_speed_PM }}</span></div></div></div></td>    
                                             @endforeach
                                         </tr>
 
                                         <tr> {{--Water temp--}}
                                             <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">water temp (f)</td>
                                             @foreach($weathers as $weather)
-                                                <td><div class="container"><div class="row"><div class="col-sm text-center"><span>{{ $weather->water_temp_AM }}</span></div><div class="col-sm text-center"><span>{{ $weather->water_temp_PM }}</span></div></div></div></td>    
+                                                <td><div class="container"><div class="row"><div class="col-sm text-center"><span>{{ $weather->water_temp_AM }}°</span></div><div class="col-sm text-center"><span>{{ $weather->water_temp_PM }}°</span></div></div></div></td>    
                                             @endforeach
                                         </tr>
                                         

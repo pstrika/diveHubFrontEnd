@@ -16217,12 +16217,12 @@ span.flatpickr-weekday {
   border-color: #e6e6e6; }
 
 .flatpickr-day.today {
-  border-color: #959ea9; }
+  border-color: #03a9f4; }
 
 .flatpickr-day.today:hover,
 .flatpickr-day.today:focus {
-  border-color: #959ea9;
-  background: #959ea9;
+  border-color: #03a9f4;
+  background: #03a9f4;
   color: #fff; }
 
 .flatpickr-day.selected,
@@ -16463,7 +16463,7 @@ span.flatpickr-weekday {
   margin-top: 3px; }
 
 .flatpickr-calendar .flatpickr-day.today, .flatpickr-calendar .flatpickr-day.selected, .flatpickr-calendar .flatpickr-day.startRange, .flatpickr-calendar .flatpickr-day.endRange {
-  background: #e91e63 !important;
+  background: #03a9f4 !important;
   color: #fff;
   border: none; }
 
@@ -16488,7 +16488,7 @@ span.flatpickr-weekday {
 .flatpickr-day.endRange.startRange + .endRange:not(:nth-child(7n+1)),
 .flatpickr-day.selected.startRange + .endRange:not(:nth-child(7n+1)),
 .flatpickr-day.startRange.startRange + .endRange:not(:nth-child(7n+1)) {
-  box-shadow: -10px 0 0 #e91e63; }
+  box-shadow: -10px 0 0 #03a9f4; }
 
 /*! nouislider - 14.6.3 - 11/19/2020 */
 /* Functional styling;
@@ -18360,7 +18360,7 @@ span.flatpickr-weekday {
   margin-top: 3px; }
 
 .flatpickr-calendar .flatpickr-day.today, .flatpickr-calendar .flatpickr-day.selected, .flatpickr-calendar .flatpickr-day.startRange, .flatpickr-calendar .flatpickr-day.endRange {
-  background: #e91e63 !important;
+  background: #03a9f4 !important;
   color: #fff;
   border: none; }
 

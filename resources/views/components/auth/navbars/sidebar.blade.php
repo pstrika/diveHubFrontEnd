@@ -7,7 +7,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('dashboard') }}">
             <img src="{{ asset('assets') }}/img/logo-ct.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiveHub</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.0.2</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -80,20 +80,28 @@
                     <ul class="nav ">
                         <li class="nav-item {{ $activeItem == 'calendarRec' ? ' active ' : '' }}  ">
                             <a class="nav-link text-white {{ $activeItem == 'calendarRec' ? ' active' : '' }}  "
-                                href="{{ route('Trips') }}">
+                                href="{{ route('CalendarT') }}/rec">
                                 <span class="sidenav-mini-icon"> R </span>
                                 <span class="sidenav-normal  ms-2  ps-1"> Recreational </span>
                             </a>
                         </li>
                         <li class="nav-item {{ $activeItem == 'calendarTec' ? ' active ' : '' }}  ">
                             <a class="nav-link text-white {{ $activeItem == 'calendarTec' ? ' active' : '' }}  "
-                                href="{{ route('CalendarT') }}">
+                                href="{{ route('CalendarT') }}/tec">
                                 <span class="sidenav-mini-icon"> T </span>
                                 <span class="sidenav-normal  ms-2  ps-1"> Technical </span>
                             </a>
                         </li>
                     </ul>
                 </div>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link text-white {{ $activeItem == 'analytics' ? ' active' : '' }}  "
+                    href="{{ route('Operators') }}">
+                    <i class="material-icons-round opacity-10">directions_boat</i>
+                    <span class="nav-link-text ms-2 ps-1">Dive Operators</span>
+                </a>
             </li>
             
             <li class="nav-item">

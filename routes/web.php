@@ -34,11 +34,13 @@ Route::get('Trips/', 'App\Http\Controllers\TripsController@show')->middleware('a
 Route::get('Weather/{location}', 'App\Http\Controllers\WeatherController@show')->middleware('auth')->name('Weather');
 Route::get('Weather/', 'App\Http\Controllers\WeatherController@show')->middleware('auth')->name('Weather');
 
-Route::get('CalendarT/{date}', 'App\Http\Controllers\CalendarTController@show')->middleware('auth')->name('CalendarT');
+Route::get('CalendarT/{tripType}/{date}', 'App\Http\Controllers\CalendarTController@show')->middleware('auth')->name('CalendarT');
+Route::get('CalendarT/{tripType}', 'App\Http\Controllers\CalendarTController@show')->middleware('auth')->name('CalendarT');
 Route::get('CalendarT/', 'App\Http\Controllers\CalendarTController@show')->middleware('auth')->name('CalendarT');
 
 Route::get('TripDetails/{tripId}', 'App\Http\Controllers\TripDetailsController@show')->middleware('auth')->name('TripDetails');
 
+Route::get('Operators/', 'App\Http\Controllers\OperatorController@show')->middleware('auth')->name('Operators');
 
 Route::get('dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
 

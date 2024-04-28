@@ -4,7 +4,7 @@
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Technical Calendar {{ $currentMonthS}}-{{ $year }}"></x-auth.navbars.navs.auth>
+        <x-auth.navbars.navs.auth pageTitle="Recreational Calendar {{ $currentMonthS}}-{{ $year }}"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
             <div class="container-fluid py-4">
                 <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('/assets/img/illustrations/calendar.jpg');">
@@ -16,16 +16,16 @@
                     <div class="p-0 mt-n4 mx-2 border-radius-lg py-3 pe-1">
                         <div style="float: left;">
                             <h2 class="card-title text-info mx-3 mt-4">{{ $currentMonthS }}-{{ $year }}</h2>
-                            <h4 class="card-category text-info mx-4">Technical Calendar</h4>
+                            <h4 class="card-category text-info mx-4">Recreational Calendar</h4>
                         </div>
 
                         {{-----------------NAV to next day}} --}}
                         <div class="mt-5" style="float: right;">
-                            <a type="button" href="/CalendarT/tec/{{ $prevMonthS }}/" class="btn btn-info tex-end">
+                            <a type="button" href="/CalendarT/rec/{{ $prevMonthS }}/" class="btn btn-info tex-end">
                                 <span class="material-icons" style="font-size :30pt;">keyboard_arrow_left</span>
                             </a>
                             
-                            <a type="button" href="/CalendarT/tec/{{ $nextMonthS }}/" class="btn btn-info tex-end">
+                            <a type="button" href="/CalendarT/rec/{{ $nextMonthS }}/" class="btn btn-info tex-end">
                                 <span class="material-icons" style="font-size :30pt;">keyboard_arrow_right</span>
                             </a>
                         </div>
@@ -34,7 +34,6 @@
                     </div>
                 </div>
             
-
                 <div class="col-md-12">                        
                     <div class="card card-calendar p-0 position-relative mt-4 mx-0 z-index-2 mb-0">
                         {{-- Table for filters--}}
@@ -85,12 +84,14 @@
                         {{--------------------------}}
                     </div>
                 </div>
+               
+                
 
-                <div class="col-md-7">             
+                <div class="col-md-12">             
                     <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Tech Dives {{ $currentMonthS }}-{{ $year }}</h2>
+                                <h2 class="card-title text-white mx-4">Recreational Dives {{ $currentMonthS }}-{{ $year }}</h2>
                             </div>
                         </div>
                         <div class="card-body">
@@ -150,24 +151,23 @@
                                         </thead>
                                         <tbody >
                                             @foreach($trips as $trip)
-                                                
                                                 @php
                                                     // do this to avoid printing on the table trips that are not within the current month, but wanted to show them on calendar (check controller)
                                                     $tripDate = new DateTime($trip->date);
                                                     $tripMonth = $tripDate->format('F');
                                                 @endphp
                                                 @if( $tripMonth == $currentMonthS)
-                                                <tr style="border-bottom: 1px solid #D3D3D3;" data-tag="{{ $trip->tags }}">
-                                                <td class="px-4">{{ $trip->date }}</td>
-                                                    <td class="px-0 py-2 text-sm text-wrap">{{ $trip->operatorName }}</td>
-                                                    <td class="px-4">{{ $trip->departureTime }}</td>
-                                                    @if($trip->tripFreeSpots == 0)
-                                                        <td class="text-center">-</td>
-                                                    @else
-                                                        <td class="text-center"> <a href="{{ $trip->linkToBook }}" target="_blank">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</a></td>
-                                                    @endif
-                                                    <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}</a></td>
-                                                </tr>
+                                                    <tr style="border-bottom: 1px solid #D3D3D3;" data-tag="{{ $trip->tags }}">
+                                                    <td class="px-4">{{ $trip->date }}</td>
+                                                        <td class="px-0 py-2 text-sm text-wrap">{{ $trip->operatorName }}</td>
+                                                        <td class="px-4">{{ $trip->departureTime }}</td>
+                                                        @if($trip->tripFreeSpots == 0)
+                                                            <td class="text-center">-</td>
+                                                        @else
+                                                            <td class="text-center"> <a href="{{ $trip->linkToBook }}" target="_blank">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</a></td>
+                                                        @endif
+                                                        <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}</a></td>
+                                                    </tr>
                                                 @endif
                                             @endforeach          
                                         </tbody>
@@ -188,26 +188,23 @@
     @push('js')
     
     <script src="/assets/js/plugins/fullcalendar.min.js"></script>
-
-    
-    
     <script>
         var calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
-        dateClick: function(info) {
-            var link = '/Trips/' + info.dateStr;
-            window.location.href = link;
-        },
-        initialView: "dayGridMonth",
+        initialView: "dayGridWeek",
+        //navLinks: true,
         firstDay: 1,
-        contentHeight: 'auto',
+        contentHeight: 200,
+        
         headerToolbar: {
             start: '', //'title', // will normally be on the left. if RTL, will be on the right
             center: '',
-            end: ''//'today prev,next' // will normally be on the right. if RTL, will be on the left
+            end: 'prev, next, today'//'today prev,next' // will normally be on the right. if RTL, will be on the left
         },
         selectable: true,
         editable: false,
-        initialDate: '{{ $currentDate }}',
+
+        initialDate: '{{ date('Y-m-d') }}',
+        eventLimit: true,
         events: [
             @php
                 foreach($trips as $trip) {
@@ -226,7 +223,9 @@
                     elseif($trip->operatorId == "9")
                         echo "className: 'bg-gradient-info text-white opId=9 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
                     else
-                        echo "className: 'bg-gradient-primary text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";    
+                        echo "className: 'bg-gradient-primary text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
+                    
+                    
                 }
             @endphp
             
