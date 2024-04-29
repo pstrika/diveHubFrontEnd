@@ -22,4 +22,9 @@ class OperatorController extends Controller
     return view('pages.Operators', compact('operators', 'locationAreas'));
 
     }
+
+    public function showHealth() {
+        $operators = Operator::all();
+        return view('pages.PlatformHealth', compact('operators'));
+    }
 }

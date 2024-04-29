@@ -103,6 +103,14 @@
                     <span class="nav-link-text ms-2 ps-1">Dive Operators</span>
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a class="nav-link text-white {{ $activeItem == 'analytics' ? ' active' : '' }}  "
+                    href="{{ route('PlatformHealth') }}">
+                    <i class="material-icons-round opacity-10">health_and_safety</i>
+                    <span class="nav-link-text ms-2 ps-1">Platform Health</span>
+                </a>
+            </li>
             
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#dashboardsExamples"

@@ -42,6 +42,8 @@ Route::get('TripDetails/{tripId}', 'App\Http\Controllers\TripDetailsController@s
 
 Route::get('Operators/', 'App\Http\Controllers\OperatorController@show')->middleware('auth')->name('Operators');
 
+Route::get('PlatformHealth/', 'App\Http\Controllers\OperatorController@showHealth')->middleware('auth')->name('PlatformHealth');
+
 Route::get('dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
 
 Route::get('sign-up', [RegisterController::class, 'create'])->middleware('guest')->name('register');
