@@ -12,7 +12,8 @@ class UserController extends Controller
 {
     public function index(){
 
-        return view('laravel-examples.user-profile.edit');
+        //return view('laravel-examples.user-profile.edit');
+        return redirect()->route('Trips');
     }
 
     public function update()

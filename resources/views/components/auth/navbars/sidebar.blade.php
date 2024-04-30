@@ -103,7 +103,7 @@
                     <span class="nav-link-text ms-2 ps-1">Dive Operators</span>
                 </a>
             </li>
-
+            @can('manage-items', App\Models\User::class)
             <li class="nav-item">
                 <a class="nav-link text-white {{ $activeItem == 'analytics' ? ' active' : '' }}  "
                     href="{{ route('PlatformHealth') }}">
@@ -111,7 +111,9 @@
                     <span class="nav-link-text ms-2 ps-1">Platform Health</span>
                 </a>
             </li>
+            @endcan
             
+            @can('manage-items', App\Models\User::class)
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#dashboardsExamples"
                     class="nav-link text-white {{ $activePage == 'dashboard' ? ' active ' : '' }} "
@@ -159,6 +161,8 @@
                     </ul>
                 </div>
             </li>
+            @endcan
+            @can('manage-items', App\Models\User::class)
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#LaravelExamples"
                     class="nav-link text-white {{ $activePage == 'laravel-examples' ? ' active ' : '' }}  "
@@ -228,9 +232,13 @@
                     </ul>
                 </div>
             </li>
+            @endcan
+            @can('manage-items', App\Models\User::class)
             <li class="nav-item mt-3">
                 <h6 class="ps-4  ms-2 text-uppercase text-xs font-weight-bolder text-white">PAGES</h6>
             </li>
+            @endcan
+            @can('manage-items', App\Models\User::class)
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#pagesExamples"
                     class="nav-link text-white {{ $activePage == 'pages' ? ' active ' : '' }}  "
@@ -432,6 +440,8 @@
                     </ul>
                 </div>
             </li>
+            @endcan
+            @can('manage-items', App\Models\User::class)
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#applicationsExamples"
                     class="nav-link text-white {{ $activePage == 'applications' ? ' active ' : '' }}"
@@ -486,6 +496,8 @@
                     </ul>
                 </div>
             </li>
+            @endcan
+            @can('manage-items', App\Models\User::class)
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#ecommerceExamples"
                     class="nav-link text-white {{ $activePage == 'ecommerce' ? ' active ' : '' }} "
@@ -570,6 +582,8 @@
                     </ul>
                 </div>
             </li>
+            @endcan
+            @can('manage-items', App\Models\User::class)
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#authExamples" class="nav-link text-white "
                     aria-controls="authExamples" role="button" aria-expanded="false">
@@ -751,10 +765,14 @@
                     </ul>
                 </div>
             </li>
+            @endcan
+            @can('manage-items', App\Models\User::class)
             <li class="nav-item">
                 <hr class="horizontal light" />
                 <h6 class="ps-4  ms-2 text-uppercase text-xs font-weight-bolder text-white">DOCS</h6>
             </li>
+            @endcan
+            @can('manage-items', App\Models\User::class)
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#basicExamples" class="nav-link text-white "
                     aria-controls="basicExamples" role="button" aria-expanded="false">
@@ -853,6 +871,8 @@
                     </ul>
                 </div>
             </li>
+            @endcan
+            @can('manage-items', App\Models\User::class)
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#componentsExamples" class="nav-link text-white "
                     aria-controls="componentsExamples" role="button" aria-expanded="false">
@@ -1001,6 +1021,7 @@
                     </ul>
                 </div>
             </li>
+            @endcan
         </ul>
     </div>
     

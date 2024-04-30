@@ -8,14 +8,14 @@
     <!-- End Navbar -->
     <main class="main-content  mt-0">
         <div class="page-header align-items-start min-vh-100"
-            style="background-image: url('/assets/img/diveHub-login.jpg');">
+            style="background-image: url('https://images.unsplash.com/photo-1448375240586-882707db888b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1650&q=80');">
             <span class="mask bg-gradient-dark opacity-6"></span>
             <div class="container my-5">
                 <div class="row signin-margin">
                     <div class="col-lg-4 col-md-8 mx-auto">
                         <div class="card z-index-0">
                             <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
-                                <div class="bg-gradient-info shadow-success border-radius-lg py-3 pe-1">
+                                <div class="bg-gradient-success shadow-success border-radius-lg py-3 pe-1">
                                     <h4 class="text-white font-weight-bolder text-center mt-2 mb-0">Register with</h4>
                                     <div class="row mt-3">
                                         <div class="col-2 text-center ms-auto">
@@ -63,7 +63,19 @@
                                     @error('email')
                                     <p class='text-danger inputerror'>{{ $message }} </p>
                                     @enderror
-                                    
+                                    <label for='select-role' class="mt-3">Select Role</label>
+                                    <div class="input-group input-group-dynamic mb-3">
+                                        <select class="form-select p-2" id='select-role' name='role_id'>
+                                            <option value="">-</option>
+                                            @foreach ($roles as $role)
+                                                <option value="{{ $role->id }}">{{ $role->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    @error('role_id')
+                                    <p class='text-danger inputerror'>{{ $message }} </p>
+                                    @enderror
 
                                     <div class="input-group input-group-dynamic mt-3">
                                         <label class="form-label">Password</label>

@@ -73,7 +73,7 @@
                                                             <p class="text-uppercase text-secondary text-xl font-weight-bolder opacity-7 text-center" style="border-bottom: 1px solid #D3D3D3;"> +1 {{ $operator->phone}}</p>
                                                         </div>
                                                         <h5 class="font-weight-normal mt-3">
-                                                            <a href="javascript:;"> {{ $operator->operatorName }}</a>
+                                                            <a href="OperatorDetails/{{ $operator->id }}"> {{ $operator->operatorName }}</a>
                                                         </h5>
                                                         
                                                     </div>

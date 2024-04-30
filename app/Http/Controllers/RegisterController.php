@@ -19,8 +19,11 @@ class RegisterController extends Controller
             'name' => 'required|max:255',
             'email' => 'required|email|max:255|unique:users,email',
             'password' => 'required|min:7|max:255',
-            'role_id'=>'required'
+            //'role_id'=>'required'
         ]);
+
+        // force role_id to Member
+        $attributes['role_id'] = 3;
 
         $user = User::create($attributes);
         auth()->login($user);

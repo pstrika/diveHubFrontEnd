@@ -68,14 +68,16 @@
                                         @foreach($operators as $operator)
                                             @php
                                                 $dateTime = DateTime::createFromFormat('Y-m-d H:i:s', $operator->_lastUpdate);
+                                                
                                                 $now = new DateTime();
+                                                
                                                 $interval = $now->diff($dateTime);
 
                                                 if($operator->_status == "1" and $interval->format('%d') == "0") {
                                                     $statusIcon = "check_circle";
                                                     $colorIcon = "#008000";
                                                 }
-                                                elseif ($operator->_status == "-1" and $interval->format('%d') == "0") {
+                                                elseif ($operator->_status == "0") {
                                                     $statusIcon = "schedule";
                                                     $colorIcon = "#03a9f4";
                                                 }

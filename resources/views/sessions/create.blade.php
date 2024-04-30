@@ -38,15 +38,8 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <h6>You can login with these 3 user types:</h6>
-                                <ol>
-                                    <li class="text-sm font-weight-normal">Username <strong>admin@material.com</strong> and Password
-                                        <strong>secret</strong></li>
-                                    <li class="text-sm font-weight-normal">Username <strong>creator@material.com</strong> and Password
-                                       <strong>secret</strong></li>
-                                    <li class="text-sm font-weight-normal"> Username <strong>member@material.com</strong> and Password
-                                        <strong>secret</strong></li>
-                                </ol>
+                                <h6>Logo goes here</h6>
+                                
                                 <form role="form" method="POST" action="{{ route('login') }}" class="text-start">
                                     @csrf
                                     @if (Session::has('status'))

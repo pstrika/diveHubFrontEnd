@@ -18,6 +18,22 @@
                         <h2 class="card-title text-info mx-3 mt-4">{{ $location }}</h2>
                         <h4 class="card-category text-info mx-3">Weather Forecast</h4>
                     </div>
+                    {{-----------------NAV to next day}} --}}
+                    <div class="mt-5 mx-5" style="float: right;">
+                            
+                        <a  href="" >                         
+                            <div class="dropdown">
+                                <select class="btn bg-info dropdown-toggle w-100 text-white" type="button" id="filterLocation" data-bs-toggle="dropdown" aria-expanded="false">
+                                <option value="" selected disabled>Select...</option>
+                                    @foreach($allLocations as $thisLocation)
+                                        <option value="{{ $thisLocation->location }}">{{ $thisLocation->location }}</option>
+                                    @endforeach
+                                </select>   
+                            </div>
+                        </a>
+                        <p class="text-xs font-weight-bold mb-0 mt-n3">location</p>
+                        </div>
+                        <div style="clear: both;"></div>
                 </div>
             </div>    
             
@@ -249,24 +265,23 @@
 
                                         <tr> {{--AM/PM--}}
                                             <td> </td>
-                                            <td><div class="container"><div class="row"><div class="col-sm text-center"><span>AM</span></div><div class="col-sm text-center"><span>PM</span></div></div></div></td>
-                                            <td><div class="container"><div class="row"><div class="col-sm text-center"><span>AM</span></div><div class="col-sm text-center"><span>PM</span></div></div></div></td>
-                                            <td><div class="container"><div class="row"><div class="col-sm text-center"><span>AM</span></div><div class="col-sm text-center"><span>PM</span></div></div></div></td>
-                                            <td><div class="container"><div class="row"><div class="col-sm text-center"><span>AM</span></div><div class="col-sm text-center"><span>PM</span></div></div></div></td>
-                                            <td><div class="container"><div class="row"><div class="col-sm text-center"><span>AM</span></div><div class="col-sm text-center"><span>PM</span></div></div></div></td>
+                                            @foreach($weathers as $weather)
+                                                <td><div class="container"><div class="row"><div class="col-sm text-center"><span>AM</span></div><div class="col-sm text-center"><span>PM</span></div></div></div></td>
+                                            @endforeach
+                                            
                                         </tr>
 
                                         <tr> {{--waves--}}
                                             <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">waves (ft)</td>
                                             @foreach($weathers as $weather)
-                                                <td><div class="container"><div class="row"><div class="col-sm text-center"><span>{{ $weather->swell_height_AM }}</span></div><div class="col-sm text-center"><span>{{ $weather->swell_height_PM }}</span></div></div></div></td>    
+                                                <td><div class="container"><div class="row"><div class="col-sm text-center"><span>{{ round($weather->swell_height_AM) }}</span></div><div class="col-sm text-center"><span>{{ round($weather->swell_height_PM) }}</span></div></div></div></td>    
                                             @endforeach
                                         </tr>
 
                                         <tr> {{--Period--}}
                                             <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">period (secs)</td>
                                             @foreach($weathers as $weather)
-                                                <td><div class="container"><div class="row"><div class="col-sm text-center"><span>{{ $weather->swell_period_AM }}</span></div><div class="col-sm text-center"><span>{{ $weather->swell_period_PM }}</span></div></div></div></td>    
+                                                <td><div class="container"><div class="row"><div class="col-sm text-center"><span>{{ round($weather->swell_period_AM) }}</span></div><div class="col-sm text-center"><span>{{ round($weather->swell_period_PM) }}</span></div></div></div></td>    
                                             @endforeach
                                         </tr>
                                         
@@ -299,15 +314,15 @@
                                                 {{--<td> <i class="material-icons rotate-icon" style="transform: rotate(45deg);">arrow_upward</i></td> --}}
                                                 {{--<td><div class="container"><div class="row"><div class="col-sm text-center"><span>({{ $weather->wind_dir_AM }}) {{ $weather->wind_speed_AM }}</span></div><div class="col-sm text-center"><span>({{ $weather->wind_dir_PM }}) {{ $weather->wind_speed_PM }}</span></div></div></div></td>--}}
                                                 <td><div class="container"><div class="row"><div class="col-sm text-center"><span>
-                                                <i class="material-icons rotate-icon" style="transform: rotate({{ $rotationAM + 180 }}deg);">navigation</i> {{ $weather->wind_speed_AM }}</span></div><div class="col-sm text-center"><span>
-                                                <i class="material-icons rotate-icon" style="transform: rotate({{ $rotationPM +180  }}deg);">navigation</i> {{ $weather->wind_speed_PM }}</span></div></div></div></td>    
+                                                <i class="material-icons rotate-icon" style="transform: rotate({{ $rotationAM + 180 }}deg);">navigation</i> {{ round($weather->wind_speed_AM) }}</span></div><div class="col-sm text-center"><span>
+                                                <i class="material-icons rotate-icon" style="transform: rotate({{ $rotationPM +180  }}deg);">navigation</i> {{ round($weather->wind_speed_PM) }}</span></div></div></div></td>    
                                             @endforeach
                                         </tr>
 
                                         <tr> {{--Water temp--}}
                                             <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">water temp (f)</td>
                                             @foreach($weathers as $weather)
-                                                <td><div class="container"><div class="row"><div class="col-sm text-center"><span>{{ $weather->water_temp_AM }}°</span></div><div class="col-sm text-center"><span>{{ $weather->water_temp_PM }}°</span></div></div></div></td>    
+                                                <td><div class="container"><div class="row"><div class="col-sm text-center"><span>{{ round($weather->water_temp_AM) }}°</span></div><div class="col-sm text-center"><span>{{ round($weather->water_temp_PM) }}°</span></div></div></div></td>    
                                             @endforeach
                                         </tr>
                                         
@@ -643,104 +658,12 @@
     </script>
 
 
-    {{--Handler for tripAM table: filter by location--}}
+    {{--Handler for location--}}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('filterLocAM').addEventListener('change', function() {
-                var selectedOption = this.value;
-                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
-                
-                rows.forEach(function(row) {
-                var tags = row.getAttribute('data-tag');
-                if (tags.includes(selectedOption) || selectedOption === 'all') {
-                    row.style.display = ''; // Show the row
-                } else {
-                    row.style.display = 'none'; // Hide the row
-                }
-                });
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('filterAvAM').addEventListener('change', function() {
-                var selectedOption = this.value;
-                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
-                
-                rows.forEach(function(row) {
-                var tags = row.getAttribute('data-tag');
-                if (tags.includes(selectedOption) || selectedOption === 'all') {
-                    row.style.display = ''; // Show the row
-                } else {
-                    row.style.display = 'none'; // Hide the row
-                }
-                });
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('filterTypeAM').addEventListener('change', function() {
-                var selectedOption = this.value;
-                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
-                
-                rows.forEach(function(row) {
-                var tags = row.getAttribute('data-tag');
-                if (tags.includes(selectedOption) || selectedOption === 'all') {
-                    row.style.display = ''; // Show the row
-                } else {
-                    row.style.display = 'none'; // Hide the row
-                }
-                });
-            });
-        });
-
-    {{--Handler for tripAM table: filter by location--}}
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('filterLocPM').addEventListener('change', function() {
-            var selectedOption = this.value;
-            var rows = document.querySelectorAll('#tableTripsPM tr[data-tag]');
-            
-            rows.forEach(function(row) {
-            var tags = row.getAttribute('data-tag');
-            if (tags.includes(selectedOption) || selectedOption === 'all') {
-                row.style.display = ''; // Show the row
-            } else {
-                row.style.display = 'none'; // Hide the row
-            }
-            });
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('filterAvPM').addEventListener('change', function() {
-            var selectedOption = this.value;
-            var rows = document.querySelectorAll('#tableTripsPM tr[data-tag]');
-            
-            rows.forEach(function(row) {
-            var tags = row.getAttribute('data-tag');
-            if (tags.includes(selectedOption) || selectedOption === 'all') {
-                row.style.display = ''; // Show the row
-            } else {
-                row.style.display = 'none'; // Hide the row
-            }
-            });
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('filterTypePM').addEventListener('change', function() {
-            var selectedOption = this.value;
-            var rows = document.querySelectorAll('#tableTripsPM tr[data-tag]');
-            
-            rows.forEach(function(row) {
-            var tags = row.getAttribute('data-tag');
-            if (tags.includes(selectedOption) || selectedOption === 'all') {
-                row.style.display = ''; // Show the row
-            } else {
-                row.style.display = 'none'; // Hide the row
-            }
-            });
-        });
+    document.getElementById('filterLocation').addEventListener('change', function() {
+        var location = this.value;
+        var url = '/Weather/' + location;
+        window.location.href = url;
     });
     </script>
     @endpush

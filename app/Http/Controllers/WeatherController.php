@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\Weatherday;
+use App\Models\WeatherLocation;
 
 class WeatherController extends Controller
 {
@@ -19,7 +20,9 @@ class WeatherController extends Controller
 
         $weathers = Weatherday::where('location', $location)->get();
 
-        return view('pages.Weather', compact('weathers', 'date', 'location'));
+        $allLocations = WeatherLocation::all();
+
+        return view('pages.Weather', compact('weathers', 'date', 'location', 'allLocations'));
 
     }
 
