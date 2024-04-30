@@ -3,6 +3,19 @@
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+    <style>
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        .animate-icon {
+            animation-name: fadeInOut;
+            animation-duration: 2s;
+            animation-iteration-count: infinite;
+            animation-timing-function: ease-in-out;
+        }
+    </style>
         <!-- Navbar -->
         <x-auth.navbars.navs.auth pageTitle="Dive Trips"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
@@ -39,7 +52,7 @@
             
             <div class="row">
                 {{-- Card Dive Conditions --}}
-                <div class="col-md-12">             
+                <div class="col-md-9">             
                     <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
@@ -107,25 +120,32 @@
                 </div>
                 {{--------------------------}}
 
-                {{-- Card waves --}}
-                @if($location == "fort lauderdale" or $location == "pompano beach" or $location == "west palm beach")
-                    <div class="col-md-4">
-                @else
-                    <div class="col-md-6">
-                @endif
+                {{-- Card location --}}
+                
+                    <div class="col-md-3">
+                
+                    
                         <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1"> 
-                                    <canvas id="wavesChart" class="chart-canvas border-radius-lg" height="120px"></canvas>
+                                <div class="bg-gradient-info min-height-100 shadow-info border-radius-xl py-3 pe-1"> 
+                                    <img src="{{ asset('assets') }}/img/Florida.png" height="200px" alt="img-blur-shadow" class=" border-radius-lg min-heigth-10 mt-n3 position-relative">
+                                    {{--<div class="page-header min-height-250 max-height-250 border-radius-xl mt-0 mx-0" --}}
+                                    <a href="/Weather/key west/" class="position-absolute text-sm material-icons text-black {{ ($location == "key west" ? "animate-icon" : "") }}" style="top:160px; left:100px;">circle</a>
+                                    <a href="/Weather/isla morada/"class="position-absolute text-sm material-icons text-black {{ ($location == "isla morada" ? "animate-icon" : "") }}" style="top:152px; left:135px;">circle</a>
+                                    <a href="/Weather/key largo/"class="position-absolute text-sm material-icons text-black {{ ($location == "key largo" ? "animate-icon" : "") }}" style="top:128px; left:162px;">circle</a>
+                                    <a href="/Weather/miami beach/"class="position-absolute text-sm material-icons text-black {{ ($location == "miami beach" ? "animate-icon" : "") }}" style="top:83px; left:175px;">circle</a>
+                                    <a href="/Weather/fort lauderdale/"class="position-absolute text-sm material-icons text-black {{ ($location == "fort lauderdale" ? "animate-icon" : "") }}" style="top:70px; left:177px;">circle</a>
+                                    <a href="/Weather/pompano beach/"class="position-absolute text-sm material-icons text-black {{ ($location == "pompano beach" ? "animate-icon" : "") }}" style="top:57px; left:177px;">circle</a>
+                                    <a href="/Weather/boynton beach/"class="position-absolute text-sm material-icons text-black {{ ($location == "boynton beach" ? "animate-icon" : "") }}" style="top:42px; left:179px;">circle</a>
+                                    <a href="/Weather/west palm beach/"class="position-absolute text-sm material-icons text-black {{ ($location == "west palm beach" ? "animate-icon" : "") }}" style="top:28px; left:182px;">circle</a>
+                                    <a href="/Weather/jupiter/"class="position-absolute text-sm material-icons text-black {{ ($location == "jupiter" ? "animate-icon" : "") }}" style="top:10px; left:179px;">circle</a>
+                                        
+                                    
                                 </div>
                             </div>
                             <div class="card-body">
-                                <h6 class="mb-0 "> waves (ft)</h6>
-                                
-                                <div class="d-flex ">
-                                    <i class="material-icons text-sm my-auto me-1">schedule</i>
-                                    <p class="mb-0 text-sm">Last update: {{ $weathers[0]->_dateAdded }} </p>
-                                </div>
+                                <h6 class="mb-0 "> choose location</h6>
+                            
                             </div>
                                     
                         </div>
@@ -181,6 +201,34 @@
                     </div>
                 @endif
                 {{-------------------------------}}
+
+
+                {{-- Card waves --}}
+                @if($location == "fort lauderdale" or $location == "pompano beach" or $location == "west palm beach")
+                    <div class="col-md-4">
+                @else
+                    <div class="col-md-6">
+                @endif
+                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                            <div class="card-header p-0 mt-n4 mx-3">
+                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1"> 
+                                    <canvas id="wavesChart" class="chart-canvas border-radius-lg" height="120px"></canvas>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="mb-0 "> waves (ft)</h6>
+                                
+                                <div class="d-flex ">
+                                    <i class="material-icons text-sm my-auto me-1">schedule</i>
+                                    <p class="mb-0 text-sm">Last update: {{ $weathers[0]->_dateAdded }} </p>
+                                </div>
+                            </div>
+                                    
+                        </div>
+                    </div>
+                {{-----------------------------}}
+
+                
 
                 {{-- Card winds--}}
                 @if($location == "fort lauderdale" or $location == "pompano beach" or $location == "west palm beach")

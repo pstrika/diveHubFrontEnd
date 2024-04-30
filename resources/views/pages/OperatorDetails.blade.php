@@ -233,6 +233,8 @@
                                                         <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillTrimix ? "check" : "block") }}</i></td>
                                                         <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillO2 ? "check" : "block") }}</i></td>
                                                         
+                                                        
+                                                        
                                                     </tr>
                                                 </tbody>
 
