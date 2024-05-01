@@ -82,8 +82,32 @@
                                                     <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Online waiver</td>
                                                     <td class="align-middle text-left text-sm"><b><a href="{{ $operator->waiverLink}}">here</a></b></td> </tr>
                                                 @endif
-
                                             </table>
+
+                                            <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Hours of Operation</td> </tr>
+                                                <table class="table align-items-center mb-0">
+                                                    <tbody>
+                                                        @php
+                                                            $hoursOfOperation = json_decode($operator->hourOfOperation, true);
+                                                        @endphp
+                                                        <tr>
+                                                            @foreach($hoursOfOperation as $hourOfOperation)
+                                                                <td class="align-middle text-center text-sm">{{ $hourOfOperation['day'] }}</td>
+                                                            @endforeach
+                                                        </tr>
+                                                        <tr>
+                                                            @foreach($hoursOfOperation as $hourOfOperation)
+                                                                <td class="align-middle text-center text-sm">{{ $hourOfOperation['hours'] }}</td>
+                                                            @endforeach
+                                                        </tr>
+
+                                                        
+                                                        
+                                                    </tbody>
+
+                                                </table>
+
+                                            
                                         </td></td>
                                         
                                         
@@ -203,52 +227,117 @@
                 {{-----------------------------}}
                 
                 
+                
+                <div class="col-md-4">
                 {{-- Card Gas Fills--}}
-                <div class="col-md-4">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Gas Fills Offered</h4>
-                                <div class="table-responsive"></div>
+                    <div class="col-md-12">             
+                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                            <div class="card-header p-0 mt-n4 mx-3">
+                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                    <h2 class="card-title text-white mx-4">Gas Fills Offered</h4>
+                                    <div class="table-responsive"></div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table align-items-center mb-0"> 
+                                        <tbody>
+
+                                            <tr> <td>
+
+                                                <table class="table align-items-center mb-0">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td class="align-middle text-center text-sm">Air</td>
+                                                            <td class="align-middle text-center text-sm">Nitrox</td>
+                                                            <td class="align-middle text-center text-sm">Trimix</td>
+                                                            <td class="align-middle text-center text-sm">Oxygen</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillAir ? "check" : "block") }}</i></td>
+                                                            <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillNitrox ? "check" : "block") }}</i></td>
+                                                            <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillTrimix ? "check" : "block") }}</i></td>
+                                                            <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillO2 ? "check" : "block") }}</i></td>
+                                                            
+                                                            
+                                                            
+                                                        </tr>
+                                                    </tbody>
+
+                                                </table>
+                                            </td></tr>
+
+                                        </tbody>    
+                                    </table>
+                                </div>    
                             </div>
                         </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table align-items-center mb-0"> 
-                                    <tbody>
+                    </div>
+                
+                    {{-----------------------------}}
+                    {{-- Card Prices--}}
+                    <div class="col-md-12">             
+                        <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
+                            <div class="card-header p-0 mt-n4 mx-3">
+                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                    <h2 class="card-title text-white mx-4">Trip Prices</h4>
+                                    <div class="table-responsive"></div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table align-items-center mb-0"> 
+                                        <tbody>
+                                        @php
+                                        $tripPrices = json_decode($operator->tripPrice, true);
+                                    @endphp
 
-                                        <tr> <td>
-
-                                            <table class="table align-items-center mb-0">
-                                                <tbody>
-                                                    <tr>
-                                                        <td class="align-middle text-center text-sm">Air</td>
-                                                        <td class="align-middle text-center text-sm">Nitrox</td>
-                                                        <td class="align-middle text-center text-sm">Trimix</td>
-                                                        <td class="align-middle text-center text-sm">Oxygen</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillAir ? "check" : "block") }}</i></td>
-                                                        <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillNitrox ? "check" : "block") }}</i></td>
-                                                        <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillTrimix ? "check" : "block") }}</i></td>
-                                                        <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillO2 ? "check" : "block") }}</i></td>
-                                                        
-                                                        
-                                                        
-                                                    </tr>
-                                                </tbody>
-
-                                            </table>
-                                        </td></tr>
-
-                                    </tbody>    
-                                </table>
-                            </div>    
+                                            <tr> <td>
+                                                <table class="table align-items-center mb-0">
+                                                
+                                                    <tr class="align-top"><td class="text-info text-lg font-weight-bolder opacity-7">Type</td>
+                                                    <td class="text-info align-middle text-left text-wrap text-lg">Price</td> </tr>
+                                                    @foreach($tripPrices as $tripPrice)
+                                                    <tr class="align-top" style="border-bottom: 1px solid #D3D3D3;"><td class="text-lg font-weight-bolder opacity-7">{{ $tripPrice['type'] }}</td>
+                                                    <td class="align-middle text-left text-wrap text-lg">${{ $tripPrice['price'] }}</td> </tr>
+                                                    @endforeach
+                                                </table>
+                                            
+                                            </td></td>
+                                            
+                                            
+                                                    
+                                        </tbody>
+                                    </table>
+                                </div>    
+                            </div>
                         </div>
                     </div>
+                    {{-----------------------------}}
                 </div>
-                {{-----------------------------}}
 
+                <div class="col-md-12">             
+                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                            <div class="card-header p-0 mt-n4 mx-3">
+                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                    <h2 class="card-title text-white mx-4">Description</h4>
+                                    <div class="table-responsive"></div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table align-items-center mb-0"> 
+                                        <tbody>
+                                            <tr> <td>
+                                                <p class="text-justify-left text-wrap">{{ $operator->desc }}</p>
+                                            </td></tr>
+
+                                        </tbody>    
+                                    </table>
+                                </div>    
+                            </div>
+                        </div>
+                    </div>
             </div>
             
                 

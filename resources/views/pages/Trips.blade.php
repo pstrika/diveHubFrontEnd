@@ -43,23 +43,23 @@
                         {{-----------------NAV to next day}} --}}
                         <div class="mt-5" style="float: right;">
                             <a type="button" href="/Trips/{{ $previousDay }}/" class="btn btn-info tex-end">
-                                <span class="material-icons" style="font-size :25pt;">keyboard_arrow_left</span>
+                                <span class="material-icons" style="font-size :24pt;">keyboard_arrow_left</span>
                             </a>
                             <a type="button" href="/Trips/" class="btn btn-info tex-end">
-                                <span class="material-icons" style="font-size :25pt;">calendar_today</span>
+                                <span class="material-icons" style="font-size :24pt;">calendar_today</span>
                             </a>
 
                             
                             <div type="button" class="btn btn-info tex-end">
                                 
                                 <input id="datePicker" placeholder=" Select date..." class="text-info opacity-0 z-index-5 position-absolute" style="width: 120%;">              
-                                <span class="material-icons z-index-1" style="font-size :25pt;">calendar_month</span>
+                                <span class="material-icons z-index-1" style="font-size :24pt;">calendar_month</span>
                             </div>
 
 
                             
                             <a type="button" href="/Trips/{{ $nextDay }}/" class="btn btn-info tex-end">
-                                <span class="material-icons" style="font-size :25pt;">keyboard_arrow_right</span>
+                                <span class="material-icons" style="font-size :24pt;">keyboard_arrow_right</span>
                             </a>
                         </div>
                         <div style="clear: both;"></div>

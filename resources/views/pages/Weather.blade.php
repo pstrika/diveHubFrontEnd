@@ -199,12 +199,50 @@
                                 </div>
                         </div>
                     </div>
+                @elseif($location == "miami beach")
+                    <div class="col-md-4">
+                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                            <div class="card-header p-0 mt-n4 mx-3">
+                            {{--<iframe loading="lazy" src="https://iframe.dacast.com/live/b5a8e966-0b7f-13a8-9ad4-5637cfb90a9f/8e2f7f51-4653-43e0-7e8e-7e213959bb2b" width="100%" height="100%" allowfullscreen="" style="position:absolute;top:0;left:0;"></iframe>--}}
+                                <iframe class="img-fluid shadow border-radius-lg" src="https://iframe.dacast.com/live/b5a8e966-0b7f-13a8-9ad4-5637cfb90a9f/8e2f7f51-4653-43e0-7e8e-7e213959bb2b" height="100%" width="100%" autoplay="" allow="autoplay;" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe>
+                                
+                                
+                                    
+                            </div>
+                            <div class="card-body">
+                                <h6 class="mb-0 "> live web cam</h6>  
+                                <div class="d-flex ">
+                                    <i class="material-icons text-sm my-auto me-1">schedule</i>
+                                    <p class="mb-0 text-sm">Last update: now (source 76th Str, Miami Beach) </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @elseif($location == "key west")
+                    <div class="col-md-4">
+                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                            <div class="card-header p-0 mt-n4 mx-3">
+                            
+                                <iframe class="img-fluid shadow border-radius-lg" src="https://relay.ozolio.com/pub.api?cmd=embed&amp;oid=EMB_RKNO000004F8" height="100%" width="100%" autoplay="" allow="autoplay;" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe>
+                                    
+                                
+                                    
+                            </div>
+                            <div class="card-body">
+                                <h6 class="mb-0 "> live web cam</h6>  
+                                <div class="d-flex ">
+                                    <i class="material-icons text-sm my-auto me-1">schedule</i>
+                                    <p class="mb-0 text-sm">Last update: now (source 76th Str, Miami Beach) </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div> 
                 @endif
                 {{-------------------------------}}
 
 
                 {{-- Card waves --}}
-                @if($location == "fort lauderdale" or $location == "pompano beach" or $location == "west palm beach")
+                @if($location == "fort lauderdale" or $location == "pompano beach" or $location == "west palm beach" or $location == "miami beach" or $location == "key west")
                     <div class="col-md-4">
                 @else
                     <div class="col-md-6">
@@ -231,7 +269,7 @@
                 
 
                 {{-- Card winds--}}
-                @if($location == "fort lauderdale" or $location == "pompano beach" or $location == "west palm beach")
+                @if($location == "fort lauderdale" or $location == "pompano beach" or $location == "west palm beach" or $location == "miami beach" or $location == "key west")
                     <div class="col-md-4">
                 @else
                     <div class="col-md-6">

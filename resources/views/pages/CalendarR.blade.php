@@ -22,11 +22,11 @@
                         {{-----------------NAV to next day}} --}}
                         <div class="mt-5" style="float: right;">
                             <a type="button" href="/CalendarT/rec/{{ $prevMonthS }}/" class="btn btn-info tex-end">
-                                <span class="material-icons" style="font-size :30pt;">keyboard_arrow_left</span>
+                                <span class="material-icons" style="font-size :24pt;">keyboard_arrow_left</span>
                             </a>
                             
                             <a type="button" href="/CalendarT/rec/{{ $nextMonthS }}/" class="btn btn-info tex-end">
-                                <span class="material-icons" style="font-size :30pt;">keyboard_arrow_right</span>
+                                <span class="material-icons" style="font-size :24pt;">keyboard_arrow_right</span>
                             </a>
                         </div>
                         <div style="clear: both;"></div>
