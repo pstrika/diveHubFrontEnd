@@ -7,7 +7,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('dashboard') }}">
             <img src="{{ asset('assets') }}/img/logo-ct.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.0.2</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.1.0</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -103,6 +103,15 @@
                     <span class="nav-link-text ms-2 ps-1">Dive Operators</span>
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a class="nav-link text-white {{ $activeItem == 'DiveSites' ? ' active' : '' }}  "
+                    href="{{ route('DiveSites') }}">
+                    <i class="material-icons-round opacity-10">location_on</i>
+                    <span class="nav-link-text ms-2 ps-1">Dive Sites</span>
+                </a>
+            </li>
+
             @can('manage-items', App\Models\User::class)
             <li class="nav-item">
                 <a class="nav-link text-white {{ $activeItem == 'analytics' ? ' active' : '' }}  "
@@ -112,6 +121,36 @@
                 </a>
             </li>
             @endcan
+
+            @can('manage-items', App\Models\User::class)
+            <li class="nav-item">
+                <a data-bs-toggle="collapse" href="#siteAdmin"
+                    class="nav-link text-white {{ $activePage == 'siteAdmin' ? ' active ' : '' }} "
+                    aria-controls="dashboardsExamples" role="button" aria-expanded="false">
+                    <i class="material-icons-round opacity-10">person_pin_circle</i>
+                    <span class="nav-link-text ms-2 ps-1">Dive Sites Admin</span>
+                </a>
+                <div class="collapse {{ $activePage == 'siteAdmin' ? ' show ' : '' }}  " id="siteAdmin">
+                    <ul class="nav ">
+                        <li class="nav-item {{ $activeItem == 'siteAdminAdd' ? ' active ' : '' }}  ">
+                            <a class="nav-link text-white {{ $activeItem == 'siteAdminAdd' ? ' active' : '' }}  "
+                                href="{{ route('new-site') }}">
+                                <i class="material-icons-round opacity-10">add_location_alt</i>
+                                <span class="sidenav-normal  ms-2  ps-1"> Add Site </span>
+                            </a>
+                        </li>
+                        <li class="nav-item {{ $activeItem == 'siteAdminEdit' ? ' active ' : '' }}  ">
+                            <a class="nav-link text-white {{ $activeItem == 'siteAdminEdit' ? ' active' : '' }}  "
+                                href="{{ route('CalendarT') }}/tec">
+                                <i class="material-icons-round opacity-10">edit_location_alt</i>
+                                <span class="sidenav-normal  ms-2  ps-1"> Edit Location </span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            @endcan           
+
             
             @can('manage-items', App\Models\User::class)
             <li class="nav-item">

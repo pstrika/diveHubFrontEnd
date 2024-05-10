@@ -46,6 +46,20 @@ Route::get('OperatorDetails/{id}', 'App\Http\Controllers\OperatorController@show
 
 Route::get('PlatformHealth/', 'App\Http\Controllers\OperatorController@showHealth')->middleware('auth')->name('PlatformHealth');
 
+Route::get('new-site/', 'App\Http\Controllers\SiteController@create')->middleware('auth')->name('new-site');
+Route::post('new-site', 'App\Http\Controllers\SiteController@store')->middleware('auth')->name('new-site-store');
+
+Route::get('new-site-uploadPics', 'App\Http\Controllers\SiteController@create')->middleware('auth')->name('new-site-uploadPics');
+Route::post('new-site-uploadPics', 'App\Http\Controllers\SiteController@updateMedia')->middleware('auth')->name('new-site-uploadPics');
+
+Route::post('upload', 'App\Http\Controllers\SiteController@upload')->middleware('auth')->name('upload');
+
+Route::post('new-site-updatePicsDesc', 'App\Http\Controllers\SiteController@updateDesc')->middleware('auth')->name('new-site-updatePicsDesc');
+
+Route::get('SiteDetails/{id}', 'App\Http\Controllers\SiteController@show')->middleware('auth')->name('SiteDetails');
+
+Route::get('DiveSites', 'App\Http\Controllers\SiteController@showAll')->middleware('auth')->name('DiveSites');
+
 Route::get('dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
 
 Route::get('sign-up', [RegisterController::class, 'create'])->middleware('guest')->name('register');
