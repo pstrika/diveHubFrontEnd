@@ -21,11 +21,11 @@
         <!-- End Navbar -->
         <div class="container-fluid py-4">
             
-        <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('/assets/img/illustrations/weather.jpeg');">
+        <div class="page-header min-height-250 max-height-300 border-radius-xl mt-0 mx-n2" style="background-image: url('/assets/img/illustrations/weather.jpeg');">
                 <span class="mask  bg-gradient-info  opacity-4"></span>
             </div>
 
-            <div class="card p-0 position-relative mt-n7 mx-3 z-index-2 mb-4">
+            <div class="card p-0 position-relative mt-n7 mx-2 z-index-2 mb-4">
                 <div class="p-0 mt-n4 mx-2 ">
                     <div class="border-radius-lg py-3 pe-1" style="float: left;">
                         <h2 class="card-title text-info mx-3 mt-4">{{ $location }}</h2>
@@ -53,7 +53,7 @@
             <div class="row">
                 {{-- Card Dive Conditions --}}
                 <div class="col-md-9">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                    <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
                                 <h2 class="card-title text-white mx-4">Dive Conditions</h4>
@@ -125,7 +125,7 @@
                     <div class="col-md-3">
                 
                     
-                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                                 <div class="bg-gradient-info min-height-100 shadow-info border-radius-xl py-3 pe-1"> 
                                     <img src="{{ asset('assets') }}/img/Florida.png" height="200px" alt="img-blur-shadow" class=" border-radius-lg min-heigth-10 mt-n3 position-relative">
@@ -155,7 +155,7 @@
                 {{-- Card live cam --}}
                 @if($location == "fort lauderdale")                    
                     <div class="col-md-4">
-                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                                 <iframe class="img-fluid border-radius-lg" allow-same-origin="" allow-scripts="" allowfullscreen="" alt="EarthCam Video Player Embed" autoplay="" frameborder="0" height="450" id="iframe" marginheight="0" marginwidth="0" scrolling="no" src="//www.earthcam.com/js/video/embed.php?type=h264&amp;vid=windjammerHD2.flv&amp;w=auto&amp;company=Windjammer&amp;timezone=America/New_York&amp;metar=KFLL&amp;ecn=1&amp;requested_version=current" style="top:0;left:0;width:10px;min-width:100%;*width:100%;height:200px;" width="800"></iframe>
                             </div>
@@ -170,7 +170,7 @@
                     </div>
                 @elseif($location == "pompano beach")
                     <div class="col-md-4">
-                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                                 <iframe class="img-fluid shadow border-radius-lg" src="https://player.brownrice.com/embed/copbfl1" height="100%" width="100%" autoplay="" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe>
                             </div>
@@ -185,7 +185,7 @@
                     </div>              
                 @elseif($location == "west palm beach")
                     <div class="col-md-4">
-                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                                 <iframe class="img-fluid shadow border-radius-lg" id="main_content" name="main_content" src="https://video-monitoring.com/beachcams/palmbeachmarriott/stream.htm" width="960" height="540" allowfullscreen="" autoplay="true" style="top:0;left:0;width:10px;min-width:100%;*width:100%;height:200px;"></iframe>
                             </div>
@@ -201,7 +201,7 @@
                     </div>
                 @elseif($location == "miami beach")
                     <div class="col-md-4">
-                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                             {{--<iframe loading="lazy" src="https://iframe.dacast.com/live/b5a8e966-0b7f-13a8-9ad4-5637cfb90a9f/8e2f7f51-4653-43e0-7e8e-7e213959bb2b" width="100%" height="100%" allowfullscreen="" style="position:absolute;top:0;left:0;"></iframe>--}}
                                 <iframe class="img-fluid shadow border-radius-lg" src="https://iframe.dacast.com/live/b5a8e966-0b7f-13a8-9ad4-5637cfb90a9f/8e2f7f51-4653-43e0-7e8e-7e213959bb2b" height="100%" width="100%" autoplay="" allow="autoplay;" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe>
@@ -220,7 +220,7 @@
                     </div>
                     @elseif($location == "key west")
                     <div class="col-md-4">
-                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                             
                                 <iframe class="img-fluid shadow border-radius-lg" src="https://relay.ozolio.com/pub.api?cmd=embed&amp;oid=EMB_RKNO000004F8" height="100%" width="100%" autoplay="" allow="autoplay;" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe>
@@ -247,7 +247,7 @@
                 @else
                     <div class="col-md-6">
                 @endif
-                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                                 <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1"> 
                                     <canvas id="wavesChart" class="chart-canvas border-radius-lg" height="120px"></canvas>
@@ -274,7 +274,7 @@
                 @else
                     <div class="col-md-6">
                 @endif
-                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                                 <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1"> 
                                     <canvas id="windChart" class="chart-canvas" height="120px"></canvas>
@@ -293,7 +293,7 @@
                 
                 {{-- Card Extended forecast--}}
                 <div class="col-md-12">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                    <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
                                 <h2 class="card-title text-white mx-4">Extended Forecast</h4>
@@ -416,6 +416,8 @@
                                             <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">high tide</td>
                                             @php
                                                 foreach($weathers as $weather) {     
+
+                                                    
                                                     $jsonString = $weather->tides;
                                                     
                                                     $tides = json_decode($jsonString, true);

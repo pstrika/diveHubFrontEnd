@@ -12,11 +12,11 @@
 
 
 
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('/assets/img/illustrations/platformHealth.jpeg');">
+            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/platformHealth.jpeg');">
                 <span class="mask  bg-gradient-info  opacity-4"></span>
             </div>
 
-            <div class="card p-0 position-relative mt-n5 mx-3 z-index-2 mb-4">
+            <div class="card p-0 position-relative mt-n5 mx-1 z-index-2 mb-4">
                 
                     <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
                         <div style="float: left;">

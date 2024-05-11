@@ -20,12 +20,13 @@
         
 
 
-
-            <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('/assets/img/illustrations/divers_jumping.avif');">
+        
+            <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/divers_jumping.avif');">
                 <span class="mask  bg-gradient-info  opacity-4"></span>
             </div>
 
-            <div class="card p-0 position-relative mt-n7 mx-3 z-index-2 mb-4">
+            
+            <div class="card p-0 position-relative mt-n7 mx-2 z-index-2 mb-4">
                 
                     <div class="p-0 mt-n4 mx-2 border-radius-lg py-3 pe-1">
                     
@@ -66,6 +67,7 @@
                     </div>
                 </div>
             </div>
+        
 
             <div class="row">
                 {{-- Dive conditions card AM --}}

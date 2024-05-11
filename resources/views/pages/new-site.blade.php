@@ -276,7 +276,7 @@
                                                     {{--<option disabled value="None" selected="">Type</option>--}}
                                                     <option value="Freighter">Freighter</option>
                                                     <option value="Tugboat">Tugboat</option>
-                                                    <option value="Dredge">Dedge</option>
+                                                    <option value="Dredge">Dredge</option>
                                                     <option value="Ferry">Ferry</option>
                                                     <option value="Barge">Barge</option>
                                                     <option value="Sailboat">Sailboat</option>
