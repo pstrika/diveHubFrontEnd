@@ -218,6 +218,7 @@
             //uploadMultiple: true, // Allow multiple files to be uploaded together
             addRemoveLinks: true, // Show remove links for uploaded files
             method: "post", // sets the form method to PUT
+            resizeWidth: 800,
             chunking: true,
             paramName: "img_file",
             headers: {
