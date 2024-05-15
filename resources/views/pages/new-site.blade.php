@@ -1,9 +1,9 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
-    <x-auth.navbars.sidebar activePage="ecommerce" activeItem="products" activeSubitem="new-product">
+    <x-auth.navbars.sidebar activePage="siteAdmin" activeItem="siteAdminAdd" activeSubitem="">
     </x-auth.navbars.sidebar>
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="New Product"></x-auth.navbars.navs.auth>
+        <x-auth.navbars.navs.auth pageTitle="Add new dive site"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
 
         <!-- Customize slider colors -->
@@ -47,7 +47,7 @@
                             <i class="material-icons h1 text-secondary">
                                 task_alt
                             </i>
-                            <h4 class="text-gradient text-info mt-4">{{ session('status') }}</h4>
+                            <h4 class="text-gradient text-info mt-4">{{ $status }}</h4>
                             <p>Press anywhere outside this dialog to continue</p>
                             </div>
                         </div>
@@ -87,7 +87,7 @@
                 <input type="hidden" id="newId" name="newId" value="{{ $newId }}">
                 <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
                     <div style="float: left;">
-                        <h2 class="card-title text-info mx-3 mt-0">Add new site #{{ $newId }} {{ $status }}</h2>
+                        <h2 class="card-title text-info mx-3 mt-0">Add new dive site</h2>
                     </div>
 
                 </div>
@@ -455,7 +455,7 @@
     </script>
 
     {{---Show modal----}}
-    @if(session('status'))
+    @if($status)
     <script>
         $(document).ready(function() {
             $('#modal-notification').modal('show'); // Show the modal

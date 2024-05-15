@@ -1,5 +1,5 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
-    <x-auth.navbars.sidebar activePage="operators" activeItem="operators" activeSubitem=""></x-auth.navbars.sidebar>
+    <x-auth.navbars.sidebar activePage="diveOperators" activeItem="diveOperators" activeSubitem=""></x-auth.navbars.sidebar>
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">

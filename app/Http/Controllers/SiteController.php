@@ -28,10 +28,34 @@ class SiteController extends Controller
 
     }
 
+    public function delete($id) {
+        $site = Site::findOrFail(intval($id));
+        $photos = Photo::where('siteId', $id)->get();
+
+        $siteName = $site->name;
+
+        foreach ($photos as $photo) {
+            $photo->deletePhoto();
+        }
+        $site->delete();
+
+        $sites = Site::all();
+        $locations = WeatherLocation::all();
+
+        return redirect()->back()->withStatus("Site \"" . $siteName . " \"successfully deleted");
+    }
     public function showAll() {
         $sites = Site::all();
+        $locations = WeatherLocation::all();
 
-        return view('pages.DiveSites', compact('sites'));
+        return view('pages.DiveSites', compact('sites', 'locations'));
+    }
+
+    public function showAllAdmin() {
+        $sites = Site::all();
+        $locations = WeatherLocation::all();
+
+        return view('pages.DiveSitesAdmin', compact('sites', 'locations'));
     }
 
     public function create() {
@@ -40,7 +64,7 @@ class SiteController extends Controller
         $locations = WeatherLocation::all();
         $operators = Operator::all();
 
-        $status = "new record";
+        $status = null;
         $newId = Site::max("id") + 1;
 
         return view('pages.new-site', compact('locations','operators', 'status', 'newId'));
@@ -91,21 +115,24 @@ class SiteController extends Controller
             'history' => $request->history,
             'wreckData' => json_encode($wreckDetails),
             
-            'tag' => strtoupper($request->type)[0] . $request->newId,
+            //'tag' => strtoupper($request->type)[0] . $request->newId,
             //'pics' => $attributes['picture'],
             
         ]);
         
+        $newSite->update([
+            'tag' => strtoupper($request->type)[0] . $newSite->id,
+        ]);
         
 
-        $status = "sucess";
-        $newId = $request->newId;
+        $status = "Dive site created successfully";
+        $newId = $newSite->id;
         $newName = $request->name;
         //return view('pages.new-site', compact('locations','operators','status', 'newId'));
 
         
         //return redirect('new-site-uploadPics')->withStatus('Item successfully created.');
-        return view('pages.new-site-uploadPics', compact('newId', 'newName'))->withStatus('Item successfully created.');
+        return view('pages.new-site-uploadPics', compact('newId', 'newName', 'status'));
         
     }
 
@@ -129,6 +156,9 @@ class SiteController extends Controller
             $newName = $site->name;
             return view('pages.new-site-updatePicsDesc', compact('newId', 'newName', 'photos'))->withStatus('Media Successfully Uploaded');    
         }
+        else {
+            Log::error("Couldn't update media for site: " . $request->newId);  
+        }
     }
 
     public function updateDesc(Request $request) {
@@ -149,7 +179,7 @@ class SiteController extends Controller
         $locations = WeatherLocation::all();
         $operators = Operator::all();
 
-        $status = "new record";
+        $status = "Dive site created successfully";
         $newId = Site::max("id") + 1;
 
         return view('pages.new-site', compact('locations','operators', 'status', 'newId'));

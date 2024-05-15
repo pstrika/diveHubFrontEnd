@@ -46,7 +46,14 @@
                                         @foreach($sites as $site)    
                                             <tr style="border-bottom: 1px solid #D3D3D3;">
                                                 <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
-                                                <td class="w-70 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
+                                                <td class="w-40 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
+                                                @foreach($locations as $location)
+                                                    @if($location->short == $site->location)
+                                                        <td class="w-20 align-middle text-left text-md"><b>{{ $location->location }}</b></td> 
+                                                    @endif
+                                                @endforeach
+                                                
+
                                                 <?php 
                                                     if($site->level == 0)
                                                         $level="Open Water";

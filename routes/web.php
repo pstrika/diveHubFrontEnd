@@ -57,8 +57,14 @@ Route::post('upload', 'App\Http\Controllers\SiteController@upload')->middleware(
 Route::post('new-site-updatePicsDesc', 'App\Http\Controllers\SiteController@updateDesc')->middleware('auth')->name('new-site-updatePicsDesc');
 
 Route::get('SiteDetails/{id}', 'App\Http\Controllers\SiteController@show')->middleware('auth')->name('SiteDetails');
+Route::get('SiteDetails', 'App\Http\Controllers\SiteController@show')->middleware('auth')->name('SiteDetails');
 
 Route::get('DiveSites', 'App\Http\Controllers\SiteController@showAll')->middleware('auth')->name('DiveSites');
+Route::get('DiveSitesAdmin', 'App\Http\Controllers\SiteController@showAllAdmin')->middleware('auth')->name('DiveSitesAdmin');
+Route::get('DeleteDiveSite/{id}', 'App\Http\Controllers\SiteController@delete')->middleware('auth')->name('DeleteDiveSite');
+
+Route::get('DeleteDiveSite', 'App\Http\Controllers\SiteController@delete')->middleware('auth')->name('DeleteDiveSite');
+
 
 Route::get('dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
 

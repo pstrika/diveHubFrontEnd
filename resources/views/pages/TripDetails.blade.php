@@ -3,6 +3,90 @@
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+
+    <style>
+            /* ------ Default Style ---------- */
+            .gauge-container {
+            width: 150px;
+            height: 70px;
+            display: block;
+            float: center;
+            padding: 10px;
+            /*background-color: #222;*/
+            margin: 7px;
+            border-radius: 3px;
+            position: relative;
+            }
+            .gauge-container > .label {
+            position: absolute;
+            right: 0;
+            top: 0;
+            display: inline-block;
+            background: rgba(0,0,0,0.5);
+            font-family: monospace;
+            font-size: 0.8em;
+            padding: 5px 10px;
+            }
+            .gauge-container > .gauge .dial {
+            stroke: #334455;
+            stroke-width: 2;
+            fill: rgba(0,0,0,0);
+            }
+            .gauge-container > .gauge .value {
+            stroke: rgb(47, 227, 255);
+            stroke-width: 2;
+            fill: rgba(0,0,0,0);
+            }
+            .gauge-container > .gauge .value-text {
+            fill: rgb(47, 227, 255);
+            font-family: sans-serif;
+            font-weight: bold;
+            font-size: 0.8em;
+            }
+            /* ------- Alternate Style ------- */
+            .wrapper {
+            height: 100px;
+            float: left;
+            margin: 7px;
+            overflow: hidden;
+            }
+            .wrapper > .gauge-container {
+            margin: 0;
+            }
+            .gauge-container.two {
+            }
+            .gauge-container.two > .gauge .dial {
+            stroke: #334455;
+            stroke-width: 10;
+            }
+            .gauge-container.two > .gauge .value {
+            stroke: orange;
+            stroke-dasharray: none;
+            stroke-width: 13;
+            }
+            .gauge-container.two > .gauge .value-text {
+            fill: #ccc;
+            font-weight: 100;
+            font-size: 1em;
+            }
+
+            /* ----- Alternate Style ----- */
+            .gauge-container.five > .gauge .dial {
+            stroke: #D3D3D3;
+            stroke-width: 15;
+            }
+            .gauge-container.five > .gauge .value {
+            stroke: #F8774B;
+            stroke-dasharray: 25 1;
+            stroke-width: 15;
+            }
+            .gauge-container.five > .gauge .value-text {
+            fill: transparent;
+            font-size: 0.7em;
+            }
+
+        </style>
+        
         <!-- Navbar -->
         <x-auth.navbars.navs.auth pageTitle="Dive Trips"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
@@ -40,32 +124,32 @@
                                     <table class="table align-items-center mb-0">
                                         
                                         <tbody>    
-                                            <tr> <td>
+                                            <tr> <td >
                                                 <table class="table align-items-center mb-0">
                                                 
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Departure time</td>
-                                                    <td class="align-middle text-left text-lg"><b>{{ $tripDetails->departureTime}}</b></td> </tr>
+                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Departure time</td>
+                                                    <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $tripDetails->departureTime}}</b></td> </tr>
 
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Check-in time</td>
-                                                    <td class="align-middle text-left text-lg"><b>{{ $tripDetails->checkInTime}}</b></td> </tr>
+                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Check-in time</td>
+                                                    <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $tripDetails->checkInTime}}</b></td> </tr>
                                                     
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Availability</td>
+                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Availability</td>
                                                     @if( $tripDetails->tripFreeSpots > 0 and $tripDetails->tripFreeSpots != 1000 and count($boats) == 1 and $boats != null)
-                                                        <td class="align-middle text-left text-lg"><b>{{ $tripDetails->tripFreeSpots }} / {{ $boats[0]->capacity }}</b></td> </tr>
+                                                        <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $tripDetails->tripFreeSpots }} / {{ $boats[0]->capacity }}</b></td> </tr>
                                                     @else
-                                                        <td class="align-middle text-left text-lg"><b>{{ $tripDetails->tripFreeSpots == 1000 ? "Yes" : $tripDetails->tripFreeSpots }}</b></td> </tr>
+                                                        <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $tripDetails->tripFreeSpots == 1000 ? "Yes" : $tripDetails->tripFreeSpots }}</b></td> </tr>
                                                     @endif
 
 
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Price ($)</td>
-                                                    <td class="align-middle text-left text-lg"><b>{{ $tripDetails->tripPrice}} USD</b></td> </tr>
+                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Price ($)</td>
+                                                    <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $tripDetails->tripPrice}} USD</b></td> </tr>
 
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Trip type</td>
-                                                    <td class="align-middle text-left text-lg"><b>{{ $tripDetails->tripType}}</b></td> </tr>
+                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Trip type</td>
+                                                    <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $tripDetails->tripType}}</b></td> </tr>
 
                                                 </table>
                                                 @if($tripDetails->linkToBook)
-                                                    <tr><td class="text-center"><a type="button" href="{{ $tripDetails->linkToBook }}" class="btn btn-info">book this trip</a>
+                                                    <tr><td style="border: none;" class="text-center"><a type="button" href="{{ $tripDetails->linkToBook }}" class="btn btn-info">book this trip</a>
                                                 @endif
                                             </td></tr>
                                             
@@ -93,36 +177,64 @@
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table class="table align-items-center mb-0">
-                                        
                                         <tbody>    
-                                            <tr> <td>
+                                            <tr> <td style="border: none;">
                                                 <table class="table align-items-center mb-0">
                                                 
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Departure time</td>
-                                                    <td class="align-middle text-left text-lg"><b>{{ $tripDetails->departureTime}}</b></td> </tr>
-
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Check-in time</td>
-                                                    <td class="align-middle text-left text-lg"><b>{{ $tripDetails->checkInTime}}</b></td> </tr>
-                                                    
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Availability</td>
-                                                    <td class="align-middle text-left text-lg"><b>{{ $tripDetails->tripFreeSpots == 1000 ? "Yes" : $tripDetails->tripFreeSpots }}</b></td> </tr>
-
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Price ($)</td>
-                                                    <td class="align-middle text-left text-lg"><b>{{ $tripDetails->tripPrice}} USD</b></td> </tr>
-
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Trip type</td>
-                                                    <td class="align-middle text-left text-lg"><b>{{ $tripDetails->tripType}}</b></td> </tr>
-
+                                                    <tr><td style="border-bottom: 1px solid #D3D3D3;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">As advertised</td>
+                                                    <td style="border-bottom: 1px solid #D3D3D3;" class="align-middle text-left text-sm text-wrap"><b>"{{ $tripDetails->tripName}}"</b></td> </tr>
                                                 </table>
-                                                @if($tripDetails->linkToBook)
-                                                    <tr><td class="text-center"><a type="button" href="{{ $tripDetails->linkToBook }}" class="btn btn-info">book this trip</a>
+                                                @if(count($sites))
+                                                    {{--name and type--}}
+                                                    <tr style="border-top: none;"><td class="text-uppercase text-secondary text-xl font-weight-bolder opacity-7 text-center" style="border: none;"><a href="{{ route("SiteDetails") }}/{{ $sites[0]->id }}"><b>{{ $sites[0]->name}}</b></a></td> </tr>
+                                                    <tr><td style="border: none;"><p class="mt-n3 text-secondary align-top text-center text-xs font-weight-bolder opacity-7">{{ $sites[0]->type }}</p></td>
+                                                    
+                                                    {{--gauge and minimum cert--}}
+                                                    <table class="table align-items-center mb-0" >
+                                                        <tbody>
+                                                        <tr><td class="row justify-content-center mx-auto mt-n4">
+                                                            <div id="gauge2" class="gauge-container five"> </div>
+                                                            @php
+                                                                if($sites[0]->level == 0)
+                                                                    $level="Open Water";
+                                                                elseif($sites[0]->level == 1)
+                                                                    $level="Advanced Open Water";
+                                                                elseif($sites[0]->level == 2)
+                                                                    $level="Technical Air";
+                                                                elseif($sites[0]->level == 3)
+                                                                    $level="Technical Normoxic Trimix";
+                                                                elseif($sites[0]->level == 4)
+                                                                    $level="Technical Hypoxic Trimix";
+                                                                
+                                                            @endphp
+                                                            <div class="align-middle text-center text-md"><b>{{ $level }}</b></div>
+                                                            <div class="align-middle text-center text-xs">Minimum Recommended Certification</div>
+                                                    </td></tr>
+                                                        </tbody>
+
+                                                    </table>
+
+                                                    {{--max depth and location--}}
+                                                    <table class="table align-items-center mb-0">
+
+                                                        <tr><td style="border: none;" class="w-50 text-secondary text-end text-lg font-weight-bolder opacity-7">Max Depth</td>
+                                                        <td style="border: none;" class="align-middle text-left text-sm text-wrap"><b>{{ $sites[0]->maxDepth}} ft</b></td> </tr>
+
+                                                        <tr><td style="border: none;" class="w-50 text-secondary text-end text-lg font-weight-bolder opacity-7">Location</td>
+                                                        <td style="border: none;" class="align-middle text-left text-sm text-wrap"><b>{{ $sites[0]->location}}</b></td> </tr>
+
+                                                        
+
+                                                        
+
+
+                                                    </table>
+
+                                                    {{--picture--}}
+                                                    <tr><td><div class="page-header min-height-250 max-height-250 border-radius-xl mt-0 mx-0" style="background-image: url('{{ asset('assets') }}/img/sites/{{ $sitePhoto->file}}');"></div></td></tr>
+                                                    <tr><td style="border: none;" class="align-middle"><p class="text-center text-sm text-wrap"> {{ $sitePhoto->desc}}</p></td> </tr>
                                                 @endif
                                             </td></tr>
-                                            
-                                            
-                                            
-                                        
-                                        
                                         </tbody>    
                                     </table>
 
@@ -154,30 +266,30 @@
                                         <tr> <td>
                                             <table class="table align-items-center mb-0">
                                             
-                                                <tr class="align-top"><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Address</td>
-                                                <td class="align-middle text-left text-wrap text-sm"><b>{{ $operator->streetAddress}}<br>{{ $operator->cityAddress}}, {{ $operator->stateAddress}} {{ $operator->zipAddress}} </b></td> </tr>
+                                                <tr class="align-top" ><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7" >Address</td>
+                                                <td style="border: none;" class="align-middle text-left text-wrap text-sm"><b>{{ $operator->streetAddress}}<br>{{ $operator->cityAddress}}, {{ $operator->stateAddress}} {{ $operator->zipAddress}} </b></td> </tr>
 
-                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Phone</td>
-                                                <td class="align-middle text-left text-sm"><b>{{ $operator->phone}}</b></td> </tr>
+                                                <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Phone</td>
+                                                <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $operator->phone}}</b></td> </tr>
                                                 
                                                 @if($operator->email)
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">email</td>
-                                                    <td class="align-middle text-left text-sm"><b><a href="mailto:{{ $operator->email}}">{{ $operator->email}}</a></b></td> </tr>
+                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">email</td>
+                                                    <td style="border: none;" class="align-middle text-left text-sm"><b><a href="mailto:{{ $operator->email}}">{{ $operator->email}}</a></b></td> </tr>
                                                 @endif
 
                                                 @if($operator->marinaAddress)
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Marina address</td>
-                                                    <td class="align-middle text-wrap text-sm"><b>{{ $operator->marinaAddress}}</b></td> </tr>
+                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Marina address</td>
+                                                    <td style="border: none;" class="align-middle text-wrap text-sm"><b>{{ $operator->marinaAddress}}</b></td> </tr>
                                                 @endif
                                                 
                                                 @if($operator->webSite)
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Website</td>
-                                                    <td class="align-middle text-left text-sm"><b><a href="{{ $operator->webSite}}">here</a></b></td> </tr>
+                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Website</td>
+                                                    <td style="border: none;" class="align-middle text-left text-sm"><b><a href="{{ $operator->webSite}}">here</a></b></td> </tr>
                                                 @endif
 
                                                 @if($operator->waiverLink)
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Online waiver</td>
-                                                    <td class="align-middle text-left text-sm"><b><a href="{{ $operator->waiverLink}}">here</a></b></td> </tr>
+                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Online waiver</td>
+                                                    <td style="border: none;" class="align-middle text-left text-sm"><b><a href="{{ $operator->waiverLink}}">here</a></b></td> </tr>
                                                 @endif
 
                                             </table>
@@ -307,6 +419,35 @@
     <x-plugins></x-plugins>
     
     @push('js')
+    <script src="{{ asset('assets') }}/js/plugins/gauge.js"></script>
+    
+    @if(count($sites))
+    <script>
+        var gauge2 = Gauge(
+            document.getElementById("gauge2"), {
+                min: 0,
+                max: 10,
+                dialStartAngle: 180,
+                dialEndAngle: 0,
+                value: -1,
+                color: function(value) {
+                    if(value < 1) {
+                    return "#ccdfe5";
+                    }else if(value < 3) {
+                    return "#aedced";
+                    }else if(value < 5) {
+                    return "#88d0ea";
+                    }else if(value < 7) {
+                    return "#43c3ef";
+                    }else {
+                    return "#03a9f4";
+                    }
+                }
+            }
+        );
+        gauge2.setValueAnimated({{ $sites[0]->level * 2 + 2}}, 2);
 
+    </script>
+    @endif
     @endpush
 </x-page-template>

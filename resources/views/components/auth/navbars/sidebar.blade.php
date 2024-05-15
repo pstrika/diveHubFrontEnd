@@ -7,7 +7,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('dashboard') }}">
             <img src="{{ asset('assets') }}/img/logo-ct.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.1.1</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.2.0</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -53,8 +53,8 @@
             <hr class="horizontal light mt-0">
 
 
-            <li class="nav-item">
-                <a class="nav-link text-white {{ $activeItem == 'analytics' ? ' active' : '' }}  "
+            <li class="nav-item {{ $activePage == 'trips' ? ' active ' : '' }}">
+                <a class="nav-link text-white {{ $activeItem == 'trips' ? ' active' : '' }}  "
                     href="{{ route('Trips') }}">
                     <i class="material-icons-round opacity-10">calendar_today</i>
                     <span class="nav-link-text ms-2 ps-1">Today Trips</span>
@@ -62,7 +62,7 @@
             </li>
             
             <li class="nav-item">
-                <a class="nav-link text-white {{ $activeItem == 'analytics' ? ' active' : '' }}  "
+                <a class="nav-link text-white {{ $activeItem == 'weather' ? ' active' : '' }}  "
                     href="{{ route('Weather') }}">
                     <i class="material-icons-round opacity-10">cloud</i>
                     <span class="nav-link-text ms-2 ps-1">Weather</span>
@@ -71,22 +71,22 @@
 
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#calendars"
-                    class="nav-link text-white {{ $activePage == 'calendars' ? ' active ' : '' }} "
+                    class="nav-link text-white {{ $activePage == 'Calendars' ? ' active ' : '' }} "
                     aria-controls="dashboardsExamples" role="button" aria-expanded="false">
                     <i class="material-icons-round opacity-10">calendar_month</i>
                     <span class="nav-link-text ms-2 ps-1">Calendars</span>
                 </a>
-                <div class="collapse {{ $activePage == 'calendars' ? ' show ' : '' }}  " id="calendars">
+                <div class="collapse {{ $activePage == 'Calendars' ? ' show ' : '' }}  " id="calendars">
                     <ul class="nav ">
-                        <li class="nav-item {{ $activeItem == 'calendarRec' ? ' active ' : '' }}  ">
-                            <a class="nav-link text-white {{ $activeItem == 'calendarRec' ? ' active' : '' }}  "
+                        <li class="nav-item {{ $activeItem == 'CalendarRec' ? ' active ' : '' }}  ">
+                            <a class="nav-link text-white {{ $activeItem == 'CalendarRec' ? ' active' : '' }}  "
                                 href="{{ route('CalendarT') }}/rec">
                                 <span class="sidenav-mini-icon"> R </span>
                                 <span class="sidenav-normal  ms-2  ps-1"> Recreational </span>
                             </a>
                         </li>
-                        <li class="nav-item {{ $activeItem == 'calendarTec' ? ' active ' : '' }}  ">
-                            <a class="nav-link text-white {{ $activeItem == 'calendarTec' ? ' active' : '' }}  "
+                        <li class="nav-item {{ $activeItem == 'CalendarTec' ? ' active ' : '' }}  ">
+                            <a class="nav-link text-white {{ $activeItem == 'CalendarTec' ? ' active' : '' }}  "
                                 href="{{ route('CalendarT') }}/tec">
                                 <span class="sidenav-mini-icon"> T </span>
                                 <span class="sidenav-normal  ms-2  ps-1"> Technical </span>
@@ -97,7 +97,7 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link text-white {{ $activeItem == 'analytics' ? ' active' : '' }}  "
+                <a class="nav-link text-white {{ $activeItem == 'diveOperators' ? ' active' : '' }}  "
                     href="{{ route('Operators') }}">
                     <i class="material-icons-round opacity-10">directions_boat</i>
                     <span class="nav-link-text ms-2 ps-1">Dive Operators</span>
@@ -114,7 +114,7 @@
 
             @can('manage-items', App\Models\User::class)
             <li class="nav-item">
-                <a class="nav-link text-white {{ $activeItem == 'analytics' ? ' active' : '' }}  "
+                <a class="nav-link text-white {{ $activeItem == 'platformHealth' ? ' active' : '' }}  "
                     href="{{ route('PlatformHealth') }}">
                     <i class="material-icons-round opacity-10">health_and_safety</i>
                     <span class="nav-link-text ms-2 ps-1">Platform Health</span>
@@ -141,9 +141,9 @@
                         </li>
                         <li class="nav-item {{ $activeItem == 'siteAdminEdit' ? ' active ' : '' }}  ">
                             <a class="nav-link text-white {{ $activeItem == 'siteAdminEdit' ? ' active' : '' }}  "
-                                href="{{ route('CalendarT') }}/tec">
+                                href="{{ route('DiveSitesAdmin') }}">
                                 <i class="material-icons-round opacity-10">edit_location_alt</i>
-                                <span class="sidenav-normal  ms-2  ps-1"> Edit Location </span>
+                                <span class="sidenav-normal  ms-2  ps-1"> Edit Site </span>
                             </a>
                         </li>
                     </ul>

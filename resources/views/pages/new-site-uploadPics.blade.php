@@ -47,7 +47,7 @@
                             <i class="material-icons h1 text-secondary">
                                 task_alt
                             </i>
-                            <h4 class="text-gradient text-info mt-4">{{ session('status') }}</h4>
+                            <h4 class="text-gradient text-info mt-4">{{ $status }}</h4>
                             <p>Press anywhere outside this dialog to continue</p>
                             </div>
                         </div>
@@ -169,6 +169,16 @@
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     <script src="{{ asset('assets') }}/js/plugins/dropzone.min.js"></script>
 
+     {{---Show modal----}}
+     @if($status)
+    <script>
+        $(document).ready(function() {
+            $('#modal-notification').modal('show'); // Show the modal
+        });
+    </script>
+    @endif
+
+
  
     <script>
         function submitform() {
@@ -198,14 +208,7 @@
 
     
 
-    {{---Show modal----}}
-    @if(session('status'))
-    <script>
-        $(document).ready(function() {
-            $('#modal-notification').modal('show'); // Show the modal
-        });
-    </script>
-    @endif
+   
 
     <script>
         Dropzone.autoDiscovery = false;

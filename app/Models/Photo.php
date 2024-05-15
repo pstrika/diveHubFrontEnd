@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class Photo extends Model
 {
@@ -21,4 +23,9 @@ class Photo extends Model
         'credit',
         'siteId',
     ];
+
+    public function deletePhoto() {
+        Storage::disk('siteAssets')->delete('img/sites/' . $this->file);
+        $this->delete();
+    }
 }
