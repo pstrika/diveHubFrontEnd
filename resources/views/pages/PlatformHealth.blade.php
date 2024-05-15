@@ -62,6 +62,9 @@
                                     <th class="text-center align-top">
                                         Error Code
                                     </th>
+                                    <th class="text-center align-top">
+                                        Version
+                                    </th>
                                 </thead>
 
                                     <tbody>
@@ -95,6 +98,7 @@
                                                 <td class="">{{ $operator->_lastUpdate }}</td>
                                                 <td class="text-center">{{ $operator->_updatedCount }}</td>
                                                 <td class="text-center">{{ $operator->_status }}</td>
+                                                <td class="text-center">{{ $operator->_ver }}</td>
                                             </tr>
 
                                         @endforeach

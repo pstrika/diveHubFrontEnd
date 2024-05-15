@@ -183,7 +183,12 @@
                                                 
                                                     <tr><td style="border-bottom: 1px solid #D3D3D3;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">As advertised</td>
                                                     <td style="border-bottom: 1px solid #D3D3D3;" class="align-middle text-left text-sm text-wrap"><b>"{{ $tripDetails->tripName}}"</b></td> </tr>
+                                                    
+                                                    
                                                 </table>
+                                                @if( $tripDetails->siteIdStatus == "suggested")
+                                                    <tr><td height="20" style="border: none;"><p class="mt-0 text-danger align-middle text-center text-xs font-weight-bolder opacity-7">Sites are not confirmed, but this operator often visits...</p></td>    
+                                                @endif
                                                 @if(count($sites))
                                                     {{--name and type--}}
                                                     <tr style="border-top: none;"><td class="text-uppercase text-secondary text-xl font-weight-bolder opacity-7 text-center" style="border: none;"><a href="{{ route("SiteDetails") }}/{{ $sites[0]->id }}"><b>{{ $sites[0]->name}}</b></a></td> </tr>
