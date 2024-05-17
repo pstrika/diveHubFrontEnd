@@ -449,8 +449,22 @@
                             </div>
                         </div>
                         <div class="card-body mt-4">
-                            <div id="history" style="max-height: 424px; overflow-y: auto;">
+                            <div class="row">
+                                @if(!empty($site->historicImg))
+                                    <div class="col-md-4">
+                                        <div class="d-flex align-items-center justify-content-center mt-3">
+                                            <img src="{{ asset('assets') }}/img/sites/{{ $site->historicImg }}" class="img-fluid border-radius-xl shadow">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                @else
+                                    <div class="col-md-12">
+                                @endif
+                                    <div id="history" style="flex-grow: 1; max-height: 424px; overflow-y: auto;" class="mt-2"></div>
+                                </div>                            
                             </div>
+                            
+                            
                         </div>
                     </div>
                 </div>
