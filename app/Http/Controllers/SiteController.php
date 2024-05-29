@@ -45,7 +45,7 @@ class SiteController extends Controller
         return redirect()->back()->withStatus("Site \"" . $siteName . " \"successfully deleted");
     }
     public function showAll() {
-        $sites = Site::all();
+        $sites = Site::all()->sortby("name");
         $locations = WeatherLocation::all();
 
         return view('pages.DiveSites', compact('sites', 'locations'));
