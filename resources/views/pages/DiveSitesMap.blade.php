@@ -1,10 +1,10 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
-    <x-auth.navbars.sidebar activePage="DiveSites" activeItem="DiveSitesTopRated" activeSubitem=""></x-auth.navbars.sidebar>
+    <x-auth.navbars.sidebar activePage="DiveSites" activeItem="DiveSitesMap" activeSubitem=""></x-auth.navbars.sidebar>
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Dive Sites"></x-auth.navbars.navs.auth>
+        <x-auth.navbars.navs.auth pageTitle="Dive Sites Map"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
 
         <style>
@@ -57,7 +57,7 @@
                 
                     <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
                         <div style="float: left;">
-                            <h2 class="card-title text-info mx-3 mt-0">Top Rated Dive Sites</h2>
+                            <h2 class="card-title text-info mx-3 mt-0">Dive Sites Map</h2>
                         </div>
 
                     </div>
@@ -66,63 +66,14 @@
 
             <div class="row">
                 
-                {{--<div class="col-md-6">    
+                <div class="col-md-12">    
                     <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
                         <div class="border-radius-xl">
-                            <div id="map" style="width: 100%; height: 400px; border-radius: 1rem; background-color: #f0f0f0; padding: 1rem;"></div>
-                        </div>
-                    </div>
-                </div>--}}
-                {{-- Dive Operator location are cards --}}
-                <div class="col-md-12 m-auto">             
-                    <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h3 class="card-title text-white mx-4"> All Sites</h3>
-                            </div>
-                        </div>
-
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table>
-                                    <tbody>
-                                        @foreach($sites as $site)    
-                                            <tr style="border-bottom: 1px solid #D3D3D3;">
-                                                <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
-                                                <td class="w-40 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
-                                                @foreach($locations as $location)
-                                                    @if($location->short == $site->location)
-                                                        <td class="w-20 align-middle text-left text-md"><b>{{ $location->location }}</b></td> 
-                                                    @endif
-                                                @endforeach
-                                                
-
-                                                <?php 
-                                                    if($site->level == 0)
-                                                        $level="Open Water";
-                                                    elseif($site->level == 1)
-                                                        $level="Advanced Open Water";
-                                                    elseif($site->level == 2)
-                                                        $level="Technical Air";
-                                                    elseif($site->level == 3)
-                                                        $level="Technical Normoxic Trimix";
-                                                    elseif($site->level == 4)
-                                                        $level="Technical Hypoxic Trimix";    
-                                                ?>
-                                                <td class="w-25 align-middle text-left text-md"><b>{{ $level}}</b></td> 
-                                        
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                    
-                                </table>
-                            </div>    
+                            <div id="map" style="width: 100%; height: 600px; border-radius: 1rem; background-color: #f0f0f0; padding: 1rem;"></div>
                         </div>
                     </div>
                 </div>
-
                 
-                {{-----------------------------}}
             
                     
             </div>

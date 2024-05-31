@@ -7,7 +7,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('dashboard') }}">
             <img src="{{ asset('assets') }}/img/logo-ct.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.3.0 (5/29/24)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.3.1 (5/30/24)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -104,12 +104,41 @@
                 </a>
             </li>
 
+
             <li class="nav-item">
-                <a class="nav-link text-white {{ $activeItem == 'DiveSites' ? ' active' : '' }}  "
-                    href="{{ route('DiveSites') }}">
+                <a data-bs-toggle="collapse" href="#sites"
+                    class="nav-link text-white {{ $activePage == 'DiveSites' ? ' active ' : '' }} "
+                    aria-controls="dashboardsExamples" role="button" aria-expanded="false">
                     <i class="material-icons-round opacity-10">location_on</i>
                     <span class="nav-link-text ms-2 ps-1">Dive Sites</span>
                 </a>
+                <div class="collapse {{ $activePage == 'DiveSites' ? ' show ' : '' }}  " id="sites">
+                    <ul class="nav ">
+                    <li class="nav-item {{ $activeItem == 'DiveSitesTopRated' ? ' active ' : '' }}  ">
+                            <a class="nav-link text-white {{ $activeItem == 'DiveSitesTopRated' ? ' active' : '' }}  "
+                                href="{{ route('DiveSites') }}">
+                                <i class="material-icons-round opacity-10">star</i>
+                                <span class="sidenav-normal  ms-2  ps-1"> Top Rated Sites</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item {{ $activeItem == 'DiveSitesMap' ? ' active ' : '' }}  ">
+                            <a class="nav-link text-white {{ $activeItem == 'DiveSitesMap' ? ' active' : '' }}  "
+                                href="{{ route('DiveSitesMap') }}">
+                                <i class="material-icons-round opacity-10">map</i>
+                                <span class="sidenav-normal  ms-2  ps-1"> Sites Map </span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item {{ $activeItem == 'DiveSitesSearch' ? ' active ' : '' }}  ">
+                            <a class="nav-link text-white {{ $activeItem == 'DiveSitesSearch' ? ' active' : '' }}  "
+                                href="/DiveSitesSearch">
+                                <i class="material-icons-round opacity-10">search</i>
+                                <span class="sidenav-normal  ms-2  ps-1"> Search Sites...</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
 
             @can('manage-items', App\Models\User::class)

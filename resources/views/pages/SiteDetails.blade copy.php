@@ -85,15 +85,6 @@
             }
 
         </style>
-
-    <style>
-        iframe {
-            aspect-ratio: 16 / 9; /* Set the desired aspect ratio (16:9 for YouTube) */
-            height: auto; /* Let the height adjust automatically */
-            width: 100%; /* Fill the available width */
-        }
-    </style>
-
         <!-- Navbar -->
         <x-auth.navbars.navs.auth pageTitle="Dive Sites"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
@@ -123,7 +114,7 @@
                 
                 
                 {{-- Card Details --}}
-                <div class="col-md-12">             
+                <div class="col-md-4">             
                     <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
@@ -133,137 +124,89 @@
                         </div>
                         <div class="card-body">
                             
-                            <div class="row">
-                                <div class="col-md-2">
-                                    <div id="gauge2" class="gauge-container justify-content-center mx-auto five"> </div>
-                                    @php
-                                        if($site->level == 0)
-                                            $level="Open Water";
-                                        elseif($site->level == 1)
-                                            $level="Advanced Open Water";
-                                        elseif($site->level == 2)
-                                            $level="Technical Air";
-                                        elseif($site->level == 3)
-                                            $level="Technical Normoxic Trimix";
-                                        elseif($site->level == 4)
-                                            $level="Technical Hypoxic Trimix";
+                            
+                            <div class="table-responsive">
+                                
+                                <table class="table align-items-center mb-0"> 
+                                    <tbody>
+
+                                        <tr><td class="row justify-content-center mx-auto">
+                                                <div id="gauge2" class="gauge-container five"> </div>
+                                                @php
+                                                    if($site->level == 0)
+                                                        $level="Open Water";
+                                                    elseif($site->level == 1)
+                                                        $level="Advanced Open Water";
+                                                    elseif($site->level == 2)
+                                                        $level="Technical Air";
+                                                    elseif($site->level == 3)
+                                                        $level="Technical Normoxic Trimix";
+                                                    elseif($site->level == 4)
+                                                        $level="Technical Hypoxic Trimix";
+                                                    
+                                                @endphp
+                                                <div class="align-middle text-center text-md"><b>{{ $level }}</b></div>
+                                                <div class="align-middle text-center text-xxs">Minimum Recommended Certification</div>
+                                        </td></tr>
+
+                                        <tr> <td>
+                                            <table class="table align-items-center mb-0">
+
+                                                
+
+                                                @if($site->maxDepth)
+                                                    <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">Max Depth</td>
+                                                    <td class="align-middle text-left text-md"><b>{{ $site->maxDepth}} ft</b></td> </tr>
+                                                @endif
+
+                                                @if($site->avgDepth)
+                                                    <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">Average Depth</td>
+                                                    <td class="align-middle text-left text-md w-50"><b>{{ $site->avgDepth}} ft</a></b></td> </tr>
+                                                @endif
+
+                                                @if($site->access)
+                                                    <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">Access</td>
+                                                    <td class="align-middle text-left text-md w-50"><b>{{ $site->access}}</b></td> </tr>
+                                                @endif
+
+                                                @if($site->externalLink)
+                                                    <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">External Link</td>
+                                                    <td class="align-middle text-left text-md w-50"><b><a href="{{ $site->externalLink}}">here</a></b></td> </tr>
+                                                @endif
+
+                                                <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">GPS coordinates</td>
+                                                <td class="align-middle text-left text-md w-50 text-wrap"><b>{{ $site->gpsLat}} , {{ $site->gpsLon}}</b></td> </tr>
+
+                                                <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">Location</td>
+                                                <td class="align-middle text-left text-md w-50"><b>{{ $location->location }}</b></td> </tr>
+                                                
+                                            </table>
+
+                                            
+
+                                            
+                                        </td></td>
                                         
-                                    @endphp
-                                    <div class="align-middle text-center text-md"><b>{{ $level }}</b></div>
-                                    <div class="align-middle text-center text-xxs">Minimum Recommended Certification</div>    
-                                </div>
-
-                                <div class="col-md-3">
-                                    <div class="table-responsive">                                   
-                                        <table class="table align-items-center mb-0"> 
-                                            <tbody>
-                                                <tr> <td>
-                                                    <table class="table align-items-center mb-0">
-                                                        @if($site->maxDepth)
-                                                            <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">Max Depth</td>
-                                                            <td class="align-middle text-left text-md"><b>{{ $site->maxDepth}} ft</b></td> </tr>
-                                                        @endif
-
-                                                        @if($site->avgDepth)
-                                                            <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">Average Depth</td>
-                                                            <td class="align-middle text-left text-md w-50"><b>{{ $site->avgDepth}} ft</a></b></td> </tr>
-                                                        @endif
-
-                                                        @if($site->access)
-                                                            <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">Access</td>
-                                                            <td class="align-middle text-left text-md w-50 text-wrap"><b>{{ $site->access}}</b></td> </tr>
-                                                        @endif
-
-                                                        
-                                                        
-                                                    </table>
-                                            </td></td>
-                                            
-                                            
-                                                    
-                                        </tbody>
-                                    </table>
-                                </div>  
-                                </div>
-
-                                <div class="col-md-3">
-                                    <div class="table-responsive">                                   
-                                        <table class="table align-items-center mb-0"> 
-                                            <tbody>
-                                                <tr> <td>
-                                                    <table class="table align-items-center mb-0">
-                                                        <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">GPS coordinates</td>
-                                                        <td class="align-middle text-left text-md w-50 text-wrap"><b>{{ $site->gpsLat}},<br>{{ $site->gpsLon}}</b></td> </tr>
-
-                                                        <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">Location</td>
-                                                        <td class="align-middle text-left text-md w-50"><b>{{ $location->location }}</b></td> </tr>
-                                                        
-                                                    </table>
-                                            </td></td>
-                                            
-                                            
-                                                    
-                                        </tbody>
-                                    </table>
-                                </div>  
-                                </div>
-
-                                <div class="col-md-4">
-                                    <div class="table-responsive">    
-                                        <table class="table align-items-center mb-0"> 
-                                            <tbody>
-                                                @foreach($operators as $operator)
-                                                    <tr>
-                                                        <td class="w-20"><img src="{{ asset('assets') }}{{ $operator->logoUrl}}" alt="img-blur-shadow" class="img-fluid"></td>
-                                                        <td class="text-wrap"><a href="/OperatorDetails/{{ $operator->id }}"> {{ $operator->operatorName }}</a></td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-
-                            </div>  
+                                        
+                                                   
+                                    </tbody>
+                                </table>
+                            </div>    
                             
                         </div>
                     </div>
                 </div>
-
-                {{-- Card video --}}
-                @php
-                    $video = json_decode($site->videos);    
-                @endphp
-
-                <div class="col-md-6">
-                    @if($video[0]->link)
-                        <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
-                            {{--<div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Video</h4>
-                                    <div class="table-responsive"></div>
-                                </div>
-                            </div>--}}
-                            <div class="card-body mt-0">
-                                <iframe id="youtubeVideo" class="img-fluid border-radius-lg" src="{{ $video[0]->link }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
-                                @if($video[0]->credit)
-                                    <p class="align-middle text-center text-sm"><b>🎥 {{ $video[0]->credit }}</b></p>
-                                @endif
-                                
-                            </div>
-                        </div>
-                    @endif
-                </div>
                 {{-----------------------------}}
 
                 {{-- Card pictures --}}
-                <div class="col-md-6">             
-                    <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
-                        {{--<div class="card-header p-0 mt-n4 mx-3">
+                <div class="col-md-4">             
+                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Pictures</h2>
+                                <h2 class="card-title text-white mx-4">Pictures</h4>
                                 <div class="table-responsive"></div>
                             </div>
-                        </div>--}}
+                        </div>
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table class="table align-items-center mb-0"> 
@@ -276,11 +219,11 @@
                                                 @endphp
                                                     
                                                 @foreach ($photos as $photo)    
-                                                    <div class="carousel-item {{ $first ? "active" : "" }}">
+                                                    <div class="carousel-item {{ ($first ? "active" : "") }}">
                                                         @php
                                                             $first = false;
                                                         @endphp
-                                                        <div class="page-header min-vh-50 border-radius-xl" style="background-image: url('{{ asset('assets') }}/img/sites/{{ $photo->file}}');">
+                                                        <div class="page-header min-vh-25 m-3 border-radius-xl" style="background-image: url('{{ asset('assets') }}/img/sites/{{ $photo->file}}');">
                                                         
                                                             <div class="container">
                                                                 
@@ -332,10 +275,58 @@
                 </div>
                 {{-----------------------------}}
                 
-                
+                @php
+                    $video = json_decode($site->videos);    
+                @endphp
 
                 
-            
+                
+                {{-- Card Video and Visiting operators--}}
+                <div class="col-md-4">            
+                    @if($video[0]->link)
+                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h2 class="card-title text-white mx-4">Video</h4>
+                                <div class="table-responsive"></div>
+                            </div>
+                        </div>
+                        <div class="card-body mt-4">
+                            <iframe id="youtubeVideo" class="img-fluid border-radius-lg" width="560" height="315" src="{{ $video[0]->link }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                            @if($video[0]->credit)
+                                <p class="align-middle text-center text-sm"><b>🎥 {{ $video[0]->credit }}</b></p>
+                            @endif
+                            
+                        </div>
+                    </div>
+                    @endif
+
+                    @if(count($operators))
+                    <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h2 class="card-title text-white mx-4">Visiting Operators</h4>
+                                <div class="table-responsive"></div>
+                            </div>
+                        </div>
+                        <div class="card-body mt-4">
+                            <div class="table-responsive">    
+                                <table class="table align-items-center mb-0"> 
+                                    <tbody>
+                                        @foreach($operators as $operator)
+                                            <tr>
+                                                <td class="w-20"><img src="{{ asset('assets') }}{{ $operator->logoUrl}}" alt="img-blur-shadow" class="img-fluid"></td>
+                                                <td class="text-wrap"><a href="/OperatorDetails/{{ $operator->id }}"> {{ $operator->operatorName }}</a></td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                </div>
                 
                 {{-----------------------------}}
                 
@@ -453,7 +444,7 @@
                     <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Wreck History</h2>
+                                <h2 class="card-title text-white mx-4">Wreck History</h4>
                                 <div class="table-responsive"></div>
                             </div>
                         </div>
@@ -472,6 +463,8 @@
                                     <div id="history" style="flex-grow: 1; max-height: 424px; overflow-y: auto;" class="mt-2"></div>
                                 </div>                            
                             </div>
+                            
+                            
                         </div>
                     </div>
                 </div>

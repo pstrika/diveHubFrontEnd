@@ -59,7 +59,10 @@ Route::post('new-site-updatePicsDesc', 'App\Http\Controllers\SiteController@upda
 Route::get('SiteDetails/{id}', 'App\Http\Controllers\SiteController@show')->middleware('auth')->name('SiteDetails');
 Route::get('SiteDetails', 'App\Http\Controllers\SiteController@show')->middleware('auth')->name('SiteDetails');
 
-Route::get('DiveSites', 'App\Http\Controllers\SiteController@showAll')->middleware('auth')->name('DiveSites');
+Route::get('DiveSites', 'App\Http\Controllers\SiteController@showTopRated')->middleware('auth')->name('DiveSites');
+Route::get('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites')->middleware('auth')->name('DiveSitesSearch');
+Route::post('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites')->middleware('auth')->name('DiveSitesSearch');
+Route::get('DiveSitesMap', 'App\Http\Controllers\SiteController@showAll')->middleware('auth')->name('DiveSitesMap');
 Route::get('DiveSitesAdmin', 'App\Http\Controllers\SiteController@showAllAdmin')->middleware('auth')->name('DiveSitesAdmin');
 Route::get('DeleteDiveSite/{id}', 'App\Http\Controllers\SiteController@delete')->middleware('auth')->name('DeleteDiveSite');
 

@@ -48,9 +48,42 @@ class SiteController extends Controller
         $sites = Site::all()->sortby("name");
         $locations = WeatherLocation::all();
 
+        return view('pages.DiveSitesMap', compact('sites', 'locations'));
+    }
+
+    public function showTopRated() {
+        $sites = Site::all()->sortby("name");
+        $locations = WeatherLocation::all();
+
         return view('pages.DiveSites', compact('sites', 'locations'));
     }
 
+    public function searchSites(Request $request) {
+
+        Log::info('Request data:', $request->all());
+
+        $locations = WeatherLocation::all();
+
+        if ($request->has('searchString')) {
+            Log::debug("Got searchString in request");
+            $searchString = $request->searchString;
+            $results = Site::select('id', 'name', 'type', 'level', 'location')
+                ->where('name', 'LIKE', "%$searchString%")
+                ->orWhere('aka', 'LIKE', "%$searchString%")
+                ->orWhere('desc', 'LIKE', "%$searchString%")
+                ->orWhere('wreckData', 'LIKE', "%$searchString%")
+                ->orWhere('history', 'LIKE', "%$searchString%")
+                ->get();
+            Log::info("Got " . str(count($results)) . " matches in the search");
+            
+            if(count($results))
+                return view('pages.DiveSitesSearch', compact('searchString', 'results', 'locations'))->withStatus("match");
+            else
+                return view('pages.DiveSitesSearch', compact('searchString', 'results'))->withStatus("no match");
+        }
+        else
+            return view('pages.DiveSitesSearch');
+    }
     public function showAllAdmin() {
         $sites = Site::all();
         $locations = WeatherLocation::all();
