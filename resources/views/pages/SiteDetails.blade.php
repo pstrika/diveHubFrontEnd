@@ -86,18 +86,70 @@
 
         </style>
 
-    <style>
-        iframe {
-            aspect-ratio: 16 / 9; /* Set the desired aspect ratio (16:9 for YouTube) */
-            height: auto; /* Let the height adjust automatically */
-            width: 100%; /* Fill the available width */
-        }
-    </style>
+        <style>
+            iframe {
+                aspect-ratio: 16 / 9; /* Set the desired aspect ratio (16:9 for YouTube) */
+                height: auto; /* Let the height adjust automatically */
+                width: 100%; /* Fill the available width */
+            }
+        </style>
 
         <!-- Navbar -->
         <x-auth.navbars.navs.auth pageTitle="Dive Sites"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
         <div class="container-fluid py-0">
+
+            <!-- Modal rating -->
+            <div class="modal fade" id="modalRating" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title font-weight-normal" id="exampleModalLabel">Rate site <b>{{ $site->name }}</b></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form id="myForm" class="multisteps-form__form m-auto" action="{{ route('RateSite') }}" method="POST" enctype="multipart/form-data">
+                        @csrf <!-- Add CSRF token for security -->
+                        <input type="hidden" name="siteId" value="{{ $site->id }}">
+                        <div class="modal-body m-auto">
+                            <input type="hidden" id="valueRate" name="rate">
+                            <div id="rateSite"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Close</button>
+                            <button class="btn bg-gradient-info ms-auto" id="submit-all" title="Send" onclick="submitform()">Submit</button> {{---type="submit"----}}
+                            
+                        </div>
+                    </form>
+                    </div>
+                </div>
+            </div>
+
+            <!--modal success rating-->
+            @if(session('msg'))
+            <div class="modal fade" id="modal-notification" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
+                <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header text-center">
+                            <h6 class="modal-title font-weight-normal" id="modal-title-notification">Notification</h6>
+                            {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
+                            <span aria-hidden="true">×</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="py-3 text-center">
+                            <i class="material-icons h1 text-secondary">
+                                task_alt
+                            </i>
+                            <h4 class="text-gradient text-info mt-4">{{ session('msg') }}</h4>
+                            <p>Press anywhere outside this dialog to continue</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
 
             <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('/assets/img/illustrations/site_wreck.jpeg');">
                 <span class="mask  bg-gradient-info  opacity-4"></span>
@@ -106,6 +158,8 @@
             <div class="card p-0 position-relative mt-n5 mx-3 z-index-2 mb-4">
                 
                     <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
+                        
+                        {{-- Div for site name and type--}}
                         <div style="float: left;">
                             <table> <tbody>
                                 <td class="w-10"><img src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
@@ -113,6 +167,40 @@
                                     <p class="align-middle text-left text-md text-info mx-3 mt-n2">{{ $site->type }} </p>
                                 </td> 
                             </tbody></table>
+                        </div>
+                        {{-- Div for star ratings--}}
+                        <div class="m-auto" style="float: right;">
+                            @php
+                                $productRating = $site->rate; // Replace with your actual product rating
+                            @endphp
+
+                            @foreach(range(1, 5) as $i)
+                                <span class="fa-stack" style="width: 1em; font-size: 2em;">
+                                    <i class="far fa-star fa-stack-1x"></i>
+                                    @if($productRating > 0)
+                                        @if($productRating > 0.5)
+                                            <i class="fas fa-star fa-stack-1x" style="color: gold;"></i>
+                                        @else
+                                            <i class="fas fa-star-half fa-stack-1x" style="color: gold; "></i>
+                                        @endif
+                                    @endif
+                                    @php $productRating--; @endphp
+                                </span>
+                            @endforeach
+                            <div class="mt-n3">
+                                <p class="align-middle text-left text-md text-info mt-n2"><b>{{ $site->votes }} ratings</b></p>
+                            </div>
+
+                            @if(!$ratedAlready)
+                            <div class="mt-n1">
+                                <p class="align-middle text-left text-xs text-decoration-underline text-info mt-0"><a href="#" data-bs-toggle="modal" data-bs-target="#modalRating"><b>rate this site</b></a></p>
+                            </div>
+                            @else
+                            <div class="mt-n1">
+                                <p class="align-middle text-left text-xs text-info mt-0"><b>You already rated this site</b></p>
+                            </div>
+                            @endif
+
                         </div>
 
                     </div>
@@ -208,8 +296,12 @@
                                 </div>  
                                 </div>
 
+                                @if(!empty($operators))
                                 <div class="col-md-4">
                                     <div class="table-responsive">    
+                                        <table class="table align-items-center mb-0"> 
+                                            <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Frequently visiting operators</td> </tr>
+                                        </table>
                                         <table class="table align-items-center mb-0"> 
                                             <tbody>
                                                 @foreach($operators as $operator)
@@ -222,6 +314,7 @@
                                         </table>
                                     </div>
                                 </div>
+                                @endif
 
                             </div>  
                             
@@ -499,6 +592,42 @@
     <script src="{{ asset('assets') }}/js/plugins/flatpickr.min.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/gauge.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/quill.min.js"></script>
+    <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.js"></script>
+
+    <script>
+        /* Javascript */
+        
+        //Make sure that the dom is ready
+       /* $(function () {
+            $("#rateSite").rateYo({
+            rating: 0
+            });
+        });*/
+
+        $(function () {
+            
+            $("#rateSite").rateYo({
+                precision : 0,
+                onSet: function (rating, rateYoInstance) {
+                    var rateInput = document.getElementById('valueRate');
+                    rateInput.value = rating;
+                    //alert("Rating is set to: " + rating);
+                }
+            });
+        });
+
+    </script>
+
+    {{---Show modal----}}
+    @if(session('msg'))
+    <script>
+        $(document).ready(function() {
+            $('#modal-notification').modal('show'); // Show the modal
+        });
+    </script>
+    @endif
 
     {{---Script to show the description---}}
     <script>

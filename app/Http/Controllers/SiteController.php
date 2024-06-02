@@ -8,6 +8,7 @@ use App\Models\Operator;
 use App\Models\WeatherLocation;
 use App\Models\Site;
 use App\Models\Photo;
+use App\Models\SiteRating;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
@@ -24,7 +25,9 @@ class SiteController extends Controller
         $ids = explode(',', $site->visitingOperators);
         $operators = Operator::whereIn('id', $ids)->get();
 
-        return view('pages.SiteDetails', compact('site','photos', 'location', 'operators'));
+        $ratedAlready = SiteRating::where('userId', auth()->id())->where('siteId', $id)->exists();
+
+        return view('pages.SiteDetails', compact('site','photos', 'location', 'operators', 'ratedAlready'));
 
     }
 

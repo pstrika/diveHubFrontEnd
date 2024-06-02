@@ -35,6 +35,7 @@ class Site extends Model
         'location',
         'gpsLat',
         'gpsLon',
+        'votes',
         // Other fields...
     ];
 }
