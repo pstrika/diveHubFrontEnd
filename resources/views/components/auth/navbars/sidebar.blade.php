@@ -7,7 +7,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('dashboard') }}">
             <img src="{{ asset('assets') }}/img/logo-ct.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.4.0 (6/1/24)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.4.1 (6/2/24)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -139,6 +139,14 @@
                         </li>
                     </ul>
                 </div>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link text-white {{ $activeItem == 'waivers' ? ' active' : '' }}  "
+                    href="{{ route('Waivers') }}">
+                    <i class="material-icons-round opacity-10">description</i>
+                    <span class="nav-link-text ms-2 ps-1">Online waivers</span>
+                </a>
             </li>
 
             @can('manage-items', App\Models\User::class)

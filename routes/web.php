@@ -41,6 +41,7 @@ Route::get('CalendarT/', 'App\Http\Controllers\CalendarTController@show')->middl
 Route::get('TripDetails/{tripId}', 'App\Http\Controllers\TripDetailsController@show')->middleware('auth')->name('TripDetails');
 
 Route::get('Operators/', 'App\Http\Controllers\OperatorController@show')->middleware('auth')->name('Operators');
+Route::get('Waivers', 'App\Http\Controllers\OperatorController@getWaivers')->middleware('auth')->name('Waivers');
 
 Route::get('OperatorDetails/{id}', 'App\Http\Controllers\OperatorController@show')->middleware('auth')->name('OperatorDetails');
 

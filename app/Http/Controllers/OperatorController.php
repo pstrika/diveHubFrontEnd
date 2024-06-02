@@ -28,6 +28,15 @@ class OperatorController extends Controller
 
     }
 
+    public function getWaivers() {
+        
+        
+        $operators = Operator::all();
+    
+        return view('pages.Waivers', compact('operators'));
+    
+        }
+
     public function showHealth() {
         $operators = Operator::all();
         return view('pages.PlatformHealth', compact('operators'));
