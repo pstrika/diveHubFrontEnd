@@ -13,6 +13,7 @@
     <hr class="horizontal light mt-0 mb-2">
     <div class="collapse navbar-collapse  w-auto h-auto" id="sidenav-collapse-main">
         <ul class="navbar-nav">
+            {{-- User --}}
             <li class="nav-item mb-2 mt-0">
                 <a data-bs-toggle="collapse" href="#ProfileNav" class="nav-link text-white" aria-controls="ProfileNav"
                     role="button" aria-expanded="false">
@@ -52,7 +53,7 @@
             </li>
             <hr class="horizontal light mt-0">
 
-
+            {{-- Trips today --}}
             <li class="nav-item {{ $activePage == 'trips' ? ' active ' : '' }}">
                 <a class="nav-link text-white {{ $activeItem == 'trips' ? ' active' : '' }}  "
                     href="{{ route('Trips') }}">
@@ -61,6 +62,7 @@
                 </a>
             </li>
             
+            {{-- Weather --}}
             <li class="nav-item">
                 <a class="nav-link text-white {{ $activeItem == 'weather' ? ' active' : '' }}  "
                     href="{{ route('Weather') }}">
@@ -69,6 +71,7 @@
                 </a>
             </li>
 
+            {{-- Calendars --}}
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#calendars"
                     class="nav-link text-white {{ $activePage == 'Calendars' ? ' active ' : '' }} "
@@ -96,6 +99,7 @@
                 </div>
             </li>
 
+            {{-- Operators --}}
             <li class="nav-item">
                 <a class="nav-link text-white {{ $activeItem == 'diveOperators' ? ' active' : '' }}  "
                     href="{{ route('Operators') }}">
@@ -104,7 +108,7 @@
                 </a>
             </li>
 
-
+            {{-- Dive Sites --}}
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#sites"
                     class="nav-link text-white {{ $activePage == 'DiveSites' ? ' active ' : '' }} "
@@ -141,6 +145,35 @@
                 </div>
             </li>
 
+            {{-- Calendars --}}
+            <li class="nav-item">
+                <a data-bs-toggle="collapse" href="#special"
+                    class="nav-link text-white {{ $activePage == 'Special' ? ' active ' : '' }} "
+                    aria-controls="dashboardsExamples" role="button" aria-expanded="false">
+                    <i class="material-icons-round opacity-10">stars</i>
+                    <span class="nav-link-text ms-2 ps-1">Special dives</span>
+                </a>
+                <div class="collapse {{ $activePage == 'Special' ? ' show ' : '' }}  " id="special">
+                    <ul class="nav ">
+                        <li class="nav-item {{ $activeItem == 'beachDiving' ? ' active ' : '' }}  ">
+                            <a class="nav-link text-white {{ $activeItem == 'beachDiving' ? ' active' : '' }}  "
+                                href="{{ route('CalendarT') }}/rec">
+                                <i class="material-icons-round opacity-10">beach_access</i>
+                                <span class="sidenav-normal  ms-2  ps-1">Beach Diving</span>
+                            </a>
+                        </li>
+                        <li class="nav-item {{ $activeItem == 'sharkDiving' ? ' active ' : '' }}  ">
+                            <a class="nav-link text-white {{ $activeItem == 'sharkDiving' ? ' active' : '' }}  "
+                                href="{{ route('CalendarT') }}/tec">
+                                <span class="sidenav-mini-icon"> S </span>
+                                <span class="sidenav-normal  ms-2  ps-1">Shark Diving</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            {{-- Online waivers --}}
             <li class="nav-item">
                 <a class="nav-link text-white {{ $activeItem == 'waivers' ? ' active' : '' }}  "
                     href="{{ route('Waivers') }}">
@@ -149,6 +182,7 @@
                 </a>
             </li>
 
+            {{-- Platform health --}}
             @can('manage-items', App\Models\User::class)
             <li class="nav-item">
                 <a class="nav-link text-white {{ $activeItem == 'platformHealth' ? ' active' : '' }}  "
@@ -159,6 +193,7 @@
             </li>
             @endcan
 
+            {{-- Dive sites Admins --}}
             @can('manage-items', App\Models\User::class)
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#siteAdmin"

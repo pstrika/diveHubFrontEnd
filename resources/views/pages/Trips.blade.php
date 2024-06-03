@@ -388,7 +388,7 @@
         altInput: true,
         altFormat: "F j, Y",
         dateFormat: "Y-m-d",
-        minDate: "today",
+        minDate: new Date(),
         
         maxDate: new Date().fp_incr(90),
         onChange: function(selectedDates, dateStr, instance) {

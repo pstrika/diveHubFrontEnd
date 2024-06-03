@@ -57,11 +57,11 @@
                                                     </div>
 
 
-                                                    <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
-                                                        <a class="d-block blur-shadow-image">
-                                                            <img src="{{ asset('assets') }}{{ $operator->logoUrl}}" alt="img-blur-shadow" class="img-fluid shadow border-radius-lg">
+                                                    <div class="card-header p-0 position-relative mt-n4 mx-auto z-index-2">
+                                                        <a href="OperatorDetails/{{ $operator->id }}" class= blur-shadow-image mx-auto">
+                                                            <img src="{{ asset('assets') }}{{ $operator->logoUrl}}" alt="img-blur-shadow" class="img-fluid shadow align-items-center border-radius-lg">
                                                         </a>
-                                                        <div class="colored-shadow" style="background-image: url(&quot;{{ asset('assets') }}/img/products/product-1-min.jpg&quot;);">
+                                                        {{--<div class="colored-shadow" style="background-image: url(&quot;{{ asset('assets') }}/img/products/product-1-min.jpg&quot;);">--}}
                                                         </div>
                                                     </div>
                                                     <div class="card-body text-center">
@@ -70,7 +70,7 @@
                                                             <button class="btn btn-link text-info me-auto border-0" data-bs-toggle="tooltip" data-bs-placement="bottom" title="" data-bs-original-title="Click-to-call">
                                                                 <i class="material-icons text-lg">phone</i>
                                                             </button>
-                                                            <p class="text-uppercase text-secondary text-xl font-weight-bolder opacity-7 text-center" style="border-bottom: 1px solid #D3D3D3;"> +1 {{ $operator->phone}}</p>
+                                                            <p class="text-uppercase text-secondary text-xl font-weight-bolder opacity-7 text-center" > +1 {{ $operator->phone}}</p>
                                                         </div>
                                                         <h5 class="font-weight-normal mt-3">
                                                             <a href="OperatorDetails/{{ $operator->id }}"> {{ $operator->operatorName }}</a>

@@ -30,10 +30,10 @@
             <div class="row m-auto">
                 @foreach($operators as $operator)
                     @if($operator->waiverLink)
-                        <div class="col-md-3 m-auto">
-                            <a href="{{ $operator->waiverLink }}" class="d-block blur-shadow-image">
-                                <img src="{{ asset('assets') }}{{ $operator->logoUrl}}" alt="img-blur-shadow" class="img-fluid border-radius-lg m-auto">
-                                <p class="align-middle text-center text-md text-info m-auto">{{ $operator->operatorName}}</p>
+                        <div class="col-md-3 mt-2">
+                            <a href="{{ $operator->waiverLink }}" class="d-block blur-shadow-image text-center">
+                                <img src="{{ asset('assets') }}{{ $operator->logoUrl}}" alt="img-blur-shadow" class="img-fluid border-radius-lg mx-auto">
+                                <p class="align-middle text-center text-md text-info m-auto"><b>{{ $operator->operatorName}}</b></p>
                             </a>
                         </div>
                     
