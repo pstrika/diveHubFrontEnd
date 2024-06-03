@@ -388,6 +388,7 @@
         altInput: true,
         altFormat: "F j, Y",
         dateFormat: "Y-m-d",
+        disableMobile: "true",
         minDate: new Date(),
         
         maxDate: new Date().fp_incr(90),
