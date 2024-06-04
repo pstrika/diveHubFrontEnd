@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Site extends Model
 {
@@ -38,4 +39,13 @@ class Site extends Model
         'votes',
         // Other fields...
     ];
+
+    public function trip(): BelongsTo
+    {
+        return $this->belongsTo(Trip::class, 'id', 'siteId')->withDefault([
+            'id' => 0,
+            'maxDepth' => '60',
+            'level' => 2,
+        ]);
+    }
 }

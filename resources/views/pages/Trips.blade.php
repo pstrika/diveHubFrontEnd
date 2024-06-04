@@ -29,38 +29,39 @@
             <div class="card p-0 position-relative mt-n7 mx-2 z-index-2 mb-4">
                 
                     <div class="p-0 mt-n4 mx-2 border-radius-lg py-3 pe-1">
-                    
-                        @php
-                            $date = new DateTime($trips[0]->date);
-                            $dateDayName = $date->format('l');
-                            $dateText = $date->format('F\-d, Y');
-                        @endphp
+                    @php
+                        $date = new DateTime($trips[0]->date);
+                        $dateDayName = $date->format('l');
+                        $dateText = $date->format('F\-d, Y');
+                    @endphp
+                        
                         
                         <div style="float: left;">
+                            
                             <h2 class="card-title text-info mx-3 mt-4">{{ $dateDayName }}</h2>
+                            
                             <h4 class="card-category text-info mx-3"> {{ $dateText }}</h4>
                         </div>
-
+                        <div id="spinner" style="float: center; display: none;" class="spinner-border text-info mt-4" role="status">
+                                <span class="sr-only">Loading...</span>
+                        </div>
+                        
                         {{-----------------NAV to next day}} --}}
                         <div class="mt-5" style="float: right;">
-                            <a type="button" href="/Trips/{{ $previousDay }}/" class="btn btn-info tex-end">
+                            <a type="button" class="btn btn-info tex-end" id="button1">
                                 <span class="material-icons" style="font-size :24pt;">keyboard_arrow_left</span>
                             </a>
-                            <a type="button" href="/Trips/" class="btn btn-info tex-end">
+                            <a type="button" class="btn btn-info tex-end" id="button2">
                                 <span class="material-icons" style="font-size :24pt;">calendar_today</span>
                             </a>
 
-                            
-                            <div type="button" class="btn btn-info tex-end">
-                                
+                            <div type="button" class="btn btn-info tex-end" id="button3">
                                 <input id="datePicker" placeholder=" Select date..." class="text-info opacity-0 z-index-5 position-absolute" style="width: 120%;">              
                                 <span class="material-icons z-index-1" style="font-size :24pt;">calendar_month</span>
                             </div>
-
-
-                            
-                            <a type="button" href="/Trips/{{ $nextDay }}/" class="btn btn-info tex-end">
-                                <span class="material-icons" style="font-size :24pt;">keyboard_arrow_right</span>
+ 
+                            <a type="button" class="btn btn-info tex-end" >
+                                <span class="material-icons" style="font-size :24pt;" id="button4">keyboard_arrow_right</span>
                             </a>
                         </div>
                         <div style="clear: both;"></div>
@@ -187,6 +188,9 @@
                                             <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">
                                                 Site / Trip Name<p class="text-xs mt-0 px-1">click for details</p>
                                             </th>
+                                            <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
+                                                Depth
+                                            </th>
                                         </thead>
                                         <tbody >
                                             @foreach($trips as $trip)
@@ -203,6 +207,9 @@
                                                             <td class="text-center"> <a href="{{ $trip->linkToBook }}" target="_blank">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</a></td>
                                                         @endif
                                                         <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}<a></td>
+                                                        @if(!empty($trip->site[0]))
+                                                            <td class="px-4 text-sm text-center">{{ $trip->site[0]->maxDepth }}</td>
+                                                        @endif
                                                     </tr>
                                                 @endif
                                             @endforeach          
@@ -332,6 +339,9 @@
                                             <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">
                                                 Site / Trip Name<p class="text-xs mt-0 px-1">click for details</p>
                                             </th>
+                                            <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
+                                                Depth
+                                            </th>
                                         </thead>
                                         <tbody>
                                             @foreach($trips as $trip)
@@ -348,6 +358,9 @@
                                                             <td class="text-center"> <a href="{{ $trip->linkToBook }}" target="_blank">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</a></td>
                                                         @endif
                                                         <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}</a></td>
+                                                        @if(!empty($trip->site[0]))
+                                                            <td class="px-4 text-sm text-center">{{ $trip->site[0]->maxDepth }}</td>
+                                                        @endif
                                                     </tr>
                                                 @endif
                                             @endforeach          
@@ -382,6 +395,12 @@
     <script src="{{ asset('assets') }}/js/plugins/flatpickr.min.js"></script>
 
     <script>
+        function showSpinner() {
+            document.getElementById("spinner").style.display = "inline-flex";
+        }
+    </script>
+
+    <script>
       
 
     flatpickr("#datePicker", {
@@ -393,13 +412,37 @@
         
         maxDate: new Date().fp_incr(90),
         onChange: function(selectedDates, dateStr, instance) {
+            showSpinner();
             window.location.href = `/Trips/${dateStr}`;
         }
     });
+    </script>
 
-    
+    <script>
+        
 
+        
 
+        const button1 = document.querySelector("#button1");
+        button1.addEventListener("click", function() {
+            // Redirect to the specified URL
+            showSpinner();
+            window.location.href = "/Trips/{{ $previousDay }}/";
+        });
+
+        const button2 = document.querySelector("#button2");
+        button2.addEventListener("click", function() {
+            // Redirect to the specified URL
+            showSpinner();
+            window.location.href = "/Trips/";
+        });
+
+        const button4 = document.querySelector("#button4");
+        button4.addEventListener("click", function() {
+            // Redirect to the specified URL
+            showSpinner();
+            window.location.href = "/Trips/{{ $nextDay }}/";
+        });
 
     </script>
     {{--Handler for tripAM table: filter by location--}}
