@@ -51,9 +51,10 @@
                                             <table class="table align-items-center mb-0">
                                                 <tr><td class="text-center">
                                                 {{--<div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">--}}
-                                                <div class="border-radius-xl">
-                                                    <div id="map" style="width: 100%; height: 250px; border-radius: 1rem; background-color: #f0f0f0; padding: 1rem;"></div>
-                                                </div>
+                                                    <div class="card-header p-0 mt-0 mx-3">
+                                                        {{--<iframe class="img-fluid border-radius-lg" allow-same-origin="" allow-scripts="" allowfullscreen="" alt="EarthCam Video Player Embed" autoplay="" frameborder="0" height="450" id="iframe" marginheight="0" marginwidth="0" scrolling="no" src="//www.earthcam.com/js/video/embed.php?type=h264&amp;vid=windjammerHD2.flv&amp;w=auto&amp;company=Windjammer&amp;timezone=America/New_York&amp;metar=KFLL&amp;ecn=1&amp;requested_version=current" style="top:0;left:0;width:10px;min-width:100%;*width:100%;height:200px;" width="800"></iframe>--}}
+                                                        <iframe style="top:0;left:0;width:10px;min-width:100%;*width:100%;height:200px;" src="{{ $operator->mapUrl }}" width="600" height="450" style="border:2;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                                                    </div>
 
                                                 </td></td>
                                             </table>
@@ -288,8 +289,8 @@
                                     <table class="table align-items-center mb-0"> 
                                         <tbody>
                                         @php
-                                            $tripPrices = json_decode($operator->tripPrice, true);
-                                        @endphp
+                                        $tripPrices = json_decode($operator->tripPrice, true);
+                                    @endphp
 
                                             <tr> <td>
                                                 <table class="table align-items-center mb-0">
@@ -350,48 +351,15 @@
     </main>
     
     
-    {{--<x-plugins></x-plugins>--}}
+    <x-plugins></x-plugins>
     
     @push('js')
     
     <script src="{{ asset('assets') }}/js/plugins/flatpickr.min.js"></script>
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
 
     <script>
-        mapboxgl.accessToken = 'pk.eyJ1IjoicHN0cmlrYSIsImEiOiJjbHZsc2p2bXcyY240MmtuMDcydHJzd2UxIn0.KBf79cvk47WseBc9rNu6gQ';
-        const address = '{{ $operator->streetAddress}}, {{ $operator->cityAddress}}, {{ $operator->stateAddress}} {{ $operator->zipAddress}}';
-        
+      
 
-        fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${mapboxgl.accessToken}`)
-        .then(response => response.json())
-        .then(data => {
-            const [lng, lat] = data.features[0].center;
-            console.log(`Latitude: ${lat}, Longitude: ${lng}`);
-            // Now you have the coordinates!
-            const map = new mapboxgl.Map({
-                container: 'map',
-                style: 'mapbox://styles/pstrika/clx0wsurg01yj01qmhmvb9pd6',
-                center: [lng, lat], // Set your desired center coordinates
-                zoom: 12, // Set your desired zoom level
-                projection: 'albers'
-            });
-
-            const marker1 = new mapboxgl.Marker()
-                .setLngLat([lng, lat])
-                .addTo(map);
-
-            const popup = new mapboxgl.Popup().setText("{{ $operator->operatorName }}"); // Set your label text
-            marker1.setPopup(popup);
-
-        })
-        .catch(error => console.error('Error fetching geocoding data:', error));
-
-        
-        
-    </script>
-
-    <script>
     flatpickr("#datePicker", {
         altInput: true,
         altFormat: "F j, Y",
@@ -403,7 +371,111 @@
             window.location.href = `/Trips/${dateStr}`;
         }
     });
-    </script>
 
+    
+
+
+
+    </script>
+    {{--Handler for tripAM table: filter by location--}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('filterLocAM').addEventListener('change', function() {
+                var selectedOption = this.value;
+                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
+                
+                rows.forEach(function(row) {
+                var tags = row.getAttribute('data-tag');
+                if (tags.includes(selectedOption) || selectedOption === 'all') {
+                    row.style.display = ''; // Show the row
+                } else {
+                    row.style.display = 'none'; // Hide the row
+                }
+                });
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('filterAvAM').addEventListener('change', function() {
+                var selectedOption = this.value;
+                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
+                
+                rows.forEach(function(row) {
+                var tags = row.getAttribute('data-tag');
+                if (tags.includes(selectedOption) || selectedOption === 'all') {
+                    row.style.display = ''; // Show the row
+                } else {
+                    row.style.display = 'none'; // Hide the row
+                }
+                });
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('filterTypeAM').addEventListener('change', function() {
+                var selectedOption = this.value;
+                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
+                
+                rows.forEach(function(row) {
+                var tags = row.getAttribute('data-tag');
+                if (tags.includes(selectedOption) || selectedOption === 'all') {
+                    row.style.display = ''; // Show the row
+                } else {
+                    row.style.display = 'none'; // Hide the row
+                }
+                });
+            });
+        });
+
+    {{--Handler for tripAM table: filter by location--}}
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('filterLocPM').addEventListener('change', function() {
+            var selectedOption = this.value;
+            var rows = document.querySelectorAll('#tableTripsPM tr[data-tag]');
+            
+            rows.forEach(function(row) {
+            var tags = row.getAttribute('data-tag');
+            if (tags.includes(selectedOption) || selectedOption === 'all') {
+                row.style.display = ''; // Show the row
+            } else {
+                row.style.display = 'none'; // Hide the row
+            }
+            });
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('filterAvPM').addEventListener('change', function() {
+            var selectedOption = this.value;
+            var rows = document.querySelectorAll('#tableTripsPM tr[data-tag]');
+            
+            rows.forEach(function(row) {
+            var tags = row.getAttribute('data-tag');
+            if (tags.includes(selectedOption) || selectedOption === 'all') {
+                row.style.display = ''; // Show the row
+            } else {
+                row.style.display = 'none'; // Hide the row
+            }
+            });
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('filterTypePM').addEventListener('change', function() {
+            var selectedOption = this.value;
+            var rows = document.querySelectorAll('#tableTripsPM tr[data-tag]');
+            
+            rows.forEach(function(row) {
+            var tags = row.getAttribute('data-tag');
+            if (tags.includes(selectedOption) || selectedOption === 'all') {
+                row.style.display = ''; // Show the row
+            } else {
+                row.style.display = 'none'; // Hide the row
+            }
+            });
+        });
+    });
+    </script>
     @endpush
 </x-page-template>

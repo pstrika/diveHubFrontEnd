@@ -187,7 +187,7 @@
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>
     </main>
-    <x-plugins></x-plugins>
+    {{--<x-plugins></x-plugins>--}}
     @push('js')
     <script src="{{ asset('assets') }}/js/plugins/perfect-scrollbar.min.js"></script>
         

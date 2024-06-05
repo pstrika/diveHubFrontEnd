@@ -49,8 +49,8 @@
             </div>
             <ul class="navbar-nav  align-items-center">
                 <li class="nav-item">
-                    <a href="{{ route('illustration-sign-in') }}" class="nav-link text-body p-0 position-relative"
-                        target="_blank">
+                    <a href="{{ route('overview') }}" class="nav-link text-body p-0 position-relative">
+                        
                         <i class="material-icons me-sm-1">
                             account_circle
                         </i>
@@ -66,7 +66,7 @@
                     </a>
                 </li>
                 <li class="nav-item px-3">
-                    <a href="javascript:;" class="nav-link text-body p-0">
+                    <a href="{{ route('settings') }}" class="nav-link text-body p-0">
                         <i class="material-icons fixed-plugin-button-nav cursor-pointer">
                             settings
                         </i>

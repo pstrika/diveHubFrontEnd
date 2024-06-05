@@ -101,7 +101,7 @@
                         $date = new DateTime($tripDetails->date);
                     @endphp
                     <div style="float: left;">
-                        <h2 class="card-title text-info mx-3 mt-4">Dive trip on {{ $date->format('l, F-d') }}</h2>
+                        <h2 class="card-title text-info mx-3 mt-4">Trip on {{ $date->format('l, F-d') }}</h2>
                         <h4 class="card-category text-info mx-3"> {{ $location->location }}</h4>
                     </div>
                 </div>
@@ -421,7 +421,7 @@
     </main>
     
     
-    <x-plugins></x-plugins>
+    {{--<x-plugins></x-plugins>--}}
     
     @push('js')
     <script src="{{ asset('assets') }}/js/plugins/gauge.js"></script>

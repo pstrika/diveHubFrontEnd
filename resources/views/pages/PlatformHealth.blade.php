@@ -125,7 +125,7 @@
     </main>
     
     
-    <x-plugins></x-plugins>
+    {{--<x-plugins></x-plugins>--}}
     
     @push('js')
     

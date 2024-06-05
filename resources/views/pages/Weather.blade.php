@@ -15,12 +15,52 @@
             animation-iteration-count: infinite;
             animation-timing-function: ease-in-out;
         }
+
+        .comparison-table {
+            display: flex;
+            flex-wrap: nowrap; /* Prevent columns from wrapping */
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            flex: 1; /* Distribute available space equally */
+            padding: 10px;
+            /*border: 1px solid grey;*/
+            text-align: center;
+            flex-wrap: nowrap;
+}
+
     </style>
+
+    
         <!-- Navbar -->
         <x-auth.navbars.navs.auth pageTitle="Dive Trips"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
         <div class="container-fluid py-4">
-            
+        
+        {{--modal code--}}
+        <div class="modal fade" id="modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
+                <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header text-center">
+                            <h6 class="modal-title font-weight-normal" id="modal-title-notification">What is this?</h6>
+                            {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
+                            <span aria-hidden="true">×</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="py-3 text-center">
+                            <i class="material-icons h1 text-secondary">
+                                help_outline
+                            </i>
+                            <h4 class="text-gradient text-info text-md mt-4">Diver's Hub uses weather data from waves (period, direction and height) and winds (direction and speed) to predict dive conditions.</h4>
+                            <p>Press anywhere outside this dialog to continue</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         <div class="page-header min-height-250 max-height-300 border-radius-xl mt-0 mx-n2" style="background-image: url('/assets/img/illustrations/weather.jpeg');">
                 <span class="mask  bg-gradient-info  opacity-4"></span>
             </div>
@@ -56,7 +96,8 @@
                     <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Dive Conditions</h4>
+                                <h2 class="card-title text-white mx-4">Dive Conditions</h2>
+                                <a href="#" onclick="showModal();"><p class="card-title text-white text-xs mt-n2 mx-4">What is this?</p></a>
                                 <div class="table-responsive"></div>
                             </div>
                         </div>
@@ -302,7 +343,7 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table align-items-center mb-0">    
+                                <table class="comparison-table align-items-center mb-0">    
                                     <tbody>
 
                                         
@@ -352,7 +393,7 @@
                                         <tr> {{--AM/PM--}}
                                             <td> </td>
                                             @foreach($weathers as $weather)
-                                                <td><div class="container"><div class="row"><div class="col-sm text-center"><span>AM</span></div><div class="col-sm text-center"><span>PM</span></div></div></div></td>
+                                                <td><div class="container"><div class="row"><div class="col-xxs text-center"><span>AM</span></div><div class="col-sm text-center"><span>PM</span></div></div></div></td>
                                             @endforeach
                                             
                                         </tr>
@@ -360,14 +401,14 @@
                                         <tr> {{--waves--}}
                                             <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">waves (ft)</td>
                                             @foreach($weathers as $weather)
-                                                <td><div class="container"><div class="row"><div class="col-sm text-center"><span>{{ round($weather->swell_height_AM) }}</span></div><div class="col-sm text-center"><span>{{ round($weather->swell_height_PM) }}</span></div></div></div></td>    
+                                                <td><div class="container"><div class="row"><div class="col-xxs text-center"><span>{{ round($weather->swell_height_AM) }}</span></div><div class="col-sm text-center"><span>{{ round($weather->swell_height_PM) }}</span></div></div></div></td>    
                                             @endforeach
                                         </tr>
 
                                         <tr> {{--Period--}}
                                             <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">period (secs)</td>
                                             @foreach($weathers as $weather)
-                                                <td><div class="container"><div class="row"><div class="col-sm text-center"><span>{{ round($weather->swell_period_AM) }}</span></div><div class="col-sm text-center"><span>{{ round($weather->swell_period_PM) }}</span></div></div></div></td>    
+                                                <td><div class="container"><div class="row"><div class="col-xxs text-center"><span>{{ round($weather->swell_period_AM) }}</span></div><div class="col-sm text-center"><span>{{ round($weather->swell_period_PM) }}</span></div></div></div></td>    
                                             @endforeach
                                         </tr>
                                         
@@ -399,16 +440,16 @@
                                                 @endphp
                                                 {{--<td> <i class="material-icons rotate-icon" style="transform: rotate(45deg);">arrow_upward</i></td> --}}
                                                 {{--<td><div class="container"><div class="row"><div class="col-sm text-center"><span>({{ $weather->wind_dir_AM }}) {{ $weather->wind_speed_AM }}</span></div><div class="col-sm text-center"><span>({{ $weather->wind_dir_PM }}) {{ $weather->wind_speed_PM }}</span></div></div></div></td>--}}
-                                                <td><div class="container"><div class="row"><div class="col-sm text-center"><span>
-                                                <i class="material-icons rotate-icon" style="transform: rotate({{ $rotationAM + 180 }}deg);">navigation</i> {{ round($weather->wind_speed_AM) }}</span></div><div class="col-sm text-center"><span>
-                                                <i class="material-icons rotate-icon" style="transform: rotate({{ $rotationPM +180  }}deg);">navigation</i> {{ round($weather->wind_speed_PM) }}</span></div></div></div></td>    
+                                                <td><div class="container"><div class="row"><div class="col-xs text-center"><span>
+                                                <i class="material-icons rotate-icon" style="transform: rotate({{ $rotationAM + 180 }}deg);">navigation</i>{{ round($weather->wind_speed_AM) }}</span></div><div class="col-sm text-center"><span>
+                                                <i class="material-icons rotate-icon" style="transform: rotate({{ $rotationPM +180  }}deg);">navigation</i>{{ round($weather->wind_speed_PM) }}</span></div></div></div></td>    
                                             @endforeach
                                         </tr>
 
                                         <tr> {{--Water temp--}}
                                             <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">water temp (f)</td>
                                             @foreach($weathers as $weather)
-                                                <td><div class="container"><div class="row"><div class="col-sm text-center"><span>{{ round($weather->water_temp_AM) }}°</span></div><div class="col-sm text-center"><span>{{ round($weather->water_temp_PM) }}°</span></div></div></div></td>    
+                                                <td><div class="container"><div class="row"><div class="col-xxs text-center"><span>{{ round($weather->water_temp_AM) }}°</span></div><div class="col-sm text-center"><span>{{ round($weather->water_temp_PM) }}°</span></div></div></div></td>    
                                             @endforeach
                                         </tr>
                                         
@@ -444,7 +485,7 @@
                                                             $lowTides[$suffix] = substr($tide['tide_time'], -5);
                                                         }
                                                     }
-                                                    echo '<td><div class="container"><div class="row"><div class="col-sm text-center"><span>' . $highTides['AM'] . '</span></div><div class="col-sm text-center"><span>' . $highTides['PM'] . '</span></div></div></div></td>';
+                                                    echo '<td><div class="container"><div class="row"><div class="col-xxs text-center"><span>' . $highTides['AM'] . '</span></div><div class="col-sm text-center"><span>' . $highTides['PM'] . '</span></div></div></div></td>';
                                                 }
                                             @endphp
                                         </tr>
@@ -479,7 +520,7 @@
                                                             $lowTides[$suffix] = substr($tide['tide_time'], -5);
                                                         }
                                                     }
-                                                    echo '<td><div class="container"><div class="row"><div class="col-sm text-center"><span>' . $lowTides['AM'] . '</span></div><div class="col-sm text-center"><span>' . $lowTides['PM'] . '</span></div></div></div></td>';
+                                                    echo '<td><div class="container"><div class="row"><div class="col-xxs text-center"><span>' . $lowTides['AM'] . '</span></div><div class="col-sm text-center"><span>' . $lowTides['PM'] . '</span></div></div></div></td>';
                                                 }
                                             @endphp
                                         </tr>
@@ -515,12 +556,19 @@
     </main>
     
     
-    <x-plugins></x-plugins>
+    {{--<x-plugins></x-plugins>--}}
     
     @push('js')
 
     <script src="../../assets/js/plugins/chartjs.min.js"></script>
+    <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     
+    <script>
+        function showModal() {
+            $('#modal').modal('show'); // Show the modal
+        };
+    </script>
+
     <script>
         var ctx = document.getElementById('wavesChart').getContext('2d');
         var wavesChart = new Chart(ctx, {

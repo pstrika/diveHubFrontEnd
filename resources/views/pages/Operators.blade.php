@@ -31,8 +31,8 @@
                 
                 @foreach($locationAreas as $locationArea)
                     {{-- Dive Operator location are cards --}}
-                    <div class="col-md-4 ">             
-                        <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
+                    <div class="col-md-3">             
+                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                                 <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
                                     <h3 class="card-title text-white mx-4"> {{ $locationArea }}</h3>
@@ -106,31 +106,24 @@
     </main>
     
     
-    <x-plugins></x-plugins>
+    {{--<x-plugins></x-plugins>--}}
     
     @push('js')
     
     <script src="{{ asset('assets') }}/js/plugins/flatpickr.min.js"></script>
 
     <script>
-      
-
-    flatpickr("#datePicker", {
-        altInput: true,
-        altFormat: "F j, Y",
-        dateFormat: "Y-m-d",
-        minDate: "today",
-        
-        maxDate: new Date().fp_incr(90),
-        onChange: function(selectedDates, dateStr, instance) {
-            window.location.href = `/Trips/${dateStr}`;
-        }
-    });
-
-    
-
-
-
+        flatpickr("#datePicker", {
+            altInput: true,
+            altFormat: "F j, Y",
+            dateFormat: "Y-m-d",
+            minDate: "today",
+            
+            maxDate: new Date().fp_incr(90),
+            onChange: function(selectedDates, dateStr, instance) {
+                window.location.href = `/Trips/${dateStr}`;
+            }
+        });
     </script>
     {{--Handler for tripAM table: filter by location--}}
     <script>

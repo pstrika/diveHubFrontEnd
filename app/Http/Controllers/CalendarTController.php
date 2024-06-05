@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Weatherday;
+use App\Models\Site;
 use Illuminate\Http\Request;
 
 
 use App\Models\Trip;
 use Carbon\Carbon;
 use Symfony\Component\Console\Input\Input;
+use Illuminate\Support\Facades\Log;
 
 class CalendarTController extends Controller
 {
@@ -45,6 +47,27 @@ class CalendarTController extends Controller
             ->where('tripType', 'like', "%" . $tripType . "%")
             ->whereDate('date', '>=', Carbon::today())
             ->get()->sortBy("date");
+
+        $sites = collect(Site::select('id', 'maxDepth', 'level')->get());
+        
+        Log::debug("size of sites: " . $sites);
+
+        foreach($trips as $i => $trip) {
+            if($trip->siteId != null) {
+                $siteIds = explode(',', $trip->siteId);
+                $relatedSites = $sites->whereIn('id', $siteIds)->all();
+                
+                $j=0;
+                foreach($relatedSites as $relatedSite) {
+                    $trips[$i]->site[$j]->id = $relatedSite->id;
+                    $trips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
+                    $trips[$i]->site[$j]->level = $relatedSite->level;
+                    $j++;
+                    
+                }
+            
+            }
+        }
             
         $dateF = Carbon::parse($date);
         

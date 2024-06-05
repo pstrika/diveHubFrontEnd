@@ -11,6 +11,57 @@
                     <span class="mask  bg-gradient-info  opacity-4"></span>
                 </div>
 
+                {{--modal code--}}
+                <div class="modal fade" id="modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
+                    <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header text-center">
+                                <h6 class="modal-title font-weight-normal" id="modal-title-notification">Site levels</h6>
+                                {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
+                                <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="py-3 text-center">
+                                    <h4 class="text-gradient text-info text-md mt-4"></h4>
+                                    <div class="table-responsive">
+                                        <table class="table align-items-left mb-0"> 
+                                            <tbody>
+                                                
+                                                <tr><td class="w-20 text-secondary text-end text-lg font-weight-bolder opacity-7"> </td>
+                                                <td class="w-60 align-middle text-start text-sm"><b>Level</b></td>
+                                                <td class="w-20 align-middle text-start text-sm"><b>Max Depth (ft)</b></td> </tr>
+                                                
+                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_0.png" height="25"></td>
+                                                <td class="align-middle text-info text-start text-sm"><b>Open Water</b></td> 
+                                                <td class="align-middle text-info text-center text-sm"><b>60</b></td> </tr>
+
+                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_1.png" height="25"></td>
+                                                <td class="align-middle text-info text-start text-sm"><b>Advanced Open Water</b></td>
+                                                <td class="align-middle text-info text-center text-sm"><b>130</b></td> </tr>
+
+                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7"><img src="{{ asset('assets') }}/img/icons/icons_level_2.png" height="25"></td>
+                                                <td class="align-middle text-info text-start text-sm"><b>Technical Air</b></td>
+                                                <td class="align-middle text-info text-center text-sm"><b>150</b></td> </tr>
+
+                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_3.png" height="25"></td>
+                                                <td class="align-middle text-info text-start text-sm"><b>Technical Normoxic Trimix</b></td>
+                                                <td class="align-middle text-info text-center text-sm"><b>200</b></td> </tr>
+
+                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_4.png" height="25"></td>
+                                                <td class="align-middle text-info text-start text-sm"><b>Technical Hypoxic Trimix</b></td>
+                                                <td class="align-middle text-info text-center text-sm"><b>330+</b></td> </tr>
+
+                                            </tbody>
+                                        </table>
+                                    </div>   
+                                    <p>Press anywhere outside this dialog to continue</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card p-0 position-relative mt-n7 mx-2 z-index-2">
             
                     <div class="p-0 mt-n4 mx-2 border-radius-lg py-3 pe-1">
@@ -86,7 +137,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-7">             
+                <div class="col-md-12">             
                     <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
@@ -142,10 +193,17 @@
                                             <th class="px-4 align-top">
                                                 Time
                                             </th>
-                                                <th class="py-0">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
+                                                <th class="py-0 align-top">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
                                             </th>
+                                            
                                             <th class="px-4 align-top">
                                                 Site / Trip Name
+                                            </th>
+                                            <th class="px-4 align-top">
+                                                Level<a href="#" onclick="showModal();"><p class="text-xs text-info text-center mt-0 px-1">(?)</p></a>
+                                            </th>
+                                            <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
+                                                Depth
                                             </th>
                                         </thead>
                                         <tbody >
@@ -166,7 +224,24 @@
                                                     @else
                                                         <td class="text-center"> <a href="{{ $trip->linkToBook }}" target="_blank">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</a></td>
                                                     @endif
+                                                    
+                                                    
+
                                                     <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}</a></td>
+
+                                                    @if(!empty($trip->site[0]))
+                                                        {{--<td class="px-4 text-sm text-center">{{ $trip->site[0]->level }}</td>--}}
+                                                        <td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $trip->site[0]->level }}.png" height="25"></td>
+                                                    @else
+                                                        <td class="px-4 text-sm text-center"> </td>
+                                                    @endif
+
+                                                    @if(!empty($trip->site[0]))
+                                                        <td class="px-4 text-sm text-center">{{ $trip->site[0]->maxDepth }}</td>
+                                                    @else
+                                                        <td class="px-4 text-sm text-center"> </td>
+                                                    @endif
+                                                    
                                                 </tr>
                                                 @endif
                                             @endforeach          
@@ -183,12 +258,19 @@
     </main>
     
     
-    <x-plugins></x-plugins>
+    {{--<x-plugins></x-plugins>--}}
     
     @push('js')
     
     <script src="/assets/js/plugins/fullcalendar.min.js"></script>
+    <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
 
+
+    <script>
+        function showModal() {
+            $('#modal').modal('show'); // Show the modal
+        };
+    </script>
     
     
     <script>

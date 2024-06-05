@@ -15,8 +15,82 @@
         <!-- Navbar -->
         <x-auth.navbars.navs.auth pageTitle="Dive Trips"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
-        <div class="container-fluid py-0">
+        < class="container-fluid py-0">
 
+        {{--modal code--}}
+        <div class="modal fade" id="modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
+            <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+                <div class="modal-content">
+                    <div class="modal-header text-center">
+                        <h6 class="modal-title font-weight-normal" id="modal-title-notification">What is this?</h6>
+                        {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
+                        <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="py-3 text-center">
+                            <i class="material-icons h1 text-secondary">
+                                help_outline
+                            </i>
+                            <h4 class="text-gradient text-info text-md mt-4">Diver's Hub uses weather data from waves (period, direction and height) and winds (direction and speed) to predict dive conditions.</h4>
+                            <p>Press anywhere outside this dialog to continue</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{--modal Level--}}
+        <div class="modal fade" id="modalLevel" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
+                    <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header text-center">
+                                <h6 class="modal-title font-weight-normal" id="modal-title-notification">Site levels</h6>
+                                {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
+                                <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="py-3 text-center">
+                                    <h4 class="text-gradient text-info text-md mt-4"></h4>
+                                    <div class="table-responsive">
+                                        <table class="table align-items-left mb-0"> 
+                                            <tbody>
+                                                
+                                                <tr><td class="w-20 text-secondary text-end text-lg font-weight-bolder opacity-7"> </td>
+                                                <td class="w-60 align-middle text-start text-sm"><b>Level</b></td>
+                                                <td class="w-20 align-middle text-start text-sm"><b>Max Depth (ft)</b></td> </tr>
+                                                
+                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_0.png" height="25"></td>
+                                                <td class="align-middle text-info text-start text-sm"><b>Open Water</b></td> 
+                                                <td class="align-middle text-info text-center text-sm"><b>60</b></td> </tr>
+
+                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_1.png" height="25"></td>
+                                                <td class="align-middle text-info text-start text-sm"><b>Advanced Open Water</b></td>
+                                                <td class="align-middle text-info text-center text-sm"><b>130</b></td> </tr>
+
+                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7"><img src="{{ asset('assets') }}/img/icons/icons_level_2.png" height="25"></td>
+                                                <td class="align-middle text-info text-start text-sm"><b>Technical Air</b></td>
+                                                <td class="align-middle text-info text-center text-sm"><b>150</b></td> </tr>
+
+                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_3.png" height="25"></td>
+                                                <td class="align-middle text-info text-start text-sm"><b>Technical Normoxic Trimix</b></td>
+                                                <td class="align-middle text-info text-center text-sm"><b>200</b></td> </tr>
+
+                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_4.png" height="25"></td>
+                                                <td class="align-middle text-info text-start text-sm"><b>Technical Hypoxic Trimix</b></td>
+                                                <td class="align-middle text-info text-center text-sm"><b>330+</b></td> </tr>
+
+                                            </tbody>
+                                        </table>
+                                    </div>   
+                                    <p>Press anywhere outside this dialog to continue</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
         
 
 
@@ -80,8 +154,12 @@
                                 
                                 <div class="table-responsive">
                                     
-                                </div>       
-                                <p class="card-category text-white mx-4">{{ $weathers->isNotEmpty() ? "Dive Conditions (beta) - " : ""}}Trips</p>
+                                </div>
+                                @if($weathers->isNotEmpty())   
+                                    <p class="card-category text-white mx-4">Dive Conditions (<a class="text-white text-xs text-decoration-underline" href="#" onclick="showModal();"><b>What is this?</b></a>) - Trips</p>
+                                @else
+                                    <p class="card-category text-white mx-4">Trips</p>
+                                @endif
                             </div>
                         </div>
 
@@ -183,10 +261,13 @@
                                             <th class="px-4 align-top">
                                                 Time
                                             </th>
-                                                <th class="py-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the numbers below to go to trip booking page" data-container="body" data-animation="true">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
+                                                <th class="py-0 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the numbers below to go to trip booking page" data-container="body" data-animation="true">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
                                             </th>
                                             <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">
                                                 Site / Trip Name<p class="text-xs mt-0 px-1">click for details</p>
+                                            </th>
+                                            <th class="px-4 align-top">
+                                                Level<a href="#" onclick="showModalLevel();"><p class="text-xs text-info text-center mt-0 px-1">(?)</p></a>
                                             </th>
                                             <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
                                                 Depth
@@ -208,7 +289,16 @@
                                                         @endif
                                                         <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}<a></td>
                                                         @if(!empty($trip->site[0]))
+                                                        {{--<td class="px-4 text-sm text-center">{{ $trip->site[0]->level }}</td>--}}
+                                                            <td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $trip->site[0]->level }}.png" height="25"></td>
+                                                        @else
+                                                            <td class="px-4 text-sm text-center"> </td>
+                                                        @endif
+
+                                                        @if(!empty($trip->site[0]))
                                                             <td class="px-4 text-sm text-center">{{ $trip->site[0]->maxDepth }}</td>
+                                                        @else
+                                                            <td class="px-4 text-sm text-center"> </td>
                                                         @endif
                                                     </tr>
                                                 @endif
@@ -232,8 +322,11 @@
                                 <div class="table-responsive">
                                     
                                 </div>
-                                       
-                                <p class="card-category text-white mx-4">{{ $weathers->isNotEmpty() ? "Dive Conditions (beta) - " : ""}}Trips</p>
+                                @if($weathers->isNotEmpty())   
+                                    <p class="card-category text-white mx-4">Dive Conditions (<a class="text-white text-xs text-decoration-underline" href="#" onclick="showModal();"><b>What is this?</b></a>) - Trips</p>
+                                @else
+                                    <p class="card-category text-white mx-4">Trips</p>
+                                @endif
                             </div>
                         </div>
                         <div class="card-body">
@@ -334,10 +427,13 @@
                                             <th class="px-4 align-top">
                                                 Time
                                             </th>
-                                            <th class="py-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the numbers below to go to trip booking page" data-container="body" data-animation="true">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
+                                            <th class="py-0 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the numbers below to go to trip booking page" data-container="body" data-animation="true">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
                                             </th>
                                             <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">
                                                 Site / Trip Name<p class="text-xs mt-0 px-1">click for details</p>
+                                            </th>
+                                            <th class="px-4 align-top">
+                                                Level<a href="#" onclick="showModalLevel();"><p class="text-xs text-info text-center mt-0 px-1">(?)</p></a>
                                             </th>
                                             <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
                                                 Depth
@@ -359,7 +455,16 @@
                                                         @endif
                                                         <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}</a></td>
                                                         @if(!empty($trip->site[0]))
+                                                        {{--<td class="px-4 text-sm text-center">{{ $trip->site[0]->level }}</td>--}}
+                                                            <td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $trip->site[0]->level }}.png" height="25"></td>
+                                                        @else
+                                                            <td class="px-4 text-sm text-center"> </td>
+                                                        @endif
+
+                                                        @if(!empty($trip->site[0]))
                                                             <td class="px-4 text-sm text-center">{{ $trip->site[0]->maxDepth }}</td>
+                                                        @else
+                                                            <td class="px-4 text-sm text-center"> </td>
                                                         @endif
                                                     </tr>
                                                 @endif
@@ -388,16 +493,27 @@
     </main>
     
     
-    <x-plugins></x-plugins>
+    {{--<x-plugins></x-plugins>--}}
     
     @push('js')
     
     <script src="{{ asset('assets') }}/js/plugins/flatpickr.min.js"></script>
+    <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
 
     <script>
         function showSpinner() {
             document.getElementById("spinner").style.display = "inline-flex";
         }
+    </script>
+
+    <script>
+        function showModal() {
+            $('#modal').modal('show'); // Show the modal
+        };
+
+        function showModalLevel() {
+            $('#modalLevel').modal('show'); // Show the modal
+        };
     </script>
 
     <script>
