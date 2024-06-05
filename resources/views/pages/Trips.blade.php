@@ -15,7 +15,7 @@
         <!-- Navbar -->
         <x-auth.navbars.navs.auth pageTitle="Dive Trips"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
-        < class="container-fluid py-0">
+        <div class="container-fluid py-0">
 
         {{--modal code--}}
         <div class="modal fade" id="modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">

@@ -174,7 +174,7 @@
                                 $productRating = $site->rate; // Replace with your actual product rating
                             @endphp
 
-                            @foreach(range(1, 5) as $i)
+                            {{--@foreach(range(1, 5) as $i)
                                 <span class="fa-stack" style="width: 1em; font-size: 2em;">
                                     <i class="far fa-star fa-stack-1x"></i>
                                     @if($productRating > 0)
@@ -186,18 +186,19 @@
                                     @endif
                                     @php $productRating--; @endphp
                                 </span>
-                            @endforeach
-                            <div class="mt-n3">
-                                <p class="align-middle text-left text-md text-info mt-n2"><b>{{ $site->votes }} ratings</b></p>
+                            @endforeach--}}
+                            <div id="rateYoReadOnly"></div>
+                            <div class="mt-1">
+                                <p class="align-middle text-end text-md text-info mt-n2"><b>{{ $site->votes }} ratings</b></p>
                             </div>
 
                             @if(!$ratedAlready)
                             <div class="mt-n1">
-                                <p class="align-middle text-left text-xs text-decoration-underline text-info mt-0"><a href="#" data-bs-toggle="modal" data-bs-target="#modalRating"><b>rate this site</b></a></p>
+                                <p class="align-middle text-end text-xs text-decoration-underline text-info mt-0"><a href="#" data-bs-toggle="modal" data-bs-target="#modalRating"><b>rate this site</b></a></p>
                             </div>
                             @else
                             <div class="mt-n1">
-                                <p class="align-middle text-left text-xs text-info mt-0"><b>You already rated this site</b></p>
+                                <p class="align-middle text-end text-xs text-info mt-0"><b>You already rated this site</b></p>
                             </div>
                             @endif
 
@@ -615,6 +616,14 @@
                     rateInput.value = rating;
                     //alert("Rating is set to: " + rating);
                 }
+            });
+        });
+
+        $(function () {
+ 
+            $("#rateYoReadOnly").rateYo({
+                rating: {{ $site->rate != null ? $site->rate : 0 }},
+                readOnly: true
             });
         });
 
