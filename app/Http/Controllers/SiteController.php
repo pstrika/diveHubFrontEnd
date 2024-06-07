@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\Operator;
 use App\Models\WeatherLocation;
+use App\Models\WeatherDay;
 use App\Models\Site;
 use App\Models\Photo;
 use App\Models\SiteRating;
@@ -16,6 +17,32 @@ use Illuminate\Support\Facades\File;
 class SiteController extends Controller
 {
     //
+
+    public function showBeach() {
+        $sitesFLL = Site::where('access', 'Beach Access')->where('location', 'FLL')->get();
+        $sitesWPB = Site::where('access', 'Beach Access')->where('location', 'WPB')->get();
+        $locations = WeatherLocation::all();
+        $weathersFLL = Weatherday::whereIn('location', ['fort lauderdale'])->orderBy('date')->take(5)->get();
+        $weathersWPB = Weatherday::whereIn('location', ['west palm beach'])->orderBy('date')->take(5)->get();
+
+        $weathers[0] = $weathersFLL;
+        $weathers[1] = $weathersWPB;
+
+        $i=0;
+        if($sitesFLL->isNotEmpty()) {
+            Log::debug("Site found for FLL " . str(count($sitesFLL)));
+            $sites[$i] = $sitesFLL;
+            $i++;
+        }
+        if($sitesWPB->isNotEmpty()) {
+            Log::debug("Site found for WPB " . str(count($sitesWPB)));
+            $sites[$i] = $sitesWPB;
+            $i++;
+        }
+
+
+        return view('pages.BeachDiving', compact('sites', 'locations', 'weathers'));
+    }
 
     public function show($id = null) {
         $site = Site::findOrFail(intval($id));

@@ -145,7 +145,7 @@
                 </div>
             </li>
 
-            {{-- Calendars --}}
+            {{-- Special Dives --}}
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#special"
                     class="nav-link text-white {{ $activePage == 'Special' ? ' active ' : '' }} "
@@ -157,7 +157,7 @@
                     <ul class="nav ">
                         <li class="nav-item {{ $activeItem == 'beachDiving' ? ' active ' : '' }}  ">
                             <a class="nav-link text-white {{ $activeItem == 'beachDiving' ? ' active' : '' }}  "
-                                href="{{ route('CalendarT') }}/rec">
+                                href="{{ route('BeachDiving') }}">
                                 <i class="material-icons-round opacity-10">beach_access</i>
                                 <span class="sidenav-normal  ms-2  ps-1">Beach Diving</span>
                             </a>

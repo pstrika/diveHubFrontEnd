@@ -45,6 +45,8 @@ Route::get('Waivers', 'App\Http\Controllers\OperatorController@getWaivers')->mid
 
 Route::get('OperatorDetails/{id}', 'App\Http\Controllers\OperatorController@show')->middleware('auth')->name('OperatorDetails');
 
+Route::get('BeachDiving', 'App\Http\Controllers\SiteController@showBeach')->middleware('auth')->name('BeachDiving');
+
 Route::get('PlatformHealth/', 'App\Http\Controllers\OperatorController@showHealth')->middleware('auth')->name('PlatformHealth');
 
 Route::get('new-site/', 'App\Http\Controllers\SiteController@create')->middleware('auth')->name('new-site');
