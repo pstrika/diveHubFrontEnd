@@ -7,7 +7,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('dashboard') }}">
             <img src="{{ asset('assets') }}/img/logo-ct.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.4.5 (6/5/24)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.5.1 (6/7/24)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -84,14 +84,14 @@
                         <li class="nav-item {{ $activeItem == 'CalendarRec' ? ' active ' : '' }}  ">
                             <a class="nav-link text-white {{ $activeItem == 'CalendarRec' ? ' active' : '' }}  "
                                 href="{{ route('CalendarT') }}/rec">
-                                <span class="sidenav-mini-icon"> R </span>
+                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_rec.png"></span>
                                 <span class="sidenav-normal  ms-2  ps-1"> Recreational </span>
                             </a>
                         </li>
                         <li class="nav-item {{ $activeItem == 'CalendarTec' ? ' active ' : '' }}  ">
                             <a class="nav-link text-white {{ $activeItem == 'CalendarTec' ? ' active' : '' }}  "
                                 href="{{ route('CalendarT') }}/tec">
-                                <span class="sidenav-mini-icon"> T </span>
+                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_tec.png"></span>
                                 <span class="sidenav-normal  ms-2  ps-1"> Technical </span>
                             </a>
                         </li>
@@ -165,7 +165,8 @@
                         <li class="nav-item {{ $activeItem == 'sharkDiving' ? ' active ' : '' }}  ">
                             <a class="nav-link text-white {{ $activeItem == 'sharkDiving' ? ' active' : '' }}  "
                                 href="{{ route('CalendarT') }}/tec">
-                                <span class="sidenav-mini-icon"> S </span>
+                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_shark.png"></span>
+                                
                                 <span class="sidenav-normal  ms-2  ps-1">Shark Diving</span>
                             </a>
                         </li>

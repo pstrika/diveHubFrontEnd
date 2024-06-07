@@ -31,7 +31,7 @@
                 
                 
                 {{-- Platform Health card --}}
-                <div class="col-md-6 ">             
+                <div class="col-md-12">             
                     <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
@@ -54,7 +54,7 @@
                                         Last Execution
                                     </th>
                                     <th class="align-top">
-                                        Time Stamp
+                                        Time Stamp (UTC-5)
                                     </th>
                                     <th class="text-center align-top">
                                         Trips Added
@@ -70,11 +70,20 @@
                                     <tbody>
                                         @foreach($operators as $operator)
                                             @php
-                                                $dateTime = DateTime::createFromFormat('Y-m-d H:i:s', $operator->_lastUpdate);
+                                                //$dateTime = DateTime::createFromFormat('Y-m-d H:i:s', $operator->_lastUpdate);
+                                                
+                                                // Assuming you have a datetime variable in UTC
+                                                $utc_datetime_str = $operator->_lastUpdate;
+                                                $utc_datetime = new DateTime($utc_datetime_str, new DateTimeZone('UTC'));
+
+                                                // Convert to EST (Eastern Standard Time)
+                                                $est_timezone = new DateTimeZone('America/New_York'); // UTC-5
+                                                $dateTime = $utc_datetime->setTimezone($est_timezone);
                                                 
                                                 $now = new DateTime();
                                                 
                                                 $interval = $now->diff($dateTime);
+                                                //$interval = $dateTime->diff($now);
 
                                                 if($operator->_status == "1" and $interval->format('%d') == "0") {
                                                     $statusIcon = "check_circle";
@@ -93,9 +102,9 @@
                                             @endphp
                                             <tr style="border-bottom: 1px solid #D3D3D3;">
                                                 <td class="px-0 py-2 text-sm text-center custom-text-color" style="color: {{ $colorIcon }};"><i class="material-icons position-relative ms-auto text-lg me-1 my-auto" >{{ $statusIcon}}</i></td>
-                                                <td class="">{{ $operator->operatorName }}</td>
-                                                <td class="">{{ ($interval->format('%d') != 0) ? ($interval->format('%d days')) : "" }} {{ ($interval->format('%h') != 0) ? ($interval->format('%h hrs')) : "" }} {{ ($interval->format('%i') != 0) ? ($interval->format('%i min')) : "" }} ago</td>
-                                                <td class="">{{ $operator->_lastUpdate }}</td>
+                                                <td class="w-40">{{ $operator->operatorName }}</td>
+                                                <td class="w-15">{{ ($interval->format('%d') != 0) ? ($interval->format('%d days')) : "" }} {{ ($interval->format('%h') != 0) ? ($interval->format('%h hrs')) : "" }} {{ ($interval->format('%i') != 0) ? ($interval->format('%i min')) : "" }} ago</td>
+                                                <td class="w-15">{{ $dateTime->format('Y-m-d H:i:s') }}</td>
                                                 <td class="text-center">{{ $operator->_updatedCount }}</td>
                                                 <td class="text-center">{{ $operator->_status }}</td>
                                                 <td class="text-center">{{ $operator->_ver }}</td>
@@ -129,127 +138,6 @@
     
     @push('js')
     
-    <script src="{{ asset('assets') }}/js/plugins/flatpickr.min.js"></script>
 
-    <script>
-      
-
-    flatpickr("#datePicker", {
-        altInput: true,
-        altFormat: "F j, Y",
-        dateFormat: "Y-m-d",
-        minDate: "today",
-        
-        maxDate: new Date().fp_incr(90),
-        onChange: function(selectedDates, dateStr, instance) {
-            window.location.href = `/Trips/${dateStr}`;
-        }
-    });
-
-    
-
-
-
-    </script>
-    {{--Handler for tripAM table: filter by location--}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('filterLocAM').addEventListener('change', function() {
-                var selectedOption = this.value;
-                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
-                
-                rows.forEach(function(row) {
-                var tags = row.getAttribute('data-tag');
-                if (tags.includes(selectedOption) || selectedOption === 'all') {
-                    row.style.display = ''; // Show the row
-                } else {
-                    row.style.display = 'none'; // Hide the row
-                }
-                });
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('filterAvAM').addEventListener('change', function() {
-                var selectedOption = this.value;
-                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
-                
-                rows.forEach(function(row) {
-                var tags = row.getAttribute('data-tag');
-                if (tags.includes(selectedOption) || selectedOption === 'all') {
-                    row.style.display = ''; // Show the row
-                } else {
-                    row.style.display = 'none'; // Hide the row
-                }
-                });
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('filterTypeAM').addEventListener('change', function() {
-                var selectedOption = this.value;
-                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
-                
-                rows.forEach(function(row) {
-                var tags = row.getAttribute('data-tag');
-                if (tags.includes(selectedOption) || selectedOption === 'all') {
-                    row.style.display = ''; // Show the row
-                } else {
-                    row.style.display = 'none'; // Hide the row
-                }
-                });
-            });
-        });
-
-    {{--Handler for tripAM table: filter by location--}}
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('filterLocPM').addEventListener('change', function() {
-            var selectedOption = this.value;
-            var rows = document.querySelectorAll('#tableTripsPM tr[data-tag]');
-            
-            rows.forEach(function(row) {
-            var tags = row.getAttribute('data-tag');
-            if (tags.includes(selectedOption) || selectedOption === 'all') {
-                row.style.display = ''; // Show the row
-            } else {
-                row.style.display = 'none'; // Hide the row
-            }
-            });
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('filterAvPM').addEventListener('change', function() {
-            var selectedOption = this.value;
-            var rows = document.querySelectorAll('#tableTripsPM tr[data-tag]');
-            
-            rows.forEach(function(row) {
-            var tags = row.getAttribute('data-tag');
-            if (tags.includes(selectedOption) || selectedOption === 'all') {
-                row.style.display = ''; // Show the row
-            } else {
-                row.style.display = 'none'; // Hide the row
-            }
-            });
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('filterTypePM').addEventListener('change', function() {
-            var selectedOption = this.value;
-            var rows = document.querySelectorAll('#tableTripsPM tr[data-tag]');
-            
-            rows.forEach(function(row) {
-            var tags = row.getAttribute('data-tag');
-            if (tags.includes(selectedOption) || selectedOption === 'all') {
-                row.style.display = ''; // Show the row
-            } else {
-                row.style.display = 'none'; // Hide the row
-            }
-            });
-        });
-    });
-    </script>
     @endpush
 </x-page-template>

@@ -1,5 +1,5 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
-    <x-auth.navbars.sidebar activePage="Special" activeItem="BeachDiving" activeSubitem=""></x-auth.navbars.sidebar>
+    <x-auth.navbars.sidebar activePage="Special" activeItem="beachDiving" activeSubitem=""></x-auth.navbars.sidebar>
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
@@ -138,7 +138,7 @@
                                         </tr>
 
                                         @foreach($weathers as $locationWeather)
-                                            <tr><td colspan="100%" class="text-uppercase text-white text-sm font-weight-bolder opacity-7 text-center bg-gradient-info" style="border: none;">{{$locationWeather[0]->location}}</td> </tr>
+                                            <tr><td colspan="100%" class="text-uppercase text-white text-sm font-weight-bolder opacity-7 text-center bg-gradient-info" style="border: none;"><a class="text-white" href="/Weather/{{$locationWeather[0]->location}}/">{{$locationWeather[0]->location}}</a></td> </tr>
                                             <tr>
                                                 <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">Morning</td>
                                                 @foreach($locationWeather as $weather)
@@ -192,7 +192,7 @@
 
                 {{-- Card Dive Conditions --}}
                 @foreach($sites as $siteLocation)
-                <div class="col-md-12 m-auto">             
+                <div class="col-md-12 m-auto">
                     <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
@@ -206,39 +206,46 @@
                         </div>
 
                         <div class="card-body">
-                            <div class="table-responsive">
-                                <table>
-                                    <thead class="text-info">
-                                        <th class="align-top">
-                                            Type
-                                        </th>
-                                        
-                                        <th class="px-4 align-top text-start" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">
-                                            Site Name<p class="text-xs text-start mt-0 px-1">click for details</p>
-                                        </th>
-                                        <th class="px-4 align-top text-center">
-                                            Level<a href="#" onclick="showModalLevel();"><p class="text-xs text-info text-center mt-0 px-1">(?)</p></a>
-                                        </th>
-                                        <th class="px-4 align-top text-center" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
-                                            Max Depth
-                                        </th>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($siteLocation as $site)    
-                                            <tr style="border-bottom: 1px solid #D3D3D3;">
-                                                <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
-                                                <td class="w-80 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div id="map" style="width: 100%; height: 600px; border-radius: 1rem; background-color: #f0f0f0; padding: 1rem;"></div>
+                                </div>
+                                <div class="col-md-7">
+                                    <div class="table-responsive">
+                                        <table>
+                                            <thead class="text-info">
+                                                <th class="align-top">
+                                                    Type
+                                                </th>
+                                                
+                                                <th class="px-4 align-top text-start" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">
+                                                    Site Name<p class="text-xs text-start mt-0 px-1">click for details</p>
+                                                </th>
+                                                <th class="px-4 align-top text-center">
+                                                    Level<a href="#" onclick="showModalLevel();"><p class="text-xs text-info text-center mt-0 px-1">(?)</p></a>
+                                                </th>
+                                                <th class="px-4 align-top text-center" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
+                                                    Max Depth
+                                                </th>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($siteLocation as $site)    
+                                                    <tr style="border-bottom: 1px solid #D3D3D3;">
+                                                        <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
+                                                        <td class="w-80 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
 
-                                                <td class="w-5 text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" height="25"></td>
+                                                        <td class="w-5 text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" height="25"></td>
 
-                                                <td class="w-10 align-middle text-center text-md"><b>{{ $site->maxDepth }}</b></td> 
-                                        
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                    
-                                </table>
-                            </div>    
+                                                        <td class="w-10 align-middle text-center text-md"><b>{{ $site->maxDepth }}</b></td> 
+                                                
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                            
+                                        </table>
+                                    </div>    
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -275,5 +282,21 @@
         };
     </script>
     
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
+
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoicHN0cmlrYSIsImEiOiJjbHZsc2p2bXcyY240MmtuMDcydHJzd2UxIn0.KBf79cvk47WseBc9rNu6gQ'; // Replace with your actual access token
+
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/pstrika/clwqz4fds03gv01qo9d4w3g21', // Choose a map style
+            center: [-80.07488399442913, 26.137643513173536], // Set the initial center coordinates
+            zoom: 10, // Set the initial zoom level
+            projection: 'albers'
+        });
+
+    </script>
+
     @endpush
 </x-page-template>
