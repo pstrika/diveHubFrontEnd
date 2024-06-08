@@ -45,7 +45,7 @@
 
         <div class="container-fluid py-0">
 
-        
+        <div class="d-none" data-color="info" id="sidebarColorDiv"></div> {{--Set active element on sidenav bar color (goes together wih JS below--}}
 
 
 
@@ -257,6 +257,12 @@
         }); */
 
 
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            sidebarColor(document.getElementById("sidebarColorDiv")); // Execute the sidebarColor function once the HTML is loaded
+        });
     </script>
     @endpush
 </x-page-template>

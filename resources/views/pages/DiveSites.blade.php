@@ -44,7 +44,7 @@
         </style>
 
         <div class="container-fluid py-0">
-
+            <div class="d-none" data-color="info" id="sidebarColorDiv"></div> {{--Set active element on sidenav bar color (goes together wih JS below--}}
         
 
 
@@ -73,7 +73,7 @@
                         </div>
                     </div>
                 </div>--}}
-                {{-- Dive Operator location are cards --}}
+                {{-- Dive Sites list card --}}
                 <div class="col-md-12 m-auto">             
                     <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
@@ -306,6 +306,12 @@
         }); */
 
 
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            sidebarColor(document.getElementById("sidebarColorDiv")); // Execute the sidebarColor function once the HTML is loaded
+        });
     </script>
     @endpush
 </x-page-template>

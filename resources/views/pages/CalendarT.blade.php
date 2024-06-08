@@ -11,6 +11,8 @@
                     <span class="mask  bg-gradient-info  opacity-4"></span>
                 </div>
 
+                <div class="d-none" data-color="info" id="sidebarColorDiv"></div>
+
                 {{--modal code--}}
                 <div class="modal fade" id="modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
                     <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
@@ -402,6 +404,12 @@
 
     
     
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            sidebarColor(document.getElementById("sidebarColorDiv")); // Execute the sidebarColor function once the HTML is loaded
+        });
     </script>
     @endpush
 </x-page-template>

@@ -17,6 +17,8 @@
         
         <div class="container-fluid py-0">
 
+            <div class="d-none" data-color="info" id="sidebarColorDiv"></div>
+
             {{--modal code--}}
             <div class="modal fade" id="modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
                 <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
@@ -190,7 +192,10 @@
                 </div>
                 {{--------------------------}}
 
-                {{-- Card Dive Conditions --}}
+                {{-- Card Locations --}}
+                <?php
+                    $i=0;
+                ?>
                 @foreach($sites as $siteLocation)
                 <div class="col-md-12 m-auto">
                     <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
@@ -208,7 +213,7 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-5">
-                                    <div id="map" style="width: 100%; height: 600px; border-radius: 1rem; background-color: #f0f0f0; padding: 1rem;"></div>
+                                    <div id="map{{$i}}" style="width: 100%; height: 600px; border-radius: 1rem; background-color: #f0f0f0; padding: 1rem;"></div>
                                 </div>
                                 <div class="col-md-7">
                                     <div class="table-responsive">
@@ -249,6 +254,9 @@
                         </div>
                     </div>
                 </div>
+                <?php
+                    $i++;
+                ?>
                 @endforeach
                 {{--------------------------}}
                 
@@ -288,15 +296,22 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoicHN0cmlrYSIsImEiOiJjbHZsc2p2bXcyY240MmtuMDcydHJzd2UxIn0.KBf79cvk47WseBc9rNu6gQ'; // Replace with your actual access token
 
-        const map = new mapboxgl.Map({
-            container: 'map',
+        @for($j=0; $j < $i; $j++)
+        const map{{$j}} = new mapboxgl.Map({
+            container: 'map{{$j}}',
             style: 'mapbox://styles/pstrika/clwqz4fds03gv01qo9d4w3g21', // Choose a map style
             center: [-80.07488399442913, 26.137643513173536], // Set the initial center coordinates
             zoom: 10, // Set the initial zoom level
             projection: 'albers'
         });
+        @endfor
 
     </script>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            sidebarColor(document.getElementById("sidebarColorDiv")); // Execute the sidebarColor function once the HTML is loaded
+        });
+    </script>
     @endpush
 </x-page-template>

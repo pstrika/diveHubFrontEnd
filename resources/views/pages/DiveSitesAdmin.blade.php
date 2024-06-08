@@ -7,7 +7,7 @@
         <x-auth.navbars.navs.auth pageTitle="Dive Sites Admin"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
         <div class="container-fluid py-0">
-
+            <div class="d-none" data-color="info" id="sidebarColorDiv"></div> {{--Set active element on sidenav bar color (goes together wih JS below--}}
             {{--modal code--}}
             <div class="modal fade" id="modal-notification" data-backdrop="static" data-keyboard="false" tabindex="-1" >
                 <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
@@ -140,6 +140,11 @@
     </script>
     @endif
     
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            sidebarColor(document.getElementById("sidebarColorDiv")); // Execute the sidebarColor function once the HTML is loaded
+        });
+    </script>
 
 
    

@@ -28,6 +28,8 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <div class="container-fluid py-4">
+
+            <div class="d-none" data-color="info" id="sidebarColorDiv"></div> {{--Set active element on sidenav bar color (goes together wih JS below--}}
             <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('/assets/img/illustrations/newSite.jpg');">
                 <span class="mask  bg-gradient-info  opacity-4"></span>
             </div>
@@ -603,6 +605,12 @@
             );
         }
 
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            sidebarColor(document.getElementById("sidebarColorDiv")); // Execute the sidebarColor function once the HTML is loaded
+        });
     </script>
     @endpush
 </x-page-template>
