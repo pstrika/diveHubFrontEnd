@@ -45,8 +45,57 @@
 
         <div class="container-fluid py-0">
             <div class="d-none" data-color="info" id="sidebarColorDiv"></div> {{--Set active element on sidenav bar color (goes together wih JS below--}}
-        
 
+            {{--modal Level--}}
+            <div class="modal fade" id="modalLevel" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
+                <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header text-center">
+                            <h6 class="modal-title font-weight-normal" id="modal-title-notification">Site levels</h6>
+                            {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
+                            <span aria-hidden="true">×</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="py-3 text-center">
+                                <h4 class="text-gradient text-info text-md mt-4"></h4>
+                                <div class="table-responsive">
+                                    <table class="table align-items-left mb-0"> 
+                                        <tbody>
+                                            
+                                            <tr><td class="w-20 text-secondary text-end text-lg font-weight-bolder opacity-7"> </td>
+                                            <td class="w-60 align-middle text-start text-sm"><b>Level</b></td>
+                                            <td class="w-20 align-middle text-start text-sm"><b>Max Depth (ft)</b></td> </tr>
+                                            
+                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_0.png" height="25"></td>
+                                            <td class="align-middle text-info text-start text-sm"><b>Open Water</b></td> 
+                                            <td class="align-middle text-info text-center text-sm"><b>60</b></td> </tr>
+
+                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_1.png" height="25"></td>
+                                            <td class="align-middle text-info text-start text-sm"><b>Advanced Open Water</b></td>
+                                            <td class="align-middle text-info text-center text-sm"><b>130</b></td> </tr>
+
+                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7"><img src="{{ asset('assets') }}/img/icons/icons_level_2.png" height="25"></td>
+                                            <td class="align-middle text-info text-start text-sm"><b>Technical Air</b></td>
+                                            <td class="align-middle text-info text-center text-sm"><b>150</b></td> </tr>
+
+                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_3.png" height="25"></td>
+                                            <td class="align-middle text-info text-start text-sm"><b>Technical Normoxic Trimix</b></td>
+                                            <td class="align-middle text-info text-center text-sm"><b>200</b></td> </tr>
+
+                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_4.png" height="25"></td>
+                                            <td class="align-middle text-info text-start text-sm"><b>Technical Hypoxic Trimix</b></td>
+                                            <td class="align-middle text-info text-center text-sm"><b>330+</b></td> </tr>
+
+                                        </tbody>
+                                    </table>
+                                </div>   
+                                <p>Press anywhere outside this dialog to continue</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
 
             <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/dive_sites.jpg');">
@@ -85,38 +134,41 @@
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table>
+                                    <thead class="text-info">
+                                        <th class="align-top">
+                                            Type
+                                        </th>
+                                        
+                                        <th class="px-4 align-top text-start" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">
+                                            Site Name<p class="text-xs text-start mt-0 px-1">click for details</p>
+                                        </th>
+                                        <th class="px-4 align-top text-start" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">
+                                            Rating
+                                        </th>
+                                        <th class="px-4 align-top text-center">
+                                            Level<a href="#" onclick="showModalLevel();"><p class="text-xs text-info text-center mt-0 px-1">(?)</p></a>
+                                        </th>
+                                        <th class="px-4 align-top text-center" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
+                                            Max Depth
+                                        </th>
+                                    </thead>
                                     <tbody>
                                         @foreach($sites as $site)    
                                             <tr style="border-bottom: 1px solid #D3D3D3;">
                                                 <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
-                                                <td class="w-40 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
-                                                @foreach($locations as $location)
-                                                    @if($location->short == $site->location)
-                                                        <td class="w-20 align-middle text-left text-md"><b>{{ $location->location }}</b></td> 
-                                                    @endif
-                                                @endforeach
+                                                <td class="w-65 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
+                                                <td class="w-15 align-middle text-md"><div id="rateYoReadOnly_{{ $site->id }}"></div></td> 
                                                 
+                                                <td class="w-5 text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" height="25"></td>
 
-                                                <?php 
-                                                    if($site->level == 0)
-                                                        $level="Open Water";
-                                                    elseif($site->level == 1)
-                                                        $level="Advanced Open Water";
-                                                    elseif($site->level == 2)
-                                                        $level="Technical Air";
-                                                    elseif($site->level == 3)
-                                                        $level="Technical Normoxic Trimix";
-                                                    elseif($site->level == 4)
-                                                        $level="Technical Hypoxic Trimix";    
-                                                ?>
-                                                <td class="w-25 align-middle text-left text-md"><b>{{ $level}}</b></td> 
+                                                <td class="w-10 align-middle text-center text-md"><b>{{ $site->maxDepth }}</b></td> 
                                         
                                             </tr>
                                         @endforeach
                                     </tbody>
                                     
                                 </table>
-                            </div>    
+                            </div>     
                         </div>
                     </div>
                 </div>
@@ -142,9 +194,23 @@
     
     @push('js')
     
+    <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.js"></script>
 
+    <script>
+        @foreach($sites as $site)
+        $(function () {   
+            $("#rateYoReadOnly_{{ $site->id }}").rateYo({
+                rating: {{ $site->rate != null ? $site->rate : 0 }},
+                readOnly: true
+            });
+        });
+        @endforeach
+
+    </script>
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoicHN0cmlrYSIsImEiOiJjbHZsc2p2bXcyY240MmtuMDcydHJzd2UxIn0.KBf79cvk47WseBc9rNu6gQ'; // Replace with your actual access token
 
@@ -312,6 +378,12 @@
         document.addEventListener("DOMContentLoaded", function() {
             sidebarColor(document.getElementById("sidebarColorDiv")); // Execute the sidebarColor function once the HTML is loaded
         });
+    </script>
+
+    <script>
+        function showModalLevel() {
+            $('#modalLevel').modal('show'); // Show the modal
+        };
     </script>
     @endpush
 </x-page-template>

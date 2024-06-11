@@ -82,7 +82,7 @@ class SiteController extends Controller
     }
 
     public function showTopRated() {
-        $sites = Site::all()->sortby("name");
+        $sites = Site::all()->sortByDesc("rate");
         $locations = WeatherLocation::all();
 
         return view('pages.DiveSites', compact('sites', 'locations'));
