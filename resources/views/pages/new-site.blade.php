@@ -303,6 +303,7 @@
                                                     <option value="Destroyer">Destroyer</option>
                                                     <option value="Landing Dock Ship">Landing Dock Ship</option>
                                                     <option value="Cable Ship">Cable Ship</option>
+                                                    <option value="Steamer">Steamer</option>
                                                 </select>
                                             </div>
                                             <div class="col-12 col-sm-4 mt-sm-4">
