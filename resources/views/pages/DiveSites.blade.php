@@ -122,12 +122,12 @@
                         </div>
                     </div>
                 </div>--}}
-                {{-- Dive Sites list card --}}
-                <div class="col-md-12 m-auto">             
+                {{-- Dive Sites Wrecks card --}}
+                <div class="col-md-6 m-auto">             
                     <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h3 class="card-title text-white mx-4"> All Sites</h3>
+                                <h3 class="card-title text-white mx-4">Wrecks</h3>
                             </div>
                         </div>
 
@@ -153,7 +153,7 @@
                                         </th>
                                     </thead>
                                     <tbody>
-                                        @foreach($sites as $site)    
+                                        @foreach($sitesWrecks as $site)    
                                             <tr style="border-bottom: 1px solid #D3D3D3;">
                                                 <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
                                                 <td class="w-65 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
@@ -172,10 +172,59 @@
                         </div>
                     </div>
                 </div>
-
-                
                 {{-----------------------------}}
-            
+
+                {{-- Dive Sites Reefs card --}}
+                <div class="col-md-6 m-auto">             
+                    <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h3 class="card-title text-white mx-4">Reefs</h3>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table>
+                                    <thead class="text-info">
+                                        <th class="align-top">
+                                            Type
+                                        </th>
+                                        
+                                        <th class="px-4 align-top text-start" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">
+                                            Site Name<p class="text-xs text-start mt-0 px-1">click for details</p>
+                                        </th>
+                                        <th class="px-4 align-top text-start" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">
+                                            Rating
+                                        </th>
+                                        <th class="px-4 align-top text-center">
+                                            Level<a href="#" onclick="showModalLevel();"><p class="text-xs text-info text-center mt-0 px-1">(?)</p></a>
+                                        </th>
+                                        <th class="px-4 align-top text-center" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
+                                            Max Depth
+                                        </th>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($sitesReefs as $site)    
+                                            <tr style="border-bottom: 1px solid #D3D3D3;">
+                                                <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
+                                                <td class="w-65 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
+                                                <td class="w-15 align-middle text-md"><div id="rateYoReadOnly_{{ $site->id }}"></div></td> 
+                                                
+                                                <td class="w-5 text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" height="25"></td>
+
+                                                <td class="w-10 align-middle text-center text-md"><b>{{ $site->maxDepth }}</b></td> 
+                                        
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                    
+                                </table>
+                            </div>     
+                        </div>
+                    </div>
+                </div>
+                {{-----------------------------}}
                     
             </div>
             
@@ -201,7 +250,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.js"></script>
 
     <script>
-        @foreach($sites as $site)
+        @foreach($sitesWrecks as $site)
+        $(function () {   
+            $("#rateYoReadOnly_{{ $site->id }}").rateYo({
+                rating: {{ $site->rate != null ? $site->rate : 0 }},
+                readOnly: true
+            });
+        });
+        @endforeach
+
+        @foreach($sitesReefs as $site)
         $(function () {   
             $("#rateYoReadOnly_{{ $site->id }}").rateYo({
                 rating: {{ $site->rate != null ? $site->rate : 0 }},
@@ -250,7 +308,7 @@
                         return $dd * $sign;
                     }
 
-                    foreach($sites as $site) {
+                    foreach($sitesWrecks as $site) {
                         list($lat_deg, $lat_min, $lat_dir) = sscanf($site->gpsLat, "%d° %f' %c");
                         list($lon_deg, $lon_min, $lon_dir) = sscanf($site->gpsLon, "%d° %f' %c");
 

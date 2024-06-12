@@ -31,24 +31,26 @@ class TripsController extends Controller
         //$trips = Trip::where('date', $date)->with(['site' => function ($query) {
         //    $query->select('id', 'maxDepth', 'level');
         //}])->get()->sortBy('departureTime');
-        Log::debug("size of sites: " . $sites);
+        Log::debug("size of sites: " . count($sites));
 
         foreach($trips as $i => $trip) {
             if($trip->siteId != null) {
+                Log::debug("trip->siteTd " . $trip->siteId);
                 $siteIds = explode(',', $trip->siteId);
                 //$relatedSites = Site::whereIn('id', $siteIds)->get();
                 $relatedSites = $sites->whereIn('id', $siteIds)->all();
-                //Log::debug("size of relatedSites: " . count($relatedSites));
+                Log::debug("size of relatedSites: " . count($relatedSites));
                 //$trips[$i]->site = $relatedSites;
                 
                 $j=0;
+                
                 foreach($relatedSites as $relatedSite) {
                     $trips[$i]->site[$j]->id = $relatedSite->id;
                     $trips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
                     $trips[$i]->site[$j]->level = $relatedSite->level;
-                    //Log::debug("Trip [" . $trips[$i]->date . " " . $trips[$i]->departureTime . " " . $trips[$i]->tripName . "[" . $trips[$i]->site[$j]->maxDepth . "]");
+                    Log::debug("Trip [" . $trips[$i]->date . " " . $trips[$i]->departureTime . " " . $trips[$i]->tripName . "[" . $trips[$i]->site[$j]->maxDepth . "]");
                     $j++;
-                    
+                    $trips[$i]->site[] = $relatedSite;  
                 }
             
             }

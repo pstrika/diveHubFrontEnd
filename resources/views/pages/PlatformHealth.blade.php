@@ -119,6 +119,90 @@
                     </div>
                 </div>
                 {{-----------------------------}}
+
+                {{-- Weather API card --}}
+                <div class="col-md-12">             
+                    <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h3 class="card-title text-white mx-4"> Weather API</h3>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table>
+
+                                <thead class="text-info">
+                                    <th class="align-top text-center">
+                                        Status
+                                    </th>
+                                    <th class="align-top">
+                                        Location
+                                    </th>
+                                    <th class="align-top">
+                                        Last Execution
+                                    </th>
+                                    <th class="align-top">
+                                        Time Stamp (UTC-5)
+                                    </th>
+                                    <th class="text-center align-top">
+                                        Error Code
+                                    </th>
+                                    
+                                </thead>
+
+                                    <tbody>
+                                        @foreach($weatherLocations as $weatherLocation)
+                                            @php
+                                                //$dateTime = DateTime::createFromFormat('Y-m-d H:i:s', $operator->_lastUpdate);
+                                                
+                                                // Assuming you have a datetime variable in UTC
+                                                $utc_datetime_str = $weatherLocation->_lastUpdated;
+                                                $utc_datetime = new DateTime($utc_datetime_str, new DateTimeZone('UTC'));
+
+                                                // Convert to EST (Eastern Standard Time)
+                                                $est_timezone = new DateTimeZone('America/New_York'); // UTC-5
+                                                $dateTime = $utc_datetime->setTimezone($est_timezone);
+                                                
+                                                $now = new DateTime();
+                                                
+                                                $interval = $now->diff($dateTime);
+                                                //$interval = $dateTime->diff($now);
+
+                                                if($weatherLocation->_status == "1" and $interval->format('%h') == "0") {
+                                                    $statusIcon = "check_circle";
+                                                    $colorIcon = "#008000";
+                                                }
+                                                elseif ($weatherLocation->_status == "0") {
+                                                    $statusIcon = "schedule";
+                                                    $colorIcon = "#03a9f4";
+                                                }
+                                                else {
+                                                    $statusIcon = "error";
+                                                    $colorIcon = "#ff0000";
+                                                }
+                                                
+
+                                            @endphp
+                                            <tr style="border-bottom: 1px solid #D3D3D3;">
+                                                <td class="px-0 py-2 text-sm text-center custom-text-color" style="color: {{ $colorIcon }};"><i class="material-icons position-relative ms-auto text-lg me-1 my-auto" >{{ $statusIcon}}</i></td>
+                                                <td class="w-40">{{ $weatherLocation->location }}</td>
+                                                <td class="w-15">{{ ($interval->format('%d') != 0) ? ($interval->format('%d days')) : "" }} {{ ($interval->format('%h') != 0) ? ($interval->format('%h hrs')) : "" }} {{ ($interval->format('%i') != 0) ? ($interval->format('%i min')) : "" }} ago</td>
+                                                <td class="w-15">{{ $dateTime->format('Y-m-d H:i:s') }}</td>
+                                                <td class="text-center">{{ $weatherLocation->_status }}</td>
+                                                
+                                            </tr>
+
+                                        @endforeach
+                                    </tbody>
+                                    
+                                </table>
+                            </div>    
+                        </div>
+                    </div>
+                </div>
+                {{-----------------------------}}
                 
                     
                 </div>

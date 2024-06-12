@@ -127,7 +127,7 @@
                                                 <option value="all">Show All</option>
                                                 <option value="opId=14">Emerald Charters</option>
                                                 <option value="opId=1">South Florida Diving HQ</option>
-                                                <option value="opId=7">Dixie Divers</option>
+                                                <option value="opId=11">Conch Republic</option>
                                                 <option value="opId=15">Stuart Scuba</option>
                                                 
                                             </select>
@@ -151,7 +151,7 @@
                                 <tr><td class="text-center text-sm w-1"> 
                                     <span class="badge badge-md bg-gradient-success text-white">SFDH</span>
                                     <span class="badge badge-md bg-gradient-danger text-white">Emerald</span>
-                                    <span class="badge badge-md bg-gradient-warning text-white">Dixie</span>
+                                    <span class="badge badge-md bg-gradient-warning text-white">Conch R</span>
                                     <span class="badge badge-md bg-gradient-info text-white">Stuart</span>
                                     <span class="badge badge-md bg-gradient-primary text-white">OTHER</span> 
                                 </td></tr>
@@ -334,7 +334,7 @@
                         echo "className: 'bg-gradient-success text-white opId=1 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
                     elseif($trip->operatorId == "14")
                         echo "className: 'bg-gradient-danger text-white opId=3 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
-                    elseif($trip->operatorId == "7")
+                    elseif($trip->operatorId == "11")
                         echo "className: 'bg-gradient-warning text-white opId=8 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
                     elseif($trip->operatorId == "15")
                         echo "className: 'bg-gradient-info text-white opId=9 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";

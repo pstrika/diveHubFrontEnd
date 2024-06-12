@@ -82,10 +82,19 @@ class SiteController extends Controller
     }
 
     public function showTopRated() {
-        $sites = Site::all()->sortByDesc("rate");
+        //$sites = Site::all()->sortByDesc("rate");
+        $sitesWrecks = Site::where('type', 'wreck')
+            ->orderBy('rate', 'desc')
+            ->take(10)
+            ->get();
+        
+        $sitesReefs = Site::where('type', '!=', 'wreck')
+            ->orderBy('rate', 'desc')
+            ->take(10)
+            ->get();
         $locations = WeatherLocation::all();
 
-        return view('pages.DiveSites', compact('sites', 'locations'));
+        return view('pages.DiveSites', compact('sitesWrecks', 'sitesReefs', 'locations'));
     }
 
     public function searchSites(Request $request) {

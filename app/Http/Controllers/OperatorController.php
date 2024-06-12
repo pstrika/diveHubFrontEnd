@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Models\Operator;
+use App\Models\WeatherLocation;
 use App\Models\Boat;
 
 use Illuminate\Http\Request;
@@ -39,6 +40,7 @@ class OperatorController extends Controller
 
     public function showHealth() {
         $operators = Operator::all();
-        return view('pages.PlatformHealth', compact('operators'));
+        $weatherLocations = WeatherLocation::all();
+        return view('pages.PlatformHealth', compact('operators', 'weatherLocations'));
     }
 }

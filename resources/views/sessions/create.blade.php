@@ -16,7 +16,7 @@
                     <div class="col-lg-5 col-md-8 col-12 mx-auto">
                         <div class="card z-index-0 fadeIn3 fadeInBottom">
                             <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
-                                <div class="bg-gradient-info shadow-primary border-radius-lg py-3 pe-1">
+                                <div class="bg-gradient-info shadow-secondary border-radius-lg py-3 pe-1">
                                     <h4 class="text-white font-weight-bolder text-center mt-2 mb-0">Sign in</h4>
                                     <div class="row mt-3">
                                         <div class="col-2 text-center ms-auto">
@@ -38,8 +38,12 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <h6>Logo goes here</h6>
-                                
+                                <div class="d-flex justify-content-center">
+                                    <img src="{{ asset('assets') }}/img/logos/logo_divershub.png" class="img-fluid" width="150">
+                                </div>
+                                <div class="d-flex justify-content-center">
+                                    <img src="{{ asset('assets') }}/img/logos/logo_letters.png" class="img-fluid" width="200">
+                                </div>
                                 <form role="form" method="POST" action="{{ route('login') }}" class="text-start">
                                     @csrf
                                     @if (Session::has('status'))
