@@ -40,15 +40,23 @@ class TripDetailsController extends Controller
         Log::debug('siteIds count: ' . count($siteIds));
         Log::debug('siteIds: ' . json_encode($siteIds));
         
+        # get all sites
+        
+
         if(count($siteIds)>1) { //can also use $siteIds[0] != ""
-            $sites = Site::where('id', $siteIds[0])->get();
-            $siteLocation = Location::where('short', $sites[0]->location)->get();
-            $sites[0]->location = $siteLocation[0]->location;
-            $sitePhoto = Photo::where('siteId', $sites[0]->id)->get()[0];
-            Log::debug('Site location: ' . $siteLocation);
+            $sites = Site::whereIn('id', $siteIds)->get();
+            Log::debug("Got " . count($sites) . " sites for this trip");
+            #foreach($sites as $site) {
+            #    Log::debug("Photos for site " . $site->name . " is " . $site->photos[0]->id . " and location long is " . $site->locationLong->location);
+            #}
+        #    $sites = Site::where('id', $siteIds[0])->get();
+        #    $siteLocation = Location::where('short', $sites[0]->location)->get();
+        #    $sites[0]->location = $siteLocation[0]->location;
+        #    $sitePhoto = Photo::where('siteId', $sites[0]->id)->get()[0];
+        #    Log::debug('Site location: ' . $siteLocation);
         } else {
             $sites = [];
-            $sitePhoto = null;
+        #    $sitePhoto = null;
         }
         
 
@@ -62,7 +70,8 @@ class TripDetailsController extends Controller
             else
                 $boats = null;
         }
-        return view('pages.TripDetails', compact('tripDetails', 'operator', 'location', 'boats', 'sites', 'sitePhoto'));
+        #return view('pages.TripDetails', compact('tripDetails', 'operator', 'location', 'boats', 'sites', 'sitePhoto'));
+        return view('pages.TripDetails', compact('tripDetails', 'operator', 'location', 'boats', 'sites'));
 
     }
 }

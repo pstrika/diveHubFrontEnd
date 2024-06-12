@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
@@ -27,5 +28,10 @@ class Photo extends Model
     public function deletePhoto() {
         Storage::disk('siteAssets')->delete('img/sites/' . $this->file);
         $this->delete();
+    }
+
+    public function site(): BelongsTo
+    {
+        return $this->belongsTo(Site::class, 'pics', 'id');
     }
 }

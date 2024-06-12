@@ -181,8 +181,8 @@
                                             <tr> <td style="border: none;">
                                                 <table class="table align-items-center mb-0">
                                                 
-                                                    <tr><td style="border-bottom: 1px solid #D3D3D3;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">As advertised</td>
-                                                    <td style="border-bottom: 1px solid #D3D3D3;" class="align-middle text-left text-sm text-wrap"><b>"{{ $tripDetails->tripName}}"</b></td> </tr>
+                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">As advertised</td>
+                                                    <td class="align-middle text-left text-sm text-wrap"><b>"{{ $tripDetails->tripName}}"</b></td> </tr>
                                                     
                                                     
                                                 </table>
@@ -190,54 +190,60 @@
                                                     <tr><td height="20" style="border: none;"><p class="mt-0 text-danger align-middle text-center text-xs font-weight-bolder opacity-7">Sites are not confirmed, but this operator often visits...</p></td>    
                                                 @endif
                                                 @if(count($sites))
-                                                    {{--name and type--}}
-                                                    <tr style="border-top: none;"><td class="text-uppercase text-secondary text-xl font-weight-bolder opacity-7 text-center" style="border: none;"><a href="{{ route("SiteDetails") }}/{{ $sites[0]->id }}"><b>{{ $sites[0]->name}}</b></a></td> </tr>
-                                                    <tr><td style="border: none;"><p class="mt-n3 text-secondary align-top text-center text-xs font-weight-bolder opacity-7">{{ $sites[0]->type }}</p></td>
-                                                    
-                                                    {{--gauge and minimum cert--}}
-                                                    <table class="table align-items-center mb-0" >
-                                                        <tbody>
-                                                        <tr><td class="row justify-content-center mx-auto mt-n4">
-                                                            <div id="gauge2" class="gauge-container five"> </div>
-                                                            @php
-                                                                if($sites[0]->level == 0)
-                                                                    $level="Open Water";
-                                                                elseif($sites[0]->level == 1)
-                                                                    $level="Advanced Open Water";
-                                                                elseif($sites[0]->level == 2)
-                                                                    $level="Technical Air";
-                                                                elseif($sites[0]->level == 3)
-                                                                    $level="Technical Normoxic Trimix";
-                                                                elseif($sites[0]->level == 4)
-                                                                    $level="Technical Hypoxic Trimix";
-                                                                
-                                                            @endphp
-                                                            <div class="align-middle text-center text-md"><b>{{ $level }}</b></div>
-                                                            <div class="align-middle text-center text-xs">Minimum Recommended Certification</div>
-                                                    </td></tr>
-                                                        </tbody>
+                                                    @foreach($sites as $site)
+                                                        {{--name and type--}}
+                                                        <table class="table align-items-center mb-0" >
+                                                            <tr style="border-top: 1px solid #D3D3D3;"><td class="text-uppercase text-secondary text-xl font-weight-bolder opacity-7 text-center" style="border: none;"><a href="{{ route("SiteDetails") }}/{{ $site->id }}"><b>{{ $site->name}}</b></a></td> </tr>
+                                                            <tr><td style="border: none;"><p class="mt-n3 text-secondary align-top text-center text-xs font-weight-bolder opacity-7">{{ $site->type }}</p></td>
+                                                        </table>
+                                                        {{--gauge and minimum cert--}}
+                                                        <table class="table align-items-center mb-0" >
+                                                            <tbody>
+                                                            <tr><td class="row justify-content-center mx-auto mt-n4">
+                                                                <div id="gauge{{ $site->id }}" class="gauge-container five"> </div>
+                                                                @php
+                                                                    if($site->level == 0)
+                                                                        $level="Open Water";
+                                                                    elseif($site->level == 1)
+                                                                        $level="Advanced Open Water";
+                                                                    elseif($site->level == 2)
+                                                                        $level="Technical Air";
+                                                                    elseif($site->level == 3)
+                                                                        $level="Technical Normoxic Trimix";
+                                                                    elseif($site->level == 4)
+                                                                        $level="Technical Hypoxic Trimix";
+                                                                    
+                                                                @endphp
+                                                                <div class="align-middle text-center text-md"><b>{{ $level }}</b></div>
+                                                                <div class="align-middle text-center text-xs">Minimum Recommended Certification</div>
+                                                        </td></tr>
+                                                            </tbody>
 
-                                                    </table>
+                                                        </table>
 
-                                                    {{--max depth and location--}}
-                                                    <table class="table align-items-center mb-0">
+                                                        {{--max depth and location--}}
+                                                        <table class="table align-items-center mb-0">
 
-                                                        <tr><td style="border: none;" class="w-50 text-secondary text-end text-lg font-weight-bolder opacity-7">Max Depth</td>
-                                                        <td style="border: none;" class="align-middle text-left text-sm text-wrap"><b>{{ $sites[0]->maxDepth}} ft</b></td> </tr>
+                                                            <tr><td style="border: none;" class="w-50 text-secondary text-end text-lg font-weight-bolder opacity-7">Max Depth</td>
+                                                            <td style="border: none;" class="align-middle text-left text-sm text-wrap"><b>{{ $site->maxDepth}} ft</b></td> </tr>
 
-                                                        <tr><td style="border: none;" class="w-50 text-secondary text-end text-lg font-weight-bolder opacity-7">Location</td>
-                                                        <td style="border: none;" class="align-middle text-left text-sm text-wrap"><b>{{ $sites[0]->location}}</b></td> </tr>
+                                                            <tr><td style="border: none;" class="w-50 text-secondary text-end text-lg font-weight-bolder opacity-7">Location</td>
+                                                            <td style="border: none;" class="align-middle text-left text-sm text-wrap"><b>{{ $site->locationLong->location}}</b></td> </tr>
 
-                                                        
+                                                            
 
-                                                        
+                                                            
 
 
-                                                    </table>
+                                                        </table>
 
-                                                    {{--picture--}}
-                                                    <tr><td><div class="page-header min-height-250 max-height-250 border-radius-xl mt-0 mx-0" style="background-image: url('{{ asset('assets') }}/img/sites/{{ $sitePhoto->file}}');"></div></td></tr>
-                                                    <tr><td style="border: none;" class="align-middle"><p class="text-center text-sm text-wrap"> {{ $sitePhoto->desc}}</p></td> </tr>
+                                                        {{--picture--}}
+                                                        <table class="table align-items-center mb-0">
+                                                            <tr><td><div class="page-header min-height-250 max-height-250 border-radius-xl mt-0 mx-0" style="background-image: url('{{ asset('assets') }}/img/sites/{{ $site->photos[0]->file }}');"></div></td></tr>
+                                                            <tr><td style="border: none;" class="align-middle"><p class="text-center text-sm text-wrap"> {{ $site->photos[0]->desc}}</p></td> </tr>
+                                                        </table>
+
+                                                    @endforeach
                                                 @endif
                                             </td></tr>
                                         </tbody>    
@@ -428,8 +434,9 @@
     
     @if(count($sites))
     <script>
-        var gauge2 = Gauge(
-            document.getElementById("gauge2"), {
+        @foreach($sites as $site)
+        var gauge{{ $site->id }} = Gauge(
+            document.getElementById("gauge{{ $site->id }}"), {
                 min: 0,
                 max: 10,
                 dialStartAngle: 180,
@@ -450,8 +457,8 @@
                 }
             }
         );
-        gauge2.setValueAnimated({{ $sites[0]->level * 2 + 2}}, 2);
-
+        gauge{{ $site->id }}.setValueAnimated({{ $site->level * 2 + 2}}, 2);
+        @endforeach
     </script>
     @endif
     @endpush
