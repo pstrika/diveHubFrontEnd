@@ -42,54 +42,54 @@
 
         {{--modal Level--}}
         <div class="modal fade" id="modalLevel" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
-                    <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header text-center">
-                                <h6 class="modal-title font-weight-normal" id="modal-title-notification">Site levels</h6>
-                                {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
-                                <span aria-hidden="true">×</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="py-3 text-center">
-                                    <h4 class="text-gradient text-info text-md mt-4"></h4>
-                                    <div class="table-responsive">
-                                        <table class="table align-items-left mb-0"> 
-                                            <tbody>
-                                                
-                                                <tr><td class="w-20 text-secondary text-end text-lg font-weight-bolder opacity-7"> </td>
-                                                <td class="w-60 align-middle text-start text-sm"><b>Level</b></td>
-                                                <td class="w-20 align-middle text-start text-sm"><b>Max Depth (ft)</b></td> </tr>
-                                                
-                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_0.png" height="25"></td>
-                                                <td class="align-middle text-info text-start text-sm"><b>Open Water</b></td> 
-                                                <td class="align-middle text-info text-center text-sm"><b>60</b></td> </tr>
+            <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+                <div class="modal-content">
+                    <div class="modal-header text-center">
+                        <h6 class="modal-title font-weight-normal" id="modal-title-notification">Site levels</h6>
+                        {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
+                        <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="py-3 text-center">
+                            <h4 class="text-gradient text-info text-md mt-4"></h4>
+                            <div class="table-responsive">
+                                <table class="table align-items-left mb-0"> 
+                                    <tbody>
+                                        
+                                        <tr><td class="w-20 text-secondary text-end text-lg font-weight-bolder opacity-7"> </td>
+                                        <td class="w-60 align-middle text-start text-sm"><b>Level</b></td>
+                                        <td class="w-20 align-middle text-start text-sm"><b>Max Depth (ft)</b></td> </tr>
+                                        
+                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_0.png" height="25"></td>
+                                        <td class="align-middle text-info text-start text-sm"><b>Open Water</b></td> 
+                                        <td class="align-middle text-info text-center text-sm"><b>60</b></td> </tr>
 
-                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_1.png" height="25"></td>
-                                                <td class="align-middle text-info text-start text-sm"><b>Advanced Open Water</b></td>
-                                                <td class="align-middle text-info text-center text-sm"><b>130</b></td> </tr>
+                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_1.png" height="25"></td>
+                                        <td class="align-middle text-info text-start text-sm"><b>Advanced Open Water</b></td>
+                                        <td class="align-middle text-info text-center text-sm"><b>130</b></td> </tr>
 
-                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7"><img src="{{ asset('assets') }}/img/icons/icons_level_2.png" height="25"></td>
-                                                <td class="align-middle text-info text-start text-sm"><b>Technical Air</b></td>
-                                                <td class="align-middle text-info text-center text-sm"><b>150</b></td> </tr>
+                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7"><img src="{{ asset('assets') }}/img/icons/icons_level_2.png" height="25"></td>
+                                        <td class="align-middle text-info text-start text-sm"><b>Technical Air</b></td>
+                                        <td class="align-middle text-info text-center text-sm"><b>150</b></td> </tr>
 
-                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_3.png" height="25"></td>
-                                                <td class="align-middle text-info text-start text-sm"><b>Technical Normoxic Trimix</b></td>
-                                                <td class="align-middle text-info text-center text-sm"><b>200</b></td> </tr>
+                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_3.png" height="25"></td>
+                                        <td class="align-middle text-info text-start text-sm"><b>Technical Normoxic Trimix</b></td>
+                                        <td class="align-middle text-info text-center text-sm"><b>200</b></td> </tr>
 
-                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_4.png" height="25"></td>
-                                                <td class="align-middle text-info text-start text-sm"><b>Technical Hypoxic Trimix</b></td>
-                                                <td class="align-middle text-info text-center text-sm"><b>330+</b></td> </tr>
+                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_4.png" height="25"></td>
+                                        <td class="align-middle text-info text-start text-sm"><b>Technical Hypoxic Trimix</b></td>
+                                        <td class="align-middle text-info text-center text-sm"><b>330+</b></td> </tr>
 
-                                            </tbody>
-                                        </table>
-                                    </div>   
-                                    <p>Press anywhere outside this dialog to continue</p>
-                                </div>
-                            </div>
+                                    </tbody>
+                                </table>
+                            </div>   
+                            <p>Press anywhere outside this dialog to continue</p>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
         
         
 
@@ -187,7 +187,7 @@
                                                 @endif
                                             @endforeach
                                         </tr>
-                                        <tr><td>DIVE CONDITIONS</td>
+                                        <tr><td>OCEAN CONDITIONS</td>
                                             @foreach($weathers as $weather)
                                                 @if($weather->location == "key largo" or $weather->location == "fort lauderdale" or $weather->location == "west palm beach")
                                                     {{--<td class="align-middle text-center text-sm">{{ $weather->conditionsAM_text }}</td>--}}
@@ -221,7 +221,7 @@
                                                     <option value="FLL">fort lauderdale</option>
                                                     <option value="POM">pompano beach</option>
                                                     <option value="DEB">deerfield beach</option>
-                                                    <option value="WPB">west pam beach</option>
+                                                    <option value="WPB">west palm beach</option>
                                                     <option value="KLA">key largo</option>
                                                 </select>
                                                 <p class="text-xs font-weight-bold mb-0 mt-n3">location</p>
@@ -354,7 +354,7 @@
                                                 @endif
                                             @endforeach
                                         </tr>
-                                        <tr><td>DIVE CONDITIONS</td>
+                                        <tr><td>OCEAN CONDITIONS</td>
                                             @foreach($weathers as $weather)
                                                 @if($weather->location == "key largo" or $weather->location == "fort lauderdale" or $weather->location == "west palm beach")
                                                     {{--<td class="align-middle text-center text-sm">{{ $weather->conditionsAM_text }}</td>--}}
@@ -388,7 +388,7 @@
                                                     <option value="FLL">fort lauderdale</option>
                                                     <option value="POM">pompano beach</option>
                                                     <option value="DEB">deerfield beach</option>
-                                                    <option value="WPB">west pam beach</option>
+                                                    <option value="WPB">west palm beach</option>
                                                     <option value="KLA">key largo</option>
                                                 </select>
                                                 <p class="text-xs font-weight-bold mb-0 mt-n3">location</p>

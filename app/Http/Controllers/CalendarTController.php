@@ -93,4 +93,126 @@ class CalendarTController extends Controller
             return view('pages.CalendarR', compact('trips', 'currentDate', 'currentMonthS', 'year', 'prevMonthS', 'nextMonthS', 'controlNav'));
 
     }
+
+    public function showShark($date = null)
+    {
+        // if we didn't receive $date, we just put today's
+        if (!$date) {
+            $date = Carbon::today()->toDateString();
+        }
+
+        $month = date('m', strtotime($date)); // Extract the month from the 'date' variable
+        $year = date('Y', strtotime($date)); // Extract the year from the 'date' variable
+        
+        $dateFrom = Carbon::parse($date)->format('Y-m-d');
+        $dateTo = Carbon::parse($date)->addWeek(6)->format('Y-m-d');
+        $trips = Trip::whereBetween('date', [$dateFrom, $dateTo])
+            ->where('tags', 'like', "%SHA%")
+            ->whereDate('date', '>=', Carbon::today())
+            ->get()->sortBy("date");
+
+        $sites = collect(Site::select('id', 'maxDepth', 'level')->get());
+        
+        Log::debug("size of sites: " . $sites);
+
+        foreach($trips as $i => $trip) {
+            if($trip->siteId != null) {
+                $siteIds = explode(',', $trip->siteId);
+                $relatedSites = $sites->whereIn('id', $siteIds)->all();
+                
+                $j=0;
+                foreach($relatedSites as $relatedSite) {
+                    $trips[$i]->site[$j]->id = $relatedSite->id;
+                    $trips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
+                    $trips[$i]->site[$j]->level = $relatedSite->level;
+                    $j++;
+                    
+                }
+            
+            }
+        }
+            
+        $dateF = Carbon::parse($date);
+        
+        // Get the next month....
+        $nextMonthS = $dateF->addMonth()->startOfMonth()->toDateString(); // Add a month
+        $thisMonth = Carbon::today()->startOfMonth();
+        $prevMonth = $dateF->sub(new \DateInterval('P2M'));
+
+        $controlNav = "";
+        if($prevMonth < $thisMonth) {
+            $prevMonth = $thisMonth;
+            $controlNav = "disabled";
+        }
+        $prevMonthS = $prevMonth->toDateString();
+
+        $currentMonthS = Carbon::parse($date)->format('F');
+        $year = Carbon::parse($date)->format('Y');
+        $currentDate = Carbon::parse($date)->startOfMonth()->toDateString();
+
+        return view('pages.CalendarShark', compact('trips', 'currentDate', 'currentMonthS', 'year', 'prevMonthS', 'nextMonthS', 'controlNav'));
+
+    }
+
+    public function showLobster($date = null)
+    {
+        // if we didn't receive $date, we just put today's
+        if (!$date) {
+            $date = Carbon::today()->toDateString();
+        }
+
+        $month = date('m', strtotime($date)); // Extract the month from the 'date' variable
+        $year = date('Y', strtotime($date)); // Extract the year from the 'date' variable
+        
+        $dateFrom = Carbon::parse($date)->format('Y-m-d');
+        $dateTo = Carbon::parse($date)->addWeek(6)->format('Y-m-d');
+        $trips = Trip::whereBetween('date', [$dateFrom, $dateTo])
+            ->where('tags', 'like', "%LOB%")
+            ->whereDate('date', '>=', Carbon::today())
+            ->get()->sortBy("date");
+
+        $sites = collect(Site::select('id', 'maxDepth', 'level')->get());
+        
+        Log::debug("size of sites: " . $sites);
+
+        foreach($trips as $i => $trip) {
+            if($trip->siteId != null) {
+                $siteIds = explode(',', $trip->siteId);
+                $relatedSites = $sites->whereIn('id', $siteIds)->all();
+                
+                $j=0;
+                foreach($relatedSites as $relatedSite) {
+                    $trips[$i]->site[$j]->id = $relatedSite->id;
+                    $trips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
+                    $trips[$i]->site[$j]->level = $relatedSite->level;
+                    $j++;
+                    
+                }
+            
+            }
+        }
+            
+        $dateF = Carbon::parse($date);
+        
+        // Get the next month....
+        $nextMonthS = $dateF->addMonth()->startOfMonth()->toDateString(); // Add a month
+        $thisMonth = Carbon::today()->startOfMonth();
+        $prevMonth = $dateF->sub(new \DateInterval('P2M'));
+
+        $controlNav = "";
+        if($prevMonth < $thisMonth) {
+            $prevMonth = $thisMonth;
+            $controlNav = "disabled";
+        }
+        $prevMonthS = $prevMonth->toDateString();
+
+        $currentMonthS = Carbon::parse($date)->format('F');
+        $year = Carbon::parse($date)->format('Y');
+        $currentDate = Carbon::parse($date)->startOfMonth()->toDateString();
+
+        return view('pages.CalendarLobster', compact('trips', 'currentDate', 'currentMonthS', 'year', 'prevMonthS', 'nextMonthS', 'controlNav'));
+
+    }
+
+    
 }

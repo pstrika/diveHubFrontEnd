@@ -37,6 +37,10 @@ Route::get('Weather/', 'App\Http\Controllers\WeatherController@show')->middlewar
 Route::get('CalendarT/{tripType}/{date}', 'App\Http\Controllers\CalendarTController@show')->middleware('auth')->name('CalendarT');
 Route::get('CalendarT/{tripType}', 'App\Http\Controllers\CalendarTController@show')->middleware('auth')->name('CalendarT');
 Route::get('CalendarT/', 'App\Http\Controllers\CalendarTController@show')->middleware('auth')->name('CalendarT');
+Route::get('CalendarShark/{date}', 'App\Http\Controllers\CalendarTController@showShark')->middleware('auth')->name('CalendarShark');
+Route::get('CalendarShark/', 'App\Http\Controllers\CalendarTController@showShark')->middleware('auth')->name('CalendarShark');
+Route::get('CalendarLobster/{date}', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('auth')->name('CalendarLobster');
+Route::get('CalendarLobster/', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('auth')->name('CalendarLobster');
 
 Route::get('TripDetails/{tripId}', 'App\Http\Controllers\TripDetailsController@show')->middleware('auth')->name('TripDetails');
 

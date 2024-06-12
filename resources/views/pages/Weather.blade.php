@@ -96,7 +96,7 @@
                     <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Dive Conditions</h2>
+                                <h2 class="card-title text-white mx-4">Ocean Conditions</h2>
                                 <a href="#" onclick="showModal();"><p class="card-title text-white text-xs mt-n2 mx-4">What is this?</p></a>
                                 <div class="table-responsive"></div>
                             </div>

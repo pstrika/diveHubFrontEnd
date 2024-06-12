@@ -8,7 +8,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('dashboard') }}">
             <img src="{{ asset('assets') }}/img/logo-ct.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.5.3 (6/10/24)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.6.0 (6/11/24)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -82,13 +82,13 @@
                 </a>
                 <div class="collapse {{ $activePage == 'Calendars' ? ' show ' : '' }}  " id="calendars">
                     <ul class="nav ">
-                        <li class="nav-item {{ $activeItem == 'CalendarRec' ? ' active ' : '' }}  ">
+                        {{--<li class="nav-item {{ $activeItem == 'CalendarRec' ? ' active ' : '' }}  ">
                             <a class="nav-link text-white {{ $activeItem == 'CalendarRec' ? ' active' : '' }}  "
                                 href="{{ route('CalendarT') }}/rec">
                                 <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_rec.png"></span>
                                 <span class="sidenav-normal  ms-2  ps-1"> Recreational </span>
                             </a>
-                        </li>
+                        </li>--}}
                         <li class="nav-item {{ $activeItem == 'CalendarTec' ? ' active ' : '' }}  ">
                             <a class="nav-link text-white {{ $activeItem == 'CalendarTec' ? ' active' : '' }}  "
                                 href="{{ route('CalendarT') }}/tec">
@@ -96,8 +96,35 @@
                                 <span class="sidenav-normal  ms-2  ps-1"> Technical </span>
                             </a>
                         </li>
+
+                        <li class="nav-item {{ $activeItem == 'sharkDiving' ? ' active ' : '' }}  ">
+                            <a class="nav-link text-white {{ $activeItem == 'sharkDiving' ? ' active' : '' }}  "
+                                href="{{ route('CalendarShark') }}">
+                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_shark.png"></span>
+                                
+                                <span class="sidenav-normal  ms-2  ps-1">Shark Diving</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item {{ $activeItem == 'lobsterDiving' ? ' active ' : '' }}  ">
+                            <a class="nav-link text-white {{ $activeItem == 'lobsterDiving' ? ' active' : '' }}  "
+                                href="{{ route('CalendarLobster') }}">
+                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_lobster.png"></span>
+                                
+                                <span class="sidenav-normal  ms-2  ps-1">Lobster Diving</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
+            </li>
+
+            {{-- Beach diving --}}
+            <li class="nav-item">
+                <a class="nav-link text-white {{ $activeItem == 'beachDiving' ? ' active' : '' }}  "
+                    href="{{ route('BeachDiving') }}">
+                    <i class="material-icons-round opacity-10">beach_access</i>
+                    <span class="nav-link-text ms-2 ps-1">Beach Diving</span>
+                </a>
             </li>
 
             {{-- Operators --}}
@@ -147,7 +174,7 @@
             </li>
 
             {{-- Special Dives --}}
-            <li class="nav-item">
+            {{--<li class="nav-item">
                 <a data-bs-toggle="collapse" href="#special"
                     class="nav-link text-white {{ $activePage == 'Special' ? ' active ' : '' }} "
                     aria-controls="dashboardsExamples" role="button" aria-expanded="false">
@@ -163,17 +190,10 @@
                                 <span class="sidenav-normal  ms-2  ps-1">Beach Diving</span>
                             </a>
                         </li>
-                        <li class="nav-item {{ $activeItem == 'sharkDiving' ? ' active ' : '' }}  ">
-                            <a class="nav-link text-white {{ $activeItem == 'sharkDiving' ? ' active' : '' }}  "
-                                href="{{ route('CalendarT') }}/tec">
-                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_shark.png"></span>
-                                
-                                <span class="sidenav-normal  ms-2  ps-1">Shark Diving</span>
-                            </a>
-                        </li>
+                        
                     </ul>
                 </div>
-            </li>
+            </li>--}}
 
             {{-- Online waivers --}}
             <li class="nav-item">

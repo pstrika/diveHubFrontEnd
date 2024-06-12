@@ -195,17 +195,22 @@
                 {{-- Card Locations --}}
                 <?php
                     $i=0;
+                    $displayedLocations = [];
                 ?>
                 @foreach($sites as $siteLocation)
                 <div class="col-md-12 m-auto">
                     <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                @foreach($locations as $location)
-                                    @if($location->short == $siteLocation[0]->location)
-                                        <h3 class="card-title text-white mx-4">{{ $location->location }}</h3>
-                                    @endif
-                                @endforeach
+                                <?php
+                                
+                                foreach($locations as $location)
+                                    if($location->short == $siteLocation[0]->location) {
+                                        echo '<h3 class="card-title text-white mx-4">' . $location->location . '</h3>';
+                                        array_push($displayedLocations, $location);
+
+                                    }
+                                ?>
                                 
                             </div>
                         </div>
@@ -296,14 +301,118 @@
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoicHN0cmlrYSIsImEiOiJjbHZsc2p2bXcyY240MmtuMDcydHJzd2UxIn0.KBf79cvk47WseBc9rNu6gQ'; // Replace with your actual access token
 
+        <?php
+            function dms_to_dd($degrees, $minutes, $direction) {
+                $sign = ($direction === 'N' || $direction === 'E') ? 1 : -1;
+                $dd = $degrees + ($minutes * 60)  / 3600;
+                return $dd * $sign;
+            }
+        ?>
+
         @for($j=0; $j < $i; $j++)
         const map{{$j}} = new mapboxgl.Map({
             container: 'map{{$j}}',
             style: 'mapbox://styles/pstrika/clwqz4fds03gv01qo9d4w3g21', // Choose a map style
-            center: [-80.07488399442913, 26.137643513173536], // Set the initial center coordinates
-            zoom: 10, // Set the initial zoom level
+            center: [ {{$displayedLocations[$j]->centerLon }}, {{$displayedLocations[$j]->centerLat }}], // Set the initial center coordinates
+            zoom: 11, // Set the initial zoom level
             projection: 'albers'
         });
+
+        //add icons
+        map{{$j}}.loadImage( '{{ asset('assets') }}/img/icons/marker_reef.png', (error, reef) => {
+            if (error) throw error;
+            // Continue to the next step...
+            map{{$j}}.addImage('icon_reef', reef);
+        });
+        map{{$j}}.loadImage( '{{ asset('assets') }}/img/icons/marker_wreck.png', (error, wreck) => {
+            if (error) throw error;
+            // Continue to the next step...
+            map{{$j}}.addImage('icon_wreck', wreck);
+        });
+        map{{$j}}.loadImage( '{{ asset('assets') }}/img/icons/marker_other.png', (error, other) => {
+            if (error) throw error;
+            // Continue to the next step...
+            map{{$j}}.addImage('icon_other', other);
+        });
+
+        const sites{{$j}} = {
+            'type': 'FeatureCollection',
+            'features': [
+                <?php
+                    $siteLocation = $sites[$j];
+                    foreach($siteLocation as $site) {
+                        list($lat_deg, $lat_min, $lat_dir) = sscanf($site->gpsLat, "%d° %f' %c");
+                        list($lon_deg, $lon_min, $lon_dir) = sscanf($site->gpsLon, "%d° %f' %c");
+
+                        $latitude_dd = dms_to_dd($lat_deg, $lat_min, $lat_dir);
+                        $longitude_dd = dms_to_dd($lon_deg, $lon_min, $lon_dir);
+                
+                        echo "{
+                            'type': '" . $site->type . "'," .
+                                "'properties': {" .
+                                    "'name': \"" . $site->name . "\"," .
+                                    "'icon': 'icon_" . $site->type . "'," .
+                                    "'url': 'SiteDetails/" . $site->id . "'," .
+                            "}," .
+                            "'geometry': {" .
+                                "'type': 'Point'," .
+                                "'coordinates': [" . $longitude_dd . "," . $latitude_dd . "]" .
+                            "}" .
+                        "},";
+                    }
+                ?>
+            ]
+        };
+
+        map{{$j}}.on('load', () => {
+            // Add a GeoJSON source containing place coordinates and information.
+            map{{$j}}.addSource('sites', {
+                'type': 'geojson',
+                'data': sites{{$j}}
+            });
+
+            map{{$j}}.addLayer({
+                'id': 'poi-labels',
+                'type': 'symbol',
+                'source': 'sites',
+                'layout': {
+                    'text-field': ['get', 'name'],
+                    'text-variable-anchor': ['top'],
+                    'text-radial-offset': 0.5,
+                    'text-justify': 'auto',
+                    'text-size': 12,
+                    'icon-image': ['get', 'icon'],
+                    'icon-size': 0.3,
+                    'icon-anchor': 'bottom',
+                },
+                'paint': {
+                    'text-color': 'white',
+                },
+            });
+
+            
+        });
+
+        map{{$j}}.on('click', function (e) {
+            var features = map{{$j}}.queryRenderedFeatures(e.point, { layers: ['poi-labels'] });
+
+            if (!features.length) {
+                return;
+            }
+
+            var feature = features[0];
+            // Use Feature and put your code
+            // Populate the popup and set its coordinates
+            // based on the feature found.
+            window.location.href = feature.properties.url;
+            
+        });
+
+        map{{$j}}.on('mousemove', function (e) {
+            var features = map{{$j}}.queryRenderedFeatures(e.point, { layers: ['poi-labels'] });
+            map{{$j}}.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
+        });
+        
         @endfor
 
     </script>
