@@ -9,6 +9,8 @@
         <!-- Customize slider colors -->
         <style>
             
+            
+
             .noUi-connect {
                 background-color: #03a9f4;
             }

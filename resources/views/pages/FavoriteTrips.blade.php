@@ -1,5 +1,5 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
-    <x-auth.navbars.sidebar activePage="trips" activeItem="trips" activeSubitem=""></x-auth.navbars.sidebar>
+    <x-auth.navbars.sidebar activePage="favorites" activeItem="favorites" activeSubitem=""></x-auth.navbars.sidebar>
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
@@ -13,7 +13,7 @@
             }
         </style>
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Dive Trips"></x-auth.navbars.navs.auth>
+        <x-auth.navbars.navs.auth pageTitle="Favorites Dive Trips"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
         <div class="container-fluid py-0">
 
@@ -165,7 +165,6 @@
 
                         <div class="card-body">
                             <div class="table-responsive">
-                                {{-- Table for Weathers--}}
                                 @if ($weathers->isNotEmpty())
                                 <table class="table align-items-center mb-0">
                                     {{--<thead>
@@ -211,84 +210,12 @@
                                 </table>
                                 @endif
 
-                                {{-- Table for filters--}}
-                                <table class="table align-items-center mb-0">
-                                    <tr>
-                                        <td>
-                                            <div class="dropdown">
-                                                <select class="btn bg-info dropdown-toggle w-100 text-white" type="button" id="filterLocAM" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <option value="all">Show All</option>
-                                                    <option value="MIA">miami beach</option>
-                                                    <option value="FLL">fort lauderdale</option>
-                                                    <option value="POM">pompano beach</option>
-                                                    <option value="DEB">deerfield beach</option>
-                                                    <option value="WPB">west palm beach</option>
-                                                    <option value="KLA">key largo</option>
-                                                </select>
-                                                <p class="text-xs font-weight-bold mb-0 mt-n3">location</p>
-                                            </div>
-                                        </td>
-                                        {{--<td>
-                                            <div class="dropdown">
-                                                <select class="btn bg-info dropdown-toggle w-100 text-white" type="button" id="filterAvAM" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <option value="all">Show All</option>
-                                                    <option value="AVA">Available</option>
-                                                    <option value="NAV">Sold-out</option>    
-                                                </select>
-                                                <p class="text-xs font-weight-bold mb-0 mt-n3">availability</p>
-                                            </div>
-                                        </td>--}}
-                                        <td>
-                                            <div class="dropdown">
-                                                <select class="btn bg-info dropdown-toggle w-100 text-white" type="button" id="filterTypeAM" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <option value="all">Show All</option>
-                                                    <option value="TEC">Technical</option>
-                                                    <option value="R">Recreational (all)</option>
-                                                    <option value=" OW">Recreational (OW)</option>    
-                                                    <option value="AOW">Recreational (Advanced)</option>      
-                                                </select>
-                                                <p class="text-xs font-weight-bold mb-0 mt-n3">type</p>
-                                            </div>
-                                        </td>
-                                    </tr> 
-                                    <tr>
-                                        <td>
-                                            <ul class="list-group">
-                                                <li class="list-group-item border-0 px-0">
-                                                    <div class="form-check form-switch ps-0">
-                                                        <input class="form-check-input ms-auto" type="checkbox"
-                                                            id="filterFavAM">
-                                                        <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                            for="flexSwitchCheckDefault">Show Favorites only</label>
-                                                    </div>
-                                                </li>
-                                                
-                                            </ul>
-                                        </td>
-                                        <td>
-                                            <ul class="list-group">
-                                                <li class="list-group-item border-0 px-0">
-                                                    <div class="form-check form-switch ps-0">
-                                                        <input class="form-check-input ms-auto" type="checkbox"
-                                                            id="filterAvAM">
-                                                        <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                            for="flexSwitchCheckDefault">Show available only</label>
-                                                    </div>
-                                                </li>
-                                                
-                                            </ul>
-                                        </td>
-                                    </tr>
-                                </table>
                                 
 
-                                {{-- Table for trips--}}
+
                                 <div class="table-responsive">
                                     <table id="tableTripsAM">
                                         <thead class="text-info">
-                                            <th class="align-top">
-                                                
-                                            </th>
                                             <th class="align-top">
                                                 Operator
                                             </th>
@@ -313,13 +240,8 @@
                                                     $hour = (int)substr($trip->departureTime, 0, 2);
                                                 @endphp
                                                 @if($hour < 12)
-                                                    <tr style="border-bottom: 1px solid #D3D3D3;" class="justify-content-center align-middle" data-tag="{{ $trip->tags }}">
-                                                        @if($trip->fav == 1)
-                                                            <td class="text-start justify-content-center"><i class="material-icons-round text-info opacity-10">favorite</i></td>
-                                                        @else
-                                                            <td class="text-center"> </td>
-                                                        @endif
-                                                        <td class="px-0 py-2 text-sm text-wrap align-middle justify-content-center">{{ $trip->operatorName }}</td>
+                                                    <tr style="border-bottom: 1px solid #D3D3D3;" data-tag="{{ $trip->tags }}">
+                                                        <td class="px-0 py-2 text-sm text-wrap">{{ $trip->operatorName }}</td>
                                                         <td class="px-4">{{ $trip->departureTime }}</td>
                                                         @if($trip->tripFreeSpots == 0)
                                                             <td class="text-center">-</td>
@@ -371,7 +293,6 @@
                         <div class="card-body">
                             <div class="table-responsive">
                                 
-                                {{-- Table for weathers--}}
                                 @if($weathers->isNotEmpty())
                                 <table class="table align-items-center mb-0">
                                     {{--<thead>
@@ -434,7 +355,7 @@
                                                 <p class="text-xs font-weight-bold mb-0 mt-n3">location</p>
                                             </div>
                                         </td>
-                                        {{--<td>
+                                        <td>
                                             <div class="dropdown">
                                                 <select class="btn bg-info dropdown-toggle w-100 text-white" type="button" id="filterAvPM" data-bs-toggle="dropdown" aria-expanded="false">
                                                     <option value="all">Show All</option>
@@ -443,57 +364,24 @@
                                                 </select>
                                                 <p class="text-xs font-weight-bold mb-0 mt-n3">availability</p>
                                             </div>
-                                        </td>--}}
+                                        </td>
                                         <td>
                                             <div class="dropdown">
                                                 <select class="btn bg-info dropdown-toggle w-100 text-white" type="button" id="filterTypePM" data-bs-toggle="dropdown" aria-expanded="false">
                                                     <option value="all">Show All</option>
                                                     <option value="TEC">Technical</option>
-                                                    <option value="R">Recreational (all)</option>
-                                                    <option value=" OW">Recreational (OW)</option>    
-                                                    <option value="AOW">Recreational (Advanced)</option>    
+                                                    <option value="R">Recreational</option>    
                                                 </select>
                                                 <p class="text-xs font-weight-bold mb-0 mt-n3">type</p>
                                             </div>
                                         </td>
                                     </tr> 
-                                    <tr>
-                                        <td>
-                                            <ul class="list-group">
-                                                <li class="list-group-item border-0 px-0">
-                                                    <div class="form-check form-switch ps-0">
-                                                        <input class="form-check-input ms-auto" type="checkbox"
-                                                            id="filterFavPM">
-                                                        <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                            for="flexSwitchCheckDefault">Show Favorites only</label>
-                                                    </div>
-                                                </li>
-                                                
-                                            </ul>
-                                        </td>
-                                        <td>
-                                            <ul class="list-group">
-                                                <li class="list-group-item border-0 px-0">
-                                                    <div class="form-check form-switch ps-0">
-                                                        <input class="form-check-input ms-auto" type="checkbox"
-                                                            id="filterAvPM">
-                                                        <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                            for="flexSwitchCheckDefault">Show available only</label>
-                                                    </div>
-                                                </li>
-                                                
-                                            </ul>
-                                        </td>
-                                    </tr>
                                 </table>
-                                
-                                {{--Table for Trips-------}}
+                                {{-------------------------}}
+
                                 <div class="table-responsive">
                                     <table id="tableTripsPM">
                                         <thead class="text-info">
-                                            <th class="align-top">
-                                                
-                                            </th>
                                             <th class="align-top">
                                                 Operator
                                             </th>
@@ -518,13 +406,8 @@
                                                     $hour = (int)substr($trip->departureTime, 0, 2);
                                                 @endphp
                                                 @if($hour >= 12)
-                                                    <tr style="border-bottom: 1px solid #D3D3D3;" class="justify-content-center align-middle" data-tag="{{ $trip->tags }}">
-                                                        @if($trip->fav == 1)
-                                                            <td class="text-start justify-content-center"><i class="material-icons-round text-info opacity-10">favorite</i></td>
-                                                        @else
-                                                            <td class="text-center"> </td>
-                                                        @endif
-                                                        <td class="px-0 py-2 text-sm text-wrap align-middle justify-content-center">{{ $trip->operatorName }}</td>
+                                                    <tr style="border-bottom: 1px solid #D3D3D3;" data-tag="{{ $trip->tags }}">
+                                                        <td class="d-flex px-0 py-2 text-sm text-wrap">{{ $trip->operatorName }}</td>
                                                         <td class="px-4">{{ $trip->departureTime }}</td>
                                                         @if($trip->tripFreeSpots == 0)
                                                             <td class="text-center">-</td>
@@ -639,20 +522,8 @@
         });
 
     </script>
-
     {{--Handler for tripAM table: filter by location--}}
     <script>
-        var filterAvPM =document.getElementById('filterAvPM');
-        var filterFavPM =document.getElementById('filterFavPM');
-        var filterLocPM =document.getElementById('filterLocPM');
-        var filterTypePM =document.getElementById('filterTypePM');
-
-        var filterAvAM =document.getElementById('filterAvAM');
-        var filterFavAM =document.getElementById('filterFavAM');
-        var filterLocAM =document.getElementById('filterLocAM');
-        var filterTypeAM =document.getElementById('filterTypeAM');
-
-        // Filter Location AM
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('filterLocAM').addEventListener('change', function() {
                 var selectedOption = this.value;
@@ -666,21 +537,12 @@
                     row.style.display = 'none'; // Hide the row
                 }
                 });
-
-                filterAvAM.checked = false;
-                filterFavAM.checked = false;
-                filterTypeAM.value = 'all';
             });
         });
 
-         // Filter AM Availability
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('filterAvAM').addEventListener('change', function() {
-                var selectedOption = 'all';
-                if (this.checked) {
-                    selectedOption = 'AVA';
-                }
-                
+                var selectedOption = this.value;
                 var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
                 
                 rows.forEach(function(row) {
@@ -691,40 +553,9 @@
                     row.style.display = 'none'; // Hide the row
                 }
                 });
-
-                filterFavAM.checked = false;
-                filterLocAM.value = 'all';
-                filterTypeAM.value = 'all';
             });
         });
 
-        // Filter AM Fav
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('filterFavAM').addEventListener('change', function() {
-                var selectedOption = 'all';
-                if (this.checked) {
-                    selectedOption = 'FAV';
-                }
-                
-                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
-                
-                rows.forEach(function(row) {
-                var tags = row.getAttribute('data-tag');
-                if (tags.includes(selectedOption) || selectedOption === 'all') {
-                    row.style.display = ''; // Show the row
-                } else {
-                    row.style.display = 'none'; // Hide the row
-                }
-                });
-
-                //reset all other filters
-                filterAvAM.checked = false;
-                filterLocAM.value = 'all';
-                filterTypeAM.value = 'all';
-            });
-        });
-
-        // Filter AM Type
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('filterTypeAM').addEventListener('change', function() {
                 var selectedOption = this.value;
@@ -738,16 +569,11 @@
                     row.style.display = 'none'; // Hide the row
                 }
                 });
-
-                filterAvAM.checked = false;
-                filterFavAM.checked = false;
-                filterLocAM.value = 'all';
             });
         });
 
-    {{--Handler for tripPM table: filter by location--}}
+    {{--Handler for tripAM table: filter by location--}}
 
-    // Filter PM Location
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('filterLocPM').addEventListener('change', function() {
             var selectedOption = this.value;
@@ -761,21 +587,12 @@
                 row.style.display = 'none'; // Hide the row
             }
             });
-
-            filterAvPM.checked = false;
-            filterFavPM.checked = false;
-            filterTypePM.value = 'all';
         });
     });
 
-    // Filter PM Availability
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('filterAvPM').addEventListener('change', function() {
-            var selectedOption = 'all';
-            if (this.checked) {
-                selectedOption = 'AVA';
-            }
-            
+            var selectedOption = this.value;
             var rows = document.querySelectorAll('#tableTripsPM tr[data-tag]');
             
             rows.forEach(function(row) {
@@ -786,40 +603,9 @@
                 row.style.display = 'none'; // Hide the row
             }
             });
-
-            filterFavPM.checked = false;
-            filterLocPM.value = 'all';
-            filterTypePM.value = 'all';
         });
     });
 
-    // Filter PM Fav
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('filterFavPM').addEventListener('change', function() {
-            var selectedOption = 'all';
-            if (this.checked) {
-                selectedOption = 'FAV';
-            }
-            
-            var rows = document.querySelectorAll('#tableTripsPM tr[data-tag]');
-            
-            rows.forEach(function(row) {
-            var tags = row.getAttribute('data-tag');
-            if (tags.includes(selectedOption) || selectedOption === 'all') {
-                row.style.display = ''; // Show the row
-            } else {
-                row.style.display = 'none'; // Hide the row
-            }
-            });
-
-            //reset all other filters
-            filterAvPM.checked = false;
-            filterLocPM.value = 'all';
-            filterTypePM.value = 'all';
-        });
-    });
-
-    // Filter PM Type
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('filterTypePM').addEventListener('change', function() {
             var selectedOption = this.value;
@@ -833,10 +619,6 @@
                 row.style.display = 'none'; // Hide the row
             }
             });
-
-            filterAvPM.checked = false;
-            filterFavPM.checked = false;
-            filterLocPM.value = 'all';
         });
     });
     </script>

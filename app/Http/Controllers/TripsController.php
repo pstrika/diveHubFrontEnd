@@ -53,9 +53,51 @@ class TripsController extends Controller
                     $trips[$i]->site[$j]->level = $relatedSite->level;
                     //Log::debug("Trip [" . $trips[$i]->date . " " . $trips[$i]->departureTime . " " . $trips[$i]->tripName . "[" . $trips[$i]->site[$j]->maxDepth . "]");
                     $j++;
-                    $trips[$i]->site[] = $relatedSite;  
+                    $trips[$i]->site[] = $relatedSite;
+                    
+                    //add tag for OW and AOW
+                    if($relatedSite->level == 0) {
+                        $trips[$i]->tags .= " OW";
+                        $trips[$i]->level = 0;
+                    }
+                    elseif($relatedSite->level == 1) {
+                        $trips[$i]->tags .= " AOW";        
+                        $trips[$i]->level = 1;
+                    }
+                    elseif($relatedSite->level == 2) {        
+                        $trips[$i]->level = 2;
+                    }
+                    elseif($relatedSite->level == 3) {        
+                        $trips[$i]->level = 3;
+                    }
+                    elseif($relatedSite->level == 4) {
+                        $trips[$i]->level = 4;
+                    }
+                    
                 }
             
+            }
+            else
+                $trips[$i]->level = -1;
+
+            // check if trip is a favorite
+            $favoriteOperatorsIndex = explode(',', $user->favOperators);
+            $favoriteLevels = explode(',', $user->showLevel);
+            $showLevelLow = intval($favoriteLevels[0]);
+            $showLevelHigh = intval($favoriteLevels[1]);
+
+            if(in_array($trip->operatorId, $favoriteOperatorsIndex)) {
+                Log::debug("Operator for this trip is in favorites!");
+
+                Log::debug("Level low: " . str($showLevelLow));
+                Log::debug("Level high: " . str($showLevelHigh));
+
+                // if we don't have siteIds, then we set value to -1
+                Log::debug("trip->level: " . $trip->level);
+                if(intval($trip->level) >= $showLevelLow and intval($trip->level) <= $showLevelHigh) {
+                    $trips[$i]->fav = 1;
+                    $trips[$i]->tags .= " FAV";
+                }
             }
         }
         

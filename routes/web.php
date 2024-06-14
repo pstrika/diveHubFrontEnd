@@ -46,6 +46,7 @@ Route::get('TripDetails/{tripId}', 'App\Http\Controllers\TripDetailsController@s
 
 Route::get('Operators/', 'App\Http\Controllers\OperatorController@show')->middleware('auth')->name('Operators');
 Route::get('Waivers', 'App\Http\Controllers\OperatorController@getWaivers')->middleware('auth')->name('Waivers');
+Route::get('ToggleFav/{id}', 'App\Http\Controllers\OperatorController@toggleFav')->middleware('auth')->name('ToggleFav');
 
 Route::get('OperatorDetails/{id}', 'App\Http\Controllers\OperatorController@show')->middleware('auth')->name('OperatorDetails');
 

@@ -17,6 +17,11 @@
                     <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
                         <div style="float: left;">
                             <h2 class="card-title text-info mx-3 mt-0">{{ $operator->operatorName }}</h2>
+                            
+                        </div>
+
+                        <div style="float: right;">
+                            <a href="{{ route('ToggleFav', ['id' => $operator->id]) }}"><i class="justify-content-bottom align-bottom material-icons text-info opacity-10" style="font-size: 50px;">{{ $fav ? "favorite" : "favorite_border"}}</i></a>
                         </div>
 
                     </div>
@@ -51,11 +56,11 @@
                                             <table class="table align-items-center mb-0">
                                                 <tr><td class="text-center">
                                                 {{--<div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">--}}
-                                                <div class="border-radius-xl">
-                                                    <div id="map" style="width: 100%; height: 250px; border-radius: 1rem; background-color: #f0f0f0; padding: 1rem;"></div>
-                                                </div>
+                                                    <div class="border-radius-xl">
+                                                        <div id="map" style="width: 100%; height: 250px; border-radius: 1rem; background-color: #f0f0f0; padding: 1rem;"></div>
+                                                    </div>
 
-                                                </td></td>
+                                                </td></tr>
                                             </table>
                                             <table class="table align-items-center mb-0">
 
@@ -84,29 +89,26 @@
                                             </table>
 
                                             <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Hours of Operation</td> </tr>
-                                                <table class="table align-items-center mb-0">
-                                                    <tbody>
-                                                        @php
-                                                            $hoursOfOperation = json_decode($operator->hourOfOperation, true);
-                                                        @endphp
-                                                        <tr>
-                                                            @foreach($hoursOfOperation as $hourOfOperation)
-                                                                <td class="align-middle text-center text-sm">{{ $hourOfOperation['day'] }}</td>
-                                                            @endforeach
-                                                        </tr>
-                                                        <tr>
-                                                            @foreach($hoursOfOperation as $hourOfOperation)
-                                                                <td class="align-middle text-center text-sm">{{ $hourOfOperation['hours'] }}</td>
-                                                            @endforeach
-                                                        </tr>
+                                            <table class="table align-items-center mb-0">
+                                                <tbody>
+                                                    @php
+                                                        $hoursOfOperation = json_decode($operator->hourOfOperation, true);
+                                                    @endphp
+                                                    <tr>
+                                                        @foreach($hoursOfOperation as $hourOfOperation)
+                                                            <td class="align-middle text-center text-sm">{{ $hourOfOperation['day'] }}</td>
+                                                        @endforeach
+                                                    </tr>
+                                                    <tr>
+                                                        @foreach($hoursOfOperation as $hourOfOperation)
+                                                            <td class="align-middle text-center text-sm">{{ $hourOfOperation['hours'] }}</td>
+                                                        @endforeach
+                                                    </tr>
 
-                                                        
-                                                        
-                                                    </tbody>
-
-                                                </table>
-
-                                            
+                                                    
+                                                    
+                                                </tbody>
+                                            </table>
                                         </td></td>
                                         
                                         
@@ -279,7 +281,7 @@
                         <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                                 <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Trip Prices</h4>
+                                    <h2 class="card-title text-white mx-4">Trip Prices</h2>
                                     <div class="table-responsive"></div>
                                 </div>
                             </div>
@@ -287,25 +289,25 @@
                                 <div class="table-responsive">
                                     <table class="table align-items-center mb-0"> 
                                         <tbody>
-                                        @php
-                                            $tripPrices = json_decode($operator->tripPrice, true);
-                                        @endphp
+                                            @php
+                                                $tripPrices = json_decode($operator->tripPrice, true);
+                                            @endphp
 
-                                            <tr> <td>
+                                            <tr><td>
                                                 <table class="table align-items-center mb-0">
-                                                
-                                                    <tr class="align-top"><td class="text-info text-lg font-weight-bolder opacity-7">Type</td>
-                                                    <td class="text-info align-middle text-left text-wrap text-lg">Price</td> </tr>
+                                                    <tr class="align-top">
+                                                        <td class="text-info text-lg font-weight-bolder opacity-7">Type</td>
+                                                        <td class="text-info align-middle text-left text-wrap text-lg">Price</td>
+                                                    </tr>
                                                     @foreach($tripPrices as $tripPrice)
-                                                    <tr class="align-top" style="border-bottom: 1px solid #D3D3D3;"><td class="text-lg font-weight-bolder opacity-7">{{ $tripPrice['type'] }}</td>
-                                                    <td class="align-middle text-left text-wrap text-lg">${{ $tripPrice['price'] }}</td> </tr>
+                                                    <tr class="align-top" style="border-bottom: 1px solid #D3D3D3;">
+                                                        <td class="text-lg font-weight-bolder opacity-7">{{ $tripPrice['type'] }}</td>
+                                                        <td class="align-middle text-left text-wrap text-lg">${{ $tripPrice['price'] }}</td>
+                                                    </tr>
                                                     @endforeach
                                                 </table>
                                             
-                                            </td></td>
-                                            
-                                            
-                                                    
+                                            </td></td>       
                                         </tbody>
                                     </table>
                                 </div>    

@@ -143,6 +143,16 @@ class UserController extends Controller
             Log::info("Got certification level. Updating to: " . str($request->level));
             $user->certLevel = $request->level;
         }
+        
+        if($request->has('name')) {
+            Log::info("Got name. Updating to: " . str($request->name));
+            $user->name = $request->name;
+        }
+
+        if($request->has('phone')) {
+            Log::info("Got phone. Updating to: " . str($request->phone));
+            $user->phone = $request->phone;
+        }
 
         if($request->has('levelLow') and $request->has('levelHigh')) {
             Log::info("Got show level. Updating to: " . str($request->levelLow . "-" . str($request->levelHigh)));

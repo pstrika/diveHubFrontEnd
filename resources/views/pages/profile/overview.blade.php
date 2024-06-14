@@ -14,6 +14,11 @@
                     color: white;
                 }
                 
+                {{--Code to change the color of the input text--}}
+                .input-group.input-group-dynamic .form-control, .input-group.input-group-dynamic .form-control:focus, .input-group.input-group-static .form-control, .input-group.input-group-static .form-control:focus {
+    background-image: linear-gradient(0deg, #03a9f4 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #d2d2d2 1px, rgba(209, 209, 209, 0) 0);
+    border-radius: 0 !important;
+}
             
 
                 
@@ -74,10 +79,45 @@
                     <div class="row">
                         <div class="row mt-3">
                             <div class="col-12 col-md-6 col-xl-4 position-relative">
-                                <div class="card card-plain h-100">
+                                {{--Card Contact information--}}
+                                <div class="card card-plain">
                                     <div class="card-header pb-0 p-3">
                                         {{--<h5 class="mb-0 mx-n1">Certification Level<a href="javascript:;"> <i class="material-icons text-info" id="editCertButton" style="font-size :15pt;">edit</i> </a></h5> --}}
                                         <h5 class="mb-0">My Profile</h5>
+                                        <div class="row">
+                                            <div class="col-md-8 d-flex align-items-center">
+                                                <h6 class="text-uppercase text-body text-start mt-4 text-xs font-weight-bolder">contact information</h6>
+                                            </div>
+                                            
+                                            <div class="col-md-4 text-end mt-3">
+                                                <a href="javascript:;">
+                                                    <i id="editContactButton" class="fas fa-user-edit text-info text-sm"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                                        title="Edit contact information..."></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        
+                                        <div class="input-group input-group-dynamic">
+                                            <label id="labelName" for="exampleFormControlInput1" class="form-label"></label>
+                                            <input disabled id="name" class="multisteps-form__input form-control" type="text" name="name" value="{{ $user->name }}"/>
+                                        </div>
+   
+                                        <div class="input-group input-group-dynamic mt-4">
+                                            <label id="labelPhone" for="exampleFormControlInput1" class="form-label"></label>
+                                            <input disabled id="phone" class="multisteps-form__input form-control" type="text" name="phone" value="{{ $user->phone }}" placeholder="+1.(954)-123-4567"/>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                {{--Card Certifican Level--}}
+                                <div class="card card-plain">
+                                    <div class="card-header pb-0 p-3">
+                                        {{--<h5 class="mb-0 mx-n1">Certification Level<a href="javascript:;"> <i class="material-icons text-info" id="editCertButton" style="font-size :15pt;">edit</i> </a></h5> --}}
+                                        
                                         <div class="row">
                                             <div class="col-md-8 d-flex align-items-center">
                                                 <h6 class="text-uppercase text-body text-start mt-4 text-xs font-weight-bolder">Certification Level</h6>
@@ -116,6 +156,7 @@
                                         
                                     </div>
                                 </div>
+                                
                                 <hr class="vertical dark">
                             </div>
                             <div class="col-12 col-md-6 col-xl-8 mt-md-0 mt-4 position-relative">
@@ -447,5 +488,27 @@
 
 
     </script>   
+
+    <script>
+        editContactButton = document.getElementById('editContactButton');
+        nameInput = document.getElementById('name');
+        nameLabel = document.getElementById('labelName');
+        phoneInput = document.getElementById('phone');
+        phoneLabel = document.getElementById('labelPhone');
+        editContactButton.addEventListener('click', () => {
+                
+                nameInput.disabled = false;
+                phoneInput.disabled = false;
+                divButton.style.display = 'block';
+            });
+
+        nameInput.addEventListener('click', () => {
+            nameLabel.innerText = "Name";
+        });
+
+        phoneInput.addEventListener('click', () => {
+            phoneLabel.innerText = "Phone number";
+        });
+    </script>
     @endpush
 </x-page-template>
