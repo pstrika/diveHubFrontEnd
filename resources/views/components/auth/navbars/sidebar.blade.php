@@ -8,7 +8,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('dashboard') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.6.2 (6/12/24)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.7.0 (6/13/24)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -19,7 +19,7 @@
                 <a data-bs-toggle="collapse" href="#ProfileNav" class="nav-link text-white" aria-controls="ProfileNav"
                     role="button" aria-expanded="false">
                     @if (auth()->user()->picture)
-                    <img src="/storage/{{(auth()->user()->picture)}}" alt="avatar" class="avatar">
+                    <img src="{{ asset('assets') }}/img/users/{{(auth()->user()->picture)}}" alt="avatar" class="avatar">
                     @else
                     <img src="{{ asset('assets') }}/img/default-avatar.png" alt="avatar" class="avatar">
                     @endif

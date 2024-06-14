@@ -12,6 +12,7 @@ use App\Models\Operator;
 use App\Models\Location;
 use App\Models\Boat;
 use App\Models\Photo;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Console\Input\Input;

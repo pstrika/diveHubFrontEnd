@@ -76,6 +76,8 @@ Route::get('DeleteDiveSite/{id}', 'App\Http\Controllers\SiteController@delete')-
 
 Route::get('DeleteDiveSite', 'App\Http\Controllers\SiteController@delete')->middleware('auth')->name('DeleteDiveSite');
 
+Route::get('overview', 'App\Http\Controllers\UserController@getProfile')->middleware('auth')->name('overview');
+Route::post('overview', 'App\Http\Controllers\UserController@updateProfile')->middleware('auth')->name('overview');
 
 Route::get('dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
 
@@ -194,9 +196,9 @@ Route::group(['middleware' => 'auth'], function () {
 		return view('pages.projects.timeline');
 	})->name('timeline');
 
-	Route::get('overview', function () {
-		return view('pages.profile.overview');
-	})->name('overview');
+	#Route::get('overview', function () {
+	#	return view('pages.profile.overview');
+	#})->name('overview');
 
 	Route::get('projects', function () {
 		return view("pages.profile.projects");

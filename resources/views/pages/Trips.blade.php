@@ -175,34 +175,34 @@
                                     <tbody>
                                         <tr> <td>LOCATION</td>
                                             @foreach($weathers as $weather)
-                                                @if($weather->location == "key largo" or $weather->location == "fort lauderdale" or $weather->location == "west palm beach")
-                                                    <td class="align-middle text-center text-sm">{{ $weather->location }}</td>
-                                                @endif
+                                                
+                                                <td class="align-middle text-center text-sm">{{ $weather->location }}</td>
+                                                
                                             @endforeach
                                         </tr>
                                         <tr><td>FORECAST</td>
                                             @foreach($weathers as $weather)
-                                                @if($weather->location == "key largo" or $weather->location == "fort lauderdale" or $weather->location == "west palm beach")
-                                                    <td class="align-middle text-center text-sm"> <img src="{{ $weather->conditions_icon }}" alt="{{ $weather->conditionsAM_text }}"> </td>
-                                                @endif
+                                                
+                                                <td class="align-middle text-center text-sm"> <img src="{{ $weather->conditions_icon }}" alt="{{ $weather->conditionsAM_text }}"> </td>
+                                                
                                             @endforeach
                                         </tr>
                                         <tr><td>OCEAN CONDITIONS</td>
                                             @foreach($weathers as $weather)
-                                                @if($weather->location == "key largo" or $weather->location == "fort lauderdale" or $weather->location == "west palm beach")
-                                                    {{--<td class="align-middle text-center text-sm">{{ $weather->conditionsAM_text }}</td>--}}
-                                                    @if($weather->conditionsAM_text == "Poor")
-                                                        <td class="align-middle text-center text-sm"> <span class="badge badge-warning">  Poor  </span> </td>
-                                                    @elseif($weather->conditionsAM_text == "No Dive")
-                                                        <td class="align-middle text-center text-sm"> <span class="badge badge-danger"> No dive </span> </td>
-                                                    @elseif($weather->conditionsAM_text == "Average")
-                                                        <td class="align-middle text-center text-sm"> <span class="badge badge-secondary"> Average </span> </td>
-                                                    @elseif($weather->conditionsAM_text == "Perfect")
-                                                        <td class="align-middle text-center text-sm"> <span class="badge badge-success"> Perfect </span> </td>
-                                                    @else
-                                                        <td class="align-middle text-center text-sm"> <span class="badge badge-info">  Good  </span> </td>
-                                                    @endif
+                                                
+                                                {{--<td class="align-middle text-center text-sm">{{ $weather->conditionsAM_text }}</td>--}}
+                                                @if($weather->conditionsAM_text == "Poor")
+                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-warning">  Poor  </span> </td>
+                                                @elseif($weather->conditionsAM_text == "No Dive")
+                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-danger"> No dive </span> </td>
+                                                @elseif($weather->conditionsAM_text == "Average")
+                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-secondary"> Average </span> </td>
+                                                @elseif($weather->conditionsAM_text == "Perfect")
+                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-success"> Perfect </span> </td>
+                                                @else
+                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-info">  Good  </span> </td>
                                                 @endif
+                                                
                                             @endforeach
                                         </tr>
                                         <tr> <td> </td></tr>
@@ -342,34 +342,34 @@
                                     <tbody>
                                         <tr> <td>LOCATION</td>
                                             @foreach($weathers as $weather)
-                                                @if($weather->location == "key largo" or $weather->location == "fort lauderdale" or $weather->location == "west palm beach")
-                                                    <td class="align-middle text-center text-sm">{{ $weather->location }}</td>
-                                                @endif
+                                                
+                                                <td class="align-middle text-center text-sm">{{ $weather->location }}</td>
+                                                
                                             @endforeach
                                         </tr>
                                         <tr><td>FORECAST</td>
                                             @foreach($weathers as $weather)
-                                                @if($weather->location == "key largo" or $weather->location == "fort lauderdale" or $weather->location == "west palm beach")
-                                                    <td class="align-middle text-center text-sm"> <img src="{{ $weather->conditions_icon }}" alt="{{ $weather->conditionsPM_text }}"> </td>
-                                                @endif
+                                                
+                                                <td class="align-middle text-center text-sm"> <img src="{{ $weather->conditions_icon }}" alt="{{ $weather->conditionsPM_text }}"> </td>
+                                            
                                             @endforeach
                                         </tr>
                                         <tr><td>OCEAN CONDITIONS</td>
                                             @foreach($weathers as $weather)
-                                                @if($weather->location == "key largo" or $weather->location == "fort lauderdale" or $weather->location == "west palm beach")
-                                                    {{--<td class="align-middle text-center text-sm">{{ $weather->conditionsAM_text }}</td>--}}
-                                                    @if($weather->conditionsPM_text == "Poor")
-                                                        <td class="align-middle text-center text-sm"> <span class="badge badge-warning">Poor</span> </td>
-                                                    @elseif($weather->conditionsPM_text == "No Dive")
-                                                        <td class="align-middle text-center text-sm"> <span class="badge badge-danger">No dive</span> </td>
-                                                    @elseif($weather->conditionsPM_text == "Average")
-                                                        <td class="align-middle text-center text-sm"> <span class="badge badge-secondary">Average</span> </td>
-                                                    @elseif($weather->conditionsPM_text == "Perfect")
-                                                        <td class="align-middle text-center text-sm"> <span class="badge badge-success">Perfect</span> </td>
-                                                    @else
-                                                        <td class="align-middle text-center text-sm"> <span class="badge badge-info">Good</span> </td>
-                                                    @endif
+                                            
+                                                {{--<td class="align-middle text-center text-sm">{{ $weather->conditionsAM_text }}</td>--}}
+                                                @if($weather->conditionsPM_text == "Poor")
+                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-warning">Poor</span> </td>
+                                                @elseif($weather->conditionsPM_text == "No Dive")
+                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-danger">No dive</span> </td>
+                                                @elseif($weather->conditionsPM_text == "Average")
+                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-secondary">Average</span> </td>
+                                                @elseif($weather->conditionsPM_text == "Perfect")
+                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-success">Perfect</span> </td>
+                                                @else
+                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-info">Good</span> </td>
                                                 @endif
+                                                
                                             @endforeach
                                         </tr>
                                         <tr> <td> </td></tr>

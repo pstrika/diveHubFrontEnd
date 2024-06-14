@@ -1,10 +1,13 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\WeatherLocation;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Operator;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 use function PHPUnit\Framework\isNull;
 
@@ -114,5 +117,50 @@ class UserController extends Controller
         else{
             return back()->with(['error' =>"Old password doesn't match"]);
         }
+    }
+
+    public function getProfile() {
+        $user = User::findorFail(auth()->user()->id);
+
+        $operators = Operator::all();
+        $favOperatorsIndex = explode(',', $user->favOperators);
+        $favOperators = Operator::whereIn('id', $favOperatorsIndex)->get();
+
+        $locations = WeatherLocation::all();
+        $favLocationsIndex = explode(',', $user->favLocations);
+        $favLocations = Operator::whereIn('id', $favLocationsIndex)->get();
+
+        return view('pages.profile.overview', compact('user', 'operators', 'favOperators', 'locations', 'favLocations'));
+    }
+
+    public function updateProfile(Request $request) {
+
+        $user = User::findorFail(auth()->user()->id);
+
+        Log::info('Request data:', $request->all());
+
+        if($request->has('level')) {
+            Log::info("Got certification level. Updating to: " . str($request->level));
+            $user->certLevel = $request->level;
+        }
+
+        if($request->has('levelLow') and $request->has('levelHigh')) {
+            Log::info("Got show level. Updating to: " . str($request->levelLow . "-" . str($request->levelHigh)));
+            $user->showLevel = str($request->levelLow) . ", " . str($request->levelHigh);
+        }
+
+        if($request->has('favOperators')) {
+            Log::info("Got Favorite Operators. Updating to: ");
+            $user->favOperators = implode(', ', $request->favOperators);
+        }
+
+        if($request->has('favLocations')) {
+            Log::info("Got Favorite Locations. Updating to: ");
+            $user->favLocations = implode(', ', $request->favLocations);
+        }
+
+        $user->save();
+
+        return redirect()->back();
     }
 }

@@ -6,25 +6,38 @@
         <x-auth.navbars.navs.auth pageTitle='Profile Overview'></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
         <div class="container-fluid px-2 px-md-4">
-            <div class="page-header min-height-300 border-radius-xl mt-4"
-                style="background-image: url('https://images.unsplash.com/photo-1531512073830-ba890ca4eba2?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');">
-                <span class="mask  bg-gradient-primary  opacity-6"></span>
+
+            <!-- Customize slider colors -->
+            <style>
+                .choices__list .choices__item--selectable.is-highlighted {
+                    background-color: #2F88EC;
+                    color: white;
+                }
+                
+            
+
+                
+            </style>
+
+            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4"
+            style="background-image: url('/assets/img/illustrations/profile.png');">
+                <span class="mask  bg-gradient-info  opacity-6"></span>
             </div>
             <div class="card card-body mx-3 mx-md-4 mt-n6">
                 <div class="row gx-4">
                     <div class="col-auto">
                         <div class="avatar avatar-xl position-relative">
-                            <img src="{{ asset('assets') }}/img/bruce-mars.jpg" alt="profile_image"
+                            <img src="{{ asset('assets') }}/img/users/{{  $user->picture }}" alt="profile_image"
                                 class="w-100 rounded-circle shadow-sm">
                         </div>
                     </div>
                     <div class="col-auto my-auto">
                         <div class="h-100">
                             <h5 class="mb-1">
-                                Richard Davis
+                                {{ $user->name }}
                             </h5>
                             <p class="mb-0 font-weight-normal text-sm">
-                                CEO / Co-Founder
+                                {{ $user->email }}
                             </p>
                         </div>
                     </div>
@@ -56,416 +69,191 @@
                         </div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="row mt-3">
-                        <div class="col-12 col-md-6 col-xl-4 position-relative">
-                            <div class="card card-plain h-100">
-                                <div class="card-header pb-0 p-3">
-                                    <h6 class="mb-0">Platform Settings</h6>
-                                </div>
-                                <div class="card-body p-3">
-                                    <h6 class="text-uppercase text-body text-xs font-weight-bolder">Account</h6>
-                                    <ul class="list-group">
-                                        <li class="list-group-item border-0 px-0">
-                                            <div class="form-check form-switch ps-0">
-                                                <input class="form-check-input ms-auto" type="checkbox"
-                                                    id="flexSwitchCheckDefault" checked>
-                                                <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                    for="flexSwitchCheckDefault">Email me when someone follows
-                                                    me</label>
+                <form id="myForm" class="multisteps-form__form" action="{{ route('overview') }}" method="POST" enctype="multipart/form-data">
+                    @csrf <!-- Add CSRF token for security -->
+                    <div class="row">
+                        <div class="row mt-3">
+                            <div class="col-12 col-md-6 col-xl-4 position-relative">
+                                <div class="card card-plain h-100">
+                                    <div class="card-header pb-0 p-3">
+                                        {{--<h5 class="mb-0 mx-n1">Certification Level<a href="javascript:;"> <i class="material-icons text-info" id="editCertButton" style="font-size :15pt;">edit</i> </a></h5> --}}
+                                        <h5 class="mb-0">My Profile</h5>
+                                        <div class="row">
+                                            <div class="col-md-8 d-flex align-items-center">
+                                                <h6 class="text-uppercase text-body text-start mt-4 text-xs font-weight-bolder">Certification Level</h6>
                                             </div>
-                                        </li>
-                                        <li class="list-group-item border-0 px-0">
-                                            <div class="form-check form-switch ps-0">
-                                                <input class="form-check-input ms-auto" type="checkbox"
-                                                    id="flexSwitchCheckDefault1">
-                                                <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                    for="flexSwitchCheckDefault1">Email me when someone answers on my
-                                                    post</label>
+                                            
+                                            <div class="col-md-4 text-end mt-3">
+                                                <a href="javascript:;">
+                                                    <i id="editCertButton" class="fas fa-user-edit text-info text-sm"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                                        title="Edit certification level..."></i>
+                                                </a>
                                             </div>
-                                        </li>
-                                        <li class="list-group-item border-0 px-0">
-                                            <div class="form-check form-switch ps-0">
-                                                <input class="form-check-input ms-auto" type="checkbox"
-                                                    id="flexSwitchCheckDefault2" checked>
-                                                <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                    for="flexSwitchCheckDefault2">Email me when someone mentions
-                                                    me</label>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                    <h6 class="text-uppercase text-body text-xs font-weight-bolder mt-4">Application
-                                    </h6>
-                                    <ul class="list-group">
-                                        <li class="list-group-item border-0 px-0">
-                                            <div class="form-check form-switch ps-0">
-                                                <input class="form-check-input ms-auto" type="checkbox"
-                                                    id="flexSwitchCheckDefault3">
-                                                <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                    for="flexSwitchCheckDefault3">New launches and projects</label>
-                                            </div>
-                                        </li>
-                                        <li class="list-group-item border-0 px-0">
-                                            <div class="form-check form-switch ps-0">
-                                                <input class="form-check-input ms-auto" type="checkbox"
-                                                    id="flexSwitchCheckDefault4" checked>
-                                                <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                    for="flexSwitchCheckDefault4">Monthly product updates</label>
-                                            </div>
-                                        </li>
-                                        <li class="list-group-item border-0 px-0 pb-0">
-                                            <div class="form-check form-switch ps-0">
-                                                <input class="form-check-input ms-auto" type="checkbox"
-                                                    id="flexSwitchCheckDefault5">
-                                                <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                    for="flexSwitchCheckDefault5">Subscribe to newsletter</label>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <hr class="vertical dark">
-                        </div>
-                        <div class="col-12 col-md-6 col-xl-4 mt-md-0 mt-4 position-relative">
-                            <div class="card card-plain h-100">
-                                <div class="card-header pb-0 p-3">
-                                    <div class="row">
-                                        <div class="col-md-8 d-flex align-items-center">
-                                            <h6 class="mb-0">Profile Information</h6>
                                         </div>
-                                        <div class="col-md-4 text-end">
-                                            <a href="javascript:;">
-                                                <i class="fas fa-user-edit text-secondary text-sm"
-                                                    data-bs-toggle="tooltip" data-bs-placement="top"
-                                                    title="Edit Profile"></i>
-                                            </a>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        
+                                        <div class="mt-n2">
+                                            <input type="hidden" id="slider-value" name="level">
+                                            <label class="mt-0 mx-n1" id="labelLevel">Level</label>
+                                            <div class="slider-styled" id="sliderLevel"></div>
+                                        </div>
+                                        
+                                        <h6 class="text-uppercase text-body text-xs mt-5 font-weight-bolder">Notifications</h6>
+                                        <ul class="list-group">
+                                            <li class="list-group-item border-0 px-0">
+                                                <div class="form-check form-switch ps-0">
+                                                    <input class="form-check-input ms-auto" type="checkbox"
+                                                        id="flexSwitchCheckDefault" checked>
+                                                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
+                                                        for="flexSwitchCheckDefault">Email me with new dives</label>
+                                                </div>
+                                            </li>
+                                            
+                                        </ul>
+                                        
+                                        
+                                    </div>
+                                </div>
+                                <hr class="vertical dark">
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-8 mt-md-0 mt-4 position-relative">
+                                {{-- Favorite Operators--}}
+                                <div class="card card-plain">
+                                    <div class="card-header pb-0 p-3">
+                                    <h5 class="mb-0">My Favorites</h5>
+                                        <div class="row">
+                                            <div class="col-md-8 d-flex align-items-center">
+                                                <h6 class="text-uppercase text-body text-start mt-4 text-xs font-weight-bolder">Favorite Operators</h6>
+                                            </div>
+                                            <div class="col-md-4 text-end mt-3">
+                                                <a href="javascript:;">
+                                                    <i id="editFavOpeButton" class="fas fa-user-edit text-info text-secondary text-sm"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                                        title="Edit Favorite operators..."></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
+                                    <div class="card-body p-3 mt-n2">
+                                        {{--<label class="mb-0 mx-n1">Visiting Operators</label>--}}
+                                        <div>
+                                            <select id="favOperators" class="form-control" name="favOperators[]" multiple>
+                                                {{--<option disabled value="None" selected="">Type</option>--}}
+                                                @foreach($operators as $operator)
+                                                    <option value="{{ $operator->id }}">{{ $operator->operatorName }}</option>
+                                                @endforeach
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="card-body p-3">
-                                    <p class="text-sm">
-                                        Hi, I’m Alec Thompson, Decisions: If you can’t decide, the answer is no. If two
-                                        equally difficult paths, choose the one more painful in the short term (pain
-                                        avoidance is creating an illusion of equality).
-                                    </p>
-                                    <hr class="horizontal gray-light my-4">
-                                    <ul class="list-group">
-                                        <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong
-                                                class="text-dark">Full Name:</strong> &nbsp; Alec M. Thompson</li>
-                                        <li class="list-group-item border-0 ps-0 text-sm"><strong
-                                                class="text-dark">Mobile:</strong> &nbsp; (44) 123 1234 123</li>
-                                        <li class="list-group-item border-0 ps-0 text-sm"><strong
-                                                class="text-dark">Email:</strong> &nbsp; alecthompson@mail.com</li>
-                                        <li class="list-group-item border-0 ps-0 text-sm"><strong
-                                                class="text-dark">Location:</strong> &nbsp; USA</li>
-                                        <li class="list-group-item border-0 ps-0 pb-0">
-                                            <strong class="text-dark text-sm">Social:</strong> &nbsp;
-                                            <a class="btn btn-facebook btn-simple mb-0 ps-1 pe-2 py-0"
-                                                href="javascript:;">
-                                                <i class="fab fa-facebook fa-lg"></i>
-                                            </a>
-                                            <a class="btn btn-twitter btn-simple mb-0 ps-1 pe-2 py-0"
-                                                href="javascript:;">
-                                                <i class="fab fa-twitter fa-lg"></i>
-                                            </a>
-                                            <a class="btn btn-instagram btn-simple mb-0 ps-1 pe-2 py-0"
-                                                href="javascript:;">
-                                                <i class="fab fa-instagram fa-lg"></i>
-                                            </a>
-                                        </li>
-                                    </ul>
+
+                                {{-- Favorite Locations--}}
+                                <div class="card card-plain">
+                                    <div class="card-header pb-0 p-3">
+                                        
+                                        <div class="row">
+                                            <div class="col-md-8 d-flex align-items-center">
+                                                <h6 class="text-uppercase text-body text-start mt-4 text-xs font-weight-bolder">Favorite Locations</h6>
+                                            </div>
+                                            <div class="col-md-4 text-end mt-3">
+                                                <a href="javascript:;">
+                                                    <i id="editFavLocButton" class="fas fa-user-edit text-info text-secondary text-sm"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                                        title="Edit Favorite locations..."></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
+                                    <div class="card-body p-3 mt-n2">
+                                        {{--<label class="mb-0 mx-n1">Visiting Operators</label>--}}
+                                        <div>
+                                            <select id="favLocations" class="form-control" name="favLocations[]" multiple>
+                                                {{--<option disabled value="None" selected="">Type</option>--}}
+                                                @foreach($locations as $location)
+                                                    <option value="{{ $location->id }}">{{ $location->location }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Show Dives--}}
+                                <div class="card card-plain">
+                                    <div class="card-header pb-0 p-3">
+                                        
+                                        <div class="row">
+                                            <div class="col-md-8 d-flex align-items-center">
+                                                <h6 class="text-uppercase text-body text-start mt-4 text-xs font-weight-bolder">SHOW Dives</h6>
+                                                
+                                            </div>
+                                            <p class="text-wrap text-xs text-body">Diver's Hub will use your "Favorite Operators" to prioritie what trips to show. You can choose to use "Favorite Locations" as your main filter criteria.</p>
+                                        </div>
+                                        
+                                    </div>
+                                    <div class="card-body p-3 mt-n4">
+                                        {{--<label class="mb-0 mx-n1">Visiting Operators</label>--}}
+                                        <div>
+                                        <ul class="list-group">
+                                            <li class="list-group-item border-0 px-0">
+                                                <div class="form-check form-switch ps-0">
+                                                    <input class="form-check-input ms-auto" type="checkbox"
+                                                        id="flexSwitchCheckDefault" checked>
+                                                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
+                                                        for="flexSwitchCheckDefault">Use "Favorite Locations" to show me dive trips</label>
+                                                </div>
+                                            </li>
+                                            
+                                        </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {{-- Show Levels--}}
+                                <div class="card card-plain">
+                                    <div class="card-header pb-0 p-3">
+                                        
+                                        <div class="row">
+                                            <div class="col-md-8 d-flex align-items-center">
+                                                <h6 class="text-uppercase text-body text-start mt-4 text-xs font-weight-bolder">SHOW dives within level</h6>
+                                                
+                                            </div>
+                                            <div class="col-md-4 text-end mt-3">
+                                                <a href="javascript:;">
+                                                    <i id="buttonEditShowLevel" class="fas fa-user-edit text-info text-secondary text-sm"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                                        title="Edit Favorite operators..."></i>
+                                                </a>
+                                            </div>
+                                            <p class="text-wrap text-xs text-body">Select which levels we should you dive trips for.</p>
+                                        </div>
+                                        
+                                    </div>
+                                    <div class="card-body p-3 mt-n4">
+                                        <div class="mt-n2">
+                                            <input type="hidden" id="slider-valueLow" name="levelLow">
+                                            <input type="hidden" id="slider-valueHigh" name="levelHigh">
+                                            <label class="mt-0 mx-n1 text-start" id="labelSliderFilterLow">Level Low</label>
+                                            <div class="text-end" style="float: right;">
+                                                <label class="mt-0 mx-n1 text-end" id="labelSliderFilterHigh">Level High</label>
+                                            </div>
+                                            <div class="slider-styled" id="sliderLevelFilter"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-end mt-5" id="divButton" style="display: none;">
+                                    <button class="btn bg-gradient-info ms-auto" id="submit-all" title="Send" onclick="submitform()">Submit</button> {{---type="submit"----}}
                                 </div>
                             </div>
-                            <hr class="vertical dark">
+                        
                         </div>
-                        <div class="col-12 col-xl-4 mt-xl-0 mt-4">
-                            <div class="card card-plain h-100">
-                                <div class="card-header pb-0 p-3">
-                                    <h6 class="mb-0">Conversations</h6>
-                                </div>
-                                <div class="card-body p-3">
-                                    <ul class="list-group">
-                                        <li class="list-group-item border-0 d-flex align-items-center px-0 mb-2 pt-0">
-                                            <div class="avatar me-3">
-                                                <img src="{{ asset('assets') }}/img/kal-visuals-square.jpg" alt="kal"
-                                                    class="rounded-circle shadow">
-                                            </div>
-                                            <div class="d-flex align-items-start flex-column justify-content-center">
-                                                <h6 class="mb-0 text-sm">Sophie B.</h6>
-                                                <p class="mb-0 text-xs">Hi! I need more information..</p>
-                                            </div>
-                                            <a class="btn btn-link pe-3 ps-0 mb-0 ms-auto w-25 w-md-auto"
-                                                href="javascript:;">Reply</a>
-                                        </li>
-                                        <li class="list-group-item border-0 d-flex align-items-center px-0 mb-2">
-                                            <div class="avatar me-3">
-                                                <img src="{{ asset('assets') }}/img/marie.jpg" alt="kal"
-                                                    class="rounded-circle shadow">
-                                            </div>
-                                            <div class="d-flex align-items-start flex-column justify-content-center">
-                                                <h6 class="mb-0 text-sm">Anne Marie</h6>
-                                                <p class="mb-0 text-xs">Awesome work, can you..</p>
-                                            </div>
-                                            <a class="btn btn-link pe-3 ps-0 mb-0 ms-auto w-25 w-md-auto"
-                                                href="javascript:;">Reply</a>
-                                        </li>
-                                        <li class="list-group-item border-0 d-flex align-items-center px-0 mb-2">
-                                            <div class="avatar me-3">
-                                                <img src="{{ asset('assets') }}/img/ivana-square.jpg" alt="kal"
-                                                    class="rounded-circle shadow">
-                                            </div>
-                                            <div class="d-flex align-items-start flex-column justify-content-center">
-                                                <h6 class="mb-0 text-sm">Ivanna</h6>
-                                                <p class="mb-0 text-xs">About files I can..</p>
-                                            </div>
-                                            <a class="btn btn-link pe-3 ps-0 mb-0 ms-auto w-25 w-md-auto"
-                                                href="javascript:;">Reply</a>
-                                        </li>
-                                        <li class="list-group-item border-0 d-flex align-items-center px-0 mb-2">
-                                            <div class="avatar me-3">
-                                                <img src="{{ asset('assets') }}/img/team-4.jpg" alt="kal"
-                                                    class="rounded-circle shadow">
-                                            </div>
-                                            <div class="d-flex align-items-start flex-column justify-content-center">
-                                                <h6 class="mb-0 text-sm">Peterson</h6>
-                                                <p class="mb-0 text-xs">Have a great afternoon..</p>
-                                            </div>
-                                            <a class="btn btn-link pe-3 ps-0 mb-0 ms-auto w-25 w-md-auto"
-                                                href="javascript:;">Reply</a>
-                                        </li>
-                                        <li class="list-group-item border-0 d-flex align-items-center px-0">
-                                            <div class="avatar me-3">
-                                                <img src="{{ asset('assets') }}/img/team-3.jpg" alt="kal"
-                                                    class="rounded-circle shadow">
-                                            </div>
-                                            <div class="d-flex align-items-start flex-column justify-content-center">
-                                                <h6 class="mb-0 text-sm">Nick Daniel</h6>
-                                                <p class="mb-0 text-xs">Hi! I need more information..</p>
-                                            </div>
-                                            <a class="btn btn-link pe-3 ps-0 mb-0 ms-auto w-25 w-md-auto"
-                                                href="javascript:;">Reply</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+                        
                     </div>
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="mb-5 ps-3">
-                                <h6 class="mb-1">Projects</h6>
-                                <p class="text-sm">Architects design houses</p>
-                            </div>
-                            <div class="row">
-                                <div class="col-xl-3 col-md-6 mb-xl-0 mb-4">
-                                    <div class="card card-blog card-plain">
-                                        <div class="card-header p-0 mt-n4 mx-3">
-                                            <a class="d-block shadow-xl border-radius-xl">
-                                                <img src="{{ asset('assets') }}/img/home-decor-1.jpg"
-                                                    alt="img-blur-shadow" class="img-fluid shadow border-radius-xl">
-                                            </a>
-                                        </div>
-                                        <div class="card-body p-3">
-                                            <p class="mb-0 text-sm">Project #2</p>
-                                            <a href="javascript:;">
-                                                <h5>
-                                                    Modern
-                                                </h5>
-                                            </a>
-                                            <p class="mb-4 text-sm">
-                                                As Uber works through a huge amount of internal management turmoil.
-                                            </p>
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <button type="button" class="btn btn-outline-primary btn-sm mb-0">View
-                                                    Project</button>
-                                                <div class="avatar-group mt-2">
-                                                    <a href="javascript:;" class="avatar avatar-xs rounded-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                        title="Elena Morison">
-                                                        <img alt="Image placeholder"
-                                                            src="{{ asset('assets') }}/img/team-1.jpg">
-                                                    </a>
-                                                    <a href="javascript:;" class="avatar avatar-xs rounded-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                        title="Ryan Milly">
-                                                        <img alt="Image placeholder"
-                                                            src="{{ asset('assets') }}/img/team-2.jpg">
-                                                    </a>
-                                                    <a href="javascript:;" class="avatar avatar-xs rounded-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                        title="Nick Daniel">
-                                                        <img alt="Image placeholder"
-                                                            src="{{ asset('assets') }}/img/team-3.jpg">
-                                                    </a>
-                                                    <a href="javascript:;" class="avatar avatar-xs rounded-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                        title="Peterson">
-                                                        <img alt="Image placeholder"
-                                                            src="{{ asset('assets') }}/img/team-4.jpg">
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-xl-3 col-md-6 mb-xl-0 mb-4">
-                                    <div class="card card-blog card-plain">
-                                        <div class="card-header p-0 mt-n4 mx-3">
-                                            <a class="d-block shadow-xl border-radius-xl">
-                                                <img src="{{ asset('assets') }}/img/home-decor-2.jpg"
-                                                    alt="img-blur-shadow" class="img-fluid shadow border-radius-lg">
-                                            </a>
-                                        </div>
-                                        <div class="card-body p-3">
-                                            <p class="mb-0 text-sm">Project #1</p>
-                                            <a href="javascript:;">
-                                                <h5>
-                                                    Scandinavian
-                                                </h5>
-                                            </a>
-                                            <p class="mb-4 text-sm">
-                                                Music is something that every person has his or her own specific opinion
-                                                about.
-                                            </p>
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <button type="button" class="btn btn-outline-primary btn-sm mb-0">View
-                                                    Project</button>
-                                                <div class="avatar-group mt-2">
-                                                    <a href="javascript:;" class="avatar avatar-xs rounded-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                        title="Nick Daniel">
-                                                        <img alt="Image placeholder"
-                                                            src="{{ asset('assets') }}/img/team-3.jpg">
-                                                    </a>
-                                                    <a href="javascript:;" class="avatar avatar-xs rounded-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                        title="Peterson">
-                                                        <img alt="Image placeholder"
-                                                            src="{{ asset('assets') }}/img/team-4.jpg">
-                                                    </a>
-                                                    <a href="javascript:;" class="avatar avatar-xs rounded-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                        title="Elena Morison">
-                                                        <img alt="Image placeholder"
-                                                            src="{{ asset('assets') }}/img/team-1.jpg">
-                                                    </a>
-                                                    <a href="javascript:;" class="avatar avatar-xs rounded-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                        title="Ryan Milly">
-                                                        <img alt="Image placeholder"
-                                                            src="{{ asset('assets') }}/img/team-2.jpg">
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-xl-3 col-md-6 mb-xl-0 mb-4">
-                                    <div class="card card-blog card-plain">
-                                        <div class="card-header p-0 mt-n4 mx-3">
-                                            <a class="d-block shadow-xl border-radius-xl">
-                                                <img src="{{ asset('assets') }}/img/home-decor-3.jpg"
-                                                    alt="img-blur-shadow" class="img-fluid shadow border-radius-xl">
-                                            </a>
-                                        </div>
-                                        <div class="card-body p-3">
-                                            <p class="mb-0 text-sm">Project #3</p>
-                                            <a href="javascript:;">
-                                                <h5>
-                                                    Minimalist
-                                                </h5>
-                                            </a>
-                                            <p class="mb-4 text-sm">
-                                                Different people have different taste, and various types of music.
-                                            </p>
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <button type="button" class="btn btn-outline-primary btn-sm mb-0">View
-                                                    Project</button>
-                                                <div class="avatar-group mt-2">
-                                                    <a href="javascript:;" class="avatar avatar-xs rounded-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                        title="Peterson">
-                                                        <img alt="Image placeholder"
-                                                            src="{{ asset('assets') }}/img/team-4.jpg">
-                                                    </a>
-                                                    <a href="javascript:;" class="avatar avatar-xs rounded-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                        title="Nick Daniel">
-                                                        <img alt="Image placeholder"
-                                                            src="{{ asset('assets') }}/img/team-3.jpg">
-                                                    </a>
-                                                    <a href="javascript:;" class="avatar avatar-xs rounded-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                        title="Ryan Milly">
-                                                        <img alt="Image placeholder"
-                                                            src="{{ asset('assets') }}/img/team-2.jpg">
-                                                    </a>
-                                                    <a href="javascript:;" class="avatar avatar-xs rounded-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                        title="Elena Morison">
-                                                        <img alt="Image placeholder"
-                                                            src="{{ asset('assets') }}/img/team-1.jpg">
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-xl-3 col-md-6 mb-xl-0 mb-4">
-                                    <div class="card card-blog card-plain">
-                                        <div class="card-header p-0 mt-n4 mx-3">
-                                            <a class="d-block shadow-xl border-radius-xl">
-                                                <img src="https://images.unsplash.com/photo-1606744824163-985d376605aa?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                                                    alt="img-blur-shadow" class="img-fluid shadow border-radius-xl">
-                                            </a>
-                                        </div>
-                                        <div class="card-body p-3">
-                                            <p class="mb-0 text-sm">Project #4</p>
-                                            <a href="javascript:;">
-                                                <h5>
-                                                    Gothic
-                                                </h5>
-                                            </a>
-                                            <p class="mb-4 text-sm">
-                                                Why would anyone pick blue over pink? Pink is obviously a better color.
-                                            </p>
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <button type="button" class="btn btn-outline-primary btn-sm mb-0">View
-                                                    Project</button>
-                                                <div class="avatar-group mt-2">
-                                                    <a href="javascript:;" class="avatar avatar-xs rounded-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                        title="Peterson">
-                                                        <img alt="Image placeholder"
-                                                            src="{{ asset('assets') }}/img/team-4.jpg">
-                                                    </a>
-                                                    <a href="javascript:;" class="avatar avatar-xs rounded-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                        title="Nick Daniel">
-                                                        <img alt="Image placeholder"
-                                                            src="{{ asset('assets') }}/img/team-3.jpg">
-                                                    </a>
-                                                    <a href="javascript:;" class="avatar avatar-xs rounded-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                        title="Ryan Milly">
-                                                        <img alt="Image placeholder"
-                                                            src="{{ asset('assets') }}/img/team-2.jpg">
-                                                    </a>
-                                                    <a href="javascript:;" class="avatar avatar-xs rounded-circle"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                                        title="Elena Morison">
-                                                        <img alt="Image placeholder"
-                                                            src="{{ asset('assets') }}/img/team-1.jpg">
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                </form>
             </div>
         </div>
         <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
@@ -473,6 +261,191 @@
     <x-plugins></x-plugins>
     @push('js')
     <script src="{{ asset('assets') }}/js/plugins/perfect-scrollbar.min.js"></script>
+    {{--<script src="{{ asset('assets') }}/js/plugins/nouislider.min.js"></script>--}}
+    <script src="{{ asset('assets') }}/js/plugins/nouislider.js"></script>
+    <link href="{{ asset('assets') }}/css/nouislider.css" rel="stylesheet">
+    <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
+    <script src="{{ asset('assets') }}/js/plugins/choices.min.js"></script>
+
+    <script>
+        var divButton = document.getElementById('divButton');
+    </script>
+
+    {{-- Slider script--}}
+    <script>
+        var slider = document.getElementById('sliderLevel');
+        var label = document.getElementById('labelLevel');
+        var sliderValueInput = document.getElementById('slider-value');
+        var buttonEditCert = document.getElementById('editCertButton'); // Replace with your button ID
+
+        var sliderFilter = document.getElementById('sliderLevelFilter');
+        var labelSliderFilterLow = document.getElementById('labelSliderFilterLow');
+        var labelSliderFilterHigh = document.getElementById('labelSliderFilterHigh');
+        var sliderValueLowInput = document.getElementById('slider-valueLow');
+        var sliderValueHighInput = document.getElementById('slider-valueHigh');
         
+        
+
+        // Define the level names
+        var levelNames = [
+            'Open Water',
+            'Advanced Open Water',
+            'Tec ANDP',
+            'Tec Trimix Normoxic',
+            'Tec Trimix Hypoxic'
+        ];
+
+        noUiSlider.create(slider, {
+            start: 0,
+            connect: [true, false],
+            range: {
+                'min': 0,
+                'max': 4
+            },
+            step: 1,
+            pips: {
+                mode: 'steps',
+                density: 1000,
+                format: {
+                    to: function (value) {
+                        return ''; // Hide all labels
+                    }
+                }
+            },
+            
+            
+        
+        
+        });
+        
+        // Hide the tick mark labels
+        var tickLabels = slider.querySelectorAll('.noUi-value-sub');
+        tickLabels.forEach(function (label) {
+            label.style.display = 'none';
+        });
+        
+        // Listen for the 'update' event
+        slider.noUiSlider.on('update', function (values, handle) {
+            label.textContent = levelNames[parseInt(values[handle])];
+            var sliderValue = values[handle];
+            sliderValueInput.value = parseInt(sliderValue);
+        });
+
+        slider.noUiSlider.set({{ $user->certLevel }});
+        slider.noUiSlider.disable();
+        
+        buttonEditCert.addEventListener('click', () => {
+            // Change the handle color based on your logic
+            const newColor = '#FF0000'; // Red color
+            slider.noUiSlider.enable();
+            divButton.style.display = 'block';
+        });
+       
+        noUiSlider.create(sliderFilter, {
+            start: [0, 2],
+            connect: [false, true, false],
+            range: {
+                'min': [0],
+                'max': [4]
+            },
+            step: 1,
+            pips: {
+                mode: 'steps',
+                density: 1000,
+                format: {
+                    to: function (value) {
+                        return ''; // Hide all labels
+                    }
+                }
+            },
+            
+            
+        
+        
+        });
+        
+        // Hide the tick mark labels
+        var tickLabels = sliderFilter.querySelectorAll('.noUi-value-sub');
+        tickLabels.forEach(function (label) {
+            label.style.display = 'none';
+        });
+
+        sliderFilter.noUiSlider.disable();
+
+        sliderFilter.noUiSlider.on('update', function (values, handle) {
+            const currentValues = this.get();
+            const [lowValue, highValue] = currentValues;
+            labelSliderFilterLow.textContent = levelNames[parseInt(lowValue)];
+            labelSliderFilterHigh.textContent = levelNames[parseInt(highValue)];
+            
+            sliderValueLowInput.value = parseInt(lowValue);
+            sliderValueHighInput.value = parseInt(highValue);
+        });
+
+        buttonEditShowLevel.addEventListener('click', () => {
+            // Change the handle color based on your logic
+            const newColor = '#FF0000'; // Red color
+            sliderFilter.noUiSlider.enable();
+            divButton.style.display = 'block';
+        });
+
+    </script>
+    {{-------------------}}
+
+    <script>
+        var buttonEditFavOpe = document.getElementById('editFavOpeButton'); // Replace with your button ID
+
+        if (document.getElementById('favOperators')) {
+            var element = document.getElementById('favOperators');
+            const example = new Choices(element, {
+                searchEnabled: true,
+                removeItemButton: true,
+            });
+
+            @foreach($favOperators as $favOperator)
+                example.setChoiceByValue('{{ $favOperator->id}}');
+            @endforeach
+            example.disable();
+
+            buttonEditFavOpe.addEventListener('click', () => {
+                // Change the handle color based on your logic
+                const newColor = '#FF0000'; // Red color
+                example.enable();
+                divButton.style.display = 'block';
+            });
+        };
+
+
+
+    </script>
+
+    <script>
+        var buttonEditFavLoc = document.getElementById('editFavLocButton'); // Replace with your button ID
+
+        if (document.getElementById('favLocations')) {
+            var element = document.getElementById('favLocations');
+            const example1 = new Choices(element, {
+                searchEnabled: true,
+                removeItemButton: true,
+                maxItemCount: 3,
+            });
+
+            @foreach($favLocations as $favLocation)
+                example1.setChoiceByValue('{{ $favLocation->id}}');
+            @endforeach
+            example1.disable();
+
+            buttonEditFavLoc.addEventListener('click', () => {
+                // Change the handle color based on your logic
+                const newColor = '#FF0000'; // Red color
+                example1.enable();
+                divButton.style.display = 'block';
+            });
+        };
+
+
+
+
+    </script>   
     @endpush
 </x-page-template>
