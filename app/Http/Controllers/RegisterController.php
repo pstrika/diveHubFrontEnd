@@ -24,6 +24,7 @@ class RegisterController extends Controller
 
         // force role_id to Member
         $attributes['role_id'] = 3;
+        @$attributes['showLevel'] = '0, 4';
 
         $user = User::create($attributes);
         auth()->login($user);
