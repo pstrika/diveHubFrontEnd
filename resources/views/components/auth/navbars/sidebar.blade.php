@@ -8,7 +8,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('dashboard') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.7.1 (6/14/24)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 1.7.2 (6/14/24)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -29,23 +29,23 @@
                     <ul class="nav ">
                         <li class="nav-item">
                             <a class="nav-link text-white" href="{{ route('overview') }}">
-                                <span class="sidenav-mini-icon"> MP </span>
+                                <i class="material-icons-round opacity-10">person</i>
                                 <span class="sidenav-normal  ms-3  ps-1"> My Profile </span>
                             </a>
                         </li>
-                        <li class="nav-item">
+                        {{--<li class="nav-item">
                             <a class="nav-link text-white " href="{{ route('settings') }}">
-                                <span class="sidenav-mini-icon"> S </span>
+                                <i class="material-icons-round opacity-10">settings</i>
                                 <span class="sidenav-normal  ms-3  ps-1"> Settings </span>
                             </a>
-                        </li>
+                        </li>--}}
                         <form method="POST" action="{{ route('logout') }}" class="d-none" id="logout-form">
                             @csrf
                         </form>
                         <li class="nav-item">
                             <a class="nav-link text-white " href="{{ route('logout') }}"
                                 onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-                                <span class="sidenav-mini-icon"> L </span>
+                                <i class="material-icons-round opacity-10">logout</i>
                                 <span class="sidenav-normal  ms-3  ps-1"> Logout </span>
                             </a>
                         </li>

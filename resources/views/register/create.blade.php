@@ -16,8 +16,8 @@
                         <div class="card z-index-0">
                             <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
                                 <div class="bg-gradient-info shadow-success border-radius-lg py-3 pe-1">
-                                    <h4 class="text-white font-weight-bolder text-center mt-2 mb-0">Register with</h4>
-                                    <div class="row mt-3">
+                                    <h4 class="text-white font-weight-bolder text-center mt-2 mb-0">Register</h4>
+                                    {{--<div class="row mt-3">
                                         <div class="col-2 text-center ms-auto">
                                             <a class="btn btn-link px-3" href="javascript:;">
                                                 <i class="fa fa-facebook text-white text-lg"></i>
@@ -33,21 +33,26 @@
                                                 <i class="fa fa-google text-white text-lg"></i>
                                             </a>
                                         </div>
-                                    </div>
+                                    </div>--}}
                                 </div>
                             </div>
-                            <div class="row px-xl-5 px-sm-4 px-3">
+                            {{--<div class="row px-xl-5 px-sm-4 px-3">
                                 <div class="mt-2 position-relative text-center">
                                     <p
                                         class="text-sm font-weight-bold mb-2 text-secondary text-border d-inline z-index-2 bg-white px-3">
                                         or
                                     </p>
                                 </div>
-                            </div>
+                            </div>--}}
                             <div class="card-body">
                                 <form role="form" method="POST" action="{{ route('register') }}">
                                     @csrf
-
+                                    <div class="d-flex justify-content-center">
+                                        <img src="{{ asset('assets') }}/img/logos/logo_divershub.png" class="img-fluid" width="150">
+                                    </div>
+                                    <div class="d-flex justify-content-center">
+                                        <img src="{{ asset('assets') }}/img/logos/logo_letters.png" class="img-fluid" width="200">
+                                    </div>
                                     <div class="input-group input-group-dynamic">
                                         <label class="form-label">Name</label>
                                         <input type="text" name='name' class="form-control" aria-label="Name" value='{{ old('name') }}'>
