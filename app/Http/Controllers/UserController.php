@@ -130,7 +130,11 @@ class UserController extends Controller
         $favLocationsIndex = explode(',', $user->favLocations);
         $favLocations = Operator::whereIn('id', $favLocationsIndex)->get();
 
-        return view('pages.profile.overview', compact('user', 'operators', 'favOperators', 'locations', 'favLocations'));
+        $favoriteLevels = explode(',', $user->showLevel);
+        $showLevelLow = intval($favoriteLevels[0]);
+        $showLevelHigh = intval($favoriteLevels[1]);
+
+        return view('pages.profile.overview', compact('user', 'operators', 'favOperators', 'locations', 'favLocations', 'showLevelLow', 'showLevelHigh'));
     }
 
     public function updateProfile(Request $request) {

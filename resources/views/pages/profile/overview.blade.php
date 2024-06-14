@@ -383,7 +383,7 @@
         });
        
         noUiSlider.create(sliderFilter, {
-            start: [0, 2],
+            start: [{{ $showLevelLow }}, {{ $showLevelHigh }}],
             connect: [false, true, false],
             range: {
                 'min': [0],
