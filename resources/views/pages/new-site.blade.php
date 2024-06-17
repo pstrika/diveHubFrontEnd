@@ -27,6 +27,53 @@
                 background-color: #03a9f4;
             }
         </style>
+
+         <!-- Customize slider colors -->
+         <style>
+                .choices__list .choices__item--selectable.is-highlighted {
+                    background-color: #2F88EC;
+                    color: white;
+                }
+                
+                {{--Code to change the color of the input text--}}
+                .input-group.input-group-dynamic .form-control, .input-group.input-group-dynamic .form-control:focus, .input-group.input-group-static .form-control, .input-group.input-group-static .form-control:focus {
+                    background-image: linear-gradient(0deg, #2F88EC 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #d2d2d2 1px, rgba(209, 209, 209, 0) 0);
+                    border-radius: 0 !important;
+                }
+
+                .input-group.input-group-dynamic.is-focused label, .input-group.input-group-static.is-focused label {
+                    color: #2F88EC;
+                }
+
+                {{--This rule is to change the color of the line for input multiple--}}
+                .choices .choices__input {
+                    background-image: linear-gradient(0deg, #2F88EC 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #d2d2d2 1px, rgba(209, 209, 209, 0) 0);
+                    background-size: 0 100%, 100% 100%;
+                }
+                {{---This rule changes the color of the pill on a seleted multiple input--}}
+                .choices__list--multiple .choices__item {
+                    display: inline-block;
+                    vertical-align: middle;
+                    border-radius: 20px;
+                    padding: 4px 10px;
+                    font-size: 12px;
+                    font-weight: 500;
+                    margin-right: 3.75px;
+                    margin-bottom: 3.75px;
+                    background-color: #2F88EC;
+                    border: 1px solid #2F88EC;
+                    color: #ffffff;
+                    word-break: break-all;
+                    box-sizing: border-box;
+                }
+
+                {{--This rule changes the color of the line for an input single--}}
+                .choices .choices__list.choices__list--single, .choices .choices__list.choices__list--single:focus {
+                    background-image: linear-gradient(0deg, #2F88EC 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #d2d2d2 1px, rgba(209, 209, 209, 0) 0);
+                }
+   
+            </style>
+
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <div class="container-fluid py-4">
@@ -59,7 +106,7 @@
                 </div>
             </div>
 
-            {{--modal upload--}}
+            {{--modal delete--}}
             <div class="modal fade" id="modal-upload" tabindex="-1"  data-backdrop="static" style="pointer-events: none;" data-keyboard="false"> {{----role="dialog" aria-labelledby="modal-notification" aria-hidden="true"---}}
                 <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
                     <div class="modal-content">
@@ -100,8 +147,8 @@
 
 
             <div class="row min-vh-80 mt-7">
-                <div class="col-lg-8 col-md-10 col-12 m-auto mt-0">
-                    <div class="card">
+                <div class="col-lg-12 col-md-10 col-12 m-auto mt-0 ">
+                    <div class="card my-auto">
                         <div class="card-header p-0 position-relative mt-n5 mx-3 z-index-2">
                             <div class="bg-gradient-info shadow-info border-radius-lg pt-4 pb-3">
                                 <div class="multisteps-form__progress">

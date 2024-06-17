@@ -16,12 +16,46 @@
                 
                 {{--Code to change the color of the input text--}}
                 .input-group.input-group-dynamic .form-control, .input-group.input-group-dynamic .form-control:focus, .input-group.input-group-static .form-control, .input-group.input-group-static .form-control:focus {
-    background-image: linear-gradient(0deg, #03a9f4 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #d2d2d2 1px, rgba(209, 209, 209, 0) 0);
-    border-radius: 0 !important;
-}
-            
+                    background-image: linear-gradient(0deg, #2F88EC 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #d2d2d2 1px, rgba(209, 209, 209, 0) 0);
+                    border-radius: 0 !important;
+                }
 
-                
+                .input-group.input-group-dynamic.is-focused label, .input-group.input-group-static.is-focused label {
+                    color: #2F88EC;
+                }
+
+                {{--This rule is to change the color of the line for input multiple--}}
+                .choices .choices__input {
+                    background-image: linear-gradient(0deg, #2F88EC 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #d2d2d2 1px, rgba(209, 209, 209, 0) 0);
+                    background-size: 0 100%, 100% 100%;
+                }
+                {{---This rule changes the color of the pill on a seleted multiple input--}}
+                .choices__list--multiple .choices__item {
+                    display: inline-block;
+                    vertical-align: middle;
+                    border-radius: 20px;
+                    padding: 4px 10px;
+                    font-size: 12px;
+                    font-weight: 500;
+                    margin-right: 3.75px;
+                    margin-bottom: 3.75px;
+                    background-color: #2F88EC;
+                    border: 1px solid #2F88EC;
+                    color: #ffffff;
+                    word-break: break-all;
+                    box-sizing: border-box;
+                }
+
+                {{--This rules changes the background of the multi choice: set to white here--}}
+                .choices.is-disabled .choices__inner, .choices.is-disabled .choices__input {
+                    background-color: #ffffff;
+                    cursor: not-allowed;
+                    -webkit-user-select: none;
+                    -ms-user-select: none;
+                    -moz-user-select: none;
+                    user-select: none;
+                }
+   
             </style>
 
             <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4"

@@ -128,7 +128,7 @@ class UserController extends Controller
 
         $locations = WeatherLocation::all();
         $favLocationsIndex = explode(',', $user->favLocations);
-        $favLocations = Operator::whereIn('id', $favLocationsIndex)->get();
+        $favLocations = WeatherLocation::whereIn('id', $favLocationsIndex)->get();
 
         $favoriteLevels = explode(',', $user->showLevel);
         $showLevelLow = intval($favoriteLevels[0]);

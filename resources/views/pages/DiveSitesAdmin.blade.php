@@ -30,6 +30,33 @@
                     </div>
                 </div>
             </div>
+
+            {{--modal delete--}}
+            <div class="modal fade" id="modal-delete" data-backdrop="static" data-keyboard="false" tabindex="-1" >
+                <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header text-center">
+                            <h6 class="modal-title font-weight-normal" id="modal-title-notification">Notification</h6>
+                            {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
+                            <span aria-hidden="true">×</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="py-3 text-center">
+                            <i class="material-icons h1 text-secondary">
+                                task_alt
+                            </i>
+                            <h4 id="deleteConfirmText" class="text-gradient text-info mt-4">Are you sure you want to delete site?</h4>
+                            <div class="modal-footer">
+                                <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button class="btn bg-gradient-info ms-auto" id="deleteButton" title="Delete" onclick="">Delete site</button> {{---type="submit"----}}
+                                
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         
 
 
@@ -88,14 +115,16 @@
                                                     elseif($site->level == 4)
                                                         $level="Technical Hypoxic Trimix";    
                                                 ?>
-                                                <td class="w-25 align-middle text-left text-md"><b>{{ $level}}</b></td> 
+                                                {{--<td class="w-25 align-middle text-left text-md"><b>{{ $level}}</b></td> --}}
+                                                <td class="w-5 text-center align-middle" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" height="25"></td>
                                                 
                                                 <td class="w-5 align-middle text-center text-sm">
-                                                    <a href="linktonotging"> <i class="material-icons text-success" style="font-size :20pt;">edit</i> </a>
+                                                    <a href="{{ route("edit-site", ['id' => $site->id]) }}"> <i class="material-icons text-success" style="font-size :20pt;">edit</i> </a>
                                                 </td>
                                                 
                                                 <td class="w-5 text-center text-sm">
-                                                    <a href="{{ route("DeleteDiveSite") }}/{{ $site->id }}"><i class="material-icons text-danger" style="font-size :20pt;">delete</i></a>
+                                                    {{--<a href="{{ route("DeleteDiveSite") }}/{{ $site->id }}"><i class="material-icons text-danger" style="font-size :20pt;">delete</i></a>--}}
+                                                    <a onclick="confirmDeleteSite({{ $site->id }}, '{{ $site->name }}')" href="javascript:void(0);"><i class="material-icons text-danger" style="font-size :20pt;">delete</i></a>
                                                 </td>
 
                                                 
@@ -130,6 +159,21 @@
     @push('js')
     
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
+
+    <script>
+        function deleteSite(id) {
+            window.location.href = '{{ route("DeleteDiveSite") }}' + '/' + id;
+        }
+
+        function confirmDeleteSite(id, siteName) {
+            var deleteConfirmText = document.getElementById('deleteConfirmText');
+            var deleteButton = document.getElementById('deleteButton');
+            deleteConfirmText.textContent = "Are you sure you want to delete site " + siteName + " ?"
+            deleteButton.setAttribute('onclick', 'deleteSite(' + id + ')');
+            $('#modal-delete').modal('show'); // Show the modal
+        }
+
+    </script>
     {{---Show modal----}}
         
     @if(session('status'))

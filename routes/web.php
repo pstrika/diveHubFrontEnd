@@ -64,6 +64,9 @@ Route::post('upload', 'App\Http\Controllers\SiteController@upload')->middleware(
 
 Route::post('new-site-updatePicsDesc', 'App\Http\Controllers\SiteController@updateDesc')->middleware('auth')->name('new-site-updatePicsDesc');
 
+Route::get('edit-site/{id}', 'App\Http\Controllers\SiteController@showAdmin')->middleware('auth')->name('edit-site');
+Route::post('update-site', 'App\Http\Controllers\SiteController@update')->middleware('auth')->name('update-site');
+
 Route::get('SiteDetails/{id}', 'App\Http\Controllers\SiteController@show')->middleware('auth')->name('SiteDetails');
 Route::get('SiteDetails', 'App\Http\Controllers\SiteController@show')->middleware('auth')->name('SiteDetails');
 Route::post('RateSite', 'App\Http\Controllers\SiteRatingController@new')->middleware('auth')->name('RateSite');

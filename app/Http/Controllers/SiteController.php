@@ -58,7 +58,135 @@ class SiteController extends Controller
 
     }
 
+    public function showAdmin($id) {
+        $this->authorize('manage-items', User::class);
+        $status = null;
+        $site = Site::findOrFail(intval($id));
+        $photos = Photo::where('siteId', $id)->get();
+        $locations = WeatherLocation::all();
+        $operators = Operator::all();
+
+        $visitingOperatorsIndex = explode(',', $site->visitingOperators);
+        $visitingOperators = Operator::whereIn('id', $visitingOperatorsIndex)->get();
+
+        return view('pages.edit-site', compact('site','photos', 'locations', 'operators', 'status', 'visitingOperators'));
+    }
+
+    public function update(Request $request) {
+        
+        $this->authorize('manage-items', User::class);
+
+        $locations = WeatherLocation::all();
+        $operators = Operator::all();
+        $photos = Photo::where('siteId', $request->id)->get();
+        //$newSite = Site::create($request->all());
+
+        Log::info('Request data:', $request->all());
+
+        $site = Site::findOrFail($request->id);
+
+        //$path = request()->picture->store('pictures', 'public');
+        //$attributes['picture'] = "$path";
+        $wreckDetails = array(
+            "type" => $request->shipType,
+            "length" => $request->length,
+            "beam" => $request->beam,
+            "sunkDate" => $request->sunkDate,
+        );
+
+        if($request->has('type')) {
+            Log::info("Got type. Updating to: " . str($request->type));
+            $site->type = $request->type;
+        }
+
+        if($request->has('avgDepth')) {
+            Log::info("Got avgDepth. Updating to: " . str($request->avgDepth));
+            $site->avgDepth = $request->avgDepth;
+        }
+
+        if($request->has('maxDepth')) {
+            Log::info("Got maxDepth. Updating to: " . str($request->maxDepth));
+            $site->maxDepth = $request->maxDepth;
+        }
+
+        if($request->has('level')) {
+            Log::info("Got level. Updating to: " . str($request->level));
+            $site->level = $request->level;
+        }
+        if($request->has('location')) {
+            Log::info("Got location. Updating to: " . str($request->location));
+            $site->location = $request->location;
+        }
+
+        if($request->has('gpsLat')) {
+            Log::info("Got gpsLat. Updating to: " . str($request->gpsLat));
+            $site->gpsLat = $request->gpsLat;
+        }
+
+        if($request->has('gpsLon')) {
+            Log::info("Got gpsLon. Updating to: " . str($request->gpsLon));
+            $site->gpsLon = $request->gpsLon;
+        }
+
+        if($request->has('access')) {
+            Log::info("Got access. Updating to: " . str($request->access));
+            $site->access = $request->access;
+        }
+
+        if($request->has('visitinOperators')) {
+            Log::info("Got visitingOperators. Updating to: " . str(implode(', ' , $request->input('visitingOperators'))));
+            $site->visitingOperators = implode(', ' , $request->input('visitingOperators'));
+        }
+
+        if($request->has('desc')) {
+            Log::info("Got desc. Updating to: " . str($request->desc));
+            $site->desc = $request->desc;
+        }
+
+        if($request->has('route')) {
+            Log::info("Got route. Updating to: " . str($request->route));
+            $site->route = $request->route;
+        }
+
+        if($request->has('conditions')) {
+            Log::info("Got conditions. Updating to: " . str($request->conditions));
+            $site->typicalConditions = $request->conditions;
+        }
+
+        if($request->has('externalLink')) {
+            Log::info("Got externalLink. Updating to: " . str($request->externalLink));
+            $site->externalLink = $request->externalLink;
+        }
+
+        if($request->has('history')) {
+            Log::info("Got history. Updating to: " . str($request->history));
+            $site->history = $request->history;
+        }
+
+        if($request->has('shipType')) {
+            Log::info("Got wreckData. Updating...");
+            $site->wreckData = json_encode($wreckDetails);
+        }
+
+        
+        $site->save();
+        $status = "Dive site updated successfully";
+
+        $visitingOperatorsIndex = explode(',', $site->visitingOperators);
+        $visitingOperators = Operator::whereIn('id', $visitingOperatorsIndex)->get();
+        
+        //return view('pages.new-site', compact('locations','operators','status', 'newId'));
+
+        
+        //return redirect('new-site-uploadPics')->withStatus('Item successfully created.');
+        //return view('pages.new-site-uploadPics', compact('newId', 'newName', 'status'));
+        return view('pages.edit-site', compact('site','photos', 'locations', 'operators', 'status', 'visitingOperators'));
+        
+    }
+
     public function delete($id) {
+
+        $this->authorize('manage-items', User::class);
         $site = Site::findOrFail(intval($id));
         $photos = Photo::where('siteId', $id)->get();
 
@@ -124,6 +252,7 @@ class SiteController extends Controller
             return view('pages.DiveSitesSearch');
     }
     public function showAllAdmin() {
+        $this->authorize('manage-items', User::class);
         $sites = Site::all();
         $locations = WeatherLocation::all();
 
