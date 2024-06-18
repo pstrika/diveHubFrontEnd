@@ -89,6 +89,7 @@ Route::get('DeletePic', 'App\Http\Controllers\SiteController@deletePic')->middle
 
 Route::get('overview', 'App\Http\Controllers\UserController@getProfile')->middleware('auth')->name('overview');
 Route::post('overview', 'App\Http\Controllers\UserController@updateProfile')->middleware('auth')->name('overview');
+Route::post('upload-profile-pic', 'App\Http\Controllers\UserController@updateProfilePic')->middleware('auth')->name('upload-profile-pic');
 
 Route::get('dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
 

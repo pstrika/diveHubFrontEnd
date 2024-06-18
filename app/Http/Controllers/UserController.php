@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Operator;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
@@ -88,7 +89,7 @@ class UserController extends Controller
         return back()->withStatus('Profile successfully updated.');
     }
 
-    public function passwordUpdate(){
+    public function passwordUpdate() {
 
         request()->validate([ 
             'old_password' => 'required',
@@ -175,6 +176,18 @@ class UserController extends Controller
 
         $user->save();
 
+        return redirect()->back();
+    }
+
+    public function updateProfilePic(Request $request) {
+        $user = User::findorFail(auth()->user()->id);
+        Log::info('Request data updateProfilePic:', $request->all());
+
+        $filename = time() . '_' . $request->file('img_file')->getClientOriginalName();
+        Storage::disk('siteAssets')->putFileAs('img/users', $request->file('img_file'), $filename);
+        
+        $user->picture = $filename;
+        $user->save();
         return redirect()->back();
     }
 }

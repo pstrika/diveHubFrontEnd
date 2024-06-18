@@ -111,7 +111,7 @@ class SiteController extends Controller
             }
         }
 
-        if($request->has('video')) {
+        if($request->has('videoCredit')) {
             Log::debug("Got video info");
             $videoArray = array(
                 array("link" => $request->video, "credit" => $request->videoCredit),

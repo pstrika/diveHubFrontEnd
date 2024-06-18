@@ -444,13 +444,13 @@
                                             </div>
                                             <div class="col-12 col-sm-4 mt-sm-4">
                                                 <div class="input-group input-group-dynamic">
-                                                    <label id="lengthLabel" class="form-label" hidden>Length</label>
+                                                    <label id="lengthLabel" class="form-label" hidden>Length (ft)</label>
                                                     <input id="length" class="multisteps-form__input form-control" type="text" name="length" value="{{ $wreckData->length}}" placeholder="Length" disabled/>
                                                 </div>
                                             </div>
                                             <div class="col-12 col-sm-4 mt-sm-4">
                                                 <div class="input-group input-group-dynamic">
-                                                    <label id="beamLabel" class="form-label" hidden>Beam</label>
+                                                    <label id="beamLabel" class="form-label" hidden>Beam (ft)</label>
                                                     <input id="beam" class="multisteps-form__input form-control" type="text" name="beam" value="{{ $wreckData->beam}}" placeholder="Beam" disabled/>
                                                 </div>
                                             </div>
@@ -460,7 +460,7 @@
                                             
                                             <div class="col-12 col-sm-4 mt-sm-4">
                                                 <div class="input-group input-group-dynamic">
-                                                    <label id="sunkDateLabel" class="form-label" hidden>Sunk date</label>
+                                                    <label id="sunkDateLabel" class="form-label" hidden>Sunk date (i.e. April 10th, 1950)</label>
                                                     <input id="sunkDate" class="multisteps-form__input form-control" type="text" name="sunkDate" value="{{ $wreckData->sunkDate}}" placeholder="Sunk Date" disabled/>
                                                 </div>
                                             </div>

@@ -157,7 +157,7 @@
                             <h4 id="deleteConfirmText" class="text-gradient text-info mt-4">Are you sure you want to delete picture?</h4>
                             <div class="modal-footer">
                                 <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button class="btn bg-gradient-info ms-auto" id="deleteButton" title="Delete" onclick="">Delete site</button> {{---type="submit"----}}
+                                <button class="btn bg-gradient-info ms-auto" id="deleteButton" title="Delete" onclick="">Delete picture</button> {{---type="submit"----}}
                                 
                             </div>
                             </div>

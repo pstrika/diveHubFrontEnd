@@ -58,6 +58,36 @@
    
             </style>
 
+            <meta name="csrf-token" content="{{ csrf_token() }}">
+
+            {{--modal add pics--}}
+            <div class="modal fade" id="modal-add-pic" data-backdrop="static" data-keyboard="false" tabindex="-1" >
+                <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header text-center">
+                            <h6 class="modal-title font-weight-normal" id="modal-title-notification">Notification</h6>
+                            {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
+                            <span aria-hidden="true">×</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="py-3 text-center">
+                            <i class="material-icons h1 text-info">
+                                account_box
+                            </i>
+                            <h4 id="deleteConfirmText" class="text-gradient text-info mt-4">Add profile picture here</h4>
+                            <div  class="form-control border dropzone" id="myDropzone"></div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button class="btn bg-gradient-info ms-auto" id="upload-pics-button" title="Delete" onclick="">Crop and upload</button> {{---type="submit"----}}
+                                
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4"
             style="background-image: url('/assets/img/illustrations/profile.png');">
                 <span class="mask  bg-gradient-info  opacity-6"></span>
@@ -68,6 +98,11 @@
                         <div class="avatar avatar-xl position-relative">
                             <img src="{{ asset('assets') }}/img/users/{{  $user->picture }}" alt="profile_image"
                                 class="w-100 rounded-circle shadow-sm">
+                                <div class="" style="display: inline-block; position: absolute; z-index: 2; bottom: 0; right: 0;">
+                                    <a href="javascript:;">
+                                        <span id="buttonUploadProfilePic"><img style="height:25px;" src="{{ asset('assets') }}/img/icons/edit_pic_icon.png"></span>
+                                    </a>
+                                </div>
                         </div>
                     </div>
                     <div class="col-auto my-auto">
@@ -81,7 +116,7 @@
                         </div>
                     </div>
                     <div class="col-lg-4 col-md-6 my-sm-auto ms-sm-auto me-sm-0 mx-auto mt-3">
-                        <div class="nav-wrapper position-relative end-0">
+                        {{--<div class="nav-wrapper position-relative end-0">
                             <ul class="nav nav-pills nav-fill p-1" role="tablist">
                                 <li class="nav-item">
                                     <a class="nav-link mb-0 px-0 py-1 active " data-bs-toggle="tab" href="javascript:;"
@@ -105,7 +140,7 @@
                                     </a>
                                 </li>
                             </ul>
-                        </div>
+                        </div>--}}
                     </div>
                 </div>
                 <form id="myForm" class="multisteps-form__form" action="{{ route('overview') }}" method="POST" enctype="multipart/form-data">
@@ -341,10 +376,134 @@
     <link href="{{ asset('assets') }}/css/nouislider.css" rel="stylesheet">
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     <script src="{{ asset('assets') }}/js/plugins/choices.min.js"></script>
+    <script src="{{ asset('assets') }}/js/plugins/dropzone.min.js"></script>
+
+    <link href="https://unpkg.com/cropperjs/dist/cropper.css" rel="stylesheet"/>
+    <script src="https://unpkg.com/cropperjs"></script>
 
     <script>
         var divButton = document.getElementById('divButton');
     </script>
+
+    <script>
+        uploadPicProfileButton =document.getElementById('buttonUploadProfilePic');
+        uploadPicProfileButton.addEventListener('click', () => {
+            $('#modal-add-pic').modal('show'); // Show the modal
+        });
+    </script>
+
+    {{---Dropzone code--}}
+    <script>
+        Dropzone.autoDiscovery = false;
+        Dropzone.options.myDropzone = {
+            url: "{{ route('upload-profile-pic')}}", // Specify the server endpoint for file uploads
+            autoProcessQueue: false, // Disable automatic processing
+            maxFilesize: 40, // Set maximum file size (in MB)
+            acceptedFiles: ".jpeg,.jpg,.png,.gif,.webp", // Specify accepted file types
+            parallelUploads: 1, // Number of parallel uploads
+            maxFiles: 1,
+            //uploadMultiple: true, // Allow multiple files to be uploaded together
+            addRemoveLinks: true, // Show remove links for uploaded files
+            method: "post", // sets the form method to PUT
+            resizeWidth: 800,
+            //chunking: true,
+            paramName: "img_file",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                
+            },
+            queuecomplete: function (file, response) {
+                window.location.href = '{{ route("overview") }}';
+            },
+            // Event listener for the 'sending' event
+            sending: function(file, xhr, formData) {
+                // Add metadata to formData
+                formData.append('userId', ' {{ $user->id }}'); // Replace with actual data
+                // ... add other metadata as needed ...
+            },
+
+            init: function () {
+                var submitButton = document.querySelector("#upload-pics-button");
+                var myDropzone = this;
+                
+
+                // Manually trigger form submission when button is clicked
+                submitButton.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $('#modal-upload').modal('show'); // Show the moda
+                    myDropzone.processQueue();  
+                });
+
+                // Handle successful uploads
+                this.on("success", function (file, response) {
+                    console.log("File uploaded successfully:", file.name);
+                });
+
+                // Handle upload errors
+                this.on("error", function (file, errorMessage) {
+                    console.error("Error uploading file:", file.name, errorMessage);
+                });
+            },
+        
+            transformFile: function(file, done) {
+                // Create Dropzone reference for use in confirm button click handler
+                var myDropZone = this;
+                // Create the image editor overlay
+                var editor = document.createElement('div');
+                editor.style.position = 'fixed';
+                editor.style.left = 0;
+                editor.style.right = 0;
+                editor.style.top = 0;
+                editor.style.bottom = 0;
+                editor.style.zIndex = 9999;
+                editor.style.backgroundColor = '#000';
+                document.body.appendChild(editor);
+                // Create confirm button at the top left of the viewport
+                var buttonConfirm = document.createElement('button');
+                buttonConfirm.style.position = 'absolute';
+                buttonConfirm.style.left = '10px';
+                buttonConfirm.style.top = '10px';
+                buttonConfirm.style.zIndex = 9999;
+                buttonConfirm.textContent = 'Confirm';
+                editor.appendChild(buttonConfirm);
+                buttonConfirm.addEventListener('click', function() {
+                    // Get the canvas with image data from Cropper.js
+                    var canvas = cropper.getCroppedCanvas({
+                    width: 256,
+                    height: 256
+                    });
+                    // Turn the canvas into a Blob (file object without a name)
+                    canvas.toBlob(function(blob) {
+                    // Create a new Dropzone file thumbnail
+                    myDropZone.createThumbnail(
+                        blob,
+                        myDropZone.options.thumbnailWidth,
+                        myDropZone.options.thumbnailHeight,
+                        myDropZone.options.thumbnailMethod,
+                        false, 
+                        function(dataURL) {
+                        
+                        // Update the Dropzone file thumbnail
+                        myDropZone.emit('thumbnail', file, dataURL);
+                        // Return the file to Dropzone
+                        done(blob);
+                    });
+                    });
+                    // Remove the editor from the view
+                    document.body.removeChild(editor);
+                });
+                // Create an image node for Cropper.js
+                var image = new Image();
+                image.src = URL.createObjectURL(file);
+                editor.appendChild(image);
+                
+                // Create Cropper.js
+                var cropper = new Cropper(image, { aspectRatio: 1 });
+                },
+        };
+    </script>
+
 
     {{-- Slider script--}}
     <script>
@@ -517,9 +676,6 @@
                 divButton.style.display = 'block';
             });
         };
-
-
-
 
     </script>   
 

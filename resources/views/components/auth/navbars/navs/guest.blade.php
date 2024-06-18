@@ -3,7 +3,7 @@
 <div class="container {{ $p }}">
     <a class="navbar-brand font-weight-bolder ms-lg-0 ms-3 d-flex flex-column {{ $textColor }}" href="{{ route('dashboard') }}">
         DiveHub
-        <span>v1.8.2 (6/18/2024)</span>
+        <span>v1.8.3 (6/18/2024)</span>
     </a>
     <button class="navbar-toggler shadow-none ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navigation"
         aria-controls="navigation" aria-expanded="false" aria-label="Toggle navigation">

@@ -357,13 +357,13 @@
                                             </div>
                                             <div class="col-12 col-sm-4 mt-sm-4">
                                                 <div class="input-group input-group-dynamic">
-                                                    <label class="form-label">Length</label>
+                                                    <label class="form-label">Length (ft)</label>
                                                     <input class="multisteps-form__input form-control" type="text" name="length" />
                                                 </div>
                                             </div>
                                             <div class="col-12 col-sm-4 mt-sm-4">
                                                 <div class="input-group input-group-dynamic">
-                                                    <label class="form-label">Beam</label>
+                                                    <label class="form-label">Beam (ft)</label>
                                                     <input class="multisteps-form__input form-control" type="text" name="beam"/>
                                                 </div>
                                             </div>
@@ -373,7 +373,7 @@
                                             
                                             <div class="col-12 col-sm-4 mt-sm-4">
                                                 <div class="input-group input-group-dynamic">
-                                                    <label class="form-label">Sunk date</label>
+                                                    <label class="form-label">Sunk date (i.e. April 10th, 1950)</label>
                                                     <input class="multisteps-form__input form-control" type="text" name="sunkDate"/>
                                                 </div>
                                             </div>
