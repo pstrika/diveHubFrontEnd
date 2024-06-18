@@ -43,8 +43,8 @@
                         </div>
                         <div class="modal-body">
                             <div class="py-3 text-center">
-                            <i class="material-icons h1 text-secondary">
-                                task_alt
+                            <i class="material-icons h1 text-danger">
+                                warning
                             </i>
                             <h4 id="deleteConfirmText" class="text-gradient text-info mt-4">Are you sure you want to delete site?</h4>
                             <div class="modal-footer">
@@ -121,6 +121,10 @@
                                                 <td class="w-5 align-middle text-center text-sm">
                                                     <a href="{{ route("edit-site", ['id' => $site->id]) }}"> <i class="material-icons text-success" style="font-size :20pt;">edit</i> </a>
                                                 </td>
+
+                                                <td class="w-5 align-middle text-center text-sm">
+                                                    <a href="{{ route("edit-site-pics", ['id' => $site->id]) }}"> <i class="material-icons text-info" style="font-size :20pt;">photo_library</i> </a>
+                                                </td>
                                                 
                                                 <td class="w-5 text-center text-sm">
                                                     {{--<a href="{{ route("DeleteDiveSite") }}/{{ $site->id }}"><i class="material-icons text-danger" style="font-size :20pt;">delete</i></a>--}}
@@ -160,6 +164,7 @@
     
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
 
+    {{--Delete confirmation--}}
     <script>
         function deleteSite(id) {
             window.location.href = '{{ route("DeleteDiveSite") }}' + '/' + id;

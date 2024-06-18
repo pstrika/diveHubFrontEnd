@@ -164,8 +164,6 @@
                                 <div class="multisteps-form__progress">
                                     <button class="multisteps-form__progress-btn js-active" type="button"title="Product Info"><span>Site Info</span></button>
                                     <button id="wreckElement" class="multisteps-form__progress-btn" type="button" title="Media">Wreck</button>
-                                    <button class="multisteps-form__progress-btn" type="button" title="Socials" disabled>Pics</button>
-                                    <button class="multisteps-form__progress-btn" type="button" title="Pricing" disabled>Pics Desc</button>
                                 </div>
                             </div>
                         </div>
@@ -382,7 +380,7 @@
                                         <div class="row mt-3">
                                             <div class="button-row d-flex mt-0">
                                                 <button id="buttonNextPanelInfo" class="btn bg-gradient-dark ms-auto mb-0 js-btn-next" type="button" title="Next">Next</button>
-                                                <button class="btn bg-gradient-dark ms-auto mb-0" id="submit-all-1" title="Send" onclick="submitform()" style="display: none;">Update Site</button> {{---type="submit"----}}
+                                                <button class="btn bg-gradient-info ms-auto mb-0" id="submit-all-1" title="Send" onclick="submitform() disabled" style="display: none;">Update Site</button> {{---type="submit"----}}
                                             </div>
                                         </div>
                                     </div>
@@ -499,7 +497,7 @@
                                         <div class="row">
                                             <div class="button-row d-flex mt-0 mt-md-4">
                                                 <button class="btn bg-gradient-light mb-0 js-btn-prev" type="button" title="Prev">Prev</button>
-                                                <button class="btn bg-gradient-dark ms-auto mb-0" id="submit-all" title="Send" onclick="submitform()">Update Site</button> {{---type="submit"----}}
+                                                <button class="btn bg-gradient-info ms-auto mb-0" id="submit-all" title="Send" onclick="submitform()" disabled>Update Site</button> {{---type="submit"----}}
                                             </div>
                                         </div>
                                     </div>
@@ -806,11 +804,15 @@
         var descriptionBoxEdit = document.getElementById("descriptionBoxEdit");
         var descriptionBoxShow = document.getElementById("descriptionBoxShow");
         var quilDesc = document.querySelector('textarea[name="desc"]');
+        var submitButton = document.getElementById('submit-all');
+        var submitButton1 = document.getElementById('submit-all-1');
 
         editDescButton.addEventListener('click', () => {
                 {{--quill_desc.root.innerHTML = '{{ $site->desc }}';--}}
                 descriptionBoxEdit.style.display = 'block';
                 descriptionBoxShow.style.display = 'none';
+                submitButton.disabled = false;
+                submitButton1.disabled=false;
             });
 
         var editRouteButton = document.getElementById("editRouteButton");
@@ -822,6 +824,8 @@
                 {{--quill_desc.root.innerHTML = '{{ $site->desc }}';--}}
                 routeBoxEdit.style.display = 'block';
                 routeBoxShow.style.display = 'none';
+                submitButton.disabled = false;
+                submitButton1.disabled=false;
             });
 
         var editConditionsButton = document.getElementById("editConditionsButton");
@@ -833,6 +837,8 @@
                 {{--quill_desc.root.innerHTML = '{{ $site->desc }}';--}}
                 conditionsBoxEdit.style.display = 'block';
                 conditionsBoxShow.style.display = 'none';
+                submitButton.disabled = false;
+                submitButton1.disabled=false;
             });
 
         var editHistoryButton = document.getElementById("editHistoryButton");
@@ -852,6 +858,9 @@
                 length.disabled = false;
                 beam.disabled = false;
                 sunkDate.disabled = false;
+
+                submitButton.disabled = false;
+                submitButton1.disabled=false;
 
             });
         
@@ -887,6 +896,9 @@
                 accessInput.enable()
 
                 slider.noUiSlider.enable();
+
+                submitButton.disabled = false;
+                submitButton1.disabled=false;
             });
 
         maxDepth.addEventListener('click', () => {

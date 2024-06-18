@@ -72,6 +72,62 @@ class SiteController extends Controller
         return view('pages.edit-site', compact('site','photos', 'locations', 'operators', 'status', 'visitingOperators'));
     }
 
+    public function showAdminPics($id) {
+        $this->authorize('manage-items', User::class);
+        $status = null;
+        $site = Site::findOrFail(intval($id));
+        $photos = Photo::where('siteId', $id)->get();
+
+        return view('pages.updatePics', compact('site','photos', 'status'));
+    }
+
+    public function updatePics(Request $request) {
+        $this->authorize('manage-items', User::class);
+
+        Log::info('Request data @ updatePics:', $request->all());
+
+        $site = Site::findOrFail($request->siteId);
+
+        
+        // Update photos only if we get an array with photoIds
+        
+        if($request->has('photoId')) {
+            $photoIds = $request->photoId;
+            $photoDescs = $request->picDesc;
+            $photoCredits = $request->picCredit;
+            $photos = Photo::whereIn('id', $photoIds)->get();
+
+            //Log::debug("Length of photoId: " . count($photos));
+            $i =0;
+            foreach($photos as $photo) {
+                Log::debug("Photo name: " . $photo->file);
+                Log::debug("Old desc: " . $photo->desc);
+                Log::debug("New desc: " . $photoDescs[$i]);
+
+                $photo->desc = $photoDescs[$i];
+                $photo->credit = $photoCredits[$i];
+                $i++;
+                $photo->save();
+            }
+        }
+
+        if($request->has('video')) {
+            Log::debug("Got video info");
+            $videoArray = array(
+                array("link" => $request->video, "credit" => $request->videoCredit),
+            );
+
+            $site->videos = json_encode($videoArray);
+
+            $site->save();
+        }
+
+        // retrieve latest from model and show blade
+        $photos = Photo::where('siteId', $request->siteId)->get();
+        $status = "Media for site " . $site->name . " updated successfully";
+        return view('pages.updatePics', compact('site','photos', 'status'));
+    }
+
     public function update(Request $request) {
         
         $this->authorize('manage-items', User::class);
@@ -184,6 +240,25 @@ class SiteController extends Controller
         
     }
 
+    public function deletePic($id) {
+        $this->authorize('manage-items', User::class);
+        $photo = Photo::findOrFail($id);
+        $site = Site::findOrFail($photo->siteId);
+        $allPhotosForSite = explode(',', $site->pics);
+
+        //create array with all photoIds but no the one we are deleting
+        $filteredArray = array_filter($allPhotosForSite, function ($item) use ($id) {
+            return $item !== $id;
+        });
+
+        $site->pics = implode(', ', $filteredArray);
+        $site->save();
+        $photo->deletePhoto();
+
+        $photos = Photo::where('siteId', $site->id)->get();
+        $status = "Picture successfully deleted.";
+        return view('pages.updatePics', compact('site','photos', 'status'));
+    }
     public function delete($id) {
 
         $this->authorize('manage-items', User::class);

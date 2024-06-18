@@ -187,8 +187,6 @@
     </script>
 
     {{--Code to update video frame with input--}}
-
-
     <script>
         const videoInput = document.getElementById('videoInput');
         const youtubeVideo = document.getElementById('youtubeVideo');
@@ -209,14 +207,14 @@
     
 
    
-
+    {{---Dropzone code--}}
     <script>
         Dropzone.autoDiscovery = false;
         Dropzone.options.myDropzone = {
             url: "{{ route('upload')}}", // Specify the server endpoint for file uploads
             autoProcessQueue: false, // Disable automatic processing
             maxFilesize: 40, // Set maximum file size (in MB)
-            acceptedFiles: ".jpeg,.jpg,.png,.gif", // Specify accepted file types
+            acceptedFiles: ".jpeg,.jpg,.png,.gif,.webp", // Specify accepted file types
             parallelUploads: 20, // Number of parallel uploads
             //uploadMultiple: true, // Allow multiple files to be uploaded together
             addRemoveLinks: true, // Show remove links for uploaded files
