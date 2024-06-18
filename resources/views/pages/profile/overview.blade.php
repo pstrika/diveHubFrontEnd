@@ -100,7 +100,7 @@
                                 class="w-100 rounded-circle shadow-sm">
                                 <div class="" style="display: inline-block; position: absolute; z-index: 2; bottom: 0; right: 0;">
                                     <a href="javascript:;">
-                                        <span id="buttonUploadProfilePic"><img style="height:25px;" src="{{ asset('assets') }}/img/icons/edit_pic_icon.png"></span>
+                                        <span id="buttonUploadProfilePic"><img style="height:25px; width:25px;" src="{{ asset('assets') }}/img/icons/edit_pic_icon.png"></span>
                                     </a>
                                 </div>
                         </div>

@@ -103,7 +103,7 @@
                                                             elseif($site->level == 4)
                                                                 $level="Technical Hypoxic Trimix";    
                                                         ?>
-                                                        <td class="w-25 align-middle text-left text-md"><b>{{ $level}}</b></td> 
+                                                        <td class="w-5 text-center align-middle" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" height="25"></td>
                                                 
                                                     </tr>
                                                 @endforeach
