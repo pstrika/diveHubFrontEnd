@@ -1,10 +1,10 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
-    <x-auth.navbars.sidebar activePage="Calendars" activeItem="CalendarTec" activeSubitem=""></x-auth.navbars.sidebar>
+    <x-auth.navbars.sidebar activePage="Calendars" activeItem="MyCalendar" activeSubitem=""></x-auth.navbars.sidebar>
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Technical Calendar {{ $currentMonthS}}-{{ $year }}"></x-auth.navbars.navs.auth>
+        <x-auth.navbars.navs.auth pageTitle="My Calendar {{ $currentMonthS}}-{{ $year }}"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
             <div class="container-fluid py-4">
                 <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/calendar.jpg');">
@@ -68,7 +68,10 @@
                 <div class="modal fade" id="modal-calendar" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
                     <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
                         <div class="modal-content">
+                            <span id="span-booked" class="badge badge-md bg-gradient-success text-white">Booked</span>
+                            <span id="span-not-booked" class="badge badge-md bg-gradient-danger text-white">Not Booked</span>
                             <div class="modal-header text-center">
+                                
                                 <h6 class="modal-title font-weight-normal text-start" id="modal-title-notification-calendar">Edit calendar</h6>
                                 {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
                                 <span aria-hidden="true">×</span>
@@ -82,14 +85,29 @@
                                             <tbody>
                                                 
                                                 <tr>
-                                                <td class="w-60 align-middle text-start text-sm">
-                                                <a href=""> <i class="material-icons text-info" style="font-size :20pt;">visibility</i> </a></td>
-                                                <td class="w-20 align-middle text-start text-sm"><b>Go to trip</b></td> </tr>
-                                                
+                                                    <td class="w-60 align-middle text-center text-sm">    
+                                                        <a id="button-go" href=""><button class="btn btn-icon btn-3 btn-info" type="button">
+                                                            <span class="btn-inner--icon"><i class="material-icons">visibility</i></span>
+                                                            <span class="btn-inner--text">Go to trip</span>
+                                                        </button></a>
+                                                    </td>
+                                                </tr>
                                                 <tr>
-                                                <td class="w-60 align-middle text-start text-sm">
-                                                    <a href=""> <i class="material-icons text-info" style="font-size :20pt;">delete</i> </a></td>
-                                                <td class="w-20 align-middle text-start text-sm"><b>Remove from calendar</b></td> </tr>
+                                                    <td id="div-button-book" class="w-60 align-middle text-center text-sm">    
+                                                        <a id="button-book" href=""><button class="btn btn-icon btn-3 btn-success" type="button">
+                                                            <span class="btn-inner--icon"><i class="material-icons">check</i></span>
+                                                            <span class="btn-inner--text">I'm booked already!</span>
+                                                        </button></a>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="w-60 align-middle text-center text-sm">    
+                                                        <a id="button-remove" href=""><button class="btn btn-icon btn-3 btn-danger" type="button">
+                                                            <span class="btn-inner--icon"><i class="material-icons">delete</i></span>
+                                                            <span class="btn-inner--text">Remove from calendar</span>
+                                                        </button></a>
+                                                    </td>
+                                                </tr>
                                                 
 
                                             </tbody>
@@ -107,16 +125,16 @@
                     <div class="p-0 mt-n4 mx-2 border-radius-lg py-3 pe-1">
                         <div style="float: left;">
                             <h2 class="card-title text-info mx-3 mt-4">{{ $currentMonthS }}-{{ $year }}</h2>
-                            <h4 class="card-category text-info mx-4">Technical Calendar</h4>
+                            <h4 class="card-category text-info mx-4">My Calendar</h4>
                         </div>
 
                         {{-----------------NAV to next day}} --}}
                         <div class="mt-5" style="float: right;">
-                            <a type="button" href="/CalendarT/tec/{{ $prevMonthS }}/" class="btn btn-info tex-end">
+                            <a type="button" href="/MyCalendar/{{ $prevMonthS }}/" class="btn btn-info tex-end">
                                 <span class="material-icons" style="font-size :24pt;">keyboard_arrow_left</span>
                             </a>
                             
-                            <a type="button" href="/CalendarT/tec/{{ $nextMonthS }}/" class="btn btn-info tex-end">
+                            <a type="button" href="/MyCalendar/{{ $nextMonthS }}/" class="btn btn-info tex-end">
                                 <span class="material-icons" style="font-size :24pt;">keyboard_arrow_right</span>
                             </a>
                         </div>
@@ -158,12 +176,9 @@
 
                             </tr> 
                             
-                            <tr><td class="text-center text-sm w-1"> 
-                                <span class="badge badge-md bg-gradient-success text-white">SFDH</span>
-                                <span class="badge badge-md bg-gradient-danger text-white">PVD</span>
-                                <span class="badge badge-md bg-gradient-warning text-white">DP</span>
-                                <span class="badge badge-md bg-gradient-info text-white">HD</span>
-                                <span class="badge badge-md bg-gradient-primary text-white">OTHER</span> 
+                            <tr><td class="text-start text-sm w-1"> 
+                                <span class="badge badge-md bg-gradient-success text-white">Booked</span>
+                                <span class="badge badge-md bg-gradient-danger text-white">Not Booked</span>
                             </td></tr>
                             <tr><td><p class="text-xs font-weight-bold mb-0 mt-n3">reference</p></td></tr>
                         </table>
@@ -182,7 +197,7 @@
                     <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Tech Dives {{ $currentMonthS }}-{{ $year }}</h2>
+                                <h2 class="card-title text-white mx-4">My Dives {{ $currentMonthS }}-{{ $year }}</h2>
                             </div>
                         </div>
                         <div class="card-body">
@@ -225,6 +240,9 @@
                                 <div class="table-responsive">
                                     <table id="tableTripsAM">
                                         <thead class="text-info">
+                                            <th class="px-4 align-top text-wrap">
+                                                booked?
+                                            </th>
                                             <th class="px-4 align-top">
                                                 Date
                                             </th>
@@ -257,6 +275,11 @@
                                                 @endphp
                                                 @if( $tripMonth == $currentMonthS)
                                                 <tr style="border-bottom: 1px solid #D3D3D3;" data-tag="{{ $trip->tags }}">
+                                                @if($trip->booked)
+                                                    <td class="w-10 text-center text-info" style="border: none;"><i class="material-icons">check</i></td>
+                                                @else
+                                                    <td class="w-10 text-center text-danger" style="border: none;"><i class="material-icons">close</i></td>
+                                                @endif
                                                 <td class="px-4">{{ $trip->date }}</td>
                                                     <td class="px-0 py-2 text-sm text-wrap">{{ $trip->operatorName }}</td>
                                                     <td class="px-4">{{ $trip->departureTime }}</td>
@@ -332,10 +355,28 @@
             const minutes = parsedDate.getMinutes();
 
             // Create the desired string
-            const formattedString = `${day} ${month} ${year} ${hours}:${minutes}`;
+            const formattedString = `${day} ${month} ${year} ${hours}:${String(minutes).padStart(2, '0')}`;
             var modal = document.getElementById('modal-title-notification-calendar');
-            modal.innerHTML = "Edit event in calendar: <br>" + formattedString + "<br> <b>" + info.event.title + "</b>";
+            modal.innerHTML = "Edit event in calendar: <br>" + formattedString + "<br> <b>" + info.event.title + "</b> <br> <p class='text-info text-sm text-bold'>" + info.event.extendedProps.operator + "<p>";
             $('#modal-calendar').modal('show');
+
+            document.getElementById("button-go").href = '/TripDetails/' + info.event.extendedProps.myId;
+            document.getElementById("button-book").href = '/SetEventBook/' + info.event.extendedProps.eventId;
+            document.getElementById("button-remove").href = '/RemoveFromCalendar/' + info.event.extendedProps.eventId;
+            
+            if(info.event.extendedProps.booked == '1') {
+                document.getElementById("div-button-book").hidden = true;
+                document.getElementById("span-booked").hidden = false;
+                document.getElementById("span-not-booked").hidden = true;
+            } else {
+                document.getElementById("div-button-book").hidden = false;
+                document.getElementById("span-booked").hidden = true;
+                document.getElementById("span-not-booked").hidden = false;
+            }
+
+
+            
+
 
         },
         initialView: "dayGridMonth",
@@ -358,17 +399,12 @@
                     echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) ."',";
                     echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
                     //echo "url: '/TripDetails/" . str($trip->id) . "',";
-                    echo "extendedProps: {myId: '" . str($trip->id) . "'},";
-                    if($trip->operatorId == "1")
-                        echo "className: 'bg-gradient-success text-white opId=1 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
-                    elseif($trip->operatorId == "3")
-                        echo "className: 'bg-gradient-danger text-white opId=3 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
-                    elseif($trip->operatorId == "8")
-                        echo "className: 'bg-gradient-warning text-white opId=8 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
-                    elseif($trip->operatorId == "9")
-                        echo "className: 'bg-gradient-info text-white opId=9 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
+                    echo "extendedProps: {myId: '" . str($trip->id) . "', operator: '" . $trip->operatorName . "', eventId: '" . $trip->eventId ."', booked: '" . $trip->booked . "'},";
+                    if($trip->booked)
+                        echo "className: 'bg-gradient-success text-white opId=$trip->operatorId isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
                     else
-                        echo "className: 'bg-gradient-primary text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";    
+                        echo "className: 'bg-gradient-danger text-white opId=$trip->operatorId isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
+                    
                 }
             @endphp
             

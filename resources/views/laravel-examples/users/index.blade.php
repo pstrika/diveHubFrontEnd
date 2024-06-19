@@ -64,7 +64,7 @@
                                         <td class="text-sm font-weight-normal">{{ $user->id }}</td>
                                         <td class="avatar avatar-xxl position-relative">
                                             @if ($user->picture)
-                                            <img src="/storage/{{($user->picture)}} " alt="picture"
+                                            <img src="{{ asset('assets') }}/img/users/{{  $user->picture }}" alt="picture"
                                                 class="w-100 rounded-circle shadow-sm">
                                             @else
                                             <img src="{{ asset('assets') }}/img/default-avatar.png" alt="avatar"

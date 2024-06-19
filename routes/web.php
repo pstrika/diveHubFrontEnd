@@ -31,6 +31,7 @@ Route::get('/', function () {
 Route::get('Trips/{date}', 'App\Http\Controllers\TripsController@show')->middleware('auth')->name('Trips');
 Route::get('Trips/', 'App\Http\Controllers\TripsController@show')->middleware('auth')->name('Trips');
 
+
 Route::get('Weather/{location}', 'App\Http\Controllers\WeatherController@show')->middleware('auth')->name('Weather');
 Route::get('Weather/', 'App\Http\Controllers\WeatherController@show')->middleware('auth')->name('Weather');
 
@@ -41,8 +42,13 @@ Route::get('CalendarShark/{date}', 'App\Http\Controllers\CalendarTController@sho
 Route::get('CalendarShark/', 'App\Http\Controllers\CalendarTController@showShark')->middleware('auth')->name('CalendarShark');
 Route::get('CalendarLobster/{date}', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('auth')->name('CalendarLobster');
 Route::get('CalendarLobster/', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('auth')->name('CalendarLobster');
+Route::get('MyCalendar/{date}', 'App\Http\Controllers\EventController@show')->middleware('auth')->name('MyCalendar');
+Route::get('MyCalendar/', 'App\Http\Controllers\EventController@show')->middleware('auth')->name('MyCalendar');
 
 Route::get('TripDetails/{tripId}', 'App\Http\Controllers\TripDetailsController@show')->middleware('auth')->name('TripDetails');
+Route::get('AddEventToCalendar/{tripId}', 'App\Http\Controllers\EventController@addEventToCalendar')->middleware('auth')->name('AddEventToCalendar');
+Route::get('SetEventBook/{tripId}', 'App\Http\Controllers\EventController@setEventBook')->middleware('auth')->name('SetEventBook');
+Route::get('RemoveFromCalendar/{tripId}', 'App\Http\Controllers\EventController@removeFromCalendar')->middleware('auth')->name('RemoveFromCalendar');
 
 Route::get('Operators/', 'App\Http\Controllers\OperatorController@show')->middleware('auth')->name('Operators');
 Route::get('Waivers', 'App\Http\Controllers\OperatorController@getWaivers')->middleware('auth')->name('Waivers');

@@ -13,6 +13,7 @@ use App\Models\Location;
 use App\Models\Boat;
 use App\Models\Photo;
 use App\Models\User;
+use App\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Console\Input\Input;
@@ -72,7 +73,10 @@ class TripDetailsController extends Controller
                 $boats = null;
         }
         #return view('pages.TripDetails', compact('tripDetails', 'operator', 'location', 'boats', 'sites', 'sitePhoto'));
-        return view('pages.TripDetails', compact('tripDetails', 'operator', 'location', 'boats', 'sites'));
+
+        // check if for this user this trip is on his calendar
+        $alreadyInCalendar = Event::alreadyInCalendar($tripId);
+        return view('pages.TripDetails', compact('tripDetails', 'operator', 'location', 'boats', 'sites', 'alreadyInCalendar'));
 
     }
 }

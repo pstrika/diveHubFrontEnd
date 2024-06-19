@@ -54,6 +54,7 @@ class SiteController extends Controller
 
         $ratedAlready = SiteRating::where('userId', auth()->id())->where('siteId', $id)->exists();
 
+
         return view('pages.SiteDetails', compact('site','photos', 'location', 'operators', 'ratedAlready'));
 
     }
@@ -461,8 +462,7 @@ class SiteController extends Controller
         return view('pages.new-site', compact('locations','operators', 'status', 'newId'));
     }
 
-    public function upload(Request $request)
-    {
+    public function upload(Request $request) {
         Log::info('Request data:', $request->all());
         // Get chunk information
         $chunkNumber = $request->input('dzchunkindex');

@@ -28,32 +28,7 @@
             </div>
 
             <div class="row">
-                <div class="col-12">
-                    <div class="wp-block-tdvb-td-viewer  align" id="tdvb3DViewerBlock-38a8dc92-1">
-                        <style> #tdvb3DViewerBlock-38a8dc92-1 .tdvb3DViewerBlock {
-                                text-align: center;
-                            }
-                            #tdvb3DViewerBlock-38a8dc92-1 .tdvb3DViewerBlock model-viewer {
-                                width: 100%;
-                                height: 600px;
-                            } 
-                        </style>
-                            <div class="tdvb3DViewerBlock">
-                               <model-viewer camera-controls="" src="https://dl.dropbox.com/scl/fi/5575unk74eo2cr22evw0p/hydro-engine-room.glb?rlkey=msly3uhgoopbon41yaqjdj9ht&amp;st=4m80xj4d&amp;" ar-modes="webxr scene-viewer quick-look" poster="https://www.bythecmedia.com/wp-content/uploads/2024/06/Screenshot-2024-06-14-at-17.37.58.png" shadow-intensity="1" camera-orbit="-123.6deg 26.81deg 66.66m" field-of-view="25.43deg" exposure="1.91" shadow-softness="1" ar-status="not-presenting">
-                                    <div class="progress-bar hide" slot="progress-bar">
-                                        <div class="update-bar"></div>
-                                    </div>
-                                    <button slot="ar-button" id="ar-button">
-                                        View in your space
-                                    </button>
-                                    <div id="ar-prompt">
-                                        <img decoding="async" src="https://www.bythecmedia.com/wp-content/themes/by_the_sea/images/ar_hand_prompt.png">
-                                    </div>
-                                </model-viewer>
-                            </div>
-                    </div>
-
-                </div>
+                
                 
                 {{-- Platform Health card --}}
                 <div class="col-md-12">             
@@ -247,7 +222,7 @@
     
     @push('js')
     
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+    
 
     @endpush
 </x-page-template>

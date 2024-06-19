@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Log;
+use App\Models\Event;
 use Carbon\Carbon;
 
 class Trip extends Model
@@ -28,5 +30,23 @@ class Trip extends Model
         // Explode the comma-separated site IDs and retrieve the related sites
         //return Site::whereIn('id', explode(',', $this->siteId))->get();
         return $this->hasMany(Site::class, 'id', 'siteId');
+    }
+
+    public static function tripInEvent($event) {
+        Log::debug("tripInEvent received event = " . str($event));
+
+        $trip = Trip::where([
+            [ 'date', '=', $event->date],
+            [ 'departureTime', '=', $event->time],
+            [ 'operatorId', '=', $event->operatorId],
+            [ 'tripName', '=', $event->tripName]
+        ])->get();
+
+        Log::debug("trip info: " . $trip);
+        if(count($trip) == 1)
+            return $trip[0];
+        else
+            return -1;
+        
     }
 }
