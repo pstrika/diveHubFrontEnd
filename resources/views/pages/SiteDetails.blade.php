@@ -426,7 +426,52 @@
                 </div>
                 {{-----------------------------}}
                 
-                
+                {{--Card 3D model--}}
+                @if($site->dModel != null)
+                <div class="col-md-12">             
+                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h2 class="card-title text-white mx-4">3D-Model</h4>
+                                <div class="table-responsive"></div>
+                            </div>
+                        </div>
+                        <div class="card-body mt-4">
+                            <div class="wp-block-tdvb-td-viewer  align" id="tdvb3DViewerBlock-38a8dc92-1">
+                                <style> #tdvb3DViewerBlock-38a8dc92-1 .tdvb3DViewerBlock {
+                                        text-align: center;
+                                    }
+                                    #tdvb3DViewerBlock-38a8dc92-1 .tdvb3DViewerBlock model-viewer {
+                                        width: 100%;
+                                        height: 600px;
+                                    }
+                                    .progress-bar {
+                                        display: flex;
+                                        flex-direction: column;
+                                        justify-content: center;
+                                        overflow: hidden;
+                                        color: #fff;
+                                        text-align: center;
+                                        white-space: nowrap;
+                                        background-color: #ffffff;
+                                        transition: width 0.6s ease;
+                                    }
+                                </style>
+                                <div class="tdvb3DViewerBlock">
+                                    <model-viewer camera-controls="" src="{{ $site->dModel}}" ar-modes="webxr scene-viewer quick-look" poster="https://www.bythecmedia.com/wp-content/uploads/2023/05/okinawa.jpg" shadow-intensity="1" camera-orbit="0deg 75deg 226.7m" field-of-view="30deg" exposure="2" shadow-softness="1" ar-status="not-presenting">
+                                        {{--<div class="progress-bar hide" slot="progress-bar">
+                                            <div class="update-bar"></div>
+                                        </div>--}}
+                                        
+                                    </model-viewer>
+                                    <p class="align-middle text-center text-sm"><b>📸 {{ $site->dModelCredit }}</b></p>
+                                </div>
+                            </div> 
+                           
+                        </div>
+                    </div>
+                </div>
+                @endif
 
                 
             
@@ -445,7 +490,7 @@
                         <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                                 <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Wreck Details</h4>
+                                    <h2 class="card-title text-white mx-4">Wreck Details</h2>
                                     <div class="table-responsive"></div>
                                 </div>
                             </div>
@@ -596,6 +641,8 @@
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+
 
     <script>
         /* Javascript */
