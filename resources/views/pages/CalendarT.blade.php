@@ -320,24 +320,7 @@
             var link = '/Trips/' + info.dateStr;
             window.location.href = link;
         },
-        eventClick: function(info) {
-            //mandar modal aca
-            const parsedDate = new Date(info.event.start);
-
-            // Get the components you need
-            const day = parsedDate.getDate();
-            const month = parsedDate.toLocaleString('default', { month: 'short' });
-            const year = parsedDate.getFullYear();
-            const hours = parsedDate.getHours();
-            const minutes = parsedDate.getMinutes();
-
-            // Create the desired string
-            const formattedString = `${day} ${month} ${year} ${hours}:${minutes}`;
-            var modal = document.getElementById('modal-title-notification-calendar');
-            modal.innerHTML = "Edit event in calendar: <br>" + formattedString + "<br> <b>" + info.event.title + "</b>";
-            $('#modal-calendar').modal('show');
-
-        },
+        
         initialView: "dayGridMonth",
         firstDay: 1,
         contentHeight: 'auto',
@@ -357,8 +340,8 @@
                     echo "{";
                     echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) ."',";
                     echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
-                    //echo "url: '/TripDetails/" . str($trip->id) . "',";
-                    echo "extendedProps: {myId: '" . str($trip->id) . "'},";
+                    echo "url: '/TripDetails/" . str($trip->id) . "',";
+                    //echo "extendedProps: {myId: '" . str($trip->id) . "'},";
                     if($trip->operatorId == "1")
                         echo "className: 'bg-gradient-success text-white opId=1 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
                     elseif($trip->operatorId == "3")
