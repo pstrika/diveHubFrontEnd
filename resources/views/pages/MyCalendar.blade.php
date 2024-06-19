@@ -93,6 +93,14 @@
                                                     </td>
                                                 </tr>
                                                 <tr>
+                                                    <td id="div-button-link" class="w-60 align-middle text-center text-sm">    
+                                                        <a id="button-link" href="" target="_blank"><button class="btn btn-icon btn-3 btn-info" type="button">
+                                                            <span class="btn-inner--icon"><i class="material-icons">link</i></span>
+                                                            <span class="btn-inner--text">Click to book</span>
+                                                        </button></a>
+                                                    </td>
+                                                </tr>
+                                                <tr>
                                                     <td id="div-button-book" class="w-60 align-middle text-center text-sm">    
                                                         <a id="button-book" href=""><button class="btn btn-icon btn-3 btn-success" type="button">
                                                             <span class="btn-inner--icon"><i class="material-icons">check</i></span>
@@ -100,6 +108,7 @@
                                                         </button></a>
                                                     </td>
                                                 </tr>
+                                                
                                                 <tr>
                                                     <td class="w-60 align-middle text-center text-sm">    
                                                         <a id="button-remove" href=""><button class="btn btn-icon btn-3 btn-danger" type="button">
@@ -363,12 +372,15 @@
             document.getElementById("button-go").href = '/TripDetails/' + info.event.extendedProps.myId;
             document.getElementById("button-book").href = '/SetEventBook/' + info.event.extendedProps.eventId;
             document.getElementById("button-remove").href = '/RemoveFromCalendar/' + info.event.extendedProps.eventId;
+            document.getElementById("button-link").href = info.event.extendedProps.linkToBook;
             
             if(info.event.extendedProps.booked == '1') {
                 document.getElementById("div-button-book").hidden = true;
+                document.getElementById("div-button-link").hidden = true;
                 document.getElementById("span-booked").hidden = false;
                 document.getElementById("span-not-booked").hidden = true;
             } else {
+                document.getElementById("div-button-book").hidden = false;
                 document.getElementById("div-button-book").hidden = false;
                 document.getElementById("span-booked").hidden = true;
                 document.getElementById("span-not-booked").hidden = false;
@@ -399,7 +411,7 @@
                     echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) ."',";
                     echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
                     //echo "url: '/TripDetails/" . str($trip->id) . "',";
-                    echo "extendedProps: {myId: '" . str($trip->id) . "', operator: '" . $trip->operatorName . "', eventId: '" . $trip->eventId ."', booked: '" . $trip->booked . "'},";
+                    echo "extendedProps: {myId: '" . str($trip->id) . "', operator: '" . $trip->operatorName . "', eventId: '" . $trip->eventId ."', booked: '" . $trip->booked . "', linkToBook: '" . $trip->linkToBook . "'},";
                     if($trip->booked)
                         echo "className: 'bg-gradient-success text-white opId=$trip->operatorId isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
                     else
