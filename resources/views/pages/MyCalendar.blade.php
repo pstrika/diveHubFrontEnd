@@ -74,7 +74,7 @@
                                 
                                 <h6 class="modal-title font-weight-normal text-start" id="modal-title-notification-calendar">Edit calendar</h6>
                                 {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
-                                <span aria-hidden="true">×</span>
+                                {{--<span aria-hidden="true">×</span>--}}
                                 </button>
                             </div>
                             <div class="modal-body">
@@ -85,35 +85,41 @@
                                             <tbody>
                                                 
                                                 <tr>
-                                                    <td class="w-60 align-middle text-center text-sm">    
-                                                        <a id="button-go" href=""><button class="btn btn-icon btn-3 btn-info" type="button">
+                                                    <td class="align-middle text-center text-sm">    
+                                                        <a id="button-go" href=""><button class="btn btn-icon btn-3 btn-info" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="See details for this trip">
                                                             <span class="btn-inner--icon"><i class="material-icons">visibility</i></span>
-                                                            <span class="btn-inner--text">Go to trip</span>
+                                                            {{--<span class="btn-inner--text">Go to trip</span>--}}
                                                         </button></a>
                                                     </td>
-                                                </tr>
-                                                <tr>
-                                                    <td id="div-button-link" class="w-60 align-middle text-center text-sm">    
-                                                        <a id="button-link" href="" target="_blank"><button class="btn btn-icon btn-3 btn-info" type="button">
-                                                            <span class="btn-inner--icon"><i class="material-icons">link</i></span>
-                                                            <span class="btn-inner--text">Click to book</span>
-                                                        </button></a>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td id="div-button-book" class="w-60 align-middle text-center text-sm">    
-                                                        <a id="button-book" href=""><button class="btn btn-icon btn-3 btn-success" type="button">
-                                                            <span class="btn-inner--icon"><i class="material-icons">check</i></span>
-                                                            <span class="btn-inner--text">I'm booked already!</span>
-                                                        </button></a>
-                                                    </td>
-                                                </tr>
                                                 
-                                                <tr>
-                                                    <td class="w-60 align-middle text-center text-sm">    
-                                                        <a id="button-remove" href=""><button class="btn btn-icon btn-3 btn-danger" type="button">
+                                                    <td id="div-button-link" class="align-middle text-center text-sm">    
+                                                        <a id="button-link" href="" target="_blank"><button class="btn btn-icon btn-3 btn-info" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Open booking page">
+                                                            <span class="btn-inner--icon"><i class="material-icons">link</i></span>
+                                                            {{--<span class="btn-inner--text">Click to book</span>--}}
+                                                        </button></a>
+                                                    </td>
+
+                                                    <td id="div-button-waiver" class="align-middle text-center text-sm">    
+                                                        <a id="button-waiver" href="" target="_blank"><button class="btn btn-icon btn-3 btn-info" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Open online waiver">
+                                                            <span class="btn-inner--icon"><i class="material-icons">description</i></span>
+                                                            {{--<span class="btn-inner--text">Click to book</span>--}}
+                                                        </button></a>
+                                                    </td>
+                                                
+                                                
+                                                    <td id="div-button-book" class="align-middle text-center text-sm">    
+                                                        <a id="button-book" href=""><button class="btn btn-icon btn-3 btn-success" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="I'm already booked for this trip!">
+                                                            <span class="btn-inner--icon"><i class="material-icons">check</i></span>
+                                                            {{--<span class="btn-inner--text">I'm booked already!</span>--}}
+                                                        </button></a>
+                                                    </td>
+                                                
+                                                
+                                                
+                                                    <td class="align-middle text-center text-sm">    
+                                                        <a id="button-remove" href=""><button class="btn btn-icon btn-3 btn-danger" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Remove trip from My Calendar">
                                                             <span class="btn-inner--icon"><i class="material-icons">delete</i></span>
-                                                            <span class="btn-inner--text">Remove from calendar</span>
+                                                            {{--<span class="btn-inner--text">Remove from calendar</span>--}}
                                                         </button></a>
                                                     </td>
                                                 </tr>
@@ -155,43 +161,7 @@
 
                 <div class="col-md-12">                        
                     <div class="card card-calendar p-0 position-relative mt-4 mx-0 z-index-2 mb-0">
-                        {{-- Table for filters--}}
-                        <table class="table align-items-left mb-0 mx-3">
-                            <tr>
-                                <td>
-                                    <div class="dropdown">
-                                        <select class="btn bg-info dropdown-toggle text-white" type="button" id="filterCalendarOp" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <option value="all">Show All</option>
-                                            <option value="opId=1">South Florida Diving HQ</option>
-                                            <option value="opId=3">Pura Vida Divers</option>
-                                            <option value="opId=8">Diver Paradise</option>
-                                            <option value="opId=9">Horizon Divers</option>
-                                            
-                                        </select>
-                                        <p class="text-xs font-weight-bold mb-0 mt-n3">dive operator</p>
-                                    </div>
-                                </td>
-
-                                <td>
-                                    <div class="dropdown">
-                                        <select class="btn bg-info dropdown-toggle text-white" type="button" id="filterCalendarAv" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <option value="all">Show All</option>
-                                            <option value="isAvail=Y">Available</option>
-                                            <option value="isAvail=N">Sold-out</option>    
-                                        </select>
-                                        <p class="text-xs font-weight-bold mb-0 mt-n3">availability</p>
-                                    </div>
-                                </td>
-
-                            </tr> 
-                            
-                            <tr><td class="text-start text-sm w-1"> 
-                                <span class="badge badge-md bg-gradient-success text-white">Booked</span>
-                                <span class="badge badge-md bg-gradient-danger text-white">Not Booked</span>
-                            </td></tr>
-                            <tr><td><p class="text-xs font-weight-bold mb-0 mt-n3">reference</p></td></tr>
-                        </table>
-                        {{-------------------------}}
+                        
                         
                         {{--Calendar--}}
                         <div class="card-body p-3">
@@ -211,41 +181,7 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                {{-- Table for filters--}}
-                                <table class="table align-items-center mb-0">
-                                    <tr>
-                                        <td class="w-20">
-                                            <div class="dropdown">
-                                                <select class="btn bg-info dropdown-toggle text-white" type="button" id="filterLocAM" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <option value="all">Show All</option>
-                                                    <option value="MIA">miami beach</option>
-                                                    <option value="FLL">fort lauderdale</option>
-                                                    <option value="POM">pompano beach</option>
-                                                    <option value="DEB">deerfield beach</option>
-                                                    <option value="WPB">west pam beach</option>
-                                                    <option value="KLA">key largo</option>
-                                                </select>
-                                                <p class="text-xs font-weight-bold mb-0 mt-n3">location</p>
-                                            </div>
-                                        </td>
-                                        <td class="w-20">
-                                            <div class="dropdown">
-                                                <select class="btn bg-info dropdown-toggle text-white" type="button" id="filterAvAM" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <option value="all">Show All</option>
-                                                    <option value="AVA">Available</option>
-                                                    <option value="NAV">Sold-out</option>    
-                                                </select>
-                                                <p class="text-xs font-weight-bold mb-0 mt-n3">availability</p>
-                                            </div>
-                                        </td>
-                                        
-
-                                        <td>
-                                            
-                                        </td>
-                                    </tr> 
-                                </table>
-                                {{-------------------------}}
+                                
                                 <div class="table-responsive">
                                     <table id="tableTripsAM">
                                         <thead class="text-info">

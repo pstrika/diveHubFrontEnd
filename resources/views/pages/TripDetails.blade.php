@@ -155,7 +155,7 @@
 
                                                 </table>
                                                 @if($tripDetails->linkToBook)
-                                                    <tr><td style="border: none;" class="text-center"><a type="button" href="{{ $tripDetails->linkToBook }}" class="btn btn-info">book this trip</a>
+                                                    <tr><td style="border: none;" class="text-center"><a type="button" href="{{ $tripDetails->linkToBook }}" target="_blank" class="btn btn-info">book this trip</a>
                                                 @endif
                                             </td></tr>
                                             
@@ -391,7 +391,7 @@
                                                         @endif
                                                         
                                                         @if($boat->length)
-                                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Lentgh</td>
+                                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Length</td>
                                                             <td class="align-middle text-wrap text-sm"><b>{{ $boat->length }} ft</b></td> </tr>
                                                         @endif
 

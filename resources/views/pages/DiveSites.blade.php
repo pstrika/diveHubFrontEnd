@@ -52,9 +52,9 @@
                     <div class="modal-content">
                         <div class="modal-header text-center">
                             <h6 class="modal-title font-weight-normal" id="modal-title-notification">Site levels</h6>
-                            {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
-                            <span aria-hidden="true">×</span>
-                            </button>
+                            
+                            
+                            
                         </div>
                         <div class="modal-body">
                             <div class="py-3 text-center">

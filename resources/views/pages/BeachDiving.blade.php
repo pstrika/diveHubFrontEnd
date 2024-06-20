@@ -25,9 +25,7 @@
                     <div class="modal-content">
                         <div class="modal-header text-center">
                             <h6 class="modal-title font-weight-normal" id="modal-title-notification">What is this?</h6>
-                            {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
-                            <span aria-hidden="true">×</span>
-                            </button>
+                            
                         </div>
                         <div class="modal-body">
                             <div class="py-3 text-center">
@@ -48,9 +46,7 @@
                     <div class="modal-content">
                         <div class="modal-header text-center">
                             <h6 class="modal-title font-weight-normal" id="modal-title-notification">Site levels</h6>
-                            {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
-                            <span aria-hidden="true">×</span>
-                            </button>
+                            
                         </div>
                         <div class="modal-body">
                             <div class="py-3 text-center">
@@ -119,7 +115,7 @@
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
                                 <h2 class="card-title text-white mx-4">Shore Dive Conditions</h2>
-                                <a href="#" onclick="showModal();"><p class="card-title text-white text-xs mt-n2 mx-4">What is this?</p></a>
+                                <a href="#" onclick="showModal();"><p class="text-white text-decoration-underline text-xs mt-n2 mx-4"><b>What is this?</b></p></a>
                                 <div class="table-responsive"></div>
                             </div>
                         </div>
