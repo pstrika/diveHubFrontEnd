@@ -107,6 +107,7 @@
             projection: 'albers'
         });
 
+        
         //add icons
         map.loadImage( '{{ asset('assets') }}/img/icons/marker_reef.png', (error, reef) => {
             if (error) throw error;
@@ -170,15 +171,18 @@
                 'id': 'poi-labels',
                 'type': 'symbol',
                 'source': 'sites',
+                
                 'layout': {
                     'text-field': ['get', 'name'],
                     'text-variable-anchor': ['top'],
-                    'text-radial-offset': 0.5,
+                    'text-allow-overlap' : true,
+                    'text-radial-offset': 0.1,
                     'text-justify': 'auto',
                     'text-size': 12,
                     'icon-image': ['get', 'icon'],
                     'icon-size': 0.3,
                     'icon-anchor': 'bottom',
+                    'icon-allow-overlap' : true,
                 },
                 'paint': {
                     'text-color': 'white',
@@ -206,6 +210,7 @@
         map.on('mousemove', function (e) {
             var features = map.queryRenderedFeatures(e.point, { layers: ['poi-labels'] });
             map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
+
         });
 
         /*coordinates.forEach(coord => {
@@ -256,7 +261,7 @@
                 .addTo(map);
         }); */
 
-
+        
     </script>
 
     <script>

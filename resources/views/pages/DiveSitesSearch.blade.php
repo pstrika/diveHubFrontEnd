@@ -77,40 +77,118 @@
                                 </div>
 
                                 <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table>
-                                            <tbody>
-                                                @foreach($results as $site)    
-                                                    <tr style="border-bottom: 1px solid #D3D3D3;">
-                                                        <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
-                                                        <td class="w-40 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
-                                                        @foreach($locations as $location)
-                                                            @if($location->short == $site->location)
-                                                                <td class="w-20 align-middle text-left text-md"><b>{{ $location->location }}</b></td> 
-                                                            @endif
-                                                        @endforeach
-                                                        
+                                    @if(count($results))
+                                        <div class="table-responsive">
+                                            <h4 class="text-info">in sites name</h4>
+                                            <table>
+                                                <tbody>
+                                                    @foreach($results as $site)    
+                                                        <tr style="border-bottom: 1px solid #D3D3D3;">
+                                                            <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
+                                                            <td class="w-40 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
+                                                            @foreach($locations as $location)
+                                                                @if($location->short == $site->location)
+                                                                    <td class="w-20 align-middle text-left text-md"><b>{{ $location->location }}</b></td> 
+                                                                @endif
+                                                            @endforeach
+                                                            
 
-                                                        <?php 
-                                                            if($site->level == 0)
-                                                                $level="Open Water";
-                                                            elseif($site->level == 1)
-                                                                $level="Advanced Open Water";
-                                                            elseif($site->level == 2)
-                                                                $level="Technical Air";
-                                                            elseif($site->level == 3)
-                                                                $level="Technical Normoxic Trimix";
-                                                            elseif($site->level == 4)
-                                                                $level="Technical Hypoxic Trimix";    
-                                                        ?>
-                                                        <td class="w-5 text-center align-middle" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" height="25"></td>
+                                                            <?php 
+                                                                if($site->level == 0)
+                                                                    $level="Open Water";
+                                                                elseif($site->level == 1)
+                                                                    $level="Advanced Open Water";
+                                                                elseif($site->level == 2)
+                                                                    $level="Technical Air";
+                                                                elseif($site->level == 3)
+                                                                    $level="Technical Normoxic Trimix";
+                                                                elseif($site->level == 4)
+                                                                    $level="Technical Hypoxic Trimix";    
+                                                            ?>
+                                                            <td class="w-5 text-center align-middle" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" height="25"></td>
+                                                    
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
                                                 
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                            
-                                        </table>
-                                    </div>    
+                                            </table>
+                                        </div>    
+                                    @endif
+
+                                    @if(count($resultsWreckType))
+                                        <div class="table-responsive">
+                                            <h4 class="text-info">in wreck type</h4>
+                                            <table>
+                                                <tbody>
+                                                    @foreach($resultsWreckType as $site)    
+                                                        <tr style="border-bottom: 1px solid #D3D3D3;">
+                                                            <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
+                                                            <td class="w-40 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
+                                                            @foreach($locations as $location)
+                                                                @if($location->short == $site->location)
+                                                                    <td class="w-20 align-middle text-left text-md"><b>{{ $location->location }}</b></td> 
+                                                                @endif
+                                                            @endforeach
+                                                            
+
+                                                            <?php 
+                                                                if($site->level == 0)
+                                                                    $level="Open Water";
+                                                                elseif($site->level == 1)
+                                                                    $level="Advanced Open Water";
+                                                                elseif($site->level == 2)
+                                                                    $level="Technical Air";
+                                                                elseif($site->level == 3)
+                                                                    $level="Technical Normoxic Trimix";
+                                                                elseif($site->level == 4)
+                                                                    $level="Technical Hypoxic Trimix";    
+                                                            ?>
+                                                            <td class="w-5 text-center align-middle" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" height="25"></td>
+                                                    
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                                
+                                            </table>
+                                        </div>    
+                                    @endif
+
+                                    @if(count($resultsDescription))
+                                        <div class="table-responsive mt-3">
+                                            <h4 class="text-info">in sites description</h4>
+                                            <table>
+                                                <tbody>
+                                                    @foreach($resultsDescription as $resultDescription)
+                                                        <tr>
+                                                            <td><p class="text-sm">...{{ $resultDescription['beforeString'] }}<b>{{ $resultDescription['searchString'] }}</b>{{ $resultDescription['afterString']}}...</p></td>
+                                                        </tr>
+                                                        <tr style="border-bottom: 1px solid #D3D3D3;" >
+                                                            <td><a href="/SiteDetails/{{ $resultDescription['siteId']}}"><p class="text-info text-sm mt-n3">Site: <b><u>{{ $resultDescription['siteName']}}</u></b> {{ $resultDescription['siteType']}}</p></a></td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @endif
+
+                                    @if(count($resultsHistoryA))
+                                        <div class="table-responsive mt-3">
+                                            <h4 class="text-info">in sites history</h4>
+                                            <table>
+                                                <tbody>
+                                                    @foreach($resultsHistoryA as $resultHistory)
+                                                        <tr>
+                                                            <td><p class="text-sm">...{{ $resultHistory['beforeString'] }}<b>{{ $resultHistory['searchString'] }}</b>{{ $resultHistory['afterString']}}...</p></td>
+                                                        </tr>
+                                                        <tr style="border-bottom: 1px solid #D3D3D3;" >
+                                                            <td><a href="/SiteDetails/{{ $resultHistory['siteId']}}"><p class="text-info text-sm mt-n3">Site: <b><u>{{ $resultHistory['siteName']}}</u></b> {{ $resultHistory['siteType']}}</p></a></td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @endif
+                                    
                                 </div>
                             </div>
                         </div>

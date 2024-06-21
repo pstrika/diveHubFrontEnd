@@ -130,7 +130,7 @@ class SiteController extends Controller
     }
 
     public function update(Request $request) {
-        
+     
         $this->authorize('manage-items', User::class);
 
         $locations = WeatherLocation::all();
@@ -299,6 +299,7 @@ class SiteController extends Controller
         return view('pages.DiveSites', compact('sitesWrecks', 'sitesReefs', 'locations'));
     }
 
+    
     public function searchSites(Request $request) {
 
         Log::info('Request data:', $request->all());
@@ -311,14 +312,124 @@ class SiteController extends Controller
             $results = Site::select('id', 'name', 'type', 'level', 'location')
                 ->where('name', 'LIKE', "%$searchString%")
                 ->orWhere('aka', 'LIKE', "%$searchString%")
-                ->orWhere('desc', 'LIKE', "%$searchString%")
-                ->orWhere('wreckData', 'LIKE', "%$searchString%")
-                ->orWhere('history', 'LIKE', "%$searchString%")
+                //->orWhere('wreckData', 'LIKE', "%$searchString%")
+                ->take(10)
                 ->get();
             Log::info("Got " . str(count($results)) . " matches in the search");
+
+            $resultsWreckType = Site::select('id', 'name', 'type', 'level', 'location')
+                ->where('wreckData', 'LIKE', "%$searchString%")
+                ->where('type', '=', 'wreck')
+                ->take(10)
+                ->get();
+            Log::info("Got " . str(count($resultsWreckType)) . " matches in the search for wreck type");
+
             
-            if(count($results))
-                return view('pages.DiveSitesSearch', compact('searchString', 'results', 'locations'))->withStatus("match");
+
+            $resultsDesc = Site::select('id', 'name', 'type', 'level', 'location', 'desc')
+                ->where('desc', 'LIKE', "%$searchString%")
+                ->take(10)
+                ->get();
+            Log::info("Got " . str(count($resultsDesc)) . " matches in the search for desc");
+
+            $resultsDescription = [];
+            $contextWords = 3; // Number of words before and after the match
+            foreach($resultsDesc as $resultDesc) {
+                //get the plain text from the quill json
+                $delta = json_decode($resultDesc->desc);
+                $desc = '';
+
+                foreach ($delta->ops as $op) {
+                    if (isset($op->insert) && is_string($op->insert)) {
+                        $desc .= $op->insert;
+                    }
+                }
+
+                // see where the search token is
+                $position = strpos($desc, $searchString);
+                Log::debug('position is: ' . $position);
+
+                // get pre a pos words
+                $preString = substr($desc, 0, $position);
+                $posString = substr($desc, $position + strlen($searchString));
+
+                $preWords = explode(' ', $preString);
+                $posWords = explode(' ', $posString);
+
+                $afterWords = array_slice($posWords, 0, $contextWords); // Get the first $contextWords elements
+                $beforeWords = array_slice($preWords, -$contextWords, $contextWords, true);
+
+                $beforeString = implode(' ', $beforeWords);
+                $afterString = implode(' ', $afterWords);
+
+                Log::debug($beforeString . $searchString . $afterString);
+                $temp = array(
+                    'beforeString' => $beforeString,
+                    'searchString' => $searchString,
+                    'afterString' => $afterString,
+                    'siteId' => $resultDesc->id,
+                    'siteName' => $resultDesc->name,
+                    'siteType' => $resultDesc->type,
+                );
+                
+                $resultsDescription[] = $temp;
+            }
+
+            $resultsHistory = Site::select('id', 'name', 'type', 'level', 'location', 'history')
+                ->where('history', 'LIKE', "%$searchString%")
+                ->take(10)
+                ->get();
+            Log::info("Got " . str(count($resultsHistory)) . " matches in the search for history");
+
+            //check on history
+            $resultsHistoryA = [];
+            $contextWords = 3; // Number of words before and after the match
+            foreach($resultsHistory as $resultHistory) {
+                //get the plain text from the quill json
+                $delta = json_decode($resultHistory->history);
+                $history = '';
+
+                foreach ($delta->ops as $op) {
+                    if (isset($op->insert) && is_string($op->insert)) {
+                        $history .= $op->insert;
+                    }
+                }
+
+                // see where the search token is
+                $position = strpos($history, $searchString);
+                Log::debug('position is: ' . $position);
+
+                // get pre a pos words
+                $preString = substr($history, 0, $position);
+                $posString = substr($history, $position + strlen($searchString));
+
+                $preWords = explode(' ', $preString);
+                $posWords = explode(' ', $posString);
+
+                $afterWords = array_slice($posWords, 0, $contextWords); // Get the first $contextWords elements
+                $beforeWords = array_slice($preWords, -$contextWords, $contextWords, true);
+
+                $beforeString = implode(' ', $beforeWords);
+                $afterString = implode(' ', $afterWords);
+
+                Log::debug($beforeString . $searchString . $afterString);
+                $temp = array(
+                    'beforeString' => $beforeString,
+                    'searchString' => $searchString,
+                    'afterString' => $afterString,
+                    'siteId' => $resultHistory->id,
+                    'siteName' => $resultHistory->name,
+                    'siteType' => $resultHistory->type,
+                );
+                
+                $resultsHistoryA[] = $temp;
+                
+            }
+            Log::debug("Count history: " . count($resultsHistoryA));
+            
+
+            if(count($results) or count($resultsDescription) or count($resultsHistoryA) or count($resultsWreckType))
+                return view('pages.DiveSitesSearch', compact('searchString', 'results', 'locations', 'resultsDescription', 'resultsHistoryA', 'resultsWreckType'))->withStatus("match");
             else
                 return view('pages.DiveSitesSearch', compact('searchString', 'results'))->withStatus("no match");
         }

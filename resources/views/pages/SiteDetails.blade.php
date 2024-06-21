@@ -322,31 +322,35 @@
                 </div>
 
                 {{-- Card video --}}
+                
                 @php
                     $video = json_decode($site->videos);    
                 @endphp
 
-                <div class="col-md-6">
-                    @if($video[0]->link)
-                        <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
-                            {{--<div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Video</h4>
-                                    <div class="table-responsive"></div>
+                @if($video != null)
+                    <div class="col-md-6">
+                        @if($video[0]->link)
+                            <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
+                                {{--<div class="card-header p-0 mt-n4 mx-3">
+                                    <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                        <h2 class="card-title text-white mx-4">Video</h4>
+                                        <div class="table-responsive"></div>
+                                    </div>
+                                </div>--}}
+                                <div class="card-body mt-0">
+                                    <iframe id="youtubeVideo" class="img-fluid border-radius-lg" src="{{ $video[0]->link }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                                    @if($video[0]->credit)
+                                        <p class="align-middle text-center text-sm"><b>🎥 {{ $video[0]->credit }}</b></p>
+                                    @endif
+                                    
                                 </div>
-                            </div>--}}
-                            <div class="card-body mt-0">
-                                <iframe id="youtubeVideo" class="img-fluid border-radius-lg" src="{{ $video[0]->link }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
-                                @if($video[0]->credit)
-                                    <p class="align-middle text-center text-sm"><b>🎥 {{ $video[0]->credit }}</b></p>
-                                @endif
-                                
                             </div>
-                        </div>
-                    @endif
-                </div>
+                        @endif
+                    </div>
+                @endif
                 {{-----------------------------}}
 
+                @if($site->pics)
                 {{-- Card pictures --}}
                 <div class="col-md-6">             
                     <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
@@ -423,6 +427,7 @@
                     </div>
                 </div>
                 {{-----------------------------}}
+                @endif
                 
                 {{--Card 3D model--}}
                 @if($site->dModel != null)

@@ -60,4 +60,19 @@ class Site extends Model
     {
         return $this->hasOne(WeatherLocation::class, 'short', 'location');
     }
+
+    public function getPlainTextDesc()
+    {
+        // Assuming 'content' is the Quill delta column in your database
+        $delta = json_decode($this->desc);
+        $plainText = '';
+
+        foreach ($delta->ops as $op) {
+            if (isset($op->insert) && is_string($op->insert)) {
+                $plainText .= $op->insert;
+            }
+        }
+
+        return $plainText;
+    }
 }

@@ -19,9 +19,6 @@
                         <div class="modal-content">
                             <div class="modal-header text-center">
                                 <h6 class="modal-title font-weight-normal" id="modal-title-notification">Site levels</h6>
-                                {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
-                                <span aria-hidden="true">×</span>
-                                </button>
                             </div>
                             <div class="modal-body">
                                 <div class="py-3 text-center">
@@ -70,9 +67,6 @@
                         <div class="modal-content">
                             <div class="modal-header text-center">
                                 <h6 class="modal-title font-weight-normal text-start" id="modal-title-notification-calendar">Edit calendar</h6>
-                                {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
-                                <span aria-hidden="true">×</span>
-                                </button>
                             </div>
                             <div class="modal-body">
                                 <div class="py-3 text-center">
@@ -408,13 +402,15 @@
                     if(selectedOption == 'all') {
                         row.style.display = '';    
                     } else {
-                        console.log("tag is= " + tags);
-                        if (tags.includes(selectedOption) || selectedOption === 'all') {
-                            row.style.display = ''; // Hide the row
-                               
-                        } else {
-                                row.style.display = 'none'; // Hide the row
-                        
+                        if(tags.includes('fc-daygrid-event')) {
+                            console.log("tag is= " + tags);
+                            if (tags.includes(selectedOption) || selectedOption === 'all') {
+                                row.style.display = ''; // Hide the row
+                                
+                            } else {
+                                    row.style.display = 'none'; // Hide the row
+                            
+                            }
                         }
                     }
                 });

@@ -42,10 +42,13 @@
         </div>
         <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
             <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-                <div class="input-group input-group-outline">
-                    <label class="form-label">Search there</label>
-                    <input type="text" class="form-control">
-                </div>
+                <form id="myForm" class="multisteps-form__form" action="{{ route('DiveSitesSearch') }}" method="POST" enctype="multipart/form-data">
+                    @csrf <!-- Add CSRF token for security -->
+                    <div class="input-group input-group-outline">
+                        <label class="form-label">Search</label>
+                        <input type="text" class="form-control" name="searchString">
+                    </div>
+                </form>
             </div>
             <ul class="navbar-nav  align-items-center">
                 <li class="nav-item">
