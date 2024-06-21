@@ -244,10 +244,12 @@
                                                         </table>
 
                                                         {{--picture--}}
+                                                        @if(isset($site->photos[0]))
                                                         <table class="table align-items-center mb-0">
                                                             <tr><td><div class="page-header min-height-250 max-height-250 border-radius-xl mt-0 mx-0" style="background-image: url('{{ asset('assets') }}/img/sites/{{ $site->photos[0]->file }}');"></div></td></tr>
                                                             <tr><td style="border: none;" class="align-middle"><p class="text-center text-sm text-wrap"> {{ $site->photos[0]->desc}}</p></td> </tr>
                                                         </table>
+                                                        @endif
 
                                                     @endforeach
                                                 @endif

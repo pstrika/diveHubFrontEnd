@@ -245,18 +245,16 @@ class SiteController extends Controller
         $this->authorize('manage-items', User::class);
         $photo = Photo::findOrFail($id);
         $site = Site::findOrFail($photo->siteId);
-        $allPhotosForSite = explode(',', $site->pics);
-
-        //create array with all photoIds but no the one we are deleting
-        $filteredArray = array_filter($allPhotosForSite, function ($item) use ($id) {
-            return $item !== $id;
-        });
-
-        $site->pics = implode(', ', $filteredArray);
-        $site->save();
+        
         $photo->deletePhoto();
 
+        
         $photos = Photo::where('siteId', $site->id)->get();
+        $photoIds = $photos->pluck('id')->toArray();
+        $commaSeparatedString = implode(', ', $photoIds);
+        $site->pics = $commaSeparatedString;
+        $site->save();
+
         $status = "Picture successfully deleted.";
         return view('pages.updatePics', compact('site','photos', 'status'));
     }
@@ -463,7 +461,7 @@ class SiteController extends Controller
     }
 
     public function upload(Request $request) {
-        Log::info('Request data:', $request->all());
+        Log::info('Request data in upload picture!', $request->all());
         // Get chunk information
         $chunkNumber = $request->input('dzchunkindex');
         $totalChunks = $request->input('dztotalchunkcount');
@@ -499,6 +497,14 @@ class SiteController extends Controller
                     'siteId'=> $request->input('siteId'),
                 ]);   
 
+                //agregar el id de la photo al Model del sitio (coma separated)
+                $site = Site::findOrFail($request->input('siteId'));
+                $photos = Photo::where('siteId', $site->id)->get();
+                $photoIds = $photos->pluck('id')->toArray();
+                $commaSeparatedString = implode(', ', $photoIds);
+                $site->pics = $commaSeparatedString;
+                $site->save();
+
                 return response()->json(['message' => 'File uploaded and combined successfully']);
             }
             return response()->json(['message' => 'Chunk uploaded successfully']);
@@ -507,6 +513,14 @@ class SiteController extends Controller
             'file'=> $filename,
             'siteId'=> $request->input('siteId'),
         ]);    
+
+        //agregar el id de la photo al Model del sitio (coma separated)
+        $site = Site::findOrFail($request->input('siteId'));
+        $photos = Photo::where('siteId', $site->id)->get();
+        $photoIds = $photos->pluck('id')->toArray();
+        $commaSeparatedString = implode(', ', $photoIds);
+        $site->pics = $commaSeparatedString;
+        $site->save();
 
         return response()->json(['message' => 'File no-chunk uploaded successfully']);
     }

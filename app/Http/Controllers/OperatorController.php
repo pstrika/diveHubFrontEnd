@@ -67,7 +67,7 @@ class OperatorController extends Controller
         }
 
     public function showHealth() {
-        $operators = Operator::all();
+        $operators = Operator::all()->sortBy('operatorName');
         $weatherLocations = WeatherLocation::all();
         return view('pages.PlatformHealth', compact('operators', 'weatherLocations'));
     }

@@ -310,10 +310,10 @@
                                         <ul class="list-group">
                                             <li class="list-group-item border-0 px-0">
                                                 <div class="form-check form-switch ps-0">
-                                                    <input class="form-check-input ms-auto" type="checkbox"
-                                                        id="flexSwitchCheckDefault" checked>
+                                                    <input name="prefersLocation" class="form-check-input ms-auto" type="checkbox"
+                                                        id="prefersLocation" {{ $user->prefersLocation ? "checked" : ""}} value="1">
                                                     <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                        for="flexSwitchCheckDefault">Use "Favorite Locations" to show me dive trips</label>
+                                                        for="prefersLocation">Use "Favorite Locations" to show me dive trips</label>
                                                 </div>
                                             </li>
                                             
@@ -698,6 +698,13 @@
 
         phoneInput.addEventListener('click', () => {
             phoneLabel.innerText = "Phone number";
+        });
+    </script>
+
+    <script>
+        var prefersLocation =document.getElementById('prefersLocation');
+        prefersLocation.addEventListener('click', () => {
+            divButton.style.display = 'block';
         });
     </script>
     @endpush

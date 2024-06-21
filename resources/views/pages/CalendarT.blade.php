@@ -129,45 +129,53 @@
                 <div class="col-md-12">                        
                     <div class="card card-calendar p-0 position-relative mt-4 mx-0 z-index-2 mb-0">
                         {{-- Table for filters--}}
-                        <table class="table align-items-left mb-0 mx-3">
-                            <tr>
-                                <td>
-                                    <div class="dropdown">
-                                        <select class="btn bg-info dropdown-toggle text-white" type="button" id="filterCalendarOp" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <option value="all">Show All</option>
-                                            <option value="opId=1">South Florida Diving HQ</option>
-                                            <option value="opId=3">Pura Vida Divers</option>
-                                            <option value="opId=8">Diver Paradise</option>
-                                            <option value="opId=9">Horizon Divers</option>
-                                            
-                                        </select>
-                                        <p class="text-xs font-weight-bold mb-0 mt-n3">dive operator</p>
-                                    </div>
-                                </td>
-
-                                <td>
-                                    <div class="dropdown">
-                                        <select class="btn bg-info dropdown-toggle text-white" type="button" id="filterCalendarAv" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <option value="all">Show All</option>
-                                            <option value="isAvail=Y">Available</option>
-                                            <option value="isAvail=N">Sold-out</option>    
-                                        </select>
-                                        <p class="text-xs font-weight-bold mb-0 mt-n3">availability</p>
-                                    </div>
-                                </td>
-
-                            </tr> 
-                            
-                            <tr><td class="text-center text-sm w-1"> 
-                                <span class="badge badge-md bg-gradient-success text-white">SFDH</span>
-                                <span class="badge badge-md bg-gradient-danger text-white">PVD</span>
-                                <span class="badge badge-md bg-gradient-warning text-white">DP</span>
-                                <span class="badge badge-md bg-gradient-info text-white">HD</span>
-                                <span class="badge badge-md bg-gradient-primary text-white">OTHER</span> 
-                            </td></tr>
-                            <tr><td><p class="text-xs font-weight-bold mb-0 mt-n3">reference</p></td></tr>
-                        </table>
-                        {{-------------------------}}
+                        <table class="table align-items-center mb-1">
+                                    <tr>
+                                        <td>
+                                            <div class="dropdown">
+                                                <select class="btn bg-info dropdown-toggle text-white" type="button" id="filterLoc" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <option value="all">Show All</option>
+                                                    <option value="MIA">miami beach</option>
+                                                    <option value="FLL">fort lauderdale</option>
+                                                    <option value="POM">pompano beach</option>
+                                                    <option value="DEB">deerfield beach</option>
+                                                    <option value="WPB">west palm beach</option>
+                                                    <option value="KLA">key largo</option>
+                                                </select>
+                                                <p class="text-xs font-weight-bold mb-0 mt-n3">location</p>
+                                            </div>
+                                        </td>
+                                        
+                                        
+                                    
+                                        
+                                        <td>
+                                            <ul class="list-group">
+                                                <li class="list-group-item border-0 px-0">
+                                                    <div class="form-check form-switch ps-0">
+                                                        <input class="form-check-input ms-auto" type="checkbox"
+                                                            id="filterAv">
+                                                        <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
+                                                            for="flexSwitchCheckDefault">Show available only</label>
+                                                    </div>
+                                                </li>
+                                                
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <table>
+                                    <tr><td class="text-start text-sm w-1"> 
+                                        <span class="badge badge-md bg-gradient-success text-white mx-2">SFDH</span>
+                                        <span class="badge badge-md bg-gradient-danger text-white">Pura Vida</span>
+                                        <span class="badge badge-md bg-gradient-warning text-white">Divers Paradise</span>
+                                        <span class="badge badge-md bg-gradient-info text-white">Horizon Divers</span>
+                                        <span class="badge badge-md bg-gradient-primary text-white">OTHER</span> 
+                                    </td></tr>
+                                    <tr><td><p class="text-xs font-weight-bold mb-0 mt-0 mx-2">reference</p></td></tr>
+                                </table>
+                                {{----------}}
+                        
                         
                         {{--Calendar--}}
                         <div class="card-body p-3">
@@ -187,43 +195,11 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                {{-- Table for filters--}}
-                                <table class="table align-items-center mb-0">
-                                    <tr>
-                                        <td class="w-20">
-                                            <div class="dropdown">
-                                                <select class="btn bg-info dropdown-toggle text-white" type="button" id="filterLocAM" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <option value="all">Show All</option>
-                                                    <option value="MIA">miami beach</option>
-                                                    <option value="FLL">fort lauderdale</option>
-                                                    <option value="POM">pompano beach</option>
-                                                    <option value="DEB">deerfield beach</option>
-                                                    <option value="WPB">west pam beach</option>
-                                                    <option value="KLA">key largo</option>
-                                                </select>
-                                                <p class="text-xs font-weight-bold mb-0 mt-n3">location</p>
-                                            </div>
-                                        </td>
-                                        <td class="w-20">
-                                            <div class="dropdown">
-                                                <select class="btn bg-info dropdown-toggle text-white" type="button" id="filterAvAM" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <option value="all">Show All</option>
-                                                    <option value="AVA">Available</option>
-                                                    <option value="NAV">Sold-out</option>    
-                                                </select>
-                                                <p class="text-xs font-weight-bold mb-0 mt-n3">availability</p>
-                                            </div>
-                                        </td>
-                                        
+                                
 
-                                        <td>
-                                            
-                                        </td>
-                                    </tr> 
-                                </table>
-                                {{-------------------------}}
+                                
                                 <div class="table-responsive">
-                                    <table id="tableTripsAM">
+                                    <table id="tableTrips">
                                         <thead class="text-info">
                                             <th class="px-4 align-top">
                                                 Date
@@ -342,7 +318,7 @@
                     echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
                     echo "url: '/TripDetails/" . str($trip->id) . "',";
                     //echo "extendedProps: {myId: '" . str($trip->id) . "'},";
-                    if($trip->operatorId == "1")
+                    /*if($trip->operatorId == "1")
                         echo "className: 'bg-gradient-success text-white opId=1 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
                     elseif($trip->operatorId == "3")
                         echo "className: 'bg-gradient-danger text-white opId=3 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
@@ -351,7 +327,17 @@
                     elseif($trip->operatorId == "9")
                         echo "className: 'bg-gradient-info text-white opId=9 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
                     else
-                        echo "className: 'bg-gradient-primary text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";    
+                        echo "className: 'bg-gradient-primary text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";    */
+                    if($trip->operatorId == "1" or $trip->operatorId == "21")
+                        echo "className: 'bg-gradient-success text-white opId=1 loc=" . substr($trip->tags, 0, 3) . " isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
+                    elseif($trip->operatorId == "3")
+                        echo "className: 'bg-gradient-danger text-white opId=3 loc=" . substr($trip->tags, 0, 3) . " isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
+                    elseif($trip->operatorId == "8")
+                        echo "className: 'bg-gradient-warning text-white opId=8 loc=" . substr($trip->tags, 0, 3) . " isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
+                    elseif($trip->operatorId == "9")
+                        echo "className: 'bg-gradient-info text-white opId=9 loc=" . substr($trip->tags, 0, 3) . " isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
+                    else
+                        echo "className: 'bg-gradient-primary text-white loc=" . substr($trip->tags, 0, 3) . " isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";    
                 }
             @endphp
             
@@ -394,10 +380,16 @@
 
     {{--Handler for tripAM table: filter by location--}}
     <script>
+
+        var filterAv =document.getElementById('filterAv');
+        var filterLoc =document.getElementById('filterLoc');
+        
+
+        // Filter Location
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('filterLocAM').addEventListener('change', function() {
+            document.getElementById('filterLoc').addEventListener('change', function() {
                 var selectedOption = this.value;
-                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
+                var rows = document.querySelectorAll('#tableTrips tr[data-tag]');
                 
                 rows.forEach(function(row) {
                 var tags = row.getAttribute('data-tag');
@@ -407,13 +399,39 @@
                     row.style.display = 'none'; // Hide the row
                 }
                 });
+
+                console.log("Selected option=" + selectedOption);
+                var rows = document.querySelectorAll('#calendar a[class]');
+                rows.forEach(function(row) {
+                    var tags = row.getAttribute('class');
+                    
+                    if(selectedOption == 'all') {
+                        row.style.display = '';    
+                    } else {
+                        console.log("tag is= " + tags);
+                        if (tags.includes(selectedOption) || selectedOption === 'all') {
+                            row.style.display = ''; // Hide the row
+                               
+                        } else {
+                                row.style.display = 'none'; // Hide the row
+                        
+                        }
+                    }
+                });
+
+                filterAv.checked = false;
             });
         });
 
+        // Filter AM Availability
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('filterAvAM').addEventListener('change', function() {
-                var selectedOption = this.value;
-                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
+            document.getElementById('filterAv').addEventListener('change', function() {
+                var selectedOption = 'all';
+                if (this.checked) {
+                    selectedOption = 'AVA';
+                }
+                
+                var rows = document.querySelectorAll('#tableTrips tr[data-tag]');
                 
                 rows.forEach(function(row) {
                 var tags = row.getAttribute('data-tag');
@@ -423,10 +441,33 @@
                     row.style.display = 'none'; // Hide the row
                 }
                 });
+
+                var rows = document.querySelectorAll('#calendar a[class]');
+                rows.forEach(function(row) {
+                    var tags = row.getAttribute('class');
+                    if(selectedOption == 'all') {
+                        row.style.display = '';    
+                    } else {
+                        if (tags.includes('isAvail=')) {
+                            if (tags.includes('Y')) {
+                                row.style.display = ''; // Show the row
+                            } else {
+                                row.style.display = 'none'; // Hide the row
+                            }
+                        }
+                    }
+                });
+
+                filterLoc.value = 'all';
+               
             });
         });
 
-        document.addEventListener('DOMContentLoaded', function() {
+     
+
+        
+
+        /*document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('filterCalendarOp').addEventListener('change', function() {
                 var selectedOption = this.value;
                 var rows = document.querySelectorAll('#calendar a[class]');
@@ -441,7 +482,7 @@
                     }
                 }});
             });
-        });
+        });*/
 
     
     

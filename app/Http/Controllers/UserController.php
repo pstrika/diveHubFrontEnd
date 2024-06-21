@@ -17,7 +17,7 @@ class UserController extends Controller
     public function index(){
 
         //return view('laravel-examples.user-profile.edit');
-        return redirect()->route('Trips');
+        return redirect()->route('MyDashboard');
     }
 
     public function update()
@@ -172,6 +172,15 @@ class UserController extends Controller
         if($request->has('favLocations')) {
             Log::info("Got Favorite Locations. Updating to: ");
             $user->favLocations = implode(', ', $request->favLocations);
+        }
+
+        // Special case: if we dont have the input, means the checkbox is off so we update to 0
+        if($request->has('prefersLocation')) {
+            Log::info("Got prefersLocation. Updating to: 1");
+            $user->prefersLocation = true;
+        } else {
+            Log::info("Didn't get prefersLocation. Updating to: 0");
+            $user->prefersLocation = false;
         }
 
         $user->save();

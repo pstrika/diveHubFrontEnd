@@ -81,22 +81,55 @@ class TripsController extends Controller
                 $trips[$i]->level = -1;
 
             // check if trip is a favorite
-            $favoriteOperatorsIndex = explode(',', $user->favOperators);
-            $favoriteLevels = explode(',', $user->showLevel);
-            $showLevelLow = intval($favoriteLevels[0]);
-            $showLevelHigh = intval($favoriteLevels[1]);
 
-            if(in_array($trip->operatorId, $favoriteOperatorsIndex)) {
-                Log::debug("Operator for this trip is in favorites!");
+            // user prefers operator fav or location fav?
+            if($user->prefersLocation) {
+                $favoriteLocationsIndex = explode(',', $user->favLocations);
+                $favLocationShorts = WeatherLocation::whereIn('id', $favoriteLocationsIndex)
+                    ->pluck('short')
+                    ->toArray();
 
-                Log::debug("Level low: " . str($showLevelLow));
-                Log::debug("Level high: " . str($showLevelHigh));
+                $favoriteLevels = explode(',', $user->showLevel);
+                $showLevelLow = intval($favoriteLevels[0]);
+                $showLevelHigh = intval($favoriteLevels[1]);
 
-                // if we don't have siteIds, then we set value to -1
-                Log::debug("trip->level: " . $trip->level);
-                if(intval($trip->level) >= $showLevelLow and intval($trip->level) <= $showLevelHigh) {
-                    $trips[$i]->fav = 1;
-                    $trips[$i]->tags .= " FAV";
+                if(in_array(substr($trip->tags,0 ,3),  $favLocationShorts)) {
+                    Log::debug("Operator for this trip is in favorites!");
+
+                    Log::debug("Level low: " . str($showLevelLow));
+                    Log::debug("Level high: " . str($showLevelHigh));
+
+                    // if we don't have siteIds, then we set value to -1
+                    Log::debug("trip->level: " . $trip->level);
+                    if(isset($trip->level))
+                        if(intval($trip->level) >= $showLevelLow and intval($trip->level) <= $showLevelHigh) {
+                            $trips[$i]->fav = 1;
+                            $trips[$i]->tags .= " FAV";
+                        }
+                    // this code will set FAV if the level is not set
+                    //else {
+                    //    $trips[$i]->fav = 1;
+                     //   $trips[$i]->tags .= " FAV";
+                    //}
+                }
+            } else {
+                $favoriteOperatorsIndex = explode(',', $user->favOperators);
+                $favoriteLevels = explode(',', $user->showLevel);
+                $showLevelLow = intval($favoriteLevels[0]);
+                $showLevelHigh = intval($favoriteLevels[1]);
+
+                if(in_array($trip->operatorId, $favoriteOperatorsIndex)) {
+                    Log::debug("Operator for this trip is in favorites!");
+
+                    Log::debug("Level low: " . str($showLevelLow));
+                    Log::debug("Level high: " . str($showLevelHigh));
+
+                    // if we don't have siteIds, then we set value to -1
+                    Log::debug("trip->level: " . $trip->level);
+                    if(intval($trip->level) >= $showLevelLow and intval($trip->level) <= $showLevelHigh) {
+                        $trips[$i]->fav = 1;
+                        $trips[$i]->tags .= " FAV";
+                    }
                 }
             }
         }
