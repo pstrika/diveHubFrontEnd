@@ -42,7 +42,7 @@
         </div>
         <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
             <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-                <form id="myForm" class="multisteps-form__form" action="{{ route('DiveSitesSearch') }}" method="POST" enctype="multipart/form-data">
+                <form id="searchForm" action="{{ route('DiveSitesSearch') }}" method="POST" enctype="multipart/form-data">
                     @csrf <!-- Add CSRF token for security -->
                     <div class="input-group input-group-outline">
                         <label class="form-label">Search</label>
