@@ -327,149 +327,149 @@
                     $video = json_decode($site->videos);    
                 @endphp
 
-                
-                <div class="col-md-6">
-                    {{--Card for video---}}
-                    @if($video != null)
-                        @if($video[0]->link)
-                            <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
-                                <div class="card-body mt-0">
-                                    <iframe id="youtubeVideo" class="img-fluid border-radius-lg" src="{{ $video[0]->link }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
-                                    @if($video[0]->credit)
-                                        <p class="align-middle text-center text-sm"><b>🎥 {{ $video[0]->credit }}</b></p>
-                                    @endif
-                                    
+                @if($video != null or $video != null or count($site->upcomingTrips))
+                    <div class="col-md-6">
+                        {{--Card for video---}}
+                        @if($video != null)
+                            @if($video[0]->link)
+                                <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
+                                    <div class="card-body mt-0">
+                                        <iframe id="youtubeVideo" class="img-fluid border-radius-lg" src="{{ $video[0]->link }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                                        @if($video[0]->credit)
+                                            <p class="align-middle text-center text-sm"><b>🎥 {{ $video[0]->credit }}</b></p>
+                                        @endif
+                                        
+                                    </div>
+                                </div>
+                            @endif
+                        @endif
+
+                        {{--Card for upcoming trips---}}
+                        @if(count($site->upcomingTrips))
+                            <div class="row mx-1 mt-3">
+                                <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                                    <div class="card-header p-0 mt-n4 mx-3">
+                                        <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                            <h2 class="card-title text-white mx-4">Upcoming trips ({{ count($site->upcomingTrips) }})</h2>
+                                            <div class="table-responsive"></div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body mt-4">
+                                        <div class="table-responsive">
+                                            <table id="tableUpcomingTrips" style="display: block; height: 300px; overflow-y: scroll">
+                                                <thead class="text-info">
+                                                    <th class="align-top">Operator</th>
+                                                    <th class="px-4 align-top">Date</th> 
+                                                    <th class="px-4 align-top">Time</th>
+                                                    <th class="py-0 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the numbers below to go to trip booking page" data-container="body" data-animation="true">Availability<p class="text-xs mt-0 px-1">click-to-book</p></th>
+                                                    <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">Trip Name<p class="text-xs mt-0 px-1">click for details</p></th>
+                                                </thead>
+                                                <tbody> 
+                                                    @foreach($site->upcomingTrips as $trip)
+                                                        
+                                                        <tr style="border-bottom: 1px solid #D3D3D3;" class="justify-content-center align-middle" data-tag="{{ $trip->tags }}">
+                                                            
+                                                            <td class="px-0 py-2 text-sm text-wrap align-middle justify-content-center">{{ $trip->operatorName }}</td>
+                                                            <td class="px-4">{{ $trip->date }}</td>
+                                                            <td class="px-4">{{ $trip->departureTime }}</td>
+                                                            @if($trip->tripFreeSpots == 0)
+                                                                <td class="text-center">-</td>
+                                                            @else
+                                                                <td class="text-center"> <a href="{{ $trip->linkToBook }}" target="_blank">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</a></td>
+                                                            @endif
+                                                            <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}<a></td>
+                                                            
+                                                        </tr>
+                                                
+                                                    @endforeach          
+                                                </tbody>
+                                            </table>
+                                </div>   
+                                    </div>
                                 </div>
                             </div>
                         @endif
-                    @endif
-
-                    {{--Card for upcoming trips---}}
-                    @if(count($site->upcomingTrips))
-                        <div class="row mx-1 mt-3">
-                            <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                                <div class="card-header p-0 mt-n4 mx-3">
+                    </div>
+                    
+                    
+                    {{-- Card pictures --}}
+                    @if($site->pics)
+                        <div class="col-md-6">             
+                            <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
+                                {{--<div class="card-header p-0 mt-n4 mx-3">
                                     <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                        <h2 class="card-title text-white mx-4">Upcoming trips ({{ count($site->upcomingTrips) }})</h2>
+                                        <h2 class="card-title text-white mx-4">Pictures</h2>
                                         <div class="table-responsive"></div>
                                     </div>
-                                </div>
-                                <div class="card-body mt-4">
+                                </div>--}}
+                                <div class="card-body">
                                     <div class="table-responsive">
-                                        <table id="tableUpcomingTrips" style="display: block; height: 300px; overflow-y: scroll">
-                                            <thead class="text-info">
-                                                <th class="align-top">Operator</th>
-                                                <th class="px-4 align-top">Date</th> 
-                                                <th class="px-4 align-top">Time</th>
-                                                <th class="py-0 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the numbers below to go to trip booking page" data-container="body" data-animation="true">Availability<p class="text-xs mt-0 px-1">click-to-book</p></th>
-                                                <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">Trip Name<p class="text-xs mt-0 px-1">click for details</p></th>
-                                            </thead>
-                                            <tbody> 
-                                                @foreach($site->upcomingTrips as $trip)
+                                        <table class="table align-items-center mb-0"> 
+                                            <tbody>
+                                                <tr><td>
+                                                <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
+                                                    <div class="carousel-inner">
+                                                        @php 
+                                                            $first = true;
+                                                        @endphp
+                                                            
+                                                        @foreach ($photos as $photo)    
+                                                            <div class="carousel-item {{ $first ? "active" : "" }}">
+                                                                @php
+                                                                    $first = false;
+                                                                @endphp
+                                                                <div class="page-header min-vh-50 border-radius-xl" style="background-image: url('{{ asset('assets') }}/img/sites/{{ $photo->file}}');">
+                                                                
+                                                                    <div class="container">
+                                                                        
+                                                                    </div>
+                                                                </div>
+                                                                {{--<h4 class="text-info mb-0 fadeIn1 fadeInBottom align-bottom text-center"> {{ $boat->name }}</h4>--}}
+
+                                                                <table class="table align-items-center mb-0">
+                                                            
+                                                                    @if($photo->desc)
+                                                                        <tr class="align-top">
+                                                                        <td class="align-middle text-center text-wrap text-md"><b>{{ $photo->desc }}</b></td> </tr>
+                                                                    @endif
+                                                                    
+                                                                    @if($photo->credit)
+                                                                        <tr>
+                                                                        <td class="align-middle text-center text-sm"><b>📸 {{ $photo->credit }}</b></td> </tr>
+                                                                    @endif
+                                                                    
+                                
+
+                                                                </table>
+
+
+                                                            </div>
+                                                        @endforeach
+
+                                                        
+                                                    </div>
+
+                                                    <div class="position-absolute min-vh-25 w-100 top-10">
+                                                        <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-bs-slide="prev">
+                                                            <span class="carousel-control-prev-icon position-absolute bottom-50 text-info" aria-hidden="true"></span>
+                                                            <span class="visually-hidden">Previous</span>
+                                                        </a>
+                                                        <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-bs-slide="next">
+                                                            <span class="carousel-control-next-icon position-absolute bottom-50" aria-hidden="true"></span>
+                                                            <span class="visually-hidden">Next</span>
+                                                        </a>
+                                                    </div>
                                                     
-                                                    <tr style="border-bottom: 1px solid #D3D3D3;" class="justify-content-center align-middle" data-tag="{{ $trip->tags }}">
-                                                        
-                                                        <td class="px-0 py-2 text-sm text-wrap align-middle justify-content-center">{{ $trip->operatorName }}</td>
-                                                        <td class="px-4">{{ $trip->date }}</td>
-                                                        <td class="px-4">{{ $trip->departureTime }}</td>
-                                                        @if($trip->tripFreeSpots == 0)
-                                                            <td class="text-center">-</td>
-                                                        @else
-                                                            <td class="text-center"> <a href="{{ $trip->linkToBook }}" target="_blank">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</a></td>
-                                                        @endif
-                                                        <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}<a></td>
-                                                        
-                                                    </tr>
-                                            
-                                                @endforeach          
-                                            </tbody>
+                                                </div>
+
+                                            </tbody>    
                                         </table>
-                            </div>   
+                                    </div>    
                                 </div>
                             </div>
                         </div>
                     @endif
-                </div>
-                
-                
-                {{-- Card pictures --}}
-                @if($site->pics)
-                    <div class="col-md-6">             
-                        <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
-                            {{--<div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Pictures</h2>
-                                    <div class="table-responsive"></div>
-                                </div>
-                            </div>--}}
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table align-items-center mb-0"> 
-                                        <tbody>
-                                            <tr><td>
-                                            <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
-                                                <div class="carousel-inner">
-                                                    @php 
-                                                        $first = true;
-                                                    @endphp
-                                                        
-                                                    @foreach ($photos as $photo)    
-                                                        <div class="carousel-item {{ $first ? "active" : "" }}">
-                                                            @php
-                                                                $first = false;
-                                                            @endphp
-                                                            <div class="page-header min-vh-50 border-radius-xl" style="background-image: url('{{ asset('assets') }}/img/sites/{{ $photo->file}}');">
-                                                            
-                                                                <div class="container">
-                                                                    
-                                                                </div>
-                                                            </div>
-                                                            {{--<h4 class="text-info mb-0 fadeIn1 fadeInBottom align-bottom text-center"> {{ $boat->name }}</h4>--}}
-
-                                                            <table class="table align-items-center mb-0">
-                                                        
-                                                                @if($photo->desc)
-                                                                    <tr class="align-top">
-                                                                    <td class="align-middle text-center text-wrap text-md"><b>{{ $photo->desc }}</b></td> </tr>
-                                                                @endif
-                                                                
-                                                                @if($photo->credit)
-                                                                    <tr>
-                                                                    <td class="align-middle text-center text-sm"><b>📸 {{ $photo->credit }}</b></td> </tr>
-                                                                @endif
-                                                                
-                            
-
-                                                            </table>
-
-
-                                                        </div>
-                                                    @endforeach
-
-                                                    
-                                                </div>
-
-                                                <div class="position-absolute min-vh-25 w-100 top-10">
-                                                    <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-bs-slide="prev">
-                                                        <span class="carousel-control-prev-icon position-absolute bottom-50 text-info" aria-hidden="true"></span>
-                                                        <span class="visually-hidden">Previous</span>
-                                                    </a>
-                                                    <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-bs-slide="next">
-                                                        <span class="carousel-control-next-icon position-absolute bottom-50" aria-hidden="true"></span>
-                                                        <span class="visually-hidden">Next</span>
-                                                    </a>
-                                                </div>
-                                                
-                                            </div>
-
-                                        </tbody>    
-                                    </table>
-                                </div>    
-                            </div>
-                        </div>
-                    </div>
                 @endif
-                
                 {{--Card 3D model--}}
                 @if($site->dModel != null)
                 <div class="col-md-12">             

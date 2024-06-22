@@ -51,7 +51,7 @@ class SiteController extends Controller
         // get trips for this site
         $trips = Trip::where(function ($query) use ($site) {
             $query->whereRaw("FIND_IN_SET(?, siteId)", [$site->id]);
-        })->where('siteIdStatus', "confirmed")->get();    //->where('siteIdStatus', '<>', "suggested")
+        })->where('siteIdStatus', "confirmed")->whereDate('date', '>=', Carbon::today())->get()->sortBy('date');    //->where('siteIdStatus', '<>', "suggested")
 
         //$trips = Trip::where('siteId', 'LIKE', '% ' . $id . ',%')->where('siteIdStatus', 'confirmed')->get();
 
