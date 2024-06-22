@@ -75,4 +75,5 @@ class Site extends Model
 
         return $plainText;
     }
+
 }

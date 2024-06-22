@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\Operator;
+use App\Models\Trip;
 use App\Models\WeatherLocation;
 use App\Models\WeatherDay;
 use App\Models\Site;
@@ -46,6 +47,19 @@ class SiteController extends Controller
 
     public function show($id = null) {
         $site = Site::findOrFail(intval($id));
+
+        // get trips for this site
+        $trips = Trip::where(function ($query) use ($site) {
+            $query->whereRaw("FIND_IN_SET(?, siteId)", [$site->id]);
+        })->where('siteIdStatus', "confirmed")->get();    //->where('siteIdStatus', '<>', "suggested")
+
+        //$trips = Trip::where('siteId', 'LIKE', '% ' . $id . ',%')->where('siteIdStatus', 'confirmed')->get();
+
+
+
+        $site->upcomingTrips = $trips;
+        Log::debug("This site has upcoming trips:" . count($site->upcomingTrips));
+
         $photos = Photo::where('siteId', $id)->get();
         $location = WeatherLocation::where('short', $site->location)->first();
 
@@ -277,7 +291,8 @@ class SiteController extends Controller
         return redirect()->back()->withStatus("Site \"" . $siteName . " \"successfully deleted");
     }
     public function showAll() {
-        $sites = Site::all()->sortby("name");
+        $sites = Site::where('_hidden', '<>', 1)->get()->sortby("name");
+        Log::debug("# sites we got: " . count($sites));
         $locations = WeatherLocation::all();
 
         return view('pages.DiveSitesMap', compact('sites', 'locations'));
@@ -285,7 +300,7 @@ class SiteController extends Controller
 
     public function showAllSearch() {
         //$results = Site::all()->with('locationLong')->sortby("name");
-        $results = Site::with('locationLong')->get()->sortby("name");
+        $results = Site::where('_hidden', '<>', 1)->with('locationLong')->get()->sortby("name");
         //$locations = WeatherLocation::all();
         $searchString = "all";
 
@@ -310,7 +325,6 @@ class SiteController extends Controller
         return view('pages.DiveSites', compact('sitesWrecks', 'sitesReefs', 'locations'));
     }
 
-    
     public function searchSites(Request $request) {
 
         Log::info('Request data:', $request->all());

@@ -72,7 +72,7 @@
             @if(!empty($status))
                 @if($status == "match")
                     <div class="row">
-                        <div class="col-md-12 m-auto">             
+                        <div class="col-md-12">             
                             <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
                                 <div class="card-header p-0 mt-n4 mx-3">
                                     <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
@@ -89,10 +89,10 @@
                                                     @foreach($results as $site)    
                                                         <tr style="border-bottom: 1px solid #D3D3D3;">
                                                             <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
-                                                            <td class="w-40 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
+                                                            <td class="align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
                                                             @foreach($locations as $location)
                                                                 @if($location->short == $site->location)
-                                                                    <td class="w-20 align-middle text-left text-md"><b>{{ $location->location }}</b></td> 
+                                                                    <td class="align-middle text-left text-md"><b>{{ $location->location }}</b></td> 
                                                                 @endif
                                                             @endforeach
                                                             
@@ -130,7 +130,7 @@
                                                             <td class="w-40 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
                                                             @foreach($locations as $location)
                                                                 @if($location->short == $site->location)
-                                                                    <td class="w-20 align-middle text-left text-md"><b>{{ $location->location }}</b></td> 
+                                                                    <td class="align-middle text-left text-md"><b>{{ $location->location }}</b></td> 
                                                                 @endif
                                                             @endforeach
                                                             
@@ -164,7 +164,7 @@
                                                 <tbody>
                                                     @foreach($resultsDescription as $resultDescription)
                                                         <tr>
-                                                            <td><p class="text-sm">...{{ $resultDescription['beforeString'] }}<b>{{ $resultDescription['searchString'] }}</b>{{ $resultDescription['afterString']}}...</p></td>
+                                                            <td class="w-50"><p class="text-sm">...{{ $resultDescription['beforeString'] }}<b>{{ $resultDescription['searchString'] }}</b>{{ $resultDescription['afterString']}}...</p></td>
                                                         </tr>
                                                         <tr style="border-bottom: 1px solid #D3D3D3;" >
                                                             <td><a href="/SiteDetails/{{ $resultDescription['siteId']}}"><p class="text-info text-sm mt-n3">Site: <b><u>{{ $resultDescription['siteName']}}</u></b> {{ $resultDescription['siteType']}}</p></a></td>
@@ -182,10 +182,10 @@
                                                 <tbody>
                                                     @foreach($resultsHistoryA as $resultHistory)
                                                         <tr>
-                                                            <td><p class="text-sm">...{{ $resultHistory['beforeString'] }}<b>{{ $resultHistory['searchString'] }}</b>{{ $resultHistory['afterString']}}...</p></td>
+                                                            <td style="width:100%"><p class="text-sm">...{{ $resultHistory['beforeString'] }}<b>{{ $resultHistory['searchString'] }}</b>{{ $resultHistory['afterString']}}...</p></td>
                                                         </tr>
                                                         <tr style="border-bottom: 1px solid #D3D3D3;" >
-                                                            <td><a href="/SiteDetails/{{ $resultHistory['siteId']}}"><p class="text-info text-sm mt-n3">Site: <b><u>{{ $resultHistory['siteName']}}</u></b> {{ $resultHistory['siteType']}}</p></a></td>
+                                                            <td style="width:100%"><a href="/SiteDetails/{{ $resultHistory['siteId']}}"><p class="text-info text-sm mt-n3">Site: <b><u>{{ $resultHistory['siteName']}}</u></b> {{ $resultHistory['siteType']}}</p></a></td>
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
