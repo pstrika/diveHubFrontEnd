@@ -86,6 +86,7 @@ Route::get('DiveSites', 'App\Http\Controllers\SiteController@showTopRated')->mid
 Route::get('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites')->middleware('auth')->name('DiveSitesSearch');
 Route::post('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites')->middleware('auth')->name('DiveSitesSearch');
 Route::get('DiveSitesMap', 'App\Http\Controllers\SiteController@showAll')->middleware('auth')->name('DiveSitesMap');
+Route::get('DiveSitesAll', 'App\Http\Controllers\SiteController@showAllSearch')->middleware('auth')->name('DiveSitesAll');
 Route::get('DiveSitesAdmin', 'App\Http\Controllers\SiteController@showAllAdmin')->middleware('auth')->name('DiveSitesAdmin');
 Route::get('DeleteDiveSite/{id}', 'App\Http\Controllers\SiteController@delete')->middleware('auth')->name('DeleteDiveSite');
 Route::get('DeleteDiveSite', 'App\Http\Controllers\SiteController@delete')->middleware('auth')->name('DeleteDiveSite');

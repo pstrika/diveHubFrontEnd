@@ -283,6 +283,17 @@ class SiteController extends Controller
         return view('pages.DiveSitesMap', compact('sites', 'locations'));
     }
 
+    public function showAllSearch() {
+        //$results = Site::all()->with('locationLong')->sortby("name");
+        $results = Site::with('locationLong')->get()->sortby("name");
+        //$locations = WeatherLocation::all();
+        $searchString = "all";
+
+        Log::debug("Count of sites: " . count($results));
+
+        return view('pages.DiveSitesSearch', compact('searchString', 'results'))->withStatus("show all");
+    }
+
     public function showTopRated() {
         //$sites = Site::all()->sortByDesc("rate");
         $sitesWrecks = Site::where('type', 'wreck')

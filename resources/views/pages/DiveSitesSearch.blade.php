@@ -26,6 +26,8 @@
                                 <h2 class="card-title text-info mx-3 mt-0">Dive Sites Search...</h2>
                             @elseif($status == "match")
                                 <h2 class="card-title text-info mx-3 mt-0">Dive Sites Search Results</h2>
+                            @elseif($status == "show all")
+                                <h2 class="card-title text-info mx-3 mt-0">Showing all sites</h2>
                             @else
                                 <h2 class="card-title text-info mx-3 mt-0">No match for search "{{ $searchString }}"</h2>
                             @endif
@@ -35,7 +37,8 @@
                 </div>
             </div>
 
-            <div class="row">
+            {{---Search input--}}
+            <div id="searchBox" class="row">
                 {{-- Dive Operator location are cards --}}
                 <div class="col-md-6 m-auto">             
                     <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
@@ -56,7 +59,7 @@
 
                                     <div class="button-row text-center mt-0 mt-md-4">
                                         <button class="btn bg-gradient-info ms-auto mb-0" id="submit-all" title="Send" onclick="submitform()">Search</button> {{---type="submit"----}}
-                                        <button class="btn bg-gradient-info ms-auto mb-0" id="submit-all" title="Send" onclick="submitform()">Show me all sites</button> {{---type="submit"----}}
+                                        <a href="{{ route('DiveSitesAll') }}"><span class="btn bg-gradient-info ms-auto mb-0">Show me all sites</span></a> {{---type="submit"----}}
                                     </div>
                             </form>
                         </div>
@@ -65,6 +68,7 @@
                 {{-----------------------------}}
             </div>
             
+            {{---Card show search results--}}
             @if(!empty($status))
                 @if($status == "match")
                     <div class="row">
@@ -194,6 +198,55 @@
                         </div>
                     </div>
                 @endif
+
+                @if($status == "show all")
+                    <div class="col-md-12 m-auto">             
+                        <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
+
+                            <div class="card-body">
+                                <table id="tableAll" class="display" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Name</th>
+                                            <th>Location</th>
+                                            <th>Level</th>
+                                            <th>Max Depth (ft)</th>
+                                            <th>GPS Lat</th>
+                                            <th>GPS Lon</th>
+                                            
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($results as $result)
+                                            <?php 
+                                                if($result->level == 0)
+                                                    $level="Open Water";
+                                                elseif($result->level == 1)
+                                                    $level="Advanced Open Water";
+                                                elseif($result->level == 2)
+                                                    $level="Technical Air";
+                                                elseif($result->level == 3)
+                                                    $level="Technical Normoxic Trimix";
+                                                elseif($result->level == 4)
+                                                    $level="Technical Hypoxic Trimix";    
+                                            ?>
+                                            <tr>
+                                                <td class="w-5 text-center align-middle"><small hidden>{{ $result->type}}</small><img src="{{ asset('assets') }}/img/icons/{{ $result->type }}_icon.png" height="35"></td>
+                                                <td><a href="/SiteDetails/{{ $result->id }}">{{ $result->name }}</a></td>
+                                                <td>{{ $result->locationLong->location }}</td>
+                                                <td class="w-5 text-center align-middle"><small hidden>{{ $result->level}}</small><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $result->level }}.png" height="25"></td>
+                                                <td>{{ $result->maxDepth }}</td>
+                                                <td>{{ $result->gpsLat }}</td>
+                                                <td>{{ $result->gpsLon }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             @endif
                 
 
@@ -209,7 +262,20 @@
     {{--<x-plugins></x-plugins>--}}
     
     @push('js')
+    <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
+    <script src="//cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
+    <link href="//cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css" rel="stylesheet">
     
+    
+    <script>
+        
+        @if(!empty($status))
+            @if($status == "show all")
+                new DataTable('#tableAll');
+                document.getElementById('searchBox').style.display = 'none';
+            @endif
+        @endif
+    </script>
     <script>
         function submitform() {
             document.forms["myForm"].submit();
