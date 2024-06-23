@@ -47,6 +47,7 @@ class EventController extends Controller
         $dateTo = Carbon::parse($date)->addWeek(6)->format('Y-m-d');
         $events = Event::whereBetween('date', [$dateFrom, $dateTo])
             ->where('userId', auth()->user()->id)
+            //->where('userId', '8')
             ->whereDate('date', '>=', Carbon::today())
             ->get()->sortBy("date");
 
@@ -63,25 +64,35 @@ class EventController extends Controller
 
         $sites = collect(Site::select('id', 'maxDepth', 'level')->get());
         
-        Log::debug("size of sites: " . $sites);
-
+        Log::debug("size of sites: " . count($sites));
+        Log::debug("Size of trips: " . count($trips));
+        /* why did I put this codde in here???!?!?!?!?!?!?
         foreach($trips as $i => $trip) {
+            Log::debug("content of siteId: " . $trip->siteId);
             if($trip->siteId != null) {
                 $siteIds = explode(',', $trip->siteId);
                 $relatedSites = $sites->whereIn('id', $siteIds)->all();
+                Log::debug("relatedSites: " . count($relatedSites));
                 
-                $j=0;
+                //$j=0;
                 foreach($relatedSites as $relatedSite) {
-                    $trips[$i]->site[$j]->id = $relatedSite->id;
-                    $trips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
-                    $trips[$i]->site[$j]->level = $relatedSite->level;
-                    $j++;
+                    Log::debug("index i,j: " . $i . ", " . $j);
+                    //$trips[$i]->site[$j]->id = $relatedSite->id;
+                    //$trips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
+                    //$trips[$i]->site[$j]->level = $relatedSite->level;
+                    //$j++;
+
+                    $tempSite = [];
+                    $tempSite['id'] = $relatedSite->id;
+                    $tempSite['maxDepth'] = $relatedSite->maxDepth;
+                    $tempSite['level'] = $relatedSite->level;
+                    
                     
                 }
             
             }
         }
-            
+            */
         $dateF = Carbon::parse($date);
         
         // Get the next month....
