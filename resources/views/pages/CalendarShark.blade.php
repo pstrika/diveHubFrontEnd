@@ -311,7 +311,7 @@
             window.location.href = link;
         },
         initialView: "dayGridMonth",
-        firstDay: 1,
+        firstDay: {{ auth()->user()->firstDayOfWeek }},
         contentHeight: 'auto',
         headerToolbar: {
             start: '', //'title', // will normally be on the left. if RTL, will be on the right

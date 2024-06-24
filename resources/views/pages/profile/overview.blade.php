@@ -209,7 +209,7 @@
                                             <div class="slider-styled" id="sliderLevel"></div>
                                         </div>
                                         
-                                        <h6 class="text-uppercase text-body text-xs mt-5 font-weight-bolder">Notifications</h6>
+                                        <h6 class="text-uppercase text-body text-xs mt-5 font-weight-bolder">Preferences</h6>
                                         <ul class="list-group">
                                             <li class="list-group-item border-0 px-0">
                                                 <div class="form-check form-switch ps-0">
@@ -219,7 +219,17 @@
                                                         for="flexSwitchCheckDefault">Email me with new dives</label>
                                                 </div>
                                             </li>
-                                            
+                                        </ul>
+
+                                        <ul class="list-group">
+                                            <li class="list-group-item border-0 px-0">
+                                                <div class="form-check form-switch ps-0">
+                                                    <input name="firstDayOfWeek" class="form-check-input ms-auto" type="checkbox"
+                                                        id="firstDayOfWeek" {{ $user->firstDayOfWeek ? "checked" : ""}} value="1">
+                                                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
+                                                        for="firstDayOfWeek">Set Monday as the first day of the week</label>
+                                                </div>
+                                            </li>
                                         </ul>
                                         
                                         
@@ -316,7 +326,6 @@
                                                         for="prefersLocation">Use "Favorite Locations" to show me dive trips</label>
                                                 </div>
                                             </li>
-                                            
                                         </ul>
                                         </div>
                                     </div>
@@ -704,6 +713,11 @@
     <script>
         var prefersLocation =document.getElementById('prefersLocation');
         prefersLocation.addEventListener('click', () => {
+            divButton.style.display = 'block';
+        });
+
+        var firstDayOfWeek =document.getElementById('firstDayOfWeek');
+        firstDayOfWeek.addEventListener('click', () => {
             divButton.style.display = 'block';
         });
     </script>

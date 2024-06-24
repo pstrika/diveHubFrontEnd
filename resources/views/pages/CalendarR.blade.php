@@ -194,7 +194,7 @@
         var calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
         initialView: "dayGridWeek",
         //navLinks: true,
-        firstDay: 1,
+        firstDay: {{ auth()->user()->firstDayOfWeek }},
         contentHeight: 200,
         
         headerToolbar: {

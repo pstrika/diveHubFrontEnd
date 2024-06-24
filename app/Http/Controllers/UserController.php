@@ -183,6 +183,15 @@ class UserController extends Controller
             $user->prefersLocation = false;
         }
 
+        // Special case: if we dont have the input, means the checkbox is off so we update to 0. This is for config firstDayOfWeek
+        if($request->has('firstDayOfWeek')) {
+            Log::info("Got first day of week. Updating to: 1, which means monday");
+            $user->firstDayOfWeek = 1;
+        } else {
+            Log::info("Didn't get firstDayOfWeek. Updating to: 0");
+            $user->firstDayOfWeek = 0;
+        }
+
         $user->save();
 
         return redirect()->back();
