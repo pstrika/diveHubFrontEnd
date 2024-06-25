@@ -215,7 +215,7 @@
                                                 <div class="form-check form-switch ps-0">
                                                     <input class="form-check-input ms-auto" type="checkbox"
                                                         id="flexSwitchCheckDefault" checked>
-                                                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
+                                                    <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
                                                         for="flexSwitchCheckDefault">Email me with new dives</label>
                                                 </div>
                                             </li>
@@ -226,7 +226,7 @@
                                                 <div class="form-check form-switch ps-0">
                                                     <input name="firstDayOfWeek" class="form-check-input ms-auto" type="checkbox"
                                                         id="firstDayOfWeek" {{ $user->firstDayOfWeek ? "checked" : ""}} value="1">
-                                                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
+                                                    <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
                                                         for="firstDayOfWeek">Set Monday as the first day of the week</label>
                                                 </div>
                                             </li>
@@ -322,7 +322,7 @@
                                                 <div class="form-check form-switch ps-0">
                                                     <input name="prefersLocation" class="form-check-input ms-auto" type="checkbox"
                                                         id="prefersLocation" {{ $user->prefersLocation ? "checked" : ""}} value="1">
-                                                    <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
+                                                    <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
                                                         for="prefersLocation">Use "Favorite Locations" to show me dive trips</label>
                                                 </div>
                                             </li>
@@ -347,7 +347,7 @@
                                                         title="Edit Favorite operators..."></i>
                                                 </a>
                                             </div>
-                                            <p class="text-wrap text-xs text-body">Select which levels we should you dive trips for.</p>
+                                            <p class="text-wrap text-xs text-body">Select range level to show as favorites</p>
                                         </div>
                                         
                                     </div>
