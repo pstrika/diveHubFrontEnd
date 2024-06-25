@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 use App\Models\Operator;
 use App\Models\WeatherLocation;
 use App\Models\Boat;
+use App\Models\Trip;
+use App\Models\Site;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 
@@ -29,7 +31,50 @@ class OperatorController extends Controller
         } else
             $fav = false;
 
-        return view('pages.OperatorDetails', compact('operator', 'boats', 'fav'));
+
+        // Get most popular sites for operator
+        $trips = Trip::where('operatorId', $id)
+            ->where('siteIdStatus', 'confirmed')
+            ->get();
+
+        if(count($trips)) {
+            // Initialize an empty array to store the counts
+            $counts = [];
+
+            // Loop through each trip
+            foreach ($trips as $trip) {
+                // Split the comma-separated siteId values
+                $siteIds = explode(',', $trip->siteId);
+
+                // Increment the count for each integer
+                foreach ($siteIds as $siteId) {
+                    $siteId = trim($siteId); // Remove any leading/trailing spaces
+                    if (!empty($siteId)) {
+                        $counts[$siteId] = isset($counts[$siteId]) ? $counts[$siteId] + 1 : 1;
+                    }
+                }
+            }
+
+            
+            arsort($counts);
+
+            // Now $counts contains the count of each integer
+            foreach ($counts as $siteId => $count) {
+                
+                Log::debug( "Site ID $siteId: $count occurrences");
+            }
+            
+            $topIds =array_slice( array_keys($counts), 0, 10);
+            Log::debug("ids= " . implode('-', $topIds));
+            $topSites = Site::whereIn('id', $topIds)
+            ->orderByRaw('FIELD(id, ' . implode(',', $topIds) . ')')
+            ->get();
+
+
+        } else
+            $topSites = null;     
+
+        return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites'));
     }
 
 

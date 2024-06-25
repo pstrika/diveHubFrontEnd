@@ -327,7 +327,7 @@
                     $video = json_decode($site->videos);    
                 @endphp
 
-                @if($video != null or $video != null or count($site->upcomingTrips))
+                @if(($video != null and $video[0]->link != null) or count($site->upcomingTrips))
                     <div class="col-md-6">
                         {{--Card for video---}}
                         @if($video != null)
@@ -391,85 +391,85 @@
                         @endif
                     </div>
                     
-                    
-                    {{-- Card pictures --}}
-                    @if($site->pics)
-                        <div class="col-md-6">             
-                            <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
-                                {{--<div class="card-header p-0 mt-n4 mx-3">
-                                    <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                        <h2 class="card-title text-white mx-4">Pictures</h2>
-                                        <div class="table-responsive"></div>
-                                    </div>
-                                </div>--}}
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table align-items-center mb-0"> 
-                                            <tbody>
-                                                <tr><td>
-                                                <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
-                                                    <div class="carousel-inner">
-                                                        @php 
-                                                            $first = true;
-                                                        @endphp
-                                                            
-                                                        @foreach ($photos as $photo)    
-                                                            <div class="carousel-item {{ $first ? "active" : "" }}">
-                                                                @php
-                                                                    $first = false;
-                                                                @endphp
-                                                                <div class="page-header min-vh-50 border-radius-xl" style="background-image: url('{{ asset('assets') }}/img/sites/{{ $photo->file}}');">
-                                                                
-                                                                    <div class="container">
-                                                                        
-                                                                    </div>
-                                                                </div>
-                                                                {{--<h4 class="text-info mb-0 fadeIn1 fadeInBottom align-bottom text-center"> {{ $boat->name }}</h4>--}}
-
-                                                                <table class="table align-items-center mb-0">
-                                                            
-                                                                    @if($photo->desc)
-                                                                        <tr class="align-top">
-                                                                        <td class="align-middle text-center text-wrap text-md"><b>{{ $photo->desc }}</b></td> </tr>
-                                                                    @endif
-                                                                    
-                                                                    @if($photo->credit)
-                                                                        <tr>
-                                                                        <td class="align-middle text-center text-sm"><b>📸 {{ $photo->credit }}</b></td> </tr>
-                                                                    @endif
-                                                                    
-                                
-
-                                                                </table>
-
-
-                                                            </div>
-                                                        @endforeach
-
+                @endif
+                {{-- Card pictures --}}
+                @if($site->pics)
+                    <div class="col-md-6">             
+                        <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
+                            {{--<div class="card-header p-0 mt-n4 mx-3">
+                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                    <h2 class="card-title text-white mx-4">Pictures</h2>
+                                    <div class="table-responsive"></div>
+                                </div>
+                            </div>--}}
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table align-items-center mb-0"> 
+                                        <tbody>
+                                            <tr><td>
+                                            <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
+                                                <div class="carousel-inner">
+                                                    @php 
+                                                        $first = true;
+                                                    @endphp
                                                         
-                                                    </div>
+                                                    @foreach ($photos as $photo)    
+                                                        <div class="carousel-item {{ $first ? "active" : "" }}">
+                                                            @php
+                                                                $first = false;
+                                                            @endphp
+                                                            <div class="page-header min-vh-50 border-radius-xl" style="background-image: url('{{ asset('assets') }}/img/sites/{{ $photo->file}}');">
+                                                            
+                                                                <div class="container">
+                                                                    
+                                                                </div>
+                                                            </div>
+                                                            {{--<h4 class="text-info mb-0 fadeIn1 fadeInBottom align-bottom text-center"> {{ $boat->name }}</h4>--}}
 
-                                                    <div class="position-absolute min-vh-25 w-100 top-10">
-                                                        <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-bs-slide="prev">
-                                                            <span class="carousel-control-prev-icon position-absolute bottom-50 text-info" aria-hidden="true"></span>
-                                                            <span class="visually-hidden">Previous</span>
-                                                        </a>
-                                                        <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-bs-slide="next">
-                                                            <span class="carousel-control-next-icon position-absolute bottom-50" aria-hidden="true"></span>
-                                                            <span class="visually-hidden">Next</span>
-                                                        </a>
-                                                    </div>
+                                                            <table class="table align-items-center mb-0">
+                                                        
+                                                                @if($photo->desc)
+                                                                    <tr class="align-top">
+                                                                    <td class="align-middle text-center text-wrap text-md"><b>{{ $photo->desc }}</b></td> </tr>
+                                                                @endif
+                                                                
+                                                                @if($photo->credit)
+                                                                    <tr>
+                                                                    <td class="align-middle text-center text-sm"><b>📸 {{ $photo->credit }}</b></td> </tr>
+                                                                @endif
+                                                                
+                            
+
+                                                            </table>
+
+
+                                                        </div>
+                                                    @endforeach
+
                                                     
                                                 </div>
 
-                                            </tbody>    
-                                        </table>
-                                    </div>    
-                                </div>
+                                                <div class="position-absolute min-vh-25 w-100 top-10">
+                                                    <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-bs-slide="prev">
+                                                        <span class="carousel-control-prev-icon position-absolute bottom-50 text-info" aria-hidden="true"></span>
+                                                        <span class="visually-hidden">Previous</span>
+                                                    </a>
+                                                    <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-bs-slide="next">
+                                                        <span class="carousel-control-next-icon position-absolute bottom-50" aria-hidden="true"></span>
+                                                        <span class="visually-hidden">Next</span>
+                                                    </a>
+                                                </div>
+                                                
+                                            </div>
+
+                                        </tbody>    
+                                    </table>
+                                </div>    
                             </div>
                         </div>
-                    @endif
+                    </div>
                 @endif
+                
                 {{--Card 3D model--}}
                 @if($site->dModel != null)
                 <div class="col-md-12">             

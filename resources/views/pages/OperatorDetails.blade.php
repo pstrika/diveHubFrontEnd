@@ -317,7 +317,51 @@
                     {{-----------------------------}}
                 </div>
 
-                <div class="col-md-12">             
+
+                {{--card top sites--}}
+                @if( $topSites != null and count($topSites))
+                    <div class="col-md-6">
+                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                            <div class="card-header p-0 mt-n4 mx-3">
+                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                    <h2 class="card-title text-white mx-4">Most visited sites</h2>
+                                    <div class="table-responsive"></div>
+                                </div>
+                            </div>
+                            <div class="card-body mt-4">
+                                <div class="table-responsive">
+                                    <table style="display: block; height: 300px; overflow-y: scroll">
+                                        <thead class="text-info">
+                                            <th class="align-top text-center">Rank</th> 
+                                            <th class="align-top">Type</th>
+                                            <th class="px-4 align-top">Name</th> 
+                                            <th class="px-4 align-top">Level</th>
+                                        </thead>
+                                        <tbody> 
+                                            @foreach($topSites as $i => $site)
+                                                
+                                                <tr style="border-bottom: 1px solid #D3D3D3;" class="justify-content-center align-middle">
+                                                    <td class="px-4 text-center">{{ $i+1 }}</td>
+                                                    <td class="w-5 text-center align-middle"><img src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" height="35"></td>
+                                                    <td class="px-4"><a href="/SiteDetails/{{ $site->id }}">{{ $site->name }}</a></td>
+                                                    <td class="w-5 text-center align-middle"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" height="25"></td>
+                                                </tr>
+                                        
+                                            @endforeach          
+                                        </tbody>
+                                    </table>
+                                </div>   
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                @else
+                    <div class="col-md-12">
+                @endif
+
+
+                             
                         <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                                 <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
