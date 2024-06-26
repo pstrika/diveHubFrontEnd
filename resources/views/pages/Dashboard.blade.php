@@ -28,7 +28,7 @@
             </div>
 
             <div class="row mx-1">
-                <div class="col-lg-4">
+                <div class="col-md-4 mb-4">
                     <div class="card mt-3">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
@@ -36,7 +36,7 @@
                                 <div class="table-responsive"></div>
                             </div>
                         </div>
-                        <div class="card-body p-3">
+                        <div class="card-body p-3" style="display: block; max-height: 350px; overflow-y: scroll">
                             @if(count($trips) == 0)
                                 <p>You have no upcoming dives in you calendar</p>
                             @else
@@ -79,7 +79,98 @@
                         </div>
                     </div>
                 </div>
+            
+
+            
+                <div class="col-md-8">             
+                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h2 class="card-title text-white mx-4">Recommended for next weekend</h2>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                
+
+                                
+                                <div class="table-responsive">
+                                    <table id="tableTrips" style="display: block; max-height: 300px; overflow-y: scroll">
+                                        <thead class="text-info">
+                                            <th class="px-4 align-top">
+                                                Date
+                                            </th>
+                                            <th class="align-top">
+                                                Operator
+                                            </th>
+                                            <th class="px-4 align-top">
+                                                Time
+                                            </th>
+                                                <th class="py-0 align-top">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
+                                            </th>
+                                            
+                                            <th class="px-4 align-top">
+                                                Site / Trip Name
+                                            </th>
+                                            <th class="px-4 align-top">
+                                                Level<a href="#" onclick="showModal();"><p class="text-xs text-info text-center mt-0 px-1">(?)</p></a>
+                                            </th>
+                                            <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
+                                                Depth
+                                            </th>
+                                        </thead>
+                                        <tbody >
+                                            @foreach($favTrips as $trip)
+                                                
+                                                @php
+                                                    //because we get all the dives, we check if it's a fav
+                                                    if(!$trip->fav)
+                                                        continue;
+                                                    // do this to avoid printing on the table trips that are not within the current month, but wanted to show them on calendar (check controller)
+                                                    $tripDate = new DateTime($trip->date);
+                                                    $tripMonth = $tripDate->format('F');
+                                                @endphp
+                                                
+                                                <tr style="border-bottom: 1px solid #D3D3D3;" data-tag="{{ $trip->tags }}">
+                                                <td class="px-4">{{ $tripDate->format('D') }} {{ $tripDate->format('M-d') }}</td>
+                                                    <td class="px-0 py-2 text-sm text-wrap">{{ $trip->operatorName }}</td>
+                                                    <td class="px-4">{{ $trip->departureTime }}</td>
+                                                    @if($trip->tripFreeSpots == 0)
+                                                        <td class="text-center">-</td>
+                                                    @else
+                                                        <td class="text-center"> <a href="{{ $trip->linkToBook }}" target="_blank">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</a></td>
+                                                    @endif
+                                                    
+                                                    
+
+                                                    <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}</a></td>
+
+                                                    @if(!empty($trip->site[0]))
+                                                        {{--<td class="px-4 text-sm text-center">{{ $trip->site[0]->level }}</td>--}}
+                                                        <td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $trip->site[0]->level }}.png" height="25"></td>
+                                                    @else
+                                                        <td class="px-4 text-sm text-center"> </td>
+                                                    @endif
+
+                                                    @if(!empty($trip->site[0]))
+                                                        <td class="px-4 text-sm text-center">{{ $trip->site[0]->maxDepth }}</td>
+                                                    @else
+                                                        <td class="px-4 text-sm text-center"> </td>
+                                                    @endif
+                                                    
+                                                </tr>
+                                                
+                                            @endforeach          
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>    
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            
             
                 
 

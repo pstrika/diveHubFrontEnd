@@ -356,7 +356,7 @@
                                     </div>
                                     <div class="card-body mt-4">
                                         <div class="table-responsive">
-                                            <table id="tableUpcomingTrips" style="display: block; height: 300px; overflow-y: scroll">
+                                            <table id="tableUpcomingTrips" style="display: block; max-height: 300px; overflow-y: scroll">
                                                 <thead class="text-info">
                                                     <th class="align-top">Operator</th>
                                                     <th class="px-4 align-top">Date</th> 

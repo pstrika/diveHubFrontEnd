@@ -159,4 +159,6 @@ class TripsController extends Controller
         return view('pages.Trips', compact('trips', 'weathers', 'today', 'previousDay', 'nextDay', 'controlNav', 'user'));
 
     }
+
+    
 }
