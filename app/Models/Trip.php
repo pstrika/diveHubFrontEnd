@@ -46,7 +46,7 @@ class Trip extends Model
         if(count($trip) == 1)
             return $trip[0];
         else
-            return -1;
+            return 0;
         
     }
 }
