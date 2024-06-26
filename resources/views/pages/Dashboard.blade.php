@@ -4,7 +4,7 @@
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Platform Health"></x-auth.navbars.navs.auth>
+        <x-auth.navbars.navs.auth pageTitle="My Dashboard"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
         <div class="container-fluid py-0">
 
