@@ -8,7 +8,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('dashboard') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 2.1.9 (6/26/24)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 2.1.11 (6/27/24)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -23,7 +23,9 @@
                     @else
                     <img src="{{ asset('assets') }}/img/default-avatar.png" alt="avatar" class="avatar">
                     @endif
-                    <span class="nav-link-text ms-2 ps-1">{{ auth()->user()->name }}</span>
+                    <span class="nav-link-text ms-2 ps-1">{{ auth()->user()->name }}
+                    </span>
+                    
                 </a>
                 <div class="collapse" id="ProfileNav" style="">
                     <ul class="nav ">
@@ -221,14 +223,36 @@
                 </a>
             </li>
 
-            {{-- Platform health --}}
-            @can('manage-items', App\Models\User::class)
+            {{-- Admin Tools --}}
+            @can('manage-users', App\Models\User::class)
             <li class="nav-item">
-                <a class="nav-link text-white {{ $activeItem == 'platformHealth' ? ' active' : '' }}  "
-                    href="{{ route('PlatformHealth') }}">
-                    <i class="material-icons-round opacity-10">health_and_safety</i>
-                    <span class="nav-link-text ms-2 ps-1">Platform Health</span>
+                <a data-bs-toggle="collapse" href="#adminTools"
+                    class="nav-link text-white {{ $activePage == 'AdminTools' ? ' active ' : '' }} "
+                    aria-controls="dashboardsExamples" role="button" aria-expanded="false">
+                    <i class="material-icons-round opacity-10">construction</i>
+                    <span class="nav-link-text ms-2 ps-1">Admin Tools</span>
                 </a>
+                <div class="collapse {{ $activePage == 'AdminTools' ? ' show ' : '' }}  " id="adminTools">
+                    <ul class="nav ">
+                        
+                        <li class="nav-item {{ $activeItem == 'platformHealth' ? ' active ' : '' }}  ">
+                            <a class="nav-link text-white {{ $activeItem == 'platformHealth' ? ' active' : '' }}  "
+                                href="{{ route('PlatformHealth') }}">
+                                <i class="material-icons-round opacity-10">health_and_safety</i>
+                                <span class="nav-link-text ms-2 ps-1">Platform Health</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item {{ $activeItem == 'UserAdmin' ? ' active ' : '' }}  ">
+                            <a class="nav-link text-white {{ $activeItem == 'UserAdmin' ? ' active' : '' }}  "
+                                href="{{ route('users') }}">
+                                <i class="material-icons-round opacity-10">people</i>
+                                <span class="sidenav-normal  ms-2  ps-1"> User Management </span>
+                            </a>
+                        </li>
+
+                    </ul>
+                </div>
             </li>
             @endcan
 
@@ -262,7 +286,7 @@
             </li>
             @endcan           
 
-            
+            {{--
             @can('manage-items', App\Models\User::class)
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#dashboardsExamples"
@@ -1172,6 +1196,7 @@
                 </div>
             </li>
             @endcan
+            --}}
         </ul>
     </div>
     

@@ -1,5 +1,5 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
-    <x-auth.navbars.sidebar activePage="platformHealth" activeItem="platformHealth" activeSubitem=""></x-auth.navbars.sidebar>
+    <x-auth.navbars.sidebar activePage="AdminTools" activeItem="platformHealth" activeSubitem=""></x-auth.navbars.sidebar>
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
@@ -10,7 +10,7 @@
 
         
 
-
+            <div class="d-none" data-color="info" id="sidebarColorDiv"></div>
 
             <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/platformHealth.jpg');">
                 <span class="mask  bg-gradient-info  opacity-4"></span>
@@ -221,8 +221,13 @@
     {{--<x-plugins></x-plugins>--}}
     
     @push('js')
+    <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     
-    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            sidebarColor(document.getElementById("sidebarColorDiv")); // Execute the sidebarColor function once the HTML is loaded
+        });
+    </script>
 
     @endpush
 </x-page-template>

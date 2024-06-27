@@ -1,11 +1,26 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
-    <x-auth.navbars.sidebar activePage="laravel-examples" activeItem="user-management" activeSubitem="">
+    <x-auth.navbars.sidebar activePage="AdminTools" activeItem="UserAdmin" activeSubitem="">
     </x-auth.navbars.sidebar>
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <!-- Navbar -->
         <x-auth.navbars.navs.auth pageTitle="User Management"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
         <div class="container-fluid py-4">
+            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/platformHealth.jpg');">
+                <span class="mask  bg-gradient-info  opacity-4"></span>
+            </div>
+
+            <div class="card p-0 position-relative mt-n5 mx-1 z-index-2 mb-4">
+            
+                <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
+                    <div style="float: left;">
+                        <h2 class="card-title text-info mx-3 mt-0">User Management</h2>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="d-none" data-color="info" id="sidebarColorDiv"></div>
             <div class="row mt-4">
                 <div class="col-12">
                     <div class="card">
@@ -130,6 +145,12 @@
             fixedHeight: true
         });
 
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            sidebarColor(document.getElementById("sidebarColorDiv")); // Execute the sidebarColor function once the HTML is loaded
+        });
     </script>
     @endpush
 </x-page-template>

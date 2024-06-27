@@ -1,5 +1,5 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
-    <x-auth.navbars.sidebar activePage="laravel-examples" activeItem="user-management" activeSubitem="">
+    <x-auth.navbars.sidebar activePage="AdminTools" activeItem="UserAdmin" activeSubitem="">
     </x-auth.navbars.sidebar>
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <!-- Navbar -->
