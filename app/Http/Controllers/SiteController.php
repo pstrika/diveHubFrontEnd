@@ -204,7 +204,7 @@ class SiteController extends Controller
             $site->access = $request->access;
         }
 
-        if($request->has('visitinOperators')) {
+        if($request->has('visitingOperators')) {
             Log::info("Got visitingOperators. Updating to: " . str(implode(', ' , $request->input('visitingOperators'))));
             $site->visitingOperators = implode(', ' , $request->input('visitingOperators'));
         }

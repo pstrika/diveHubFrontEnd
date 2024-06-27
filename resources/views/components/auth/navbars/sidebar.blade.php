@@ -68,7 +68,7 @@
                 <a class="nav-link text-white {{ $activeItem == 'trips' ? ' active' : '' }}  "
                     href="{{ route('Trips') }}">
                     <i class="material-icons-round opacity-10">calendar_today</i>
-                    <span class="nav-link-text ms-2 ps-1">Today Trips</span>
+                    <span class="nav-link-text ms-2 ps-1">Upcoming Trips</span>
                 </a>
             </li>
             
