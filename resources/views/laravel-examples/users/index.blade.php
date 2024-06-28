@@ -82,7 +82,7 @@
                                             <img src="{{ asset('assets') }}/img/users/{{  $user->picture }}" alt="picture"
                                                 class="w-100 rounded-circle shadow-sm">
                                             @else
-                                            <img src="{{ asset('assets') }}/img/default-avatar.png" alt="avatar"
+                                            <img src="{{ asset('assets') }}/img/default-avatar-background.png" alt="avatar"
                                                 class="w-100 rounded-circle shadow-sm">
                                             @endif </td>
                                         <td class="text-sm font-weight-normal">{{ $user->name }}</td>

@@ -48,11 +48,11 @@
                                 <form role="form" method="POST" action="{{ route('register') }}">
                                     @csrf
                                     <div class="d-flex justify-content-center">
-                                        <img src="{{ asset('assets') }}/img/logos/logo_divershub.png" class="img-fluid" width="150">
+                                        <img src="{{ asset('assets') }}/img/logos/logo_divershub.png" class="img-fluid" width="200">
                                     </div>
-                                    <div class="d-flex justify-content-center">
+                                    {{--<div class="d-flex justify-content-center">
                                         <img src="{{ asset('assets') }}/img/logos/logo_letters.png" class="img-fluid" width="200">
-                                    </div>
+                                    </div>--}}
                                     <div class="input-group input-group-dynamic">
                                         <label class="form-label">Name</label>
                                         <input type="text" name='name' class="form-control" aria-label="Name" value='{{ old('name') }}'>

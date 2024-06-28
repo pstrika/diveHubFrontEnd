@@ -13,7 +13,7 @@
             <span class="mask bg-gradient-dark opacity-6"></span>
             <div class="container my-5">
                 <div class="row signin-margin">
-                    <div class="col-lg-5 col-md-8 col-12 mx-auto">
+                    <div class="col-lg-4 col-md-8 col-12 mx-auto">
                         <div class="card z-index-0 fadeIn3 fadeInBottom">
                             <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
                                 <div class="bg-gradient-info shadow-secondary border-radius-lg py-3 pe-1">

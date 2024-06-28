@@ -32,6 +32,13 @@ class Trip extends Model
         return $this->hasMany(Site::class, 'id', 'siteId');
     }
 
+    public function operator(): HasOne
+    {
+        // Explode the comma-separated site IDs and retrieve the related sites
+        //return Site::whereIn('id', explode(',', $this->siteId))->get();
+        return $this->hasOne(Operator::class, 'id', 'operatorId');
+    }
+
     public static function tripInEvent($event) {
         Log::debug("tripInEvent received event = " . str($event));
 

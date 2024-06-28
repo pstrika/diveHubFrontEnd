@@ -75,7 +75,7 @@
                         </i>
                     </a>
                 </li>
-                <li class="nav-item dropdown pe-2">
+                {{--<li class="nav-item dropdown pe-2">
                     <a href="javascript:;" class="nav-link text-body p-0 position-relative" id="dropdownMenuButton"
                         data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="material-icons cursor-pointer">
@@ -125,7 +125,7 @@
                             </a>
                         </li>
                     </ul>
-                </li>
+                </li>--}}
             </ul>
         </div>
     </div>

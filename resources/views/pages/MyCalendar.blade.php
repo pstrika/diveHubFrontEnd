@@ -309,6 +309,7 @@
             document.getElementById("button-book").href = '/SetEventBook/' + info.event.extendedProps.eventId;
             document.getElementById("button-remove").href = '/RemoveFromCalendar/' + info.event.extendedProps.eventId;
             document.getElementById("button-link").href = info.event.extendedProps.linkToBook;
+            document.getElementById("button-waiver").href = info.event.extendedProps.waiver;
             
             if(info.event.extendedProps.booked == '1') {
                 document.getElementById("div-button-book").hidden = true;
@@ -317,10 +318,16 @@
                 document.getElementById("span-not-booked").hidden = true;
             } else {
                 document.getElementById("div-button-book").hidden = false;
-                document.getElementById("div-button-book").hidden = false;
+                document.getElementById("div-button-link").hidden = false;
                 document.getElementById("span-booked").hidden = true;
                 document.getElementById("span-not-booked").hidden = false;
             }
+
+            // check if we have a waiver link. If not we hide the button
+            if(info.event.extendedProps.waiver)
+                document.getElementById("div-button-waiver").hidden = false;
+            else
+                document.getElementById("div-button-waiver").hidden = true;
 
 
             
@@ -347,7 +354,7 @@
                     echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) ."',";
                     echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
                     //echo "url: '/TripDetails/" . str($trip->id) . "',";
-                    echo "extendedProps: {myId: '" . str($trip->id) . "', operator: '" . $trip->operatorName . "', eventId: '" . $trip->eventId ."', booked: '" . $trip->booked . "', linkToBook: '" . $trip->linkToBook . "'},";
+                    echo "extendedProps: {myId: '" . str($trip->id) . "', operator: '" . $trip->operatorName . "', eventId: '" . $trip->eventId ."', booked: '" . $trip->booked . "', linkToBook: '" . $trip->linkToBook . "', waiver: '" . $trip->waiver . "'},";
                     if($trip->booked)
                         echo "className: 'bg-gradient-success text-white opId=$trip->operatorId isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
                     else

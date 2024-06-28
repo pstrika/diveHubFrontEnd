@@ -58,6 +58,8 @@ class EventController extends Controller
             if($trip) {
                 $trip->booked = $event->booked;
                 $trip->eventId = $event->id;
+                $trip->waiver = $trip->operator->waiverLink;
+                //Log::debug("waiver: " . $trip->waiver);
                 $trips[] = $trip;
             }
         }
@@ -111,6 +113,7 @@ class EventController extends Controller
         $year = Carbon::parse($date)->format('Y');
         $currentDate = Carbon::parse($date)->startOfMonth()->toDateString();
 
+        
         return view('pages.MyCalendar', compact('trips', 'currentDate', 'currentMonthS', 'year', 'prevMonthS', 'nextMonthS', 'controlNav'));
 
     }
