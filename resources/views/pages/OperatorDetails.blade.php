@@ -20,9 +20,11 @@
                             
                         </div>
 
-                        <div style="float: right;">
-                            <a href="{{ route('ToggleFav', ['id' => $operator->id]) }}"><i class="justify-content-bottom align-bottom material-icons text-info opacity-10" style="font-size: 50px;">{{ $fav ? "favorite" : "favorite_border"}}</i></a>
-                        </div>
+                        @if(auth()->user()->isNotGuest())
+                            <div style="float: right;">
+                                <a href="{{ route('ToggleFav', ['id' => $operator->id]) }}"><i class="justify-content-bottom align-bottom material-icons text-info opacity-10" style="font-size: 50px;">{{ $fav ? "favorite" : "favorite_border"}}</i></a>
+                            </div>
+                        @endif
 
                     </div>
                 </div>

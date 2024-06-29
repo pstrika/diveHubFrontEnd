@@ -17,7 +17,10 @@ class UserController extends Controller
     public function index(){
 
         //return view('laravel-examples.user-profile.edit');
-        return redirect()->route('MyDashboard');
+        if(auth()->id() == 5)  //check for guest user
+            return redirect()->route('Trips');
+        else
+            return redirect()->route('MyDashboard');
     }
 
     public function update()
@@ -164,15 +167,25 @@ class UserController extends Controller
             $user->showLevel = str($request->levelLow) . ", " . str($request->levelHigh);
         }
 
-        if($request->has('favOperators')) {
-            Log::info("Got Favorite Operators. Updating to: ");
-            $user->favOperators = implode(', ', $request->favOperators);
-        }
+        if($request->intentEditFavOperators == "1")
+            if($request->has('favOperators')) {
+                Log::info("Got Favorite Operators. Updating to: ");
+                $user->favOperators = implode(', ', $request->favOperators);
+            }
+            else {
+                Log::info("Fav operators not present, but user intends to edit. Updating to: EMPTY");
+                $user->favOperators = null;
+            }
 
-        if($request->has('favLocations')) {
-            Log::info("Got Favorite Locations. Updating to: ");
-            $user->favLocations = implode(', ', $request->favLocations);
-        }
+        if($request->intentEditFavLocations == "1")
+            if($request->has('favLocations')) {
+                Log::info("Got Favorite Locations. Updating to: ");
+                $user->favLocations = implode(', ', $request->favLocations);
+            }
+            else {
+                Log::info("Fav locations not present, but user intends to edit. Updating to: EMPTY");
+                $user->favLocations = null;
+            }
 
         // Special case: if we dont have the input, means the checkbox is off so we update to 0
         if($request->has('prefersLocation')) {

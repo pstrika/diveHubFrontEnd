@@ -30,7 +30,27 @@ Route::get('/', function () {
 /* Routes for diveHub */
 Route::get('Trips/{date}', 'App\Http\Controllers\TripsController@show')->middleware('auth')->name('Trips');
 Route::get('Trips/', 'App\Http\Controllers\TripsController@show')->middleware('auth')->name('Trips');
+//Route::get('Trips/', 'App\Http\Controllers\TripsController@show')->middleware('guest')->name('Trips');
 
+Route::middleware(['auth', 'admin'])->group(function () {
+    // Define admin-only routes here
+    // Example:
+    // Route::get('/admin/dashboard', 'AdminController@dashboard');
+	Route::get('PlatformHealth/', 'App\Http\Controllers\OperatorController@showHealth')->middleware('auth')->name('PlatformHealth');
+
+	Route::get('users-management', [UserManagementController::class, 'index'])->middleware('auth')->name('users');
+	Route::get('add-new-user', [UserManagementController::class, 'create'])->middleware('auth')->name('add.user');
+	Route::post('add-new-user', [UserManagementController::class, 'store'])->middleware('auth');
+	Route::get('edit-user/{id}',[UserManagementController::class, 'edit'])->middleware('auth')->name('edit.user');
+	Route::post('edit-user/{id}',[UserManagementController::class, 'update'])->middleware('auth');
+	Route::post('users-management/{id}',[UserManagementController::class, 'destroy'])->middleware('auth')->name('delete.user');
+
+	Route::get('DeleteDiveSite/{id}', 'App\Http\Controllers\SiteController@delete')->middleware('auth')->name('DeleteDiveSite');
+	Route::get('DeleteDiveSite', 'App\Http\Controllers\SiteController@delete')->middleware('auth')->name('DeleteDiveSite');
+
+	Route::get('DeletePic/{id}', 'App\Http\Controllers\SiteController@deletePic')->middleware('auth')->name('DeletePic');
+	Route::get('DeletePic', 'App\Http\Controllers\SiteController@deletePic')->middleware('auth')->name('DeletePic');
+});
 
 Route::get('Weather/{location}', 'App\Http\Controllers\WeatherController@show')->middleware('auth')->name('Weather');
 Route::get('Weather/', 'App\Http\Controllers\WeatherController@show')->middleware('auth')->name('Weather');
@@ -58,7 +78,7 @@ Route::get('OperatorDetails/{id}', 'App\Http\Controllers\OperatorController@show
 
 Route::get('BeachDiving', 'App\Http\Controllers\SiteController@showBeach')->middleware('auth')->name('BeachDiving');
 
-Route::get('PlatformHealth/', 'App\Http\Controllers\OperatorController@showHealth')->middleware('auth')->name('PlatformHealth');
+
 
 Route::get('new-site/', 'App\Http\Controllers\SiteController@create')->middleware('auth')->name('new-site');
 Route::post('new-site', 'App\Http\Controllers\SiteController@store')->middleware('auth')->name('new-site-store');
@@ -88,11 +108,7 @@ Route::post('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites'
 Route::get('DiveSitesMap', 'App\Http\Controllers\SiteController@showAll')->middleware('auth')->name('DiveSitesMap');
 Route::get('DiveSitesAll', 'App\Http\Controllers\SiteController@showAllSearch')->middleware('auth')->name('DiveSitesAll');
 Route::get('DiveSitesAdmin', 'App\Http\Controllers\SiteController@showAllAdmin')->middleware('auth')->name('DiveSitesAdmin');
-Route::get('DeleteDiveSite/{id}', 'App\Http\Controllers\SiteController@delete')->middleware('auth')->name('DeleteDiveSite');
-Route::get('DeleteDiveSite', 'App\Http\Controllers\SiteController@delete')->middleware('auth')->name('DeleteDiveSite');
 
-Route::get('DeletePic/{id}', 'App\Http\Controllers\SiteController@deletePic')->middleware('auth')->name('DeletePic');
-Route::get('DeletePic', 'App\Http\Controllers\SiteController@deletePic')->middleware('auth')->name('DeletePic');
 
 Route::get('overview', 'App\Http\Controllers\UserController@getProfile')->middleware('auth')->name('overview');
 Route::post('overview', 'App\Http\Controllers\UserController@updateProfile')->middleware('auth')->name('overview');
@@ -157,12 +173,7 @@ Route::post('edit-item/{id}',[ItemsController::class, 'update'])->middleware('au
 Route::post('items/{id}', [ItemsController::class, 'destroy'])->middleware('auth')->name('delete.item');
 
 
-Route::get('users-management', [UserManagementController::class, 'index'])->middleware('auth')->name('users');
-Route::get('add-new-user', [UserManagementController::class, 'create'])->middleware('auth')->name('add.user');
-Route::post('add-new-user', [UserManagementController::class, 'store'])->middleware('auth');
-Route::get('edit-user/{id}',[UserManagementController::class, 'edit'])->middleware('auth')->name('edit.user');
-Route::post('edit-user/{id}',[UserManagementController::class, 'update'])->middleware('auth');
-Route::post('users-management/{id}',[UserManagementController::class, 'destroy'])->middleware('auth')->name('delete.user');
+
 
 Route::group(['middleware' => 'auth'], function () {
 	Route::get('charts', function () {

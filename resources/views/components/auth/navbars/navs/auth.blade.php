@@ -40,6 +40,19 @@
                 </div>
             </a>
         </div>
+        @if(auth()->user()->isGuest())
+            <form method="POST" action="{{ route('logout') }}" class="d-none" id="logout-form">
+                @csrf
+            </form>
+            <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
+                <div class="ms-md-auto pe-md-3 d-flex align-items-center">
+                <a class="nav-link text-white " href="{{ route('logout') }}"
+                onclick="event.preventDefault();document.getElementById('logout-form').submit();">
+                    <span class="badge badge-lg badge-primary"> YOU ARE LOGGED IN AS A "GUEST". Click here to create an account</span>
+                </a>
+                </div>
+            </div>
+        @endif
         <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
             <div class="ms-md-auto pe-md-3 d-flex align-items-center">
                 <form id="searchForm" action="{{ route('DiveSitesSearch') }}" method="POST" enctype="multipart/form-data">
@@ -50,6 +63,7 @@
                     </div>
                 </form>
             </div>
+            @if(auth()->user()->isNotGuest())
             <ul class="navbar-nav  align-items-center">
                 <li class="nav-item">
                     <a href="{{ route('overview') }}" class="nav-link text-body p-0 position-relative">
@@ -68,6 +82,7 @@
                         </div>
                     </a>
                 </li>
+                {{--
                 <li class="nav-item px-3">
                     <a href="{{ route('settings') }}" class="nav-link text-body p-0">
                         <i class="material-icons fixed-plugin-button-nav cursor-pointer">
@@ -75,6 +90,7 @@
                         </i>
                     </a>
                 </li>
+                --}}
                 {{--<li class="nav-item dropdown pe-2">
                     <a href="javascript:;" class="nav-link text-body p-0 position-relative" id="dropdownMenuButton"
                         data-bs-toggle="dropdown" aria-expanded="false">
@@ -127,6 +143,7 @@
                     </ul>
                 </li>--}}
             </ul>
+            @endif
         </div>
     </div>
 </nav>

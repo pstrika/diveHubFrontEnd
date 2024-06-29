@@ -8,7 +8,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('dashboard') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 2.1.12 (6/28/24)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 2.2.0 (6/29/24)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -29,12 +29,14 @@
                 </a>
                 <div class="collapse" id="ProfileNav" style="">
                     <ul class="nav ">
+                        @if(auth()->user()->isNotGuest())
                         <li class="nav-item">
                             <a class="nav-link text-white" href="{{ route('overview') }}">
                                 <i class="material-icons-round opacity-10">person</i>
                                 <span class="sidenav-normal  ms-3  ps-1"> My Profile </span>
                             </a>
                         </li>
+                        @endif
                         {{--<li class="nav-item">
                             <a class="nav-link text-white " href="{{ route('settings') }}">
                                 <i class="material-icons-round opacity-10">settings</i>
@@ -44,11 +46,17 @@
                         <form method="POST" action="{{ route('logout') }}" class="d-none" id="logout-form">
                             @csrf
                         </form>
+                        
                         <li class="nav-item">
                             <a class="nav-link text-white " href="{{ route('logout') }}"
                                 onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-                                <i class="material-icons-round opacity-10">logout</i>
-                                <span class="sidenav-normal  ms-3  ps-1"> Logout </span>
+                                @if(auth()->user()->isNotGuest())
+                                    <i class="material-icons-round opacity-10">logout</i>
+                                    <span class="sidenav-normal  ms-3  ps-1"> Logout </span>
+                                @else
+                                    <i class="material-icons-round opacity-10">person_add_alt</i>
+                                    <span class="sidenav-normal  ms-3  ps-1"> Create account </span>
+                                @endif
                             </a>
                         </li>
                     </ul>
@@ -57,6 +65,7 @@
             <hr class="horizontal light mt-0">
 
             {{-- Dashboard --}}
+            @if(auth()->user()->isNotGuest())
             <li class="nav-item {{ $activePage == 'Dashboard' ? ' active ' : '' }}">
                 <a class="nav-link text-white {{ $activeItem == 'Dashboard' ? ' active' : '' }}  "
                     href="{{ route('MyDashboard') }}">
@@ -64,6 +73,7 @@
                     <span class="nav-link-text ms-2 ps-1">My Dashboard</span>
                 </a>
             </li>
+            @endif
 
             {{-- Trips today --}}
             <li class="nav-item {{ $activePage == 'trips' ? ' active ' : '' }}">
@@ -75,6 +85,7 @@
             </li>
             
             {{-- Weather --}}
+            @if(auth()->user()->isNotGuest())
             <li class="nav-item">
                 <a class="nav-link text-white {{ $activeItem == 'weather' ? ' active' : '' }}  "
                     href="{{ route('Weather') }}">
@@ -82,7 +93,9 @@
                     <span class="nav-link-text ms-2 ps-1">Weather</span>
                 </a>
             </li>
+            @endif
 
+            @if(auth()->user()->isNotGuest())
             {{-- Calendars --}}
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#calendars"
@@ -136,6 +149,7 @@
                     </ul>
                 </div>
             </li>
+            @endif
 
             {{-- Beach diving --}}
             <li class="nav-item">

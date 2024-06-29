@@ -44,7 +44,12 @@
                                 {{--<div class="d-flex justify-content-center">
                                     <img src="{{ asset('assets') }}/img/logos/logo_letters.png" class="img-fluid" width="200">
                                 </div>--}}
-                                <form role="form" method="POST" action="{{ route('login') }}" class="text-start">
+                                <div class="m-auto text-center" id="spinner" style="display: none;">
+                                    <div class="spinner-border text-info mt-4" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </div>
+                                <form role="form" method="POST" action="{{ route('login') }}" class="text-start" id="form">
                                     @csrf
                                     @if (Session::has('status'))
                                     <div class="alert alert-success alert-dismissible text-white" role="alert">
@@ -56,27 +61,27 @@
                                     </div>
                                     @endif
 
-                                    <div class="input-group input-group-outline mt-3">
+                                    <div class="input-group input-group-outline mt-3" id="emailDiv">
                                         <label class="form-label">Email</label>
-                                        <input type="email" class="form-control" name='email'
+                                        <input type="email" class="form-control" name='email' id="email"
                                             >
                                     </div>
                                     @error('email')
                                     <p class='text-danger inputerror'>{{ $message }} </p>
                                     @enderror
 
-                                    <div class="input-group input-group-outline mt-3">
+                                    <div class="input-group input-group-outline mt-3" id="passwordDiv">
                                         <label class="form-label" >Password</label>
-                                        <input type="password" class="form-control" name='password'>
+                                        <input type="password" class="form-control" name='password' id="password">
                                     </div>
                                     @error('password')
                                     <p class='text-danger inputerror'>{{ $message }} </p>
                                     @enderror
                                     <div class="form-check form-switch d-flex align-items-center my-3">
                                         <input class="form-check-input" type="checkbox" id="rememberMe">
-                                        <label class="form-check-label mb-0 ms-2" for="rememberMe">Remember me</label>
+                                        <label class="form-check-label mb-0 ms-2" for="rememberMe" id="rememberMeLabel">Remember me</label>
                                     </div>
-                                    <div class="text-center">
+                                    <div class="text-center" id="buttonDiv">
                                         <button type="submit" class="btn bg-gradient-info w-100 my-4 mb-2">Sign
                                             in</button>
                                     </div>
@@ -91,6 +96,11 @@
                                             class="text-info text-gradient font-weight-bold">Sign
                                             up</a>
                                     </p>
+                                    <p class="mt-4 text-sm text-center">
+                                        Continue as 
+                                        <a href="javascript:submitFormGuest()" class="text-info text-gradient font-weight-bold">Guest</a>
+                                            
+                                    </p>
                                 </form>
                             </div>
                         </div>
@@ -102,6 +112,20 @@
     </main>
     @push('js')
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js"></script>
+    <script>
+        function submitFormGuest() {
+            document.getElementById('emailDiv').style.display = 'none';
+            document.getElementById('passwordDiv').style.display = 'none';
+            document.getElementById('rememberMe').style.display = 'none';
+            document.getElementById('rememberMeLabel').style.display = 'none';
+            document.getElementById('buttonDiv').style.display = 'none';
+            document.getElementById('email').value = 'guest@divers-hub.com';
+            document.getElementById('password').value = '12345678';
+            document.getElementById("spinner").style.display = "block";
+
+            document.forms["form"].submit();
+        }
+    </script>
     <script>
         $(function () {
     

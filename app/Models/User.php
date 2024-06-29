@@ -67,6 +67,22 @@ class User extends Authenticatable
         return $this->role_id == 3;
     }
 
+     /**
+     * Check if the user has user role
+     */
+    public function isNotGuest()
+    {
+        return ($this->role_id != 4);
+    }
+
+     /**
+     * Check if the user has user role
+     */
+    public function isGuest()
+    {
+        return $this->role_id == 4;
+    }
+
     public function role(){
 
         return $this->belongsTo(Role::class);

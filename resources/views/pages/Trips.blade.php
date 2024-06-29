@@ -248,6 +248,7 @@
                                         </td>
                                     </tr> 
                                     <tr>
+                                        @if($user->id != 5) {{---If user is "guest" aka id=5, we don't show favorite filter--}}
                                         <td>
                                             <ul class="list-group">
                                                 <li class="list-group-item border-0 px-0">
@@ -255,12 +256,13 @@
                                                         <input class="form-check-input ms-auto" type="checkbox"
                                                             id="filterFavAM">
                                                         <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                            for="flexSwitchCheckDefault">Show Favorites only</label>
+                                                            for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="To set Favorites, go to your Profile">Show Favorites only</label>
                                                     </div>
                                                 </li>
                                                 
                                             </ul>
                                         </td>
+                                        @endif
                                         <td>
                                             <ul class="list-group">
                                                 <li class="list-group-item border-0 px-0">
@@ -454,6 +456,7 @@
                                         </td>
                                     </tr> 
                                     <tr>
+                                        @if($user->id != 5) {{---If user is "guest" aka id=5, we don't show favorite filter--}}
                                         <td>
                                             <ul class="list-group">
                                                 <li class="list-group-item border-0 px-0">
@@ -461,12 +464,13 @@
                                                         <input class="form-check-input ms-auto" type="checkbox"
                                                             id="filterFavPM">
                                                         <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                            for="flexSwitchCheckDefault">Show Favorites only</label>
+                                                            for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="To set Favorites, go to your Profile">Show Favorites only</label>
                                                     </div>
                                                 </li>
                                                 
                                             </ul>
                                         </td>
+                                        @endif
                                         <td>
                                             <ul class="list-group">
                                                 <li class="list-group-item border-0 px-0">

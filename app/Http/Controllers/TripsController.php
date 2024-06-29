@@ -21,7 +21,10 @@ class TripsController extends Controller
 
     public function show($date = null)
     {
-        $user = User::findorFail(auth()->user()->id);
+        //$user = User::findorFail(auth()->user()->id);
+        $user = User::find(auth()->user()->id);
+        if (!$user)
+            $user = User::find(5);  // Get designated for user Guest if user do
         // if we didn't receive $date, we just put today's
         if (!$date) {
             $date = Carbon::today()->toDateString();
@@ -157,6 +160,7 @@ class TripsController extends Controller
         
 
         return view('pages.Trips', compact('trips', 'weathers', 'today', 'previousDay', 'nextDay', 'controlNav', 'user'));
+        //return view('pages.Trips', compact('trips', 'weathers', 'today', 'previousDay', 'nextDay', 'controlNav'));
 
     }
 

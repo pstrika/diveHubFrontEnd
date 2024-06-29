@@ -190,14 +190,30 @@
                                 <p class="align-middle text-end text-md text-info mt-n2"><b>{{ $site->votes }} ratings</b></p>
                             </div>
 
-                            @if(!$ratedAlready)
-                            <div class="mt-n1">
-                                <p class="align-middle text-end text-xs text-decoration-underline text-info mt-0"><a href="#" data-bs-toggle="modal" data-bs-target="#modalRating"><b>rate this site</b></a></p>
-                            </div>
+                            {{--Don't allow rating if guest--}}
+                            @if(auth()->user()->isNotGuest())
+                                @if(!$ratedAlready)
+                                <div class="mt-n1">
+                                    <p class="align-middle text-end text-xs text-decoration-underline text-info mt-0"><a href="#" data-bs-toggle="modal" data-bs-target="#modalRating"><b>rate this site</b></a></p>
+                                </div>
+                                @else
+                                <div class="mt-n1">
+                                    <p class="align-middle text-end text-xs text-info mt-0"><b>You already rated this site</b></p>
+                                </div>
+                                @endif
                             @else
-                            <div class="mt-n1">
-                                <p class="align-middle text-end text-xs text-info mt-0"><b>You already rated this site</b></p>
-                            </div>
+                                <div class="mt-n1">
+                                <form method="POST" action="{{ route('logout') }}" class="d-none" id="logout-form">
+                                    @csrf
+                                    
+                                </form>
+                                <a class="nav-link text-white " href="{{ route('logout') }}"
+                                onclick="event.preventDefault();document.getElementById('logout-form').submit();">
+                                    <p class="align-middle text-end text-xs text-info mt-0"><b>Register here to rate this site</b></p>
+                                </a>
+                                
+                                    
+                                </div>
                             @endif
 
                         </div>

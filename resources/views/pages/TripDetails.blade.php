@@ -104,12 +104,14 @@
                         <h2 class="card-title text-info mx-3 mt-4">Trip on {{ $date->format('l, F-d') }}</h2>
                         <h4 class="card-category text-info mx-3"> {{ $location->location }}</h4>
                     </div>
-                    <div class="mt-4" style="float: right;" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $alreadyInCalendar ? "This trip is already in your calendar" : "" }}">
-                        <button class="btn btn-icon btn-3 btn-info" type="button" onclick="window.location.href='{{ route('AddEventToCalendar', ['tripId' => $tripDetails->id]) }}';" {{ $alreadyInCalendar ? "disabled" : "" }}>
-                            <span class="btn-inner--icon"><i class="material-icons">event_available</i></span>
-                            <span class="btn-inner--text">Add to my calendar</span>
-                        </button>
-                    </div>
+                    @if(auth()->user()->isNotGuest())
+                        <div class="mt-4" style="float: right;" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $alreadyInCalendar ? "This trip is already in your calendar" : "" }}">
+                            <button class="btn btn-icon btn-3 btn-info" type="button" onclick="window.location.href='{{ route('AddEventToCalendar', ['tripId' => $tripDetails->id]) }}';" {{ $alreadyInCalendar ? "disabled" : "" }}>
+                                <span class="btn-inner--icon"><i class="material-icons">event_available</i></span>
+                                <span class="btn-inner--text">Add to my calendar</span>
+                            </button>
+                        </div>
+                    @endif
                 </div>
             </div>    
 

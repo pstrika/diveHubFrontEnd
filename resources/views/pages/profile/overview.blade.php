@@ -259,9 +259,10 @@
                                     </div>
                                     <div class="card-body p-3 mt-n2">
                                         {{--<label class="mb-0 mx-n1">Visiting Operators</label>--}}
+                                        <input type="hidden" id="intentEditFavOperators" name="intentEditFavOperators" value="0">
                                         <div>
                                             <select id="favOperators" class="form-control" name="favOperators[]" multiple>
-                                                {{--<option disabled value="None" selected="">Type</option>--}}
+                                                {{--<option disabled value="" style="display: none;" selected=""></option>--}}
                                                 @foreach($operators as $operator)
                                                     <option value="{{ $operator->id }}">{{ $operator->operatorName }}</option>
                                                 @endforeach
@@ -290,6 +291,7 @@
                                     </div>
                                     <div class="card-body p-3 mt-n2">
                                         {{--<label class="mb-0 mx-n1">Visiting Operators</label>--}}
+                                        <input type="hidden" id="intentEditFavLocations" name="intentEditFavLocations" value="0">
                                         <div>
                                             <select id="favLocations" class="form-control" name="favLocations[]" multiple>
                                                 {{--<option disabled value="None" selected="">Type</option>--}}
@@ -648,6 +650,7 @@
             @foreach($favOperators as $favOperator)
                 example.setChoiceByValue('{{ $favOperator->id}}');
             @endforeach
+            
             example.disable();
 
             buttonEditFavOpe.addEventListener('click', () => {
@@ -655,6 +658,8 @@
                 const newColor = '#FF0000'; // Red color
                 example.enable();
                 divButton.style.display = 'block';
+                // enable flag in case the user selects nothing
+                document.getElementById('intentEditFavOperators').value = '1';
             });
         };
 
@@ -683,6 +688,7 @@
                 const newColor = '#FF0000'; // Red color
                 example1.enable();
                 divButton.style.display = 'block';
+                document.getElementById('intentEditFavLocations').value = '1';
             });
         };
 
