@@ -454,9 +454,10 @@
                                         <tr> {{--High tides--}}
                                             <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">high tide</td>
                                             @php
+                                                Log::debug('paso por aca');
                                                 foreach($weathers as $weather) {     
 
-                                                    
+                                                    Log::debug('paso por aca');
                                                     $jsonString = $weather->tides;
                                                     
                                                     $tides = json_decode($jsonString, true);
@@ -472,9 +473,11 @@
 
                                                     // Iterate through the array of tides
                                                     foreach ($tides as $tide) {
+                                                        Log::debug($tide);
                                                         // Extract the time and AM/PM part
                                                         $time = strtotime($tide['tide_time']);
                                                         $suffix = date('A', $time);
+
                                                         
                                                         // Sort into high and low tides for AM and PM
                                                         if ($tide['tide_type'] == 'HIGH') {

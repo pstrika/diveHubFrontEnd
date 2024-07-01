@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\Weatherday;
 use App\Models\WeatherLocation;
+use Illuminate\Support\Facades\Log;
 
 class WeatherController extends Controller
 {
@@ -19,6 +20,10 @@ class WeatherController extends Controller
         $date = Carbon::today()->toDateString();
 
         $weathers = Weatherday::where('location', $location)->get();
+
+        foreach($weathers as $weather){
+            Log::debug($weather->tides);
+        }
 
         $allLocations = WeatherLocation::all();
 
