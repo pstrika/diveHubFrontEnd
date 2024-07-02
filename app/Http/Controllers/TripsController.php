@@ -48,14 +48,14 @@ class TripsController extends Controller
                 //Log::debug("size of relatedSites: " . count($relatedSites));
                 //$trips[$i]->site = $relatedSites;
                 
-                $j=0;
+                #$j=0;
                 
                 foreach($relatedSites as $relatedSite) {
-                    $trips[$i]->site[$j]->id = $relatedSite->id;
-                    $trips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
-                    $trips[$i]->site[$j]->level = $relatedSite->level;
+                    #$trips[$i]->site[$j]->id = $relatedSite->id;
+                    #$trips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
+                    #$trips[$i]->site[$j]->level = $relatedSite->level;
                     //Log::debug("Trip [" . $trips[$i]->date . " " . $trips[$i]->departureTime . " " . $trips[$i]->tripName . "[" . $trips[$i]->site[$j]->maxDepth . "]");
-                    $j++;
+                    #$j++;
                     $trips[$i]->site[] = $relatedSite;
                     
                     //add tag for OW and AOW

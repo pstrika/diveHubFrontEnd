@@ -50,19 +50,22 @@ class CalendarTController extends Controller
 
         $sites = collect(Site::select('id', 'maxDepth', 'level')->get());
         
-        Log::debug("size of sites: " . $sites);
+        Log::debug("size of sites: " . count($sites));
+        Log::debug("size of trips: " . count($trips));
 
         foreach($trips as $i => $trip) {
             if($trip->siteId != null) {
                 $siteIds = explode(',', $trip->siteId);
                 $relatedSites = $sites->whereIn('id', $siteIds)->all();
                 
-                $j=0;
+                #$j=0;
                 foreach($relatedSites as $relatedSite) {
-                    $trips[$i]->site[$j]->id = $relatedSite->id;
-                    $trips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
-                    $trips[$i]->site[$j]->level = $relatedSite->level;
-                    $j++;
+                    #Log::debug("i, j: " . $i . " , " .$j);
+                    //$trips[$i]->site[$j]->id = $relatedSite->id;
+                    //$trips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
+                    //$trips[$i]->site[$j]->level = $relatedSite->level;
+                    #$j++;
+                    $trips[$i]->site[] = $relatedSite;
                     
                 }
             
@@ -120,12 +123,13 @@ class CalendarTController extends Controller
                 $siteIds = explode(',', $trip->siteId);
                 $relatedSites = $sites->whereIn('id', $siteIds)->all();
                 
-                $j=0;
+                #$j=0;
                 foreach($relatedSites as $relatedSite) {
-                    $trips[$i]->site[$j]->id = $relatedSite->id;
-                    $trips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
-                    $trips[$i]->site[$j]->level = $relatedSite->level;
-                    $j++;
+                    #$trips[$i]->site[$j]->id = $relatedSite->id;
+                    #$trips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
+                    #$trips[$i]->site[$j]->level = $relatedSite->level;
+                    #$j++;
+                    $trips[$i]->site[] = $relatedSite;
                     
                 }
             
@@ -180,12 +184,13 @@ class CalendarTController extends Controller
                 $siteIds = explode(',', $trip->siteId);
                 $relatedSites = $sites->whereIn('id', $siteIds)->all();
                 
-                $j=0;
+                #$j=0;
                 foreach($relatedSites as $relatedSite) {
-                    $trips[$i]->site[$j]->id = $relatedSite->id;
-                    $trips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
-                    $trips[$i]->site[$j]->level = $relatedSite->level;
-                    $j++;
+                    #$trips[$i]->site[$j]->id = $relatedSite->id;
+                    #$trips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
+                    #$trips[$i]->site[$j]->level = $relatedSite->level;
+                    #$j++;
+                    $trips[$i]->site[] = $relatedSite;
                     
                 }
             
