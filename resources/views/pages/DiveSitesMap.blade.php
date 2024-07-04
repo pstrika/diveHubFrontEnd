@@ -189,6 +189,20 @@
                 },
             });
 
+            {{--
+            map.addLayer({
+                id: 'bathymetry-layer',
+                type: 'fill',
+                source: {
+                    type: 'vector',
+                    url: 'mapbox://mapbox.mapbox-bathymetry-v2', // Use the tileset URL
+                },
+                'source-layer': 'depth', // Specify the layer within the tileset
+                paint: {
+                    'fill-color': '#0074D9', // Customize the fill color
+                    'fill-opacity': 0.5, // Adjust opacity
+                },
+            });--}}
             
         });
 
