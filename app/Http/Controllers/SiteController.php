@@ -49,11 +49,15 @@ class SiteController extends Controller
         $site = Site::findOrFail(intval($id));
 
         // get trips for this site
-        $trips = Trip::where(function ($query) use ($site) {
-            $query->whereRaw("FIND_IN_SET(?, siteId)", [$site->id]);
-        })->where('siteIdStatus', "confirmed")->whereDate('date', '>=', Carbon::today())->get()->sortBy('date');    //->where('siteIdStatus', '<>', "suggested")
+        //$trips = Trip::where(function ($query) use ($site) {
+        //    $query->whereRaw("FIND_IN_SET(?, siteId)", [$site->id]);
+        //})->where('siteIdStatus', "confirmed")->whereDate('date', '>=', Carbon::today())->get()->sortBy('date');    //->where('siteIdStatus', '<>', "suggested")
 
-        //$trips = Trip::where('siteId', 'LIKE', '% ' . $id . ',%')->where('siteIdStatus', 'confirmed')->get();
+        $trips = Trip::where('siteId', 'LIKE', '% ' . $id . ',%')
+        ->orWhere('siteId', 'LIKE', $id . ',%')     //this is to account for the case where the siteId is in the first postion (not space in front)
+        ->where('siteIdStatus', 'confirmed')
+        ->whereDate('date', '>=', Carbon::today())
+        ->get()->sortBy('date');
 
 
 
