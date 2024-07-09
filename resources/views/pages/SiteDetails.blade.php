@@ -185,7 +185,9 @@
                                     @php $productRating--; @endphp
                                 </span>
                             @endforeach--}}
-                            <div id="rateYoReadOnly"></div>
+
+                            <div class="d-flex justify-content-end"><div id="rateYoReadOnly"></div></div>
+                            
                             <div class="mt-1">
                                 <p class="align-middle text-end text-md text-info mt-n2"><b>{{ $site->votes }} ratings</b></p>
                             </div>
@@ -201,6 +203,18 @@
                                     <p class="align-middle text-end text-xs text-info mt-0"><b>You already rated this site</b></p>
                                 </div>
                                 @endif
+                                <div class="form-check form-switch ps-0">
+                                    <form method="POST" action="{{ route('UpdateVisited') }}" id="updatedVisited-form">
+                                        @csrf
+                                        <input name="visited" type="text" hidden id="alreadyVisitedHiddenInput">
+                                        <input name="site" type="text" hidden id="siteHiddenInput" value="{{ $site->id }}">
+                                        <input class="form-check-input ms-auto" type="checkbox"
+                                            id="alreadyVisited" {{ $visited ? "checked" : ""}}>
+
+                                        <label class="form-check-label text-body ms-3 mt-0"
+                                            for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="Click to update">Already visited this site?</label>
+                                    </form>
+                                </div>
                             @else
                                 <div class="mt-n1">
                                 <form method="POST" action="{{ route('logout') }}" class="d-none" id="logout-form">
@@ -817,6 +831,13 @@
 
     </script>
 
-
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('alreadyVisited').addEventListener('change', function() {
+                document.getElementById('alreadyVisitedHiddenInput').value = document.getElementById('alreadyVisited').checked;  
+                document.getElementById('updatedVisited-form').submit();
+            });
+        });
+    </script>
     @endpush
 </x-page-template>

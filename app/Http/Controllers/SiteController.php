@@ -8,6 +8,7 @@ use App\Models\Operator;
 use App\Models\Trip;
 use App\Models\WeatherLocation;
 use App\Models\WeatherDay;
+use App\Models\VisitedSite;
 use App\Models\Site;
 use App\Models\Photo;
 use App\Models\SiteRating;
@@ -72,11 +73,30 @@ class SiteController extends Controller
 
         $ratedAlready = SiteRating::where('userId', auth()->id())->where('siteId', $id)->exists();
 
+        // user has visited this site?
+        $visited = VisitedSite::where('userId', auth()->id())->where('siteId', $id)->exists();
+        Log::debug("User already visite this site? " . str($visited));
 
-        return view('pages.SiteDetails', compact('site','photos', 'location', 'operators', 'ratedAlready'));
+        return view('pages.SiteDetails', compact('site','photos', 'location', 'operators', 'ratedAlready', 'visited'));
 
     }
 
+    public function updateVisited(Request $request) {
+        Log::debug($request);
+
+        if(VisitedSite::where('siteId', $request->site)->where('userId', auth()->id())->exists()) {
+            VisitedSite::where('siteId', $request->site)->where('userId', auth()->id())->delete();
+        } else {
+            VisitedSite::create([
+                'siteId' => $request->site,
+                'userId' => auth()->id(),
+                // Add other relevant fields as needed
+            ]);
+        }
+
+        return redirect()->back();
+
+    }
     public function showAdmin($id) {
         $this->authorize('manage-items', User::class);
         $status = null;

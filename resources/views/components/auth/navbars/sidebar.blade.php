@@ -8,7 +8,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('dashboard') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 2.2.3 (7/7/24)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 2.2.5 (7/8/24)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -30,7 +30,7 @@
                 <div class="collapse" id="ProfileNav" style="">
                     <ul class="nav ">
                         @if(auth()->user()->isNotGuest())
-                        <li class="nav-item">
+                        <li class="nav-item" style="padding-left: 1rem;">
                             <a class="nav-link text-white" href="{{ route('overview') }}">
                                 <i class="material-icons-round opacity-10">person</i>
                                 <span class="sidenav-normal  ms-3  ps-1"> My Profile </span>
@@ -47,8 +47,8 @@
                             @csrf
                         </form>
                         
-                        <li class="nav-item">
-                            <a class="nav-link text-white " href="{{ route('logout') }}"
+                        <li class="nav-item" style="padding-left: 1rem;">
+                            <a class="nav-link text-white " href="{{ route('logout') }} "
                                 onclick="event.preventDefault();document.getElementById('logout-form').submit();">
                                 @if(auth()->user()->isNotGuest())
                                     <i class="material-icons-round opacity-10">logout</i>
@@ -113,7 +113,7 @@
                                 <span class="sidenav-normal  ms-2  ps-1"> Recreational </span>
                             </a>
                         </li>--}}
-                        <li class="nav-item {{ $activeItem == 'MyCalendar' ? ' active ' : '' }}  ">
+                        <li class="nav-item {{ $activeItem == 'MyCalendar' ? ' active ' : '' }}  " style="padding-left: 1rem;">
                             <a class="nav-link text-white {{ $activeItem == 'MyCalendar' ? ' active' : '' }}  "
                                 href="{{ route('MyCalendar') }}">
                                 <i class="material-icons-round opacity-10">perm_contact_calendar</i>
@@ -121,7 +121,7 @@
                             </a>
                         </li>
 
-                        <li class="nav-item {{ $activeItem == 'CalendarTec' ? ' active ' : '' }}  ">
+                        <li class="nav-item {{ $activeItem == 'CalendarTec' ? ' active ' : '' }}  " style="padding-left: 1rem;">
                             <a class="nav-link text-white {{ $activeItem == 'CalendarTec' ? ' active' : '' }}  "
                                 href="{{ route('CalendarT') }}/tec">
                                 <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_tec.png"></span>
@@ -129,7 +129,7 @@
                             </a>
                         </li>
 
-                        <li class="nav-item {{ $activeItem == 'sharkDiving' ? ' active ' : '' }}  ">
+                        <li class="nav-item {{ $activeItem == 'sharkDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
                             <a class="nav-link text-white {{ $activeItem == 'sharkDiving' ? ' active' : '' }}  "
                                 href="{{ route('CalendarShark') }}">
                                 <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_shark.png"></span>
@@ -138,7 +138,7 @@
                             </a>
                         </li>
 
-                        <li class="nav-item {{ $activeItem == 'lobsterDiving' ? ' active ' : '' }}  ">
+                        <li class="nav-item {{ $activeItem == 'lobsterDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
                             <a class="nav-link text-white {{ $activeItem == 'lobsterDiving' ? ' active' : '' }}  "
                                 href="{{ route('CalendarLobster') }}">
                                 <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_lobster.png"></span>
@@ -179,7 +179,7 @@
                 </a>
                 <div class="collapse {{ $activePage == 'DiveSites' ? ' show ' : '' }}  " id="sites">
                     <ul class="nav ">
-                    <li class="nav-item {{ $activeItem == 'DiveSitesTopRated' ? ' active ' : '' }}  ">
+                    <li class="nav-item {{ $activeItem == 'DiveSitesTopRated' ? ' active ' : '' }}  " style="padding-left: 1rem;">
                             <a class="nav-link text-white {{ $activeItem == 'DiveSitesTopRated' ? ' active' : '' }}  "
                                 href="{{ route('DiveSites') }}">
                                 <i class="material-icons-round opacity-10">star</i>
@@ -187,7 +187,7 @@
                             </a>
                         </li>
 
-                        <li class="nav-item {{ $activeItem == 'DiveSitesMap' ? ' active ' : '' }}  ">
+                        <li class="nav-item {{ $activeItem == 'DiveSitesMap' ? ' active ' : '' }}  " style="padding-left: 1rem;">
                             <a class="nav-link text-white {{ $activeItem == 'DiveSitesMap' ? ' active' : '' }}  "
                                 href="{{ route('DiveSitesMap') }}">
                                 <i class="material-icons-round opacity-10">map</i>
@@ -195,7 +195,7 @@
                             </a>
                         </li>
                         
-                        <li class="nav-item {{ $activeItem == 'DiveSitesSearch' ? ' active ' : '' }}  ">
+                        <li class="nav-item {{ $activeItem == 'DiveSitesSearch' ? ' active ' : '' }}  " style="padding-left: 1rem;">
                             <a class="nav-link text-white {{ $activeItem == 'DiveSitesSearch' ? ' active' : '' }}  "
                                 href="/DiveSitesSearch">
                                 <i class="material-icons-round opacity-10">search</i>
@@ -249,7 +249,7 @@
                 <div class="collapse {{ $activePage == 'AdminTools' ? ' show ' : '' }}  " id="adminTools">
                     <ul class="nav ">
                         
-                        <li class="nav-item {{ $activeItem == 'platformHealth' ? ' active ' : '' }}  ">
+                        <li class="nav-item {{ $activeItem == 'platformHealth' ? ' active ' : '' }}  " style="padding-left: 1rem;">
                             <a class="nav-link text-white {{ $activeItem == 'platformHealth' ? ' active' : '' }}  "
                                 href="{{ route('PlatformHealth') }}">
                                 <i class="material-icons-round opacity-10">health_and_safety</i>
@@ -257,7 +257,7 @@
                             </a>
                         </li>
 
-                        <li class="nav-item {{ $activeItem == 'UserAdmin' ? ' active ' : '' }}  ">
+                        <li class="nav-item {{ $activeItem == 'UserAdmin' ? ' active ' : '' }}  " style="padding-left: 1rem;">
                             <a class="nav-link text-white {{ $activeItem == 'UserAdmin' ? ' active' : '' }}  "
                                 href="{{ route('users') }}">
                                 <i class="material-icons-round opacity-10">people</i>
@@ -279,16 +279,16 @@
                     <i class="material-icons-round opacity-10">person_pin_circle</i>
                     <span class="nav-link-text ms-2 ps-1">Dive Sites Admin</span>
                 </a>
-                <div class="collapse {{ $activePage == 'siteAdmin' ? ' show ' : '' }}  " id="siteAdmin">
+                <div class="collapse {{ $activePage == 'siteAdmin' ? ' show ' : '' }}  " id="siteAdmin" >
                     <ul class="nav ">
-                        <li class="nav-item {{ $activeItem == 'siteAdminAdd' ? ' active ' : '' }}  ">
+                        <li class="nav-item {{ $activeItem == 'siteAdminAdd' ? ' active ' : '' }}  " style="padding-left: 1rem;">
                             <a class="nav-link text-white {{ $activeItem == 'siteAdminAdd' ? ' active' : '' }}  "
                                 href="{{ route('new-site') }}">
                                 <i class="material-icons-round opacity-10">add_location_alt</i>
                                 <span class="sidenav-normal  ms-2  ps-1"> Add Site </span>
                             </a>
                         </li>
-                        <li class="nav-item {{ $activeItem == 'siteAdminEdit' ? ' active ' : '' }}  ">
+                        <li class="nav-item {{ $activeItem == 'siteAdminEdit' ? ' active ' : '' }}  " style="padding-left: 1rem;">
                             <a class="nav-link text-white {{ $activeItem == 'siteAdminEdit' ? ' active' : '' }}  "
                                 href="{{ route('DiveSitesAdmin') }}">
                                 <i class="material-icons-round opacity-10">edit_location_alt</i>

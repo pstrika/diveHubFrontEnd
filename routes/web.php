@@ -101,6 +101,7 @@ Route::get('edit-site-pics/{id}', 'App\Http\Controllers\SiteController@showAdmin
 Route::get('SiteDetails/{id}', 'App\Http\Controllers\SiteController@show')->middleware('auth')->name('SiteDetails');
 Route::get('SiteDetails', 'App\Http\Controllers\SiteController@show')->middleware('auth')->name('SiteDetails');
 Route::post('RateSite', 'App\Http\Controllers\SiteRatingController@new')->middleware('auth')->name('RateSite');
+Route::post('UpdateVisited', 'App\Http\Controllers\SiteController@updateVisited')->middleware('auth')->name('UpdateVisited');
 
 Route::get('DiveSites', 'App\Http\Controllers\SiteController@showTopRated')->middleware('auth')->name('DiveSites');
 Route::get('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites')->middleware('auth')->name('DiveSitesSearch');
