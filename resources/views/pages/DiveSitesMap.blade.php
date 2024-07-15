@@ -102,8 +102,9 @@
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/pstrika/clwqz4fds03gv01qo9d4w3g21', // Choose a map style
-            center: [-80.07488399442913, 26.137643513173536], // Set the initial center coordinates
-            zoom: 10, // Set the initial zoom level
+            //center: [-80.07488399442913, 26.137643513173536], // Set the initial center coordinates
+            center: [ {{ $centerLon }}, {{ $centerLat }}],
+            zoom: 11, // Set the initial zoom level
             projection: 'albers'
         });
 

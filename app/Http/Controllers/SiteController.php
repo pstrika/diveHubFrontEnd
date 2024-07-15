@@ -12,6 +12,7 @@ use App\Models\VisitedSite;
 use App\Models\Site;
 use App\Models\Photo;
 use App\Models\SiteRating;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
@@ -319,7 +320,21 @@ class SiteController extends Controller
         Log::debug("# sites we got: " . count($sites));
         $locations = WeatherLocation::all();
 
-        return view('pages.DiveSitesMap', compact('sites', 'locations'));
+        //center map on first user fav. If user is guest, we do FLL
+        $defaultLoc = WeatherLocation::find(5);   //5 is the id for FLL
+        $centerLon = $defaultLoc->centerLon;
+        $centerLat = $defaultLoc->centerLat;
+        if( auth()->id() != 5) {
+            $user = User::findorFail(auth()->user()->id);
+            $first = current(explode(',', $user->favLocations));
+            if($first) {
+                $defaultLoc = WeatherLocation::find($first);   //5 is the id for FLL
+                $centerLon = $defaultLoc->centerLon;
+                $centerLat = $defaultLoc->centerLat;
+            }   
+        }
+        
+        return view('pages.DiveSitesMap', compact('sites', 'locations', 'centerLon', 'centerLat'));
     }
 
     public function showAllSearch() {
