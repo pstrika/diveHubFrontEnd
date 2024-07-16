@@ -8,6 +8,7 @@ use App\Models\Trip;
 use App\Models\Operator;
 use App\Models\WeatherLocation;
 use App\Models\WeatherDay;
+use App\Models\WishedSite;
 use App\Models\User;
 use App\Models\Site;
 use Carbon\Carbon;
@@ -163,6 +164,33 @@ class MyDashboardController extends Controller
         $weathers = Weatherday::where('date', $date)->whereIn('location', $weatherLocationsNames)->get();
 
 
-        return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers'));
+        // work the wishlist
+        $wished = WishedSite::where('userId', $user->id)->with('site')->get();
+        Log::debug("Got wished sites: " . count($wished));
+
+        
+        foreach($wished as $i => $wish) {
+            Log::debug("Site: " . $wish->site->name);
+            $wishedTrips = Trip::where('siteId', $wish->siteId)
+                ->where('siteIdStatus', 'confirmed')
+                ->whereDate('date', '>=', Carbon::today())
+                ->get()->sortBy('date');
+            Log::debug("Count of trips for this site: " . count($wishedTrips));
+            if(count($wishedTrips) > 0) {
+                $wished[$i]->operator = $wishedTrips[0]->operatorName;
+                $wished[$i]->date = $wishedTrips[0]->date;
+                $wished[$i]->time = $wishedTrips[0]->departureTime;
+                $wished[$i]->linkToBook = $wishedTrips[0]->linkToBook;
+                $wished[$i]->tripName = $wishedTrips[0]->tripName;
+                $wished[$i]->tripFreeSpots = $wishedTrips[0]->tripFreeSpots;
+                $wished[$i]->operatorId = $wishedTrips[0]->operatorId;
+                $wished[$i]->tripId = $wishedTrips[0]->id;
+
+                Log::debug("Trip on: " . $wished[$i]->date . " " . $wished[$i]->time . " " . $wished[$i]->operator);
+              
+            }
+        }
+
+        return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers', 'wished'));
     }
 }

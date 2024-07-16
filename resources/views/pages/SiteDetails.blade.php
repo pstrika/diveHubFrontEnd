@@ -158,13 +158,30 @@
                     <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
                         
                         {{-- Div for site name and type--}}
-                        <div style="float: left;">
+                        <div style="float: left;" class="mt-n4">
                             <table> <tbody>
-                                <td class="w-10"><img src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
-                                <td><h2 class="card-title text-info mx-3 mt-3">{{ $site->name }}</h2>
-                                    <p class="align-middle text-left text-md text-info mx-3 mt-n2">{{ $site->type }} </p>
-                                </td> 
+                                <tr>
+                                    <td class="w-10"><img src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
+                                    <td><h2 class="card-title text-info mx-3 mt-3">{{ $site->name }}</h2>
+                                        <p class="align-middle text-left text-md text-info mx-3 mt-n3">{{ $site->type }} </p>
+                                    </td> 
+                                </tr>
                             </tbody></table>
+                            @if(auth()->user()->isNotGuest())
+                            <table> <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="mt-1" style="float: right;" data-bs-toggle="tooltip" data-bs-placement="top" title="Add/Remove from wishlist">
+                                            
+                                            <button class="btn btn-icon btn-3 btn-info" type="button" onclick="window.location.href='{{ route('UpdateWished', ['siteId' => $site->id]) }}';">
+                                                <span class="btn-inner--icon"><i class="material-icons">{{ !$wished ? "favorite" : "favorite_border"}}</i></span>
+                                                <span class="btn-inner--text"> {{ !$wished ? "Add to wishlist" : "Remove from wishlist"}}</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody></table>
+                            @endif
                         </div>
                         {{-- Div for star ratings--}}
                         <div class="m-auto" style="float: right;">
@@ -212,7 +229,7 @@
                                             id="alreadyVisited" {{ $visited ? "checked" : ""}}>
 
                                         <label class="form-check-label text-body ms-3 mt-0"
-                                            for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="Click to update">Already visited this site?</label>
+                                            for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="Click to update">Already dove this site?</label>
                                     </form>
                                 </div>
                             @else

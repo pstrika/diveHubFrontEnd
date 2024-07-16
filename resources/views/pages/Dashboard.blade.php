@@ -80,9 +80,7 @@
                         </div>
                     </div>
                 </div>
-            
 
-            
                 <div class="col-md-8">             
                     <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
@@ -168,6 +166,79 @@
                                                             <td class="px-4 text-sm text-center"> </td>
                                                         @endif
                                                         
+                                                    </tr>
+                                                    
+                                                @endforeach          
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>    
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-12">
+                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h2 class="card-title text-white mx-4"><i class="material-icons justify-content-middle align-middle" style="font-size: 40px;">favorite</i>My wishlist</h2>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            
+                            @if(!count($wished))
+                                <p>You have no sites in your wishlist. You can go to Dive Sites and add them to your wishlist</p>
+                            @else
+                                <div class="table-responsive">
+                                    <div class="table-responsive">
+                                        <table id="tableTrips" style="display: block; max-height: 300px; overflow-y: scroll">
+                                            <thead class="text-info">
+                                            <th class="align-top">
+                                                    Type
+                                                </th>
+                                                <th class="px-4 align-top">
+                                                    Site
+                                                </th>
+                                                <th class="px-4 align-top">
+                                                    Level<a href="#" onclick="showModal();"><p class="text-xs text-info text-center mt-0 px-1">(?)</p></a>
+                                                </th>
+                                                <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
+                                                    Depth
+                                                </th>
+                                                <th class="align-top">
+                                                    Operator
+                                                </th>
+                                                <th class="px-4 align-top">
+                                                    Date
+                                                </th>
+                                                <th class="px-4 align-top">
+                                                    Time
+                                                </th>
+                                                    <th class="py-0 align-top">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
+                                                </th>
+                                                <th class="px-4 align-top">
+                                                    Trip Name
+                                                </th>
+                                                
+                                            </thead>
+                                            <tbody >
+                                                @foreach($wished as $wish)
+                                                    
+                                                    
+                                                    <tr style="border-bottom: 1px solid #D3D3D3;">
+                                                        <td class="w-5 text-center align-middle"><img src="{{ asset('assets') }}/img/icons/{{ $wish->site->type }}_icon.png" height="35"></td>
+                                                        <td class="px-4 text-sm text-left"> <a href="SiteDetails/{{$wish->site->id}}">{{ $wish->site->name}}</a></td>
+                                                        <td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $wish->site->level }}.png" height="25"></td>
+                                                        <td class="px-4 text-sm text-center">{{ $wish->site->maxDepth }}</td>
+                                                        {{--<td class="px-4 text-sm text-left"> <a href=" {{ route('OperatorDetails', ['id' => $wish->operatorId])}}">{{ $wish->operator}}</a></td>--}}
+                                                        <td class="px-4 text-sm text-left"> <a href="OperatorDetails/{{$wish->operatorId}}">{{ $wish->operator}}</a></td>
+                                                        <td class="px-4 text-sm text-left"> {{ $wish->date}}</td>
+                                                        <td class="px-4 text-sm text-left"> {{ $wish->time}}</td>
+                                                        <td class="px-4 text-sm text-left"> <a href="{{ $wish->linkToBook }}">{{ $wish->tripFreeSpots}}</a></td>
+                                                        <td class="px-4 text-sm text-left"> <a href="TripDetails/{{ $wish->tripId}}">{{ $wish->tripName}}</a></td>
+
                                                     </tr>
                                                     
                                                 @endforeach          

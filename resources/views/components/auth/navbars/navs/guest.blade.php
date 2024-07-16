@@ -3,7 +3,7 @@
 <div class="container {{ $p }}">
     <a class="navbar-brand font-weight-bolder ms-lg-0 ms-3 d-flex flex-column {{ $textColor }}" href="{{ route('dashboard') }}">
         DiveHub
-        <span>v2.2.6 (7/15/2024)</span>
+        <span>v2.2.7 (7/15/2024)</span>
     </a>
     <button class="navbar-toggler shadow-none ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navigation"
         aria-controls="navigation" aria-expanded="false" aria-label="Toggle navigation">
@@ -13,7 +13,7 @@
             <span class="navbar-toggler-bar bar3"></span>
         </span>
     </button>
-    <div class="collapse navbar-collapse w-100 pt-3 pb-2 py-lg-0" id="navigation">
+    {{--<div class="collapse navbar-collapse w-100 pt-3 pb-2 py-lg-0" id="navigation">
         <ul class="navbar-nav navbar-nav-hover mx-auto">
             @auth
             <li class="nav-item dropdown dropdown-hover mx-2">
@@ -789,5 +789,5 @@
             @endguest
         </ul>
        
-    </div>
+    </div>--}}
 </div>

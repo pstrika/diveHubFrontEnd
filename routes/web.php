@@ -102,6 +102,7 @@ Route::get('SiteDetails/{id}', 'App\Http\Controllers\SiteController@show')->midd
 Route::get('SiteDetails', 'App\Http\Controllers\SiteController@show')->middleware('auth')->name('SiteDetails');
 Route::post('RateSite', 'App\Http\Controllers\SiteRatingController@new')->middleware('auth')->name('RateSite');
 Route::post('UpdateVisited', 'App\Http\Controllers\SiteController@updateVisited')->middleware('auth')->name('UpdateVisited');
+Route::get('UpdateWished/{siteId}', 'App\Http\Controllers\SiteController@updateWished')->middleware('auth')->name('UpdateWished');
 
 Route::get('DiveSites', 'App\Http\Controllers\SiteController@showTopRated')->middleware('auth')->name('DiveSites');
 Route::get('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites')->middleware('auth')->name('DiveSitesSearch');

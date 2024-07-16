@@ -9,6 +9,7 @@ use App\Models\Trip;
 use App\Models\WeatherLocation;
 use App\Models\WeatherDay;
 use App\Models\VisitedSite;
+use App\Models\WishedSite;
 use App\Models\Site;
 use App\Models\Photo;
 use App\Models\SiteRating;
@@ -78,7 +79,11 @@ class SiteController extends Controller
         $visited = VisitedSite::where('userId', auth()->id())->where('siteId', $id)->exists();
         Log::debug("User already visite this site? " . str($visited));
 
-        return view('pages.SiteDetails', compact('site','photos', 'location', 'operators', 'ratedAlready', 'visited'));
+        // user has this site on wishlist?
+        $wished = WishedSite::where('userId', auth()->id())->where('siteId', $id)->exists();
+        Log::debug("User already has site on wishlist? " . str($wished));
+
+        return view('pages.SiteDetails', compact('site','photos', 'location', 'operators', 'ratedAlready', 'visited', 'wished'));
 
     }
 
@@ -91,6 +96,24 @@ class SiteController extends Controller
             VisitedSite::create([
                 'siteId' => $request->site,
                 'userId' => auth()->id(),
+                // Add other relevant fields as needed
+            ]);
+        }
+
+        return redirect()->back();
+
+    }
+    public function updateWished($siteId) {
+        Log::debug($siteId);
+
+        if(WishedSite::where('siteId', $siteId)->where('userId', auth()->id())->exists()) {
+            WishedSite::where('siteId', $siteId)->where('userId', auth()->id())->delete();
+        } else {
+            WishedSite::create([
+                'siteId' => $siteId,
+                'userId' => auth()->id(),
+                'notified_email' => 0,
+                'notified_sms' => 0,
                 // Add other relevant fields as needed
             ]);
         }
