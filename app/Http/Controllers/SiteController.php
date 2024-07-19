@@ -24,7 +24,13 @@ class SiteController extends Controller
 
     public function showBeach() {
         $sitesFLL = Site::where('access', 'Beach Access')->where('location', 'FLL')->get();
-        $sitesWPB = Site::where('access', 'Beach Access')->where('location', 'WPB')->get();
+        //$sitesWPB = Site::where('access', 'Beach Access')->where('location', 'WPB')->get();
+        $sitesWPB = Site::where(function ($query) {
+            $query->where('location', 'BOY')
+                  ->orWhere('location', 'WPB');
+        })
+        ->where('access', 'Beach Access')
+        ->get();
         $locations = WeatherLocation::all();
         $weathersFLL = Weatherday::whereIn('location', ['fort lauderdale'])->orderBy('date')->take(5)->get();
         $weathersWPB = Weatherday::whereIn('location', ['west palm beach'])->orderBy('date')->take(5)->get();
