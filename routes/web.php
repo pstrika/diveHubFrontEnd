@@ -28,8 +28,8 @@ Route::get('/', function () {
 
 
 /* Routes for diveHub */
-Route::get('Trips/{date}', 'App\Http\Controllers\TripsController@show')->middleware('auth')->name('Trips');
-Route::get('Trips/', 'App\Http\Controllers\TripsController@show')->middleware('auth')->name('Trips');
+Route::get('Trips/{date}', 'App\Http\Controllers\TripsController@show')->middleware('guest')->name('Trips');
+Route::get('Trips/', 'App\Http\Controllers\TripsController@show')->middleware('guest')->name('Trips');
 //Route::get('Trips/', 'App\Http\Controllers\TripsController@show')->middleware('guest')->name('Trips');
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -65,18 +65,19 @@ Route::get('CalendarLobster/', 'App\Http\Controllers\CalendarTController@showLob
 Route::get('MyCalendar/{date}', 'App\Http\Controllers\EventController@show')->middleware('auth')->name('MyCalendar');
 Route::get('MyCalendar/', 'App\Http\Controllers\EventController@show')->middleware('auth')->name('MyCalendar');
 
-Route::get('TripDetails/{tripId}', 'App\Http\Controllers\TripDetailsController@show')->middleware('auth')->name('TripDetails');
+Route::get('TripDetails/{tripId}', 'App\Http\Controllers\TripDetailsController@show')->middleware('guest')->name('TripDetails');
 Route::get('AddEventToCalendar/{tripId}', 'App\Http\Controllers\EventController@addEventToCalendar')->middleware('auth')->name('AddEventToCalendar');
 Route::get('SetEventBook/{tripId}', 'App\Http\Controllers\EventController@setEventBook')->middleware('auth')->name('SetEventBook');
 Route::get('RemoveFromCalendar/{tripId}', 'App\Http\Controllers\EventController@removeFromCalendar')->middleware('auth')->name('RemoveFromCalendar');
 
-Route::get('Operators/', 'App\Http\Controllers\OperatorController@show')->middleware('auth')->name('Operators');
-Route::get('Waivers', 'App\Http\Controllers\OperatorController@getWaivers')->middleware('auth')->name('Waivers');
+Route::get('Operators/', 'App\Http\Controllers\OperatorController@show')->middleware('guest')->name('Operators');
+Route::get('Waivers', 'App\Http\Controllers\OperatorController@getWaivers')->middleware('guest')->name('Waivers');
 Route::get('ToggleFav/{id}', 'App\Http\Controllers\OperatorController@toggleFav')->middleware('auth')->name('ToggleFav');
 
-Route::get('OperatorDetails/{id}', 'App\Http\Controllers\OperatorController@show')->middleware('auth')->name('OperatorDetails');
+Route::get('OperatorDetails/{id}', 'App\Http\Controllers\OperatorController@show')->middleware('guest')->name('OperatorDetails');
 
-Route::get('BeachDiving', 'App\Http\Controllers\SiteController@showBeach')->middleware('auth')->name('BeachDiving');
+
+Route::get('BeachDiving', 'App\Http\Controllers\SiteController@showBeach')->middleware('guest')->name('BeachDiving');
 
 
 
@@ -98,17 +99,17 @@ Route::post('update-site', 'App\Http\Controllers\SiteController@update')->middle
 Route::get('edit-site-pics/{id}', 'App\Http\Controllers\SiteController@showAdminPics')->middleware('auth')->name('edit-site-pics');
 
 
-Route::get('SiteDetails/{id}', 'App\Http\Controllers\SiteController@show')->middleware('auth')->name('SiteDetails');
-Route::get('SiteDetails', 'App\Http\Controllers\SiteController@show')->middleware('auth')->name('SiteDetails');
+Route::get('SiteDetails/{id}', 'App\Http\Controllers\SiteController@show')->middleware('guest')->name('SiteDetails');
+Route::get('SiteDetails', 'App\Http\Controllers\SiteController@show')->middleware('guest')->name('SiteDetails');
 Route::post('RateSite', 'App\Http\Controllers\SiteRatingController@new')->middleware('auth')->name('RateSite');
 Route::post('UpdateVisited', 'App\Http\Controllers\SiteController@updateVisited')->middleware('auth')->name('UpdateVisited');
 Route::get('UpdateWished/{siteId}', 'App\Http\Controllers\SiteController@updateWished')->middleware('auth')->name('UpdateWished');
 
-Route::get('DiveSites', 'App\Http\Controllers\SiteController@showTopRated')->middleware('auth')->name('DiveSites');
-Route::get('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites')->middleware('auth')->name('DiveSitesSearch');
-Route::post('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites')->middleware('auth')->name('DiveSitesSearch');
-Route::get('DiveSitesMap', 'App\Http\Controllers\SiteController@showAll')->middleware('auth')->name('DiveSitesMap');
-Route::get('DiveSitesAll', 'App\Http\Controllers\SiteController@showAllSearch')->middleware('auth')->name('DiveSitesAll');
+Route::get('DiveSites', 'App\Http\Controllers\SiteController@showTopRated')->middleware('guest')->name('DiveSites');
+Route::get('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites')->middleware('guest')->name('DiveSitesSearch');
+Route::post('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites')->middleware('guest')->name('DiveSitesSearch');
+Route::get('DiveSitesMap', 'App\Http\Controllers\SiteController@showAll')->middleware('guest')->name('DiveSitesMap');
+Route::get('DiveSitesAll', 'App\Http\Controllers\SiteController@showAllSearch')->middleware('guest')->name('DiveSitesAll');
 Route::get('DiveSitesAdmin', 'App\Http\Controllers\SiteController@showAllAdmin')->middleware('auth')->name('DiveSitesAdmin');
 
 
