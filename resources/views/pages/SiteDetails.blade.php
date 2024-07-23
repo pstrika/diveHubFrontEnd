@@ -330,7 +330,7 @@
                                                         <td class="align-middle text-left text-md w-50 text-wrap"><b>{{ $site->gpsLat}},<br>{{ $site->gpsLon}}</b></td> </tr>
 
                                                         <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">Location</td>
-                                                        <td class="align-middle text-left text-md w-50"><b>{{ $location->location }}</b></td> </tr>
+                                                        <td class="align-middle text-left text-md w-50"><b>{{ ucwords($location->location) }}</b></td> </tr>
                                                         
                                                     </table>
                                             </td></td>

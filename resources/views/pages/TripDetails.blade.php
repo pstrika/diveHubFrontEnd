@@ -236,7 +236,7 @@
                                                             <td style="border: none;" class="align-middle text-left text-sm text-wrap"><b>{{ $site->maxDepth}} ft</b></td> </tr>
 
                                                             <tr><td style="border: none;" class="w-50 text-secondary text-end text-lg font-weight-bolder opacity-7">Location</td>
-                                                            <td style="border: none;" class="align-middle text-left text-sm text-wrap"><b>{{ $site->locationLong->location}}</b></td> </tr>
+                                                            <td style="border: none;" class="align-middle text-left text-sm text-wrap"><b>{{ ucwords($site->locationLong->location) }}</b></td> </tr>
 
                                                             
 

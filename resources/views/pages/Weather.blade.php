@@ -66,7 +66,7 @@
             <div class="card p-0 position-relative mt-n7 mx-2 z-index-2 mb-4">
                 <div class="p-0 mt-n4 mx-2 ">
                     <div class="border-radius-lg py-3 pe-1" style="float: left;">
-                        <h2 class="card-title text-info mx-3 mt-4">{{ $location }}</h2>
+                        <h2 class="card-title text-info mx-3 mt-4">{{ ucwords($location) }}</h2>
                         <h4 class="card-category text-info mx-3">Weather Forecast</h4>
                     </div>
                     {{-----------------NAV to next day}} --}}
@@ -77,7 +77,7 @@
                                 <select class="btn bg-info dropdown-toggle w-100 text-white" type="button" id="filterLocation" data-bs-toggle="dropdown" aria-expanded="false">
                                 <option value="" selected disabled>Select...</option>
                                     @foreach($allLocations as $thisLocation)
-                                        <option value="{{ $thisLocation->location }}">{{ $thisLocation->location }}</option>
+                                        <option value="{{ $thisLocation->location }}">{{ ucwords($thisLocation->location) }}</option>
                                     @endforeach
                                 </select>   
                             </div>
@@ -167,7 +167,7 @@
                         <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                                 <div class="bg-gradient-info min-height-100 shadow-info border-radius-xl py-3 pe-1"> 
-                                    <img src="{{ asset('assets') }}/img/Florida.png" height="200px" alt="img-blur-shadow" class=" border-radius-lg min-heigth-10 mt-n3 position-relative">
+                                    <img src="{{ asset('assets') }}/img/Florida1.png" height="200px" alt="img-blur-shadow" class=" border-radius-lg min-heigth-10 mt-n3 position-relative">
                                     {{--<div class="page-header min-height-250 max-height-250 border-radius-xl mt-0 mx-0" --}}
                                     <a href="/Weather/key west/" class="position-absolute text-sm material-icons text-black {{ ($location == "key west" ? "animate-icon" : "") }}" style="top:160px; left:100px;">circle</a>
                                     <a href="/Weather/isla morada/"class="position-absolute text-sm material-icons text-black {{ ($location == "isla morada" ? "animate-icon" : "") }}" style="top:152px; left:135px;">circle</a>
@@ -178,6 +178,8 @@
                                     <a href="/Weather/boynton beach/"class="position-absolute text-sm material-icons text-black {{ ($location == "boynton beach" ? "animate-icon" : "") }}" style="top:42px; left:179px;">circle</a>
                                     <a href="/Weather/west palm beach/"class="position-absolute text-sm material-icons text-black {{ ($location == "west palm beach" ? "animate-icon" : "") }}" style="top:28px; left:182px;">circle</a>
                                     <a href="/Weather/jupiter/"class="position-absolute text-sm material-icons text-black {{ ($location == "jupiter" ? "animate-icon" : "") }}" style="top:10px; left:179px;">circle</a>
+                                    <a href="/Weather/stuart/"class="position-absolute text-sm material-icons text-black {{ ($location == "stuart" ? "animate-icon" : "") }}" style="top:-5px; left:175px;">circle</a>
+                                    <a href="/Weather/port st lucie/"class="position-absolute text-sm material-icons text-black {{ ($location == "port st lucie" ? "animate-icon" : "") }}" style="top:-20px; left:168px;">circle</a>
                                         
                                     
                                 </div>

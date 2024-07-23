@@ -173,7 +173,7 @@
                                         <tr> <td>LOCATION</td>
                                             @foreach($weathers as $weather)
                                                 
-                                                <td class="align-middle text-center text-sm">{{ $weather->location }}</td>
+                                                <td class="align-middle text-center text-sm">{{ ucwords($weather->location) }}</td>
                                                 
                                             @endforeach
                                         </tr>
@@ -214,12 +214,12 @@
                                             <div class="dropdown">
                                                 <select class="btn bg-info dropdown-toggle w-100 text-white" type="button" id="filterLocAM" data-bs-toggle="dropdown" aria-expanded="false">
                                                     <option value="all">Show All</option>
-                                                    <option value="MIA">miami beach</option>
-                                                    <option value="FLL">fort lauderdale</option>
-                                                    <option value="POM">pompano beach</option>
-                                                    <option value="DEB">deerfield beach</option>
-                                                    <option value="WPB">west palm beach</option>
-                                                    <option value="KLA">key largo</option>
+                                                    <option value="MIA">Miami Beach</option>
+                                                    <option value="FLL">Fort Lauderdale</option>
+                                                    <option value="POM">Pompano Beach</option>
+                                                    <option value="DEB">Deerfield Beach</option>
+                                                    <option value="WPB">West Palm Beach</option>
+                                                    <option value="KLA">Key Largo</option>
                                                 </select>
                                                 <p class="text-xs font-weight-bold mb-0 mt-n3">location</p>
                                             </div>
@@ -381,7 +381,7 @@
                                         <tr> <td>LOCATION</td>
                                             @foreach($weathers as $weather)
                                                 
-                                                <td class="align-middle text-center text-sm">{{ $weather->location }}</td>
+                                                <td class="align-middle text-center text-sm">{{ ucwords($weather->location) }}</td>
                                                 
                                             @endforeach
                                         </tr>
@@ -422,12 +422,12 @@
                                             <div class="dropdown">
                                                 <select class="btn bg-info dropdown-toggle w-100 text-white" type="button" id="filterLocPM" data-bs-toggle="dropdown" aria-expanded="false">
                                                     <option value="all">Show All</option>
-                                                    <option value="MIA">miami beach</option>
-                                                    <option value="FLL">fort lauderdale</option>
-                                                    <option value="POM">pompano beach</option>
-                                                    <option value="DEB">deerfield beach</option>
-                                                    <option value="WPB">west palm beach</option>
-                                                    <option value="KLA">key largo</option>
+                                                    <option value="MIA">Miami Beach</option>
+                                                    <option value="FLL">Fort Lauderdale</option>
+                                                    <option value="POM">Pompano Beach</option>
+                                                    <option value="DEB">Deerfield Beach</option>
+                                                    <option value="WPB">West Palm Beach</option>
+                                                    <option value="KLA">Key Largo</option>
                                                 </select>
                                                 <p class="text-xs font-weight-bold mb-0 mt-n3">location</p>
                                             </div>

@@ -234,7 +234,7 @@
                                             <tr>
                                                 <td class="w-5 text-center align-middle"><small hidden>{{ $result->type}}</small><img src="{{ asset('assets') }}/img/icons/{{ $result->type }}_icon.png" height="35"></td>
                                                 <td><a href="/SiteDetails/{{ $result->id }}">{{ $result->name }}</a></td>
-                                                <td>{{ $result->locationLong->location }}</td>
+                                                <td>{{ ucwords($result->locationLong->location) }}</td>
                                                 <td class="w-5 text-center align-middle"><small hidden>{{ $result->level}}</small><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $result->level }}.png" height="25"></td>
                                                 <td>{{ $result->maxDepth }}</td>
                                                 <td>{{ $result->gpsLat }}</td>

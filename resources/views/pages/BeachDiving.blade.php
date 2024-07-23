@@ -202,7 +202,7 @@
                                 
                                 foreach($locations as $location)
                                     if($location->short == $siteLocation[0]->location) {
-                                        echo '<h3 class="card-title text-white mx-4">' . $location->location . '</h3>';
+                                        echo '<h3 class="card-title text-white mx-4">' . ucwords($location->location) . '</h3>';
                                         array_push($displayedLocations, $location);
 
                                     }
