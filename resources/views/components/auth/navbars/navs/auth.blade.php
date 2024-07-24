@@ -63,8 +63,9 @@
                     </div>
                 </form>
             </div>
-            @if(auth()->user()->isNotGuest())
+            
             <ul class="navbar-nav  align-items-center">
+                @if(auth()->user()->isNotGuest())
                 <li class="nav-item">
                     <a href="{{ route('overview') }}" class="nav-link text-body p-0 position-relative">
                         
@@ -73,6 +74,7 @@
                         </i>
                     </a>
                 </li>
+                @endif
                 <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
                     <a href="javascript:;" class="nav-link text-body p-0" id="iconNavbarSidenav">
                         <div class="sidenav-toggler-inner">
@@ -143,7 +145,6 @@
                     </ul>
                 </li>--}}
             </ul>
-            @endif
         </div>
     </div>
 </nav>
