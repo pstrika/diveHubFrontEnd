@@ -1,14 +1,42 @@
 @props(['activePage', 'activeItem', 'activeSubitem'])
 
 <aside
+
+    
     class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3   bg-gradient-dark"
     id="sidenav-main">
+
+    {{--modal code--}}
+    <div class="modal fade" id="modal_logged_as_guest" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
+            <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+                <div class="modal-content">
+                    <div class="modal-header text-center">
+                        <h6 class="modal-title font-weight-normal" id="modal-title-notification">Logged as a guest</h6>
+                        
+                    </div>
+                    <div class="modal-body">
+                        <div class="py-3 text-center">
+                        <i class="material-icons h1 text-primary">
+                            lock
+                        </i>
+                        <h4 class="text-gradient text-info text-md mt-4">Create an account to access all features. It's free - no credit cards, no payment methods EVER required.</h4>
+                        <a class="nav-link text-white " href="{{ route('logout') }} "
+                                onclick="event.preventDefault();document.getElementById('logout-form').submit();">
+                                <span class="badge badge-lg badge-info"> Create an account</span>
+                            </a>
+                        <p>Press anywhere outside this dialog to continue</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     <div class="sidenav-header">
         <i class="fas fa-times p-3 cursor-pointer text-white opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('overview') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 2.3.2 (7/27/24)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 2.3.4 (7/28/24)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -73,6 +101,14 @@
                     <span class="nav-link-text ms-2 ps-1">My Dashboard</span>
                 </a>
             </li>
+            @else
+            <li class="nav-item {{ $activePage == 'Dashboard' ? ' active ' : '' }}">
+                <a class="nav-link text-white {{ $activeItem == 'Dashboard' ? ' active' : '' }}  "
+                    href="#" onclick="showModalGuest();">
+                    <i class="material-icons-round opacity-10 text-primary">lock</i>
+                    <span class="nav-link-text ms-2 ps-1 text-primary">My Dashboard</span>
+                </a>
+            </li>
             @endif
 
             {{-- Trips today --}}
@@ -91,6 +127,14 @@
                     href="{{ route('Weather') }}">
                     <i class="material-icons-round opacity-10">cloud</i>
                     <span class="nav-link-text ms-2 ps-1">Weather</span>
+                </a>
+            </li>
+            @else
+            <li class="nav-item">
+                <a class="nav-link text-white {{ $activeItem == 'weather' ? ' active' : '' }}  "
+                href="#" onclick="showModalGuest();">
+                    <i class="material-icons-round opacity-10 text-primary">lock</i>
+                    <span class="nav-link-text ms-2 ps-1 text-primary">Weather</span>
                 </a>
             </li>
             @endif
@@ -144,6 +188,59 @@
                                 <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_lobster.png"></span>
                                 
                                 <span class="sidenav-normal  ms-2  ps-1">Lobster Diving</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            @else
+            <li class="nav-item">
+                <a data-bs-toggle="collapse" href="#calendars"
+                    class="nav-link text-white {{ $activePage == 'Calendars' ? ' active ' : '' }} "
+                    aria-controls="dashboardsExamples" role="button" aria-expanded="false">
+                    <i class="material-icons-round opacity-10 text-primary">lock</i>
+                    <span class="nav-link-text ms-2 ps-1 text-primary">Calendars</span>
+                </a>
+                <div class="collapse {{ $activePage == 'Calendars' ? ' show ' : '' }}  " id="calendars">
+                    <ul class="nav ">
+                        {{--<li class="nav-item {{ $activeItem == 'CalendarRec' ? ' active ' : '' }}  ">
+                            <a class="nav-link text-white {{ $activeItem == 'CalendarRec' ? ' active' : '' }}  "
+                                href="{{ route('CalendarT') }}/rec">
+                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_rec.png"></span>
+                                <span class="sidenav-normal  ms-2  ps-1"> Recreational </span>
+                            </a>
+                        </li>--}}
+                        <li class="nav-item {{ $activeItem == 'MyCalendar' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                            <a class="nav-link text-white {{ $activeItem == 'MyCalendar' ? ' active' : '' }}  "
+                                href="#" onclick="showModalGuest();">
+                                <i class="material-icons-round opacity-10 text-primary">lock</i>
+                                <span class="sidenav-normal  ms-2  ps-1 text-primary"> My Calendar </span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item {{ $activeItem == 'CalendarTec' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                            <a class="nav-link text-white {{ $activeItem == 'CalendarTec' ? ' active' : '' }}  "
+                                href="#" onclick="showModalGuest();">
+                                <i class="material-icons-round opacity-10 text-primary">lock</i>
+                                <span class="sidenav-normal  ms-2  ps-1 text-primary"> Technical </span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item {{ $activeItem == 'sharkDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                            <a class="nav-link text-white {{ $activeItem == 'sharkDiving' ? ' active' : '' }}  "
+                                href="#" onclick="showModalGuest();">
+                                <i class="material-icons-round opacity-10 text-primary">lock</i>
+                                
+                                <span class="sidenav-normal  ms-2  ps-1 text-primary">Shark Diving</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item {{ $activeItem == 'lobsterDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                            <a class="nav-link text-white {{ $activeItem == 'lobsterDiving' ? ' active' : '' }}  "
+                                href="#" onclick="showModalGuest();">
+                                <i class="material-icons-round opacity-10 text-primary">lock</i>
+                                
+                                <span class="sidenav-normal  ms-2  ps-1 text-primary">Lobster Diving</span>
                             </a>
                         </li>
                     </ul>
@@ -1214,4 +1311,11 @@
         </ul>
     </div>
     
+    @push('js')
+    <script>
+        function showModalGuest() {
+            $('#modal_logged_as_guest').modal('show'); // Show the modal
+        };
+    </script>
+    @endpush
 </aside>
