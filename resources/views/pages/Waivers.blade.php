@@ -8,7 +8,30 @@
         <!-- End Navbar -->
         <div class="container-fluid py-0">
 
-        
+            {{--modal guest--}}
+            <div class="modal fade" id="modal_logged_as_guest" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
+                <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header text-center">
+                            <h6 class="modal-title font-weight-normal" id="modal-title-notification">Logged as a guest</h6>
+                            
+                        </div>
+                        <div class="modal-body">
+                            <div class="py-3 text-center">
+                            <i class="material-icons h1 text-primary">
+                                lock
+                            </i>
+                            <h4 class="text-gradient text-info text-md mt-4">Create an account to access all features. It's free - no credit cards, no payment methods EVER required.</h4>
+                            <a class="nav-link text-white " href="{{ route('logout') }} "
+                                    onclick="event.preventDefault();document.getElementById('logout-form').submit();">
+                                    <span class="badge badge-lg badge-info"> Create an account</span>
+                                </a>
+                            <p>Press anywhere outside this dialog to continue</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
 
 
@@ -57,127 +80,7 @@
     
     @push('js')
     
-    <script src="{{ asset('assets') }}/js/plugins/flatpickr.min.js"></script>
-
-    <script>
-      
-
-    flatpickr("#datePicker", {
-        altInput: true,
-        altFormat: "F j, Y",
-        dateFormat: "Y-m-d",
-        minDate: "today",
-        
-        maxDate: new Date().fp_incr(90),
-        onChange: function(selectedDates, dateStr, instance) {
-            window.location.href = `/Trips/${dateStr}`;
-        }
-    });
-
+    <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     
-
-
-
-    </script>
-    {{--Handler for tripAM table: filter by location--}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('filterLocAM').addEventListener('change', function() {
-                var selectedOption = this.value;
-                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
-                
-                rows.forEach(function(row) {
-                var tags = row.getAttribute('data-tag');
-                if (tags.includes(selectedOption) || selectedOption === 'all') {
-                    row.style.display = ''; // Show the row
-                } else {
-                    row.style.display = 'none'; // Hide the row
-                }
-                });
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('filterAvAM').addEventListener('change', function() {
-                var selectedOption = this.value;
-                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
-                
-                rows.forEach(function(row) {
-                var tags = row.getAttribute('data-tag');
-                if (tags.includes(selectedOption) || selectedOption === 'all') {
-                    row.style.display = ''; // Show the row
-                } else {
-                    row.style.display = 'none'; // Hide the row
-                }
-                });
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('filterTypeAM').addEventListener('change', function() {
-                var selectedOption = this.value;
-                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
-                
-                rows.forEach(function(row) {
-                var tags = row.getAttribute('data-tag');
-                if (tags.includes(selectedOption) || selectedOption === 'all') {
-                    row.style.display = ''; // Show the row
-                } else {
-                    row.style.display = 'none'; // Hide the row
-                }
-                });
-            });
-        });
-
-    {{--Handler for tripAM table: filter by location--}}
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('filterLocPM').addEventListener('change', function() {
-            var selectedOption = this.value;
-            var rows = document.querySelectorAll('#tableTripsPM tr[data-tag]');
-            
-            rows.forEach(function(row) {
-            var tags = row.getAttribute('data-tag');
-            if (tags.includes(selectedOption) || selectedOption === 'all') {
-                row.style.display = ''; // Show the row
-            } else {
-                row.style.display = 'none'; // Hide the row
-            }
-            });
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('filterAvPM').addEventListener('change', function() {
-            var selectedOption = this.value;
-            var rows = document.querySelectorAll('#tableTripsPM tr[data-tag]');
-            
-            rows.forEach(function(row) {
-            var tags = row.getAttribute('data-tag');
-            if (tags.includes(selectedOption) || selectedOption === 'all') {
-                row.style.display = ''; // Show the row
-            } else {
-                row.style.display = 'none'; // Hide the row
-            }
-            });
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('filterTypePM').addEventListener('change', function() {
-            var selectedOption = this.value;
-            var rows = document.querySelectorAll('#tableTripsPM tr[data-tag]');
-            
-            rows.forEach(function(row) {
-            var tags = row.getAttribute('data-tag');
-            if (tags.includes(selectedOption) || selectedOption === 'all') {
-                row.style.display = ''; // Show the row
-            } else {
-                row.style.display = 'none'; // Hide the row
-            }
-            });
-        });
-    });
-    </script>
     @endpush
 </x-page-template>

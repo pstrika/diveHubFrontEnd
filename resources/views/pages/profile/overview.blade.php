@@ -58,7 +58,77 @@
    
             </style>
 
+
             <meta name="csrf-token" content="{{ csrf_token() }}">
+
+            {{--modal change pwd--}}
+            <div class="modal fade" id="modal-change-pwd" data-backdrop="static" data-keyboard="false" tabindex="-1" >
+                <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header text-center">
+                            <h6 class="modal-title font-weight-normal" id="modal-title-notification">Change password</h6>
+                            {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                        
+                            <div class="card mt-4" id="password">
+                                <div class="card-header">
+                                    {{--<h5>Change Password</h5>--}}
+                                    @if (session('error'))
+                                    <div class="row">
+                                        <div class="alert alert-danger alert-dismissible text-white" role="alert">
+                                            <span class="text-sm">{{ Session::get('error') }}</span>
+                                            <button type="button" class="btn-close text-lg py-3 opacity-10"
+                                                data-bs-dismiss="alert" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    @elseif (session('success'))
+                                    <div class="row">
+                                        <div class="alert alert-success alert-dismissible text-white" role="alert">
+                                            <span class="text-sm">{{ Session::get('success') }}</span>
+                                            <button type="button" class="btn-close text-lg py-3 opacity-10"
+                                                data-bs-dismiss="alert" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    @endif
+                                </div>
+                                <div class="card-body pt-0">
+                                    <form method="POST" action="{{ route('password.change') }}">
+                                        @csrf
+
+                                        <div class="input-group input-group-dynamic">
+                                            <label class="form-label">Current password</label>
+                                            <input type="password" name='old_password' class="form-control">
+                                        </div>
+
+                                        @error('old_password')
+                                        <p class='text-danger inputerror'>{{ $message }} </p>
+                                        @enderror
+
+                                        <div class="input-group input-group-dynamic mt-4">
+                                            <label class="form-label">New password</label>
+                                            <input type="password" name='password' class="form-control">
+                                        </div>
+                                        @error('password')
+                                        <p class='text-danger inputerror'>{{ $message }} </p>
+                                        @enderror
+                                        <div class="input-group input-group-dynamic mt-4">
+                                            <label class="form-label">Confirm New password</label>
+                                            <input type="password" name='password_confirmation' class="form-control">
+                                        </div>
+                                        <button class="btn bg-gradient-info btn-sm mt-6 mb-0">Update password</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {{--modal add pics--}}
             <div class="modal fade" id="modal-add-pic" data-backdrop="static" data-keyboard="false" tabindex="-1" >
@@ -178,6 +248,12 @@
                                             <label id="labelPhone" for="exampleFormControlInput1" class="form-label"></label>
                                             <input disabled id="phone" class="multisteps-form__input form-control" type="text" name="phone" value="{{ $user->phone }}" placeholder="+1.(954)-123-4567"/>
                                         </div>
+
+                                        <a href="#" onclick="showModalChangePassword();">
+                                            <span class="badge badge-lg badge-info mt-2">Change password</span>
+                                        </a>
+
+                                        
 
                                     </div>
                                 </div>
@@ -309,10 +385,10 @@
                                         
                                         <div class="row">
                                             <div class="col-md-8 d-flex align-items-center">
-                                                <h6 class="text-uppercase text-body text-start mt-4 text-xs font-weight-bolder">SHOW Dives</h6>
+                                                <h6 class="text-uppercase text-body text-start mt-4 text-xs font-weight-bolder">Show Dives</h6>
                                                 
                                             </div>
-                                            <p class="text-wrap text-xs text-body">Diver's Hub will use your "Favorite Operators" to prioritie what trips to show. You can choose to use "Favorite Locations" as your main filter criteria.</p>
+                                            <p class="text-wrap text-xs text-body">Diver's Hub will use your "Favorite Operators" to prioritize what trips to show. You can choose to use "Favorite Locations" as your main filter criteria.</p>
                                         </div>
                                         
                                     </div>
@@ -386,6 +462,7 @@
     <script src="{{ asset('assets') }}/js/plugins/nouislider.js"></script>
     <link href="{{ asset('assets') }}/css/nouislider.css" rel="stylesheet">
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
+    <script src="{{ asset('assets') }}/js/core/bootstrap.min.js" type="text/javascript"></script>
     <script src="{{ asset('assets') }}/js/plugins/choices.min.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/dropzone.min.js"></script>
 
@@ -727,5 +804,22 @@
             divButton.style.display = 'block';
         });
     </script>
+
+    <script>
+        function showModalChangePassword() {
+            $('#modal-change-pwd').modal('show'); // Show the modal
+        };
+    </script>
+
+
+    {{---Show modal----}}
+    @if(session('error') || session('success'))
+    <script>
+        $(document).ready(function() {
+            $('#modal-change-pwd').modal('show'); // Show the modal
+        });
+    </script>
+    @endif
+
     @endpush
 </x-page-template>

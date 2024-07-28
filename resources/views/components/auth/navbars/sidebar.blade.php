@@ -6,37 +6,14 @@
     class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3   bg-gradient-dark"
     id="sidenav-main">
 
-    {{--modal code--}}
-    <div class="modal fade" id="modal_logged_as_guest" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
-            <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
-                <div class="modal-content">
-                    <div class="modal-header text-center">
-                        <h6 class="modal-title font-weight-normal" id="modal-title-notification">Logged as a guest</h6>
-                        
-                    </div>
-                    <div class="modal-body">
-                        <div class="py-3 text-center">
-                        <i class="material-icons h1 text-primary">
-                            lock
-                        </i>
-                        <h4 class="text-gradient text-info text-md mt-4">Create an account to access all features. It's free - no credit cards, no payment methods EVER required.</h4>
-                        <a class="nav-link text-white " href="{{ route('logout') }} "
-                                onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-                                <span class="badge badge-lg badge-info"> Create an account</span>
-                            </a>
-                        <p>Press anywhere outside this dialog to continue</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    
 
     <div class="sidenav-header">
         <i class="fas fa-times p-3 cursor-pointer text-white opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('overview') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 2.3.4 (7/28/24)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 2.3.5 (7/28/24)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">

@@ -104,14 +104,14 @@
                 </div>
             </div>
 
-            {{--modal delete--}}
+            {{--modal upload--}}
             <div class="modal fade" id="modal-upload" tabindex="-1"  data-backdrop="static" style="pointer-events: none;" data-keyboard="false"> {{----role="dialog" aria-labelledby="modal-notification" aria-hidden="true"---}}
                 <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
                     <div class="modal-content">
                         <div class="modal-header text-center">
                             <h6 class="modal-title font-weight-normal" id="modal-title-notification">Notification</h6>
                             {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
-                            <span aria-hidden="true">×</span>
+                            
                             </button>
                         </div>
                         <div class="modal-body">

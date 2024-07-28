@@ -94,31 +94,45 @@ class UserController extends Controller
 
     public function passwordUpdate() {
 
-        request()->validate([ 
+        /*request()->validate([ 
             'old_password' => 'required',
             'password' => 'required|min:7|confirmed',
-        ]);
+        ]);*/
 
-        if (env('IS_DEMO') && in_array(auth()->user()->id, [1, 2, 3])){
+        Log::debug("Updating password");
+
+        if(strlen(request()->old_password) == 0)
+            return back()->with(['error' =>"Please type current password"]);
+
+        if(strlen(request()->password) < 7)
+            return back()->with(['error' =>"New password needs to be at least 7 characters"]);
+
+        if(request()->password !=request()->password_confirmation)
+            return back()->with(['error' =>"New password doesn't match confirmation"]);
+        /*if (env('IS_DEMO') && in_array(auth()->user()->id, [1, 2, 3])){
 
             return back()->with('demo', "You are in a demo version, you can't change the default user password." );
-        }
+        }*/
         
         $hashedPassword = auth()->user()->password;
 
         if (Hash::check(request()->old_password , $hashedPassword)) {
+            Log::debug("Old password match!");
             if (!Hash::check(request()->password , $hashedPassword))
             {
                 $users = User::findorFail(auth()->user()->id);
                 $users->password = request()->password;
                 $users->save();
+                Log::debug("Password successfully updated.");
                 return back()->with(['success'=>'Password successfully updated.']);
             }
             else{
+                Log::debug("New password can not be the old password!");
                 return back()->with(['error' =>"New password can not be the old password!"]);
             } 
         }
         else{
+            Log::debug("Old password doesn't match");
             return back()->with(['error' =>"Old password doesn't match"]);
         }
     }

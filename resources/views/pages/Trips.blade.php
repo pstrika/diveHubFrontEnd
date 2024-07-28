@@ -16,6 +16,31 @@
         <x-auth.navbars.navs.auth pageTitle="Dive Trips"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
         <div class="container-fluid py-0">
+        
+        {{--modal guest--}}
+        <div class="modal fade" id="modal_logged_as_guest" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
+            <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+                <div class="modal-content">
+                    <div class="modal-header text-center">
+                        <h6 class="modal-title font-weight-normal" id="modal-title-notification">Logged as a guest</h6>
+                        
+                    </div>
+                    <div class="modal-body">
+                        <div class="py-3 text-center">
+                        <i class="material-icons h1 text-primary">
+                            lock
+                        </i>
+                        <h4 class="text-gradient text-info text-md mt-4">Create an account to access all features. It's free - no credit cards, no payment methods EVER required.</h4>
+                        <a class="nav-link text-white " href="{{ route('logout') }} "
+                                onclick="event.preventDefault();document.getElementById('logout-form').submit();">
+                                <span class="badge badge-lg badge-info"> Create an account</span>
+                            </a>
+                        <p>Press anywhere outside this dialog to continue</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         {{--modal code--}}
         <div class="modal fade" id="modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
