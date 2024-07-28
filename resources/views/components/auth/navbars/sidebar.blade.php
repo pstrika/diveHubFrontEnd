@@ -8,7 +8,7 @@
 
     <style>
         .modal {
-        z-index: 10050; /* Adjust this value to be higher than the sidebar's z-index */
+            z-index: 10050; /* Adjust this value to be higher than the sidebar's z-index THIS IS TO SHOW MODAL ON TOP OF SIDEBAR*/
         }
     </style>
 
