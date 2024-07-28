@@ -6,14 +6,18 @@
     class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3   bg-gradient-dark"
     id="sidenav-main">
 
-    
+    <style>
+        .modal {
+        z-index: 10050; /* Adjust this value to be higher than the sidebar's z-index */
+        }
+    </style>
 
     <div class="sidenav-header">
         <i class="fas fa-times p-3 cursor-pointer text-white opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('overview') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 2.3.5 (7/28/24)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 2.3.6 (7/28/24)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">

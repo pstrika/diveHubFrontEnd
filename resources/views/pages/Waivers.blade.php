@@ -8,6 +8,11 @@
         <!-- End Navbar -->
         <div class="container-fluid py-0">
 
+            <style>
+                .modal {
+                z-index: 10050; /* Adjust this value to be higher than the sidebar's z-index */
+                }
+            </style>
             {{--modal guest--}}
             <div class="modal fade" id="modal_logged_as_guest" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
                 <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
