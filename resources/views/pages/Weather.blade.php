@@ -459,33 +459,43 @@
                                                 Log::debug('paso por aca');
                                                 foreach($weathers as $weather) {     
 
-                                                    Log::debug('paso por aca');
+                                                    Log::debug('paso por aca High Tides');
                                                     $jsonString = $weather->tides;
-                                                    
-                                                    $tides = json_decode($jsonString, true);
-
-                                                    // Initialize arrays to hold the high and low tides for AM and PM
-                                                    $highTides = ['AM' => [], 'PM' => []];
-                                                    $lowTides = ['AM' => [], 'PM' => []];
-                                                    // Init vars in case there's no tide
-                                                    $highTides['AM'] = "none";
-                                                    $highTides['PM'] = "none";
-                                                    $lowTides['AM'] = "none";
-                                                    $lowTides['PM'] = "none";
-
-                                                    // Iterate through the array of tides
-                                                    foreach ($tides as $tide) {
-                                                        Log::debug($tide);
-                                                        // Extract the time and AM/PM part
-                                                        $time = strtotime($tide['tide_time']);
-                                                        $suffix = date('A', $time);
-
+                                                    Log::debug('jsonString: ' . $jsonString . 'strLen is ' . str(strlen($jsonString)));
+                                                    if (strlen($jsonString) < 5)  {
+                                                        Log::debug("json string is empty");
+                                                        $highTides['AM'] = "NA";
+                                                        $highTides['PM'] = "NA";
+                                                        $lowTides['AM'] = "NA";
+                                                        $lowTides['PM'] = "NA";
                                                         
-                                                        // Sort into high and low tides for AM and PM
-                                                        if ($tide['tide_type'] == 'HIGH') {
-                                                            $highTides[$suffix] = substr($tide['tide_time'], -5);
-                                                        } elseif ($tide['tide_type'] == 'LOW') {
-                                                            $lowTides[$suffix] = substr($tide['tide_time'], -5);
+                                                    } else {
+                                                    
+                                                        $tides = json_decode($jsonString, true);
+
+                                                        // Initialize arrays to hold the high and low tides for AM and PM
+                                                        $highTides = ['AM' => [], 'PM' => []];
+                                                        $lowTides = ['AM' => [], 'PM' => []];
+                                                        // Init vars in case there's no tide
+                                                        $highTides['AM'] = "none";
+                                                        $highTides['PM'] = "none";
+                                                        $lowTides['AM'] = "none";
+                                                        $lowTides['PM'] = "none";
+
+                                                        // Iterate through the array of tides
+                                                        foreach ($tides as $tide) {
+                                                            Log::debug($tide);
+                                                            // Extract the time and AM/PM part
+                                                            $time = strtotime($tide['tide_time']);
+                                                            $suffix = date('A', $time);
+
+                                                            
+                                                            // Sort into high and low tides for AM and PM
+                                                            if ($tide['tide_type'] == 'HIGH') {
+                                                                $highTides[$suffix] = substr($tide['tide_time'], -5);
+                                                            } elseif ($tide['tide_type'] == 'LOW') {
+                                                                $lowTides[$suffix] = substr($tide['tide_time'], -5);
+                                                            }
                                                         }
                                                     }
                                                     echo '<td><div class="container"><div class="row"><div class="col-xxs text-center"><span>' . $highTides['AM'] . '</span></div><div class="col-sm text-center"><span>' . $highTides['PM'] . '</span></div></div></div></td>';
@@ -497,30 +507,41 @@
                                             <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">low tide</td>
                                             @php
                                                 foreach($weathers as $weather) {     
+                                                    Log::debug('paso por aca Low Tides');
                                                     $jsonString = $weather->tides;
-                                                    
-                                                    $tides = json_decode($jsonString, true);
-
-                                                    // Initialize arrays to hold the high and low tides for AM and PM
-                                                    $highTides = ['AM' => [], 'PM' => []];
-                                                    $lowTides = ['AM' => [], 'PM' => []];
-                                                    // Init vars in case there's no tide
-                                                    $highTides['AM'] = "none";
-                                                    $highTides['PM'] = "none";
-                                                    $lowTides['AM'] = "none";
-                                                    $lowTides['PM'] = "none";
-
-                                                    // Iterate through the array of tides
-                                                    foreach ($tides as $tide) {
-                                                        // Extract the time and AM/PM part
-                                                        $time = strtotime($tide['tide_time']);
-                                                        $suffix = date('A', $time);
+                                                    Log::debug('jsonString: ' . $jsonString . 'strLen is ' . str(strlen($jsonString)));
+                                                    if (strlen($jsonString) < 5)  {
+                                                        Log::debug("json string is empty");
+                                                        $highTides['AM'] = "NA";
+                                                        $highTides['PM'] = "NA";
+                                                        $lowTides['AM'] = "NA";
+                                                        $lowTides['PM'] = "NA";
                                                         
-                                                        // Sort into high and low tides for AM and PM
-                                                        if ($tide['tide_type'] == 'HIGH') {
-                                                            $highTides[$suffix] = substr($tide['tide_time'], -5);
-                                                        } elseif ($tide['tide_type'] == 'LOW') {
-                                                            $lowTides[$suffix] = substr($tide['tide_time'], -5);
+                                                    } else {
+                                                    
+                                                        $tides = json_decode($jsonString, true);
+
+                                                        // Initialize arrays to hold the high and low tides for AM and PM
+                                                        $highTides = ['AM' => [], 'PM' => []];
+                                                        $lowTides = ['AM' => [], 'PM' => []];
+                                                        // Init vars in case there's no tide
+                                                        $highTides['AM'] = "none";
+                                                        $highTides['PM'] = "none";
+                                                        $lowTides['AM'] = "none";
+                                                        $lowTides['PM'] = "none";
+
+                                                        // Iterate through the array of tides
+                                                        foreach ($tides as $tide) {
+                                                            // Extract the time and AM/PM part
+                                                            $time = strtotime($tide['tide_time']);
+                                                            $suffix = date('A', $time);
+                                                            
+                                                            // Sort into high and low tides for AM and PM
+                                                            if ($tide['tide_type'] == 'HIGH') {
+                                                                $highTides[$suffix] = substr($tide['tide_time'], -5);
+                                                            } elseif ($tide['tide_type'] == 'LOW') {
+                                                                $lowTides[$suffix] = substr($tide['tide_time'], -5);
+                                                            }
                                                         }
                                                     }
                                                     echo '<td><div class="container"><div class="row"><div class="col-xxs text-center"><span>' . $lowTides['AM'] . '</span></div><div class="col-sm text-center"><span>' . $lowTides['PM'] . '</span></div></div></div></td>';
