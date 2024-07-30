@@ -121,6 +121,10 @@ Route::post('upload-profile-pic', 'App\Http\Controllers\UserController@updatePro
 Route::get('dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
 Route::get('MyDashboard', 'App\Http\Controllers\MyDashboardController@showDashboard')->middleware('auth')->name('MyDashboard');
 
+Route::get('AboutUs', function () {
+	return view('pages.Contact');
+})->name('AboutUs');
+
 Route::get('sign-up', [RegisterController::class, 'create'])->middleware('guest')->name('register');
 Route::post('sign-up', [RegisterController::class, 'store'])->middleware('guest');
 

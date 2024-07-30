@@ -23,7 +23,7 @@
                     <input type="email" class="form-control" placeholder="John@email.io">
                   </div>
                   <div class="text-center">
-                    <button type="button" class="btn bg-gradient-dark btn-lg w-100 my-4 mb-2">Send</button>
+                    <button type="button" class="btn bg-gradient-info btn-lg w-100 my-4 mb-2">Send</button>
                   </div>
                 </form>
               </div>

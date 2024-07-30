@@ -62,7 +62,7 @@
                                     @enderror
                                     <div class="text-center">
                                         <button type="submit"
-                                            class="btn bg-gradient-dark btn-lg w-100 my-4 my-2">Send</button>
+                                            class="btn bg-gradient-info btn-lg w-100 my-4 my-2">Send</button>
                                     </div>
                                     <p class="mt-4 text-sm text-center">
                                         Don't have an account?
