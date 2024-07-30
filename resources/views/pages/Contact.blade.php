@@ -92,7 +92,7 @@
                             
                             <div id="history" style="flex-grow: 1; max-height: 424px; overflow-y: auto;" class="mt-0">
                             If you want to get in touch with us, email us to:
-                            <br><br><b>info@divers-hub.com</b>
+                            <br><br><b><a href="mailto:info@divers-hub.com">info@divers-hub.com</a></b>
                             </div>
 
                         </div>
