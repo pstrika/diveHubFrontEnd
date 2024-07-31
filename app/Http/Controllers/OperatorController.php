@@ -112,8 +112,9 @@ class OperatorController extends Controller
         }
 
     public function showHealth() {
-        $operators = Operator::all()->sortBy('operatorName');
+        $operators = Operator::whereNotNull('_ver')->get()->sortBy('operatorName');
+        $notScrapping = Operator::whereNull('_ver')->get()->sortBy('operatorName');
         $weatherLocations = WeatherLocation::all();
-        return view('pages.PlatformHealth', compact('operators', 'weatherLocations'));
+        return view('pages.PlatformHealth', compact('operators', 'weatherLocations', 'notScrapping'));
     }
 }

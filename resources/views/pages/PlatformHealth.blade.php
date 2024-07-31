@@ -30,12 +30,13 @@
             <div class="row">
                 
                 
-                {{-- Platform Health card --}}
+                {{-- Scrapping card --}}
                 <div class="col-md-12">             
                     <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h3 class="card-title text-white mx-4"> Backend Health</h3>
+                                <h3 class="card-title text-white mx-4"> Operators Scrapping</h3>
+                                <h5 class="card-title text-white mx-4"> Total: {{ count($operators) }}</h5>
                             </div>
                         </div>
 
@@ -46,6 +47,9 @@
                                 <thead class="text-info">
                                     <th class="align-top">
                                         Status
+                                    </th>
+                                    <th class="align-top">
+                                        
                                     </th>
                                     <th class="align-top">
                                         Operator
@@ -102,6 +106,7 @@
                                             @endphp
                                             <tr style="border-bottom: 1px solid #D3D3D3;">
                                                 <td class="px-0 py-2 text-sm text-center custom-text-color" style="color: {{ $colorIcon }};"><i class="material-icons position-relative ms-auto text-lg me-1 my-auto" >{{ $statusIcon}}</i></td>
+                                                <td class="w-10"><img src="{{ asset('assets') }}{{ $operator->logoUrl}}" alt="img-blur-shadow" class="img-fluid align-items-center border-radius-lg"></td>
                                                 <td class="w-40">{{ $operator->operatorName }}</td>
                                                 <td class="w-15">{{ ($interval->format('%d') != 0) ? ($interval->format('%d days')) : "" }} {{ ($interval->format('%h') != 0) ? ($interval->format('%h hrs')) : "" }} {{ ($interval->format('%i') != 0) ? ($interval->format('%i min')) : "" }} ago</td>
                                                 <td class="w-15">{{ $dateTime->format('Y-m-d H:i:s') }}</td>
@@ -120,12 +125,58 @@
                 </div>
                 {{-----------------------------}}
 
+                {{-- Scrapping card --}}
+                <div class="col-md-12">             
+                    <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h3 class="card-title text-white mx-4"> Operators Not-Scrapping</h3>
+                                <h5 class="card-title text-white mx-4"> Total: {{ count($notScrapping) }}</h5>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table>
+
+                                <thead class="text-info">
+                                    <th class="align-top text-center">
+                                    </th>
+                                    <th class="align-top">
+                                        Operator
+                                    </th>
+                                    <th class="align-top">
+                                        Location
+                                    </th>
+
+                                </thead>
+
+                                    <tbody>
+                                        @foreach($notScrapping as $operator)
+                                            
+                                            <tr style="border-bottom: 1px solid #D3D3D3;">
+                                                <td class="w-10"><img src="{{ asset('assets') }}{{ $operator->logoUrl}}" alt="img-blur-shadow" class="img-fluid align-items-center border-radius-lg"></td>
+                                                <td class="w-70">{{ $operator->operatorName }}</td>
+                                                <td class="text-left">{{ $operator->location }}</td>
+                                            </tr>
+
+                                        @endforeach
+                                    </tbody>
+                                    
+                                </table>
+                            </div>    
+                        </div>
+                    </div>
+                </div>
+                {{-----------------------------}}
+
                 {{-- Weather API card --}}
                 <div class="col-md-12">             
                     <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
                                 <h3 class="card-title text-white mx-4"> Weather API</h3>
+                                <h5 class="card-title text-white mx-4"> Total: {{ count($weatherLocations) }}</h5>
                             </div>
                         </div>
 
