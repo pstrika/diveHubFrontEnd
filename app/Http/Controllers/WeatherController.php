@@ -26,8 +26,10 @@ class WeatherController extends Controller
         }
 
         $allLocations = WeatherLocation::all();
+        $currentLocation = WeatherLocation::where('location', $location)->first();
+        Log::debug('current location: ' . $currentLocation);
 
-        return view('pages.Weather', compact('weathers', 'date', 'location', 'allLocations'));
+        return view('pages.Weather', compact('weathers', 'date', 'location', 'allLocations', 'currentLocation'));
 
     }
 
