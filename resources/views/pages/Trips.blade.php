@@ -115,9 +115,16 @@
         
 
 
-        
+            {{--
             <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/divers_jumping.avif');">
                 <span class="mask  bg-gradient-info  opacity-4"></span>
+            </div>--}}
+
+            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2 justify-content-end" style="background-image: url('/assets/img/illustrations/ads/240803_majestic.png');">
+                <!--<span class="mask  bg-gradient-info  opacity-4"></span>-->
+                <button class="btn btn-icon btn-3 btn-info mt-n6 mx-3" type="button" onclick="sendEmail();">
+                    <span class="btn-inner--text">Learn More</span>
+                </button>
             </div>
 
             
@@ -864,6 +871,19 @@
             filterLocPM.value = 'all';
         });
     });
+    </script>
+
+    {{-- Send email for ad--}}
+    <script>
+        function sendEmail() {
+        var link = 'mailto:seatheskyadventures@gmail.com'
+                + '?cc=info@divers-hub.com'
+                + '&subject=' + encodeURIComponent("Inquiry: Majestic liveaboard on Oct-19th to Oct-26th 2024")
+                + '&body=' + encodeURIComponent("I've read in divers-hub about a trip to Egypt. I want to know more!")
+        ;
+
+        window.location.href = link;
+        }
     </script>
     @endpush
 </x-page-template>
