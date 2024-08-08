@@ -80,6 +80,9 @@ Route::get('OperatorDetails/{id}', 'App\Http\Controllers\OperatorController@show
 Route::get('BeachDiving', 'App\Http\Controllers\SiteController@showBeach')->middleware('guest')->name('BeachDiving');
 
 
+Route::get('Messages', 'App\Http\Controllers\MessageController@show')->middleware('auth')->name('Messages');
+Route::post('mark-as-read', 'App\Http\Controllers\MessageController@markAsRead')->middleware('auth')->name('mark-as-read');;
+Route::post('delete-message', 'App\Http\Controllers\MessageController@delete')->middleware('auth')->name('delete-message');;
 
 Route::get('new-site/', 'App\Http\Controllers\SiteController@create')->middleware('auth')->name('new-site');
 Route::post('new-site', 'App\Http\Controllers\SiteController@store')->middleware('auth')->name('new-site-store');

@@ -219,6 +219,25 @@ class UserController extends Controller
             $user->firstDayOfWeek = 0;
         }
 
+        // Special case: if we dont have the input, means the checkbox is off so we update to 0. This is for config firstDayOfWeek
+        if($request->has('email_notifications')) {
+            Log::info("Got email_notifications. Updating to: 1");
+            $user->email_notifications = 1;
+        } else {
+            Log::info("Didn't get email_notifications. Updating to: 0");
+            $user->email_notifications = 0;
+        }
+
+        // Special case: if we dont have the input, means the checkbox is off so we update to 0. This is for config firstDayOfWeek
+        if($request->has('sms_notifications')) {
+            Log::info("Got sms_notifications. Updating to: 1");
+            $user->sms_notifications = 1;
+        } else {
+            Log::info("Didn't get sms_notifications. Updating to: 0");
+            $user->sms_notifications = 0;
+        }
+
+
         $user->save();
 
         return redirect()->back();

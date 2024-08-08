@@ -186,7 +186,7 @@
                         <div style="float: left;" class="mt-n4">
                             <table> <tbody>
                                 <tr>
-                                    <td class="w-10"><img src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
+                                    <td class="w-10"><img style="width: 70px; height: auto;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
                                     <td><h2 class="card-title text-info mx-3 mt-3">{{ $site->name }}</h2>
                                         <p class="align-middle text-left text-md text-info mx-3 mt-n3">{{ $site->type }} </p>
                                     </td> 

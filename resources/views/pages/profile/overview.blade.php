@@ -290,9 +290,20 @@
                                             <li class="list-group-item border-0 px-0">
                                                 <div class="form-check form-switch ps-0">
                                                     <input class="form-check-input ms-auto" type="checkbox"
-                                                        id="flexSwitchCheckDefault" checked>
+                                                        id="email_notifications" name="email_notifications" {{ $user->email_notifications ? "checked" : ""}}>
                                                     <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                        for="flexSwitchCheckDefault">Email me with new dives</label>
+                                                        for="flexSwitchCheckDefault">Email me with dive updates</label>
+                                                </div>
+                                            </li>
+                                        </ul>
+
+                                        <ul class="list-group">
+                                            <li class="list-group-item border-0 px-0">
+                                                <div class="form-check form-switch ps-0">
+                                                    <input class="form-check-input ms-auto" type="checkbox"
+                                                        id="sms_notifications" name="sms_notifications" {{ $user->sms_notifications ? "checked" : ""}}>
+                                                    <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
+                                                        for="flexSwitchCheckDefault">Send SMS with dive updates - (*) additional costs may apply</label>
                                                 </div>
                                             </li>
                                         </ul>
@@ -801,6 +812,16 @@
 
         var firstDayOfWeek =document.getElementById('firstDayOfWeek');
         firstDayOfWeek.addEventListener('click', () => {
+            divButton.style.display = 'block';
+        });
+
+        var email_notifications =document.getElementById('email_notifications');
+        email_notifications.addEventListener('click', () => {
+            divButton.style.display = 'block';
+        });
+
+        var sms_notifications =document.getElementById('sms_notifications');
+        sms_notifications.addEventListener('click', () => {
             divButton.style.display = 'block';
         });
     </script>

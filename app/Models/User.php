@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -86,5 +87,9 @@ class User extends Authenticatable
     public function role(){
 
         return $this->belongsTo(Role::class);
+    }
+
+    public function unreadNotifications() {
+        return Message::where('userId', $this->id)->where('deleted', 0)->where('read', 0)->count();
     }
 }

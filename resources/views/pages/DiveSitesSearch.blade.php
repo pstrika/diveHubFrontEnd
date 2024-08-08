@@ -295,7 +295,12 @@
         
         @if(!empty($status))
             @if($status == "show all")
-                new DataTable('#tableAll');
+                
+                $(document).ready(function() {
+                    $('#tableAll').DataTable({
+                        "scrollX": true
+                    });
+                });
                 document.getElementById('searchBox').style.display = 'none';
             @endif
         @endif
