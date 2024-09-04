@@ -207,7 +207,7 @@
         <!-- Dive sites -->
         <div class="page-header align-items-start min-vh-70 position-relative">
             <video autoplay muted loop class="w-100 h-100 position-absolute top-0 start-0" style="object-fit: cover;">
-                <source src="/assets/img/illustrations/dive_sites.webm" type="video/mp4">
+                <source src="/assets/img/illustrations/dive_sites.mp4" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
             <!-- Your content here -->
@@ -340,7 +340,7 @@
         <!-- Beach diving -->
         <div class="page-header align-items-start min-vh-70 position-relative">
             <video autoplay muted loop class="w-100 h-100 position-absolute top-0 start-0" style="object-fit: cover;">
-                <source src="/assets/img/illustrations/beach.webm" type="video/mp4">
+                <source src="/assets/img/illustrations/beach.mp4" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
             <!-- Your content here -->
