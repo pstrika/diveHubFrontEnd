@@ -159,7 +159,7 @@
             </div>
 
             <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4"
-            style="background-image: url('/assets/img/illustrations/profile.png');">
+            style="background-image: url('/assets/img/illustrations/profile.webp');">
                 <span class="mask  bg-gradient-info  opacity-6"></span>
             </div>
             <div class="card card-body mx-3 mx-md-4 mt-n6">

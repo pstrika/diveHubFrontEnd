@@ -7,7 +7,7 @@
         <x-auth.navbars.navs.auth pageTitle="Lobster Diving Calendar {{ $currentMonthS}}-{{ $year }}"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
             <div class="container-fluid py-4">
-                <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/calendar.jpg');">
+                <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/calendar.webp');">
                     <span class="mask  bg-gradient-info  opacity-4"></span>
                 </div>
 
@@ -101,7 +101,7 @@
                                 <div class="row">
                                     <div class="col-md-4">
                                         <div class="d-flex align-items-center justify-content-center mt-n3">
-                                            <img src="{{ asset('assets') }}/img/illustrations/lobster.jpeg" class="img-fluid border-radius-xl shadow">
+                                            <img src="{{ asset('assets') }}/img/illustrations/lobster.webp" class="img-fluid border-radius-xl shadow">
                                         </div>
                                     </div>
                                     <div class="col-md-8">

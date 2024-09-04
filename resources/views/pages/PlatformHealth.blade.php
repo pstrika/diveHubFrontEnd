@@ -12,7 +12,7 @@
 
             <div class="d-none" data-color="info" id="sidebarColorDiv"></div>
 
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/platformHealth.jpg');">
+            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/platformHealth.webp');">
                 <span class="mask  bg-gradient-info  opacity-4"></span>
             </div>
 

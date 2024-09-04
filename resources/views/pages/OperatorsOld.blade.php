@@ -12,7 +12,7 @@
 
 
 
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('/assets/img/illustrations/operators.jpeg');">
+            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('/assets/img/illustrations/operators.webp');">
                 <span class="mask  bg-gradient-info  opacity-4"></span>
             </div>
 

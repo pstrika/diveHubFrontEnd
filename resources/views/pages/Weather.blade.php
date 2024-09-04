@@ -59,7 +59,7 @@
             </div>
         </div>
 
-        <div class="page-header min-height-250 max-height-300 border-radius-xl mt-0 mx-n2" style="background-image: url('/assets/img/illustrations/weather.jpeg');">
+        <div class="page-header min-height-250 max-height-300 border-radius-xl mt-0 mx-n2" style="background-image: url('/assets/img/illustrations/weather.webp');">
                 <span class="mask  bg-gradient-info  opacity-4"></span>
             </div>
 

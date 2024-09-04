@@ -40,7 +40,7 @@
 
 
 
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/aboutus.jpg');">
+            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/aboutus.webp');">
                 <span class="mask  bg-gradient-info  opacity-4"></span>
             </div>
 

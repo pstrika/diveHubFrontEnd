@@ -65,7 +65,7 @@
        <changefreq>daily</changefreq>
        <priority>0.6400</priority>
        <image:image>
-         <image:loc>https://divers-hub.com/assets/img/illustrations/profile.png</image:loc>
+         <image:loc>https://divers-hub.com/assets/img/illustrations/profile.webp</image:loc>
        </image:image>
        <image:image>
          <image:loc>https://divers-hub.com/assets/img/users/</image:loc>
@@ -134,7 +134,7 @@
        <changefreq>daily</changefreq>
        <priority>0.6400</priority>
        <image:image>
-         <image:loc>https://divers-hub.com/assets/img/illustrations/operators.jpeg</image:loc>
+         <image:loc>https://divers-hub.com/assets/img/illustrations/operators.webp</image:loc>
        </image:image>
        <image:image>
          <image:loc>https://divers-hub.com/assets/img/operators/operators_logos_SFDH_c.png</image:loc>
@@ -227,7 +227,7 @@
        <changefreq>daily</changefreq>
        <priority>0.6400</priority>
        <image:image>
-         <image:loc>https://divers-hub.com/assets/img/illustrations/dive_sites.jpg</image:loc>
+         <image:loc>https://divers-hub.com/assets/img/illustrations/dive_sites.webp</image:loc>
        </image:image>
   </url>
   <url>
@@ -236,7 +236,7 @@
        <changefreq>daily</changefreq>
        <priority>0.5120</priority>
        <image:image>
-         <image:loc>https://divers-hub.com/assets/img/illustrations/weather.jpeg</image:loc>
+         <image:loc>https://divers-hub.com/assets/img/illustrations/weather.webp</image:loc>
        </image:image>
        <image:image>
          <image:loc>https://divers-hub.com/assets/img/Florida1.png</image:loc>
@@ -267,7 +267,7 @@
        <changefreq>daily</changefreq>
        <priority>0.5120</priority>
        <image:image>
-         <image:loc>https://divers-hub.com/assets/img/illustrations/site_wreck.jpeg</image:loc>
+         <image:loc>https://divers-hub.com/assets/img/illustrations/site_wreck.webp</image:loc>
        </image:image>
        <image:image>
          <image:loc>https://divers-hub.com/assets/img/sites/1717703020_map.jpg</image:loc>

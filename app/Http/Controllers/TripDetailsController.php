@@ -26,7 +26,8 @@ class TripDetailsController extends Controller
     public function show($tripId)
     {
         
-        $tripDetails = Trip::where('id', $tripId)->get()[0];
+        #$tripDetails = Trip::where('id', $tripId)->get()[0];
+        $tripDetails = Trip::findOrFail($tripId);
 
         $operator = Operator::where('id', $tripDetails->operatorId)->get()[0];
 

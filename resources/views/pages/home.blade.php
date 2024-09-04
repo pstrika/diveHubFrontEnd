@@ -71,7 +71,7 @@
     <!-- End Navbar -->
     <main class="main-content mt-n8">
         <div class="page-header align-items-start min-vh-50"
-            style="background-image: url('/assets/img/illustrations/home2.jpg')">
+            style="background-image: url('/assets/img/illustrations/home2.webp')">
             <!--<span class="mask bg-gradient-dark opacity-6"></span>-->
             <div class="container my-5">
                 <div class="row signin-margin">
@@ -100,35 +100,35 @@
                         <h5 class="text-white" style="padding: 20px;">Discover more than 300 local dive sites, all dive charters calendars and more!</h5>
                     </div>
 
-                    <div class="col-lg-2 col-md-4 col-sm-6 image-container" style="background-image:url('/assets/img/illustrations/cal.jpg');">
+                    <div class="col-lg-2 col-md-4 col-sm-6 image-container" style="background-image:url('/assets/img/illustrations/cal.webp');">
                         <div class="overlay" style="padding:20px;">
                             <div class="text text-center"><h5 class="text-white">Daily trips calendars plus shark diving, lobster diving and technical diving calendars.</h5></div>
                         </div>
                         <span class="toggle-overlay"><h3 class="text-white" style="-webkit-text-stroke: 1px #4A82C3;">Calendars</h3></span>
                     </div>
 
-                    <div class="col-lg-2 col-md-4 col-sm-6 image-container" style="background-image:url('/assets/img/illustrations/dive-site.jpg');">
+                    <div class="col-lg-2 col-md-4 col-sm-6 image-container" style="background-image:url('/assets/img/illustrations/dive-site.webp');">
                         <div class="overlay" style="padding:20px;">
                             <div class="text text-center"><h5 class="text-white">Our database has more than 300 reefs and wrecks with detailed descriptions, numbers and more!</h5></div>
                         </div>
                         <span class="toggle-overlay"><h3 class="text-white">Dive Sites</h3></span>
                     </div>
 
-                    <div class="col-lg-2 col-md-4 col-sm-6 image-container" style="background-image:url('/assets/img/illustrations/weather.jpg');">
+                    <div class="col-lg-2 col-md-4 col-sm-6 image-container" style="background-image:url('/assets/img/illustrations/weather_home.webp');">
                         <div class="overlay" style="padding:20px;">
                             <div class="text text-center"><h5 class="text-white">Detailed marine weather plus ocean conditions predictor. Check live currents and webcams.</h5></div>
                         </div>
                         <span class="toggle-overlay"><h3 class="text-white">Weather</h3></span>
                     </div>
 
-                    <div class="col-lg-2 col-md-4 col-sm-6 image-container" style="background-image:url('/assets/img/illustrations/dive-charter.jpg');">
+                    <div class="col-lg-2 col-md-4 col-sm-6 image-container" style="background-image:url('/assets/img/illustrations/dive-charter.webp');">
                         <div class="overlay" style="padding:20px;">
                             <div class="text text-center"><h5 class="text-white">From Stuart to Key Kest, all dive charters are here.</h5></div>
                         </div>
                         <span class="toggle-overlay"><h3 class="text-white">Dive Charters</h3></span>
                     </div>
 
-                    <div class="col-lg-2 col-md-4 col-sm-6 image-container" style="background-image:url('/assets/img/illustrations/beach-diving.jpg');">
+                    <div class="col-lg-2 col-md-4 col-sm-6 image-container" style="background-image:url('/assets/img/illustrations/beach-diving.webp');">
                         <div class="overlay" style="padding:20px;">
                             <div class="text text-center"><h5 class="text-white">Browse shore diving favorite sites, check conditions and get suggestions.</h5></div>
                         </div>
@@ -152,7 +152,7 @@
 
         <!-- Calendars -->
         <div class="page-header align-items-start min-vh-70"
-            style="background-image: url('/assets/img/illustrations/plan_bg.jpg')">
+            style="background-image: url('/assets/img/illustrations/plan_bg.webp')">
 
             <div class="row mt-4 mx-2">
                 <div class="col-lg-6 col-md-8 col-sm-10">
@@ -167,19 +167,19 @@
                             </ol>
                             <div class="carousel-inner">
                                 <div class="carousel-item active">
-                                    <img src="/assets/img/illustrations/plan_0.png" class="d-block w-100 border-radius-xl" alt="Beach Diving 1">
+                                    <img src="/assets/img/illustrations/plan_0.webp" class="d-block w-100 border-radius-xl" alt="Beach Diving 1">
                                 </div>
                                 <div class="carousel-item">
-                                    <img src="/assets/img/illustrations/plan_1.png" class="d-block w-100 border-radius-xl" alt="Beach Diving 2">
+                                    <img src="/assets/img/illustrations/plan_1.webp" class="d-block w-100 border-radius-xl" alt="Beach Diving 2">
                                 </div>
                                 <div class="carousel-item">
-                                    <img src="/assets/img/illustrations/plan_2.png" class="d-block w-100 border-radius-xl" alt="Beach Diving 3">
+                                    <img src="/assets/img/illustrations/plan_2.webp" class="d-block w-100 border-radius-xl" alt="Beach Diving 3">
                                 </div>
                                 <div class="carousel-item">
-                                    <img src="/assets/img/illustrations/plan_3.png" class="d-block w-100 border-radius-xl" alt="Beach Diving 3">
+                                    <img src="/assets/img/illustrations/plan_3.webp" class="d-block w-100 border-radius-xl" alt="Beach Diving 3">
                                 </div>
                                 <div class="carousel-item">
-                                    <img src="/assets/img/illustrations/plan_4.png" class="d-block w-100 border-radius-xl" alt="Beach Diving 3">
+                                    <img src="/assets/img/illustrations/plan_4.webp" class="d-block w-100 border-radius-xl" alt="Beach Diving 3">
                                 </div>
                             </div>
                             <a class="carousel-control-prev" href="#photoCarousel" role="button" data-slide="prev">
@@ -207,7 +207,7 @@
         <!-- Dive sites -->
         <div class="page-header align-items-start min-vh-70 position-relative">
             <video autoplay muted loop class="w-100 h-100 position-absolute top-0 start-0" style="object-fit: cover;">
-                <source src="/assets/img/illustrations/dive_sites.mp4" type="video/mp4">
+                <source src="/assets/img/illustrations/dive_sites.webm" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
             <!-- Your content here -->
@@ -228,16 +228,16 @@
                             </ol>
                             <div class="carousel-inner">
                                 <div class="carousel-item active">
-                                    <img src="/assets/img/illustrations/dive_sites_0.png" class="d-block w-100 border-radius-xl" alt="Beach Diving 1">
+                                    <img src="/assets/img/illustrations/dive_sites_0.webp" class="d-block w-100 border-radius-xl" alt="Beach Diving 1">
                                 </div>
                                 <div class="carousel-item">
-                                    <img src="/assets/img/illustrations/dive_sites_1.png" class="d-block w-100 border-radius-xl" alt="Beach Diving 2">
+                                    <img src="/assets/img/illustrations/dive_sites_1.webp" class="d-block w-100 border-radius-xl" alt="Beach Diving 2">
                                 </div>
                                 <div class="carousel-item">
-                                    <img src="/assets/img/illustrations/dive_sites_2.png" class="d-block w-100 border-radius-xl" alt="Beach Diving 3">
+                                    <img src="/assets/img/illustrations/dive_sites_2.webp" class="d-block w-100 border-radius-xl" alt="Beach Diving 3">
                                 </div>
                                 <div class="carousel-item">
-                                    <img src="/assets/img/illustrations/dive_sites_3.png" class="d-block w-100 border-radius-xl" alt="Beach Diving 3">
+                                    <img src="/assets/img/illustrations/dive_sites_3.webp" class="d-block w-100 border-radius-xl" alt="Beach Diving 3">
                                 </div>
                             </div>
                             <a class="carousel-control-prev" href="#photoCarousel" role="button" data-slide="prev">
@@ -258,7 +258,7 @@
 
         <!-- Weather -->
         <div class="page-header align-items-start min-vh-70"
-            style="background-image: url('/assets/img/illustrations/marine_forecast.jpg')">
+            style="background-image: url('/assets/img/illustrations/marine_forecast.webp')">
 
             <div class="row mt-4 mx-2">
                 <div class="col-lg-6 col-md-8 col-sm-10">
@@ -271,10 +271,10 @@
                             </ol>
                             <div class="carousel-inner">
                                 <div class="carousel-item active">
-                                    <img src="/assets/img/illustrations/weather_0.png" class="d-block w-100 border-radius-xl" alt="Beach Diving 1">
+                                    <img src="/assets/img/illustrations/weather_0.webp" class="d-block w-100 border-radius-xl" alt="Beach Diving 1">
                                 </div>
                                 <div class="carousel-item">
-                                    <img src="/assets/img/illustrations/weather_1.png" class="d-block w-100 border-radius-xl" alt="Beach Diving 2">
+                                    <img src="/assets/img/illustrations/weather_1.webp" class="d-block w-100 border-radius-xl" alt="Beach Diving 2">
                                 </div>
                                 
                             </div>
@@ -298,7 +298,7 @@
 
         <!-- Operators -->
         <div class="page-header align-items-start min-vh-70"
-            style="background-image: url('/assets/img/illustrations/operators_bg.jpg')">
+            style="background-image: url('/assets/img/illustrations/operators_bg.webp')">
 
             <div class="row mt-4 mx-2">
                 <div class="col-lg-6 col-md-4 col-sm-12 d-flex align-items-start justify-content-center d-flex flex-column">
@@ -315,10 +315,10 @@
                             </ol>
                             <div class="carousel-inner">
                                 <div class="carousel-item active">
-                                    <img src="/assets/img/illustrations/operators_0.png" class="d-block w-100 border-radius-xl" alt="Beach Diving 1">
+                                    <img src="/assets/img/illustrations/operators_0.webp" class="d-block w-100 border-radius-xl" alt="Beach Diving 1">
                                 </div>
                                 <div class="carousel-item">
-                                    <img src="/assets/img/illustrations/operators_1.png" class="d-block w-100 border-radius-xl" alt="Beach Diving 2">
+                                    <img src="/assets/img/illustrations/operators_1.webp" class="d-block w-100 border-radius-xl" alt="Beach Diving 2">
                                 </div>
                                 
                             </div>
@@ -340,7 +340,7 @@
         <!-- Beach diving -->
         <div class="page-header align-items-start min-vh-70 position-relative">
             <video autoplay muted loop class="w-100 h-100 position-absolute top-0 start-0" style="object-fit: cover;">
-                <source src="/assets/img/illustrations/beach.mov" type="video/mp4">
+                <source src="/assets/img/illustrations/beach.webm" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
             <!-- Your content here -->
@@ -355,13 +355,13 @@
                             </ol>
                             <div class="carousel-inner">
                                 <div class="carousel-item active">
-                                    <img src="/assets/img/illustrations/beach_diving_0.png" class="d-block w-100 border-radius-xl" alt="Beach Diving 1">
+                                    <img src="/assets/img/illustrations/beach_diving_0.webp" class="d-block w-100 border-radius-xl" alt="Beach Diving 1">
                                 </div>
                                 <div class="carousel-item">
-                                    <img src="/assets/img/illustrations/beach_diving_1.png" class="d-block w-100 border-radius-xl" alt="Beach Diving 2">
+                                    <img src="/assets/img/illustrations/beach_diving_1.webp" class="d-block w-100 border-radius-xl" alt="Beach Diving 2">
                                 </div>
                                 <div class="carousel-item">
-                                    <img src="/assets/img/illustrations/beach_diving_2.png" class="d-block w-100 border-radius-xl" alt="Beach Diving 3">
+                                    <img src="/assets/img/illustrations/beach_diving_2.webp" class="d-block w-100 border-radius-xl" alt="Beach Diving 3">
                                 </div>
                             </div>
                             <a class="carousel-control-prev" href="#photoCarousel" role="button" data-slide="prev">
