@@ -1,18 +1,20 @@
 @props(['p','btn', 'textColor','svgColor'])
 
 <div class="container {{ $p }}">
-    <a class="navbar-brand font-weight-bolder ms-lg-0 ms-3 d-flex flex-column {{ $textColor }}" href="{{ route('dashboard') }}">
-        DiveHub
-        <span>v4.0.2 (9/3/2024)</span>
+    <a class="navbar-brand font-weight-bolder ms-lg-0 ms-3 d-flex flex-column {{ $textColor }}" href="{{ route('home') }}">
+    <img src="/assets/img/logos/logo_horizontal.png" alt="Logo Divers Hub" class="img-fluid mt-2" style="height:50px;"> 
+        {{--<span class="text-right">v4.0.2 (9/3/2024)</span>--}}
     </a>
-    <button class="navbar-toggler shadow-none ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navigation"
+    <span class="text-right text-white text-sm fw-bold" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); padding: 20px;">
+        v4.0.3 (9/4/2024)</span>
+    {{--<button class="navbar-toggler shadow-none ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navigation"
         aria-controls="navigation" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon mt-2">
             <span class="navbar-toggler-bar bar1"></span>
             <span class="navbar-toggler-bar bar2"></span>
             <span class="navbar-toggler-bar bar3"></span>
         </span>
-    </button>
+    </button>--}}
     {{--<div class="collapse navbar-collapse w-100 pt-3 pb-2 py-lg-0" id="navigation">
         <ul class="navbar-nav navbar-nav-hover mx-auto">
             @auth
