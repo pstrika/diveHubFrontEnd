@@ -379,13 +379,15 @@
                 <div class="col-lg-6 col-md-4 col-sm-12 d-flex align-items-center">
                     <h3 class="text-white" style="position: relative; z-index: 2;">Check shore conditions in Fort Lauderdale and West Palm Beach. Plan your perfect beach dive. Find recommended dive locations.</h>
                 </div>
-                <div style="background-color: rgba(255, 255, 255, 0.5) !important; padding:20px;">
-                <x-auth.footers.guest.basic-footer textColor='text-white'></x-auth.footers.guest.basic-footer>
-            </div>
+                
             </div>
             
+            
         </div>
-
+        <div class="page-header align-items-start position-relative" style="background-color: #000000; height:80px;">
+            <x-auth.footers.guest.basic-footer textColor='text-white'></x-auth.footers.guest.basic-footer>
+        </div>
+        
         <!--
         <div class="page-header position-relative d-flex justify-content-center align-items-center">
             <div class="row">
