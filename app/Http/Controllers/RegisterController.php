@@ -34,8 +34,11 @@ class RegisterController extends Controller
         $user = User::create($attributes);
         auth()->login($user);
         
+        session()->put('newUser', 1);
+        Log::info('New user registered! Setting newUser flag in session');
+
         // add google tag
-        $clientId = session('clientId');
+        /*$clientId = session('clientId');
 
         if (!is_null($clientId)) {
             GA4::setClientId($clientId);
@@ -53,7 +56,7 @@ class RegisterController extends Controller
             ]
         ];
     
-        $response = GA4::sendEvent($eventData);
+        $response = GA4::sendEvent($eventData);*/
 
         return redirect('/user-profile');
     } 

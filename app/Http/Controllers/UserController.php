@@ -19,12 +19,15 @@ class UserController extends Controller
     public function index(){
         
         Log::info("Passing through User@index");
+        Log::debug("Session new user is: " . session()->get('newUser'));
         //return view('laravel-examples.user-profile.edit');
         if(auth()->id() == 5)  //check for guest user
             return redirect()->route('Trips');
+        elseif(session()->get('newUser'))
+            return redirect()->route('MyDashboard')->with('newUser', true);
         else
             //return redirect()->intended($this->redirectTo);
-            return redirect()->route('MyDashboard');
+            return redirect()->route('MyDashboard')->with('newUser', false);;
     }
 
     public function update()

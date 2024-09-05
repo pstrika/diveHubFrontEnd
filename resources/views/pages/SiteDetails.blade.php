@@ -670,8 +670,13 @@
                                                             <tbody>
                                                                 <tr class="align-items-center"><td class="align-items-center text-center">
                                                                     <div class="avatar avatar-sm">
-                                                                        <img src="{{ asset('assets') }}/img/users/{{  $review->user->picture }}" alt="profile_image"
-                                                                            class="w-100 rounded-circle shadow-sm">
+                                                                        @if($review->user->picture)
+                                                                            <img src="{{ asset('assets') }}/img/users/{{  $review->user->picture }}" alt="profile_image"
+                                                                                class="w-100 rounded-circle shadow-sm">
+                                                                        @else
+                                                                            <img src="{{ asset('assets') }}/img/default-avatar.png" alt="profile_image"
+                                                                                class="w-100 rounded-circle shadow-sm" style="background: black;">
+                                                                        @endif
                                                                             
                                                                     </div>
                                                                 </td></tr>

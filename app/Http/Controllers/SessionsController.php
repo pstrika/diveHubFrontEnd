@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Support\Facades\Log;
 use Str;
 
 class SessionsController extends Controller
@@ -31,6 +32,7 @@ class SessionsController extends Controller
             ]);
         }
 
+        
         session()->regenerate();
         session()->put('logged_in', true);  // use this to clear the localStorage for filter in the client side
 
@@ -40,8 +42,7 @@ class SessionsController extends Controller
         if(auth()->id() == 5)  //check for guest user
             return redirect()->route('Trips');
         else
-            return redirect()->intended('MyDashboard');
-            //return redirect()->route('MyDashboard');
+            return redirect()->intended('MyDashboard')->with('newUser', false);
 
     }
 

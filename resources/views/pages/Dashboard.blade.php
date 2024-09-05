@@ -351,6 +351,15 @@
     @push('js')
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
 
+    <!-- Google tag (gtag.js) event -->
+    @if(session('newUser'))
+    <script>
+        gtag('event', 'conversion_event_signup_3', {
+            // <event_parameters>
+        });
+    </script>
+    @endif
+
     <script>
         function sendEmail() {
             var link = 'mailto:seatheskyadventures@gmail.com'

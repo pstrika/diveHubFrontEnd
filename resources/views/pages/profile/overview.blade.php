@@ -166,8 +166,13 @@
                 <div class="row gx-4">
                     <div class="col-auto">
                         <div class="avatar avatar-xl position-relative">
-                            <img src="{{ asset('assets') }}/img/users/{{  $user->picture }}" alt="profile_image"
-                                class="w-100 rounded-circle shadow-sm">
+                            @if ($user->picture)
+                                <img src="{{ asset('assets') }}/img/users/{{  $user->picture }}" alt="profile_image"
+                                    class="w-100 rounded-circle shadow-sm">
+                            @else
+                                <img src="{{ asset('assets') }}/img/default-avatar.png" alt="profile_image"
+                                    class="w-100 rounded-circle shadow-sm" style="background: black;"> 
+                            @endif
                                 <div class="" style="display: inline-block; position: absolute; z-index: 2; bottom: 0; right: 0;">
                                     <a href="javascript:;">
                                         <span id="buttonUploadProfilePic"><img style="height:25px; width:25px;" src="{{ asset('assets') }}/img/icons/edit_pic_icon.png"></span>
