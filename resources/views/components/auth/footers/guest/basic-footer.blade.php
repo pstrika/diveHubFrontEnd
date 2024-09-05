@@ -13,6 +13,9 @@
         <div class="col-12 col-md-6">
           <ul class="nav nav-footer justify-content-center justify-content-lg-end">
             <li class="nav-item">
+              <a href="/home" class="nav-link text-muted">Home</a>
+            </li>
+            <li class="nav-item">
               <a href="/TermsOfUse" class="nav-link text-muted">Terms of use</a>
             </li>
             <li class="nav-item">

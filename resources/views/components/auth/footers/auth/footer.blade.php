@@ -11,6 +11,9 @@
         </div>
         <div class="col-lg-6">
           <ul class="nav nav-footer justify-content-center justify-content-lg-end">
+          <li class="nav-item">
+              <a href="/home" class="nav-link text-muted">Home</a>
+            </li>
             <li class="nav-item">
               <a href="/AboutUs" class="nav-link text-muted">About us</a>
             </li>
