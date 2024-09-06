@@ -92,7 +92,7 @@
                                             </span>
                                             <span class="btn-inner--text"> Sign in with Google</span>
                                         </a>
-                                        <p class="text-xs text-dark font-weight-bolder"> * Please use Divers Hub sign in while we complete Google's verification</p>    
+                                        <!--<p class="text-xs text-dark font-weight-bolder"> * Please use Divers Hub sign in while we complete Google's verification</p>    -->
                                     </div>
                                     <p class="text-sm text-center mt-3">
                                         Forgot your password? Reset your password

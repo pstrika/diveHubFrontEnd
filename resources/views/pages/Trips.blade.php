@@ -360,7 +360,7 @@
                                                         @endif
                                                         <td class="px-0 py-2 text-sm text-wrap align-middle justify-content-center"><a href="{{ route('OperatorDetails', ['id' => $trip->operatorId] )}}">{{ $trip->operatorName }}</a></td>
                                                         <td class="px-4">{{ $trip->departureTime }}</td>
-                                                        @if($trip->tripFreeSpots == 0)
+                                                        @if($trip->tripFreeSpots <= 0)
                                                             <td class="text-center text-danger">-</td>
                                                         @else
                                                             @if ($showLinkToBook)
@@ -579,7 +579,7 @@
                                                         @endif
                                                         <td class="px-0 py-2 text-sm text-wrap align-middle justify-content-center"><a href="{{ route('OperatorDetails', ['id' => $trip->operatorId] )}}">{{ $trip->operatorName }}</a></td>
                                                         <td class="px-4">{{ $trip->departureTime }}</td>
-                                                        @if($trip->tripFreeSpots == 0)
+                                                        @if($trip->tripFreeSpots <= 0)
                                                             <td class="text-center text-danger">-</td>
                                                         @else
                                                             @if ($showLinkToBook)

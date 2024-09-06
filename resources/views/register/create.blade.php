@@ -99,7 +99,7 @@
                                             </span>
                                             <span class="btn-inner--text"> Sign up with Google</span>
                                         </a>
-                                        <p class="text-xs text-dark font-weight-bolder"> * Please use Divers Hub sign in while we complete Google's verification</p>
+                                        <!--<p class="text-xs text-dark font-weight-bolder"> * Please use Divers Hub sign in while we complete Google's verification</p>-->
                                     </div>
                                     <p class="text-sm mt-3 mb-0">Already have an account?
                                         <a href="{{ route('login') }}" class="text-info font-weight-bolder">Sign in
