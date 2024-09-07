@@ -162,6 +162,7 @@
                     </div>
                 </div>
 
+                {{---Card recommended for this weekend --}}
                 <div class="col-md-8">             
                     <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
@@ -259,6 +260,7 @@
                     </div>
                 </div>
 
+                {{---Card My wishlist --}}
                 <div class="col-md-12">
                     <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
@@ -317,7 +319,7 @@
                                                         <td class="px-4 text-sm text-left"> <a href="OperatorDetails/{{$wish->operatorId}}">{{ $wish->operator}}</a></td>
                                                         <td class="px-4 text-sm text-left"> {{ $wish->date}}</td>
                                                         <td class="px-4 text-sm text-left"> {{ $wish->time}}</td>
-                                                        <td class="px-4 text-sm text-left"> <a href="{{ $wish->linkToBook }}">{{ $wish->tripFreeSpots}}</a></td>
+                                                        <td class="px-4 text-sm text-left"> <a href="{{ $wish->linkToBook }}">{{ $wish->tripFreeSpots == 1000 ? "Y" : $wish->tripFreeSpots }}</a></td>
                                                         <td class="px-4 text-sm text-left"> <a href="TripDetails/{{ $wish->tripId}}">{{ $wish->tripName}}</a></td>
 
                                                     </tr>
