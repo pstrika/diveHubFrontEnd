@@ -356,7 +356,7 @@
     <!-- Google tag (gtag.js) event -->
     @if(session('newUser'))
     <script>
-        gtag('event', 'conversion_event_signup_3', {
+        gtag('event', 'conversion_event_signup_2', {
             // <event_parameters>
         });
     </script>
