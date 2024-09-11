@@ -78,13 +78,25 @@
                                     <tr>
                                         <td class="text-sm font-weight-normal">{{ $user->id }}</td>
                                         <td class="avatar avatar-xxl position-relative">
-                                            @if ($user->picture)
+                                        <div class="avatar avatar-xl position-relative">
+                                            @if (isset($user->picture))
                                             <img src="{{ asset('assets') }}/img/users/{{  $user->picture }}" alt="picture"
                                                 class="w-100 rounded-circle shadow-sm">
                                             @else
                                             <img src="{{ asset('assets') }}/img/default-avatar-background.png" alt="avatar"
                                                 class="w-100 rounded-circle shadow-sm">
-                                            @endif </td>
+                                            @endif 
+                                            @if ($user->google_id)
+                                            <div class="" style="display: inline-block; position: absolute; z-index: 2; bottom: 0; right: 0;">
+                                                <span id="buttonUploadProfilePic"><img style="height:25px; width:25px;" src="{{ asset('assets') }}/img/icons/google_icon.webp"></span>
+                                            </div>
+                                            @else
+                                            <div class="" style="display: inline-block; position: absolute; z-index: 2; bottom: 0; right: 0;">
+                                                <span id="buttonUploadProfilePic"><img style="height:25px; width:25px;" src="{{ asset('assets') }}/img/icons/favicon.png"></span>
+                                            </div>
+                                            @endif
+                                            </div>
+                                            </td>
                                         <td class="text-sm font-weight-normal">{{ $user->name }}</td>
                                         <td class="text-sm font-weight-normal">{{ $user->email }}</td>
                                         <td class="text-sm font-weight-normal">{{ $user->role->name }}</td>

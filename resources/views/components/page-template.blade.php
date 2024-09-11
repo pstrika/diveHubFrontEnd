@@ -23,7 +23,8 @@
  
   <title>{{ $SEO["title"] ?? "Divers Hub - your one stop for diving in FL!" }}</title>
  
-  
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9073316730673872" crossorigin="anonymous"></script>
 
   <!--     Metas    -->
   <meta name="description" content="{{ $SEO["desc"] ??  "All you need to know about scuba diving in South Florida"}}">
