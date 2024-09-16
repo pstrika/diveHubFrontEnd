@@ -27,19 +27,7 @@ class UserController extends Controller
             return redirect()->route('Trips');
         elseif(session()->get('newUser')) {
             // send welcome email
-            //$mgClient = new Mailgun('cf5c95e7c109b3208393a3ffd157a915-a26b1841-c7424af1');
-            $mg = Mailgun::create('cf5c95e7c109b3208393a3ffd157a915-a26b1841-c7424af1');
-            $domain = "mail.divers-hub.com";
-
-            Log::info("Sending welcome email to: " . auth()->user()->name . " <" . auth()->user()->email . ">");
-            $mg->messages()->send('mail.divers-hub.com', [
-                'from'    => 'Divers-Hub <postmaster@mail.divers-hub.com>',
-                'to'      => auth()->user()->name . " <" . auth()->user()->email . ">",
-                //'to'      => "Pablo Strika <pstrika@gmail.com>",
-                'subject' => 'Welcome to Divers Hub',
-                'template' => 'welcome',
-                'h:X-Mailgun-Variables'    => '{"name": "' . auth()->user()->name . '"}'
-              ]);
+            
 
             return redirect()->route('MyDashboard')->with('newUser', true);
         }
