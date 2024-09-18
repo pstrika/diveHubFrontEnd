@@ -11,6 +11,7 @@ use App\Models\Trip;
 use Carbon\Carbon;
 use Symfony\Component\Console\Input\Input;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class CalendarTController extends Controller
 {
@@ -216,6 +217,83 @@ class CalendarTController extends Controller
         $currentDate = Carbon::parse($date)->startOfMonth()->toDateString();
 
         return view('pages.CalendarLobster', compact('trips', 'currentDate', 'currentMonthS', 'year', 'prevMonthS', 'nextMonthS', 'controlNav'));
+
+    }
+
+    public function showWreck($date = null)
+    {
+        // if we didn't receive $date, we just put today's
+        if (!$date) {
+            $date = Carbon::today()->toDateString();
+        }
+
+        $month = date('m', strtotime($date)); // Extract the month from the 'date' variable
+        $year = date('Y', strtotime($date)); // Extract the year from the 'date' variable
+        
+        $dateFrom = Carbon::parse($date)->format('Y-m-d');
+        $dateTo = Carbon::parse($date)->addWeek(6)->format('Y-m-d');
+        
+        $trips = Trip::whereBetween('date', [$dateFrom, $dateTo])
+            ->where('siteIdStatus', 'confirmed')
+            ->where(function ($query) {
+                $query->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('sites')
+                        ->whereRaw("FIND_IN_SET(sites.id, trips.siteId)")
+                        ->where('sites.type', 'wreck');
+                });
+            })
+            ->get()->sortBy("date");
+        
+        LOG::debug("Size of trips for wrecks: " . count($trips));
+        
+        /*$trips = collect(Trip::whereBetween('date', [$dateFrom, $dateTo])
+            ->where('siteIdStatus', 'confirmed')
+            ->get()->sortBy("date"));
+
+        
+
+        $sites = collect(Site::select('id', 'maxDepth', 'level', 'type')->get());
+        Log::debug("size of sites: " . count($sites));
+
+        foreach($trips as $i => $trip) {
+            if($trip->siteId != null) {
+                $siteIds = explode(',', $trip->siteId);
+                $relatedSites = $sites->whereIn('id', $siteIds)->all();
+                foreach($relatedSites as $relatedSite) {
+                    if ($relatedSite->type == 'wreck')
+                        $trips[$i]->site[] = $relatedSite;   
+                }    
+            }
+        }
+
+        // Filter out trips that don't have the 'site' attribute
+        $trips = $trips->filter(function ($trip) {
+            return isset($trip->site) && !empty($trip->site);
+        })->values(); // Reset the keys
+
+        $trips = $trips->toArray();*/
+
+        $dateF = Carbon::parse($date);
+        
+        // Get the next month....
+        $nextMonthS = $dateF->addMonth()->startOfMonth()->toDateString(); // Add a month
+        $thisMonth = Carbon::today()->startOfMonth();
+        $prevMonth = $dateF->sub(new \DateInterval('P2M'));
+
+        $controlNav = "";
+        if($prevMonth < $thisMonth) {
+            $prevMonth = $thisMonth;
+            $controlNav = "disabled";
+        }
+        $prevMonthS = $prevMonth->toDateString();
+
+        $currentMonthS = Carbon::parse($date)->format('F');
+        $year = Carbon::parse($date)->format('Y');
+        $currentDate = Carbon::parse($date)->startOfMonth()->toDateString();
+
+        Log::debug("Now returning view...");
+        return view('pages.CalendarWreck', compact('trips', 'currentDate', 'currentMonthS', 'year', 'prevMonthS', 'nextMonthS', 'controlNav'));
 
     }
 

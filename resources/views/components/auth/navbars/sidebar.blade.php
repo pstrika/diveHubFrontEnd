@@ -17,7 +17,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('overview') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 4.0.13 (9/16/24)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 4.0.14 (9/18/24)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -154,6 +154,15 @@
                             </a>
                         </li>
 
+                        <!--<li class="nav-item {{ $activeItem == 'wreckDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                            <a class="nav-link text-white {{ $activeItem == 'wreckDiving' ? ' active' : '' }}  "
+                                href="{{ route('CalendarWreck') }}">
+                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/wreck_icon_white.png"></span>
+                                
+                                <span class="sidenav-normal  ms-2  ps-1">Wreck Diving</span>
+                            </a>
+                        </li>-->
+
                         <li class="nav-item {{ $activeItem == 'sharkDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
                             <a class="nav-link text-white {{ $activeItem == 'sharkDiving' ? ' active' : '' }}  "
                                 href="{{ route('CalendarShark') }}">
@@ -204,6 +213,14 @@
                                 href="#" onclick="showModalGuest();">
                                 <i class="material-icons-round opacity-10 text-primary">lock</i>
                                 <span class="sidenav-normal  ms-2  ps-1 text-primary"> Technical </span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item {{ $activeItem == 'CalendarWreck' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                            <a class="nav-link text-white {{ $activeItem == 'CalendarWreck' ? ' active' : '' }}  "
+                                href="#" onclick="showModalGuest();">
+                                <i class="material-icons-round opacity-10 text-primary">lock</i>
+                                <span class="sidenav-normal  ms-2  ps-1 text-primary"> Wreck </span>
                             </a>
                         </li>
 
@@ -340,6 +357,15 @@
                                 href="{{ route('users') }}">
                                 <i class="material-icons-round opacity-10">people</i>
                                 <span class="sidenav-normal  ms-2  ps-1"> User Management </span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item {{ $activeItem == 'wreckDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                            <a class="nav-link text-white {{ $activeItem == 'wreckDiving' ? ' active' : '' }}  "
+                                href="{{ route('CalendarWreck') }}">
+                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/wreck_icon_white.png"></span>
+                                
+                                <span class="sidenav-normal  ms-2  ps-1">Wreck Diving</span>
                             </a>
                         </li>
 

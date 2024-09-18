@@ -76,7 +76,7 @@
                 
                 
                 {{-- Dive Operator location are cards --}}
-                <div class="col-md-12 m-auto">             
+                <div class="col-8 m-auto">             
                     <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">

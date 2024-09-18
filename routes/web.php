@@ -80,6 +80,9 @@ Route::get('CalendarShark/{date}', 'App\Http\Controllers\CalendarTController@sho
 Route::get('CalendarShark/', 'App\Http\Controllers\CalendarTController@showShark')->middleware('auth')->name('CalendarShark');
 Route::get('CalendarLobster/{date}', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('auth')->name('CalendarLobster');
 Route::get('CalendarLobster/', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('auth')->name('CalendarLobster');
+Route::get('CalendarWreck/{date}', 'App\Http\Controllers\CalendarTController@showWreck')->middleware('auth')->name('CalendarWreck');
+Route::get('CalendarWreck/', 'App\Http\Controllers\CalendarTController@showWreck')->middleware('auth')->name('CalendarWreck');
+
 Route::get('MyCalendar/{date}', 'App\Http\Controllers\EventController@show')->middleware('auth')->name('MyCalendar');
 Route::get('MyCalendar/', 'App\Http\Controllers\EventController@show')->middleware('auth')->name('MyCalendar');
 
