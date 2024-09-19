@@ -142,6 +142,16 @@
                                             </div>
                                         </td>
                                         
+                                        <td>
+                                            <div class="dropdown">
+                                                <select class="btn bg-info dropdown-toggle text-white" type="button" id="filterLevel" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <option value="all">Show All</option>
+                                                    <option value="level=0">Open Water</option>
+                                                    <option value="level=1">Advanced Open Water</option>
+                                                </select>
+                                                <p class="text-xs font-weight-bold mb-0 mt-n3">level</p>
+                                            </div>
+                                        </td>
                                         
                                     
                                         
@@ -229,7 +239,7 @@
                                                     //Log::debug("Printing on table");
                                                 @endphp
                                                 @if( $tripMonth == $currentMonthS)
-                                                <tr style="border-bottom: 1px solid #D3D3D3;" data-tag="{{ $trip->tags }}">
+                                                <tr style="border-bottom: 1px solid #D3D3D3;" data-tag="{{ $trip->tags }} level={{ $trip->site[0]->level}}">
                                                 <td class="px-4">{{ $trip->date }}</td>
                                                     <td class="px-0 py-2 text-sm text-wrap">{{ $trip->operatorName }}</td>
                                                     <td class="px-4">{{ $trip->departureTime }}</td>
@@ -336,7 +346,7 @@
                     elseif($trip->operatorId == "8")
                         echo "className: 'bg-gradient-info text-white opId=9 loc=" . substr($trip->tags, 0, 3) . " isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . " level=" . $trip->site[0]->level . "' },";
                     else
-                        echo "className: 'bg-gradient-primary text-white loc=" . substr($trip->tags, 0, 3) . " isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . $trip->site[0]->level . "' },";    
+                        echo "className: 'bg-gradient-primary text-white loc=" . substr($trip->tags, 0, 3) . " isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . " level=" . $trip->site[0]->level . "' },";    
                 }
             @endphp
             
@@ -383,6 +393,7 @@
 
         var filterAv =document.getElementById('filterAv');
         var filterLoc =document.getElementById('filterLoc');
+        var filterLevel =document.getElementById('filterLevel');
         
 
         // Filter Location
@@ -424,6 +435,9 @@
                 });
 
                 filterAv.checked = false;
+                filterLevel.value = 'all';
+                
+
             });
         });
 
@@ -451,19 +465,63 @@
                     var tags = row.getAttribute('class');
                     if(selectedOption == 'all') {
                         row.style.display = '';    
+                        calendar.setOption('dayMaxEvents', 3);
                     } else {
-                        if (tags.includes('isAvail=')) {
-                            if (tags.includes('Y')) {
-                                row.style.display = ''; // Show the row
+                        console.log("tag is= " + tags);
+                        calendar.setOption('dayMaxEvents', 10);
+                        if (tags.includes('isAvail=Y'))
+                            row.style.display = ''; // Show the row
+                        else
+                            row.style.display = 'none'; // Hide the row
+                    }
+                });
+
+                filterLoc.value = 'all';
+                filterLevel.value = 'all';
+               
+            });
+        });
+
+        // filter level
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('filterLevel').addEventListener('change', function() {
+                var selectedOption = this.value;
+                var rows = document.querySelectorAll('#tableTrips tr[data-tag]');
+                
+                rows.forEach(function(row) {
+                var tags = row.getAttribute('data-tag');
+                if (tags.includes(selectedOption) || selectedOption === 'all') {
+                    row.style.display = ''; // Show the row
+                } else {
+                    row.style.display = 'none'; // Hide the row
+                }
+                });
+
+                console.log("Selected option=" + selectedOption);
+                var rows = document.querySelectorAll('#calendar a[class]');
+                rows.forEach(function(row) {
+                    var tags = row.getAttribute('class');
+                    
+                    if(selectedOption == 'all') {
+                        row.style.display = '';
+                        calendar.setOption('dayMaxEvents', 3);    
+                    } else {
+                        calendar.setOption('dayMaxEvents', 10);
+                        if(tags.includes('fc-daygrid-event')) {
+                            console.log("tag is= " + tags);
+                            if (tags.includes(selectedOption) || selectedOption === 'all') {
+                                row.style.display = ''; // Hide the row
+                                
                             } else {
-                                row.style.display = 'none'; // Hide the row
+                                    row.style.display = 'none'; // Hide the row
+                            
                             }
                         }
                     }
                 });
 
                 filterLoc.value = 'all';
-               
+                filterAv.checked = false;
             });
         });
 
