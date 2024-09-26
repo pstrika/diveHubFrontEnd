@@ -121,7 +121,39 @@ class SiteController extends Controller
         return view('pages.SiteDetails', compact('site','photos', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO'));
 
     }
+    public function getMyVisitedSites() {
+        $visitedSites = VisitedSite::where('userId', auth()->user()->id)->get();
+        $sites = Site::select('id', 'type', 'level', 'name', 'location')->where('_hidden', '<>', 1)->with('locationLong')->get();
 
+        foreach ($sites as $i => $site)
+            if($visitedSites->contains('siteId', $site->id))
+                $sites[$i]->visited = 1;
+            else
+                $sites[$i]->visited = 0;
+        
+        return view('pages.MyVisitedSites', compact('sites'));
+    }
+    public function updateAllVisitedSites(Request $request) {
+        Log::debug($request);
+
+        $boardContent = json_decode($request->input('boardContent'), true);
+
+        if (is_array($boardContent)) {
+            // Delete all entries where userId matches the authenticated user's ID
+            VisitedSite::where('userId', auth()->id())->delete();
+
+            foreach($boardContent as $site) {
+                VisitedSite::create([
+                    'siteId' => $site,
+                    'userId' => auth()->id(),
+                    // Add other relevant fields as needed
+                ]);    
+            }
+        }
+
+        $view = $this->getMyVisitedSites();
+        return $view;
+    }
     public function updateVisited(Request $request) {
         Log::debug($request);
 

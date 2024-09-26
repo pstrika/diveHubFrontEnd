@@ -172,6 +172,8 @@ Route::get('reset-password/{token}', function ($token) {
 Route::get('user-profile', [UserController::class, 'index'])->middleware('auth')->name('user-profile');
 Route::post('user-profile', [UserController::class, 'update'])->middleware('auth')->name('user.update');
 Route::post('user-profile/password', [UserController::class, 'passwordUpdate'])->middleware('auth')->name('password.change');
+Route::get('MyVisitedSites', 'App\Http\Controllers\SiteController@getMyVisitedSites')->middleware('auth')->name('MyVisitedSites');
+Route::post('UpdateAllVisited', 'App\Http\Controllers\SiteController@updateAllVisitedSites')->middleware('auth')->name('UpdateAllVisited');
 
 
 Route::get('roles', [RolesController::class, 'index'])->middleware('auth')->name('roles');

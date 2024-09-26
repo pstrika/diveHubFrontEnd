@@ -17,7 +17,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('overview') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 4.1.0 (9/18/24)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 4.2.0 (9/26/24)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -45,6 +45,13 @@
                                 <span class="sidenav-normal  ms-3  ps-1"> My Profile </span>
                             </a>
                         </li>
+                        <li class="nav-item" style="padding-left: 1rem;">
+                            <a class="nav-link text-white" href="{{ route('MyVisitedSites') }}">
+                                <i class="material-icons-round opacity-10">where_to_vote</i>
+                                <span class="sidenav-normal  ms-3  ps-1"> My Visited Sites</span>
+                            </a>
+                        </li>
+                        
                         @endif
                         {{--<li class="nav-item">
                             <a class="nav-link text-white " href="{{ route('settings') }}">

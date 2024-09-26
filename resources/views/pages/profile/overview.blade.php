@@ -323,6 +323,17 @@
                                                 </div>
                                             </li>
                                         </ul>
+
+                                        <ul class="list-group">
+                                            <li class="list-group-item border-0 px-0">
+                                                <div class="form-check form-switch ps-0">
+                                                    <input name="show_visited" class="form-check-input ms-auto" type="checkbox"
+                                                        id="show_visited" {{ $user->show_visited ? "checked" : ""}} value="1">
+                                                    <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
+                                                        for="show_visited">Highlight sites already visited in upcoming trips</label>
+                                                </div>
+                                            </li>
+                                        </ul>
                                         
                                         
                                     </div>
@@ -827,6 +838,11 @@
 
         var sms_notifications =document.getElementById('sms_notifications');
         sms_notifications.addEventListener('click', () => {
+            divButton.style.display = 'block';
+        });
+
+        var show_visited =document.getElementById('show_visited');
+        show_visited.addEventListener('click', () => {
             divButton.style.display = 'block';
         });
     </script>

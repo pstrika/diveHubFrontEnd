@@ -311,6 +311,15 @@
                                     </tr>
                                 </table>
                                 
+                                @if(auth()->user()->isNotGuest())
+                                <table style="width: 100%;">
+                                    <tr class="text-center text-sm" style="background-color: #EBFBFF;" >
+                                        <td>
+                                            Sites you've already visited will show in light blue
+                                        </td>
+                                    </tr>
+                                </table>
+                                @endif
 
                                 {{-- Table for trips--}}
                                 <div class="table-responsive">
@@ -352,7 +361,7 @@
                                                     
                                                 @endphp
                                                 @if($hour < 12)
-                                                    <tr style="border-bottom: 1px solid #D3D3D3;" class="justify-content-center align-middle" data-tag="{{ $trip->tags }}">
+                                                    <tr style="border-bottom: 1px solid #D3D3D3;{{ $trip->visited ? ' background-color: #EBFBFF;' :''}}" class="justify-content-center align-middle" data-tag="{{ $trip->tags }}">
                                                         @if($trip->fav == 1)
                                                             <td class="text-start justify-content-center"><i class="material-icons-round text-info opacity-10">favorite</i></td>
                                                         @else
@@ -530,7 +539,17 @@
                                             </ul>
                                         </td>
                                     </tr>
+                                    
                                 </table>
+                                @if(auth()->user()->isNotGuest())
+                                <table style="width: 100%;">
+                                    <tr class="text-center text-sm" style="background-color: #EBFBFF;" >
+                                        <td>
+                                            Sites you've already visited will show in light blue
+                                        </td>
+                                    </tr>
+                                </table>
+                                @endif
                                 
                                 {{--Table for Trips-------}}
                                 <div class="table-responsive">
@@ -571,7 +590,7 @@
                                                     }
                                                 @endphp
                                                 @if($hour >= 12)
-                                                    <tr style="border-bottom: 1px solid #D3D3D3;" class="justify-content-center align-middle" data-tag="{{ $trip->tags }}">
+                                                    <tr style="border-bottom: 1px solid #D3D3D3;{{ $trip->visited ? ' background-color: #EBFBFF;' :''}}" class="justify-content-center align-middle" data-tag="{{ $trip->tags }}">
                                                         @if($trip->fav == 1)
                                                             <td class="text-start justify-content-center"><i class="material-icons-round text-info opacity-10">favorite</i></td>
                                                         @else

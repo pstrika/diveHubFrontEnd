@@ -469,10 +469,10 @@
                     } else {
                         console.log("tag is= " + tags);
                         calendar.setOption('dayMaxEvents', 10);
-                        if (tags.includes('isAvail=Y'))
-                            row.style.display = ''; // Show the row
+                        if (tags.includes('isAvail=N'))
+                            row.style.display = 'none'; // Show the row
                         else
-                            row.style.display = 'none'; // Hide the row
+                            row.style.display = ''; // Hide the row
                     }
                 });
 

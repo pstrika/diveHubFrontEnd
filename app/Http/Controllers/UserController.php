@@ -261,6 +261,14 @@ class UserController extends Controller
             $user->sms_notifications = 0;
         }
 
+        if($request->has('show_visited')) {
+            Log::info("Got show_visited. Updating to: 1");
+            $user->show_visited = 1;
+        } else {
+            Log::info("Didn't get sms_notifications. Updating to: 0");
+            $user->show_visited = 0;
+        }
+
 
         $user->save();
 

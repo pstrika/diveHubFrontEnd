@@ -10,6 +10,7 @@ use App\Models\Trip;
 use App\Models\Site;
 use App\Models\User;
 use App\Models\WeatherLocation;
+use App\Models\VisitedSite;
 use Carbon\Carbon;
 use Symfony\Component\Console\Input\Input;
 use Illuminate\Support\Facades\Log;
@@ -39,7 +40,11 @@ class TripsController extends Controller
         //}])->get()->sortBy('departureTime');
         //Log::debug("size of sites: " . count($sites));
 
+        $visitedSites = VisitedSite::where('userId', auth()->user()->id)->get();
+        Log::debug("Visited sites:" . $visitedSites);
+
         foreach($trips as $i => $trip) {
+            $trips[$i]->visited = 0;
             if($trip->siteId != null) {
                 //Log::debug("trip->siteTd " . $trip->siteId);
                 $siteIds = explode(',', $trip->siteId);
@@ -49,6 +54,8 @@ class TripsController extends Controller
                 //$trips[$i]->site = $relatedSites;
                 
                 #$j=0;
+
+                
                 
                 foreach($relatedSites as $relatedSite) {
                     #$trips[$i]->site[$j]->id = $relatedSite->id;
@@ -57,6 +64,13 @@ class TripsController extends Controller
                     //Log::debug("Trip [" . $trips[$i]->date . " " . $trips[$i]->departureTime . " " . $trips[$i]->tripName . "[" . $trips[$i]->site[$j]->maxDepth . "]");
                     #$j++;
                     $trips[$i]->site[] = $relatedSite;
+
+                    // check if the user has visited this site
+                    if (auth()->user()->id == 5 or auth()->user()->show_visited == 0)
+                        $trips[$i]->visited = 0;
+                    else
+                        if ($visitedSites->contains('siteId', $relatedSite->id) and $trip->siteIdStatus == "confirmed")
+                            $trips[$i]->visited += 1;
                     
                     //add tag for OW and AOW
                     if($relatedSite->level == 0) {
