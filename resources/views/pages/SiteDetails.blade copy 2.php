@@ -199,7 +199,7 @@
                                 <tr>
                                     <td class="w-10"><img style="width: 70px; height: auto;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
                                     <td><h2 class="card-title text-info mx-3 mt-3">{{ $site->name }}</h2>
-                                        <p class="align-middle text-left text-md text-info mx-3 mt-n3">{{ $site->type }} in {{ ucwords($location->location) }}</p>
+                                        <p class="align-middle text-left text-md text-info mx-3 mt-n3">{{ $site->type }} </p>
                                     </td> 
                                 </tr>
                             </tbody></table>
@@ -304,7 +304,7 @@
                         <div class="card-body">
                             
                             <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div id="gauge2" class="gauge-container justify-content-center mx-auto five"> </div>
                                     @php
                                         if($site->level == 0)
@@ -321,45 +321,65 @@
                                     @endphp
                                     <div class="align-middle text-center text-md"><b>{{ $level }}</b></div>
                                     <div class="align-middle text-center text-xxs">Minimum Recommended Certification</div>    
+                                </div>
 
+                                <div class="col-md-3">
                                     <div class="table-responsive">                                   
                                         <table class="table align-items-center mb-0"> 
                                             <tbody>
-                                                <div> <td>
+                                                <tr> <td>
                                                     <table class="table align-items-center mb-0">
                                                         @if($site->maxDepth)
                                                             <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">Max Depth</td>
-                                                            <td class="align-middle text-left text-md w-50"><b>{{ $site->maxDepth}} ft</b></td> </tr>
+                                                            <td class="align-middle text-left text-md"><b>{{ $site->maxDepth}} ft</b></td> </tr>
                                                         @endif
 
                                                         @if($site->avgDepth)
-                                                            <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7">Average Depth</td>
-                                                            <td class="align-middle text-left text-md"><b>{{ $site->avgDepth}} ft</a></b></td> </tr>
+                                                            <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">Average Depth</td>
+                                                            <td class="align-middle text-left text-md w-50"><b>{{ $site->avgDepth}} ft</a></b></td> </tr>
                                                         @endif
-                                                    </table>
-                                                    <div class="table">
+
                                                         @if($site->access)
-                                                            <div class="text-secondary text-center text-sm font-weight-bolder opacity-7">Access</div>
-                                                            <div class="align-middle text-center text-md text-wrap mt-n1"><b>{{ $site->access}}</b></div>
+                                                            <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">Access</td>
+                                                            <td class="align-middle text-left text-md w-50 text-wrap"><b>{{ $site->access}}</b></td> </tr>
                                                         @endif
-                                                    </div>
-                                                    <div class="text-secondary text-center text-sm font-weight-bolder opacity-7">GPS coordinates</div>
-                                                    <div class="align-middle text-center text-md text-wrap"><b>{{ $site->gpsLat}}<br>{{ $site->gpsLon}}</b></> </div>
-                                                </td></tr>
-                                            </tbody>
-                                        </table>
-                                    </div>  
+
+                                                        
+                                                        
+                                                    </table>
+                                            </td></td>
+                                            
+                                            
+                                                    
+                                        </tbody>
+                                    </table>
+                                </div>  
                                 </div>
 
-                                <div class="col-md-6">
-                                    <div class="border-radius-xl">
-                                        <div id="map" style="border: 2px solid #2F88EC; width: 100%; height: 350px; border-radius: 1rem; background-color: #f0f0f0; padding: 1rem;"></div>
-                                    </div>
-                                    
+                                <div class="col-md-3">
+                                    <div class="table-responsive">                                   
+                                        <table class="table align-items-center mb-0"> 
+                                            <tbody>
+                                                <tr> <td>
+                                                    <table class="table align-items-center mb-0">
+                                                        <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">GPS coordinates</td>
+                                                        <td class="align-middle text-left text-md w-50 text-wrap"><b>{{ $site->gpsLat}},<br>{{ $site->gpsLon}}</b></td> </tr>
+
+                                                        <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">Location</td>
+                                                        <td class="align-middle text-left text-md w-50"><b>{{ ucwords($location->location) }}</b></td> </tr>
+                                                        
+                                                    </table>
+                                            </td></td>
+                                            
+                                            
+                                                    
+                                        </tbody>
+                                    </table>
+                                </div>  
                                 </div>
 
                                 @if(!empty($operators))
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <div class="table-responsive">    
                                         <table class="table align-items-center mb-0"> 
                                             <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Frequently visiting operators</td> </tr>
@@ -870,8 +890,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
 
     <script>
         function cancelReview() {
@@ -1006,154 +1024,6 @@
                 document.getElementById('alreadyVisitedHiddenInput').value = document.getElementById('alreadyVisited').checked;  
                 document.getElementById('updatedVisited-form').submit();
             });
-        });
-    </script>
-
-    <script>
-        <?php
-            function dms_to_dd($degrees, $minutes, $direction) {
-                $sign = ($direction === 'N' || $direction === 'E') ? 1 : -1;
-                $dd = $degrees + ($minutes * 60)  / 3600;
-                return $dd * $sign;
-            }
-
-            list($lat_deg, $lat_min, $lat_dir) = sscanf($site->gpsLat, "%d° %f' %c");
-            list($lon_deg, $lon_min, $lon_dir) = sscanf($site->gpsLon, "%d° %f' %c");
-
-            $latitude_dd = dms_to_dd($lat_deg, $lat_min, $lat_dir);
-            $longitude_dd = dms_to_dd($lon_deg, $lon_min, $lon_dir);
-        ?>
-        mapboxgl.accessToken = 'pk.eyJ1IjoicHN0cmlrYSIsImEiOiJjbHZsc2p2bXcyY240MmtuMDcydHJzd2UxIn0.KBf79cvk47WseBc9rNu6gQ'; // Replace with your actual access token
-
-        const map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/pstrika/clwqz4fds03gv01qo9d4w3g21', // Choose a map style
-            //center: [-80.07488399442913, 26.137643513173536], // Set the initial center coordinates
-            center: [ {{ $longitude_dd }}, {{ $latitude_dd }}],
-            zoom: 12, // Set the initial zoom level
-            projection: 'albers'
-        });
-
-        
-        //add icons
-        map.loadImage( '{{ asset('assets') }}/img/icons/marker_reef.png', (error, reef) => {
-            if (error) throw error;
-            // Continue to the next step...
-            map.addImage('icon_reef', reef);
-        });
-        map.loadImage( '{{ asset('assets') }}/img/icons/marker_wreck.png', (error, wreck) => {
-            if (error) throw error;
-            // Continue to the next step...
-            map.addImage('icon_wreck', wreck);
-        });
-        map.loadImage( '{{ asset('assets') }}/img/icons/marker_other.png', (error, other) => {
-            if (error) throw error;
-            // Continue to the next step...
-            map.addImage('icon_other', other);
-        });
-        map.loadImage( '{{ asset('assets') }}/img/icons/marker_reef_this.png', (error, reef) => {
-            if (error) throw error;
-            // Continue to the next step...
-            map.addImage('icon_reef_this', reef);
-        });
-        map.loadImage( '{{ asset('assets') }}/img/icons/marker_wreck_this.png', (error, wreck) => {
-            if (error) throw error;
-            // Continue to the next step...
-            map.addImage('icon_wreck_this', wreck);
-        });
-        map.loadImage( '{{ asset('assets') }}/img/icons/marker_other_this.png', (error, other) => {
-            if (error) throw error;
-            // Continue to the next step...
-            map.addImage('icon_other_this', other);
-        });
-
-
-        const sites = {
-            'type': 'FeatureCollection',
-            'features': [
-                <?php
-                    
-                    $thisSiteId = $site->id;
-
-                    foreach($sites as $site) {
-                        list($lat_deg, $lat_min, $lat_dir) = sscanf($site->gpsLat, "%d° %f' %c");
-                        list($lon_deg, $lon_min, $lon_dir) = sscanf($site->gpsLon, "%d° %f' %c");
-
-                        $latitude_dd = dms_to_dd($lat_deg, $lat_min, $lat_dir);
-                        $longitude_dd = dms_to_dd($lon_deg, $lon_min, $lon_dir);
-                
-                        $suffixIcon = "";
-                        if($thisSiteId == $site->id)
-                            $suffixIcon = "_this";
-
-                        echo "{
-                            'type': '" . $site->type . "'," .
-                                "'properties': {" .
-                                    "'name': \"" . $site->name . "\"," .
-                                    "'icon': 'icon_" . $site->type . $suffixIcon . "'," .
-                                    "'url': '" . $site->id . "'," .
-                            "}," .
-                            "'geometry': {" .
-                                "'type': 'Point'," .
-                                "'coordinates': [" . $longitude_dd . "," . $latitude_dd . "]" .
-                            "}" .
-                        "},";
-                    }
-                ?>
-            ]
-        };
-
-        map.on('load', () => {
-            // Add a GeoJSON source containing place coordinates and information.
-            map.addSource('sites', {
-                'type': 'geojson',
-                'data': sites
-            });
-
-            map.addLayer({
-                'id': 'poi-labels',
-                'type': 'symbol',
-                'source': 'sites',
-                
-                'layout': {
-                    'text-field': ['get', 'name'],
-                    'text-variable-anchor': ['top'],
-                    'text-allow-overlap' : true,
-                    'text-radial-offset': 0.1,
-                    'text-justify': 'auto',
-                    'text-size': 12,
-                    'icon-image': ['get', 'icon'],
-                    'icon-size': 0.3,
-                    'icon-anchor': 'bottom',
-                    'icon-allow-overlap' : true,
-                },
-                'paint': {
-                    'text-color': 'white',
-                },
-            });
-
-            
-        });
-
-        map.on('click', function (e) {
-            var features = map.queryRenderedFeatures(e.point, { layers: ['poi-labels'] });
-
-            if (!features.length) {
-                return;
-            }
-
-            var feature = features[0];
-            // Use Feature and put your code
-            // Populate the popup and set its coordinates
-            // based on the feature found.
-            window.location.href = feature.properties.url;
-            
-        });
-
-        map.on('mousemove', function (e) {
-            var features = map.queryRenderedFeatures(e.point, { layers: ['poi-labels'] });
-            map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
-
         });
     </script>
     @endpush

@@ -117,8 +117,13 @@ class SiteController extends Controller
             "keywords" => $site->name . "," . ($site->aka ? $site->aka . "," : "") . $location->location . "," . $site->type,
         );
         
+        // get site list to print map
+        $sites = Site::where('_hidden', '<>', 1)
+             ->select('id', 'name', 'type', 'gpsLat', 'gpsLon')
+             ->get()
+             ->sortBy('name');
 
-        return view('pages.SiteDetails', compact('site','photos', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO'));
+        return view('pages.SiteDetails', compact('site','photos', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'sites'));
 
     }
     public function getMyVisitedSites() {
