@@ -87,6 +87,9 @@
                 <div class="col-md-6">
                     <div class="card p-0 position-relative mt-3 mx-2 z-index-2 mb-4">
                         <div class="card-body">
+                            <div class="text-center text-sm" style="background-color: #EBFBFF;" >
+                                Operators offering ONLY private charters will show in light blue
+                            </div>
                             <div class="table-responsive">
                                 <table>
                                     <thead class="text-info">
@@ -133,9 +136,13 @@
                                                         $price = $item['price'];
                                                         break;
                                                     }
+                                                    elseif ($item['type'] === "Private - Half Day") {
+                                                        $price = $item['price'];
+                                                        break;
+                                                    }
                                                 }
                                             ?>
-                                            <tr style="border-bottom: 1px solid #D3D3D3;" data-tag="{{ $operator->locationArea}}">
+                                            <tr style="border-bottom: 1px solid #D3D3D3;{{ $operator->private ? ' background-color: #EBFBFF;' :''}}" data-tag="{{ $operator->locationArea}}">
                                                 <td class="w-10"><img src="{{ asset('assets') }}{{ $operator->logoUrl}}" alt="img-blur-shadow" class="img-fluid align-items-center border-radius-lg"></td>
                                                 <td class="text-sm"><a href="OperatorDetails/{{ $operator->id }}"> {{ $operator->operatorName }}</a></td>
                                                 <td class="w-10 text-center text-sm">${{ $price }}</td>
