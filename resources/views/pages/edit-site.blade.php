@@ -422,6 +422,7 @@
                                                     <option value="Workboat" {{ $wreckData->type == "Workboat" ? "selected" : ""}}>Workboat</option>
                                                     <option value="Houseboat" {{ $wreckData->type == "Houseboat" ? "selected" : ""}}>Houseboat</option>
                                                     <option value="Minesweeper" {{ $wreckData->type == "Minesweeper" ? "selected" : ""}}>Minesweeper</option>
+                                                    <option value="Missile Tracker" {{ $wreckData->type == "Missile Tracker" ? "selected" : ""}}>Missile Tracker</option>
                                                     <option value="Trawler" {{ $wreckData->type == "Trawler" ? "selected" : ""}}>Trawler</option>
                                                     <option value="Yatch" {{ $wreckData->type == "Yatch" ? "selected" : ""}}>Yatch</option>
                                                     <option value="Pipes" {{ $wreckData->type == "Pipes" ? "selected" : ""}}>Pipes</option>

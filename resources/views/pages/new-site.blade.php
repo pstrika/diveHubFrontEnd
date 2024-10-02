@@ -337,6 +337,7 @@
                                                     <option value="Workboat">Workboat</option>
                                                     <option value="Houseboat">Houseboat</option>
                                                     <option value="Minesweeper">Minesweeper</option>
+                                                    <option value="Missile Tracking">Missile Tracking</option>
                                                     <option value="Trawler">Trawler</option>
                                                     <option value="Yatch">Yatch</option>
                                                     <option value="Pipes">Pipes</option>
