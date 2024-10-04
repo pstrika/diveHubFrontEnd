@@ -252,6 +252,8 @@
                                                     <option value="DEB">Deerfield Beach</option>
                                                     <option value="WPB">West Palm Beach</option>
                                                     <option value="KLA">Key Largo</option>
+                                                    <option value="KWE">Key West</option>
+                                                    <option value="JUP">Jupiter</option>
                                                 </select>
                                                 <p class="text-xs font-weight-bold mb-0 mt-n3">location</p>
                                             </div>
@@ -482,6 +484,8 @@
                                                     <option value="DEB">Deerfield Beach</option>
                                                     <option value="WPB">West Palm Beach</option>
                                                     <option value="KLA">Key Largo</option>
+                                                    <option value="KWE">Key West</option>
+                                                    <option value="JUP">Jupiter</option>
                                                 </select>
                                                 <p class="text-xs font-weight-bold mb-0 mt-n3">location</p>
                                             </div>
