@@ -85,7 +85,7 @@ class OperatorController extends Controller
     }
 
 
-    $operators = Operator::all();
+    $operators = Operator::all()->sortBy('operatorName');
 
     $locationAreas = Operator::distinct()->pluck('locationArea')->toArray();
 
