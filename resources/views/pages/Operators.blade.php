@@ -69,13 +69,13 @@
                                 <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="Miami" data-lat="25.793449" data-lng="-80.139198" data-zoom="10">Miami</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="Upper Keys" data-lat="25.08652" data-lng="-80.44728" data-zoom="10">Upper Keys</a>
+                                <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="Upper Keys" data-lat="25.05" data-lng="-80.54728" data-zoom="10">Upper Keys</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="Lower Keys" data-lat="24.55524" data-lng="-81.78163" data-zoom="11">Lower Keys</a>
+                                <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="Lower Keys" data-lat="24.65524" data-lng="-81.60163" data-zoom="10">Lower Keys</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="Middle Keys" data-lat="24.7263" data-lng="-81.0403" data-zoom="11">Middle Keys</a>
+                                <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="Middle Keys" data-lat="24.7263" data-lng="-81" data-zoom="11">Middle Keys</a>
                             </li>
                         </ul>
                     </div>

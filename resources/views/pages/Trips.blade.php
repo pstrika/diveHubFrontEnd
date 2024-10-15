@@ -115,17 +115,17 @@
         
 
 
-            {{--
+            
             <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/divers_jumping.avif');">
                 <span class="mask  bg-gradient-info  opacity-4"></span>
-            </div>--}}
+            </div>
 
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2 justify-content-end" style="background-image: url('/assets/img/illustrations/ads/240803_majestic.png');">
+            {{--<div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2 justify-content-end" style="background-image: url('/assets/img/illustrations/ads/240803_majestic.png');">
                 <!--<span class="mask  bg-gradient-info  opacity-4"></span>-->
                 <button class="btn btn-icon btn-3 btn-info mt-n6 mx-3" type="button" onclick="sendEmail();">
                     <span class="btn-inner--text">Learn More</span>
                 </button>
-            </div>
+            </div>--}}
 
             
             <div class="card p-0 position-relative mt-n7 mx-2 z-index-2 mb-4">
@@ -1146,7 +1146,7 @@
     </script>
 
     {{-- Send email for ad--}}
-    <script>
+    {{--<script>
         function sendEmail() {
         var link = 'mailto:seatheskyadventures@gmail.com'
                 + '?cc=info@divers-hub.com'
@@ -1156,6 +1156,6 @@
 
         window.location.href = link;
         }
-    </script>
+    </script>--}}
     @endpush
 </x-page-template>

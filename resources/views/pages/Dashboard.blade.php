@@ -81,11 +81,8 @@
         </div>
 
 
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2 justify-content-end" style="background-image: url('/assets/img/illustrations/ads/240803_majestic.png');">
-                <!--<span class="mask  bg-gradient-info  opacity-4"></span>-->
-                <button class="btn btn-icon btn-3 btn-info mt-n6 mx-3" type="button" onclick="sendEmail();">
-                    <span class="btn-inner--text">Learn More</span>
-                </button>
+            <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/dashboard1.jpeg');">
+                <span class="mask  bg-gradient-info  opacity-4"></span>
             </div>
 
             <div class="card p-0 position-relative mt-n5 mx-1 z-index-2 mb-4">
