@@ -206,7 +206,9 @@ Route::get('edit-item/{id}',[ItemsController::class, 'edit'])->middleware('auth'
 Route::post('edit-item/{id}',[ItemsController::class, 'update'])->middleware('auth');
 Route::post('items/{id}', [ItemsController::class, 'destroy'])->middleware('auth')->name('delete.item');
 
-
+Route::get('/refresh-captcha', function () {
+    return response()->json(['captcha' => asset('captcha/flat')]);
+});
 
 
 Route::group(['middleware' => 'auth'], function () {

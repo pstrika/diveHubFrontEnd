@@ -21,6 +21,7 @@ class RegisterController extends Controller
             'name' => 'required|max:255',
             'email' => 'required|email|max:255|unique:users,email',
             'password' => 'required|min:7|max:255',
+            'captcha' => 'required|captcha',
             //'role_id'=>'required'
         ]);
 

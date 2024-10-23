@@ -14,6 +14,7 @@
         "laravel/socialite": "^5.15",
         "laravel/tinker": "^2.6",
         "mailgun/mailgun-php": "^4.3",
+        "mews/captcha": "^3.3",
         "nyholm/psr7": "^1.8",
         "spatie/laravel-sitemap": "^6.2",
         "symfony/http-client": "^7.1"

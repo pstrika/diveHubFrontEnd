@@ -78,6 +78,20 @@
                                     @error('password')
                                     <p class='text-danger inputerror'>{{ $message }} </p>
                                     @enderror
+                                    <div>
+                                        <div class="form-group mt-1" style="display: flex; align-items: center;">
+                                        <img src="{{ asset('captcha/flat') }}" class="captcha" alt="captcha">
+                                        <span type="button" onclick="refreshCaptcha()" class="btn bg-white"><i class="material-icons-round text-info opacity-10">refresh</i></span>
+                                        <div class="input-group input-group-dynamic" style="margin-left: 10px;">
+                                            <label class="form-label">Captcha</label>
+                                            <input type="text" name='captcha' class="form-control" aria-label="Enter CAPTCHA">
+                                        </div>
+                                       
+                                    </div>
+                                    @error('captcha')
+                                    <p class='text-danger inputerror'>{{ $message }} </p>
+                                    @enderror
+
                                     <div class="form-check text-start mt-3">
                                         <input class="form-check-input bg-dark border-dark" type="checkbox" value=""
                                             id="flexCheckDefault" checked>
@@ -148,5 +162,14 @@
     
     </script>
     
+    <script type="text/javascript">
+        function refreshCaptcha() {
+            fetch('/refresh-captcha')
+                .then(response => response.json())
+                .then(data => {
+                    document.querySelector('img.captcha').src = data.captcha + '?' + Date.now();
+                });
+        }
+    </script>
     @endpush
 </x-page-template>
