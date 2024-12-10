@@ -340,7 +340,14 @@
                                                     <div class="table">
                                                         @if($site->access)
                                                             <div class="text-secondary text-center text-sm font-weight-bolder opacity-7">Access</div>
-                                                            <div class="align-middle text-center text-md text-wrap mt-n1"><b>{{ $site->access}}</b></div>
+                                                            <div class="align-middle text-center text-md text-wrap mt-n1">
+                                                                <b>{{ $site->access}}</b>
+                                                                <?php
+                                                                    if($site->access == "Beach Access")
+                                                                        echo "(" . $site->distance_from_shore . " ft from shore)";
+                                                                ?>
+                                                                
+                                                            </div>
                                                         @endif
                                                     </div>
                                                     <div class="text-secondary text-center text-sm font-weight-bolder opacity-7">GPS coordinates</div>

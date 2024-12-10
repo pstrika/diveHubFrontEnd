@@ -255,18 +255,21 @@
                                                 <th class="px-4 align-top text-center">
                                                     Level<a href="#" onclick="showModalLevel();"><p class="text-xs text-info text-center mt-0 px-1">(?)</p></a>
                                                 </th>
+                                                <th class="px-4 align-top text-center" data-bs-toggle="tooltip" data-bs-placement="top" title="swimming distance from shore" data-container="body" data-animation="true">
+                                                    Distance from shore <p class="text-xs text-info text-center mt-0 px-1">(ft)</p>
+                                                </th>
                                                 <th class="px-4 align-top text-center" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
-                                                    Max Depth
+                                                    Max Depth <p class="text-xs text-info text-center mt-0 px-1">(ft)</p>
                                                 </th>
                                             </thead>
                                             <tbody>
                                                 @foreach($siteLocation as $site)    
                                                     <tr style="border-bottom: 1px solid #D3D3D3;">
                                                         <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
-                                                        <td class="w-80 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
+                                                        <td class="w-60 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
 
                                                         <td class="w-5 text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" height="25"></td>
-
+                                                        <td class="w-20 align-middle text-center text-md"><b>{{ $site->distance_from_shore }}</b></td> 
                                                         <td class="w-10 align-middle text-center text-md"><b>{{ $site->maxDepth }}</b></td> 
                                                 
                                                     </tr>
