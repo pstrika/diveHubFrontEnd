@@ -63,24 +63,27 @@ class MyDashboardController extends Controller
             ->sortBy('departureTime')
             ->sortBy('date');
             
-
+        Log::debug("Size of fav trips is" . count($favTrips));
         $sites = collect(Site::select('id', 'maxDepth', 'level')->get());
 
         foreach($favTrips as $i => $trip) {
             if($trip->siteId != null) {
-                //Log::debug("trip->siteTd " . $trip->siteId);
+                Log::debug("trip->siteId " . $trip->siteId . "tripId = " .$trip->id);
                 $siteIds = explode(',', $trip->siteId);
                 //$relatedSites = Site::whereIn('id', $siteIds)->get();
                 $relatedSites = $sites->whereIn('id', $siteIds)->all();
-                //Log::debug("size of relatedSites: " . count($relatedSites));
+                Log::debug("size of relatedSites: " . count($relatedSites));
                 //$trips[$i]->site = $relatedSites;
                 
                 $j=0;
                 
                 foreach($relatedSites as $relatedSite) {
-                    $favTrips[$i]->site[$j]->id = $relatedSite->id;
-                    $favTrips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
-                    $favTrips[$i]->site[$j]->level = $relatedSite->level;
+                    Log::debug("i: " . $i . "j: " . $j);
+                    // COMENTED next 3 lines on 12/21/2024 (was giving error: Undefined array key 0). Also discovered
+                    // that for Molases Reef, operator KL Dive Center sometimes uses Molases Shallow Reef clashing with Keys Shallow reef
+                    //$favTrips[$i]->site[$j]->id = $relatedSite->id;
+                    //$favTrips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
+                    //$favTrips[$i]->site[$j]->level = $relatedSite->level;
                     //Log::debug("Trip [" . $trips[$i]->date . " " . $trips[$i]->departureTime . " " . $trips[$i]->tripName . "[" . $trips[$i]->site[$j]->maxDepth . "]");
                     $j++;
                     $favTrips[$i]->site[] = $relatedSite;
