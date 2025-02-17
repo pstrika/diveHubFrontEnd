@@ -195,8 +195,13 @@
                                                             @endif
                                                             
                                                             @if($boat->capacity)
-                                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Capacity</td>
+                                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Capacity Rec</td>
                                                                 <td class="align-middle text-left text-sm"><b>{{ $boat->capacity }} divers</b></td> </tr>
+                                                            @endif
+
+                                                            @if($boat->tec_capacity)
+                                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Capacity Tec</td>
+                                                                <td class="align-middle text-left text-sm"><b>{{ $boat->tec_capacity }} divers</b></td> </tr>
                                                             @endif
                                                             
                                                             @if($boat->manufacturer)

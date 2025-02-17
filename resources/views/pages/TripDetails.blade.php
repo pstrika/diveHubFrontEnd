@@ -169,7 +169,7 @@
                                                     
                                                     <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Availability</td>
                                                     @if( $tripDetails->tripFreeSpots > 0 and $tripDetails->tripFreeSpots != 1000 and count($boats) == 1 and $boats != null)
-                                                        <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $tripDetails->tripFreeSpots }} / {{ $boats[0]->capacity }}</b></td> </tr>
+                                                        <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $tripDetails->tripFreeSpots }} / {{ $tripDetails->tripType == 'Technical' ? $boats[0]->tec_capacity : $boats[0]->capacity }}</b></td> </tr>
                                                     @else
                                                         <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $tripDetails->tripFreeSpots == 1000 ? "Yes" : $tripDetails->tripFreeSpots }}</b></td> </tr>
                                                     @endif
@@ -418,8 +418,13 @@
                                                         @endif
                                                         
                                                         @if($boat->capacity)
-                                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Capacity</td>
+                                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Capacity Rec</td>
                                                             <td class="align-middle text-left text-sm"><b>{{ $boat->capacity }} divers</b></td> </tr>
+                                                        @endif
+
+                                                        @if($boat->tec_capacity)
+                                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Capacity Tec</td>
+                                                            <td class="align-middle text-left text-sm"><b>{{ $boat->tec_capacity }} divers</b></td> </tr>
                                                         @endif
                                                         
                                                         @if($boat->manufacturer)
