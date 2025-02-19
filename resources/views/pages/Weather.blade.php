@@ -612,16 +612,24 @@
                                     
                                         <tr> {{--Sunrise--}}
                                             <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">SUNRISE</td>
-                                            @foreach($weathers as $weather)
-                                                <td class="align-middle text-center text-sm">{{ $weather->sunrise }}</td>
-                                            @endforeach
+                                            <?php
+                                            foreach($weathers as $weather) {
+                                                $dateTime = DateTime::createFromFormat('h:i A', $weather->sunrise);
+                                                $time24H = $dateTime->format('H:i');
+                                                echo '<td class="align-middle text-center text-md">' . $time24H . '</td>';
+                                            }
+                                            ?>
                                         </tr>
 
                                         <tr> {{--Sunset--}}
-                                            <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">SUNSET)</td>
-                                            @foreach($weathers as $weather)
-                                                <td class="align-middle text-center text-sm">{{ $weather->sunset }}</td>
-                                            @endforeach
+                                            <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">SUNSET</td>
+                                            <?php
+                                            foreach($weathers as $weather) {
+                                                $dateTime = DateTime::createFromFormat('h:i A', $weather->sunset);
+                                                $time24H = $dateTime->format('H:i');
+                                                echo '<td class="align-middle text-center text-md">' . $time24H . '</td>';
+                                            }
+                                            ?>
                                         </tr>
 
                                         
