@@ -1,19 +1,70 @@
-<x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
-    <x-auth.navbars.sidebar activePage="Calendars" activeItem="" activeSubitem=""></x-auth.navbars.sidebar>
+<x-page-template bodyClass='bg-gray-200'>
     
     <style>
         .past-day {
             background-color:rgb(218, 218, 218); /* Light grey color */
         },
     </style>
+    <style>
+        .recreational-event {
+            background-color: #004652; /* Green color for recreational events */
+            border-color: #004652;
+        },
+    </style>
+    <style>
+        .recreational-event:hover {
+            background-color: #33a7a4; /* Green color for recreational events */
+            border-color: #33a7a4;
+        },
+    </style>
+    <style>
+        .technical-event {
+            background-color: #5a5a5a; /* Yellow color for technical events */
+            border-color: #5a5a5a;
+        },
+    </style>
+    <style>
+        .technical-event:hover {
+            background-color: #33a7a4; /* Yellow color for technical events */
+            border-color: #33a7a4;
+        },
+    </style>
+    <style>
+        /* Styles for larger screens (desktops) */
+        @media (min-width: 768px) {
+        .fc-event-title {
+            white-space: normal !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        }
+    </style>
+
+    <style>
+        /* Styles for smaller screens (mobile devices) */
+        @media (max-width: 767px) {
+        .fc-event-title {
+            white-space: nowrap !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        }
+    </style>
+    <style>
+        .custom-hover-button {
+            background-color: #004652; /* Initial color */
+        }
+    </style>
+    <style>
+        .custom-hover-button:hover {
+            background-color: #33a7a4; /* Change to your desired hover color, e.g., tomato */
+        }
+    </style>
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-        <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Calendar Hydrotherapy {{ $currentMonthS}}-{{ $year }}"></x-auth.navbars.navs.auth>
-        <!-- End Navbar -->
             <div class="container-fluid py-4">
-                <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/calendar.webp');">
+                {{-- <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/calendar.webp');">
                     <span class="mask  bg-gradient-info  opacity-4"></span>
-                </div>
+                </div> --}}
 
                 <div class="d-none" data-color="info" id="sidebarColorDiv"></div>
 
@@ -68,22 +119,23 @@
                     </div>
                 </div>
 
-                <div class="card p-0 position-relative mt-n7 mx-2 z-index-2">
+                <div class="card p-0 position-relative mt-0 mx-2 z-index-2">
+                {{-- <div class="card p-0 position-relative mt-n7 mx-2 z-index-2"> --}}
             
                     <div class="p-0 mt-n4 mx-2 border-radius-lg py-3 pe-1">
                         <div style="float: left;">
-                            <h2 class="card-title text-info mx-3 mt-4">{{ $currentMonthS }}-{{ $year }}</h2>
-                            <h4 class="card-category text-info mx-4">Calendar Hydrotherapy</h4>
+                            <h2 class="card-title mx-3 mt-4" style="color: #004652;">{{ $currentMonthS }}-{{ $year }}</h2>
+                            <h4 class="card-category mx-3" style="color: #004652;">Click on calendar to book</h4>
                         </div>
 
                         {{-----------------NAV to next day}} --}}
                         <div class="mt-5" style="float: right;">
-                            <a type="button" href="/CalendarHydrotherapy/{{ $prevMonthS }}/" class="btn btn-info tex-end">
-                                <span class="material-icons" style="font-size :24pt;">keyboard_arrow_left</span>
+                            <a type="button" href="/CalendarHydrotherapy/{{ $prevMonthS }}/" class="btn btn-white tex-end custom-hover-button">
+                                <span class="material-icons" style="font-size :24pt; color: white;">keyboard_arrow_left</span>
                             </a>
                             
-                            <a type="button" href="/CalendarHydrotherapy/{{ $nextMonthS }}/" class="btn btn-info tex-end">
-                                <span class="material-icons" style="font-size :24pt;">keyboard_arrow_right</span>
+                            <a type="button" href="/CalendarHydrotherapy/{{ $nextMonthS }}/" class="btn btn-info tex-end custom-hover-button">
+                                <span class="material-icons" style="font-size :24pt; color: white;">keyboard_arrow_right</span>
                             </a>
                         </div>
                         <div style="clear: both;"></div>
@@ -119,8 +171,8 @@
                                 </tr> 
                                 
                                 <tr><td class="text-center text-sm w-1"> 
-                                    <span class="badge badge-md bg-gradient-success text-white">Recreational</span>
-                                    <span class="badge badge-md bg-gradient-warning text-white">Technical</span>
+                                    <span class="badge badge-md text-white" style="background-color: #004652;">Recreational</span>
+                                    <span class="badge badge-md text-white" style="background-color: #5a5a5a;">Technical</span>
                                 </td></tr>
                                 <tr><td><p class="text-xs font-weight-bold mb-0 mt-n3">reference</p></td></tr>
                             </table>
@@ -134,90 +186,10 @@
                         </div>
                     </div>
 
-                    <div class="col-md-12">             
-                        <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
-                            <div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Calendar Hydrotherapy {{ $currentMonthS }}-{{ $year }}</h2>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    
-                                    <div class="table-responsive">
-                                        <table id="tableTrips">
-                                            <thead class="text-info">
-                                                <th class="px-4 align-top">
-                                                    Date
-                                                </th>
-                                                <th class="align-top">
-                                                    Operator
-                                                </th>
-                                                <th class="px-4 align-top">
-                                                    Time
-                                                </th>
-                                                    <th class="py-0 align-top">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
-                                                </th>
-                                                
-                                                <th class="px-4 align-top">
-                                                    Site / Trip Name
-                                                </th>
-                                                <th class="px-4 align-top">
-                                                    Level<a href="#" onclick="showModal();"><p class="text-xs text-info text-center mt-0 px-1">(?)</p></a>
-                                                </th>
-                                                <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
-                                                    Depth
-                                                </th>
-                                            </thead>
-                                            <tbody >
-                                                @foreach($trips as $trip)
-                                                    
-                                                    @php
-                                                        // do this to avoid printing on the table trips that are not within the current month, but wanted to show them on calendar (check controller)
-                                                        $tripDate = new DateTime($trip->date);
-                                                        $tripMonth = $tripDate->format('F');
-                                                    @endphp
-                                                    @if( $tripMonth == $currentMonthS)
-                                                    <tr style="border-bottom: 1px solid #D3D3D3;" data-tag="{{ $trip->tags }} opId={{ $trip->operatorId }}">
-                                                    <td class="px-4">{{ $trip->date }}</td>
-                                                        <td class="px-0 py-2 text-sm text-wrap">{{ $trip->operatorName }}</td>
-                                                        <td class="px-4">{{ $trip->departureTime }}</td>
-                                                        @if($trip->tripFreeSpots == 0)
-                                                            <td class="text-center">-</td>
-                                                        @else
-                                                            <td class="text-center"> <a href="{{ $trip->linkToBook }}" target="_blank">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</a></td>
-                                                        @endif
-                                                        
-                                                        
-
-                                                        <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}</a></td>
-
-                                                        @if(!empty($trip->site[0]))
-                                                            {{--<td class="px-4 text-sm text-center">{{ $trip->site[0]->level }}</td>--}}
-                                                            <td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $trip->site[0]->level }}.png" height="25"></td>
-                                                        @else
-                                                            <td class="px-4 text-sm text-center"> </td>
-                                                        @endif
-
-                                                        @if(!empty($trip->site[0]))
-                                                            <td class="px-4 text-sm text-center">{{ $trip->site[0]->maxDepth }}</td>
-                                                        @else
-                                                            <td class="px-4 text-sm text-center"> </td>
-                                                        @endif
-                                                        
-                                                    </tr>
-                                                    @endif
-                                                @endforeach          
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>    
-                            </div>
-                        </div>
-                    </div>
+                
                 </div>
             </div>      
-            <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
+            <x-auth.footers.auth.hydrotherapy></x-auth.footers.auth.hydrotherapy>
         </div>
     </main>
     
@@ -263,10 +235,13 @@
                     echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) . " (" . str($trip->tripFreeSpots) . "/" . str($trip->boatCapacity) . ")" . "',";
                     echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
                     echo "url: '/TripDetails/" . str($trip->id) . "',";
-                    if($trip->tripType == "Technical")
-                        echo "className: 'bg-gradient-warning text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
+                    if($trip->tripType == "Technical") {
+                        
+                        echo "className: 'technical-event text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
+
+                    }
                     else
-                        echo "className: 'bg-gradient-success text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";    
+                        echo "className: 'recreational-event text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";    
                 }
             @endphp
             
@@ -311,12 +286,20 @@
         // Apply CSS styles using JavaScript
         var style = document.createElement('style');
         style.innerHTML = `
+        .fc-event-title {
+            white-space: normal !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        @media (max-width: 767px) {
             .fc-event-title {
-                white-space: normal !important;
+                white-space: nowrap !important;
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
-        `;
+        }
+    `;
         document.head.appendChild(style);
 
     </script>
