@@ -60,6 +60,20 @@
             background-color: #33a7a4; /* Change to your desired hover color, e.g., tomato */
         }
     </style>
+
+    <style>
+        .fc-button-primary {
+        background-color: #004652 !important; /* Desired color */
+        color: white !important; /* Text color */
+        border: none !important; /* Optional: Remove border */
+        }
+    </style>
+    <style>
+        .fc-button-primary:hover {
+        background-color: #33a7a4 !important; /* Optional: Slightly darker color on hover */
+        color: white !important; /* Text color on hover */
+        }
+    </style>
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
             <div class="container-fluid py-4">
                 {{-- <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/calendar.webp');">
@@ -212,16 +226,24 @@
     <script>
         var calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
         dateClick: function(info) {
-            var link = '/Trips/' + info.dateStr;
-            window.location.href = link;
+            calendar.changeView('timeGridDay', info.dateStr);
         },
         initialView: "dayGridMonth",
         firstDay: {{ auth()->user()->firstDayOfWeek }},
         contentHeight: 'auto',
         headerToolbar: {
-            start: '', //'title', // will normally be on the left. if RTL, will be on the right
-            center: '',
-            end: ''//'today prev,next' // will normally be on the right. if RTL, will be on the left
+            start: '', // Title position
+            center: 'customButton',
+            end: '' // Custom button position
+        },
+        customButtons: {
+            customButton: {
+            text: 'Back to Month View',
+            click: function() {
+                calendar.changeView('dayGridMonth');
+            },
+            className: 'back-to-month-view-button'
+            }
         },
         selectable: true,
         editable: false,
@@ -234,7 +256,9 @@
                     echo "{";
                     echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) . " (" . str($trip->tripFreeSpots) . "/" . str($trip->boatCapacity) . ")" . "',";
                     echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
-                    echo "url: '/TripDetails/" . str($trip->id) . "',";
+                    echo "end: '" . $trip->date . " " . date('H:i', strtotime('+210 minutes', strtotime($trip->departureTime))) ."',"; // Setting event duration to 2 hours
+                    //echo "url: '/TripDetails/" . str($trip->id) . "',";
+                    echo "url: '" . $trip->linkToBook . "',";
                     if($trip->tripType == "Technical") {
                         
                         echo "className: 'technical-event text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
@@ -270,16 +294,26 @@
             },
             
         },
-        dayCellDidMount: function(info) {
-                // Get the current date
-                var today = new Date();
-                // Set time to midnight for comparison
-                today.setHours(0, 0, 0, 0);
-                var date = info.date;
-                if (date < today) {
-                    info.el.classList.add('past-day');
-                }
+        viewDidMount: function(info) {
+            if (info.view.type === 'timeGridDay') {
+            document.querySelector('.fc-customButton-button').style.display = 'inline-block';
+            } else {
+            document.querySelector('.fc-customButton-button').style.display = 'none';
             }
+        },
+        viewWillUnmount: function(info) {
+            document.querySelector('.fc-customButton-button').style.display = 'none';
+        },
+        dayCellDidMount: function(info) {
+            // Get the current date
+            var today = new Date();
+            // Set time to midnight for comparison
+            today.setHours(0, 0, 0, 0);
+            var date = info.date;
+            if (date < today) {
+            info.el.classList.add('past-day');
+            }
+        }
         });
 
         calendar.render();
@@ -358,10 +392,5 @@
     
     </script>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            sidebarColor(document.getElementById("sidebarColorDiv")); // Execute the sidebarColor function once the HTML is loaded
-        });
-    </script>
     @endpush
 </x-page-template>
