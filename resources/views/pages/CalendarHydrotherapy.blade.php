@@ -271,6 +271,12 @@
             
 
         ],
+        eventClick: function(info) {
+            if (info.event.url) {
+            window.open(info.event.url, '_parent');
+            info.jsEvent.preventDefault(); // Prevent the default action (navigation)
+            }
+        },
         views: {
             month: {
             titleFormat: {
