@@ -338,6 +338,16 @@
 
     </script>
 
+    <script>
+        // Wait for the DOM to load
+        document.addEventListener("DOMContentLoaded", function() {
+            var links = document.querySelectorAll('a:not([type="button"])');
+
+            links.forEach(function(link) {
+                link.setAttribute('target', '_parent');
+        });
+        });
+    </script>
 
 
 
