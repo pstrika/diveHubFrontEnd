@@ -225,18 +225,19 @@
     
     <script>
         var calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+        initialView: "dayGridMonth",
+        firstDay: {{ auth()->user()->firstDayOfWeek }},
         dateClick: function(info) {
             // Change to day view
             calendar.changeView('timeGridDay', info.dateStr);
 
             // Format and update the <h2> title
-            var selectedDate = new Date(info.dateStr);
+            var selectedDate = new Date(info.dateStr + 'T00:00:00'); 
             var options = { weekday: 'long', month: 'long', day: 'numeric' };
             var formattedDate = selectedDate.toLocaleDateString('en-US', options);
             document.getElementById('calendar-title').textContent = formattedDate;
         },
-        initialView: "dayGridMonth",
-        firstDay: {{ auth()->user()->firstDayOfWeek }},
+        
         contentHeight: 'auto',
         headerToolbar: {
             start: '', // Title position
