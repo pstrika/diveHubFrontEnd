@@ -138,7 +138,7 @@
             
                     <div class="p-0 mt-n4 mx-2 border-radius-lg py-3 pe-1">
                         <div style="float: left;">
-                            <h2 class="card-title mx-3 mt-4" style="color: #004652;">{{ $currentMonthS }}-{{ $year }}</h2>
+                            <h2 class="card-title mx-3 mt-4" id="calendar-title" style="color: #004652;">{{ $currentMonthS }}-{{ $year }}</h2>
                             <h4 class="card-category mx-3" style="color: #004652;">Click on calendar to book</h4>
                         </div>
 
@@ -226,7 +226,14 @@
     <script>
         var calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
         dateClick: function(info) {
+            // Change to day view
             calendar.changeView('timeGridDay', info.dateStr);
+
+            // Format and update the <h2> title
+            var selectedDate = new Date(info.dateStr);
+            var options = { weekday: 'long', month: 'long', day: 'numeric' };
+            var formattedDate = selectedDate.toLocaleDateString('en-US', options);
+            document.getElementById('calendar-title').textContent = formattedDate;
         },
         initialView: "dayGridMonth",
         firstDay: {{ auth()->user()->firstDayOfWeek }},
@@ -238,11 +245,18 @@
         },
         customButtons: {
             customButton: {
-            text: 'Back to Month View',
-            click: function() {
-                calendar.changeView('dayGridMonth');
-            },
-            className: 'back-to-month-view-button'
+                text: 'Back to Month View',
+                click: function() {
+                    calendar.changeView('dayGridMonth');
+
+                    // Reset <h2> title back to current month and year
+                    var currentMonthYear = new Date('{{ $currentDate }}').toLocaleDateString('en-US', {
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                    document.getElementById('calendar-title').textContent = currentMonthYear;
+                },
+                className: 'back-to-month-view-button'
             }
         },
         selectable: true,
@@ -256,91 +270,71 @@
                     echo "{";
                     echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) . " (" . str($trip->tripFreeSpots) . "/" . str($trip->boatCapacity) . ")" . "',";
                     echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
-                    echo "end: '" . $trip->date . " " . date('H:i', strtotime('+210 minutes', strtotime($trip->departureTime))) ."',"; // Setting event duration to 2 hours
-                    //echo "url: '/TripDetails/" . str($trip->id) . "',";
+                    echo "end: '" . $trip->date . " " . date('H:i', strtotime('+210 minutes', strtotime($trip->departureTime))) ."',"; 
                     echo "url: '" . $trip->linkToBook . "',";
                     if($trip->tripType == "Technical") {
-                        
                         echo "className: 'technical-event text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
-
+                    } else {
+                        echo "className: 'recreational-event text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
                     }
-                    else
-                        echo "className: 'recreational-event text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";    
                 }
             @endphp
-            
-
         ],
         eventClick: function(info) {
             if (info.event.url) {
-            window.open(info.event.url, '_parent');
-            info.jsEvent.preventDefault(); // Prevent the default action (navigation)
+                window.open(info.event.url, '_parent');
+                info.jsEvent.preventDefault();
             }
         },
         views: {
             month: {
-            titleFormat: {
-                month: "long",
-                year: "numeric"
-            }
+                titleFormat: { month: "long", year: "numeric" }
             },
             agendaWeek: {
-            titleFormat: {
-                month: "long",
-                year: "numeric",
-                day: "numeric"
-            }
+                titleFormat: { month: "long", year: "numeric", day: "numeric" }
             },
             agendaDay: {
-            titleFormat: {
-                month: "short",
-                year: "numeric",
-                day: "numeric"
+                titleFormat: { month: "short", year: "numeric", day: "numeric" }
             }
-            },
-            
         },
         viewDidMount: function(info) {
             if (info.view.type === 'timeGridDay') {
-            document.querySelector('.fc-customButton-button').style.display = 'inline-block';
+                document.querySelector('.fc-customButton-button').style.display = 'inline-block';
             } else {
-            document.querySelector('.fc-customButton-button').style.display = 'none';
+                document.querySelector('.fc-customButton-button').style.display = 'none';
             }
         },
         viewWillUnmount: function(info) {
             document.querySelector('.fc-customButton-button').style.display = 'none';
         },
         dayCellDidMount: function(info) {
-            // Get the current date
             var today = new Date();
-            // Set time to midnight for comparison
             today.setHours(0, 0, 0, 0);
             var date = info.date;
             if (date < today) {
-            info.el.classList.add('past-day');
+                info.el.classList.add('past-day');
             }
         }
-        });
+    });
 
-        calendar.render();
-        // Apply CSS styles using JavaScript
-        var style = document.createElement('style');
-        style.innerHTML = `
+    calendar.render();
+
+    // Apply CSS styles using JavaScript
+    var style = document.createElement('style');
+    style.innerHTML = `
+    .fc-event-title {
+        white-space: normal !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    @media (max-width: 767px) {
         .fc-event-title {
-            white-space: normal !important;
+            white-space: nowrap !important;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        
-        @media (max-width: 767px) {
-            .fc-event-title {
-                white-space: nowrap !important;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-        }
-    `;
-        document.head.appendChild(style);
+    }`;
+    document.head.appendChild(style);
 
     </script>
 
