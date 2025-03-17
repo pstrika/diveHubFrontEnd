@@ -18,6 +18,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
+use App\Helpers\GasHelper;
 
 class SiteController extends Controller
 {
@@ -83,6 +84,14 @@ class SiteController extends Controller
         //    $query->whereRaw("FIND_IN_SET(?, siteId)", [$site->id]);
         //})->where('siteIdStatus', "confirmed")->whereDate('date', '>=', Carbon::today())->get()->sortBy('date');    //->where('siteIdStatus', '<>', "suggested")
 
+        // Get best mixes for site
+        $gasMixes = GasHelper::GasMixes($site->maxDepth);
+
+        Log::debug("Best mixes");
+        Log::debug('O2mix: ', $gasMixes['O2mix']);
+        Log::debug('BestMix: ', $gasMixes['bestMix']);
+        Log::debug('BestMixO2Narcotic: ', $gasMixes['bestMixO2Narcotic']);
+
         $trips = Trip::where('siteId', 'LIKE', '% ' . $id . ',%')
         ->orWhere('siteId', 'LIKE', $id . ',%')     //this is to account for the case where the siteId is in the first postion (not space in front)
         ->where('siteIdStatus', 'confirmed')
@@ -123,7 +132,7 @@ class SiteController extends Controller
              ->get()
              ->sortBy('name');
 
-        return view('pages.SiteDetails', compact('site','photos', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'sites'));
+        return view('pages.SiteDetails', compact('site','photos', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'sites', 'gasMixes'));
 
     }
     public function getMyVisitedSites() {

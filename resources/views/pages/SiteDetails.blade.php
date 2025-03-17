@@ -105,6 +105,65 @@
             }
         </style>
 
+        <style>
+            .label-container {
+                display: flex;          /* Enable Flexbox layout */
+                justify-content: space-between; /* Push labels to opposite ends */
+                align-items: center;    /* Ensure vertical alignment */
+            }
+
+            .left-label {
+                text-align: left;       /* Align text on the left */
+                margin-right: auto;     /* Push it to the far left */
+            }
+
+            .right-label-normal {
+                text-align: right;      /* Align text on the right */
+                border: 2px solid #49a3f1; /* Add box for the label */
+                padding: 5px;           /* Add padding inside the box */
+                font-weight: bold;      /* Make the text bold */
+                border-radius: 4px;     /* Optional: Round the corners */
+                margin-left: auto;      /* Push it to the far right */
+            }
+
+            .right-label-warning {
+                text-align: right;      /* Align text on the right */
+                border: 2px solid #fb8c00; /* Add box for the label */
+                padding: 5px;           /* Add padding inside the box */
+                font-weight: bold;      /* Make the text bold */
+                border-radius: 4px;     /* Optional: Round the corners */
+                margin-left: auto;      /* Push it to the far right */
+            }
+            .right-label-danger {
+                text-align: right;      /* Align text on the right */
+                border: 2px solid #f44335; /* Add box for the label */
+                padding: 5px;           /* Add padding inside the box */
+                font-weight: bold;      /* Make the text bold */
+                border-radius: 4px;     /* Optional: Round the corners */
+                margin-left: auto;      /* Push it to the far right */
+            }
+            .right-label-success {
+                text-align: right;      /* Align text on the right */
+                border: 2px solid #4caf50; /* Add box for the label */
+                padding: 5px;           /* Add padding inside the box */
+                font-weight: bold;      /* Make the text bold */
+                border-radius: 4px;     /* Optional: Round the corners */
+                margin-left: auto;      /* Push it to the far right */
+            }
+            .right-label-secondary {
+                text-align: right;      /* Align text on the right */
+                border: 2px solid #7b809a; /* Add box for the label */
+                padding: 5px;           /* Add padding inside the box */
+                font-weight: bold;      /* Make the text bold */
+                border-radius: 4px;     /* Optional: Round the corners */
+                margin-left: auto;      /* Push it to the far right */
+            }
+
+            .noUi-tick {
+                display: none;
+            }
+        </style>
+
         <!-- Navbar -->
         <x-auth.navbars.navs.auth pageTitle="Dive Sites"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
@@ -351,7 +410,7 @@
                                                         @endif
                                                     </div>
                                                     <div class="text-secondary text-center text-sm font-weight-bolder opacity-7">GPS coordinates</div>
-                                                    <div class="align-middle text-center text-md text-wrap"><b>{{ $site->gpsLat}}<br>{{ $site->gpsLon}}</b></> </div>
+                                                    <div class="align-middle text-center text-md text-wrap"><b>{{ $site->gpsLat}}<br>{{ $site->gpsLon}}</b></s> </div>
                                                 </td></tr>
                                             </tbody>
                                         </table>
@@ -392,6 +451,208 @@
                 </div>
 
             </div>
+
+            @can('manage-items', App\Models\User::class)
+            <div class="row mx-2">
+                {{-- Card Gases --}}
+                <div class="col-md-12">             
+                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h2 class="card-title text-white mx-4">Best Gases</h4>
+                                <div class="table-responsive"></div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                        
+                            <div class="row">
+                                <div class="col-12 col-lg-4 col-sm-12 col-md-4" style="border-bottom: 1px solid #D3D3D3;">
+                                    <div class="row" style="display: flex; justify-content: center;">
+                                        <div class="mt-n6" style="position: relative; width: 150px; height: 300px;">
+                                            <!-- Overlaying image -->
+                                            <img src="{{ asset("assets") }}/img/tank.png" alt="Overlay Image" 
+                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 76%; height: 75%; z-index: 10;">
+                                            
+                                            <!-- Fixed-size chart canvas -->
+                                            <canvas id="stackedBarChart" 
+                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 161px; z-index: 1;"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="label-container">
+                                                <label class="left-label text-success" id="mainLabel">Oxygen %</label>
+                                                <label class="text-success right-label-success custom-label" id="labelMixO2">Bottom PPO2</label>
+                                            </div>
+                                            <div class="label-container" id="label-container-mix-He">
+                                                <label class="left-label text-info" id="mainLabel">Helium %</label>
+                                                <label class="text-info right-label-normal custom-label" id="labelMixHe">Bottom PPO2</label>
+                                            </div>
+                                            <div class="label-container">
+                                                <label class="left-label text-secondary" id="mainLabel">Nitrogen %</label>
+                                                <label class="text-secondary right-label-secondary custom-label" id="labelMixN2">Bottom PPO2</label>
+                                            </div>
+                                            <div class="label-container">
+                                                <label class="left-label">NDL at {{ $site->maxDepth }} ft</label>
+                                                <label class="text-info right-label-normal custom-label" id="labelNDL"></label>
+                                                <label class="text-info">m</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+
+                                    
+                                <div class="col-md-4" style="border-bottom: 1px solid #D3D3D3;">
+                                    <table class="table align-items-center mb-0"> 
+                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Nitrox</td> </tr>
+                                    </table>
+                                    <div class="mt-n2">
+                                        <input type="hidden" id="sliderPPO2-value" name="sliderPPO2">
+                                        
+                                        <!-- Flex container for label alignment -->
+                                        <div class="label-container">
+                                            <label class="left-label" id="mainLabel">PPO2 at max depth ({{ $site->maxDepth }} ft)</label>
+                                            <label class="text-info right-label-normal custom-label" id="labelPPO2">Bottom PPO2</label>
+                                            <label class="text-info">atm</label>
+                                        </div>
+                                        <div class="label-container">
+                                            <label class="left-label" id="mainLabel2">PPO2 at average depth ({{ $site->avgDepth }} ft)</label>
+                                            <label class="text-info right-label-normal custom-label" id="labelPPO2Avg">Bottom PPO2</label>
+                                            <label class="text-info">atm</label>
+                                        </div>
+                                        
+                                        <div class="slider-styled" id="sliderPPO2"></div>
+                                    </div>
+                                    <div class="mt-0">
+                                        <table class="table align-items-center mb-0" style="border: top;"> 
+                                            <tr>
+                                                <td class="text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">O2 Content</td>
+                                            </tr>
+                                            <tr class="mt-n4">
+                                                <td class="text-center mt-n4" style="border: none;">
+                                                    <label class="text-info text-lg font-weight-bolder" id="bestNitrox">32%</label>
+                                                </td>
+                                            </tr>
+                                            <tr >
+                                                <td class="text-center" style="border: none;"> <!-- Added text-center here -->
+                                                    <a type="button" class="btn btn-info mt-n4" id="buttonBestNitrox">
+                                                        Calculate Best Nitrox
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+
+                                </div>
+
+                                <div class="col-md-4">
+                                    <table class="table align-items-center mb-0"> 
+                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Trimix</td> </tr>
+                                    </table>
+                                    <div class="mt-n2">
+                                        <input type="hidden" id="sliderPPO2-value" name="txsliderPPO2">
+                                        
+                                        <!-- Flex container for label alignment -->
+                                        <div class="label-container">
+                                            <label class="left-label" id="mainLabelTx">PPO2 at max depth ({{ $site->maxDepth }} ft)</label>
+                                            <label class="text-info right-label-normal custom-label" id="txlabelPPO2">Bottom PPO2</label>
+                                            <label class="text-info">atm</label>
+                                        </div>
+                                        <div class="label-container">
+                                            <label class="left-label" id="txmainLabel2">PPO2 at average depth ({{ $site->avgDepth }} ft)</label>
+                                            <label class="text-info right-label-normal custom-label" id="txlabelPPO2Avg">Bottom PPO2</label>
+                                            <label class="text-info">atm</label>
+                                        </div>
+                                        
+                                        <div class="slider-styled" id="txsliderPPO2"></div>
+                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">O2 Content</div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <input type="hidden" id="sliderPPO2-value" name="txsliderPPHe">
+                                        
+                                        <!-- Flex container for label alignment -->
+                                        <div class="label-container">
+                                            <label class="left-label" id="ENDLabelMax">END at max depth ({{ $site->maxDepth }} ft)</label>
+                                            <label class="text-info right-label-normal custom-label" id="txlabelEND"></label>
+                                            <label class="text-info">ft</label>
+                                        </div>
+                                        <div class="label-container">
+                                            <label class="left-label" id="ENDLabelAvg">END at average depth ({{ $site->avgDepth }} ft)</label>
+                                            <label class="text-info right-label-normal custom-label" id="txlabelENDAvg"></label>
+                                            <label class="text-info">ft</label>
+                                        </div>
+                                        
+                                        <div class="slider-styled" id="txsliderHe"></div>
+                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He Content</div>
+                                        <div class="form-container" style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div class="form-check form-switch ps-0">
+                                                <input name="O2narcotic" class="form-check-input ms-auto" type="checkbox"
+                                                    id="O2Narcotic" checked value="1">
+                                                <label class="form-check-label text-body ms-3"
+                                                    for="O2Narcotic">O2 narcotic?</label>
+                                            </div>
+                                            <div class="label-container" style="text-align: right;">
+                                                <label class="left-label" id="denisity" style="padding-right: 10px;">Gas density</label>
+                                                <label class="text-info right-label-normal custom-label" id="gasDensity"></label>
+                                                <label class="text-info">g/L</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <table class="table mb-0" style="border: top; width: 100%;"> 
+                                            <tbody>
+                                                <tr class="mt-n4">
+                                                    <table style="width: 100%;">
+                                                        <tr>
+                                                            
+                                                            <td class="mt-n4" style="border: none; text-align: right; width: 49%;">
+                                                                <label class="text-info text-lg font-weight-bolder" id="txbestNitrox">32%</label>
+                                                            </td>
+                                                            <td class="mt-n4" style="border: none; width: 2%; text-align: center;">
+                                                                <label class="text-info text-lg font-weight-bolder">/</label>
+                                                            </td>
+                                                            <td class="mt-n4" style="border: none; text-align: left; width: 49%;">
+                                                                <label class="text-info text-lg font-weight-bolder" id="txbestHe">32%</label>
+                                                            </td>
+                                                        
+                                                        </tr>
+                                                        
+                                                    </table>
+                                                </tr>
+                                                <tr>
+                                                    <td style="border: none;">
+                                                    <div class="text-center align-items-center mt-n3 mb-n2" id="txhypoxic" style="display: flex; justify-content: center; align-items: center;">
+                                                        <label class="text-danger text-sm font-weight-bolder" >Hypoxic at surface</label>
+                                                    </div>
+
+                                                    </td>
+                                                </tr>
+                                                <tr class="text-center align-items-center">
+                                                    <td class="text-center align-items-center" style="border: none;"> <!-- Added text-center here -->
+                                                        <div class="text-center align-items-center mt-0">
+                                                            <a type="button" class="btn btn-info mt-0" id="txbuttonBestNitrox">
+                                                                Calculate Best Trimix
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                
+                                            </tbody> 
+                                        </table>
+                                    </div>
+
+                                </div>
+
+                            </div>  
+                            
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            @endcan
             
             <div class="row mx-2">
                 @php
@@ -879,6 +1140,660 @@
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
+    <script src="{{ asset('assets') }}/js/plugins/nouislider.js"></script>
+    <link href="{{ asset('assets') }}/css/nouislider.css" rel="stylesheet">
+    <script src="../../assets/js/plugins/chartjs.min.js"></script>
+
+    
+    
+    <script>
+        // Constants: Atmospheric and conversion settings
+        const ATMOSPHERIC_PRESSURE = 1.0; // Pressure at sea level in bar
+        const WATER_COLUMN_PRESSURE = 0.1; // Increase in pressure per 1m of seawater in bar
+
+        // ZH-L16C Parameters for Nitrogen (N2) and Helium (He) compartments
+        const nitrogenCompartments = [
+            { halfTime: 5.0, a: 1.1696, b: 0.5578 },
+            { halfTime: 8.0, a: 1.0, b: 0.6514 },
+            { halfTime: 12.5, a: 0.8618, b: 0.7222 },
+            { halfTime: 18.5, a: 0.7562, b: 0.7825 },
+            { halfTime: 27.0, a: 0.62, b: 0.8126 },
+            { halfTime: 38.3, a: 0.5043, b: 0.8434 },
+            { halfTime: 54.3, a: 0.441, b: 0.8693 },
+            { halfTime: 77.0, a: 0.4, b: 0.8910 },
+            { halfTime: 109.0, a: 0.375, b: 0.9092 },
+            { halfTime: 146.0, a: 0.35, b: 0.9222 },
+            { halfTime: 187.0, a: 0.3295, b: 0.9319 },
+            { halfTime: 239.0, a: 0.3065, b: 0.9403 },
+            { halfTime: 305.0, a: 0.2835, b: 0.9477 },
+            { halfTime: 390.0, a: 0.261, b: 0.9544 },
+            { halfTime: 498.0, a: 0.248, b: 0.9602 },
+            { halfTime: 635.0, a: 0.2327, b: 0.9653 }
+        ];
+
+        const heliumCompartments = [
+            { halfTime: 1.88, a: 1.6189, b: 0.4770 },
+            { halfTime: 3.02, a: 1.383, b: 0.5747 },
+            { halfTime: 4.72, a: 1.1919, b: 0.6527 },
+            { halfTime: 6.99, a: 1.0458, b: 0.7223 },
+            { halfTime: 10.21, a: 0.922, b: 0.7582 },
+            { halfTime: 14.48, a: 0.8205, b: 0.7957 },
+            { halfTime: 20.53, a: 0.7305, b: 0.8279 },
+            { halfTime: 29.11, a: 0.6502, b: 0.8553 },
+            { halfTime: 41.20, a: 0.595, b: 0.8757 },
+            { halfTime: 55.19, a: 0.5545, b: 0.8903 },
+            { halfTime: 70.69, a: 0.5333, b: 0.8997 },
+            { halfTime: 90.34, a: 0.5189, b: 0.9073 },
+            { halfTime: 115.29, a: 0.5181, b: 0.9122 },
+            { halfTime: 147.42, a: 0.5176, b: 0.9171 },
+            { halfTime: 188.24, a: 0.5172, b: 0.9217 },
+            { halfTime: 240.03, a: 0.5119, b: 0.9267 }
+        ];
+
+        // Function to calculate inert gas pressure in a tissue compartment
+        function calculateInertGasPressure(initialPressure, ambientPressure, fraction, time, halfTime) {
+            const k = Math.log(2) / halfTime; // Rate constant
+            return initialPressure + (ambientPressure * fraction - initialPressure) * (1 - Math.exp(-k * time));
+        }
+
+        // Function to calculate M-value for a compartment
+        function calculateMValue(ambientPressure, a, b) {
+            return a + b * ambientPressure;
+        }
+
+        // Function to calculate NDL (supports Nitrox, Trimix, and Heliox)
+        function calculateNDL(depth, gasMix) {
+            const nitrogenFraction = gasMix.N2; // Fraction of nitrogen
+            const heliumFraction = gasMix.He || 0; // Fraction of helium (default to 0)
+            const ambientPressure = ATMOSPHERIC_PRESSURE + depth * WATER_COLUMN_PRESSURE; // Absolute ambient pressure in bar
+
+            let ndl = Infinity; // Initialize NDL as a very large value
+
+            // Loop through each tissue compartment
+            for (let i = 0; i < nitrogenCompartments.length; i++) {
+                const nitrogenCompartment = nitrogenCompartments[i];
+                const heliumCompartment = heliumCompartments[i];
+
+                const { halfTime: halfTimeN2, a: aN2, b: bN2 } = nitrogenCompartment;
+                const { halfTime: halfTimeHe, a: aHe, b: bHe } = heliumCompartment;
+
+                // M-values for nitrogen and helium at the current depth
+                const mValueN2 = calculateMValue(ambientPressure, aN2, bN2);
+                const mValueHe = calculateMValue(ambientPressure, aHe, bHe);
+
+                // Solve for the time when nitrogen and helium pressures equal their respective M-values
+                let t = 0;
+                while (true) {
+                    const nitrogenPressure = calculateInertGasPressure(0, ambientPressure, nitrogenFraction, t, halfTimeN2);
+                    const heliumPressure = calculateInertGasPressure(0, ambientPressure, heliumFraction, t, halfTimeHe);
+
+                    // Combined gas pressure in the compartment
+                    const totalPressure = nitrogenPressure + heliumPressure;
+
+                    // Stop iterating when total pressure exceeds the smaller of the two M-values
+                    const limitingMValue = Math.min(mValueN2, mValueHe);
+                    if (totalPressure >= limitingMValue) {
+                        if (t < ndl) {
+                            ndl = t; // Update the NDL if this compartment limits it
+                        }
+                        break;
+                    }
+                    t += 1; // Increment time in minutes
+                }
+            }
+
+            return ndl; // Return the minimum NDL across all compartments
+        }
+
+        // Example usage
+        //const depth = 30; // Depth in meters
+        //const gasMix = { O2: 0.18, N2: 0.50, He: 0.32 }; // Example Trimix gas mix
+
+        //const ndl = calculateNDL(depth, gasMix);
+        //console.log(`NDL at ${depth} meters with gas mix: O2=${gasMix.O2 * 100}%, N2=${gasMix.N2 * 100}%, He=${gasMix.He * 100}% is: ${ndl} minutes`);
+
+    </script>
+
+    {{-- Slider script Nitrox --}}
+    <script>
+        var slider = document.getElementById('sliderPPO2');
+        var label = document.getElementById('labelPPO2');
+        var labelAvg = document.getElementById('labelPPO2Avg');
+        var sliderValueInput = document.getElementById('slider-value');
+        var labelBestNitrox = document.getElementById('bestNitrox');
+        
+
+
+        var bestMix =  Math.round((1.4 / ({{ $site->maxDepth }} / 33 + 1) * 100));
+        console.log("The value of bestMix is:", bestMix);
+
+        noUiSlider.create(slider, {
+            start: bestMix,
+            connect: [true, false],
+            range: {
+                'min': 21,
+                'max': 40
+            },
+            step: 1,
+            
+
+        });
+
+        // Hide the tick mark labels
+        var tickLabels = slider.querySelectorAll('.noUi-value-sub');
+        tickLabels.forEach(function (label) {
+            label.style.display = 'none';
+        });
+            
+        // Listen for the 'update' event
+        
+        slider.noUiSlider.on('update', function (values, handle) {
+            labelBestNitrox.textContent = Math.round(values[handle]) + '%';
+
+            var sliderValue = parseFloat(values[handle]); // Ensure sliderValue is numeric
+            console.log("Slider Value:", sliderValue);
+
+            var maxDepth = parseFloat({{ $site->maxDepth }}); // Ensure maxDepth is rendered as a number
+            console.log("Max Depth:", maxDepth);
+
+            var avgDepth = parseFloat({{ $site->avgDepth }}); // Ensure maxDepth is rendered as a number
+            console.log("Avg Depth:", avgDepth);
+
+            var ppo2 = (((maxDepth / 33 + 1) * sliderValue) / 100).toFixed(2); // Calculate PPO2 and format
+            console.log("PPO2:", ppo2);
+
+            var ppo2avg = (((avgDepth / 33 + 1) * sliderValue) / 100).toFixed(2); // Calculate PPO2 and format
+            console.log("PPO2:", ppo2avg);
+
+            label.textContent = ppo2;
+            labelAvg.textContent = ppo2avg
+
+            // Check PPO2 threshold and set the appropriate class
+            if (parseFloat(ppo2) > 1.59 || parseFloat(ppo2) < 0.16) {
+                console.log("High PPO2 - Danger");
+                label.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
+                label.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+            } else if (parseFloat(ppo2) > 1.41 || parseFloat(ppo2) < 0.21) {
+                console.log("Medium PPO2 - Warning");
+                label.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
+                label.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+            } else {
+                console.log("Low PPO2 - Info");
+                label.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
+                label.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+            }
+
+            if (parseFloat(ppo2avg) > 1.59 || parseFloat(ppo2avg) < 0.16) {
+                console.log("High PPO2 - Danger");
+                labelAvg.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
+                labelAvg.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+            } else if (parseFloat(ppo2avg) > 1.41 || parseFloat(ppo2avg) < 0.21) {
+                console.log("Medium PPO2 - Warning");
+                labelAvg.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
+                labelAvg.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+            } else {
+                console.log("Low PPO2 - Info");
+                labelAvg.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
+                labelAvg.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+            }
+
+            console.log("slider value=",sliderValue);
+            console.log("bestMix=", bestMix);
+            if(sliderValue == bestMix) {
+                labelBestNitrox.classList.remove("text-info");
+                labelBestNitrox.classList.add("text-success");
+            } else {
+                labelBestNitrox.classList.add("text-info");
+                labelBestNitrox.classList.remove("text-success");
+            }
+        });
+
+        // Add an event listener to the button
+        document.getElementById("buttonBestNitrox").addEventListener("click", function () {
+            // Reset the slider to its start value
+            slider.noUiSlider.set(slider.noUiSlider.options.start);
+        });
+
+    </script>
+
+
+    <script>
+
+    // Get the canvas element
+    const ctx = document.getElementById('stackedBarChart').getContext('2d');
+
+    // Create the chart with a custom plugin for labels
+    const stackedBarChart = new Chart(ctx, {
+        type: 'bar', // Bar chart type
+        data: {
+            labels: [''], // X-axis labels
+            datasets: [
+                {
+                    label: 'Oxygen',
+                    data: [18], // Data points for this dataset
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)', // Bar color
+                    borderRadius: 0, // Rounded corners
+                    barPercentage: 1 // Adjust bar width (smaller bars)
+                },
+                {
+                    label: 'Helium',
+                    data: [45], // Data points for this dataset
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)', // Bar color
+                    borderRadius: 0, // Rounded corners
+                    barPercentage: 1 // Adjust bar width (smaller bars)
+                },
+                {
+                    label: 'Nitrogen',
+                    data: [37], // Data points for this dataset
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)', // Bar color
+                    borderRadius: 0, // Rounded corners
+                    barPercentage: 1 // Adjust bar width (smaller bars)
+                }
+            ]
+        },
+        options: {
+            responsive: true, // Makes the chart responsive
+            plugins: {
+                legend: {
+                    display: false, // Hide legend
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true, // Enable stacking for the x-axis
+                    display: false // Hides the x-axis scale
+                },
+                y: {
+                    stacked: true, // Enable stacking for the y-axis
+                    display: false // Hides the y-axis scale
+                }
+            },
+            layout: {
+                padding: {
+                    left: 0,
+                    right: 0,
+                    top: 20,
+                    bottom: 0
+                }
+            }
+        },
+        plugins: [
+            {
+                id: 'valueLabels', // Custom plugin ID
+                afterDatasetsDraw: function (chart) {
+                    const ctx = chart.ctx;
+                    chart.data.datasets.forEach((dataset, i) => {
+                        const meta = chart.getDatasetMeta(i);
+                        meta.data.forEach((bar, index) => {
+                            const data = dataset.data[index];
+                            if (data) {
+                                ctx.font = '14px Roboto';
+                                ctx.fillStyle = '#FFF'; // Label color
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle'; // Centers text vertically
+                                const barMiddle = bar.y + (bar.height / 2); // Calculate middle of the bar
+                                ctx.fillText(data + '%', bar.x, bar.y + 10); // Position label slightly above the bar
+                                
+                            }
+                        });
+                    });
+                }
+            }
+        ]
+    });
+
+    function updateGasMix(oxygen, helium) {
+        // Ensure the passed values are integers
+        oxygen = parseInt(oxygen, 10);
+        helium = parseInt(helium, 10);
+
+        // Calculate Nitrogen
+        const nitrogen = 100 - (oxygen + helium);
+
+        // Validate that the sum doesn't exceed 100
+        if (nitrogen < 0) {
+            console.error("Error: The sum of Oxygen and Helium exceeds 100!");
+            return;
+        }
+
+        // Update the chart data
+        stackedBarChart.data.datasets = [
+            {
+                label: 'Oxygen',
+                data: [oxygen],
+                backgroundColor: 'rgb(76, 175, 80, 1.0)'
+            },
+            {
+                label: 'Helium',
+                data: [helium],
+                backgroundColor: 'rgb(26, 115, 232, 1.0)'
+            },
+            {
+                label: 'Nitrogen',
+                data: [nitrogen],
+                backgroundColor: '#7b809a'
+            }
+        ];
+
+        // Refresh the chart
+        stackedBarChart.update();
+
+        var labelMixO2 = document.getElementById('labelMixO2');
+        var labelMixHe = document.getElementById('labelMixHe');
+        var labelMixN2 = document.getElementById('labelMixN2');
+
+        labelMixO2.textContent = oxygen + '%';
+        labelMixHe.textContent = helium + '%';
+        labelMixN2.textContent = nitrogen + '%';
+
+        var labelContainerHe = document.getElementById("label-container-mix-He");
+        if(helium == 0) {
+            labelContainerHe.style.display = "none";
+        } else {
+            labelContainerHe.style.display = "flex";
+        }
+            
+    }
+
+    </script>
+
+    {{-- Slider script Trimix --}}
+    <script>
+
+        var txlabelBestHe = document.getElementById('txbestHe');
+
+        var txslider = document.getElementById('txsliderPPO2');
+        var txlabel = document.getElementById('txlabelPPO2');
+        var txlabelAvg = document.getElementById('txlabelPPO2Avg');
+        var txsliderValueInput = document.getElementById('txslider-value');
+        var txlabelBestNitrox = document.getElementById('txbestNitrox');
+        var txhypoxic = document.getElementById("txhypoxic");
+        var txlabelEND = document.getElementById("txlabelEND");
+        var txlabelENDAvg = document.getElementById("txlabelENDAvg");
+        var O2Narcotic = document.getElementById("O2Narcotic");
+        var bestHe = ((1 - ((80 / 33) +1) / (parseFloat({{ $site->maxDepth }}) / 33 + 1)) * 100).toFixed(0);
+        
+
+        function updateGasDensity() {
+            // Constants for molecular weights (g/mol)
+            const molecularWeights = {
+                O2: 32,
+                N2: 28,
+                He: 4
+            };
+
+            var fractionO2 = txlabel.textContent / 100;
+            var fractionHe = txlabelBestHe.textContent / 100;
+            var fractionN2 = 1 - fractionO2 - fractionHe;
+            var ambientPressure = {{ $site->maxDepth }} / 33 + 1;
+
+            // Calculate gas density
+            const gasDensity = (
+                (fractionO2 * molecularWeights.O2 +
+                fractionN2 * molecularWeights.N2 +
+                fractionHe * molecularWeights.He) *
+                ambientPressure
+            ) / 22.4; // Use 22.4 L/mol at standard temperature and pressure
+
+            // Round the result to 2 decimal places
+            const densityRounded = gasDensity.toFixed(2);
+
+            // Update the element in HTML
+            const gasDensityLabel = document.getElementById("gasDensity");
+            if (gasDensityLabel) {
+                gasDensityLabel.textContent = densityRounded;
+            }
+
+            if (densityRounded > 6.2) {
+                gasDensityLabel.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
+                gasDensityLabel.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+            } else if (densityRounded > 5.2) {
+                gasDensityLabel.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
+                gasDensityLabel.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+            } else {
+                gasDensityLabel.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
+                gasDensityLabel.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+            }
+        }
+
+        var txbestMix =  Math.round((1.4 / ({{ $site->maxDepth }} / 33 + 1) * 100));
+        console.log("The value of bestMix is:", txbestMix);
+
+        noUiSlider.create(txsliderHe, {
+            start: bestHe,
+            connect: [true, false],
+            range: {
+                'min': 0,
+                'max': 95
+            },
+            step: 1,
+            
+
+        });
+
+        // Hide the tick mark labels
+        var txtickLabelsHe = txsliderHe.querySelectorAll('.noUi-value-sub');
+        txtickLabelsHe.forEach(function (txlabelHe) {
+            txlabelHe.style.display = 'none';
+        });
+
+        txsliderHe.noUiSlider.on('update', function (values, handle) {
+            txlabelBestHe.textContent = Math.round(values[handle]);
+
+            //txlabelBestNitrox.textContent
+
+            var txmaxDepth = parseFloat({{ $site->maxDepth }}); // Ensure maxDepth is rendered as a number
+            var txavgDepth = parseFloat({{ $site->avgDepth }}); // Ensure maxDepth is rendered as a number
+            var O2Factor = 0;
+
+            if(O2Narcotic.checked) {
+                O2Factor = 0;
+            } else {
+                O2Factor = Math.round(txlabelBestNitrox.textContent) / 100;   // Get O2 %
+            }
+
+            var equivPMax =  (txmaxDepth / 33 + 1) * (1 - Math.round(values[handle]) / 100 - O2Factor);
+            var ENDMax = ((equivPMax - 1) * 33).toFixed(0);
+            txlabelEND.textContent = ENDMax;
+
+            var equivPAvg =  (txavgDepth / 33 + 1) * (1 - Math.round(values[handle]) / 100 - O2Factor);
+            var ENDAvg = ((equivPAvg - 1) * 33).toFixed(0);
+            txlabelENDAvg.textContent = ENDAvg;
+
+
+
+            if (ENDMax > 130) {
+                txlabelEND.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
+                txlabelEND.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+            } else if (ENDMax > 100) {
+                txlabelEND.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
+                txlabelEND.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+            } else {
+                txlabelEND.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
+                txlabelEND.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+            }
+
+            if (ENDAvg > 130) {
+                txlabelENDAvg.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
+                txlabelENDAvg.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+            } else if (ENDAvg > 100) {
+                txlabelENDAvg.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
+                txlabelENDAvg.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+            } else {
+                txlabelENDAvg.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
+                txlabelENDAvg.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+            }
+
+            if(txlabelBestHe.textContent == bestHe) {
+                txlabelBestHe.classList.remove("text-info");
+                txlabelBestHe.classList.add("text-success");
+            } else {
+                txlabelBestHe.classList.add("text-info");
+                txlabelBestHe.classList.remove("text-success");
+            }
+
+           updateGasDensity();
+           updateGasMix(txlabelBestNitrox.textContent, txlabelBestHe.textContent);
+            //update NDL
+            //const gasMix = {O2: txlabelBestNitrox.textContent / 100, N2: (100 - txlabelBestNitrox.textContent - txlabelBestHe.textContent)/100, He: txlabelBestHe.textContent/100};
+            //const ndl = calculateNDL({{ $site->maxDepth }}, gasMix);
+            //labelNDL = document.getElementById('labelNDL');
+            //labelNDL.textContent = ndl;
+            
+        });
+
+        
+
+        noUiSlider.create(txslider, {
+            start: txbestMix,
+            connect: [true, false],
+            range: {
+                'min': 5,
+                'max': 40
+            },
+            step: 1,
+            
+
+        });
+
+        // Hide the tick mark labels
+        var txtickLabels = txslider.querySelectorAll('.noUi-value-sub');
+        txtickLabels.forEach(function (txlabel) {
+            txlabel.style.display = 'none';
+        });
+            
+        // Listen for the 'update' event
+        
+        txslider.noUiSlider.on('update', function (values, handle) {
+            txlabelBestNitrox.textContent = Math.round(values[handle]);
+
+            var txsliderValue = parseFloat(values[handle]); // Ensure sliderValue is numeric
+            console.log("TX Slider Value:", txsliderValue);
+
+            var txmaxDepth = parseFloat({{ $site->maxDepth }}); // Ensure maxDepth is rendered as a number
+            console.log("TX Max Depth:", txmaxDepth);
+
+            var txavgDepth = parseFloat({{ $site->avgDepth }}); // Ensure maxDepth is rendered as a number
+            console.log("TX Avg Depth:", txavgDepth);
+
+            var txppo2 = (((txmaxDepth / 33 + 1) * txsliderValue) / 100).toFixed(2); // Calculate PPO2 and format
+            console.log("TX PPO2:", txppo2);
+
+            var txppo2avg = (((txavgDepth / 33 + 1) * txsliderValue) / 100).toFixed(2); // Calculate PPO2 and format
+            console.log("TX PPO2:", txppo2avg);
+
+            txlabel.textContent = txppo2;
+            txlabelAvg.textContent = txppo2avg;
+
+            // Update MAX on He slider
+            txsliderHe.noUiSlider.updateOptions({
+                range: {
+                    'min': 0,    // Keep the minimum value as is
+                    'max': 95-txsliderValue   // Update the maximum value to 120
+                }
+            });
+
+
+            // Check PPO2 threshold and set the appropriate class
+            if (parseFloat(txppo2) > 1.59 || parseFloat(txppo2) < 0.16) {
+                console.log("TX High PPO2 - Danger");
+                txlabel.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
+                txlabel.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+            } else if (parseFloat(txppo2) > 1.41 || parseFloat(txppo2) < 0.21) {
+                console.log("TX Medium PPO2 - Warning");
+                txlabel.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
+                txlabel.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+            } else {
+                console.log("TX Low PPO2 - Info");
+                txlabel.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
+                txlabel.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+            }
+
+            if (parseFloat(txppo2avg) > 1.59 || parseFloat(txppo2avg) < 0.16) {
+                console.log("High PPO2 - Danger");
+                txlabelAvg.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
+                txlabelAvg.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+                
+            } else if (parseFloat(txppo2avg) > 1.41 || parseFloat(txppo2avg) < 0.21) {
+                console.log("TX Medium PPO2 - Warning");
+                txlabelAvg.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
+                txlabelAvg.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+                
+            } else {
+                console.log("TX Low PPO2 - Info");
+                txlabelAvg.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
+                txlabelAvg.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+                
+            }
+
+            console.log("TX slider value=",txsliderValue);
+            console.log("TX bestMix=", txbestMix);
+            if(txsliderValue == txbestMix) {
+                txlabelBestNitrox.classList.remove("text-info");
+                txlabelBestNitrox.classList.add("text-success");
+            } else {
+                txlabelBestNitrox.classList.add("text-info");
+                txlabelBestNitrox.classList.remove("text-success");
+            }
+
+            if(txsliderValue < 16) {
+                txhypoxic.style.display = "flex";
+            } else {
+                txhypoxic.style.display = "none";
+            }
+
+            updateGasDensity();
+            updateGasMix(txlabelBestNitrox.textContent, txlabelBestHe.textContent);
+            //update NDL
+            //const gasMix = {O2: txlabelBestNitrox.textContent / 100, N2: (100 - txlabelBestNitrox.textContent - txlabelBestHe.textContent)/100, He: txlabelBestHe.textContent/100};
+            //const ndl = calculateNDL({{ $site->maxDepth }}, gasMix);
+            //labelNDL = document.getElementById('labelNDL');
+            //labelNDL.textContent = ndl;
+        });
+
+        // Add an event listener to the button
+        document.getElementById("txbuttonBestNitrox").addEventListener("click", function () {
+            // Reset the slider to its start value
+            O2Narcotic.checked = true;
+            txslider.noUiSlider.set(txslider.noUiSlider.options.start);
+            txsliderHe.noUiSlider.set(txsliderHe.noUiSlider.options.start);
+            updateGasDensity();
+            updateGasMix(txlabelBestNitrox.textContent, txlabelBestHe.textContent);
+
+            //update NDL
+            //const gasMix = {O2: txlabelBestNitrox.textContent / 100, N2: (100 - txlabelBestNitrox.textContent - txlabelBestHe.textContent)/100, He: txlabelBestHe.textContent/100};
+            //const ndl = calculateNDL({{ $site->maxDepth }}, gasMix);
+            //labelNDL = document.getElementById('labelNDL');
+            //labelNDL.textContent = ndl;
+            
+        });
+
+        // Add an event listener for the 'change' event
+        O2Narcotic.addEventListener("change", function () {
+            // Check if the checkbox is checked or not
+            console.log("Checkbox state changed. Checked:", O2Narcotic.checked);
+
+            var tempLabelMax = document.getElementById("ENDLabelMax");
+            var tempLabelAvg = document.getElementById("ENDLabelAvg");
+            if(O2Narcotic.checked) {
+                tempLabelMax.textContent = "END at max depth ({{ $site->maxDepth }} ft)";
+                tempLabelAvg.textContent = "END at average depth ({{ $site->avgDepth }} ft)";
+            } else {
+                tempLabelMax.textContent = "EAD at max depth ({{ $site->maxDepth }} ft)";
+                tempLabelAvg.textContent = "EAD at average depth ({{ $site->avgDepth }} ft)";
+            }
+
+            // Trigger the noUiSlider's update event
+            txsliderHe.noUiSlider.set(txsliderHe.noUiSlider.get()); // Force an update with the current value
+        });
+
+
+      
+
+    </script>
+
+    
+    
 
     <script>
         function cancelReview() {
