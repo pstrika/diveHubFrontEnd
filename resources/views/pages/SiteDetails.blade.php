@@ -1848,7 +1848,7 @@
 
             // Make the AJAX POST request
             $.ajax({
-                url: '{{ route("Calculate-ndl") }}', // The route to the server-side function
+                url: '{{ route('Calculate-ndl') }}', // The route to the server-side function
                 method: 'POST',
                 data: { depth: depth, gasMix: gasMix },
                 success: function (response) {
