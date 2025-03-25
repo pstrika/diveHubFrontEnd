@@ -4,6 +4,7 @@
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <style>
             /* ------ Default Style ---------- */
             .gauge-container {
@@ -452,9 +453,10 @@
 
             </div>
 
-            @can('manage-items', App\Models\User::class)
+            {{-- Card Gases --}}
+            
             <div class="row mx-2">
-                {{-- Card Gases --}}
+                
                 <div class="col-md-12">             
                     <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
@@ -492,158 +494,185 @@
                                                 <label class="left-label text-secondary" id="mainLabel">Nitrogen %</label>
                                                 <label class="text-secondary right-label-secondary custom-label" id="labelMixN2">Bottom PPO2</label>
                                             </div>
-                                            <div class="label-container">
-                                                <label class="left-label">NDL at {{ $site->maxDepth }} ft</label>
-                                                <label class="text-info right-label-normal custom-label" id="labelNDL"></label>
-                                                <label class="text-info">m</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                            @if( $site->maxDepth <= 130)
+                                                <div class="label-container">
+                                                    <!-- Highlighted max depth -->
+                                                    <label class="left-label">NDL at <span class="text-info" style="font-weight: bold;">{{ $site->maxDepth }} ft</span> - 24 hr min surface interval</label>
 
-
-
-                                    
-                                <div class="col-md-4" style="border-bottom: 1px solid #D3D3D3;">
-                                    <table class="table align-items-center mb-0"> 
-                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Nitrox</td> </tr>
-                                    </table>
-                                    <div class="mt-n2">
-                                        <input type="hidden" id="sliderPPO2-value" name="sliderPPO2">
-                                        
-                                        <!-- Flex container for label alignment -->
-                                        <div class="label-container">
-                                            <label class="left-label" id="mainLabel">PPO2 at max depth ({{ $site->maxDepth }} ft)</label>
-                                            <label class="text-info right-label-normal custom-label" id="labelPPO2">Bottom PPO2</label>
-                                            <label class="text-info">atm</label>
-                                        </div>
-                                        <div class="label-container">
-                                            <label class="left-label" id="mainLabel2">PPO2 at average depth ({{ $site->avgDepth }} ft)</label>
-                                            <label class="text-info right-label-normal custom-label" id="labelPPO2Avg">Bottom PPO2</label>
-                                            <label class="text-info">atm</label>
-                                        </div>
-                                        
-                                        <div class="slider-styled" id="sliderPPO2"></div>
-                                    </div>
-                                    <div class="mt-0">
-                                        <table class="table align-items-center mb-0" style="border: top;"> 
-                                            <tr>
-                                                <td class="text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">O2 Content</td>
-                                            </tr>
-                                            <tr class="mt-n4">
-                                                <td class="text-center mt-n4" style="border: none;">
-                                                    <label class="text-info text-lg font-weight-bolder" id="bestNitrox">32%</label>
-                                                </td>
-                                            </tr>
-                                            <tr >
-                                                <td class="text-center" style="border: none;"> <!-- Added text-center here -->
-                                                    <a type="button" class="btn btn-info mt-n4" id="buttonBestNitrox">
-                                                        Calculate Best Nitrox
+                                                    <!-- NDL result -->
+                                                    <label class="text-info right-label-normal custom-label" id="ndlResult">-</label>
+                                                    <label class="text-info">m</label>
+                                                </div>
+                                                <div class="text-center" style="border: none;"> <!-- Added text-center here -->
+                                                    <a type="button" class="btn btn-info mt-0" id="calculateNDLButton">
+                                                        Calculate NDL
                                                     </a>
-                                                </td>
-                                            </tr>
-                                        </table>
+                                                </div>
+                                            @endif
+                                            <!-- Legend directly below the first label -->
+                                            <div class="text-center mt-n2">
+                                                <label class="text-center text-danger text-xs">Always use a dive computer</label>
+                                            </div>
+                                                    
+                                        </div>
                                     </div>
-
                                 </div>
 
-                                <div class="col-md-4">
-                                    <table class="table align-items-center mb-0"> 
-                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Trimix</td> </tr>
-                                    </table>
-                                    <div class="mt-n2">
-                                        <input type="hidden" id="sliderPPO2-value" name="txsliderPPO2">
-                                        
-                                        <!-- Flex container for label alignment -->
-                                        <div class="label-container">
-                                            <label class="left-label" id="mainLabelTx">PPO2 at max depth ({{ $site->maxDepth }} ft)</label>
-                                            <label class="text-info right-label-normal custom-label" id="txlabelPPO2">Bottom PPO2</label>
-                                            <label class="text-info">atm</label>
-                                        </div>
-                                        <div class="label-container">
-                                            <label class="left-label" id="txmainLabel2">PPO2 at average depth ({{ $site->avgDepth }} ft)</label>
-                                            <label class="text-info right-label-normal custom-label" id="txlabelPPO2Avg">Bottom PPO2</label>
-                                            <label class="text-info">atm</label>
-                                        </div>
-                                        
-                                        <div class="slider-styled" id="txsliderPPO2"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">O2 Content</div>
-                                    </div>
-                                    <div class="mt-2">
-                                        <input type="hidden" id="sliderPPO2-value" name="txsliderPPHe">
-                                        
-                                        <!-- Flex container for label alignment -->
-                                        <div class="label-container">
-                                            <label class="left-label" id="ENDLabelMax">END at max depth ({{ $site->maxDepth }} ft)</label>
-                                            <label class="text-info right-label-normal custom-label" id="txlabelEND"></label>
-                                            <label class="text-info">ft</label>
-                                        </div>
-                                        <div class="label-container">
-                                            <label class="left-label" id="ENDLabelAvg">END at average depth ({{ $site->avgDepth }} ft)</label>
-                                            <label class="text-info right-label-normal custom-label" id="txlabelENDAvg"></label>
-                                            <label class="text-info">ft</label>
-                                        </div>
-                                        
-                                        <div class="slider-styled" id="txsliderHe"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He Content</div>
-                                        <div class="form-container" style="display: flex; justify-content: space-between; align-items: center;">
-                                            <div class="form-check form-switch ps-0">
-                                                <input name="O2narcotic" class="form-check-input ms-auto" type="checkbox"
-                                                    id="O2Narcotic" checked value="1">
-                                                <label class="form-check-label text-body ms-3"
-                                                    for="O2Narcotic">O2 narcotic?</label>
+
+                                @if( $site->maxDepth < 180)
+                                    @if( $site->maxDepth > 150)
+                                        <div class="col-md-4" style="border-bottom: 1px solid #D3D3D3;">
+                                    @else
+                                        <div class="col-md-8" style="border-bottom: 1px solid #D3D3D3;">
+                                    @endif
+                                
+                                    
+                                        <table class="table align-items-center mb-0"> 
+                                            <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Nitrox</td> </tr>
+                                        </table>
+                                        <div class="mt-n2">
+                                            <input type="hidden" id="sliderPPO2-value" name="sliderPPO2">
+                                            
+                                            <!-- Flex container for label alignment -->
+                                            <div class="label-container">
+                                                <label class="left-label" id="mainLabel">PPO2 at max depth ({{ $site->maxDepth }} ft)</label>
+                                                <label class="text-info right-label-normal custom-label" id="labelPPO2">Bottom PPO2</label>
+                                                <label class="text-info">atm</label>
                                             </div>
-                                            <div class="label-container" style="text-align: right;">
-                                                <label class="left-label" id="denisity" style="padding-right: 10px;">Gas density</label>
-                                                <label class="text-info right-label-normal custom-label" id="gasDensity"></label>
-                                                <label class="text-info">g/L</label>
+                                            <div class="label-container">
+                                                <label class="left-label" id="mainLabel2">PPO2 at average depth ({{ $site->avgDepth }} ft)</label>
+                                                <label class="text-info right-label-normal custom-label" id="labelPPO2Avg">Bottom PPO2</label>
+                                                <label class="text-info">atm</label>
                                             </div>
+                                            
+                                            <div class="slider-styled" id="sliderPPO2"></div>
                                         </div>
-                                    </div>
-                                    <div class="mt-2">
-                                        <table class="table mb-0" style="border: top; width: 100%;"> 
-                                            <tbody>
-                                                <tr class="mt-n4">
-                                                    <table style="width: 100%;">
-                                                        <tr>
-                                                            
-                                                            <td class="mt-n4" style="border: none; text-align: right; width: 49%;">
-                                                                <label class="text-info text-lg font-weight-bolder" id="txbestNitrox">32%</label>
-                                                            </td>
-                                                            <td class="mt-n4" style="border: none; width: 2%; text-align: center;">
-                                                                <label class="text-info text-lg font-weight-bolder">/</label>
-                                                            </td>
-                                                            <td class="mt-n4" style="border: none; text-align: left; width: 49%;">
-                                                                <label class="text-info text-lg font-weight-bolder" id="txbestHe">32%</label>
-                                                            </td>
-                                                        
-                                                        </tr>
-                                                        
-                                                    </table>
-                                                </tr>
+                                        <div class="mt-0">
+                                            <table class="table align-items-center mb-0" style="border: top;"> 
                                                 <tr>
-                                                    <td style="border: none;">
-                                                    <div class="text-center align-items-center mt-n3 mb-n2" id="txhypoxic" style="display: flex; justify-content: center; align-items: center;">
-                                                        <label class="text-danger text-sm font-weight-bolder" >Hypoxic at surface</label>
-                                                    </div>
+                                                    <td class="text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">O2 Content</td>
+                                                </tr>
+                                                <tr class="mt-n4">
+                                                    <td class="text-center mt-n4" style="border: none;">
+                                                        <label class="text-info text-lg font-weight-bolder" id="bestNitrox">32%</label>
+                                                    </td>
+                                                </tr>
+                                                <tr >
+                                                    <td class="text-center" style="border: none;"> <!-- Added text-center here -->
+                                                        <a type="button" class="btn btn-info mt-n4" id="buttonBestNitrox">
+                                                            Calculate Best Nitrox
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
 
-                                                    </td>
-                                                </tr>
-                                                <tr class="text-center align-items-center">
-                                                    <td class="text-center align-items-center" style="border: none;"> <!-- Added text-center here -->
-                                                        <div class="text-center align-items-center mt-0">
-                                                            <a type="button" class="btn btn-info mt-0" id="txbuttonBestNitrox">
-                                                                Calculate Best Trimix
-                                                            </a>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                
-                                            </tbody> 
-                                        </table>
                                     </div>
+                                @endif
 
-                                </div>
+                                @if( $site->maxDepth > 150)
+                                    @if( $site->maxDepth < 180)
+                                        <div class="col-md-4">
+                                    @else
+                                        <div class="col-md-8">
+                                    @endif
+                                        <table class="table align-items-center mb-0"> 
+                                            <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Trimix</td> </tr>
+                                        </table>
+                                        <div class="mt-n2">
+                                            <input type="hidden" id="sliderPPO2-value" name="txsliderPPO2">
+                                            
+                                            <!-- Flex container for label alignment -->
+                                            <div class="label-container">
+                                                <label class="left-label" id="mainLabelTx">PPO2 at max depth ({{ $site->maxDepth }} ft)</label>
+                                                <label class="text-info right-label-normal custom-label" id="txlabelPPO2">Bottom PPO2</label>
+                                                <label class="text-info">atm</label>
+                                            </div>
+                                            <div class="label-container">
+                                                <label class="left-label" id="txmainLabel2">PPO2 at average depth ({{ $site->avgDepth }} ft)</label>
+                                                <label class="text-info right-label-normal custom-label" id="txlabelPPO2Avg">Bottom PPO2</label>
+                                                <label class="text-info">atm</label>
+                                            </div>
+                                            
+                                            <div class="slider-styled" id="txsliderPPO2"></div>
+                                            <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">O2 Content</div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <input type="hidden" id="sliderPPO2-value" name="txsliderPPHe">
+                                            
+                                            <!-- Flex container for label alignment -->
+                                            <div class="label-container">
+                                                <label class="left-label" id="ENDLabelMax">END at max depth ({{ $site->maxDepth }} ft)</label>
+                                                <label class="text-info right-label-normal custom-label" id="txlabelEND"></label>
+                                                <label class="text-info">ft</label>
+                                            </div>
+                                            <div class="label-container">
+                                                <label class="left-label" id="ENDLabelAvg">END at average depth ({{ $site->avgDepth }} ft)</label>
+                                                <label class="text-info right-label-normal custom-label" id="txlabelENDAvg"></label>
+                                                <label class="text-info">ft</label>
+                                            </div>
+                                            
+                                            <div class="slider-styled" id="txsliderHe"></div>
+                                            <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He Content</div>
+                                            <div class="form-container" style="display: flex; justify-content: space-between; align-items: center;">
+                                                <div class="form-check form-switch ps-0">
+                                                    <input name="O2narcotic" class="form-check-input ms-auto" type="checkbox"
+                                                        id="O2Narcotic" checked value="1">
+                                                    <label class="form-check-label text-body ms-3"
+                                                        for="O2Narcotic">O2 narcotic?</label>
+                                                </div>
+                                                <div class="label-container" style="text-align: right;">
+                                                    <label class="left-label" id="denisity" style="padding-right: 10px;">Gas density</label>
+                                                    <label class="text-info right-label-normal custom-label" id="gasDensity"></label>
+                                                    <label class="text-info">g/L</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <table class="table mb-0" style="border: top; width: 100%;"> 
+                                                <tbody>
+                                                    <tr class="mt-n4">
+                                                        <table style="width: 100%;">
+                                                            <tr>
+                                                                
+                                                                <td class="mt-n4" style="border: none; text-align: right; width: 49%;">
+                                                                    <label class="text-info text-lg font-weight-bolder" id="txbestNitrox">32%</label>
+                                                                </td>
+                                                                <td class="mt-n4" style="border: none; width: 2%; text-align: center;">
+                                                                    <label class="text-info text-lg font-weight-bolder">/</label>
+                                                                </td>
+                                                                <td class="mt-n4" style="border: none; text-align: left; width: 49%;">
+                                                                    <label class="text-info text-lg font-weight-bolder" id="txbestHe">32%</label>
+                                                                </td>
+                                                            
+                                                            </tr>
+                                                            
+                                                        </table>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="border: none;">
+                                                        <div class="text-center align-items-center mt-n3 mb-n2" id="txhypoxic" style="display: flex; justify-content: center; align-items: center;">
+                                                            <label class="text-danger text-sm font-weight-bolder" >Hypoxic at surface</label>
+                                                        </div>
+
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="text-center align-items-center">
+                                                        <td class="text-center align-items-center" style="border: none;"> <!-- Added text-center here -->
+                                                            <div class="text-center align-items-center mt-0">
+                                                                <a type="button" class="btn btn-info mt-0" id="txbuttonBestNitrox">
+                                                                    Calculate Best Trimix
+                                                                </a>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    
+                                                </tbody> 
+                                            </table>
+                                        </div>
+
+                                    </div>
+                                @endif
 
                             </div>  
                             
@@ -652,7 +681,7 @@
                 </div>
 
             </div>
-            @endcan
+            
             
             <div class="row mx-2">
                 @php
@@ -1254,109 +1283,6 @@
 
     </script>
 
-    {{-- Slider script Nitrox --}}
-    <script>
-        var slider = document.getElementById('sliderPPO2');
-        var label = document.getElementById('labelPPO2');
-        var labelAvg = document.getElementById('labelPPO2Avg');
-        var sliderValueInput = document.getElementById('slider-value');
-        var labelBestNitrox = document.getElementById('bestNitrox');
-        
-
-
-        var bestMix =  Math.round((1.4 / ({{ $site->maxDepth }} / 33 + 1) * 100));
-        console.log("The value of bestMix is:", bestMix);
-
-        noUiSlider.create(slider, {
-            start: bestMix,
-            connect: [true, false],
-            range: {
-                'min': 21,
-                'max': 40
-            },
-            step: 1,
-            
-
-        });
-
-        // Hide the tick mark labels
-        var tickLabels = slider.querySelectorAll('.noUi-value-sub');
-        tickLabels.forEach(function (label) {
-            label.style.display = 'none';
-        });
-            
-        // Listen for the 'update' event
-        
-        slider.noUiSlider.on('update', function (values, handle) {
-            labelBestNitrox.textContent = Math.round(values[handle]) + '%';
-
-            var sliderValue = parseFloat(values[handle]); // Ensure sliderValue is numeric
-            console.log("Slider Value:", sliderValue);
-
-            var maxDepth = parseFloat({{ $site->maxDepth }}); // Ensure maxDepth is rendered as a number
-            console.log("Max Depth:", maxDepth);
-
-            var avgDepth = parseFloat({{ $site->avgDepth }}); // Ensure maxDepth is rendered as a number
-            console.log("Avg Depth:", avgDepth);
-
-            var ppo2 = (((maxDepth / 33 + 1) * sliderValue) / 100).toFixed(2); // Calculate PPO2 and format
-            console.log("PPO2:", ppo2);
-
-            var ppo2avg = (((avgDepth / 33 + 1) * sliderValue) / 100).toFixed(2); // Calculate PPO2 and format
-            console.log("PPO2:", ppo2avg);
-
-            label.textContent = ppo2;
-            labelAvg.textContent = ppo2avg
-
-            // Check PPO2 threshold and set the appropriate class
-            if (parseFloat(ppo2) > 1.59 || parseFloat(ppo2) < 0.16) {
-                console.log("High PPO2 - Danger");
-                label.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
-                label.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
-            } else if (parseFloat(ppo2) > 1.41 || parseFloat(ppo2) < 0.21) {
-                console.log("Medium PPO2 - Warning");
-                label.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
-                label.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
-            } else {
-                console.log("Low PPO2 - Info");
-                label.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
-                label.classList.add("text-info", "right-label-normal"); // Add "text-info" class
-            }
-
-            if (parseFloat(ppo2avg) > 1.59 || parseFloat(ppo2avg) < 0.16) {
-                console.log("High PPO2 - Danger");
-                labelAvg.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
-                labelAvg.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
-            } else if (parseFloat(ppo2avg) > 1.41 || parseFloat(ppo2avg) < 0.21) {
-                console.log("Medium PPO2 - Warning");
-                labelAvg.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
-                labelAvg.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
-            } else {
-                console.log("Low PPO2 - Info");
-                labelAvg.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
-                labelAvg.classList.add("text-info", "right-label-normal"); // Add "text-info" class
-            }
-
-            console.log("slider value=",sliderValue);
-            console.log("bestMix=", bestMix);
-            if(sliderValue == bestMix) {
-                labelBestNitrox.classList.remove("text-info");
-                labelBestNitrox.classList.add("text-success");
-            } else {
-                labelBestNitrox.classList.add("text-info");
-                labelBestNitrox.classList.remove("text-success");
-            }
-        });
-
-        // Add an event listener to the button
-        document.getElementById("buttonBestNitrox").addEventListener("click", function () {
-            // Reset the slider to its start value
-            slider.noUiSlider.set(slider.noUiSlider.options.start);
-        });
-
-    </script>
-
-
     <script>
 
     // Get the canvas element
@@ -1496,6 +1422,111 @@
     }
 
     </script>
+    {{-- Slider script Nitrox --}}
+    <script>
+        var slider = document.getElementById('sliderPPO2');
+        var label = document.getElementById('labelPPO2');
+        var labelAvg = document.getElementById('labelPPO2Avg');
+        var sliderValueInput = document.getElementById('slider-value');
+        var labelBestNitrox = document.getElementById('bestNitrox');
+        
+
+
+        var bestMix =  Math.round((1.4 / ({{ $site->maxDepth }} / 33 + 1) * 100));
+        console.log("The value of bestMix is:", bestMix);
+
+        noUiSlider.create(slider, {
+            start: bestMix,
+            connect: [true, false],
+            range: {
+                'min': 21,
+                'max': 40
+            },
+            step: 1,
+            
+
+        });
+
+        // Hide the tick mark labels
+        var tickLabels = slider.querySelectorAll('.noUi-value-sub');
+        tickLabels.forEach(function (label) {
+            label.style.display = 'none';
+        });
+            
+        // Listen for the 'update' event
+        
+        slider.noUiSlider.on('update', function (values, handle) {
+            labelBestNitrox.textContent = Math.round(values[handle]) + '%';
+
+            var sliderValue = parseFloat(values[handle]); // Ensure sliderValue is numeric
+            console.log("Slider Value:", sliderValue);
+
+            var maxDepth = parseFloat({{ $site->maxDepth }}); // Ensure maxDepth is rendered as a number
+            console.log("Max Depth:", maxDepth);
+
+            var avgDepth = parseFloat({{ $site->avgDepth }}); // Ensure maxDepth is rendered as a number
+            console.log("Avg Depth:", avgDepth);
+
+            var ppo2 = (((maxDepth / 33 + 1) * sliderValue) / 100).toFixed(2); // Calculate PPO2 and format
+            console.log("PPO2:", ppo2);
+
+            var ppo2avg = (((avgDepth / 33 + 1) * sliderValue) / 100).toFixed(2); // Calculate PPO2 and format
+            console.log("PPO2:", ppo2avg);
+
+            label.textContent = ppo2;
+            labelAvg.textContent = ppo2avg
+
+            // Check PPO2 threshold and set the appropriate class
+            if (parseFloat(ppo2) > 1.59 || parseFloat(ppo2) < 0.16) {
+                console.log("High PPO2 - Danger");
+                label.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
+                label.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+            } else if (parseFloat(ppo2) > 1.41 || parseFloat(ppo2) < 0.21) {
+                console.log("Medium PPO2 - Warning");
+                label.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
+                label.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+            } else {
+                console.log("Low PPO2 - Info");
+                label.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
+                label.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+            }
+
+            if (parseFloat(ppo2avg) > 1.59 || parseFloat(ppo2avg) < 0.16) {
+                console.log("High PPO2 - Danger");
+                labelAvg.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
+                labelAvg.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+            } else if (parseFloat(ppo2avg) > 1.41 || parseFloat(ppo2avg) < 0.21) {
+                console.log("Medium PPO2 - Warning");
+                labelAvg.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
+                labelAvg.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+            } else {
+                console.log("Low PPO2 - Info");
+                labelAvg.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
+                labelAvg.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+            }
+
+            console.log("slider value=",sliderValue);
+            console.log("bestMix=", bestMix);
+            if(sliderValue == bestMix) {
+                labelBestNitrox.classList.remove("text-info");
+                labelBestNitrox.classList.add("text-success");
+            } else {
+                labelBestNitrox.classList.add("text-info");
+                labelBestNitrox.classList.remove("text-success");
+            }
+            updateGasMix(labelBestNitrox.textContent, 0);
+        });
+
+        // Add an event listener to the button
+        document.getElementById("buttonBestNitrox").addEventListener("click", function () {
+            // Reset the slider to its start value
+            slider.noUiSlider.set(slider.noUiSlider.options.start);
+        });
+
+    </script>
+
+
+
 
     {{-- Slider script Trimix --}}
     <script>
@@ -1792,7 +1823,44 @@
 
     </script>
 
-    
+<script>
+        // Set up the CSRF token for AJAX requests
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
+        // Attach click event to the "Calculate NDL" button
+        $('#calculateNDLButton').on('click', function () {
+            // Get values from the input fields
+            const depth = {{ $site->maxDepth }}
+            const oxygen = labelMixO2.textContent.slice(0, -1); // Removes the last character ('%')
+            const nitrogen = labelMixN2.textContent.slice(0, -1); // Removes the last character ('%')
+            const helium = labelMixHe.textContent.slice(0, -1); // Removes the last character ('%')
+
+            // Create the gas mix object
+            const gasMix = {
+                O2: oxygen / 100, // Convert percentage to fraction
+                N2: nitrogen / 100, // Convert percentage to fraction
+                He: helium / 100 // Convert percentage to fraction
+            };
+
+            // Make the AJAX POST request
+            $.ajax({
+                url: '{{ route("Calculate-ndl") }}', // The route to the server-side function
+                method: 'POST',
+                data: { depth: depth, gasMix: gasMix },
+                success: function (response) {
+                    // Update the result in the HTML
+                    $('#ndlResult').text(response.ndl);
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error:', error);
+                }
+            });
+        });
+    </script>
     
 
     <script>

@@ -140,6 +140,8 @@ Route::post('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites'
 Route::get('DiveSitesMap', 'App\Http\Controllers\SiteController@showAll')->middleware('guest')->name('DiveSitesMap');
 Route::get('DiveSitesAll', 'App\Http\Controllers\SiteController@showAllSearch')->middleware('guest')->name('DiveSitesAll');
 Route::get('DiveSitesAdmin', 'App\Http\Controllers\SiteController@showAllAdmin')->middleware('auth')->name('DiveSitesAdmin');
+Route::post('Calculate-ndl', 'App\Http\Controllers\NDLController@calculateNDL')->middleware('guest')->name('Calculate-ndl');
+
 
 
 Route::get('overview', 'App\Http\Controllers\UserController@getProfile')->middleware('auth')->name('overview');
