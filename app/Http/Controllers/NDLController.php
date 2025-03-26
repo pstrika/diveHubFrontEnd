@@ -71,16 +71,26 @@ class NDLController extends Controller
     
         // Parameters
         $nitrogenFraction = $gasMix['N2'];
+        $heliumFraction = $gasMix['He'];
+        $totalInertGas = $nitrogenFraction + $heliumFraction;
+        $heliumWeight = $heliumFraction/$totalInertGas;
+        $nitrogenWeigth = $nitrogenFraction/$totalInertGas;
+
         $ambientPressureAtDepth = self::ATMOSPHERIC_PRESSURE + $depth * self::WATER_COLUMN_PRESSURE;
         $initialNitrogenPressure = self::ATMOSPHERIC_PRESSURE * $nitrogenFraction;
+        $initialHeliumPressure = 0;
     
         Log::debug("Ambient Pressure at Depth: $ambientPressureAtDepth");
         Log::debug("Initial Nitrogen Pressure: $initialNitrogenPressure");
+        Log::debug("Initial Helium Pressure: $initialHeliumPressure");
+        Log::debug("Total inert gas %: $totalInertGas. N2 weigth: $nitrogenWeigth / He weigth: $heliumWeight");
     
         $ascentRate = 30 * 0.3048; // Ascent rate in meters per minute (30 ft/min)
         $maxDepthTime = 240; // Arbitrary upper bound for testing
-        $ndl = 0; // Initialize NDL
+        $ndlN2 = 0; // Initialize NDL
+        $ndlHe = 0; // Initialize NDL
     
+        // Calculate NDL for N2
         for ($t = 1; $t <= $maxDepthTime; $t++) {
             $valid = true; // Assume current time is valid
     
@@ -113,9 +123,9 @@ class NDLController extends Controller
                     $mValue = $a + $currentAmbientPressure / $b ;
     
                     // Check M-value violation
-                    if ($nitrogenPressure > $mValue * self::GF_H) {
+                    if ($nitrogenPressure > $mValue * $nitrogenWeigth * self::GF_H) {
                         $valid = false; // Restriction found
-                        Log::debug("M-Value Exceeded at Depth: {$currentDepth} and Time: {$t}");
+                        Log::debug("M-Value Nitrogen Exceeded at Depth: {$currentDepth} and Time: {$t}");
                         break;
                     }
                 }
@@ -126,20 +136,76 @@ class NDLController extends Controller
             }
     
             if ($valid) {
-                $ndl = $t; // Update NDL to the current time
+                $ndlN2 = $t; // Update NDL to the current time
+            } else {
+                break; // Stop simulation as restriction occurred
+            }
+        }
+
+        // Calculate NDL for He
+        for ($t = 1; $t <= $maxDepthTime; $t++) {
+            $valid = true; // Assume current time is valid
+    
+            foreach ($this->heliumCompartments as $compartment) {
+                $halfTime = $compartment['halfTime'];
+                $a = $compartment['a'];
+                $b = $compartment['b'];
+    
+                // Calculate nitrogen pressure at depth
+                $rateConstant = log(2) / $halfTime;
+                $heliumPressure = $initialHeliumPressure + 
+                                    ($ambientPressureAtDepth * $heliumFraction - $initialHeliumPressure) * 
+                                    (1 - exp(-$rateConstant * $t));
+    
+                Log::debug("Helium Pressure at Depth (t = {$t}): $heliumPressure");
+    
+                // Simulate ascent
+                $currentDepth = $depth;
+                while ($currentDepth > 0) {
+                    $currentDepth = max(0, $currentDepth - $ascentRate); // Decrease depth incrementally
+                    $currentAmbientPressure = self::ATMOSPHERIC_PRESSURE + $currentDepth * self::WATER_COLUMN_PRESSURE;
+    
+                    // Off-gassing during ascent
+                    $heliumPressure = $heliumPressure - 
+                                        ($currentAmbientPressure * $heliumFraction) * 
+                                        (1 - exp(-$rateConstant * 1)); // 1-minute increments
+    
+                    // Calculate M-value during ascent
+                    //$mValue = $a + $b * $currentAmbientPressure;
+                    $mValue = $a + $currentAmbientPressure / $b ;
+    
+                    // Check M-value violation
+                    if ($heliumPressure > $mValue * $heliumWeight * self::GF_H) {
+                        $valid = false; // Restriction found
+                        Log::debug("M-Value He Exceeded at Depth: {$currentDepth} and Time: {$t}");
+                        break;
+                    }
+                }
+    
+                if (!$valid) {
+                    break; // Stop checking other compartments
+                }
+            }
+    
+            if ($valid) {
+                $ndlHe = $t; // Update NDL to the current time
             } else {
                 break; // Stop simulation as restriction occurred
             }
         }
     
-        if ($ndl === 0) {
+        Log::info("NDL N2: $ndlN2");
+        Log::info("NDL He: $ndlHe");
+
+
+        if ($ndlN2 === 0 && $ndlHe === 0) {
             return response()->json(['error' => 'Could not calculate NDL'], 500);
         }
     
         return response()->json([
             'depth' => $request->input('depth'),
             'gasMix' => $gasMix,
-            'ndl' => $ndl
+            'ndl' => min($ndlN2, $ndlHe)
         ]);
     }
     

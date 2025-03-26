@@ -494,7 +494,7 @@
                                                 <label class="left-label text-secondary" id="mainLabel">Nitrogen %</label>
                                                 <label class="text-secondary right-label-secondary custom-label" id="labelMixN2">Bottom PPO2</label>
                                             </div>
-                                            @if( $site->maxDepth <= 130)
+                                            @if( $site->maxDepth <= 140)
                                                 <div class="label-container">
                                                     <!-- Highlighted max depth -->
                                                     <label class="left-label">NDL at <span class="text-info" style="font-weight: bold;">{{ $site->maxDepth }} ft</span> - 24 hr min surface interval</label>
@@ -1515,13 +1515,17 @@
                 labelBestNitrox.classList.remove("text-success");
             }
             updateGasMix(labelBestNitrox.textContent, 0);
-        });
+            $('#ndlResult').text("-");
+            //calculateNDL({{ $site->maxDepth }}, labelMixO2.textContent.slice(0, -1)/100, labelMixN2.textContent.slice(0, -1)/100, labelMixHe.textContent.slice(0, -1)/100);
 
-        // Add an event listener to the button
-        document.getElementById("buttonBestNitrox").addEventListener("click", function () {
-            // Reset the slider to its start value
-            slider.noUiSlider.set(slider.noUiSlider.options.start);
-        });
+ 
+            });
+
+            // Add an event listener to the button
+            document.getElementById("buttonBestNitrox").addEventListener("click", function () {
+                // Reset the slider to its start value
+                slider.noUiSlider.set(slider.noUiSlider.options.start);
+            });
 
     </script>
 
@@ -1665,6 +1669,7 @@
 
            updateGasDensity();
            updateGasMix(txlabelBestNitrox.textContent, txlabelBestHe.textContent);
+           $('#ndlResult').text("-");
             //update NDL
             //const gasMix = {O2: txlabelBestNitrox.textContent / 100, N2: (100 - txlabelBestNitrox.textContent - txlabelBestHe.textContent)/100, He: txlabelBestHe.textContent/100};
             //const ndl = calculateNDL({{ $site->maxDepth }}, gasMix);
@@ -1775,6 +1780,7 @@
 
             updateGasDensity();
             updateGasMix(txlabelBestNitrox.textContent, txlabelBestHe.textContent);
+            $('#ndlResult').text("-");
             //update NDL
             //const gasMix = {O2: txlabelBestNitrox.textContent / 100, N2: (100 - txlabelBestNitrox.textContent - txlabelBestHe.textContent)/100, He: txlabelBestHe.textContent/100};
             //const ndl = calculateNDL({{ $site->maxDepth }}, gasMix);
@@ -1790,6 +1796,7 @@
             txsliderHe.noUiSlider.set(txsliderHe.noUiSlider.options.start);
             updateGasDensity();
             updateGasMix(txlabelBestNitrox.textContent, txlabelBestHe.textContent);
+            $('#ndlResult').text("-");
 
             //update NDL
             //const gasMix = {O2: txlabelBestNitrox.textContent / 100, N2: (100 - txlabelBestNitrox.textContent - txlabelBestHe.textContent)/100, He: txlabelBestHe.textContent/100};
@@ -1859,7 +1866,33 @@
                     console.error('Error:', error);
                 }
             });
+
+            
         });
+
+        function calculateNDL(depth, oxygen, nitrogen, helium) {
+        // Convert percentages to fractions
+        const gasMix = {
+            O2: oxygen / 100, // Convert percentage to fraction
+            N2: nitrogen / 100, // Convert percentage to fraction
+            He: helium / 100 // Convert percentage to fraction
+        };
+
+        // Make the AJAX POST request
+        $.ajax({
+            url: '{{ route('Calculate-ndl') }}', // The route to the server-side function
+            method: 'POST',
+            data: { depth: depth, gasMix: gasMix },
+            success: function (response) {
+                // Update the result in the HTML
+                $('#ndlResult').text(response.ndl);
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', error);
+            }
+        });
+}
+
     </script>
     
 
