@@ -472,28 +472,66 @@
                                     <div class="row" style="display: flex; justify-content: center;">
                                         <div class="mt-n6" style="position: relative; width: 150px; height: 300px;">
                                             <!-- Overlaying image -->
-                                            <img src="{{ asset("assets") }}/img/tank.png" alt="Overlay Image" 
-                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 76%; height: 75%; z-index: 10;">
+                                            <img id="tank_single" src="{{ asset("assets") }}/img/tank_single.png"  hidden alt="Overlay Image" 
+                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+
+                                            <img id="tank_double" src="{{ asset("assets") }}/img/tank_double.png"   alt="Overlay Image" 
+                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+
+                                            <img id="unblendable_sign" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image" 
+                                                style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
+
                                             
                                             <!-- Fixed-size chart canvas -->
-                                            <canvas id="stackedBarChart" 
-                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 161px; z-index: 1;"></canvas>
+                                            <div style="width: 300px; heigth:300px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
+                                                <canvas id="stackedBarChart" 
+                                                        style="width: 100%; height: 202px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
+                                            </div>
+
+                                            <!-- <canvas id="stackedBarChart" 
+                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 161px; z-index: 1;"></canvas> -->
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-5">
+                                            <table class="table align-items-center mb-0"> 
+                                                <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Gas mix</td> </tr>
+                                            </table>
+                                            <div class="label-container">
+                                                <label class="left-label text-success" id="mainLabel">Oxygen</label>
+                                                <label class="text-success right-label-success custom-label" id="labelMixO2">Bottom PPO2</label>
+                                            </div>
+                                            <div class="label-container" id="label-container-mix-He">
+                                                <label class="left-label text-info" id="mainLabel">Helium</label>
+                                                <label class="text-info right-label-normal custom-label" id="labelMixHe">Bottom PPO2</label>
+                                            </div>
+                                            <div class="label-container">
+                                                <label class="left-label text-secondary" id="mainLabel">Nitrogen</label>
+                                                <label class="text-secondary right-label-secondary custom-label" id="labelMixN2">Bottom PPO2</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-7">
+                                            <table class="table align-items-center mb-0"> 
+                                                <tr><td id="tankConf" class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Gas prices</td> </tr>
+                                            </table>
+                                            <table class="table"> 
+                                                <tr>
+                                                    <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Aluminum 80</td>
+                                                    <td id="tank80" class="text-secondary text-xs opacity-10 text-right" style="border: none;">$10</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Steel HP 100</td>
+                                                    <td id="tank100" class="text-secondary text-xs opacity-10 text-right" style="border: none;">$10</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Steel LP 85</td>
+                                                    <td id="tank85" class="text-secondary text-xs opacity-10 text-right" style="border: none;">$10</td>
+                                                </tr>
+                                            </table>
                                         </div>
                                     </div>
                                     <div class="row">
                                         <div class="col-12">
-                                            <div class="label-container">
-                                                <label class="left-label text-success" id="mainLabel">Oxygen %</label>
-                                                <label class="text-success right-label-success custom-label" id="labelMixO2">Bottom PPO2</label>
-                                            </div>
-                                            <div class="label-container" id="label-container-mix-He">
-                                                <label class="left-label text-info" id="mainLabel">Helium %</label>
-                                                <label class="text-info right-label-normal custom-label" id="labelMixHe">Bottom PPO2</label>
-                                            </div>
-                                            <div class="label-container">
-                                                <label class="left-label text-secondary" id="mainLabel">Nitrogen %</label>
-                                                <label class="text-secondary right-label-secondary custom-label" id="labelMixN2">Bottom PPO2</label>
-                                            </div>
                                             @if( $site->maxDepth <= 140)
                                                 <div class="label-container">
                                                     <!-- Highlighted max depth -->
@@ -1173,6 +1211,116 @@
     <link href="{{ asset('assets') }}/css/nouislider.css" rel="stylesheet">
     <script src="../../assets/js/plugins/chartjs.min.js"></script>
 
+    <script>
+
+        function blendGas(targetO2, targetHe, targetPressure) {
+            // Fixed air composition
+            const airO2 = 0.21; // Oxygen in air
+            const airN2 = 0.79; // Nitrogen in air
+
+            // Validate inputs
+            if (targetO2 + targetHe > 1) {
+                //throw new Error("Mix is unachievable: fractions exceed 1.");
+                return 0;
+            }
+            if (targetO2 < 0 || targetHe < 0 || targetPressure <= 0) {
+                //throw new Error("Invalid inputs: fractions and pressure must be positive.");
+                return 0;
+            }
+
+            // Calculate target nitrogen fraction
+            const targetN2 = 1 - targetO2 - targetHe;
+
+            // Check if nitrogen fraction is achievable using air
+            if (targetN2 < 0 || targetN2 > airN2) {
+                //throw new Error("Mix is unachievable: nitrogen fraction outside bounds.");
+                return 0;
+            }
+
+            // Solve for PSI contributions
+            let psiAir = targetN2 / airN2 * targetPressure; // PSI of air required
+            let psiO2 = (targetO2 - airO2 * psiAir / targetPressure) * targetPressure; // PSI of pure oxygen required
+            let psiHe = targetHe * targetPressure; // PSI of pure helium required
+
+            // Validate results
+            if (psiO2 < 0 || psiHe < 0 || psiAir < 0) {
+                //throw new Error("Mix is unachievable: negative PSI calculated.");
+                return 0;
+            }
+
+            // Return the results
+            return {
+                oxygenPSI: psiO2,
+                heliumPSI: psiHe,
+                airPSI: psiAir
+            };
+        }
+
+
+        // Script to update gas prices
+        function updateGasPrices() {
+            labelAl80 = document.getElementById("tank80");
+            labelSt85 = document.getElementById("tank85");
+            labelSt100 = document.getElementById("tank100");
+            signUnblendable = document.getElementById("unblendable_sign");
+            
+            tankConf = document.getElementById("tankConf").textContent;
+
+            // Get the text content of the label
+            const labelTextHe = document.getElementById("labelMixHe").textContent;
+            // Strip the '%' and convert the number to a fraction
+            const he = parseFloat(labelTextHe.replace('%', '')) / 100;
+            const labelTextO2 = document.getElementById("labelMixO2").textContent;
+            // Strip the '%' and convert the number to a fraction
+            const o2 = parseFloat(labelTextO2.replace('%', '')) / 100;
+            const n2 = 1 - o2 - he;
+
+            const O2Price = 0;
+            const HePrice = 4; //cuft
+            const AirPrice = 9;
+            const NitroxPrice = 13;
+
+            //check if the gas is blendable
+            if (blendGas(o2, he, 3000) == 0) {
+                labelAl80.textContent = "-";
+                labelSt85.textContent = "-" ;
+                labelSt100.textContent = "-";
+                document.getElementById("unblendable_sign").removeAttribute("hidden"); // Removes 'hidden' attribute from the first image
+                return;
+                
+            }
+            else
+                document.getElementById("unblendable_sign").setAttribute("hidden", "true"); // Adds 'hidden' attribute to the second image
+            // case for air
+            if(he == 0 && o2 == 0.21) {
+                price80 = AirPrice;
+                price85 = AirPrice;
+                price100 = AirPrice;
+            } else if (he == 0) {
+                price80 = NitroxPrice;
+                price85 = NitroxPrice;
+                price100 = NitroxPrice;
+            } else {
+                price80 = he * 80 * HePrice;
+                price85 = he * 85 * HePrice;
+                price100 = he * 100 * HePrice;
+            }
+
+            // doubles or singles?
+            if (tankConf.includes("Doubles")) {
+                price80 = price80 * 2;
+                price85 = price85 * 2;
+                price100 = price100 * 2;
+            }
+            
+
+            labelAl80.textContent = "$" + price80.toFixed(2);
+            labelSt85.textContent = "$" + price85.toFixed(2);
+            labelSt100.textContent = "$" + price100.toFixed(2);
+
+            return;
+        }
+    </script>
     
     
     <script>
@@ -1285,6 +1433,8 @@
 
     <script>
 
+    let labelHorizontalOffset = -40; // Initial offset value
+
     // Get the canvas element
     const ctx = document.getElementById('stackedBarChart').getContext('2d');
 
@@ -1357,8 +1507,7 @@
                                 ctx.fillStyle = '#FFF'; // Label color
                                 ctx.textAlign = 'center';
                                 ctx.textBaseline = 'middle'; // Centers text vertically
-                                const barMiddle = bar.y + (bar.height / 2); // Calculate middle of the bar
-                                ctx.fillText(data + '%', bar.x, bar.y + 10); // Position label slightly above the bar
+                                ctx.fillText(data + '%', bar.x + labelHorizontalOffset, bar.y + 10); // Position label slightly above the bar
                                 
                             }
                         });
@@ -1367,6 +1516,12 @@
             }
         ]
     });
+
+    function updateLabelHorizontalOffset(newOffset) {
+        labelHorizontalOffset = newOffset; // Update the global variable
+        stackedBarChart.update(); // Refresh the chart to apply changes
+    }
+
 
     function updateGasMix(oxygen, helium) {
         // Ensure the passed values are integers
@@ -1403,6 +1558,7 @@
 
         // Refresh the chart
         stackedBarChart.update();
+        
 
         var labelMixO2 = document.getElementById('labelMixO2');
         var labelMixHe = document.getElementById('labelMixHe');
@@ -1518,6 +1674,15 @@
             $('#ndlResult').text("-");
             //calculateNDL({{ $site->maxDepth }}, labelMixO2.textContent.slice(0, -1)/100, labelMixN2.textContent.slice(0, -1)/100, labelMixHe.textContent.slice(0, -1)/100);
 
+            updateLabelHorizontalOffset(0);
+            // JavaScript code to toggle visibility of images
+            document.getElementById("tank_single").removeAttribute("hidden"); // Removes 'hidden' attribute from the first image
+            document.getElementById("tank_double").setAttribute("hidden", "true"); // Adds 'hidden' attribute to the second image
+
+            //update Gas price label
+            document.getElementById("tankConf").innerText = "Gas Price (Single)";
+            updateGasPrices();
+
  
             });
 
@@ -1525,6 +1690,12 @@
             document.getElementById("buttonBestNitrox").addEventListener("click", function () {
                 // Reset the slider to its start value
                 slider.noUiSlider.set(slider.noUiSlider.options.start);
+                updateLabelHorizontalOffset(0);
+                document.getElementById("tank_single").removeAttribute("hidden"); // Removes 'hidden' attribute from the first image
+                document.getElementById("tank_double").setAttribute("hidden", "true"); // Adds 'hidden' attribute to the second image
+                //update Gas price label
+                document.getElementById("tankConf").innerText = "Gas Price (Single)";
+                updateGasPrices();
             });
 
     </script>
@@ -1675,6 +1846,13 @@
             //const ndl = calculateNDL({{ $site->maxDepth }}, gasMix);
             //labelNDL = document.getElementById('labelNDL');
             //labelNDL.textContent = ndl;
+            updateLabelHorizontalOffset(-40);
+            // JavaScript code to toggle visibility of images
+            document.getElementById("tank_double").removeAttribute("hidden"); // Removes 'hidden' attribute from the first image
+            document.getElementById("tank_single").setAttribute("hidden", "true"); // Adds 'hidden' attribute to the second image
+            //update Gas price label
+            document.getElementById("tankConf").innerText = "Gas Price (Doubles)";
+            updateGasPrices();
             
         });
 
@@ -1786,6 +1964,13 @@
             //const ndl = calculateNDL({{ $site->maxDepth }}, gasMix);
             //labelNDL = document.getElementById('labelNDL');
             //labelNDL.textContent = ndl;
+            updateLabelHorizontalOffset(-40);
+            // JavaScript code to toggle visibility of images
+            document.getElementById("tank_double").removeAttribute("hidden"); // Removes 'hidden' attribute from the first image
+            document.getElementById("tank_single").setAttribute("hidden", "true"); // Adds 'hidden' attribute to the second image
+            //update Gas price label
+            document.getElementById("tankConf").innerText = "Gas Price (Doubles)";
+            updateGasPrices();
         });
 
         // Add an event listener to the button
@@ -1803,6 +1988,14 @@
             //const ndl = calculateNDL({{ $site->maxDepth }}, gasMix);
             //labelNDL = document.getElementById('labelNDL');
             //labelNDL.textContent = ndl;
+
+            updateLabelHorizontalOffset(-40);
+            // JavaScript code to toggle visibility of images
+            document.getElementById("tank_double").removeAttribute("hidden"); // Removes 'hidden' attribute from the first image
+            document.getElementById("tank_single").setAttribute("hidden", "true"); // Adds 'hidden' attribute to the second image
+            //update Gas price label
+            document.getElementById("tankConf").innerText = "Gas Price (Doubles)";
+            updateGasPrices();
             
         });
 
@@ -1895,6 +2088,8 @@
 
     </script>
     
+    
+    
 
     <script>
         function cancelReview() {
@@ -1904,7 +2099,7 @@
 
         function showReviewForm() {
             document.getElementById('addReviewButton').style.display = 'none';
-            document.getElementById('addReviewForm').style.display = 'block';
+      script.getElementById('addReviewForm').style.display = 'block';
         }
     </script>
     <script>

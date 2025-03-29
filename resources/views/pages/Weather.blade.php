@@ -98,7 +98,7 @@
                                     <img src="{{ asset('assets') }}/img/Florida1.png" height="200px" alt="img-blur-shadow" class=" border-radius-lg min-heigth-10 mt-n3 position-relative">
                                     {{--<div class="page-header min-height-250 max-height-250 border-radius-xl mt-0 mx-0" --}}
                                     <a href="/Weather/key west/" class="position-absolute text-sm material-icons text-black {{ ($location == "key west" ? "animate-icon" : "") }}" style="top:160px; left:100px;">circle</a>
-                                    <a href="/Weather/isla morada/"class="position-absolute text-sm material-icons text-black {{ ($location == "isla morada" ? "animate-icon" : "") }}" style="top:152px; left:135px;">circle</a>
+                                    <a href="/Weather/islamorada/"class="position-absolute text-sm material-icons text-black {{ ($location == "islamorada" ? "animate-icon" : "") }}" style="top:152px; left:135px;">circle</a>
                                     <a href="/Weather/key largo/"class="position-absolute text-sm material-icons text-black {{ ($location == "key largo" ? "animate-icon" : "") }}" style="top:128px; left:162px;">circle</a>
                                     <a href="/Weather/miami beach/"class="position-absolute text-sm material-icons text-black {{ ($location == "miami beach" ? "animate-icon" : "") }}" style="top:83px; left:175px;">circle</a>
                                     <a href="/Weather/fort lauderdale/"class="position-absolute text-sm material-icons text-black {{ ($location == "fort lauderdale" ? "animate-icon" : "") }}" style="top:70px; left:177px;">circle</a>
