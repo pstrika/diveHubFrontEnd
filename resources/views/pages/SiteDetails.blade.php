@@ -1287,6 +1287,32 @@
             const AirPrice = 9;
             const NitroxPrice = 13;
 
+            // Suggest closest standard mix
+            //console.log("----------------------Hiding row----------------------------");
+            document.getElementById("closeMixRow").setAttribute("hidden", "true");
+
+            // Define the array of standard gas mixes
+            const gasArray = [
+                { mix: "21/35", O2: 0.21, He: 0.35 },
+                { mix: "18/45", O2: 0.18, He: 0.45 },
+                { mix: "10/50", O2: 0.10, He: 0.50 },
+                { mix: "36%", O2: 0.36, He: 0 },
+                { mix: "32%", O2: 0.32, He: 0 },
+                { mix: "Air", O2: 0.21, He: 0 },
+            ];
+
+            // Iterate over each gas mix to find the closest match
+            gasArray.forEach(element => {
+                if ((o2 - element.O2) < 0.03 && (o2 - element.O2) >= -0.01) { // Check within 4% difference
+                    //console.log("he=" + he + " element.He=" + element.He + " Diff=" + Math.abs(he - element.He));
+                    if( Math.abs(he - element.He) <= 0.1) { 
+                        //console.log("Unhidding closeMixLabel");
+                        document.getElementById("closeMix").textContent = element.mix; // Use element.mix, not this->mix
+                        document.getElementById("closeMixRow").removeAttribute("hidden"); // Show the row
+                    }
+                }
+            });
+
             //check if the gas is blendable
             if (blendGas(o2, he, 3000) == 0) {
                 labelAl80.textContent = "-";
@@ -1325,28 +1351,7 @@
             labelSt85.textContent = "$" + price85.toFixed(2);
             labelSt100.textContent = "$" + price100.toFixed(2);
 
-            // Suggest closest standard mix
-            document.getElementById("closeMixRow").setAttribute("hidden", "true");
-
-            // Define the array of standard gas mixes
-            const gasArray = [
-                { mix: "21/35", O2: 0.21, He: 0.35 },
-                { mix: "18/45", O2: 0.18, He: 0.45 },
-                { mix: "10/50", O2: 0.10, He: 0.50 },
-                { mix: "36%", O2: 0.36, He: 0 },
-                { mix: "32%", O2: 0.32, He: 0 },
-                { mix: "Air", O2: 0.21, He: 0 },
-            ];
-
-            // Iterate over each gas mix to find the closest match
-            gasArray.forEach(element => {
-                if ((o2 - element.O2) < 0.03 && (o2 - element.O2) >= -0.01) { // Check within 4% difference
-                    if( Math.abs((he - element.He) <= 0.1)) { 
-                        document.getElementById("closeMix").textContent = element.mix; // Use element.mix, not this->mix
-                        document.getElementById("closeMixRow").removeAttribute("hidden"); // Show the row
-                    }
-                }
-            });
+            
 
 
             return;
