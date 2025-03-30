@@ -517,15 +517,22 @@
                                             <table class="table"> 
                                                 <tr>
                                                     <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Aluminum 80</td>
-                                                    <td id="tank80" class="text-secondary text-xs opacity-10 text-right" style="border: none;">$10</td>
+                                                    <td id="tank80" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Steel HP 100</td>
-                                                    <td id="tank100" class="text-secondary text-xs opacity-10 text-right" style="border: none;">$10</td>
+                                                    <td id="tank100" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Steel LP 85</td>
-                                                    <td id="tank85" class="text-secondary text-xs opacity-10 text-right" style="border: none;">$10</td>
+                                                    <td id="tank85" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10</td>
+                                                </tr>
+                                                
+                                            </table>
+                                            <table class="table mt-n2">
+                                                <tr id="closeMixRow" hidden style="border-top: 1px solid #D3D3D3;">
+                                                    <td class="text-info text-xs opacity-10 text-left" style="border: none;">Closest standard mix</td>
+                                                    <td id="closeMix" class="text-info font-weight-bolder text-xs opacity-10 text-right" style="border: none; text-align: end;">-</td>
                                                 </tr>
                                             </table>
                                         </div>
@@ -1317,6 +1324,30 @@
             labelAl80.textContent = "$" + price80.toFixed(2);
             labelSt85.textContent = "$" + price85.toFixed(2);
             labelSt100.textContent = "$" + price100.toFixed(2);
+
+            // Suggest closest standard mix
+            document.getElementById("closeMixRow").setAttribute("hidden", "true");
+
+            // Define the array of standard gas mixes
+            const gasArray = [
+                { mix: "21/35", O2: 0.21, He: 0.35 },
+                { mix: "18/45", O2: 0.18, He: 0.45 },
+                { mix: "10/50", O2: 0.10, He: 0.50 },
+                { mix: "36%", O2: 0.36, He: 0 },
+                { mix: "32%", O2: 0.32, He: 0 },
+                { mix: "Air", O2: 0.21, He: 0 },
+            ];
+
+            // Iterate over each gas mix to find the closest match
+            gasArray.forEach(element => {
+                if ((o2 - element.O2) < 0.03 && (o2 - element.O2) >= -0.01) { // Check within 4% difference
+                    if( Math.abs((he - element.He) <= 0.1)) { 
+                        document.getElementById("closeMix").textContent = element.mix; // Use element.mix, not this->mix
+                        document.getElementById("closeMixRow").removeAttribute("hidden"); // Show the row
+                    }
+                }
+            });
+
 
             return;
         }
