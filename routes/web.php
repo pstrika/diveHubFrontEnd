@@ -69,9 +69,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
 	Route::get('DeletePic/{id}', 'App\Http\Controllers\SiteController@deletePic')->middleware('auth')->name('DeletePic');
 	Route::get('DeletePic', 'App\Http\Controllers\SiteController@deletePic')->middleware('auth')->name('DeletePic');
 
-	Route::get('DecoPlanner/{id}', 'App\Http\Controllers\NDLController@show')->middleware('auth')->name('DecoPlanner');
-	Route::get('DecoPlanner', 'App\Http\Controllers\NDLController@show')->middleware('auth')->name('DecoPlanner');
+	
 });
+
+Route::get('DecoPlanner/{id}', 'App\Http\Controllers\NDLController@show')->middleware('auth')->name('DecoPlanner');
+Route::get('DecoPlanner', 'App\Http\Controllers\NDLController@show')->middleware('auth')->name('DecoPlanner');
 
 Route::get('Weather/{location}', 'App\Http\Controllers\WeatherController@show')->middleware('auth')->name('Weather');
 Route::get('Weather/', 'App\Http\Controllers\WeatherController@show')->middleware('auth')->name('Weather');
