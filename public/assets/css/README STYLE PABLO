@@ -1,0 +1,6 @@
+This is the CSS to change color of datepickr today marker
+
+.flatpickr-calendar .flatpickr-day.today, .flatpickr-calendar .flatpickr-day.selected, .flatpickr-calendar .flatpickr-day.startRange, .flatpickr-calendar .flatpickr-day.endRange {
+  background: #03a9f4 !important;
+  color: #fff;
+  border: none; }
