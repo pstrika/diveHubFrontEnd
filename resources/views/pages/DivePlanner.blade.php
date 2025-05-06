@@ -163,8 +163,10 @@
                                 <p><strong>No decompression model can fully eliminate risk.</strong> Proper dive planning, equipment redundancy, and conservative dive practices are essential for safer diving experiences. Use this tool as an informational aid, not a replacement for professional dive planning and real-time monitoring.</p>
                                 
                             </h4>
-                            <p>Press anywhere outside this dialog to continue</p>
                             </div>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn btn-info" data-bs-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>
