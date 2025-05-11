@@ -40,6 +40,15 @@
                     margin-left: auto;      /* Push it to the far right */
                 }
 
+                .right-label-freeze {
+                    text-align: right;      /* Align text on the right */
+                    border: 2px solid #7b809a; /* Add box for the label */
+                    padding: 5px;           /* Add padding inside the box */
+                    font-weight: bold;      /* Make the text bold */
+                    border-radius: 4px;     /* Optional: Round the corners */
+                    margin-left: auto;      /* Push it to the far right */
+                }
+
                 .right-label-warning {
                     text-align: right;      /* Align text on the right */
                     border: 2px solid #fb8c00; /* Add box for the label */
@@ -115,7 +124,10 @@
                     padding: 5px; /* Adds spacing */
                 }
 
+                
+
             </style>
+
             {{--modal guest--}}
             <div class="modal fade" id="modal_logged_as_guest" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
                 <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
@@ -199,7 +211,19 @@
                         </div> -->
 
                         <div class="card-body">
-                            <div class="row mt-n2">
+                            <div row>
+                                <div class="nav-wrapper position-relative end-0">
+                                    <ul class="nav nav-pills nav-fill p-1" role="tablist" id="nav-tabs">
+                                        <li class="nav-item">
+                                            <a class="nav-link mb-0 px-0 py-1 active" href="#">Open Circuit</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link mb-0 px-0 py-1" href="#">Closed Circuit</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
                                 <table class="table align-items-center mb-0 mt-n2"> 
                                     <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Set dive max Depth</td> </tr>
                                 </table>
@@ -261,6 +285,30 @@
                                 </div>
                             </div>
 
+                            <div class="row" id="containerSetPoint" style="display: none;">
+                                <div class="col-lg-12 col-12" style="border-bottom: 1px solid #D3D3D3;">
+                                    <table class="table align-items-center mb-0 mt-1"> 
+                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">CCR Setpoint</td> </tr>
+                                    </table>
+
+                                    <div class="mt-0">
+                                        <input type="hidden" id="setpointSlider-value" name="setPointSlider-value">
+                                        
+                                        
+                                        
+                                        <div class="slider-styled" id="setpointSlider"></div>
+                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Setpoint</div>
+
+                                        <div class="label-container d-flex justify-content-center align-items-center">
+                                            
+                                                <label class="text-info right-label-normal custom-label text-lg"id="labelSetpoint">2222</label>
+                                            
+                                            
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
                             <!-- Row times, gradients and asc/des rates -->
                             <div class="row">
                                 <div class="col-lg-4 col-12" style="border-bottom: 1px solid #D3D3D3;">
@@ -363,7 +411,7 @@
                             <div class="row">
                                 <div class="col-lg-3 col-12 align-items-center" style="border-bottom: 1px solid #D3D3D3;">
                                     <table class="table align-items-center mb-0 mt-1"> 
-                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Bottom gas</td> </tr>
+                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" id="labelBottomGasOrDiluent" style="border: none;">Bottom gas</td> </tr>
                                     </table>
 
                                     <div style="padding: 5px; border: 2px solid #1A73E8; border-radius: 4px; margin-top: 5px;">
@@ -374,7 +422,10 @@
                                                         <img id="tank_double" src="{{ asset("assets") }}/img/tank_double.png"   alt="Overlay Image" 
                                                         style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
 
-                                                    <img id="unblendable_sign" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image" 
+                                                        <img id="tank_ccr" src="{{ asset("assets") }}/img/tank_ccr.png"   alt="Overlay Image" display="none" 
+                                                        style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+
+                                                        <img id="unblendable_sign" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image" 
                                                         style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
 
                                                     
@@ -417,19 +468,19 @@
 
                                             <div class="row mt-3">
                                                 <div class="label-container">
-                                                    <label>Max depth PPO2</label>
+                                                    <label id="labelMaxDepthPPO2Description">Max depth PPO2</label>
                                                     <label class="text-info right-label-normal custom-label" id="labelBottomGasPPO2">1.4</label>
                                                     <label class="text-info">atm</label>
                                                 </div>
 
                                                 <div class="label-container">
-                                                    <label>Equivalent Narcotic Depth</label>
+                                                    <label id="labelENDDescription">Equivalent Narcotic Depth</label>
                                                     <label class="text-info right-label-normal custom-label" id="labelBottomGasEND">90</label>
                                                     <label class="text-info">ft</label>
                                                 </div>
 
                                                 <div class="label-container">
-                                                    <label>Gas density</label>
+                                                    <label id="labelGasDensityDescription">Gas density</label>
                                                     <label class="text-info right-label-normal custom-label" id="labelBottomGasDensity">90</label>
                                                     <label class="text-info">g/l</label>
                                                 </div>
@@ -442,7 +493,7 @@
                                 <!-- Decompression gases -->
                                 <div class="col-lg-9 col-12" style="border-bottom: 1px solid #D3D3D3; background-color: #ffffff; padding-bottom:0px;">
                                     <table class="table align-items-center mb-0 mt-1"> 
-                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Decompression gases</td> </tr>
+                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;" id="titleDecoGases">Decompression gases</td> </tr>
                                     </table>
 
                                     <div class="row">
@@ -507,7 +558,7 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="row mt-3">
+                                                <div class="row mt-3" id="containerDeco1OCInfo">
                                                     <div>
                                                         <input type="hidden" id="decoGas1SwitchSlider-value" name="decoGas1SwitchSlider-value">
 
@@ -523,7 +574,28 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="row mt-3">
+                                                <div class="row mt-3" id="containerDeco1CCInfo" style="display:none;">
+                                                    <div>
+                                                        <div class="label-container">                                                
+                                                            <label class="text-info">PPO2</label>
+                                                            <label class="text-info left-label custom-label text-sm" id="labelBailoutSwitchPPO2">2222</label>
+                                                            
+                                                            <label class="text-info text-right">END</label>
+                                                            <label class="text-info right-label-normal custom-label text-sm mx-1" id="labelBailoutEND">2222</label>
+                                                            <label class="text-info">ft</label>
+                                                        </div>
+                                                        <div class="label-container align-text-right justify-text-right">                                                
+                                                            <label class="text-secondary align-text-right text-right">Switch Depth</label>
+                                                            <label class="text-secondary right-label-freeze custom-label text-sm" id="labelBailoutSwitch">2222</label>
+                                                            <label class="text-secondary">ft</label>
+                                                        </div>
+                                                        <div class="label-container d-flex justify-content-center align-items-center" style="margin-top:20px;">                                                                  
+                                                            <label class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center">BAILOUT GAS</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mt-3" id="containerDeco1OCButton">
                                                     <div class="text-center" style="border: none;">
                                                         <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="deco1DeleteButton" onclick="hideDecoGas1()">
                                                             Delete gas
@@ -868,7 +940,11 @@
                                 <div class="row mt-2">
 
                                     <div class="col-lg-3 col-12">
+                                        <div class="label-container d-flex justify-content-center align-items-center" style="margin-top:20px;">                                                                  
+                                            <label class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" id="decoTableTitle">Decompression Table</label>
+                                        </div>
                                         <div id="decoTableContainer"></div>
+                                        <div id="BOTableContainer" style="display: none;"></div>
                                     </div>
 
                                     <div class="col-lg-9 col-12" id="profileChartContainer">
@@ -912,6 +988,17 @@
                                                         </li>
                                                     </ul>
                                                 
+                                                    <ul class="list-group" id="filter7Container" style="display: none;">
+                                                        <li class="list-group-item border-0 px-0">
+                                                            <div class="form-check form-switch ps-0">
+                                                                <input class="form-check-input ms-auto" type="checkbox"
+                                                                    id="filter7">
+                                                                <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
+                                                                    for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="calculate RT and deco time switching to BO">Bailout to OC</label>
+                                                            </div>
+                                                        </li>
+                                                    </ul>
+
                                                     <ul class="list-group" id="filter3Container">
                                                         <li class="list-group-item border-0 px-0">
                                                             <div class="form-check form-switch ps-0">
@@ -943,6 +1030,17 @@
                                                                     id="filter5">
                                                                 <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
                                                                     for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="What's the impact of diving 10 ft shallower than planned?">Reduce max depth by 10 ft</label>
+                                                            </div>
+                                                        </li>
+                                                    </ul>
+
+                                                    <ul class="list-group">
+                                                        <li class="list-group-item border-0 px-0">
+                                                            <div class="form-check form-switch ps-0">
+                                                                <input class="form-check-input ms-auto" type="checkbox"
+                                                                    id="filter6">
+                                                                <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
+                                                                    for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="Minimum deco time">Minimum deco (GFs=100%)</label>
                                                             </div>
                                                         </li>
                                                     </ul>
@@ -1014,6 +1112,8 @@
         let filter3RTDT = [];
         let filter4RTDT = [];
         let filter5RTDT = [];
+        let filter6RTDT = [];
+        let filter7RTDT = [];
         // Set up the CSRF token for AJAX requests
         $.ajaxSetup({
             headers: {
@@ -1023,6 +1123,12 @@
 
         // Attach click event to the "Calculate NDL" button
         $('#calculateDecoProfile').on('click', function () {
+            // reset calculation area
+            document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+
             // Get values from the input fields
             const maxDepth = parseInt(labelDepth.textContent);
             const bottomTime = parseInt(labelBottomTime.textContent);
@@ -1039,6 +1145,7 @@
                 ascent: parseInt(labelAsc.textContent)
             };
             const surfTime = parseFloat(labelSurfaceTime.textContent);
+            const setpoint = parseFloat(labelSetpoint.textContent);
 
             var decoGases = [];
 
@@ -1053,20 +1160,27 @@
             }
 
             // Add gases dynamically if the icons are hidden
-            addDecoGas("addGasIcon1", "labelDecoGas1O2", "labelDecoGas1He", "labelDecoGas1Switch");
+            
+            if (modeOCOrCC == "CC")
+                addDecoGas("addGasIcon1", "labelDecoGas1O2", "labelDecoGas1He", "labelBailoutSwitch");
+            else
+                addDecoGas("addGasIcon1", "labelDecoGas1O2", "labelDecoGas1He", "labelDecoGas1Switch");
+
             addDecoGas("addGasIcon2", "labelDecoGas2O2", "labelDecoGas2He", "labelDecoGas2Switch");
             addDecoGas("addGasIcon3", "labelDecoGas3O2", "labelDecoGas3He", "labelDecoGas3Switch");
             addDecoGas("addGasIcon4", "labelDecoGas4O2", "labelDecoGas4He", "labelDecoGas4Switch");
 
             // Create final JSON structure
             const diveProfile = {
+                mode: modeOCOrCC,
                 maxDepth: maxDepth,
                 bottomTime: bottomTime,
                 bottomGas: bottomGas,
                 gradientFactors: GFs,
                 rate: rate,
                 surfaceTime: surfTime,
-                decoGases: decoGases
+                decoGases: decoGases,
+                setpoint: setpoint
             };
 
             // Convert to JSON string
@@ -1079,6 +1193,7 @@
             ?>
             // Make the AJAX POST request
             $.ajax({
+                LOCALurl: ` http://localhost:7071/api/DecoPlanner`,
                 url: `https://decoplanningapi.azurewebsites.net/api/DecoPlanner?code=<?php echo $DivePlannerKey; ?>`,
                 method: 'POST',
                 contentType: 'application/json',  // Ensures JSON format
@@ -1088,6 +1203,11 @@
                     console.log('Success:', response);
                     renderProfileChart(response);
                     baselineRTDT = generateDecoTable(response['baseline']);
+                    
+                    // generate BO table
+                    if (modeOCOrCC == "CC")
+                        generateDecoTable(response['bailout'], 1);
+
                     if(baselineRTDT[1] == 0){  //No deco, we hide the table and adjust the size of the chart to col-12
                         document.getElementById("decoTableContainer").style.display = "none";
                         document.getElementById("profileChartContainer").className = "col-lg-12 col-12";
@@ -1101,16 +1221,26 @@
                     filter3RTDT = calculateDecoTime(response['lostDecoGas']);
                     filter4RTDT = calculateDecoTime(response['short5min']);
                     filter5RTDT = calculateDecoTime(response['short10ft']);
+                    filter6RTDT = calculateDecoTime(response['minDeco']);
+                    filter7RTDT = calculateDecoTime(response['bailout']);
 
                     // reset all checkboxes
                     document.querySelectorAll(".form-check-input").forEach(cb => {
                             cb.checked = false; // Uncheck all other checkboxes
                     });
 
-                    if(diveProfile['decoGases'].length === 0) {
+                    console.log("modeOCCC = " + modeOCOrCC);
+                    console.log("Length=" + (diveProfile['decoGases'].length));
+                    if((modeOCOrCC === "OC" && diveProfile['decoGases'].length === 0) || (modeOCOrCC === "CC" && diveProfile['decoGases'].length < 2)) {
                         document.getElementById('filter3Container').style.display = "none";
                     } else {
                         document.getElementById('filter3Container').style.display = "block";
+                    }
+
+                    if(modeOCOrCC === "OC") {
+                        document.getElementById('filter7Container').style.display = "none";
+                    } else {
+                        document.getElementById('filter7Container').style.display = "block";
                     }
                 },
                 error: function (xhr, status, error) {
@@ -1142,31 +1272,134 @@
 
         let allSites = @json($allSites);
         console.log(allSites);
+
+        let setPointOCOrCC = 1.4;
+        let modeOCOrCC = "OC";
+
+        //var depth = parseInt(document.getElementById("labelDepth").textContent);
+        @if( !is_null($currentSite))
+            let depth = currentSite.maxDepth;
+        @else
+            let depth = 100;    // default depth
+        @endif
     </script>
 
-    {{-- Gas density --}}
+    {{-- Gas density and END--}}
     <script>
+        function calculateLoopGasDensity(depth, setpoint, diluentO2, diluentHe, waterVapor) {
+            // Constants
+            const R = 0.0821; // Gas constant in L·atm·K^−1·mol^−1
+            //const T = 293;//310.15; // Body temperature in Kelvin (37°C)
+            const M_H2O = 18.015; // Molar mass of water vapor (g/mol)
+            const M_O2 = 32.00; // Molar mass of oxygen (g/mol)
+            const M_N2 = 28.01; // Molar mass of nitrogen (g/mol)
+            const M_He = 4.002; // Molar mass of helium (g/mol)
+            T = 310;
+            if(waterVapor)
+                baseVaporPressureH2O = 0.062; // Water vapor pressure at sea level (37°C, ATA)
+            else
+                baseVaporPressureH2O = 0;
+
+            // Step 1: Calculate ambient pressure at depth (in ATA)
+            const ambientPressure = depth / 33 + 1;
+
+            // Step 2: Scale water vapor pressure by ambient pressure
+            const ppH2O = baseVaporPressureH2O * (ambientPressure / 1.0); // Scaled water vapor pressure
+
+            // Step 3: Calculate PPO2 contribution from diluent
+            const ppDiluentO2 = diluentO2 * (ambientPressure - setpoint);
+
+            // Step 4: Calculate pure O2 PPO2 (setpoint minus diluent PPO2 contribution)
+            const ppPureO2 = setpoint - ppDiluentO2;
+
+            // Step 5: Calculate diluent partial pressure
+            const ppDiluent = ambientPressure - ppPureO2;
+
+            // Step 6: Calculate diluent nitrogen fraction
+            const diluentN2 = 1 - diluentO2 - diluentHe;
+
+            // Step 7: Calculate partial pressures of He and N2 in the loop
+            const ppHeLoop = diluentHe * ppDiluent;
+            const ppN2Loop = diluentN2 * ppDiluent;
+
+            // Step 8: Calculate loop gas fractions
+            const fH2O = ppH2O / ambientPressure;
+            const fO2 = setpoint / ambientPressure; // Setpoint directly determines O2 fraction
+            const fHe = ppHeLoop / ambientPressure;
+            const fN2 = ppN2Loop / ambientPressure;
+
+            // Step 9: Calculate effective molar mass of the loop gas mixture
+            const molarMass = (fH2O * M_H2O) + (fO2 * M_O2) + (fHe * M_He) + (fN2 * M_N2);
+
+            // Step 10: Calculate loop gas density
+            const density = (molarMass * ambientPressure) / (R * T);
+
+            // Return the result
+            return density; // Density in g/L
+        };
+
+        function calculateENDCCR(depth, setpoint, diluentO2, diluentHe, isOxygenNarcotic) {
+            // Step 1: Calculate ambient pressure in ATA (depth in feet)
+            const ambientPressure = depth / 33 + 1;
+
+            // Step 2: Calculate the combined partial pressure of He and N2
+            const ppHeN2 = ambientPressure - setpoint;
+
+            // Step 3: Calculate the loop oxygen fraction
+            const loopO2 = setpoint / ambientPressure;
+
+            // Step 4: Calculate the combined fraction of He and N2
+            const remainingFraction = 1 - loopO2;
+
+            // Step 5: Calculate the diluent nitrogen fraction
+            const diluentN2 = 1 - diluentO2 - diluentHe;
+
+            // Step 6: Proportionally divide He and N2 in the loop
+            const loopHe = (diluentHe / (diluentHe + diluentN2)) * remainingFraction;
+            const loopN2 = (diluentN2 / (diluentHe + diluentN2)) * remainingFraction;
+
+            // Step 7: Calculate the narcotic fraction based on whether oxygen is considered narcotic
+            let narcoticFraction;
+            if (isOxygenNarcotic) {
+                narcoticFraction = loopO2 + loopN2;
+            } else {
+                narcoticFraction = loopN2;
+            }
+
+            // Step 8: Calculate the Equivalent Narcotic Depth (END)
+            const END = (depth + 33) * narcoticFraction - 33;
+
+            // Step 9: Return the result
+            return Math.max(END,0);
+        }
+
         function updateGasDensity(O2, He, depth, label) {
-            // Constants for molecular weights (g/mol)
-            const molecularWeights = {
-                O2: 32,
-                N2: 28,
-                He: 4
-            };
+            let gasDensity = 0;
+            // check if we are calculating loop denisty or gas density OC
+            if(modeOCOrCC == "OC") {
+                // Constants for molecular weights (g/mol)
+                const molecularWeights = {
+                    O2: 32,
+                    N2: 28,
+                    He: 4
+                };
 
-            var fractionO2 = O2 / 100;
-            var fractionHe = He / 100;
-            var fractionN2 = 1 - fractionO2 - fractionHe;
-            var ambientPressure = depth / 33 + 1;
+                var fractionO2 = O2 / 100;
+                var fractionHe = He / 100;
+                var fractionN2 = 1 - fractionO2 - fractionHe;
+                var ambientPressure = depth / 33 + 1;
 
-            // Calculate gas density
-            const gasDensity = (
-                (fractionO2 * molecularWeights.O2 +
-                fractionN2 * molecularWeights.N2 +
-                fractionHe * molecularWeights.He) *
-                ambientPressure
-            ) / 22.4; // Use 22.4 L/mol at standard temperature and pressure
-
+                // Calculate gas density
+                gasDensity = (
+                    (fractionO2 * molecularWeights.O2 +
+                    fractionN2 * molecularWeights.N2 +
+                    fractionHe * molecularWeights.He) *
+                    ambientPressure
+                ) / 22.4; // Use 22.4 L/mol at standard temperature and pressure
+            } else {
+                var currentSetPoint = parseFloat(labelSetpoint.textContent);
+                gasDensity = calculateLoopGasDensity(depth, currentSetPoint, O2 / 100, He / 100, 1);
+            }
             // Round the result to 2 decimal places
             const densityRounded = gasDensity.toFixed(2);
 
@@ -1189,12 +1422,45 @@
 
             
         }
+    
+        function updateEND(O2, He, depth) {
+            //console.log("Updating END");
+            let bottomGasEND = 0;
+            labelBottomGasEND = document.getElementById("labelBottomGasEND");
+
+            if(modeOCOrCC == "OC") {
+                var ambientPressure = depth / 33 +1;
+                var bottomGasPPHe = ambientPressure * He / 100;
+                var bottomGasENDPressure = ambientPressure - bottomGasPPHe;
+                bottomGasEND = (bottomGasENDPressure - 1 ) * 33;
+                
+
+                   
+            } else {
+                bottomGasEND = calculateENDCCR(depth, parseFloat(labelSetpoint.textContent), O2 / 100, He / 100, 1); 
+            }
+
+            labelBottomGasEND.textContent = Math.max(0,(bottomGasEND).toFixed(0));
+
+            if (bottomGasEND > 130) {
+                labelBottomGasEND.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
+                labelBottomGasEND.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+            } else if (bottomGasEND > 100) {
+                labelBottomGasEND.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
+                labelBottomGasEND.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+            } else {
+                labelBottomGasEND.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
+                labelBottomGasEND.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+            } 
+        }
+
     </script>
     {{-- Bottom gas chart --}}
     <script>
         
         // Get the canvas element
         const bottomGasStackedBarChartElement = document.getElementById('bottomGasStackedBar').getContext('2d');
+        let labelHorizontalOffset = -40;
 
         // Create the chart with a custom plugin for labels
         const bottomGasstackedBarChart = new Chart(bottomGasStackedBarChartElement, {
@@ -1265,14 +1531,14 @@
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x - 40, bar.y + 10); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x + labelHorizontalOffset, bar.y + 10); // Position label slightly above the bar
                                     
                                 } else if (data == 100) {
                                     ctx.font = '12px Roboto';
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x -10 , bar.y + 70); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x +labelHorizontalOffset , bar.y + 70); // Position label slightly above the bar
                                 }
                             });
                         });
@@ -1397,7 +1663,7 @@
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x -10 , bar.y + 70); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x , bar.y + 70); // Position label slightly above the bar
                                 }
                             });
                         });
@@ -1522,7 +1788,7 @@
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x -10 , bar.y + 70); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x , bar.y + 70); // Position label slightly above the bar
                                 }
                             });
                         });
@@ -1647,7 +1913,7 @@
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x -10 , bar.y + 70); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x , bar.y + 70); // Position label slightly above the bar
                                 }
                             });
                         });
@@ -1772,7 +2038,7 @@
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x -10 , bar.y + 70); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x , bar.y + 70); // Position label slightly above the bar
                                 }
                             });
                         });
@@ -1843,9 +2109,15 @@
             var surfaceTimeSliderValue = values[handle];
             labelSurfaceTime.textContent = parseFloat(surfaceTimeSliderValue).toFixed(1);
             
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
 
         });
+
+        surfaceTimeSlider.setAttribute('disabled', true);
     </script>
 
     {{-- Scripts slider GFs --}}
@@ -1876,7 +2148,11 @@
             var GFLSliderValue = values[handle];
             labelGFL.textContent = parseInt(GFLSliderValue);
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         });
 
         var GFHSlider = document.getElementById('GFHSlider');
@@ -1919,7 +2195,11 @@
                 GFLSlider.noUiSlider.set(GFHSliderValue);
             }
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         });
     </script>
 
@@ -1951,7 +2231,11 @@
             var desSliderValue = values[handle];
             labelDes.textContent = parseInt(desSliderValue);
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         });
 
         var ascSlider = document.getElementById('ascSlider');
@@ -1980,18 +2264,70 @@
             var ascSliderValue = values[handle];
             labelAsc.textContent = parseInt(ascSliderValue);
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+        });
+    </script>
+
+    {{-- Scripts slider setPoint --}}
+    <script>
+        var setpointSlider = document.getElementById('setpointSlider');
+        var labelSetpoint = document.getElementById('labelSetpoint');
+
+
+        noUiSlider.create(setpointSlider, {
+            start: 1.3,
+            connect: [true, false],
+            range: {
+                'min': 0.5,
+                'max': 1.6
+            },
+            step: 0.05,
+            
+
+        });
+
+        // Hide the tick mark labels
+        var setpointSliderTicks = setpointSlider.querySelectorAll('.noUi-value-sub');
+        setpointSliderTicks.forEach(function (setpointSlider) {
+            setpointSlider.style.display = 'none';
+        });
+
+        setpointSlider.noUiSlider.on('update', function (values, handle) {
+            var setpointSliderValue = values[handle];
+            labelSetpoint.textContent = parseFloat(setpointSliderValue).toFixed(2);
+
+            if (setpointSliderValue > 1.5) {
+                labelSetpoint.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
+                labelSetpoint.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+            } else if (setpointSliderValue > 1.4) {
+                labelSetpoint.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
+                labelSetpoint.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+            } else {
+                labelSetpoint.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
+                labelSetpoint.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+            } 
+
+            // update dil PPO2 slider
+            var O2At12 = 1.2 / (depth / 33 +1) * 100;
+            var O2AtSetpoint = (parseFloat(setpointSliderValue) - 0.1) / (depth / 33 +1) * 100;
+            var O2SliderMaxValue = Math.min(O2At12, O2AtSetpoint)
+            bottomGasO2Slider.noUiSlider.updateOptions({
+                range: {
+                    'min': 5,    // Keep the minimum value as is
+                    'max': O2SliderMaxValue   // Update the maximum value to 120
+                }
+            });
+
         });
     </script>
 
     {{-- Scripts slider Bottom gas O2 and He --}}
     <script>
-        //var depth = parseInt(document.getElementById("labelDepth").textContent);
-        @if( !is_null($currentSite))
-            var depth = currentSite.maxDepth;
-        @else
-            var depth = 100;    // default depth
-        @endif
+        
 
         var bottomGasO2Slider = document.getElementById('bottomGasO2Slider');
         var labelBottomGasO2 = document.getElementById('labelBottomGasO2');
@@ -2054,22 +2390,7 @@
                 labelBottomGasPPO2.classList.add("text-info", "right-label-normal"); // Add "text-info" class
             }
         
-            var ambientPressure = depth / 33 +1;
-            var bottomGasPPHe = ambientPressure * parseInt(labelBottomGasHe.textContent) / 100;
-            var bottomGasENDPressure = ambientPressure - bottomGasPPHe;
-            var bottomGasEND = (bottomGasENDPressure - 1 ) * 33;
-            labelBottomGasEND.textContent = Math.max(0,(bottomGasEND).toFixed(0));
-
-            if (bottomGasEND > 130) {
-                labelBottomGasEND.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
-                labelBottomGasEND.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
-            } else if (bottomGasEND > 100) {
-                labelBottomGasEND.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
-                labelBottomGasEND.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
-            } else {
-                labelBottomGasEND.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
-                labelBottomGasEND.classList.add("text-info", "right-label-normal"); // Add "text-info" class
-            }
+            updateEND(parseInt(labelBottomGasO2.textContent), parseInt(labelBottomGasHe.textContent), depth);
 
             updateGasDensity(parseInt(labelBottomGasO2.textContent), parseInt(labelBottomGasHe.textContent), depth, labelBottomGasDensity);
 
@@ -2085,7 +2406,11 @@
             var helium = parseInt(labelBottomGasHe.textContent);
             updateBottomGasChart(oxygen, helium);
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
 
         });
 
@@ -2109,26 +2434,15 @@
             var helium = parseInt(labelBottomGasHe.textContent);
             updateBottomGasChart(oxygen, helium);
 
-            var ambientPressure = depth / 33 +1;
-            var bottomGasPPHe = ambientPressure * parseInt(labelBottomGasHe.textContent) / 100;
-            var bottomGasENDPressure = ambientPressure - bottomGasPPHe;
-            var bottomGasEND = (bottomGasENDPressure - 1 ) * 33;
-            labelBottomGasEND.textContent = Math.max(0,(bottomGasEND).toFixed(0));
-
-            if (bottomGasEND > 130) {
-                labelBottomGasEND.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
-                labelBottomGasEND.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
-            } else if (bottomGasEND > 100) {
-                labelBottomGasEND.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
-                labelBottomGasEND.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
-            } else {
-                labelBottomGasEND.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
-                labelBottomGasEND.classList.add("text-info", "right-label-normal"); // Add "text-info" class
-            }
+            updateEND(parseInt(labelBottomGasO2.textContent), parseInt(labelBottomGasHe.textContent), depth);
 
             updateGasDensity(parseInt(labelBottomGasO2.textContent), parseInt(labelBottomGasHe.textContent), depth, labelBottomGasDensity);
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         });
 
     </script>
@@ -2137,6 +2451,8 @@
      <script>
         var depthSlider = document.getElementById('depthSlider');
         var labelDepth = document.getElementById('labelDepth');
+        var labelBailoutSwitch = document.getElementById("labelBailoutSwitch");
+        
 
         //console.log("Current Site Max Depth:", currentSite.maxDepth);
         let startDepth = currentSite ? currentSite.maxDepth : 100;
@@ -2163,15 +2479,44 @@
         depthSlider.noUiSlider.on('update', function (values, handle) {
             var depthSliderValue = values[handle];
             labelDepth.textContent = parseInt(depthSliderValue);
+            labelBailoutSwitch.textContent = parseInt(depthSliderValue);    // update bailout switching depth
 
             //bottomGasO2Slider.noUiSlider.set(bottomGasO2Slider.noUiSlider.get());
             //bottomGasHeSlider.noUiSlider.set(bottomGasHeSlider.noUiSlider.get());
-
-            bottomGasO2Slider.noUiSlider.set(Math.round((1.4 / (depthSliderValue / 33 + 1) * 100)));
+            console.log("Setpoint: " + setPointOCOrCC);
+            bottomGasO2Slider.noUiSlider.set(Math.round((setPointOCOrCC / (depthSliderValue / 33 + 1) * 100)));
             bottomGasHeSlider.noUiSlider.set(((1 - ((80 / 33) +1) / (depthSliderValue / 33 + 1)) * 100).toFixed(0));
 
+            if(modeOCOrCC == "CC") {
+                decoGas1O2Slider.noUiSlider.updateOptions({
+                    start: Math.min(100, 1.4 / (depth /33 +1) * 100),
+                    range: {
+                        'min': 5, //parseFloat(Math.max(5, (10 / 33 + 1) * Math.floor(decoGas1O2SliderValue / 100).toFixed(1))),    // Keep the minimum value as is
+                        'max': Math.min(100, 1.6 / (depth /33 +1) * 100),
+                    }
+                });
+                decoGas1HeSlider.noUiSlider.updateOptions({
+                    start: ((1 - ((80 / 33) +1) / (depthSliderValue / 33 + 1)) * 100).toFixed(0)
+                });
 
+            } else {
+                decoGas1O2Slider.noUiSlider.updateOptions({
+                    start: 50,
+                    range: {
+                        'min': 5, //parseFloat(Math.max(5, (10 / 33 + 1) * Math.floor(decoGas1O2SliderValue / 100).toFixed(1))),    // Keep the minimum value as is
+                        'max': 100, //Math.min(100, 1.6 / (depth /33 +1) * 100),
+                    }
+                });    
+                decoGas1HeSlider.noUiSlider.updateOptions({
+                    start: 0
+                });
+            }
+
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         });
 
         function useSiteDepth() {
@@ -2208,7 +2553,11 @@
             var bottomTimeSliderValue = values[handle];
             labelBottomTime.textContent = parseInt(bottomTimeSliderValue);
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
             
 
         });
@@ -2236,7 +2585,7 @@
             connect: [true, false],
             range: {
                 'min': 5,
-                'max': 100
+                'max': 100 //Math.min(100, Math.floor(1.6 / (depth /33 +1) * 100))
             },
             step: 1,
         });
@@ -2251,14 +2600,15 @@
             step: 1,
         });
 
+        
         noUiSlider.create(decoGas1SwitchSlider, {
             start: 1.6,
             connect: [true, false],
             range: {
-                'min': 0.5,
+                'min': 0.50,
                 'max': 1.6
             },
-            step: 0.1,
+            step: 0.05,
         });
 
         // Hide the tick mark labels
@@ -2280,6 +2630,7 @@
             });
 
             
+            
 
             var oxygen = parseInt(labelDecoGas1O2.textContent);
             var helium = parseInt(labelDecoGas1He.textContent);
@@ -2289,11 +2640,18 @@
             decoGas1SwitchSlider.noUiSlider.updateOptions({
                 range: {
                     'min': parseFloat(Math.max(0.2, (10 / 33 + 1) * oxygen / 100).toFixed(1)),    // Keep the minimum value as is
-                    'max': 1.6   // Update the maximum value to 120
+                    'max': 1.6 //Math.min(1.6, Math.floor(decoGas1O2SliderValue / 100 * (depth /33 +1) * 20) / 20)   // Update the maximum value to 120
                 }
             });
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+
+            // update the CC portion on the bailout
+            labelBailoutSwitchPPO2.textContent = ((depth / 33 +1) * parseInt(labelDecoGas1O2.textContent) /100).toFixed(2);
 
         });
 
@@ -2311,7 +2669,31 @@
             var helium = parseInt(labelDecoGas1He.textContent);
             updateDecoGas1Chart(oxygen, helium);
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+
+            // change on CCvar ambientPressure = depth / 33 +1;
+            var ambientPressure = (depth /33 +1);
+            var bottomGasPPHe = ambientPressure * parseInt(labelDecoGas1He.textContent) / 100;
+            var bottomGasENDPressure = ambientPressure - bottomGasPPHe;
+            bottomGasEND = (bottomGasENDPressure - 1 ) * 33;
+
+            labelBailoutEND = document.getElementById("labelBailoutEND");
+            labelBailoutEND.textContent = Math.max(0,(bottomGasEND).toFixed(0));
+
+            if (labelBailoutEND.textContent > 130) {
+                labelBailoutEND.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
+                labelBailoutEND.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+            } else if (labelBailoutEND.textContent > 100) {
+                labelBailoutEND.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
+                labelBailoutEND.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+            } else {
+                labelBailoutEND.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
+                labelBailoutEND.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+            }
 
         });
 
@@ -2323,23 +2705,35 @@
 
         decoGas1SwitchSlider.noUiSlider.on('update', function (values, handle) {
             var decoGas1SwitchSliderValue = values[handle];
-            labelDecoGas1SwitchPPO2.textContent = parseFloat(decoGas1SwitchSliderValue).toFixed(1);
+            labelDecoGas1SwitchPPO2.textContent = parseFloat(decoGas1SwitchSliderValue).toFixed(2);
 
             var O2Content = labelDecoGas1O2.textContent / 100;
             
             labelDecoGas1Switch.textContent = (((decoGas1SwitchSliderValue / O2Content) - 1 ) * 33).toFixed(0);
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         });
         
         function showDecoGas1() {
             document.getElementById("addGasIcon1").style.display = "none"; // Hide add gas icon
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         }
 
         function hideDecoGas1() {
             document.getElementById("addGasIcon1").style.display = "flex"; // Hide add gas icon
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         }
     </script>
 
@@ -2422,7 +2816,11 @@
                 }
             });
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         });
 
         // Hide the tick mark labels
@@ -2439,7 +2837,11 @@
             var helium = parseInt(labelDecoGas2He.textContent);
             updateDecoGas2Chart(oxygen, helium);
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         });
 
         // Hide the tick mark labels
@@ -2456,17 +2858,29 @@
             
             labelDecoGas2Switch.textContent = (((decoGas2SwitchSliderValue / O2Content) - 1 ) * 33).toFixed(0);
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         });
         
         function showDecoGas2() {
             document.getElementById("addGasIcon2").style.display = "none"; // Hide add gas icon
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         }
 
         function hideDecoGas2() {
             document.getElementById("addGasIcon2").style.display = "flex"; // Hide add gas icon
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         }
     </script>
 
@@ -2549,7 +2963,11 @@
                 }
             });
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         });
 
         // Hide the tick mark labels
@@ -2566,7 +2984,11 @@
             var helium = parseInt(labelDecoGas3He.textContent);
             updateDecoGas3Chart(oxygen, helium);
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         });
 
         // Hide the tick mark labels
@@ -2582,17 +3004,29 @@
             var O2Content = labelDecoGas3O2.textContent / 100;
             
             labelDecoGas3Switch.textContent = (((decoGas3SwitchSliderValue / O2Content) - 1 ) * 33).toFixed(0);
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         });
         
         function showDecoGas3() {
             document.getElementById("addGasIcon3").style.display = "none"; // Hide add gas icon
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         }
 
         function hideDecoGas3() {
             document.getElementById("addGasIcon3").style.display = "flex"; // Hide add gas icon
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         }
     </script>
 
@@ -2675,7 +3109,11 @@
                 }
             });
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         });
 
         // Hide the tick mark labels
@@ -2692,7 +3130,11 @@
             var helium = parseInt(labelDecoGas4He.textContent);
             updateDecoGas4Chart(oxygen, helium);
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         });
 
         // Hide the tick mark labels
@@ -2709,17 +3151,29 @@
             
             labelDecoGas4Switch.textContent = (((decoGas4SwitchSliderValue / O2Content) - 1 ) * 33).toFixed(0);
 
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         });
         
         function showDecoGas4() {
             document.getElementById("addGasIcon4").style.display = "none"; // Hide add gas icon
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         }
 
         function hideDecoGas4() {
             document.getElementById("addGasIcon4").style.display = "flex"; // Hide add gas icon
+            // reset calculation area
             document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
         }
     </script>
 
@@ -2731,6 +3185,8 @@
         let formattedData3 = [];
         let formattedData4 = [];
         let formattedData5 = [];
+        let formattedData6 = [];
+        let formattedData7 = [];
         // Convert absolute pressure to depth in feet
         function absPressureToDepth(abs_p) {
             return Math.round((abs_p - 1) * 33);
@@ -2750,6 +3206,8 @@
             formattedData3 = response['lostDecoGas'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * 33 }));
             formattedData4 = response['short5min'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * 33 }));
             formattedData5 = response['short10ft'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * 33 }));
+            formattedData6 = response['minDeco'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * 33 }));
+            formattedData7 = response['bailout'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * 33 }));
 
             // Get the chart canvas
             var ctx = document.getElementById('profileChart').getContext('2d');
@@ -2844,7 +3302,7 @@
             return `<span class="material-icons-round">${icons[phase] || "help"}</span>`; // Default to "help" if missing
         }
 
-        function generateDecoTable(response) {
+        function generateDecoTable(response, BO=0) {
             let tableData = []; // Store table rows
             let prevTime = 0; // Track cumulative runtime
 
@@ -2884,8 +3342,10 @@
                     depth: absPressureToDepth(descent.abs_p),
                     time: descent.time, 
                     runtime: prevTime + descent.time,
-                    gas: formatGas(descent.gas),
-                    gf: descent.gf
+                    gas: modeOCOrCC == "OC" ? formatGas(descent.gas) : "-",
+                    gf: descent.gf,
+                    mode: modeOCOrCC,
+                    ppo2: parseFloat((descent.gas[1])/100 * descent.abs_p).toFixed(2)
                 });
                 prevTime += descent.time;
             }
@@ -2898,8 +3358,10 @@
                     depth: absPressureToDepth(bottomTime.abs_p),
                     time: bottomTime.time - prevTime,
                     runtime: bottomTime.time,
-                    gas: formatGas(bottomTime.gas),
-                    gf: bottomTime.gf
+                    gas: modeOCOrCC == "OC" ? formatGas(bottomTime.gas) : "-",
+                    gf: bottomTime.gf,
+                    mode: modeOCOrCC,
+                    ppo2: parseFloat((bottomTime.gas[1])/100 * bottomTime.abs_p).toFixed(2)
                 });
                 //prevTime += bottomTime.time;
                 prevTime = bottomTime.time;
@@ -2907,15 +3369,25 @@
 
             // Find the last "ascent" that occurs before any "deco_stop"
             let lastAscentBeforeDeco = null;
+            let BOGas = null;
 
             for (let i = 0; i < response.length; i++) {
                 if (response[i].phase === "ascent") {
                     lastAscentBeforeDeco = response[i]; // Keep updating with the last ascent found
                 }
+                // look for the BO gas
+                if (response[i].phase === "gas_switch" && BOGas == null) {
+                    BOGas = response[i].gas;
+                }
                 if (response[i].phase === "deco_stop") {
                     response = response.slice(i); // Keeps all phases from index i to the end
                     break; // Stop when we hit the first deco stop
                 }
+            }
+
+            let stepMode = modeOCOrCC;
+            if(BO && modeOCOrCC === "CC") {
+                stepMode = "OC";
             }
 
             if (lastAscentBeforeDeco) {
@@ -2924,8 +3396,10 @@
                     depth: absPressureToDepthDeco(lastAscentBeforeDeco.abs_p),
                     time: lastAscentBeforeDeco.time - prevTime, // Time taken for the last ascent before deco stop
                     runtime: lastAscentBeforeDeco.time, // Run time should be the time of the last ascent
-                    gas: formatGas(lastAscentBeforeDeco.gas),
-                    gf: lastAscentBeforeDeco.gf
+                    gas: BO && modeOCOrCC === "CC" ? formatGas(BOGas) : formatGas(lastAscentBeforeDeco.gas),
+                    gf: lastAscentBeforeDeco.gf,
+                    mode: stepMode,
+                    ppo2: parseFloat((lastAscentBeforeDeco.gas[1])/100 * lastAscentBeforeDeco.abs_p).toFixed(2)
                 });
                 prevTime = lastAscentBeforeDeco.time;
             }
@@ -2954,7 +3428,9 @@
                             time: timeSpent, // Corrected calculation: difference between consecutive stops
                             runtime: entry.time,
                             gas: formatGas(entry.gas),
-                            gf: entry.gf
+                            gf: entry.gf,
+                            mode: stepMode,
+                            ppo2: parseFloat((entry.gas[1])/100 * entry.abs_p).toFixed(2)
                         });
 
                         prevTime = entry.time;
@@ -2973,7 +3449,9 @@
                         time: lastAscent.time - prevTime,
                         runtime: lastAscent.time,
                         gas: formatGas(lastAscent.gas),
-                        gf: lastAscent.gf
+                        gf: lastAscent.gf,
+                        mode: stepMode,
+                        ppo2: parseFloat((lastAscent.gas[1])/100 * (0 /33 + 1)).toFixed(2)
                     });
 
                     totalRuntime = lastAscent.time;
@@ -2983,40 +3461,108 @@
                 response = response.slice(firstDecoStopIndex);
             }
 
+            let tableHTML = "";
+            if(modeOCOrCC == "OC") {
+                tableHTML = 
+                `<div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th class="phase-column"></th>
+                                <th class="depth-column text-sm" style="padding-left: 0px; padding-right:0px;">Depth</th>
+                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Time</th>
+                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">RT</th>
+                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Gas</th>
+                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">PPO2</th>
+                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">GF</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
 
-            let tableHTML = 
-            `<div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th class="phase-column"></th>
-                            <th class="depth-column text-sm" style="padding-left: 0px; padding-right:0px;">Depth</th>
-                            <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Time</th>
-                            <th class="text-sm" style="padding-left: 0px; padding-right:0px;">RT</th>
-                            <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Gas</th>
-                            <th class="text-sm" style="padding-left: 0px; padding-right:0px;">GF</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
+                tableData.forEach(row => {
+                    tableHTML += `<tr>
+                        <td class="text-info">${getPhaseIcon(row.phase)}</td> <!-- Display icon instead of text -->
+                        <td>${row.depth}</td>
+                        <td class="text-sm text-left">${formatTime(row.time)}</td>
+                        <td class="text-sm">${formatTime(row.runtime)}</td>
+                        <td class="text-sm">${row.gas}</td>
+                        <td class="text-sm">${row.ppo2}</td>
+                        <td class="text-sm">${(row.gf * 100).toFixed(0)}%</td>
+                    </tr>`;
+                });
+            } else if (modeOCOrCC == "CC" && !BO){
+                tableHTML = 
+                `<div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th class="phase-column"></th>
+                                <th class="depth-column text-sm" style="padding-left: 0px; padding-right:0px;">Depth</th>
+                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Time</th>
+                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">RT</th>
+                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">PPO2</th>
+                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">GF</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
 
-            tableData.forEach(row => {
-                tableHTML += `<tr>
-                    <td class="text-info">${getPhaseIcon(row.phase)}</td> <!-- Display icon instead of text -->
-                    <td>${row.depth}</td>
-                    <td class="text-sm text-left">${formatTime(row.time)}</td>
-                    <td class="text-sm">${formatTime(row.runtime)}</td>
-                    <td class="text-sm">${row.gas}</td>
-                    <td class="text-sm">${(row.gf * 100).toFixed(0)}%</td>
-                </tr>`;
-            });
+                tableData.forEach(row => {
+                    tableHTML += `<tr>
+                        <td class="text-info">${getPhaseIcon(row.phase)}</td> <!-- Display icon instead of text -->
+                        <td>${row.depth}</td>
+                        <td class="text-sm text-left">${formatTime(row.time)}</td>
+                        <td class="text-sm">${formatTime(row.runtime)}</td>
+                        <td class="text-sm">${labelSetpoint.textContent}</td>
+                        <td class="text-sm">${(row.gf * 100).toFixed(0)}%</td>
+                    </tr>`;
+                });
+            } else {
+                tableHTML = 
+                `<div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th class="phase-column"></th>
+                                <th class="text-xs" style="padding-left: 0px;">M</th>
+                                <th class="depth-column text-sm" style="padding-left: 0px; padding-right:0px;">Depth</th>
+                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Time</th>
+                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">RT</th>
+                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Gas</th>
+                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">PPO2</th>
+                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">GF</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+                tableData.forEach(row => {
+                    tableHTML += `<tr>
+                        <td class="text-info">${getPhaseIcon(row.phase)}</td> <!-- Display icon instead of text -->
+                        <td class=text-xs style="padding-left: 0px;">${row.mode}</td>
+                        <td>${row.depth}</td>
+                        <td class="text-sm text-left">${formatTime(row.time)}</td>
+                        <td class="text-sm">${formatTime(row.runtime)}</td>
+                        <td class="text-sm">${row.gas}</td>
+                        <td class="text-sm fw-bold">${row.ppo2}</td>
+                        <td class="text-sm">${(row.gf * 100).toFixed(0)}%</td>
+                    </tr>`;
+                }); 
+            }
 
             tableHTML += `</tbody></table></div>`;
-            document.getElementById("decoTableContainer").innerHTML = tableHTML;
+            
+            if(BO)
+                document.getElementById("BOTableContainer").innerHTML = tableHTML;
+            else {
+                document.getElementById("decoTableContainer").innerHTML = tableHTML;
 
-            GFL = document.getElementById("labelGFL").textContent
-            GFH = document.getElementById("labelGFH").textContent
-            model = "ZH-L16C-GF";
-            updateDecoSummary(totalDecoTime, totalRuntime, model, GFH, GFL);
+                GFL = document.getElementById("labelGFL").textContent
+                GFH = document.getElementById("labelGFH").textContent
+                model = "ZH-L16C-GF";
+                updateDecoSummary(totalDecoTime, totalRuntime, model, GFH, GFL);
+            }
+
+            
+            
 
             return [totalRuntime, totalDecoTime];
         }
@@ -3171,6 +3717,10 @@
     {{-- Scripts to manage WhatIf? checksboxes --}}
     <script>
         document.getElementById("filter1").addEventListener("change", function() {
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
                 document.getElementById("labelWhatIfRunTime").innerText="-";
@@ -3246,6 +3796,10 @@
         });
 
         document.getElementById("filter2").addEventListener("change", function() {
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
                 let labelRT = document.getElementById("labelWhatIfRunTime").innerText="-";
@@ -3320,6 +3874,10 @@
         });
 
         document.getElementById("filter3").addEventListener("change", function() {
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
                 let labelRT = document.getElementById("labelWhatIfRunTime").innerText="-";
@@ -3394,6 +3952,10 @@
         }); 
 
         document.getElementById("filter4").addEventListener("change", function() {
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
                 let labelRT = document.getElementById("labelWhatIfRunTime").innerText="-";
@@ -3469,6 +4031,10 @@
         }); 
 
         document.getElementById("filter5").addEventListener("change", function() {
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
                 let labelRT = document.getElementById("labelWhatIfRunTime").innerText="-";
@@ -3543,9 +4109,181 @@
 
             
         }); 
+    
+        document.getElementById("filter6").addEventListener("change", function() {
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+
+            if (!this.checked) {
+                profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
+                let labelRT = document.getElementById("labelWhatIfRunTime").innerText="-";
+                let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff").innerText="()";
+                let labelDT = document.getElementById("labelWhatIfDecoTime").innerText="-";
+                let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff").innerText="()";
+
+                
+                
+            } else {
+                profileChartInstance.data.datasets = [
+                    {
+                        label: 'Minimum deco (GFs=100%)',
+                        data: formattedData6,
+                        borderColor: '#1A73E8',
+                        backgroundColor: '#4caf50',
+                        borderWidth: 2,
+                        showLine: true,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: 'Deco profile',
+                        data: formattedData,
+                        borderColor: '#1A73E8',
+                        backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                        borderWidth: 2,
+                        showLine: true,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 6
+                    },
+                    
+                ];
+
+                // update new decoT and newRT
+            
+                let labelRT = document.getElementById("labelWhatIfRunTime");
+                let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff");
+                
+                labelRT.innerText = `${Math.round(filter6RTDT[0])} min`;
+                var difference = Math.round(filter6RTDT[0] - baselineRTDT[0]);
+                var sign = difference >= 0 ? "+" : "-";
+
+                // Update text with the correct sign
+                labelRTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+
+                // Change color based on sign
+                labelRTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+
+                let labelDT = document.getElementById("labelWhatIfDecoTime");
+                let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff");
+                
+            
+                labelDT.innerText = `${Math.round(filter6RTDT[1])} min`;
+                difference = Math.round(filter6RTDT[1] - baselineRTDT[1]);
+                sign = difference >= 0 ? "+" : "-";
+
+                // Update text with the correct sign
+                labelDTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+
+                // Change color based on sign
+                labelDTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+            }
+
+            profileChartInstance.update(); // Refresh chart
+
+            document.querySelectorAll(".form-check-input").forEach(cb => {
+                    if (cb !== this) {
+                        cb.checked = false; // Uncheck all other checkboxes
+                    }
+            });
+
+            
+        });
+
+        document.getElementById("filter7").addEventListener("change", function() {
+            let decoTableContainer = document.getElementById("decoTableContainer");
+            let BOTableContainer = document.getElementById("BOTableContainer");
+            let decoTableTitle = document.getElementById("decoTableTitle");
+
+            if (!this.checked) {
+                profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
+                let labelRT = document.getElementById("labelWhatIfRunTime").innerText="-";
+                let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff").innerText="()";
+                let labelDT = document.getElementById("labelWhatIfDecoTime").innerText="-";
+                let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff").innerText="()";
+
+                // hide BO table and show regular table
+                decoTableContainer.style.display = "block";
+                BOTableContainer.style.display = "none";
+                decoTableTitle.innerText = "Decompression Table";
+                
+                
+            } else {
+                profileChartInstance.data.datasets = [
+                    {
+                        label: 'Deco profile',
+                        data: formattedData,
+                        borderColor: '#1A73E8',
+                        backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                        borderWidth: 2,
+                        showLine: true,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: 'Bailout to OC',
+                        data: formattedData7,
+                        borderColor: '#1A73E8',
+                        backgroundColor: '#f44335',
+                        borderWidth: 2,
+                        showLine: true,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 6
+                    }
+                ];
+                    
+                // show BO table and change table title
+                decoTableContainer.style.display = "none";
+                BOTableContainer.style.display = "block";
+                decoTableTitle.innerText = "Bailout to OC";
+
+                // update new decoT and newRT
+            
+                let labelRT = document.getElementById("labelWhatIfRunTime");
+                let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff");
+                
+                labelRT.innerText = `${Math.round(filter7RTDT[0])} min`;
+                var difference = Math.round(filter7RTDT[0] - baselineRTDT[0]);
+                var sign = difference >= 0 ? "+" : "-";
+
+                // Update text with the correct sign
+                labelRTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+
+                // Change color based on sign
+                labelRTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+
+                let labelDT = document.getElementById("labelWhatIfDecoTime");
+                let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff");
+                
+            
+                labelDT.innerText = `${Math.round(filter7RTDT[1])} min`;
+                difference = Math.round(filter7RTDT[1] - baselineRTDT[1]);
+                sign = difference >= 0 ? "+" : "-";
+
+                // Update text with the correct sign
+                labelDTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+
+                // Change color based on sign
+                labelDTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+            }
+
+            profileChartInstance.update(); // Refresh chart
+
+            document.querySelectorAll(".form-check-input").forEach(cb => {
+                    if (cb !== this) {
+                        cb.checked = false; // Uncheck all other checkboxes
+                    }
+            });
+
+            
+        });
     </script>
 
-
+    {{-- Site selector dropdown scripts --}}
     <script>
         document.getElementById("dropdownSearch").addEventListener("keyup", function() {
             filterDropdown();
@@ -3575,6 +4313,119 @@
             });
         });
 
+    </script>
+
+    {{-- Script to switch from OC to CC --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const navLinks = document.querySelectorAll('#nav-tabs .nav-link');
+            openCircuitTab = navLinks[0];
+            closedCircuitTab = navLinks[1];
+            const tankDouble = document.getElementById("tank_double");
+            const tankCCR = document.getElementById("tank_ccr");
+            const labelBottomGasOrDiluent = document.getElementById("labelBottomGasOrDiluent");
+            const containerSetPoint = document.getElementById("containerSetPoint");
+
+            const labelMaxDepthPPO2Description = document.getElementById("labelMaxDepthPPO2Description");
+            const labelENDDescription = document.getElementById("labelENDDescription");
+            const labelGasDensityDescription = document.getElementById("labelGasDensityDescription");
+
+            const containerDeco1OCInfo = document.getElementById("containerDeco1OCInfo");
+            const containerDeco1OCButton = document.getElementById("containerDeco1OCButton");
+            const containerDeco1CCInfo = document.getElementById("containerDeco1CCInfo");
+
+                
+            
+
+            function showOpenCircuit() {
+                tankDouble.style.display = "block";
+                tankCCR.style.display = "none";
+                labelBottomGasOrDiluent.innerText = "bottom gas";
+                containerSetPoint.style.display="none";
+
+                // set model to mode OC
+                modeOCOrCC = "OC";
+                // Update padding bottom dynamically
+                bottomGasstackedBarChart.options.layout.padding.bottom = 4; // New padding bottom value
+                bottomGasstackedBarChart.options.layout.padding.top = 20;
+                labelHorizontalOffset = -40;
+                // Refresh chart to apply changes
+                setPointOCOrCC = 1.4;
+                bottomGasO2Slider.noUiSlider.set(setPointOCOrCC * 100 / (depth / 33 + 1));
+                bottomGasstackedBarChart.update();
+
+                //update label descriptors
+                labelMaxDepthPPO2Description.textContent = "Max depth PPO2";
+                labelENDDescription.textContent = "Equivalent Narcotic Depth";
+                labelGasDensityDescription.textContent = "Gas density";
+
+                bottomGasO2Slider.noUiSlider.updateOptions({
+                    range: {
+                        'min': 5,    // Keep the minimum value as is
+                        'max': 95
+                    }
+                });
+
+                //update deco gases title
+                document.getElementById("titleDecoGases").innerText="decompression gases";
+
+                // hide CC Bailout and show elements from OC
+                containerDeco1OCInfo.style.display = "block";
+                containerDeco1OCButton.style.display = "block";
+                containerDeco1CCInfo.style.display = "none";
+                hideDecoGas1();
+                depthSlider.noUiSlider.set(depthSlider.noUiSlider.get()); //refresh slider to have the deco sliders updated
+
+
+            }
+
+            function showClosedCircuit() {
+                tankDouble.style.display = "none";
+                tankCCR.style.display = "block";
+                labelBottomGasOrDiluent.innerText = "diluent";
+                containerSetPoint.style.display="block";
+
+                // set model to mode OC
+                modeOCOrCC = "CC";
+                // Update padding bottom dynamically
+                bottomGasstackedBarChart.options.layout.padding.bottom = 30; // New padding bottom value
+                bottomGasstackedBarChart.options.layout.padding.top = 0;
+                labelHorizontalOffset = -3;
+                // Refresh chart to apply changes
+                setPointOCOrCC = 1.2;
+                bottomGasO2Slider.noUiSlider.set(setPointOCOrCC * 100 / (depth / 33 + 1));
+                bottomGasstackedBarChart.update();
+
+                //update label descriptors
+                labelMaxDepthPPO2Description.textContent = "Dil Max depth PPO2";
+                labelENDDescription.textContent = "Loop END";
+                labelGasDensityDescription.textContent = "Loop Gas density";
+
+                //refresh slider
+                setpointSlider.noUiSlider.set(setpointSlider.noUiSlider.get());
+
+                //update deco gases title
+                document.getElementById("titleDecoGases").innerText="Bailout and decompression gases";
+
+                // hide OC Deco1 and elements from CC
+                containerDeco1OCInfo.style.display = "none";
+                containerDeco1OCButton.style.display = "none";
+                containerDeco1CCInfo.style.display = "block";
+                showDecoGas1();
+                depthSlider.noUiSlider.set(depthSlider.noUiSlider.get()); //refresh slider to have the deco sliders updated
+            }
+
+            openCircuitTab.addEventListener("click", function () {
+                showOpenCircuit();
+            });
+
+            closedCircuitTab.addEventListener("click", function () {
+                showClosedCircuit();
+            });
+
+            // Initialize with Open Circuit visible
+            showOpenCircuit();
+        });
     </script>
 
     {{--  Script to change the color of the sidemenu to theme --}}
