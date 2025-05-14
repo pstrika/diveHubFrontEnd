@@ -31,9 +31,27 @@
                     border-radius: 4px;     /* Optional: Round the corners */
                 }
 
+                .left-label-white {
+                    text-align: left;       /* Align text on the left */
+                    margin-right: auto;     /* Push it to the far left */
+                    border: 2px solid #ffffff; /* Add box for the label */
+                    padding: 5px;           /* Add padding inside the box */
+                    font-weight: bold;      /* Make the text bold */
+                    border-radius: 4px;     /* Optional: Round the corners */
+                }
+
                 .right-label-normal {
                     text-align: right;      /* Align text on the right */
                     border: 2px solid #49a3f1; /* Add box for the label */
+                    padding: 5px;           /* Add padding inside the box */
+                    font-weight: bold;      /* Make the text bold */
+                    border-radius: 4px;     /* Optional: Round the corners */
+                    margin-left: auto;      /* Push it to the far right */
+                }
+
+                .right-label-normal-white {
+                    text-align: right;      /* Align text on the right */
+                    border: 2px solid #ffffff; /* Add box for the label */
                     padding: 5px;           /* Add padding inside the box */
                     font-weight: bold;      /* Make the text bold */
                     border-radius: 4px;     /* Optional: Round the corners */
@@ -124,6 +142,36 @@
                     padding: 5px; /* Adds spacing */
                 }
 
+                /*.table th, .table td {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }*/
+
+                .table-responsive {
+                    overflow-x: auto;
+                }
+
+                @media (max-width: 768px) {
+                    .hide-on-mobile {
+                        display: none;
+                    }
+                }
+
+                #tissueChart {
+                    height: 100px !important; /* Forces the height */
+                    width: 100%;
+                }
+
+                
+
+                #tissueChart {
+                    background: linear-gradient(to right, 
+                                                green 0% 33%, 
+                                                yellow 33% 95%, 
+                                                red 95% 100%);
+                    border-radius: 0px; /* Optional rounded corners */
+                }
                 
 
             </style>
@@ -951,6 +999,34 @@
                                         <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1"> 
                                             <canvas id="profileChart" class="chart-canvas border-radius-lg" height="500px"></canvas>
                                         </div>
+                                        <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1 mt-2">
+                                            <div class="label-container d-flex justify-content-center align-items-center" style="margin-top:0px;">                                                                  
+                                                <label class="text-uppercase text-white text-xs font-weight-bolder text-center" id="decoTableTitle">Nitrogen Tissue Compartments</label>
+                                            </div>
+                                            <div style="padding-left: 20px; padding-right: 20px;">
+                                                <canvas id="tissueChart" class="chart-canvas border-radius-lg"></canvas>
+                                            </div>
+                                            
+                                            <div class="label-container mt-2" style="padding-left:20px; padding-right:20px;">
+                                            
+                                                <label class="text-white text-align-left">Depth (ft)</label>
+                                                <label class="text-white left-label-white custom-label text-lg" id="labelTissueChartDepth">22</label>
+                                                
+
+                                                <label class="text-white right-label-normal-white custom-label text-lg" id="labelTissueChartTime">22</label>
+                                                <label class="text-white">min</label>
+                                            </div>
+                                            <div style="padding-left: 20px; padding-right: 20px;">
+                                                <div class="slider-styled mt-2" id="timeLapseSlider"></div>
+                                            </div>
+                                            <div style="padding-left: 20px; padding-right: 20px;" class="mt-3">
+                                                <div class="text-center" style="border: none;"> <!-- Added text-center here -->
+                                                    <a type="button" class="btn btn-white mt-0 text-info" id="playTissueAnimation" onclick="playSlider()">
+                                                        Play
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1079,7 +1155,6 @@
                 </div>
             </div>
             
-            
                 
 
 
@@ -1097,12 +1172,24 @@
     
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-    <script src="../../assets/js/plugins/chartjs.min.js"></script>
+    {{-- <script src="../../assets/js/plugins/chartjs.min.js"></script> --}}
+    {{-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> --}}
+    
+    
     
     <script src="{{ asset('assets') }}/js/plugins/nouislider.js"></script>
     <link href="{{ asset('assets') }}/css/nouislider.css" rel="stylesheet">
 
-    <script src="../../assets/js/plugins/chartjs.min.js"></script>
+    
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+
+    <script>
+        Chart.register(ChartAnnotation);
+    </script>
+
+
 
     {{-- Script to communicate with server -> deco profile calculation --}}
     <script>
@@ -1114,6 +1201,7 @@
         let filter5RTDT = [];
         let filter6RTDT = [];
         let filter7RTDT = [];
+        let conveyor = [];
         // Set up the CSRF token for AJAX requests
         $.ajaxSetup({
             headers: {
@@ -1193,8 +1281,8 @@
             ?>
             // Make the AJAX POST request
             $.ajax({
-                LOCALurl: ` http://localhost:7071/api/DecoPlanner`,
-                url: `https://decoplanningapi.azurewebsites.net/api/DecoPlanner?code=<?php echo $DivePlannerKey; ?>`,
+                url: ` http://localhost:7071/api/DecoPlanner`,
+                REMOTEurl: `https://decoplanningapi.azurewebsites.net/api/DecoPlanner?code=<?php echo $DivePlannerKey; ?>`,
                 method: 'POST',
                 contentType: 'application/json',  // Ensures JSON format
                 data: JSON.stringify({inputs: diveProfile}), // Converts data to JSON
@@ -1223,6 +1311,18 @@
                     filter5RTDT = calculateDecoTime(response['short10ft']);
                     filter6RTDT = calculateDecoTime(response['minDeco']);
                     filter7RTDT = calculateDecoTime(response['bailout']);
+                    
+                    // update timeLapse tissue data
+                    conveyor = response['conveyor'];
+                    console.log(conveyor.length);
+                    timeLapseSlider.noUiSlider.updateOptions({
+                        range: {
+                            'min': 0,
+                            'max': conveyor.length-1 // Set max dynamically
+                        }
+                    });
+
+              
 
                     // reset all checkboxes
                     document.querySelectorAll(".form-check-input").forEach(cb => {
@@ -3320,6 +3420,10 @@
                 return `${mins}:${secs.toString().padStart(2, '0')}`; // Ensures two-digit seconds
             }
 
+            function formatTimeMin(minutes) {
+                return Math.ceil(minutes);
+            }
+
             // Step 0: Check if we have deco or noUi-tick
             console.log(response);
             console.log(response.some(entry => entry.phase === "deco_stop"));
@@ -3465,7 +3569,7 @@
             if(modeOCOrCC == "OC") {
                 tableHTML = 
                 `<div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-striped table-sm">
                         <thead>
                             <tr>
                                 <th class="phase-column"></th>
@@ -3493,7 +3597,7 @@
             } else if (modeOCOrCC == "CC" && !BO){
                 tableHTML = 
                 `<div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-striped table-sm">
                         <thead>
                             <tr>
                                 <th class="phase-column"></th>
@@ -3518,8 +3622,8 @@
                 });
             } else {
                 tableHTML = 
-                `<div class="table-responsive">
-                    <table class="table table-striped">
+                `<div style="overflow: auto;">
+                    <table class="table table-striped table-sm" style="width: 300px; table-layout: fixed;">
                         <thead>
                             <tr>
                                 <th class="phase-column"></th>
@@ -3528,8 +3632,8 @@
                                 <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Time</th>
                                 <th class="text-sm" style="padding-left: 0px; padding-right:0px;">RT</th>
                                 <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Gas</th>
-                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">PPO2</th>
-                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">GF</th>
+                                <th class="text-sm hide-on-mobile" style="padding-left: 0px; padding-right:0px;">PPO2</th>
+                                <th class="text-sm hide-on-mobile" style="padding-left: 0px; padding-right:0px;">GF</th>
                             </tr>
                         </thead>
                         <tbody>`;
@@ -3539,11 +3643,11 @@
                         <td class="text-info">${getPhaseIcon(row.phase)}</td> <!-- Display icon instead of text -->
                         <td class=text-xs style="padding-left: 0px;">${row.mode}</td>
                         <td>${row.depth}</td>
-                        <td class="text-sm text-left">${formatTime(row.time)}</td>
-                        <td class="text-sm">${formatTime(row.runtime)}</td>
-                        <td class="text-sm">${row.gas}</td>
-                        <td class="text-sm fw-bold">${row.ppo2}</td>
-                        <td class="text-sm">${(row.gf * 100).toFixed(0)}%</td>
+                        <td class="text-sm text-left">${formatTimeMin(row.time)}</td>
+                        <td class="text-sm">${formatTimeMin(row.runtime)}</td>
+                        <td class="text-xs">${row.gas}</td>
+                        <td class="text-sm fw-bold hide-on-mobile">${row.ppo2}</td>
+                        <td class="text-sm hide-on-mobile">${(row.gf * 100).toFixed(0)}%</td>
                     </tr>`;
                 }); 
             }
@@ -4433,6 +4537,177 @@
         document.addEventListener("DOMContentLoaded", function() {
             sidebarColor(document.getElementById("sidebarColorDiv")); // Execute the sidebarColor function once the HTML is loaded
         });
+    </script>
+
+    {{-- Scripts to create Tissue chart --}}
+    <script>
+       
+        const ctx = document.getElementById("tissueChart").getContext("2d");
+        let tissueChartInstance = null;
+
+        const data = {
+            labels: ["Tissue 1", "Tissue 2", "Tissue 3", "Tissue 4", "Tissue 5", "Tissue 6", "Tissue 7", "Tissue 8",
+                    "Tissue 9", "Tissue 10", "Tissue 11", "Tissue 12", "Tissue 13", "Tissue 14", "Tissue 15", "Tissue 16"
+            ],
+            datasets: [{
+                label: "Values",
+                data: [10, 25, 40, 30, 10, 25, 40, 30, 10, 25, 40, 30, 10, 25, 40, 30],
+                backgroundColor: "black",
+                barThickness: 3
+            }]
+        };
+
+        const config = {
+            type: "bar",
+            data: data,
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { display: false, min: 0, max:300 },
+                    y: { grid: { display: false }, ticks: { color: "black" , display: false} }
+                },
+                plugins: {
+                    legend: { display: false },
+                    annotation: {
+                        annotations: {
+                            inspiredPressureInertGas: {
+                                type: "line",
+                                xMin: 30,
+                                xMax: 30,
+                                borderColor: "black",
+                                borderWidth: 2,
+                                label: {
+                                    enabled: true,
+                                    content: "100%",
+                                    position: "top"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        tissueChartInstance = new Chart(ctx, config);
+    </script>
+
+    {{-- Script to manage Tissue chart --}}
+    <script>
+
+        function formatTime(minutes) {
+            let totalSeconds = Math.round(minutes * 60);
+            let mins = Math.floor(totalSeconds / 60);
+            let secs = totalSeconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`; // Ensures two-digit seconds
+        }
+        // Define M0 and dM values for ZHL-16C (16 compartments)
+        const MValues = [
+            { M0: 1.83, dM: 0.56 },
+            { M0: 1.81, dM: 0.55 },
+            { M0: 1.79, dM: 0.54 },
+            { M0: 1.75, dM: 0.52 },
+            { M0: 1.71, dM: 0.51 },
+            { M0: 1.68, dM: 0.50 },
+            { M0: 1.65, dM: 0.49 },
+            { M0: 1.62, dM: 0.48 },
+            { M0: 1.61, dM: 0.47 },
+            { M0: 1.60, dM: 0.46 },
+            { M0: 1.55, dM: 0.45 },
+            { M0: 1.50, dM: 0.44 },
+            { M0: 1.46, dM: 0.43 },
+            { M0: 1.41, dM: 0.42 },
+            { M0: 1.37, dM: 0.41 },
+            { M0: 1.33, dM: 0.40 }
+        ];
+
+        /**
+         * Calculate the maximum tolerable nitrogen pressure for a given compartment.
+         * @param {number} compartment - Compartment number (1-16)
+         * @param {number} ambientPressure - Absolute ambient pressure (ATA)
+         * @returns {number} - Maximum allowable nitrogen partial pressure in ATA
+         */
+        function calculateMValueN2(compartment, ambientPressure) {
+            if (compartment < 1 || compartment > 16) {
+                throw new Error("Invalid compartment number. Must be between 1 and 16.");
+            }
+
+            const { M0, dM } = MValues[compartment - 1]; // Get M-values for the selected compartment
+            return M0 + (dM * ambientPressure); // Bühlmann M-value formula
+        }
+
+
+        var timeLapseSlider = document.getElementById('timeLapseSlider');
+        
+
+        noUiSlider.create(timeLapseSlider, {
+            start: 0,
+            connect: [true, false],
+            range: {
+                'min': 0,
+                'max': 100
+            },
+            step: 1,
+            
+
+        });
+
+        // Hide the tick mark labels
+        var timeLapseSliderTicks = timeLapseSlider.querySelectorAll('.noUi-value-sub');
+        timeLapseSliderTicks.forEach(function (timeLapseSlider) {
+            timeLapseSlider.style.display = 'none';
+        });
+
+        timeLapseSlider.noUiSlider.on('update', function (values, handle) {
+            let index = parseInt(values[handle]);
+
+            let tissueChart = document.getElementById("tissueChart");
+            console.log("Conveyor");
+            console.log(conveyor[index].tissue_p);
+            console.log("index = " +(index) + " Abs_P = " + (conveyor[index].abs_p) + " time = " + conveyor[index].time + " N2 = " + conveyor[index].gas[2]);
+
+            let tissueValues = [];
+            for(i=0; i<16; i++) {
+                if(conveyor[index].tissue_p[i][0] <= conveyor[index].abs_p)
+                    //const tissueValues = conveyor[index].tissue_p.map(tissue => (tissue[0]) / (conveyor[index].abs_p) * 100);
+                    tissueValues[i] = conveyor[index].tissue_p[i][0] / conveyor[index].abs_p * 100;
+                else
+                    tissueValues[i] = 100 + conveyor[index].tissue_p[i][0] / calculateMValueN2(i+1, conveyor[index].abs_p) * 195;
+            }
+            //console.log(tissueValues); // Check the extracted values
+
+            tissueChartInstance.data.datasets[0].data = tissueValues;
+
+            tissueChartInstance.options.plugins.annotation.annotations.inspiredPressureInertGas.xMin =  (100 - conveyor[index].gas[1] - conveyor[index].gas[3]);
+            tissueChartInstance.options.plugins.annotation.annotations.inspiredPressureInertGas.xMax =  (100 - conveyor[index].gas[1] - conveyor[index].gas[3]);
+
+            tissueChartInstance.update();           
+            
+            document.getElementById("labelTissueChartTime").textContent = formatTime(conveyor[index].time);
+            document.getElementById("labelTissueChartDepth").textContent = ((conveyor[index].abs_p -1 ) * 33).toFixed(0);
+            
+
+        });
+    
+        // Function to play animation
+        function playSlider() {
+            const min = timeLapseSlider.noUiSlider.options.range.min;
+            const max = timeLapseSlider.noUiSlider.options.range.max;
+            const duration = 20000; // 20 seconds
+            const steps = duration / 100; // Move every 100ms
+            let currentValue = min;
+            const stepValue = (max - min) / steps;
+
+            const interval = setInterval(() => {
+                currentValue += stepValue;
+                timeLapseSlider.noUiSlider.set(currentValue);
+
+                if (currentValue >= max) {
+                    clearInterval(interval); // Stop at max value
+                }
+            }, 100);
+        }
     </script>
     @endpush
 </x-page-template>
