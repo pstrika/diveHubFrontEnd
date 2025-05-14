@@ -1281,8 +1281,8 @@
             ?>
             // Make the AJAX POST request
             $.ajax({
-                url: ` http://localhost:7071/api/DecoPlanner`,
-                REMOTEurl: `https://decoplanningapi.azurewebsites.net/api/DecoPlanner?code=<?php echo $DivePlannerKey; ?>`,
+                LOCALurl: ` http://localhost:7071/api/DecoPlanner`,
+                url: `https://decoplanningapi.azurewebsites.net/api/DecoPlanner?code=<?php echo $DivePlannerKey; ?>`,
                 method: 'POST',
                 contentType: 'application/json',  // Ensures JSON format
                 data: JSON.stringify({inputs: diveProfile}), // Converts data to JSON
