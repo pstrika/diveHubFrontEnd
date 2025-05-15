@@ -172,6 +172,10 @@
                                                 red 95% 100%);
                     border-radius: 0px; /* Optional rounded corners */
                 }
+
+                
+
+
                 
 
             </style>
@@ -458,79 +462,99 @@
                             <!-- Row gases -->
                             <div class="row">
                                 <div class="col-lg-3 col-12 align-items-center" style="border-bottom: 1px solid #D3D3D3;">
-                                    <table class="table align-items-center mb-0 mt-1"> 
-                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" id="labelBottomGasOrDiluent" style="border: none;">Bottom gas</td> </tr>
-                                    </table>
+                                    <div class="row">
+                                        <table class="table align-items-center mb-0 mt-1"> 
+                                            <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" id="labelBottomGasOrDiluent" style="border: none;">Bottom gas</td> </tr>
+                                        </table>
+                                    </div>
 
-                                    <div style="padding: 5px; border: 2px solid #1A73E8; border-radius: 4px; margin-top: 5px;">
-                                        <div class="row" style="display: flex; justify-content: center;">
-                                            <div class="row" style="display: flex; justify-content: center;">
-                                                <div class="mt-n6" style="position: relative; width: 150px; height: 300px;">
-                                                    <!-- Overlaying image -->
-                                                        <img id="tank_double" src="{{ asset("assets") }}/img/tank_double.png"   alt="Overlay Image" 
-                                                        style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+                                    <div class="row">
+                                        <div class="col-12 position-relative">
+                                            <div style="
+                                                        position: absolute; /* Place it on top */
+                                                        top: 0;
+                                                        left: 1%;
+                                                        width: 98%;
+                                                        height: 101%;
+                                                        padding: 10px;
+                                                        border: 2px solid #1A73E8;
+                                                        border-radius: 4px;
+                                                        box-sizing: border-box; /* Ensure padding/border don't affect width */
+                                                        z-index: 100; /* Ensure it's above other elements */
+                                                        pointer-events: none;
+                                                    ">
+                                                </div>
+                                            <div style="padding: 5px; padding-top:10px;  border: 0px solid #1A73E8; border-radius: 4px; margin-top: 5px;">
+                                                <div class="row" style="display: flex; justify-content: center;">
+                                                    <div class="row" style="display: flex; justify-content: center;">
+                                                        <div class="mt-n6" style="position: relative; width: 150px; height: 300px;">
+                                                            <!-- Overlaying image -->
+                                                                <img id="tank_double" src="{{ asset("assets") }}/img/tank_double.png"   alt="Overlay Image" 
+                                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
 
-                                                        <img id="tank_ccr" src="{{ asset("assets") }}/img/tank_ccr.png"   alt="Overlay Image" display="none" 
-                                                        style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+                                                                <img id="tank_ccr" src="{{ asset("assets") }}/img/tank_ccr.png"   alt="Overlay Image" display="none" 
+                                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
 
-                                                        <img id="unblendable_sign" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image" 
-                                                        style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
+                                                                <img id="unblendable_sign" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image" 
+                                                                style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
 
-                                                    
-                                                    <!-- Fixed-size chart canvas -->
-                                                    <div style="width: 300px; heigth:300px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
-                                                        <canvas id="bottomGasStackedBar" 
-                                                                style="width: 100%; height: 202px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
+                                                            
+                                                            <!-- Fixed-size chart canvas -->
+                                                            <div style="width: 300px; heigth:300px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
+                                                                <canvas id="bottomGasStackedBar" 
+                                                                        style="width: 100%; height: 202px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
+                                                            </div>
+
+                                                            <!-- <canvas id="stackedBarChart" 
+                                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 161px; z-index: 1;"></canvas> -->
+                                                        </div>
                                                     </div>
 
-                                                    <!-- <canvas id="stackedBarChart" 
-                                                            style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 161px; z-index: 1;"></canvas> -->
-                                                </div>
-                                            </div>
-
-                                            <div class="row mt-3">
-                                                <div class="col-12 d-flex justify-content-center align-items-center">
-                                                    <div style="border: 2px solid #49a3f1; padding: 5px; font-weight: bold; border-radius: 4px;">
-                                                        <label class="text-success text-lg mb-0" style="font-weight: bold;" id="labelBottomGasO2">21</label>
-                                                        <label class="text-info text-lg mb-0" style="font-weight: bold;">/</label>
-                                                        <label class="text-info text-lg mb-0" style="font-weight: bold;" id="labelBottomGasHe">35</label>
+                                                    <div class="row mt-3">
+                                                        <div class="col-12 d-flex justify-content-center align-items-center">
+                                                            <div style="border: 2px solid #49a3f1; padding: 5px; font-weight: bold; border-radius: 4px;">
+                                                                <label class="text-success text-lg mb-0" style="font-weight: bold;" id="labelBottomGasO2">21</label>
+                                                                <label class="text-info text-lg mb-0" style="font-weight: bold;">/</label>
+                                                                <label class="text-info text-lg mb-0" style="font-weight: bold;" id="labelBottomGasHe">35</label>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </div>
 
-                                            <div class="row mt-4">
-                                                <div>
-                                                    <input type="hidden" id="bottomGasO2Slider-value" name="bottomGasO2Slider-value">
-                                                    <div class="slider-styled" id="bottomGasO2Slider"></div>
-                                                    <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">O2 %</div>
-                                                </div>
-                                            </div>
+                                                    <div class="row mt-4">
+                                                        <div>
+                                                            <input type="hidden" id="bottomGasO2Slider-value" name="bottomGasO2Slider-value">
+                                                            <div class="slider-styled" id="bottomGasO2Slider"></div>
+                                                            <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">O2 %</div>
+                                                        </div>
+                                                    </div>
 
-                                            <div class="row mt-3">
-                                                <div>
-                                                    <input type="hidden" id="bottomGasHeSlider-value" name="bottomGasHeSlider-value">
-                                                    <div class="slider-styled" id="bottomGasHeSlider"></div>
-                                                    <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
-                                                </div>
-                                            </div>
+                                                    <div class="row mt-3">
+                                                        <div>
+                                                            <input type="hidden" id="bottomGasHeSlider-value" name="bottomGasHeSlider-value">
+                                                            <div class="slider-styled" id="bottomGasHeSlider"></div>
+                                                            <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
+                                                        </div>
+                                                    </div>
 
-                                            <div class="row mt-3">
-                                                <div class="label-container">
-                                                    <label id="labelMaxDepthPPO2Description">Max depth PPO2</label>
-                                                    <label class="text-info right-label-normal custom-label" id="labelBottomGasPPO2">1.4</label>
-                                                    <label class="text-info">atm</label>
-                                                </div>
+                                                    <div class="row mt-3">
+                                                        <div class="label-container">
+                                                            <label id="labelMaxDepthPPO2Description">Max depth PPO2</label>
+                                                            <label class="text-info right-label-normal custom-label" id="labelBottomGasPPO2">1.4</label>
+                                                            <label class="text-info">atm</label>
+                                                        </div>
 
-                                                <div class="label-container">
-                                                    <label id="labelENDDescription">Equivalent Narcotic Depth</label>
-                                                    <label class="text-info right-label-normal custom-label" id="labelBottomGasEND">90</label>
-                                                    <label class="text-info">ft</label>
-                                                </div>
+                                                        <div class="label-container">
+                                                            <label id="labelENDDescription">Equivalent Narcotic Depth</label>
+                                                            <label class="text-info right-label-normal custom-label" id="labelBottomGasEND">90</label>
+                                                            <label class="text-info">ft</label>
+                                                        </div>
 
-                                                <div class="label-container">
-                                                    <label id="labelGasDensityDescription">Gas density</label>
-                                                    <label class="text-info right-label-normal custom-label" id="labelBottomGasDensity">90</label>
-                                                    <label class="text-info">g/l</label>
+                                                        <div class="label-container">
+                                                            <label id="labelGasDensityDescription">Gas density</label>
+                                                            <label class="text-info right-label-normal custom-label" id="labelBottomGasDensity">90</label>
+                                                            <label class="text-info">g/l</label>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -547,7 +571,21 @@
                                     <div class="row">
                                         <!-- Deco 1 -->
                                         <div class="col-lg-3 col-12 position-relative" id="deco1" style="margin-right: 0px; margin-left:0px; margin-bottom: 10px; padding: 5px; border: 0px solid #1A73E8; border-radius: 4px; background-color: #ffffff;">
-                                            <div style="padding: 10px; border: 2px solid #1A73E8; border-radius: 4px;">
+                                            <div style="
+                                                    position: absolute; /* Place it on top */
+                                                    top: 0;
+                                                    left: 1%;
+                                                    width: 98%;
+                                                    height: 100%;
+                                                    padding: 10px;
+                                                    border: 2px solid #1A73E8;
+                                                    border-radius: 4px;
+                                                    box-sizing: border-box; /* Ensure padding/border don't affect width */
+                                                    z-index: 100; /* Ensure it's above other elements */
+                                                    pointer-events: none;
+                                                ">
+                                            </div>
+                                            <div style="padding: 10px; border: 0px solid #1A73E8; border-radius: 4px;">
                                                 
                                                 <div id="addGasIcon1" onclick="showDecoGas1()" 
                                                     style="position: absolute; top: 10px; left: 10px; bottom: 10px; right: 8px;  background-color: #ffffff; color: #1A73E8;
@@ -656,7 +694,22 @@
 
                                         <!-- Deco 2 -->
                                         <div class="col-lg-3 col-12 position-relative" id="deco2" style="margin-right: 0px; margin-left:0px; margin-bottom: 10px; padding: 5px; border: 0px solid #1A73E8; border-radius: 4px; background-color: #ffffff;">
-                                            <div style="padding: 10px; border: 2px solid #1A73E8; border-radius: 4px;">
+                                            <div style="
+                                                    position: absolute; /* Place it on top */
+                                                    top: 0;
+                                                    left: 1%;
+                                                    width: 98%;
+                                                    height: 100%;
+                                                    padding: 10px;
+                                                    border: 2px solid #1A73E8;
+                                                    border-radius: 4px;
+                                                    box-sizing: border-box; /* Ensure padding/border don't affect width */
+                                                    z-index: 100; /* Ensure it's above other elements */
+                                                    pointer-events: none;
+                                                ">
+                                            </div>
+                                        
+                                            <div style="padding: 10px; border: 0px solid #1A73E8; border-radius: 4px;">
                                                 
                                                 <div id="addGasIcon2" onclick="showDecoGas2()" 
                                                     style="position: absolute; top: 10px; left: 10px; bottom: 10px; right: 8px;  background-color: #ffffff; color: #1A73E8;
@@ -742,7 +795,22 @@
 
                                         <!-- Deco 3 -->
                                         <div class="col-lg-3 col-12 position-relative" id="deco3" style="margin-right: 0px; margin-left:0px; margin-bottom: 10px; padding: 5px; border: 0px solid #1A73E8; border-radius: 4px; background-color: #ffffff;">
-                                            <div style="padding: 10px; border: 2px solid #1A73E8; border-radius: 4px;">
+                                            <div style="
+                                                    position: absolute; /* Place it on top */
+                                                    top: 0;
+                                                    left: 1%;
+                                                    width: 98%;
+                                                    height: 100%;
+                                                    padding: 10px;
+                                                    border: 2px solid #1A73E8;
+                                                    border-radius: 4px;
+                                                    box-sizing: border-box; /* Ensure padding/border don't affect width */
+                                                    z-index: 100; /* Ensure it's above other elements */
+                                                    pointer-events: none;
+                                                ">
+                                            </div>
+                                        
+                                            <div style="padding: 10px; border: 0px solid #1A73E8; border-radius: 4px;">
                                                 
                                                 <div id="addGasIcon3" onclick="showDecoGas3()" 
                                                     style="position: absolute; top: 10px; left: 10px; bottom: 10px; right: 8px;  background-color: #ffffff; color: #1A73E8;
@@ -828,7 +896,22 @@
 
                                         <!-- Deco 4 -->
                                         <div class="col-lg-3 col-12 position-relative" id="deco4" style="margin-right: 0px; margin-left:0px; margin-bottom: 10px; padding: 5px; border: 0px solid #1A73E8; border-radius: 4px; background-color: #ffffff;">
-                                            <div style="padding: 10px; border: 2px solid #1A73E8; border-radius: 4px;">
+                                            <div style="
+                                                    position: absolute; /* Place it on top */
+                                                    top: 0;
+                                                    left: 1%;
+                                                    width: 98%;
+                                                    height: 100%;
+                                                    padding: 10px;
+                                                    border: 2px solid #1A73E8;
+                                                    border-radius: 4px;
+                                                    box-sizing: border-box; /* Ensure padding/border don't affect width */
+                                                    z-index: 100; /* Ensure it's above other elements */
+                                                    pointer-events: none;
+                                                ">
+                                            </div>
+                                        
+                                            <div style="padding: 10px; border: 0px solid #1A73E8; border-radius: 4px;">
                                                 
                                                 <div id="addGasIcon4" onclick="showDecoGas4()" 
                                                     style="position: absolute; top: 10px; left: 10px; bottom: 10px; right: 8px;  background-color: #ffffff; color: #1A73E8;
@@ -4708,6 +4791,145 @@
                 }
             }, 100);
         }
+    </script>
+
+    {{--  Completly useless scripts to avoid the labels in the bottom gas to change the size of the frame :) --}}
+    <script>
+        function updateLabel() {
+            const label = document.getElementById("labelENDDescription");
+            let originalText = "Loop END";
+            if(modeOCOrCC == "OC")
+                originalText = "Equivalent Narcotic Depth";
+            
+                
+            
+            label.textContent = originalText; // Set original text first
+
+            // Create a temporary measurement span inside the label
+            const tempSpan = document.createElement("span");
+            tempSpan.style.visibility = "hidden";
+            tempSpan.style.whiteSpace = "nowrap"; // Prevent wrapping
+            tempSpan.style.position = "absolute";
+            tempSpan.textContent = originalText;
+            label.appendChild(tempSpan);
+
+            // Measure the actual rendered text width
+            const textWidth = tempSpan.offsetWidth;
+            const containerWidth = label.offsetWidth;
+
+            label.removeChild(tempSpan); // Remove temporary span
+
+            // Replace text only if wrapping is required
+            if (textWidth > containerWidth) {
+                if(modeOCOrCC == "OC")
+                    label.textContent = "END";
+            }
+        }
+
+        // Run when the page loads & when resizing
+        window.addEventListener("load", updateLabel);
+        window.addEventListener("resize", updateLabel);
+
+        function updateLabel1() {
+            const label = document.getElementById("labelMaxDepthPPO2Description");
+            let originalText = "Dil Max Depth PPO2";
+            if(modeOCOrCC == "OC")
+                originalText = "Max Depth PPO2";
+            
+            label.textContent = originalText; // Set original text first
+
+            // Create a temporary measurement span inside the label
+            const tempSpan = document.createElement("span");
+            tempSpan.style.visibility = "hidden";
+            tempSpan.style.whiteSpace = "nowrap"; // Prevent wrapping
+            tempSpan.style.position = "absolute";
+            tempSpan.textContent = originalText;
+            label.appendChild(tempSpan);
+
+            // Measure the actual rendered text width
+            const textWidth = tempSpan.offsetWidth;
+            const containerWidth = label.offsetWidth;
+
+            label.removeChild(tempSpan); // Remove temporary span
+
+            // Replace text only if wrapping is required
+            if (textWidth > containerWidth) {
+                if(modeOCOrCC == "OC")
+                    label.textContent = "Max PPO2";
+                else
+                    label.textContent = "Dil Max PPO2";
+            }
+        }
+
+        // Run when the page loads & when resizing
+        window.addEventListener("load", updateLabel1);
+        window.addEventListener("resize", updateLabel1);
+
+        function updateLabel2() {
+            const label = document.getElementById("labelGasDensityDescription");
+            let originalText = "Loop Gas Density";
+            if(modeOCOrCC == "OC")
+                originalText = "Gas Density";
+            
+            label.textContent = originalText; // Set original text first
+
+            // Create a temporary measurement span inside the label
+            const tempSpan = document.createElement("span");
+            tempSpan.style.visibility = "hidden";
+            tempSpan.style.whiteSpace = "nowrap"; // Prevent wrapping
+            tempSpan.style.position = "absolute";
+            tempSpan.textContent = originalText;
+            label.appendChild(tempSpan);
+
+            // Measure the actual rendered text width
+            const textWidth = tempSpan.offsetWidth;
+            const containerWidth = label.offsetWidth;
+
+            label.removeChild(tempSpan); // Remove temporary span
+
+            // Replace text only if wrapping is required
+            if (textWidth > containerWidth) {
+                if(modeOCOrCC == "CC")
+                    label.textContent = "Loop Density";
+                
+            }
+        }
+
+        // Run when the page loads & when resizing
+        window.addEventListener("load", updateLabel2);
+        window.addEventListener("resize", updateLabel2);
+    </script>
+
+    {{--  Script to avoid the pill selector OC CC to go back to default OC --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const navLinks = document.querySelectorAll("#nav-tabs .nav-link");
+
+            navLinks.forEach(link => {
+                link.addEventListener("click", function () {
+                    // Remove 'active' class from all tabs
+                    navLinks.forEach(nav => nav.classList.remove("active"));
+                    
+                    // Add 'active' class to the clicked tab
+                    this.classList.add("active");
+
+                    // Save selected tab in local storage (optional)
+                    localStorage.setItem("activeTab", this.innerText.trim());
+                });
+            });
+
+            // Restore active tab after page reload or resize
+            const savedTab = localStorage.getItem("activeTab");
+            if (savedTab) {
+                navLinks.forEach(link => {
+                    if (link.innerText.trim() === savedTab) {
+                        link.classList.add("active");
+                    } else {
+                        link.classList.remove("active");
+                    }
+                });
+            }
+        });
     </script>
     @endpush
 </x-page-template>
