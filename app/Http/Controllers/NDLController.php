@@ -902,6 +902,8 @@ class NDLController extends Controller
     
     public function show($id = null) {
 
+        $deco_unit = auth()->user()->deco_unit;
+
         Log::debug("In NDLController@show with id " . str($id));
         if($id == null)
             $currentSite = null;
@@ -917,7 +919,51 @@ class NDLController extends Controller
              ->sortBy('name');
 
 
-        return view('pages.DivePlanner', compact('currentSite', 'allSites'));
+        return view('pages.DivePlanner', compact('currentSite', 'allSites', 'deco_unit'));
+    }
+
+    public function showImperial($id = null) {
+
+        $deco_unit = 0;
+
+        Log::debug("In NDLController@show with id " . str($id));
+        if($id == null)
+            $currentSite = null;
+        else
+            $currentSite = Site::findOrFail(intval($id));
+
+        //Log::debug("Got site " . $currentSite->name);
+
+        // get site list to print map
+        $allSites = Site::where('_hidden', '<>', 1)
+             ->select('id', 'name', 'maxDepth', 'type', 'location')
+             ->get()
+             ->sortBy('name');
+
+
+        return view('pages.DivePlanner', compact('currentSite', 'allSites', 'deco_unit'));
+    }
+
+    public function showMetric($id = null) {
+
+        $deco_unit = 1;
+
+        Log::debug("In NDLController@show with id " . str($id));
+        if($id == null)
+            $currentSite = null;
+        else
+            $currentSite = Site::findOrFail(intval($id));
+
+        //Log::debug("Got site " . $currentSite->name);
+
+        // get site list to print map
+        $allSites = Site::where('_hidden', '<>', 1)
+             ->select('id', 'name', 'maxDepth', 'type', 'location')
+             ->get()
+             ->sortBy('name');
+
+
+        return view('pages.DivePlanner', compact('currentSite', 'allSites', 'deco_unit'));
     }
     
     

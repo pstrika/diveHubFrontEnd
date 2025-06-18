@@ -334,6 +334,17 @@
                                                 </div>
                                             </li>
                                         </ul>
+
+                                        <ul class="list-group">
+                                            <li class="list-group-item border-0 px-0">
+                                                <div class="form-check form-switch ps-0">
+                                                    <input name="deco_unit" class="form-check-input ms-auto" type="checkbox"
+                                                        id="deco_unit" {{ $user->deco_unit ? "checked" : ""}} value="1">
+                                                    <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
+                                                        for="deco_unit">Use metric units for deco planning (default imperial)</label>
+                                                </div>
+                                            </li>
+                                        </ul>
                                         
                                         
                                     </div>
@@ -843,6 +854,11 @@
 
         var show_visited =document.getElementById('show_visited');
         show_visited.addEventListener('click', () => {
+            divButton.style.display = 'block';
+        });
+
+        var deco_unit =document.getElementById('deco_unit');
+        deco_unit.addEventListener('click', () => {
             divButton.style.display = 'block';
         });
     </script>

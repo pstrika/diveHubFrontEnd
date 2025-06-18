@@ -269,6 +269,14 @@ class UserController extends Controller
             $user->show_visited = 0;
         }
 
+        if($request->has('deco_unit')) {
+            Log::info("Got deco_unit. Updating to: 1");
+            $user->deco_unit = 1;
+        } else {
+            Log::info("Didn't get deco_unit. Updating to: 0");
+            $user->deco_unit = 0;
+        }
+
 
         $user->save();
 

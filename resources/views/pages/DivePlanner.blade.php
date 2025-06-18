@@ -173,7 +173,16 @@
                     border-radius: 0px; /* Optional rounded corners */
                 }
 
-                
+                .dive-planner-header {
+                    display: flex;
+                    align-items: center; /* Vertically align the items */
+                    justify-content: space-between; /* Push elements apart */
+                }
+                .UnitDropdown {
+                    width: 150px; /* Adjust width to make it small */
+                    margin-left: auto; /* Push it to the right */
+                }
+
 
 
                 
@@ -244,11 +253,34 @@
 
             <div class="card p-0 position-relative mt-n5 mx-1 z-index-2 mb-4">
                 
-                <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
-                    <div style="float: left;">
-                        <h2 class="card-title text-info mx-3 mt-0">Decompression Dive Planner</h2>
+                <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1 dive-planner-header">
+                    <h2 class="card-title text-info mx-3 mt-0">Decompression Dive Planner</h2>
+                    
+                    <!--
+                    <div class="UnitDropdown">
+                        <button class="btn bg-gradient-info dropdown-toggle w-100" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            Select units...
+                        </button>
+                        <ul class="dropdown-menu" id="UnitDropdownMenu">
+                            <li><a class="dropdown-item" href="#">Imperial</a></li>
+                            <li><a class="dropdown-item" href="#">Metric</a></li>
+                        </ul>
+                    </div> -->
+
+                    <div class="text-center" style="border: none;"> <!-- Added text-center here -->
+                        @if(!is_null($currentSite) && $deco_unit)
+                            <a type="button" class="btn btn-info mt-0" id="switchUnits" href="{{ route('DecoPlannerImperial') }}/{{ $currentSite->id }}">Switch to IMPERIAL</a>
+                        @elseif(is_null($currentSite) && $deco_unit)
+                            <a type="button" class="btn btn-info mt-0" id="switchUnits" href="{{ route('DecoPlannerImperial') }}">Switch to IMPERIAL</a>
+                        @elseif(!is_null($currentSite) && !$deco_unit)
+                            <a type="button" class="btn btn-info mt-0" id="switchUnits" href="{{ route('DecoPlannerMetric') }}/{{ $currentSite->id }}">Switch to Metric</a>
+                        @else
+                            <a type="button" class="btn btn-info mt-0" id="switchUnits" href="{{ route('DecoPlannerMetric') }}">Switch to Metric</a>
+                        @endif
+                        
                     </div>
                 </div>
+
             </div>
 
            
@@ -308,7 +340,7 @@
                                                     <input type="text" class="form-control mb-2" id="dropdownSearch" placeholder="Search..." style="display: block;">
                                                 </li>
                                                 <?php foreach ($allSites as $site): ?>
-                                                    <li><a class="dropdown-item" href="#" data-depth="<?php echo htmlspecialchars($site->maxDepth); ?>">
+                                                    <li><a class="dropdown-item" href="#" data-depth="<?php echo htmlspecialchars($site->maxDepth / ($deco_unit ? 3.28 : 1) ); ?>">
                                                         <?php echo htmlspecialchars($site->name) . " (" . htmlspecialchars($site->type) . ")"; ?>
                                                     </a></li>
                                                 <?php endforeach; ?>
@@ -324,15 +356,22 @@
                                 @endif
                                     <input type="hidden" id="depthSlider-value" name="depthSlider-value">
                                     <div class="slider-styled" id="depthSlider"></div>
-                                    <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Max Depth (ft)</div> 
+                                    <div id="maxDepthSliderTitle" class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Max Depth (ft)</div> 
                                 </div>
 
                             </div>
                             <div class="row mt-2" style="border-bottom: 1px solid #D3D3D3;">
-                                <div class="col-12 d-flex justify-content-center align-items-center">
+                                <div id="maxDepthContainerImp" class="col-12 d-flex justify-content-center align-items-center">
                                     <div>
                                         <label class="text-info right-label-normal custom-label text-lg" id="labelDepth">Bottom PPO2</label>
-                                        <label class="text-info">ft</label>
+                                        <label id="maxDepthInputLabel" class="text-info">ft</label>
+                                    </div>
+                                </div>
+
+                                <div id="maxDepthContainerMet" class="col-12 d-flex justify-content-center align-items-center">
+                                    <div>
+                                        <label class="text-info right-label-normal custom-label text-lg" id="labelDepthMET">Bottom PPO2</label>
+                                        <label class="text-info">m</label>
                                     </div>
                                 </div>
                             </div>
@@ -434,10 +473,14 @@
                                     <div class="mt-0">
                                         <input type="hidden" id="desSlider-value" name="desSlider-value">
                                         
-                                        <div class="label-container">
-                                            
+                                        <div id="desRateContainerImp" class="label-container">
                                             <label class="text-info right-label-normal custom-label text-sm" id="labelDes">100</label>
                                             <label class="text-info">ft/min</label>
+                                        </div>
+
+                                        <div id="desRateContainerMet" class="label-container">
+                                            <label class="text-info right-label-normal custom-label text-sm" id="labelDesMET">100</label>
+                                            <label class="text-info">m/min</label>
                                         </div>
                                         
                                         <div class="slider-styled" id="desSlider"></div>
@@ -447,10 +490,14 @@
                                     <div class="mt-n2 mb-2">
                                         <input type="hidden" id="ascSlider-value" name="ascSlider-value">
                                         
-                                        <div class="label-container">
-                                            
+                                        <div id="ascRateContainerImp" class="label-container">
                                             <label class="text-info right-label-normal custom-label text-sm" id="labelAsc">30</label>
                                             <label class="text-info">ft/min</label>
+                                        </div>
+
+                                        <div id="ascRateContainerMet" class="label-container">
+                                            <label class="text-info right-label-normal custom-label text-sm" id="labelAscMET">30</label>
+                                            <label class="text-info">m/min</label>
                                         </div>
                                         
                                         <div class="slider-styled" id="ascSlider"></div>
@@ -546,7 +593,7 @@
                                                         <div class="label-container">
                                                             <label id="labelENDDescription">Equivalent Narcotic Depth</label>
                                                             <label class="text-info right-label-normal custom-label" id="labelBottomGasEND">90</label>
-                                                            <label class="text-info">ft</label>
+                                                            <label id="labelBottomGasENDUnit" class="text-info">ft</label>
                                                         </div>
 
                                                         <div class="label-container">
@@ -653,7 +700,7 @@
                                                             <label class="text-info left-label custom-label text-sm" id="labelDecoGas1SwitchPPO2">2222</label>
                                                             
                                                             <label class="text-info right-label-normal custom-label text-sm" id="labelDecoGas1Switch">2222</label>
-                                                            <label class="text-info">ft</label>
+                                                            <label id="labelDecoGas1SwitchUNIT" class="text-info">ft</label>
                                                         </div>
                                                         <div class="slider-styled" id="decoGas1SwitchSlider"></div>
                                                         <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Switch depth</div>
@@ -668,12 +715,12 @@
                                                             
                                                             <label class="text-info text-right">END</label>
                                                             <label class="text-info right-label-normal custom-label text-sm mx-1" id="labelBailoutEND">2222</label>
-                                                            <label class="text-info">ft</label>
+                                                            <label class="text-info" id="labelBailoutENDUNIT">{{ $deco_unit ? "m" : "ft" }}</label>
                                                         </div>
                                                         <div class="label-container align-text-right justify-text-right">                                                
                                                             <label class="text-secondary align-text-right text-right">Switch Depth</label>
                                                             <label class="text-secondary right-label-freeze custom-label text-sm" id="labelBailoutSwitch">2222</label>
-                                                            <label class="text-secondary">ft</label>
+                                                            <label class="text-secondary" id="labelBailoutSwitchUNIT">ft</label>
                                                         </div>
                                                         <div class="label-container d-flex justify-content-center align-items-center" style="margin-top:20px;">                                                                  
                                                             <label class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center">BAILOUT GAS</label>
@@ -776,7 +823,7 @@
                                                             <label class="text-info left-label custom-label text-sm" id="labelDecoGas2SwitchPPO2">2222</label>
                                                             
                                                             <label class="text-info right-label-normal custom-label text-sm" id="labelDecoGas2Switch">2222</label>
-                                                            <label class="text-info">ft</label>
+                                                            <label id="labelDecoGas2SwitchUNIT" class="text-info">ft</label>
                                                         </div>
                                                         <div class="slider-styled" id="decoGas2SwitchSlider"></div>
                                                         <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Switch depth</div>
@@ -877,7 +924,7 @@
                                                             <label class="text-info left-label custom-label text-sm" id="labelDecoGas3SwitchPPO2">2222</label>
                                                             
                                                             <label class="text-info right-label-normal custom-label text-sm" id="labelDecoGas3Switch">2222</label>
-                                                            <label class="text-info">ft</label>
+                                                            <label id="labelDecoGas3SwitchUNIT" class="text-info">ft</label>
                                                         </div>
                                                         <div class="slider-styled" id="decoGas3SwitchSlider"></div>
                                                         <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Switch depth</div>
@@ -978,7 +1025,7 @@
                                                             <label class="text-info left-label custom-label text-sm" id="labelDecoGas4SwitchPPO2">2222</label>
                                                             
                                                             <label class="text-info right-label-normal custom-label text-sm" id="labelDecoGas4Switch">2222</label>
-                                                            <label class="text-info">ft</label>
+                                                            <label id="labelDecoGas4SwitchUNIT" class="text-info">ft</label>
                                                         </div>
                                                         <div class="slider-styled" id="decoGas4SwitchSlider"></div>
                                                         <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Switch depth</div>
@@ -1097,7 +1144,7 @@
                                                                 <input class="form-check-input ms-auto" type="checkbox"
                                                                     id="filter2">
                                                                 <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                                    for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="Dive 10 ft deeper, how is RT and DT changed?">Increase max depth by 10 ft</label>
+                                                                    for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="Dive 10 ft deeper, how is RT and DT changed?">Increase max depth by {{ $deco_unit ? "3 m" : "10 ft" }}</label>
                                                             </div>
                                                         </li>
                                                     </ul>
@@ -1143,7 +1190,7 @@
                                                                 <input class="form-check-input ms-auto" type="checkbox"
                                                                     id="filter5">
                                                                 <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                                    for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="What's the impact of diving 10 ft shallower than planned?">Reduce max depth by 10 ft</label>
+                                                                    for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="What's the impact of diving 10 ft shallower than planned?">Reduce max depth by {{ $deco_unit ? "3 m" : "10 ft" }}</label>
                                                             </div>
                                                         </li>
                                                     </ul>
@@ -1221,7 +1268,7 @@
                                             
                                             <div class="label-container mt-2" style="padding-left:20px; padding-right:20px;">
                                             
-                                                <label class="text-white text-align-left">Depth (ft)</label>
+                                                <label class="text-white text-align-left">Depth ({{ $deco_unit ? "m" : "ft" }})</label>
                                                 <label class="text-white left-label-white custom-label text-lg" id="labelTissueChartDepth">22</label>
                                                 
 
@@ -1260,8 +1307,9 @@
                                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Bottom gas</td> </tr>
                                                     </table>
                                                     <div class="label-container">
+                                                        <label class="text-info right-label-normal custom-label text-sm" id="labelSACBottomGasLiters">50</label>
                                                         <label class="text-info right-label-normal custom-label text-sm" id="labelSACBottomGas">50</label>
-                                                        <label class="text-info">cuft/min</label>
+                                                        <label class="text-info">{{ $deco_unit ? "liters/min" : "cuft/min" }}</label>
                                                     </div>
                                                     <div class="slider-styled" id="sliderSACBottomGas"></div>
                                                     <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">SAC</div>
@@ -1277,8 +1325,9 @@
                                                         <tr><td id="gasConsumptionDecoOrBOHeader" class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Decompression gases</td> </tr>
                                                     </table>
                                                     <div class="label-container">
+                                                        <label class="text-info right-label-normal custom-label text-sm" id="labelSACDecoGasLiters">50</label>
                                                         <label class="text-info right-label-normal custom-label text-sm" id="labelSACDecoGas">50</label>
-                                                        <label class="text-info">cuft/min</label>
+                                                        <label class="text-info">{{ $deco_unit ? "liters/min" : "cuft/min" }}</label>
                                                     </div>
                                                     <div class="slider-styled" id="sliderSACDecoGas"></div>
                                                     <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">SAC</div>
@@ -1332,7 +1381,70 @@
         Chart.register(ChartAnnotation);
     </script>
 
+    <script>
+        @if($deco_unit)
+            let modeImpOrMetric = "met";
+        @else
+            let modeImpOrMetric = "imp";
+        @endif
 
+        <?php
+            if($deco_unit)
+                $unit = "m";
+            else
+                $unit = "ft";
+        ?>
+        const FT2M = (modeImpOrMetric === "imp" ? 1 :0.3048);
+        const FT2MLabel = (modeImpOrMetric === "imp" ? "ft" : "m");
+
+        if(modeImpOrMetric === "imp") {
+            document.getElementById("maxDepthSliderTitle").innerText = "Max Depth (ft)";
+            //document.getElementById("maxDepthInputLabel").innerText = "ft";
+            //document.getElementById("ascRateValueLabel").innerText = "ft/min";
+            //document.getElementById("descRateValueLabel").innerText = "ft/min";
+            document.getElementById("labelBottomGasENDUnit").innerText = "ft";
+            document.getElementById("labelDecoGas1SwitchUNIT").innerText = "ft";
+            document.getElementById("labelDecoGas2SwitchUNIT").innerText = "ft";
+            document.getElementById("labelDecoGas3SwitchUNIT").innerText = "ft";
+            document.getElementById("labelDecoGas4SwitchUNIT").innerText = "ft";
+            document.getElementById("labelBailoutSwitchUNIT").innerText = "ft";
+
+            document.getElementById("ascRateContainerMet").style.display = "none";
+            document.getElementById("desRateContainerMet").style.display = "none";
+            document.getElementById("maxDepthContainerMet").style.setProperty("display", "none", "important");
+            
+
+            document.getElementById("ascRateContainerImp").style.display = "flex";
+            document.getElementById("desRateContainerImp").style.display = "flex";
+            document.getElementById("maxDepthContainerImp").style.setProperty("display", "flex", "important");
+            
+
+            
+            
+        } else {
+            document.getElementById("maxDepthSliderTitle").innerText = "Max Depth (m)";
+            //document.getElementById("maxDepthInputLabel").innerText = "m";
+            //document.getElementById("ascRateValueLabel").innerText = "m/min";
+            //document.getElementById("desRateValueLabel").innerText = "m/min";
+            document.getElementById("labelBottomGasENDUnit").innerText = "m";
+            document.getElementById("labelDecoGas1SwitchUNIT").innerText = "m";
+            document.getElementById("labelDecoGas2SwitchUNIT").innerText = "m";
+            document.getElementById("labelDecoGas3SwitchUNIT").innerText = "m";
+            document.getElementById("labelDecoGas4SwitchUNIT").innerText = "m";
+            document.getElementById("labelBailoutSwitchUNIT").innerText = "m";
+
+            document.getElementById("ascRateContainerMet").style.display = "flex";
+            document.getElementById("desRateContainerMet").style.display = "flex";
+            document.getElementById("maxDepthContainerMet").style.setProperty("display", "flex", "important");
+
+            document.getElementById("ascRateContainerImp").style.display = "none";
+            document.getElementById("desRateContainerImp").style.display = "none";
+            document.getElementById("maxDepthContainerImp").style.setProperty("display", "none", "important");
+
+
+        }
+        
+    </script>
 
     {{-- Script to communicate with server -> deco profile calculation --}}
     <script>
@@ -1358,10 +1470,7 @@
         // Attach click event to the "Calculate NDL" button
         $('#calculateDecoProfile').on('click', function () {
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
 
             // Get values from the input fields
             const maxDepth = parseInt(labelDepth.textContent);
@@ -1388,7 +1497,7 @@
                     decoGases.push({
                         O2: parseInt(document.getElementById(o2LabelId).textContent),
                         He: parseInt(document.getElementById(heLabelId).textContent),
-                        switchDepth: parseInt(document.getElementById(switchLabelId).textContent)
+                        switchDepth: Math.floor(parseInt(document.getElementById(switchLabelId).textContent) * {{ $deco_unit ? 3.28084 : 1 }})
                     });
                 }
             }
@@ -1518,6 +1627,18 @@
                     } else {
                         document.getElementById('filter7Container').style.display = "block";
                     }
+
+                    @if($deco_unit)
+                        document.getElementById('labelSACBottomGas').style.display="none";
+                        document.getElementById('labelSACBottomGasLiters').style.display="block";
+                        document.getElementById('labelSACDecoGas').style.display="none";
+                        document.getElementById('labelSACDecoGasLiters').style.display="block";
+                    @else
+                        document.getElementById('labelSACBottomGas').style.display="block";
+                        document.getElementById('labelSACBottomGasLiters').style.display="none";
+                        document.getElementById('labelSACDecoGas').style.display="block";
+                        document.getElementById('labelSACDecoGasLiters').style.display="none";
+                    @endif
                 },
                 error: function (xhr, status, error) {
                     console.error('Error:', error);
@@ -1716,7 +1837,11 @@
                 bottomGasEND = calculateENDCCR(depth, parseFloat(labelSetpoint.textContent), O2 / 100, He / 100, 1); 
             }
 
-            labelBottomGasEND.textContent = Math.max(0,(bottomGasEND).toFixed(0));
+            // adjust the unit
+            if(modeImpOrMetric === "imp")
+                labelBottomGasEND.textContent = Math.max(0,(bottomGasEND).toFixed(0));
+            else
+                labelBottomGasEND.textContent = (Math.max(0,(bottomGasEND)) * 0.3048).toFixed(0);
 
             if (bottomGasEND > 130) {
                 labelBottomGasEND.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
@@ -1854,6 +1979,21 @@
             // Refresh the chart
             bottomGasstackedBarChart.update();
 
+        }
+    </script>
+
+    {{-- Script to reset calculation area --}}
+    <script>
+        function resetCalculationArea() {
+
+            document.getElementById("profileChartAndTable").style.display = "none";
+            document.getElementById("decoTableContainer").style.display = "block";
+            document.getElementById("BOTableContainer").style.display = "none";
+            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            document.getElementById("labelWhatIfRunTime").innerText="-";
+            document.getElementById("labelWhatIfRunTimeDiff").innerText="()";
+            document.getElementById("labelWhatIfDecoTime").innerText="-";
+            document.getElementById("labelWhatIfDecoTimeDiff").innerText="()";
         }
     </script>
 
@@ -2386,10 +2526,7 @@
             labelSurfaceTime.textContent = parseFloat(surfaceTimeSliderValue).toFixed(1);
             
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
 
         });
 
@@ -2425,10 +2562,7 @@
             labelGFL.textContent = parseInt(GFLSliderValue);
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         });
 
         var GFHSlider = document.getElementById('GFHSlider');
@@ -2472,10 +2606,7 @@
             }
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         });
     </script>
 
@@ -2483,19 +2614,20 @@
     <script>
         var desSlider = document.getElementById('desSlider');
         var labelDes = document.getElementById('labelDes');
+        var labelDesMET = document.getElementById('labelDesMET');
 
 
+        
         noUiSlider.create(desSlider, {
-            start: 60,
+            start: 60 *FT2M,
             connect: [true, false],
             range: {
-                'min': 10,
-                'max': 120
+                'min': 10 * FT2M,
+                'max': 120 * FT2M
             },
-            step: 10,
-            
-
+            step: 10 * FT2M,
         });
+        
 
         // Hide the tick mark labels
         var desSliderTicks = desSlider.querySelectorAll('.noUi-value-sub');
@@ -2505,29 +2637,30 @@
 
         desSlider.noUiSlider.on('update', function (values, handle) {
             var desSliderValue = values[handle];
-            labelDes.textContent = parseInt(desSliderValue);
+            if(modeImpOrMetric === "imp") {
+                labelDes.textContent = parseInt(desSliderValue);
+                labelDesMET.textContent = parseInt(desSliderValue * 0.3948);
+            } else {
+                labelDes.textContent = parseInt(desSliderValue * 3.281);
+                labelDesMET.textContent = parseInt(desSliderValue);
+                desSliderValue = parseInt(desSliderValue * 3.281);
+            }
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         });
 
         var ascSlider = document.getElementById('ascSlider');
         var labelAsc = document.getElementById('labelAsc');
 
-
         noUiSlider.create(ascSlider, {
-            start: 30,
+            start: 30 *FT2M,
             connect: [true, false],
             range: {
-                'min': 10,
-                'max': 60
+                'min': 10 * FT2M,
+                'max': 60 * FT2M
             },
-            step: 10,
-            
-
+            step: 10 * FT2M,
         });
 
         // Hide the tick mark labels
@@ -2538,13 +2671,17 @@
 
         ascSlider.noUiSlider.on('update', function (values, handle) {
             var ascSliderValue = values[handle];
-            labelAsc.textContent = parseInt(ascSliderValue);
+            if(modeImpOrMetric === "imp") {
+                labelAsc.textContent = parseInt(ascSliderValue);
+                labelAscMET.textContent = parseInt(ascSliderValue * 0.3948);
+            } else {
+                labelAsc.textContent = parseInt(ascSliderValue * 3.281);
+                labelAscMET.textContent = parseInt(ascSliderValue);
+                ascSliderValue = parseInt(ascSliderValue * 3.281);
+            }
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         });
     </script>
 
@@ -2683,10 +2820,7 @@
             updateBottomGasChart(oxygen, helium);
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
 
         });
 
@@ -2715,10 +2849,7 @@
             updateGasDensity(parseInt(labelBottomGasO2.textContent), parseInt(labelBottomGasHe.textContent), depth, labelBottomGasDensity);
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         });
 
     </script>
@@ -2727,19 +2858,20 @@
      <script>
         var depthSlider = document.getElementById('depthSlider');
         var labelDepth = document.getElementById('labelDepth');
+        var labelDepthMET = document.getElementById('labelDepthMET');
         var labelBailoutSwitch = document.getElementById("labelBailoutSwitch");
         
 
         //console.log("Current Site Max Depth:", currentSite.maxDepth);
-        let startDepth = currentSite ? currentSite.maxDepth : 100;
+        let startDepth = (currentSite ? currentSite.maxDepth : 100 ) * FT2M;
         //console.log("Slider Start Depth:", startDepth);
 
         noUiSlider.create(depthSlider, {
             start: startDepth,
             connect: [true, false],
             range: {
-                'min': 10,
-                'max': 450
+                'min': 10 * FT2M,
+                'max': 450 * FT2M
             },
             step: 1,
             
@@ -2754,9 +2886,19 @@
 
         depthSlider.noUiSlider.on('update', function (values, handle) {
             var depthSliderValue = values[handle];
-            labelDepth.textContent = parseInt(depthSliderValue);
-            labelBailoutSwitch.textContent = parseInt(depthSliderValue);    // update bailout switching depth
+            if(modeImpOrMetric == "imp") {
+                labelDepth.textContent = parseInt(depthSliderValue);
+                labelDepthMET.textContent = parseInt(depthSliderValue * 0.3948);
+                labelBailoutSwitch.textContent = parseInt(depthSliderValue);    // update bailout switching depth
+                depthSliderValue = parseInt(depthSliderValue);
+            } else {
+                labelDepth.textContent = parseInt(depthSliderValue * 3.281);
+                labelDepthMET.textContent = parseInt(depthSliderValue);
+                labelBailoutSwitch.textContent = parseInt(depthSliderValue);    // update bailout switching depth
+                depthSliderValue = parseInt(depthSliderValue * 3.281);
+            }
 
+            
             //bottomGasO2Slider.noUiSlider.set(bottomGasO2Slider.noUiSlider.get());
             //bottomGasHeSlider.noUiSlider.set(bottomGasHeSlider.noUiSlider.get());
             console.log("Setpoint: " + setPointOCOrCC);
@@ -2789,10 +2931,7 @@
             }
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         });
 
         function useSiteDepth() {
@@ -2830,10 +2969,7 @@
             labelBottomTime.textContent = parseInt(bottomTimeSliderValue);
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
             
 
         });
@@ -2921,10 +3057,7 @@
             });
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea();
 
             // update the CC portion on the bailout
             labelBailoutSwitchPPO2.textContent = ((depth / 33 +1) * parseInt(labelDecoGas1O2.textContent) /100).toFixed(2);
@@ -2946,10 +3079,7 @@
             updateDecoGas1Chart(oxygen, helium);
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
 
             // change on CCvar ambientPressure = depth / 33 +1;
             var ambientPressure = (depth /33 +1);
@@ -2958,7 +3088,8 @@
             bottomGasEND = (bottomGasENDPressure - 1 ) * 33;
 
             labelBailoutEND = document.getElementById("labelBailoutEND");
-            labelBailoutEND.textContent = Math.max(0,(bottomGasEND).toFixed(0));
+            labelBailoutEND.textContent = Math.max(0,(bottomGasEND / {{ $deco_unit ? 3.28084 : 1}}).toFixed(0));
+
 
             if (labelBailoutEND.textContent > 130) {
                 labelBailoutEND.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
@@ -2987,29 +3118,28 @@
             
             labelDecoGas1Switch.textContent = (((decoGas1SwitchSliderValue / O2Content) - 1 ) * 33).toFixed(0);
 
+            // adjust the unit
+            if(modeImpOrMetric === "imp")
+                labelDecoGas1Switch.textContent = (((decoGas1SwitchSliderValue / O2Content) - 1 ) * 33).toFixed(0);
+            else
+                labelDecoGas1Switch.textContent = (((decoGas1SwitchSliderValue / O2Content) - 1 ) * 33 * 0.3048).toFixed(0);
+
+            
+
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         });
         
         function showDecoGas1() {
             document.getElementById("addGasIcon1").style.display = "none"; // Hide add gas icon
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         }
 
         function hideDecoGas1() {
             document.getElementById("addGasIcon1").style.display = "flex"; // Hide add gas icon
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         }
     </script>
 
@@ -3093,10 +3223,7 @@
             });
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         });
 
         // Hide the tick mark labels
@@ -3114,10 +3241,7 @@
             updateDecoGas2Chart(oxygen, helium);
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         });
 
         // Hide the tick mark labels
@@ -3132,31 +3256,28 @@
 
             var O2Content = labelDecoGas2O2.textContent / 100;
             
-            labelDecoGas2Switch.textContent = (((decoGas2SwitchSliderValue / O2Content) - 1 ) * 33).toFixed(0);
+            
+
+            // adjust the unit
+            if(modeImpOrMetric === "imp")
+                labelDecoGas2Switch.textContent = (((decoGas2SwitchSliderValue / O2Content) - 1 ) * 33).toFixed(0);
+            else
+                labelDecoGas2Switch.textContent = (((decoGas2SwitchSliderValue / O2Content) - 1 ) * 33 * 0.3048).toFixed(0);
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         });
         
         function showDecoGas2() {
             document.getElementById("addGasIcon2").style.display = "none"; // Hide add gas icon
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         }
 
         function hideDecoGas2() {
             document.getElementById("addGasIcon2").style.display = "flex"; // Hide add gas icon
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         }
     </script>
 
@@ -3240,10 +3361,7 @@
             });
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         });
 
         // Hide the tick mark labels
@@ -3261,10 +3379,7 @@
             updateDecoGas3Chart(oxygen, helium);
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         });
 
         // Hide the tick mark labels
@@ -3279,30 +3394,27 @@
 
             var O2Content = labelDecoGas3O2.textContent / 100;
             
-            labelDecoGas3Switch.textContent = (((decoGas3SwitchSliderValue / O2Content) - 1 ) * 33).toFixed(0);
+
+            // adjust the unit
+            if(modeImpOrMetric === "imp")
+                labelDecoGas3Switch.textContent = (((decoGas3SwitchSliderValue / O2Content) - 1 ) * 33).toFixed(0);
+            else
+                labelDecoGas3Switch.textContent = (((decoGas3SwitchSliderValue / O2Content) - 1 ) * 33 * 0.3048).toFixed(0);
+
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         });
         
         function showDecoGas3() {
             document.getElementById("addGasIcon3").style.display = "none"; // Hide add gas icon
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         }
 
         function hideDecoGas3() {
             document.getElementById("addGasIcon3").style.display = "flex"; // Hide add gas icon
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         }
     </script>
 
@@ -3386,10 +3498,7 @@
             });
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         });
 
         // Hide the tick mark labels
@@ -3407,10 +3516,7 @@
             updateDecoGas4Chart(oxygen, helium);
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         });
 
         // Hide the tick mark labels
@@ -3424,32 +3530,27 @@
             labelDecoGas4SwitchPPO2.textContent = parseFloat(decoGas4SwitchSliderValue).toFixed(1);
 
             var O2Content = labelDecoGas4O2.textContent / 100;
-            
-            labelDecoGas4Switch.textContent = (((decoGas4SwitchSliderValue / O2Content) - 1 ) * 33).toFixed(0);
+
+            // adjust the unit
+            if(modeImpOrMetric === "imp")
+                labelDecoGas4Switch.textContent = (((decoGas4SwitchSliderValue / O2Content) - 1 ) * 33).toFixed(0);
+            else
+                labelDecoGas4Switch.textContent = (((decoGas4SwitchSliderValue / O2Content) - 1 ) * 33 * 0.3048).toFixed(0);
 
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         });
         
         function showDecoGas4() {
             document.getElementById("addGasIcon4").style.display = "none"; // Hide add gas icon
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         }
 
         function hideDecoGas4() {
             document.getElementById("addGasIcon4").style.display = "flex"; // Hide add gas icon
             // reset calculation area
-            document.getElementById("profileChartAndTable").style.display = "none";
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            resetCalculationArea()
         }
     </script>
 
@@ -3465,25 +3566,35 @@
         let formattedData7 = [];
         // Convert absolute pressure to depth in feet
         function absPressureToDepth(abs_p) {
-            return Math.round((abs_p - 1) * 33);
+            if (modeImpOrMetric == "imp")
+                return Math.round((abs_p - 1) * 33);
+            else
+                return Math.round((abs_p - 1) * 10);
         }
 
         function absPressureToDepthDeco(abs_p) {
-            return Math.round(((abs_p - 1) * 33) / 10) * 10;
+            if (modeImpOrMetric == "imp")
+                return Math.round(((abs_p - 1) * 33) / 10) * 10;
+            else    
+                return Math.round(((abs_p - 1) * 10) / 3) * 3;
         }
 
         let profileChartInstance = null; // Global variable to store chart instance
 
         function renderProfileChart(response) {
+            
+            let unitConversion = 33;
+            if (modeImpOrMetric == "met")
+                unitConversion = 10;
             // Convert data into correct format for a scatter plot
-            formattedData = response['baseline'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * 33 }));
-            formattedData1 = response['add5min'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * 33 }));
-            formattedData2 = response['add10ft'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * 33 }));
-            formattedData3 = response['lostDecoGas'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * 33 }));
-            formattedData4 = response['short5min'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * 33 }));
-            formattedData5 = response['short10ft'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * 33 }));
-            formattedData6 = response['minDeco'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * 33 }));
-            formattedData7 = response['bailout'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * 33 }));
+            formattedData = response['baseline'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * unitConversion }));
+            formattedData1 = response['add5min'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * unitConversion }));
+            formattedData2 = response['add10ft'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * unitConversion }));
+            formattedData3 = response['lostDecoGas'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * unitConversion }));
+            formattedData4 = response['short5min'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * unitConversion }));
+            formattedData5 = response['short10ft'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * unitConversion }));
+            formattedData6 = response['minDeco'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * unitConversion }));
+            formattedData7 = response['bailout'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * unitConversion }));
 
             // Get the chart canvas
             var ctx = document.getElementById('profileChart').getContext('2d');
@@ -3537,7 +3648,12 @@
                                     // Round depth to nearest integer
                                     let roundedDepth = -Math.round(context.raw.y);
 
-                                    return `RT: ${formattedTime}, Depth: ${roundedDepth} ft`;
+                                    //Unit
+                                    let unit = "ft"
+                                    if(modeImpOrMetric == "met")
+                                        unit = "m";
+
+                                    return `RT: ${formattedTime}, Depth: ${roundedDepth} ${unit}`;
                                 }
                             }
                         },
@@ -3550,7 +3666,7 @@
                             grid: { color: 'rgba(255, 255, 255, 0.5)' } // Grid lines semi-white
                         },
                         y: {
-                            title: { display: true, text: 'Depth (ft)', color: 'white' }, // Label color white
+                            title: { display: true, text: 'Depth ({{ $unit }})', color: 'white' }, // Label color white
                             ticks: {
                                 color: 'white',
                                 callback: function(value) {
@@ -3763,8 +3879,8 @@
                     tableHTML += `<tr>
                         <td class="text-info">${getPhaseIcon(row.phase)}</td> <!-- Display icon instead of text -->
                         <td>${row.depth}</td>
-                        <td class="text-sm text-left">${formatTime(row.time)}</td>
-                        <td class="text-sm">${formatTime(row.runtime)}</td>
+                        <td class="text-sm text-left">${formatTimeMin(row.time)}</td>
+                        <td class="text-sm">${formatTimeMin(row.runtime)}</td>
                         <td class="text-sm">${row.gas}</td>
                         <td class="text-sm">${row.ppo2}</td>
                         <td class="text-sm">${(row.gf * 100).toFixed(0)}%</td>
@@ -3790,8 +3906,8 @@
                     tableHTML += `<tr>
                         <td class="text-info">${getPhaseIcon(row.phase)}</td> <!-- Display icon instead of text -->
                         <td>${row.depth}</td>
-                        <td class="text-sm text-left">${formatTime(row.time)}</td>
-                        <td class="text-sm">${formatTime(row.runtime)}</td>
+                        <td class="text-sm text-left">${formatTimeMin(row.time)}</td>
+                        <td class="text-sm">${formatTimeMin(row.runtime)}</td>
                         <td class="text-sm">${labelSetpoint.textContent}</td>
                         <td class="text-sm">${(row.gf * 100).toFixed(0)}%</td>
                     </tr>`;
@@ -3863,6 +3979,10 @@
                 let mins = Math.floor(totalSeconds / 60);
                 let secs = totalSeconds % 60;
                 return `${mins}:${secs.toString().padStart(2, '0')}`; // Ensures two-digit seconds
+            }
+
+            function formatTimeMin(minutes) {
+                return Math.ceil(minutes);
             }
 
             // Step 0: Check if we have deco or noUi-tick
@@ -3997,9 +4117,13 @@
     {{-- Scripts to manage WhatIf? checksboxes --}}
     <script>
         document.getElementById("filter1").addEventListener("change", function() {
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            
+            // we only show the decompression table if the baseline has deco
+            if(baselineRTDT[1] > 0) {
+                document.getElementById("decoTableContainer").style.display = "block";
+                document.getElementById("BOTableContainer").style.display = "none";
+                document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            }
 
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
@@ -4078,9 +4202,13 @@
         });
 
         document.getElementById("filter2").addEventListener("change", function() {
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+
+            // we only show the decompression table if the baseline has deco
+            if(baselineRTDT[1] > 0) {
+                document.getElementById("decoTableContainer").style.display = "block";
+                document.getElementById("BOTableContainer").style.display = "none";
+                document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            }
 
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
@@ -4102,7 +4230,7 @@
                         pointHoverRadius: 6
                     },
                     {
-                        label: 'Increase max depth 10ft',
+                        label: 'Increase max depth 10ft/3m',
                         data: formattedData2,
                         borderColor: '#1A73E8',
                         backgroundColor: '#f44335',
@@ -4159,9 +4287,13 @@
         });
 
         document.getElementById("filter3").addEventListener("change", function() {
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            
+            // we only show the decompression table if the baseline has deco
+            if(baselineRTDT[1] > 0) {
+                document.getElementById("decoTableContainer").style.display = "block";
+                document.getElementById("BOTableContainer").style.display = "none";
+                document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            }
 
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
@@ -4240,9 +4372,12 @@
         }); 
 
         document.getElementById("filter4").addEventListener("change", function() {
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            // we only show the decompression table if the baseline has deco
+            if(baselineRTDT[1] > 0) {
+                document.getElementById("decoTableContainer").style.display = "block";
+                document.getElementById("BOTableContainer").style.display = "none";
+                document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            }
 
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
@@ -4322,9 +4457,13 @@
         }); 
 
         document.getElementById("filter5").addEventListener("change", function() {
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            
+            // we only show the decompression table if the baseline has deco
+            if(baselineRTDT[1] > 0) {
+                document.getElementById("decoTableContainer").style.display = "block";
+                document.getElementById("BOTableContainer").style.display = "none";
+                document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            }
 
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
@@ -4336,7 +4475,7 @@
             } else {
                 profileChartInstance.data.datasets = [
                     {
-                        label: 'Reduce max depth 10ft',
+                        label: 'Reduce max depth 10ft/3m',
                         data: formattedData5,
                         borderColor: '#1A73E8',
                         backgroundColor: '#4caf50',
@@ -4405,10 +4544,13 @@
         }); 
     
         document.getElementById("filter6").addEventListener("change", function() {
-            document.getElementById("decoTableContainer").style.display = "block";
-            document.getElementById("BOTableContainer").style.display = "none";
-            document.getElementById("decoTableTitle").innerText = "Decompression Table";
-
+            // we only show the decompression table if the baseline has deco
+            if(baselineRTDT[1] > 0) {
+                document.getElementById("decoTableContainer").style.display = "block";
+                document.getElementById("BOTableContainer").style.display = "none";
+                document.getElementById("decoTableTitle").innerText = "Decompression Table";
+            }
+            
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
                 let labelRT = document.getElementById("labelWhatIfRunTime").innerText="-";
@@ -4927,8 +5069,12 @@
 
             tissueChartInstance.update();           
             
+            let unitConversion = 33;
+            if(modeImpOrMetric == "met")
+                unitConversion = 10;
+
             document.getElementById("labelTissueChartTime").textContent = formatTime(conveyor[index].time);
-            document.getElementById("labelTissueChartDepth").textContent = ((conveyor[index].abs_p -1 ) * 33).toFixed(0);
+            document.getElementById("labelTissueChartDepth").textContent = ((conveyor[index].abs_p -1 ) * unitConversion).toFixed(0);
             
             // update global var for the animation
             currentValue = parseFloat(values[handle]); // Update current position
@@ -5142,7 +5288,7 @@
             thead.innerHTML = `
                 <tr>
                     <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Gas</th>
-                    <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Volume (cuft)</th>
+                    <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Volume {{ $deco_unit ? "(liters)" : "(cuft)" }}</th>
                 </tr>
             `;
             table.appendChild(thead);
@@ -5156,7 +5302,7 @@
                 const row = document.createElement("tr");
                 row.innerHTML = `
                     <td>${entry.gas}</td>
-                    <td>${entry.volume}</td>
+                    <td>${(entry.volume * ({{ $deco_unit ? 28.3168 : 1 }})).toFixed(2)}</td>
                 `;
                 tbody.appendChild(row);
             });
@@ -5172,6 +5318,8 @@
     <script>
         var sliderSACBottomGas = document.getElementById('sliderSACBottomGas');
         var labelSACBottomGas = document.getElementById('labelSACBottomGas');
+        var labelSACBottomGasLiters = document.getElementById('labelSACBottomGasLiters');
+        
 
 
         noUiSlider.create(sliderSACBottomGas, {
@@ -5195,6 +5343,7 @@
         sliderSACBottomGas.noUiSlider.on('update', function (values, handle) {
             var sliderSACBottomGasValue = values[handle];
             labelSACBottomGas.textContent = parseFloat(sliderSACBottomGasValue).toFixed(1);
+            labelSACBottomGasLiters.textContent = parseFloat(sliderSACBottomGasValue * 28.3168).toFixed(0);
             
             // update gas consumption table
             if(globalResponse != null) {
@@ -5208,6 +5357,7 @@
 
         var sliderSACDecoGas = document.getElementById('sliderSACDecoGas');
         var labelSACDecoGas = document.getElementById('labelSACDecoGas');
+        var labelSACDecoGasLiters = document.getElementById('labelSACDecoGasLiters');
 
 
         noUiSlider.create(sliderSACDecoGas, {
@@ -5232,6 +5382,7 @@
             console.log("paso");
             var sliderSACDecoGasValue = values[handle];
             labelSACDecoGas.textContent = parseFloat(sliderSACDecoGasValue).toFixed(1);
+            labelSACDecoGasLiters.textContent = parseFloat(sliderSACDecoGasValue * 28.3168).toFixed(0);
             
             // update gas consumption table
             if (globalResponse != null) {

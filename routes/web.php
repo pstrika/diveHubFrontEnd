@@ -74,6 +74,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
 Route::get('DecoPlanner/{id}', 'App\Http\Controllers\NDLController@show')->middleware('auth')->name('DecoPlanner');
 Route::get('DecoPlanner', 'App\Http\Controllers\NDLController@show')->middleware('auth')->name('DecoPlanner');
+Route::get('DecoPlannerImperial/{id}', 'App\Http\Controllers\NDLController@showImperial')->middleware('auth')->name('DecoPlannerImperial');
+Route::get('DecoPlannerImperial', 'App\Http\Controllers\NDLController@showImperial')->middleware('auth')->name('DecoPlannerImperial');
+Route::get('DecoPlannerMetric/{id}', 'App\Http\Controllers\NDLController@showMetric')->middleware('auth')->name('DecoPlannerMetric');
+Route::get('DecoPlannerMetric', 'App\Http\Controllers\NDLController@showMetric')->middleware('auth')->name('DecoPlannerMetric');
 
 Route::get('Weather/{location}', 'App\Http\Controllers\WeatherController@show')->middleware('auth')->name('Weather');
 Route::get('Weather/', 'App\Http\Controllers\WeatherController@show')->middleware('auth')->name('Weather');
