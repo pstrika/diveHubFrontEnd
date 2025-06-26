@@ -381,7 +381,7 @@
                                                                 <td class="text-center">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</td>
                                                             @endif
                                                         @endif
-                                                        <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}<a></td>
+                                                        <td class="do-not-translate px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}<a></td>
                                                         @if(!empty($trip->site[0]))
                                                         {{--<td class="px-4 text-sm text-center">{{ $trip->site[0]->level }}</td>--}}
                                                             <td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $trip->site[0]->level }}.png" height="25"></td>
@@ -613,7 +613,7 @@
                                                                 <td class="text-center">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</td>
                                                             @endif
                                                         @endif
-                                                        <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}</a></td>
+                                                        <td class="do-not-translate px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}</a></td>
                                                         @if(!empty($trip->site[0]))
                                                         {{--<td class="px-4 text-sm text-center">{{ $trip->site[0]->level }}</td>--}}
                                                             <td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $trip->site[0]->level }}.png" height="25"></td>

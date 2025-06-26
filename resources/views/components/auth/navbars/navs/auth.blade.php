@@ -95,6 +95,7 @@
                 </li>
 
                 @endif
+                
                 <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
                     <a href="javascript:;" class="nav-link text-body p-0" id="iconNavbarSidenav">
                         <div class="sidenav-toggler-inner">
@@ -114,7 +115,16 @@
                 </li>
                 --}}
                 
+                
+                
+
             </ul>
+
+            <!-- Elfsight Website Translator | Untitled Website Translator -->
+                    <script src="https://static.elfsight.com/platform/platform.js" async></script>
+                    <div class="mx-4">
+                        <div class="elfsight-app-559bf1d4-b8b3-4ee4-9754-85f637b79d6a" data-elfsight-app-lazy></div>        
+                    </div>
         </div>
     </div>
 </nav>

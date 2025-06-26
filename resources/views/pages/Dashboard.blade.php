@@ -139,7 +139,7 @@
                                                 <label id="upComingTripsOperator-{{ $trip->eventId }}" hidden>{{ $trip->operatorName}}</label>
                                                 <label id="upComingTripsTitle-{{ $trip->eventId }}" hidden>{{ $trip->tripName}}</label>
                                                 <a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">
-                                                    <h6 class="text-dark text-sm font-weight-bold mb-0">{{ $trip->tripName}}</h6>
+                                                    <h6 class="do-not-translate text-dark text-sm font-weight-bold mb-0">{{ $trip->tripName}}</h6>
                                                 </a>
                                                 <?php 
                                                     $dateTime = DateTime::createFromFormat('Y-m-d', $trip->date);
@@ -230,7 +230,7 @@
                                                         
                                                         
 
-                                                        <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}</a></td>
+                                                        <td class="do-not-translate px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}</a></td>
 
                                                         @if(!empty($trip->site[0]))
                                                             {{--<td class="px-4 text-sm text-center">{{ $trip->site[0]->level }}</td>--}}
@@ -309,7 +309,7 @@
                                                     
                                                     <tr style="border-bottom: 1px solid #D3D3D3;">
                                                         <td class="w-5 text-center align-middle"><img src="{{ asset('assets') }}/img/icons/{{ $wish->site->type }}_icon.png" height="35"></td>
-                                                        <td class="px-4 text-sm text-left"> <a href="SiteDetails/{{$wish->site->id}}">{{ $wish->site->name}}</a></td>
+                                                        <td class="do-not-translate px-4 text-sm text-left"> <a href="SiteDetails/{{$wish->site->id}}">{{ $wish->site->name}}</a></td>
                                                         <td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $wish->site->level }}.png" height="25"></td>
                                                         <td class="px-4 text-sm text-center">{{ $wish->site->maxDepth }}</td>
                                                         {{--<td class="px-4 text-sm text-left"> <a href=" {{ route('OperatorDetails', ['id' => $wish->operatorId])}}">{{ $wish->operator}}</a></td>--}}
@@ -317,7 +317,7 @@
                                                         <td class="px-4 text-sm text-left"> {{ $wish->date}}</td>
                                                         <td class="px-4 text-sm text-left"> {{ $wish->time}}</td>
                                                         <td class="px-4 text-sm text-left"> <a href="{{ $wish->linkToBook }}">{{ $wish->tripFreeSpots == 1000 ? "Y" : $wish->tripFreeSpots }}</a></td>
-                                                        <td class="px-4 text-sm text-left"> <a href="TripDetails/{{ $wish->tripId}}">{{ $wish->tripName}}</a></td>
+                                                        <td class="do-not-translate px-4 text-sm text-left"> <a href="TripDetails/{{ $wish->tripId}}">{{ $wish->tripName}}</a></td>
 
                                                     </tr>
                                                     

@@ -17,7 +17,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('overview') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 5.3.0 (06/18/25)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 6.0.0 (06/25/25)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -111,11 +111,32 @@
             {{-- Weather --}}
             @if(auth()->user()->isNotGuest())
             <li class="nav-item">
-                <a class="nav-link text-white {{ $activeItem == 'weather' ? ' active' : '' }}  "
-                    href="{{ route('Weather') }}">
+                <a data-bs-toggle="collapse" href="#weather"
+                    class="nav-link text-white {{ $activePage == 'Weather' ? ' active ' : '' }} "
+                    aria-controls="dashboardsExamples" role="button" aria-expanded="false">
                     <i class="material-icons-round opacity-10">cloud</i>
                     <span class="nav-link-text ms-2 ps-1">Weather</span>
                 </a>
+                <div class="collapse {{ $activePage == 'Weather' ? ' show ' : '' }}  " id="weather">
+                    <ul class="nav ">
+                        
+                        <li class="nav-item {{ $activeItem == 'WeatherSFL' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                            <a class="nav-link text-white {{ $activeItem == 'WeatherSFL' ? ' active' : '' }}  "
+                                href="{{ route('Weather') }}">
+                                <span><img style="height:15px;" src="{{ asset('assets') }}/img/icons/flags/US.png"></span>
+                                <span class="sidenav-normal  ms-2  ps-1"> South FL </span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item {{ $activeItem == 'WeatherAR' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                            <a class="nav-link text-white {{ $activeItem == 'WeatherAR' ? ' active' : '' }}  "
+                                href="{{ route('WeatherAR') }}">
+                                <span><img style="height:15px;" src="{{ asset('assets') }}/img/icons/flags/AR.png"></span>
+                                <span class="sidenav-normal  ms-2  ps-1"> Argentina </span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
             @else
             <li class="nav-item">
@@ -126,6 +147,8 @@
                 </a>
             </li>
             @endif
+
+            
 
             @if(auth()->user()->isNotGuest())
             {{-- Calendars --}}

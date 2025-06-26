@@ -579,13 +579,13 @@
                                                         <div>
                                                             <input type="hidden" id="bottomGasHeSlider-value" name="bottomGasHeSlider-value">
                                                             <div class="slider-styled" id="bottomGasHeSlider"></div>
-                                                            <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
+                                                            <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
                                                         </div>
                                                     </div>
 
                                                     <div class="row mt-3">
                                                         <div class="label-container">
-                                                            <label id="labelMaxDepthPPO2Description">Max depth PPO2</label>
+                                                            <label class="do-not-translate" id="labelMaxDepthPPO2Description">Max depth PPO2</label>
                                                             <label class="text-info right-label-normal custom-label" id="labelBottomGasPPO2">1.4</label>
                                                             <label class="text-info">atm</label>
                                                         </div>
@@ -687,7 +687,7 @@
                                                         <input type="hidden" id="decoGas1HeSlider-value" name="decoGas1HeSlider-value">
 
                                                         <div class="slider-styled" id="decoGas1HeSlider"></div>
-                                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
+                                                        <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
                                                     </div>
                                                 </div>
 
@@ -703,7 +703,7 @@
                                                             <label id="labelDecoGas1SwitchUNIT" class="text-info">ft</label>
                                                         </div>
                                                         <div class="slider-styled" id="decoGas1SwitchSlider"></div>
-                                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Switch depth</div>
+                                                        <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" id="switchDepthLabel1" style="border: none;">Switch depth</div>
                                                     </div>
                                                 </div>
 
@@ -718,7 +718,7 @@
                                                             <label class="text-info" id="labelBailoutENDUNIT">{{ $deco_unit ? "m" : "ft" }}</label>
                                                         </div>
                                                         <div class="label-container align-text-right justify-text-right">                                                
-                                                            <label class="text-secondary align-text-right text-right">Switch Depth</label>
+                                                            <label class="do-not-translate text-secondary align-text-right text-right" id="switchDepthLabelBO">Switch Depth</label>
                                                             <label class="text-secondary right-label-freeze custom-label text-sm" id="labelBailoutSwitch">2222</label>
                                                             <label class="text-secondary" id="labelBailoutSwitchUNIT">ft</label>
                                                         </div>
@@ -810,7 +810,7 @@
                                                         <input type="hidden" id="decoGas2HeSlider-value" name="decoGas2HeSlider-value">
 
                                                         <div class="slider-styled" id="decoGas2HeSlider"></div>
-                                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
+                                                        <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
                                                     </div>
                                                 </div>
 
@@ -826,7 +826,7 @@
                                                             <label id="labelDecoGas2SwitchUNIT" class="text-info">ft</label>
                                                         </div>
                                                         <div class="slider-styled" id="decoGas2SwitchSlider"></div>
-                                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Switch depth</div>
+                                                        <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" id="switchDepthLabel2" style="border: none;">Switch depth</div>
                                                     </div>
                                                 </div>
 
@@ -911,7 +911,7 @@
                                                         <input type="hidden" id="decoGas3HeSlider-value" name="decoGas3HeSlider-value">
 
                                                         <div class="slider-styled" id="decoGas3HeSlider"></div>
-                                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
+                                                        <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
                                                     </div>
                                                 </div>
 
@@ -927,7 +927,7 @@
                                                             <label id="labelDecoGas3SwitchUNIT" class="text-info">ft</label>
                                                         </div>
                                                         <div class="slider-styled" id="decoGas3SwitchSlider"></div>
-                                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Switch depth</div>
+                                                        <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" id="switchDepthLabel3" style="border: none;">Switch depth</div>
                                                     </div>
                                                 </div>
 
@@ -1012,7 +1012,7 @@
                                                         <input type="hidden" id="decoGas4HeSlider-value" name="decoGas4HeSlider-value">
 
                                                         <div class="slider-styled" id="decoGas4HeSlider"></div>
-                                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
+                                                        <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
                                                     </div>
                                                 </div>
 
@@ -1028,7 +1028,7 @@
                                                             <label id="labelDecoGas4SwitchUNIT" class="text-info">ft</label>
                                                         </div>
                                                         <div class="slider-styled" id="decoGas4SwitchSlider"></div>
-                                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Switch depth</div>
+                                                        <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" id="switchDepthLabel4" style="border: none;">Switch depth</div>
                                                     </div>
                                                 </div>
 
@@ -1050,7 +1050,7 @@
                                 <div class="col-12">
                                     <div class="text-center" style="border: none;"> <!-- Added text-center here -->
                                         <a type="button" class="btn btn-info mt-0" id="calculateDecoProfile">
-                                            Calculate Deco Profile
+                                            Calculate Decompression Profile
                                         </a>
                                     </div>
                                 </div>
@@ -1377,9 +1377,49 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
 
+    
+
     <script>
-        Chart.register(ChartAnnotation);
-    </script>
+    
+
+    window.addEventListener("load", () => {
+        setTimeout(() => {
+            const lang = new URLSearchParams(window.location.search).get("lang");
+            const label = document.getElementById("labelMaxDepthPPO2Description");
+            const label1 = document.getElementById("switchDepthLabel1");
+            const label2 = document.getElementById("switchDepthLabel2");
+            const label3 = document.getElementById("switchDepthLabel3");
+            const label4 = document.getElementById("switchDepthLabel4");
+            const labelBO = document.getElementById("switchDepthLabelBO");
+
+            if (label && lang === "es-ES") {
+                label.textContent = "PPO2 a máxima profundidad";
+            }
+
+            if (label1 && lang === "es-ES") {
+                label1.textContent = "Profundidad cambio de gas";
+            }
+
+            if (labelBO && lang === "es-ES") {
+                labelBO.textContent = "Profundidad cambio de gas";
+            }
+
+            if (label2 && lang === "es-ES") {
+                label2.textContent = "Profundidad cambio de gas";
+            }
+
+            if (label3 && lang === "es-ES") {
+                label3.textContent = "Profundidad cambio de gas";
+            }
+
+            if (label4 && lang === "es-ES") {
+                label4.textContent = "Profundidad cambio de gas";
+            }
+        }, 1500); // Delay lets Elfsight finish first
+    });
+
+</script>
+
 
     <script>
         @if($deco_unit)

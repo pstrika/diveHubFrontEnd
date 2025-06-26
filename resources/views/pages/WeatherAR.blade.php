@@ -1,5 +1,5 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200' :SEO="$SEO">
-    <x-auth.navbars.sidebar activePage="Weather" activeItem="WeatherSFL" activeSubitem=""></x-auth.navbars.sidebar>
+    <x-auth.navbars.sidebar activePage="Weather" activeItem="WeatherAR" activeSubitem=""></x-auth.navbars.sidebar>
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
@@ -71,7 +71,7 @@
                         <h2 class="card-title text-info mx-3 mt-4">{{ ucwords($location) }}</h2>
                         <h4 class="card-category text-info mx-3">Weather Forecast</h4>
                     </div>
-                    {{-----------------NAV to next day}} --}}
+                    {{-----------------change location}} --}}
                     <div class="mt-5 mx-5" style="float: right;">
                             
                         <a  href="" >                         
@@ -85,9 +85,26 @@
                             </div>
                         </a>
                         <p class="text-xs font-weight-bold mb-0 mt-n3">Change location</p>
-                        </div>
+                    </div>
+
+                    <div class="text-center mt-5 mx-5" style="border: none; float: right;"> <!-- Added text-center here -->
+                        @if(!is_null($location) && $deco_unit)
+                            <a type="button" class="btn btn-info mt-0" id="switchUnits" href="{{ route('WeatherARImperial') }}/{{ $location }}">Switch to IMPERIAL</a>
+                        @elseif(is_null($location) && $deco_unit)
+                            <a type="button" class="btn btn-info mt-0" id="switchUnits" href="{{ route('WeatherARImperial') }}">Switch to IMPERIAL</a>
+                        @elseif(!is_null($location) && !$deco_unit)
+                            <a type="button" class="btn btn-info mt-0" id="switchUnits" href="{{ route('WeatherARMetric') }}/{{ $location }}">Switch to Metric</a>
+                        @else
+                            <a type="button" class="btn btn-info mt-0" id="switchUnits" href="{{ route('WeatherARMetric') }}">Switch to Metric</a>
+                        @endif
+                        
+                    </div>
+
+                
                         <div style="clear: both;"></div>
                 </div>
+
+                
             </div>    
             
             <div class="row">
@@ -97,20 +114,14 @@
                         <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                                 <div class="bg-gradient-info min-height-100 shadow-info border-radius-xl py-3 pe-1"> 
-                                    <img src="{{ asset('assets') }}/img/Florida1.png" height="200px" alt="img-blur-shadow" class=" border-radius-lg min-heigth-10 mt-n3 position-relative">
-                                    {{--  <img src="{{ asset('assets') }}/img/Argentina1.png" height="200px" alt="img-blur-shadow" class=" border-radius-lg min-heigth-10 mt-n3 position-relative">--}}
+                                    {{-- <img src="{{ asset('assets') }}/img/Florida1.png" height="200px" alt="img-blur-shadow" class=" border-radius-lg min-heigth-10 mt-n3 position-relative"> --}}
+                                    <img src="{{ asset('assets') }}/img/Argentina1.png" height="200px" alt="img-blur-shadow" class=" border-radius-lg min-heigth-10 mt-n3 position-relative">
                                     {{--<div class="page-header min-height-250 max-height-250 border-radius-xl mt-0 mx-0" --}}
-                                    <a href="/Weather/key west/" class="position-absolute text-sm material-icons text-black {{ ($location == "key west" ? "animate-icon" : "") }}" style="top:160px; left:100px;">circle</a>
-                                    <a href="/Weather/islamorada/"class="position-absolute text-sm material-icons text-black {{ ($location == "islamorada" ? "animate-icon" : "") }}" style="top:152px; left:135px;">circle</a>
-                                    <a href="/Weather/key largo/"class="position-absolute text-sm material-icons text-black {{ ($location == "key largo" ? "animate-icon" : "") }}" style="top:128px; left:162px;">circle</a>
-                                    <a href="/Weather/miami beach/"class="position-absolute text-sm material-icons text-black {{ ($location == "miami beach" ? "animate-icon" : "") }}" style="top:83px; left:175px;">circle</a>
-                                    <a href="/Weather/fort lauderdale/"class="position-absolute text-sm material-icons text-black {{ ($location == "fort lauderdale" ? "animate-icon" : "") }}" style="top:70px; left:177px;">circle</a>
-                                    <a href="/Weather/pompano beach/"class="position-absolute text-sm material-icons text-black {{ ($location == "pompano beach" ? "animate-icon" : "") }}" style="top:57px; left:177px;">circle</a>
-                                    <a href="/Weather/boynton beach/"class="position-absolute text-sm material-icons text-black {{ ($location == "boynton beach" ? "animate-icon" : "") }}" style="top:42px; left:179px;">circle</a>
-                                    <a href="/Weather/west palm beach/"class="position-absolute text-sm material-icons text-black {{ ($location == "west palm beach" ? "animate-icon" : "") }}" style="top:28px; left:182px;">circle</a>
-                                    <a href="/Weather/jupiter/"class="position-absolute text-sm material-icons text-black {{ ($location == "jupiter" ? "animate-icon" : "") }}" style="top:10px; left:179px;">circle</a>
-                                    <a href="/Weather/stuart/"class="position-absolute text-sm material-icons text-black {{ ($location == "stuart" ? "animate-icon" : "") }}" style="top:-5px; left:175px;">circle</a>
-                                    <a href="/Weather/port st lucie/"class="position-absolute text-sm material-icons text-black {{ ($location == "port st lucie" ? "animate-icon" : "") }}" style="top:-20px; left:168px;">circle</a>
+                                    <a href="/WeatherAR/ushuaia/" class="position-absolute text-sm material-icons text-black {{ ($location == "ushuaia" ? "animate-icon" : "") }}" style="top:160px; left:70px;">circle</a>
+                                    <a href="/WeatherAR/puerto madryn/"class="position-absolute text-sm material-icons text-black {{ ($location == "puerto madryn" ? "animate-icon" : "") }}" style="top:37px; left:101px;">circle</a>
+                                    <a href="/WeatherAR/las grutas/"class="position-absolute text-sm material-icons text-black {{ ($location == "las grutas" ? "animate-icon" : "") }}" style="top:16px; left:103px;">circle</a>
+                                    <a href="/WeatherAR/mar del plat/"class="position-absolute text-sm material-icons text-black {{ ($location == "mar del plata" ? "animate-icon" : "") }}" style="top:-10px; left:150px;">circle</a>
+                                    
                                         
                                     
                                 </div>
@@ -357,7 +368,7 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <h6 class="mb-0 "> waves (ft)</h6>
+                                <h6 class="mb-0 "> waves {{ $deco_unit ? '(meters)' : '(ft)'}}</h6>
                                 
                                 <div class="d-flex ">
                                     <i class="material-icons text-sm my-auto me-1">schedule</i>
@@ -384,7 +395,7 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                    <h6 class="mb-0 "> winds (mph)</h6>
+                                    <h6 class="mb-0 "> winds {{ $deco_unit ? '(km/h)' : '(mph)'}}</h6>
                                     <div class="d-flex ">
                                         <i class="material-icons text-sm my-auto me-1">schedule</i>
                                         <p class="mb-0 text-sm" >Last update: {{ $weathers[0]->_dateAdded }} </p>
@@ -437,9 +448,9 @@
                                         </tr>
 
                                         <tr> {{--Temp--}}
-                                            <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">TEMP (f)</td>
+                                            <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">TEMP {{ $deco_unit ? '(ºC)' : '(ºF)' }}</td>
                                             @foreach($weathers as $weather)
-                                                <td class="align-middle text-center text-sm"><b>{{ round($weather->mintemp_f) }}° - {{ round($weather->maxtemp_f) }}° </b></td> 
+                                                <td class="align-middle text-center text-sm"><b>{{ $deco_unit ? round(($weather->mintemp_f-32) * 5 /9) : round($weather->mintemp_f) }}° - {{ $deco_unit ? round(($weather->maxtemp_f-32) * 5 /9) : round($weather->maxtemp_f) }}° </b></td> 
                                             @endforeach
                                         </tr>
                                         
@@ -461,9 +472,9 @@
                                         </tr>
 
                                         <tr> {{--waves--}}
-                                            <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">waves (ft)</td>
+                                            <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">waves {{ $deco_unit ? '(metres)' : '(ft)' }}</td>
                                             @foreach($weathers as $weather)
-                                                <td><div class="container"><div class="row"><div class="col-xxs text-center"><span>{{ round($weather->swell_height_AM) }}</span></div><div class="col-sm text-center"><span>{{ round($weather->swell_height_PM) }}</span></div></div></div></td>    
+                                                <td><div class="container"><div class="row"><div class="col-xxs text-center"><span>{{ $deco_unit ? round($weather->swell_height_AM * 0.3048,1) : round($weather->swell_height_AM) }}</span></div><div class="col-sm text-center"><span>{{ $deco_unit ? round($weather->swell_height_PM * 0.3048,1) : round($weather->swell_height_PM) }}</span></div></div></div></td>    
                                             @endforeach
                                         </tr>
 
@@ -475,7 +486,7 @@
                                         </tr>
                                         
                                         <tr> {{--winds--}}
-                                            <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">wind (mph)</td>
+                                            <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">wind {{ $deco_unit ? '(km/h)' : '(mph)'}}</td>
                                             @foreach($weathers as $weather)
                                                 @php
                                                     $compassPoints = [
@@ -503,15 +514,15 @@
                                                 {{--<td> <i class="material-icons rotate-icon" style="transform: rotate(45deg);">arrow_upward</i></td> --}}
                                                 {{--<td><div class="container"><div class="row"><div class="col-sm text-center"><span>({{ $weather->wind_dir_AM }}) {{ $weather->wind_speed_AM }}</span></div><div class="col-sm text-center"><span>({{ $weather->wind_dir_PM }}) {{ $weather->wind_speed_PM }}</span></div></div></div></td>--}}
                                                 <td><div class="container"><div class="row"><div class="col-xs text-center"><span>
-                                                <i class="material-icons rotate-icon" style="transform: rotate({{ $rotationAM + 180 }}deg);">navigation</i>{{ round($weather->wind_speed_AM) }}</span></div><div class="col-sm text-center"><span>
-                                                <i class="material-icons rotate-icon" style="transform: rotate({{ $rotationPM +180  }}deg);">navigation</i>{{ round($weather->wind_speed_PM) }}</span></div></div></div></td>    
+                                                <i class="material-icons rotate-icon" style="transform: rotate({{ $rotationAM + 180 }}deg);">navigation</i>{{ $deco_unit ? round($weather->wind_speed_AM * 1.60934) : round($weather->wind_speed_AM) }}</span></div><div class="col-sm text-center"><span>
+                                                <i class="material-icons rotate-icon" style="transform: rotate({{ $rotationPM +180  }}deg);">navigation</i>{{ $deco_unit ? round($weather->wind_speed_PM * 1.60934) : round($weather->wind_speed_PM) }}</span></div></div></div></td>    
                                             @endforeach
                                         </tr>
 
                                         <tr> {{--Water temp--}}
-                                            <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">water temp (f)</td>
+                                            <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">water temp {{ $deco_unit ? '(ºC)' : '(ºF)' }} </td>
                                             @foreach($weathers as $weather)
-                                                <td><div class="container"><div class="row"><div class="col-xxs text-center"><span>{{ round($weather->water_temp_AM) }}°</span></div><div class="col-sm text-center"><span>{{ round($weather->water_temp_PM) }}°</span></div></div></div></td>    
+                                                <td><div class="container"><div class="row"><div class="col-xxs text-center"><span>{{ $deco_unit ? round(($weather->water_temp_AM-32)*5/9) : round($weather->water_temp_AM) }}°</span></div><div class="col-sm text-center"><span>{{ $deco_unit ? round(($weather->water_temp_PM-32)*5/9): round($weather->water_temp_PM) }}°</span></div></div></div></td>    
                                             @endforeach
                                         </tr>
                                         
@@ -685,9 +696,9 @@
                             @php
                                 
                                 if ( (int)$weather->swell_height_AM > (int)$weather->swell_height_PM)
-                                    echo "'" . $weather->swell_height_AM . "',";
+                                    echo "'" . ($deco_unit ? ($weather->swell_height_AM * 0.3048) : $weather->swell_height_AM) . "',";
                                 else
-                                    echo "'" . $weather->swell_height_PM . "',";
+                                    echo "'" . ($deco_unit ? ($weather->swell_height_PM * 0.3048) : $weather->swell_height_PM) . "',";
                             @endphp
                         @endforeach    
                     ],
@@ -797,7 +808,7 @@
                     label: 'winds',
                     data: [
                         @foreach($weathers as $weather)
-                            {{ $weather->maxwind_mph }},
+                            {{ $deco_unit ? $weather->maxwind_mph * 1.60934 : $weather->maxwind_mph }},
                         @endforeach
                     ],
                     tension: 0,
@@ -892,7 +903,7 @@
     <script>
     document.getElementById('filterLocation').addEventListener('change', function() {
         var location = this.value;
-        var url = '/Weather/' + location;
+        var url = '/WeatherAR/' + location;
         window.location.href = url;
     });
     </script>
