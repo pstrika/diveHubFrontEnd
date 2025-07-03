@@ -326,7 +326,7 @@
 
                                                 @if($operator->operatorName == "Stuart Scuba")
                                                     @if(count($sites))
-                                                        @if($sites[0]->location == "STU")
+                                                        @if($sites[0]->location == "STU" || $sites[0]->location == "PSL")
                                                             <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Marina address</td>
                                                             <td style="border: none;" class="align-middle text-wrap text-sm"><b>{{ $operator->marinaAddressAlt}}</b></td> </tr>
                                                         @else
