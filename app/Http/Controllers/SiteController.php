@@ -470,6 +470,17 @@ class SiteController extends Controller
         return view('pages.DiveSites', compact('sitesWrecks', 'sitesReefs', 'locations'));
     }
 
+    public function showWrecks() {
+        //$sites = Site::all()->sortByDesc("rate");
+        $sitesWrecks = Site::where('type', 'wreck')
+            ->where('_hidden', '<>', 1)
+            ->orderBy('name', 'asc')
+            ->get();
+        
+        $locations = WeatherLocation::all();
+
+        return view('pages.WreckSites', compact('sitesWrecks', 'locations'));
+    }
     public function searchSites(Request $request) {
 
         Log::info('Request data:', $request->all());

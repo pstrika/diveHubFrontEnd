@@ -158,6 +158,8 @@ Route::get('DiveSitesAdmin', 'App\Http\Controllers\SiteController@showAllAdmin')
 Route::post('Calculate-ndl', 'App\Http\Controllers\NDLController@calculateNDL')->middleware('guest')->name('Calculate-ndl');
 Route::post('calculateDecoProfile', 'App\Http\Controllers\NDLController@calculateDecoProfile')->middleware('guest')->name('calculateDecoProfile');
 
+Route::get('WreckSites', 'App\Http\Controllers\SiteController@showWrecks')->middleware('guest')->name('WreckSites');
+
 
 
 Route::get('overview', 'App\Http\Controllers\UserController@getProfile')->middleware('auth')->name('overview');

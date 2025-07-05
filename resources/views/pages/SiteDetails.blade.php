@@ -2962,7 +2962,7 @@
                 dialStartAngle: 180,
                 dialEndAngle: 0,
                 value: -1,
-                color: function(value) {
+                /*color: function(value) {
                     if(value < 1) {
                     return "#ccdfe5";
                     }else if(value < 3) {
@@ -2973,6 +2973,22 @@
                     return "#43c3ef";
                     }else {
                     return "#03a9f4";
+                    }
+                }
+
+                */
+
+                color: function(value) {
+                    if(value < 1) {
+                    return "#e95544";
+                    }else if(value < 3) {
+                    return "#5fb664";
+                    }else if(value < 5) {
+                    return "#eddc4c";
+                    }else if(value < 7) {
+                    return "#fdcd82";
+                    }else if(value <9) {
+                    return "#f69a71";
                     }
                 }
             }
