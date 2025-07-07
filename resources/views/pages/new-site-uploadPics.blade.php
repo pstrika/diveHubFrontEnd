@@ -83,7 +83,7 @@
                 <input type="hidden" id="newId" name="newId" value="{{ $newId }}">
                 <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
                     <div style="float: left;">
-                        <h2 class="card-title text-info mx-3 mt-0">Upload media for: {{ $newName }}</h2>
+                        <h1 class="card-title text-info mx-3 mt-0">Upload media for: {{ $newName }}</h1>
                     </div>
 
                 </div>

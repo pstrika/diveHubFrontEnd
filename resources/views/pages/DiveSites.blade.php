@@ -4,7 +4,7 @@
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Dive Sites"></x-auth.navbars.navs.auth>
+        <x-auth.navbars.navs.auth pageTitle="Top Rated Sites"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
 
         <style>
@@ -131,7 +131,7 @@
                 
                     <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
                         <div style="float: left;">
-                            <h2 class="card-title text-info mx-3 mt-0">Top Rated Dive Sites</h2>
+                            <h1 class="card-title text-info mx-3 mt-0">Top Rated Dive Sites</h1>
                         </div>
 
                     </div>

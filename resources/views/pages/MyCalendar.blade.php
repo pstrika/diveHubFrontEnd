@@ -139,8 +139,8 @@
             
                     <div class="p-0 mt-n4 mx-2 border-radius-lg py-3 pe-1">
                         <div style="float: left;">
-                            <h2 class="card-title text-info mx-3 mt-4">{{ $currentMonthS }}-{{ $year }}</h2>
-                            <h4 class="card-category text-info mx-4">My Calendar</h4>
+                            <h1 class="card-category text-info mx-4 mt-3 text-xl">My Calendar</h1>
+                            <h2 class="card-title text-info mx-4 text-xl mt-n2">{{ $currentMonthS }}-{{ $year }}</h2>
                         </div>
 
                         {{-----------------NAV to next day}} --}}

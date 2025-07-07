@@ -1,10 +1,10 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
-    <x-auth.navbars.sidebar activePage="DiveSites" activeItem="wreckSites" activeSubitem=""></x-auth.navbars.sidebar>
+    <x-auth.navbars.sidebar activePage="DiveSites" activeItem="wreckWiki" activeSubitem=""></x-auth.navbars.sidebar>
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Dive Sites"></x-auth.navbars.navs.auth>
+        <x-auth.navbars.navs.auth pageTitle="WreckWiki"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
 
         <style>
@@ -131,12 +131,47 @@
                 
                     <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
                         <div style="float: left;">
-                            <h2 class="card-title text-info mx-3 mt-0">Wreck Sites (Power by wreckwiki.com)</h2>
+                            <h2 class="card-title text-info mx-3 mt-0">Wreck Sites (Powered by wreckwiki.com)</h2>
                         </div>
 
                     </div>
                 </div>
             </div>
+
+            {{---Search input--}}
+            <div class="row">
+                
+                <div id="searchBox" class="row">
+                    {{-- Dive Operator location are cards --}}
+                    <div class="col-md-6 m-auto">             
+                        <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
+                            <div class="card-body">
+                                <form id="myForm" class="multisteps-form__form" action="{{ route('DiveSitesSearch') }}" method="POST" enctype="multipart/form-data">
+                                        @csrf <!-- Add CSRF token for security -->
+
+                                        {{--<div class="input-group input-group-dynamic">
+                                            <label for="exampleFormControlInput1" class="form-label">what's in your mind?</label>
+                                            <input id="searchString" class="multisteps-form__input form-control" type="text" name="searchString"/>
+                                        </div>--}}
+                                        <div class="ms-md-auto pe-md-3 d-flex align-items-center">
+                                            <div class="input-group input-group-outline">
+                                                <label class="form-label">What's in your mind?</label>
+                                                <input type="text" class="form-control" name="searchString">
+                                            </div>
+                                        </div>
+
+                                        <div class="button-row text-center mt-0 mt-md-4">
+                                            <button class="btn bg-gradient-info ms-auto mb-0" id="submit-all" title="Send" onclick="submitform()">Search</button> {{---type="submit"----}}
+                                            <a href="{{ route('DiveSitesAll') }}"><span class="btn bg-gradient-info ms-auto mb-0">Show me all sites</span></a> {{---type="submit"----}}
+                                        </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            {{-----------------------------}}
 
             <div class="row">
                 

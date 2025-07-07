@@ -65,7 +65,7 @@
                 
                     <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
                         <div style="float: left;">
-                            <h2 class="card-title text-info mx-3 mt-0">Dive Sites Admin: Edit and Delete</h2>
+                            <h1 class="card-title text-info mx-3 mt-0">Dive Sites Admin: Edit and Delete</h1>
                         </div>
 
                     </div>

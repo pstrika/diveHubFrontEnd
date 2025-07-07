@@ -68,8 +68,9 @@
             
                     <div class="p-0 mt-n4 mx-2 border-radius-lg py-3 pe-1">
                         <div style="float: left;">
-                            <h2 class="card-title text-info mx-3 mt-4">{{ $currentMonthS }}-{{ $year }}</h2>
-                            <h4 class="card-category text-info mx-4">Lobster Diving Calendar</h4>
+                            <h1 class="card-category text-info mx-4 mt-3 text-xl">Lobster Diving Calendar</h1>
+                            <h2 class="card-title text-info mx-4 text-xl mt-n2">{{ $currentMonthS }}-{{ $year }}</h2>
+                            
                         </div>
 
                         {{-----------------NAV to next day}} --}}
@@ -106,8 +107,10 @@
                                     </div>
                                     <div class="col-md-8">
                                         <div id="history" style="flex-grow: 1; max-height: 424px; overflow-y: auto;" class="mt-0">
-                                        Sport Season (Mini-Season): The recreational fishery for spiny lobsters begins with a two-day sport season. This season occurs on the last consecutive Wednesday and Thursday of July each year. During the sport season, divers and lobster enthusiasts can head out to catch these delicious crustaceans. Keep in mind that night diving is prohibited in Monroe County during this period.
-                                        <br><br>Regular Season: Following the sport season, the regular spiny lobster season starts on August 6 and runs through March 31. During this time, lobster enthusiasts can continue their pursuit of these tasty creatures. The daily bag limit varies depending on the location: 6 per person for Monroe County and Biscayne National Park, and 12 per person for the rest of Florida. Remember to measure the carapace (shell) size, as it must be larger than 3 inches in the water. Also, possession and use of a measuring device are required at all times.
+                                            <p>
+                                                Sport Season (Mini-Season): The recreational fishery for spiny lobsters begins with a two-day sport season. This season occurs on the last consecutive Wednesday and Thursday of July each year. During the sport season, divers and lobster enthusiasts can head out to catch these delicious crustaceans. Keep in mind that night diving is prohibited in Monroe County during this period.
+                                                <br><br>Regular Season: Following the sport season, the regular spiny lobster season starts on August 6 and runs through March 31. During this time, lobster enthusiasts can continue their pursuit of these tasty creatures. The daily bag limit varies depending on the location: 6 per person for Monroe County and Biscayne National Park, and 12 per person for the rest of Florida. Remember to measure the carapace (shell) size, as it must be larger than 3 inches in the water. Also, possession and use of a measuring device are required at all times.
+                                            </p>
                                         </div>
                                     </div>                            
                                 </div>

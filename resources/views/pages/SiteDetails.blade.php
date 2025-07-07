@@ -245,20 +245,27 @@
             </div>
             @endif
 
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('/assets/img/illustrations/site_wreck.webp');">
-                <span class="mask  bg-gradient-info  opacity-4"></span>
+            <?php
+                if(!is_null($site->historicImg))
+                    $bannerImg = '/assets/img/sites/' . $site->historicImg;
+                else
+                    $bannerImg = '/assets/img/illustrations/site_wreck.webp';
+            ?>
+            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('{{ $bannerImg }}');">
+                <span class="mask  bg-gradient-secondary  opacity-4"></span>
             </div>
 
-            <div class="card p-0 position-relative mt-n5 mx-3 z-index-2 mb-4">
-                
-                    <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
+            <div class="card p-0 position-relative mt-n5 mx-3 z-index-2 mb-4" style="background-color: rgba(255, 255, 255, 0.6);">
+
+                    
+                    <div class="p-0 mt-0 mx-2  border-radius-lg py-3 pe-1">
                         
                         {{-- Div for site name and type--}}
                         <div style="float: left;" class="mt-n4">
                             <table> <tbody>
                                 <tr>
                                     <td class="w-10"><img style="width: 70px; height: auto;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
-                                    <td><h2 class="card-title text-info mx-3 mt-3">{{ $site->name }}</h2>
+                                    <td><h1 class="card-title text-info mx-3 mt-3">{{ $site->name }}</h1>
                                         <p class="align-middle text-left text-md text-info mx-3 mt-n3">{{ $site->type }} in {{ ucwords($location->location) }}</p>
                                     </td> 
                                 </tr>
@@ -346,6 +353,8 @@
                         </div>
 
                     </div>
+
+                    
                 </div>
             </div>
 
@@ -365,7 +374,20 @@
                             
                             <div class="row">
                                 <div class="col-md-3">
-                                    <div id="gauge2" class="gauge-container justify-content-center mx-auto five"> </div>
+                                   <!-- <div id="gauge2" class="gauge-container justify-content-center mx-auto five" style="margin-top:auto; width: 80%; height:auto;"> </div>-->
+
+                                    <div class="gauge-wrapper mt-n7" style="position: relative; height: 250px;">
+                                        <div id="gauge2" class="gauge-container five" style="
+                                            position: absolute;
+                                            bottom: 0;
+                                            left: 50%;
+                                            transform: translateX(-50%);
+                                            width: 300px;
+                                            height: 150px;">
+                                        </div>
+                                    </div>
+
+
                                     @php
                                         if($site->level == 0)
                                             $level="Open Water";
@@ -453,6 +475,210 @@
 
             </div>
 
+            
+            
+            
+            <div class="row mx-2">
+                @php
+                    $video = json_decode($site->videos);    
+                @endphp
+
+                @if(($video != null and $video[0]->link != null) or count($site->upcomingTrips))
+                    <div class="col-md-6">
+                        {{--Card for video---}}
+                        @if($video != null)
+                            @if($video[0]->link)
+                                <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
+                                    <div class="card-body mt-0">
+                                        <iframe id="youtubeVideo" class="img-fluid border-radius-lg" src="{{ $video[0]->link }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                                        @if($video[0]->credit)
+                                            <p class="align-middle text-center text-sm"><b>🎥 {{ $video[0]->credit }}</b></p>
+                                        @endif
+                                        
+                                    </div>
+                                </div>
+                            @endif
+                        @endif
+
+                        {{--Card for upcoming trips---}}
+                        @if(count($site->upcomingTrips))
+                            <div class="row mx-1 mt-3">
+                                <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                                    <div class="card-header p-0 mt-n4 mx-3">
+                                        <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                            <h2 class="card-title text-white mx-4">Upcoming trips ({{ count($site->upcomingTrips) }})</h2>
+                                            <div class="table-responsive"></div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body mt-4">
+                                        <div class="table-responsive">
+                                            <table id="tableUpcomingTrips" style="display: block; max-height: 300px; overflow-y: scroll">
+                                                <thead class="text-info">
+                                                    <th class="align-top">Operator</th>
+                                                    <th class="px-4 align-top">Date</th> 
+                                                    <th class="px-4 align-top">Time</th>
+                                                    <th class="py-0 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the numbers below to go to trip booking page" data-container="body" data-animation="true">Availability<p class="text-xs mt-0 px-1">click-to-book</p></th>
+                                                    <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">Trip Name<p class="text-xs mt-0 px-1">click for details</p></th>
+                                                </thead>
+                                                <tbody> 
+                                                    @foreach($site->upcomingTrips as $trip)
+                                                        
+                                                        <tr style="border-bottom: 1px solid #D3D3D3;" class="justify-content-center align-middle" data-tag="{{ $trip->tags }}">
+                                                            
+                                                            <td class="px-0 py-2 text-sm text-wrap align-middle justify-content-center">{{ $trip->operatorName }}</td>
+                                                            <td class="px-4">{{ $trip->date }}</td>
+                                                            <td class="px-4">{{ $trip->departureTime }}</td>
+                                                            @if($trip->tripFreeSpots == 0)
+                                                                <td class="text-center">-</td>
+                                                            @else
+                                                                <td class="text-center"> <a href="{{ $trip->linkToBook }}" target="_blank">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</a></td>
+                                                            @endif
+                                                            <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}<a></td>
+                                                            
+                                                        </tr>
+                                                
+                                                    @endforeach          
+                                                </tbody>
+                                            </table>
+                                        </div>   
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                    
+                @endif
+                {{-- Card pictures --}}
+                @if($site->pics)
+                    <div class="col-md-6">             
+                        <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
+                            {{--<div class="card-header p-0 mt-n4 mx-3">
+                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                    <h2 class="card-title text-white mx-4">Pictures</h2>
+                                    <div class="table-responsive"></div>
+                                </div>
+                            </div>--}}
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table align-items-center mb-0"> 
+                                        <tbody>
+                                            <tr><td>
+                                            <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
+                                                <div class="carousel-inner">
+                                                    @php 
+                                                        $first = true;
+                                                    @endphp
+                                                        
+                                                    @foreach ($photos as $photo)    
+                                                        <div class="carousel-item {{ $first ? "active" : "" }}">
+                                                            @php
+                                                                $first = false;
+                                                            @endphp
+                                                            <div class="page-header min-vh-50 border-radius-xl" style="background-image: url('{{ asset('assets') }}/img/sites/{{ $photo->file}}');">
+                                                            
+                                                                <div class="container">
+                                                                    
+                                                                </div>
+                                                            </div>
+                                                            {{--<h4 class="text-info mb-0 fadeIn1 fadeInBottom align-bottom text-center"> {{ $boat->name }}</h4>--}}
+
+                                                            <table class="table align-items-center mb-0">
+                                                        
+                                                                @if($photo->desc)
+                                                                    <tr class="align-top">
+                                                                    <td class="align-middle text-center text-wrap text-md"><b>{{ $photo->desc }}</b></td> </tr>
+                                                                @endif
+                                                                
+                                                                @if($photo->credit)
+                                                                    <tr>
+                                                                    <td class="align-middle text-center text-sm"><b>📸 {{ $photo->credit }}</b></td> </tr>
+                                                                @endif
+                                                                
+                            
+
+                                                            </table>
+
+
+                                                        </div>
+                                                    @endforeach
+
+                                                    
+                                                </div>
+
+                                                <div class="position-absolute min-vh-25 w-100 top-10">
+                                                    <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-bs-slide="prev">
+                                                        <span class="carousel-control-prev-icon position-absolute bottom-50 text-info" aria-hidden="true"></span>
+                                                        <span class="visually-hidden">Previous</span>
+                                                    </a>
+                                                    <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-bs-slide="next">
+                                                        <span class="carousel-control-next-icon position-absolute bottom-50" aria-hidden="true"></span>
+                                                        <span class="visually-hidden">Next</span>
+                                                    </a>
+                                                </div>
+                                                
+                                            </div>
+
+                                        </tbody>    
+                                    </table>
+                                </div>    
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            <div class="row mx-2">
+
+                {{--Card 3D model--}}
+                @if($site->dModel != null)
+                <div class="col-md-12">             
+                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h2 class="card-title text-white mx-4">3D-Model</h2>
+                                <div class="table-responsive"></div>
+                            </div>
+                        </div>
+                        <div class="card-body mt-4">
+                            <div class="wp-block-tdvb-td-viewer  align" id="tdvb3DViewerBlock-38a8dc92-1">
+                                <style> 
+                                    #tdvb3DViewerBlock-38a8dc92-1 .tdvb3DViewerBlock {
+                                        text-align: center;
+                                    }
+                                    #tdvb3DViewerBlock-38a8dc92-1 .tdvb3DViewerBlock model-viewer {
+                                        width: 100%;
+                                        height: 600px;
+                                    }
+                                    .progress-bar {
+                                        display: flex;
+                                        flex-direction: column;
+                                        justify-content: center;
+                                        overflow: hidden;
+                                        color: #fff;
+                                        text-align: center;
+                                        white-space: nowrap;
+                                        background-color: #ffffff;
+                                        transition: width 0.6s ease;
+                                    }
+                                </style>
+                                <div class="tdvb3DViewerBlock">
+                                    <model-viewer camera-controls="" src="{{ $site->dModel}}" ar-modes="webxr scene-viewer quick-look" poster="https://www.bythecmedia.com/wp-content/uploads/2023/05/okinawa.jpg" shadow-intensity="1" camera-orbit="0deg 75deg 226.7m" field-of-view="30deg" exposure="2" shadow-softness="1" ar-status="not-presenting">
+                                        {{--<div class="progress-bar hide" slot="progress-bar">
+                                            <div class="update-bar"></div>
+                                        </div>--}}
+                                        
+                                    </model-viewer>
+                                    <p class="align-middle text-center text-sm"><b>📸 {{ $site->dModelCredit }}</b></p>
+                                </div>
+                            </div> 
+                           
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+            </div>
+
             {{-- Card Gases --}}
             
             <div class="row mx-2">
@@ -461,11 +687,20 @@
                     <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Best Gases</h4>
-                                <div class="table-responsive"></div>
+                                <div class="d-flex align-items-center mx-4">
+                                    <h2 class="card-title text-white mb-0 me-3" id="bestGasTitle">Best Gas</h2>
+                                    <div class="form-check form-switch ps-0 mb-0 mx-5">
+                                        <input name="showGasDetails" class="form-check-input" type="checkbox" id="showGasDetails" value="1">
+                                        <label class="form-check-label ms-2 text-white mt-n1" for="showGasDetails">show details</label>
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive mt-3"></div>
                             </div>
+
+
                         </div>
-                        <div class="card-body">
+                        <div class="card-body" id="gasesCardBody">
 
                             <div class="row">
                                 <div class="col-12">
@@ -931,340 +1166,25 @@
 
                             </div>  
                             
-                        </div>
+                        
                     
-                        <div class="row">
-                            <div class="col-4">
-                                <div class="text-center" style="border: none;"> <!-- Added text-center here -->
-                                    <!-- <a type="button" class="btn btn-info mt-0" id="decoPlanningButton" href="{{ route('DecoPlanner', ['id' => $site->id] )}}"> -->
-                                    <a type="button" class="btn btn-info mt-0" id="decoPlanningButton" href="{{ route('DecoPlanner')}}/{{ $site->id }}">
-                                        Decompression planning
-                                    </a>
-                                </div>    
+                            <div class="row mt-2">
+                                <div class="col-lg-4 col-md-4 col-sm-12">
+                                    <div class="text-center mx-2" style="border: none;"> <!-- Added text-center here -->
+                                        <!-- <a type="button" class="btn btn-info mt-0" id="decoPlanningButton" href="{{ route('DecoPlanner', ['id' => $site->id] )}}"> -->
+                                        <a type="button" class="btn btn-info mt-0" id="decoPlanningButton" href="{{ route('DecoPlanner')}}/{{ $site->id }}">
+                                            Decompression planning
+                                        </a>
+                                    </div>    
+                                </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
 
             </div>
             
-            
-            <div class="row mx-2">
-                @php
-                    $video = json_decode($site->videos);    
-                @endphp
-
-                @if(($video != null and $video[0]->link != null) or count($site->upcomingTrips))
-                    <div class="col-md-6">
-                        {{--Card for video---}}
-                        @if($video != null)
-                            @if($video[0]->link)
-                                <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
-                                    <div class="card-body mt-0">
-                                        <iframe id="youtubeVideo" class="img-fluid border-radius-lg" src="{{ $video[0]->link }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
-                                        @if($video[0]->credit)
-                                            <p class="align-middle text-center text-sm"><b>🎥 {{ $video[0]->credit }}</b></p>
-                                        @endif
-                                        
-                                    </div>
-                                </div>
-                            @endif
-                        @endif
-
-                        {{--Card for upcoming trips---}}
-                        @if(count($site->upcomingTrips))
-                            <div class="row mx-1 mt-3">
-                                <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                                    <div class="card-header p-0 mt-n4 mx-3">
-                                        <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                            <h2 class="card-title text-white mx-4">Upcoming trips ({{ count($site->upcomingTrips) }})</h2>
-                                            <div class="table-responsive"></div>
-                                        </div>
-                                    </div>
-                                    <div class="card-body mt-4">
-                                        <div class="table-responsive">
-                                            <table id="tableUpcomingTrips" style="display: block; max-height: 300px; overflow-y: scroll">
-                                                <thead class="text-info">
-                                                    <th class="align-top">Operator</th>
-                                                    <th class="px-4 align-top">Date</th> 
-                                                    <th class="px-4 align-top">Time</th>
-                                                    <th class="py-0 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the numbers below to go to trip booking page" data-container="body" data-animation="true">Availability<p class="text-xs mt-0 px-1">click-to-book</p></th>
-                                                    <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">Trip Name<p class="text-xs mt-0 px-1">click for details</p></th>
-                                                </thead>
-                                                <tbody> 
-                                                    @foreach($site->upcomingTrips as $trip)
-                                                        
-                                                        <tr style="border-bottom: 1px solid #D3D3D3;" class="justify-content-center align-middle" data-tag="{{ $trip->tags }}">
-                                                            
-                                                            <td class="px-0 py-2 text-sm text-wrap align-middle justify-content-center">{{ $trip->operatorName }}</td>
-                                                            <td class="px-4">{{ $trip->date }}</td>
-                                                            <td class="px-4">{{ $trip->departureTime }}</td>
-                                                            @if($trip->tripFreeSpots == 0)
-                                                                <td class="text-center">-</td>
-                                                            @else
-                                                                <td class="text-center"> <a href="{{ $trip->linkToBook }}" target="_blank">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</a></td>
-                                                            @endif
-                                                            <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}<a></td>
-                                                            
-                                                        </tr>
-                                                
-                                                    @endforeach          
-                                                </tbody>
-                                            </table>
-                                        </div>   
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                    
-                @endif
-                {{-- Card pictures --}}
-                @if($site->pics)
-                    <div class="col-md-6">             
-                        <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
-                            {{--<div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Pictures</h2>
-                                    <div class="table-responsive"></div>
-                                </div>
-                            </div>--}}
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table align-items-center mb-0"> 
-                                        <tbody>
-                                            <tr><td>
-                                            <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
-                                                <div class="carousel-inner">
-                                                    @php 
-                                                        $first = true;
-                                                    @endphp
-                                                        
-                                                    @foreach ($photos as $photo)    
-                                                        <div class="carousel-item {{ $first ? "active" : "" }}">
-                                                            @php
-                                                                $first = false;
-                                                            @endphp
-                                                            <div class="page-header min-vh-50 border-radius-xl" style="background-image: url('{{ asset('assets') }}/img/sites/{{ $photo->file}}');">
-                                                            
-                                                                <div class="container">
-                                                                    
-                                                                </div>
-                                                            </div>
-                                                            {{--<h4 class="text-info mb-0 fadeIn1 fadeInBottom align-bottom text-center"> {{ $boat->name }}</h4>--}}
-
-                                                            <table class="table align-items-center mb-0">
-                                                        
-                                                                @if($photo->desc)
-                                                                    <tr class="align-top">
-                                                                    <td class="align-middle text-center text-wrap text-md"><b>{{ $photo->desc }}</b></td> </tr>
-                                                                @endif
-                                                                
-                                                                @if($photo->credit)
-                                                                    <tr>
-                                                                    <td class="align-middle text-center text-sm"><b>📸 {{ $photo->credit }}</b></td> </tr>
-                                                                @endif
-                                                                
-                            
-
-                                                            </table>
-
-
-                                                        </div>
-                                                    @endforeach
-
-                                                    
-                                                </div>
-
-                                                <div class="position-absolute min-vh-25 w-100 top-10">
-                                                    <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-bs-slide="prev">
-                                                        <span class="carousel-control-prev-icon position-absolute bottom-50 text-info" aria-hidden="true"></span>
-                                                        <span class="visually-hidden">Previous</span>
-                                                    </a>
-                                                    <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-bs-slide="next">
-                                                        <span class="carousel-control-next-icon position-absolute bottom-50" aria-hidden="true"></span>
-                                                        <span class="visually-hidden">Next</span>
-                                                    </a>
-                                                </div>
-                                                
-                                            </div>
-
-                                        </tbody>    
-                                    </table>
-                                </div>    
-                            </div>
-                        </div>
-                    </div>
-                @endif
-            </div>
-
-            <div class="row mx-2">
-
-                {{--Card 3D model--}}
-                @if($site->dModel != null)
-                <div class="col-md-12">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">3D-Model</h2>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body mt-4">
-                            <div class="wp-block-tdvb-td-viewer  align" id="tdvb3DViewerBlock-38a8dc92-1">
-                                <style> 
-                                    #tdvb3DViewerBlock-38a8dc92-1 .tdvb3DViewerBlock {
-                                        text-align: center;
-                                    }
-                                    #tdvb3DViewerBlock-38a8dc92-1 .tdvb3DViewerBlock model-viewer {
-                                        width: 100%;
-                                        height: 600px;
-                                    }
-                                    .progress-bar {
-                                        display: flex;
-                                        flex-direction: column;
-                                        justify-content: center;
-                                        overflow: hidden;
-                                        color: #fff;
-                                        text-align: center;
-                                        white-space: nowrap;
-                                        background-color: #ffffff;
-                                        transition: width 0.6s ease;
-                                    }
-                                </style>
-                                <div class="tdvb3DViewerBlock">
-                                    <model-viewer camera-controls="" src="{{ $site->dModel}}" ar-modes="webxr scene-viewer quick-look" poster="https://www.bythecmedia.com/wp-content/uploads/2023/05/okinawa.jpg" shadow-intensity="1" camera-orbit="0deg 75deg 226.7m" field-of-view="30deg" exposure="2" shadow-softness="1" ar-status="not-presenting">
-                                        {{--<div class="progress-bar hide" slot="progress-bar">
-                                            <div class="update-bar"></div>
-                                        </div>--}}
-                                        
-                                    </model-viewer>
-                                    <p class="align-middle text-center text-sm"><b>📸 {{ $site->dModelCredit }}</b></p>
-                                </div>
-                            </div> 
-                           
-                        </div>
-                    </div>
-                </div>
-                @endif
-
-            </div>
-
-            <div class="row mx-2">
-                <div class="col-md-6">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-secondary shadow-secondary border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Divers' Uploaded Pictures</h4>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body mt-4">
-                            Coming soon!
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Divers' Reviews</h4>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body mt-n3">
-                            @if (auth()->user()->isNotGuest())
-                                <div class="mt-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Add a comment">                                      
-                                    <button id="addReviewButton" class="btn btn-icon btn-3 btn-info" type="button" onclick="showReviewForm()">
-                                        <span class="btn-inner--text"> Add review</span>
-                                    </button>
-                                </div>
-
-                                <div id="addReviewForm" style="display:none;">
-                                    <form action='{{ route('AddSiteReview', ['siteId' => $site->id]) }}' method="POST">
-                                        @csrf
-                                        <div class="input-group input-group-dynamic">
-                                            <textarea id="review" class="multisteps-form__input form-control" name="review" rows="2" style="resize: vertical;" placeholder="write a review..."></textarea>
-                                        </div>
-                                        <div class="button-group mt-1">
-                                            <button type="button" class="btn btn-secondary" onclick="cancelReview()">Cancel</button>
-                                            <button type="submit" class="btn btn-info">Submit</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            @else
-                                <div class="mt-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Add a comment">                                      
-                                    <button id="addReviewButton" class="btn btn-icon btn-3 btn-primary" type="button" onclick="showModalGuest()">
-                                        <span class="btn-inner--icon"><i class="material-icons">lock</i></span>
-                                        <span class="btn-inner--text"> Add review</span>
-                                    </button>
-                                </div>
-                            @endif
-                            <div class="table-responsive">
-                                <table id="reviews" style="display: block; max-height: 300px; overflow-y: scroll; width: 100%;">
-                                    
-                                    <tbody>
-                                        @if(count($site->reviews))
-                                            @foreach($site->reviews as $review)
-                                                <tr style="border-bottom: 1px solid #D3D3D3;">
-                                                    <td style="width: 10%;"> 
-                                                        <table>
-                                                            <tbody>
-                                                                <tr class="align-items-center"><td class="align-items-center text-center">
-                                                                    <div class="avatar avatar-sm">
-                                                                        @if($review->user->picture)
-                                                                            <img src="{{ asset('assets') }}/img/users/{{  $review->user->picture }}" alt="profile_image"
-                                                                                class="w-100 rounded-circle shadow-sm">
-                                                                        @else
-                                                                            <img src="{{ asset('assets') }}/img/default-avatar.png" alt="profile_image"
-                                                                                class="w-100 rounded-circle shadow-sm" style="background: black;">
-                                                                        @endif
-                                                                            
-                                                                    </div>
-                                                                </td></tr>
-                                                                <tr class="text-center"> <td class="text-xs text-info">
-                                                                    <div class="mt-n2">
-                                                                        {{ $review->user->name }}
-                                                                    </div>
-                                                                </td></tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </td>
-                                                    <td style="width: 90%;">
-                                                        <table>
-                                                            <tbody>
-                                                                <tr>
-                                                                    <td class="text-sm"> 
-                                                                        <div class="text-sm mx-2 fst-italic">
-                                                                            {{ $review->comment }}
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td>
-                                                                        <div class="fw-bold text-xs mx-2 mt-1">
-                                                                            posted on {{ $review->created_at }}
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        @else
-                                            Be the first to add a review
-                                        @endif
-                                    </tbody>
-                                </table>
-                            </div>  
-                        </div>
-                    </div>
-                </div>
-
-                
-            </div>
             <div class="row mx-2">
                     {{-- Card Wreck  --}}
                     @if($site->type == "wreck")
@@ -1409,6 +1329,122 @@
                     </div>
                 </div>
                 @endif
+            </div>
+
+            <div class="row mx-2">
+                <div class="col-md-6">             
+                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-secondary shadow-secondary border-radius-xl py-3 pe-1">
+                                <h2 class="card-title text-white mx-4">Divers' Uploaded Pictures</h4>
+                                <div class="table-responsive"></div>
+                            </div>
+                        </div>
+                        <div class="card-body mt-4">
+                            Coming soon!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">             
+                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h2 class="card-title text-white mx-4">Divers' Reviews</h4>
+                                <div class="table-responsive"></div>
+                            </div>
+                        </div>
+                        <div class="card-body mt-n3">
+                            @if (auth()->user()->isNotGuest())
+                                <div class="mt-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Add a comment">                                      
+                                    <button id="addReviewButton" class="btn btn-icon btn-3 btn-info" type="button" onclick="showReviewForm()">
+                                        <span class="btn-inner--text"> Add review</span>
+                                    </button>
+                                </div>
+
+                                <div id="addReviewForm" style="display:none;">
+                                    <form action='{{ route('AddSiteReview', ['siteId' => $site->id]) }}' method="POST">
+                                        @csrf
+                                        <div class="input-group input-group-dynamic">
+                                            <textarea id="review" class="multisteps-form__input form-control" name="review" rows="2" style="resize: vertical;" placeholder="write a review..."></textarea>
+                                        </div>
+                                        <div class="button-group mt-1">
+                                            <button type="button" class="btn btn-secondary" onclick="cancelReview()">Cancel</button>
+                                            <button type="submit" class="btn btn-info">Submit</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            @else
+                                <div class="mt-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Add a comment">                                      
+                                    <button id="addReviewButton" class="btn btn-icon btn-3 btn-primary" type="button" onclick="showModalGuest()">
+                                        <span class="btn-inner--icon"><i class="material-icons">lock</i></span>
+                                        <span class="btn-inner--text"> Add review</span>
+                                    </button>
+                                </div>
+                            @endif
+                            <div class="table-responsive">
+                                <table id="reviews" style="display: block; max-height: 300px; overflow-y: scroll; width: 100%;">
+                                    
+                                    <tbody>
+                                        @if(count($site->reviews))
+                                            @foreach($site->reviews as $review)
+                                                <tr style="border-bottom: 1px solid #D3D3D3;">
+                                                    <td style="width: 10%;"> 
+                                                        <table>
+                                                            <tbody>
+                                                                <tr class="align-items-center"><td class="align-items-center text-center">
+                                                                    <div class="avatar avatar-sm">
+                                                                        @if($review->user->picture)
+                                                                            <img src="{{ asset('assets') }}/img/users/{{  $review->user->picture }}" alt="profile_image"
+                                                                                class="w-100 rounded-circle shadow-sm">
+                                                                        @else
+                                                                            <img src="{{ asset('assets') }}/img/default-avatar.png" alt="profile_image"
+                                                                                class="w-100 rounded-circle shadow-sm" style="background: black;">
+                                                                        @endif
+                                                                            
+                                                                    </div>
+                                                                </td></tr>
+                                                                <tr class="text-center"> <td class="text-xs text-info">
+                                                                    <div class="mt-n2">
+                                                                        {{ $review->user->name }}
+                                                                    </div>
+                                                                </td></tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                    <td style="width: 90%;">
+                                                        <table>
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td class="text-sm"> 
+                                                                        <div class="text-sm mx-2 fst-italic">
+                                                                            {{ $review->comment }}
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td>
+                                                                        <div class="fw-bold text-xs mx-2 mt-1">
+                                                                            posted on {{ $review->created_at }}
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        @else
+                                            Be the first to add a review
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>  
+                        </div>
+                    </div>
+                </div>
+
+                
             </div>
             
                 
@@ -2999,10 +3035,18 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Update the title of the gas card to show the best gas
+            if(document.querySelector('#bestNitrox'))
+                document.getElementById('bestGasTitle').textContent = 'Best Gas - Nitrox ' + document.getElementById('bestNitrox').textContent;
+            else
+                document.getElementById('bestGasTitle').textContent = 'Best Gas - Trimix ' + document.getElementById('txbestNitrox').textContent + '/' + document.getElementById('txbestHe').textContent;
+
             document.getElementById('alreadyVisited').addEventListener('change', function() {
                 document.getElementById('alreadyVisitedHiddenInput').value = document.getElementById('alreadyVisited').checked;  
                 document.getElementById('updatedVisited-form').submit();
             });
+
+            
         });
     </script>
 
@@ -3153,5 +3197,20 @@
 
         });
     </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const checkbox = document.getElementById("showGasDetails");
+            const gasesCardBody = document.getElementById("gasesCardBody");
+
+            // Initial state (optional): hide or show based on checkbox
+            gasesCardBody.style.display = checkbox.checked ? "block" : "none";
+
+            checkbox.addEventListener("change", function () {
+            gasesCardBody.style.display = this.checked ? "block" : "none";
+            });
+        });
+    </script>
+
     @endpush
 </x-page-template>

@@ -68,9 +68,10 @@ class SiteController extends Controller
 
         /*Provide SEO metadata */
         $SEO = array(
-            "title" => "Beach diving in South Florida - divers-hub.com",
+            "title" => "Beach diving in South Florida",
             "desc" => "Find all the details for planning a successful beach diving in Fort Lauderdale or West Palm Beach",
             "keywords" => "beach diving, fort lauderdale beach diving, palm beach beach diving, shore diving",
+            "canonical" => route("BeachDiving")
         );
 
         return view('pages.BeachDiving', compact('sites', 'locations', 'weathers', 'SEO'));
@@ -121,9 +122,10 @@ class SiteController extends Controller
 
         /*Provide SEO metadata */
         $SEO = array(
-            "title" => $site->name . " ". $site->type . " - divers-hub.com",
-            "desc" => $site->type . " in " . $location->location . ". Max depth " . $site->maxDepth . " ft",
+            "title" => $site->name . " ". $site->type,
+            "desc" => $site->name . " " . $site->type . " in " . $location->location . ". Max depth " . $site->maxDepth . " ft",
             "keywords" => $site->name . "," . ($site->aka ? $site->aka . "," : "") . $location->location . "," . $site->type,
+            "canonical" => route("SiteDetails") . "/" . $site->id,
         );
         
         // get site list to print map

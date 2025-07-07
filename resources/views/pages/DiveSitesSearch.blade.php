@@ -47,7 +47,7 @@
                     <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
                         <div style="float: left;">
                             @if(empty($status))
-                                <h2 class="card-title text-info mx-3 mt-0">Dive Sites Search...</h2>
+                                <h1 class="card-title text-info mx-3 mt-0">Dive Sites Search...</h1>
                             @elseif($status == "match")
                                 <h2 class="card-title text-info mx-3 mt-0">Dive Sites Search Results</h2>
                             @elseif($status == "show all")

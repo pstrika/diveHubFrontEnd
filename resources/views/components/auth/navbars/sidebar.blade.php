@@ -17,7 +17,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('overview') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 6.1.0 (07/05/25)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 7.0.0 (07/07/25)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -304,8 +304,8 @@
                 </a>
                 <div class="collapse {{ $activePage == 'DiveSites' ? ' show ' : '' }}  " id="sites">
                     <ul class="nav ">
-                        <li class="nav-item {{ $activeItem == 'wreckSites' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'wreckSites' ? ' active' : '' }}  "
+                        <li class="nav-item {{ $activeItem == 'wreckWiki' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                            <a class="nav-link text-white {{ $activeItem == 'wreckWiki' ? ' active' : '' }}  "
                                 href="{{ route('WreckSites') }}">
                                 <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/wreckWiki.png"></span>
                                 <span class="sidenav-normal  ms-2  ps-1"> wreckWiki</span>

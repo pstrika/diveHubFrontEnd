@@ -81,7 +81,8 @@
                 </div>
                 <div class="row">
                     <div class="col-12">
-                        <h1 class="text-white text-center">Everything you need to know about scuba diving in South Florida</h1>        
+                        <h1 class="text-white text-center">Divers Hub</h1>
+                        <h2 class="text-white text-center">Everything you need to know about scuba diving in South Florida</h2>        
                     </div>
                 </div>
             </div>

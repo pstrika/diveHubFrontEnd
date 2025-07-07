@@ -140,9 +140,9 @@
                         
                         <div style="float: left;">
                             
-                            <h2 class="card-title text-info mx-3 mt-4">{{ $dateDayName }}</h2>
+                            <h1 class="card-title text-info mx-3 mt-4">Dive Trips</h1>
                             
-                            <h4 class="card-category text-info mx-3"> {{ $dateText }}</h4>
+                            <h4 class="card-category text-info mx-3"> {{ $dateDayName }} {{ $dateText }}</h4>
                         </div>
                         <div id="spinner" style="float: center; display: none;" class="spinner-border text-info mt-4" role="status">
                                 <span class="sr-only">Loading...</span>

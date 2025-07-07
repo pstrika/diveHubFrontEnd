@@ -127,7 +127,7 @@
                         $date = new DateTime($tripDetails->date);
                     @endphp
                     <div style="float: left;">
-                        <h2 class="card-title text-info mx-3 mt-4">Trip on {{ $date->format('l, F-d') }}</h2>
+                        <h1 class="card-title text-info mx-3 mt-4">Trip on {{ $date->format('l, F-d') }}</h1>
                         <h4 class="card-category text-info mx-3"> {{ $location->location }}</h4>
                     </div>
                     @if(auth()->user()->isNotGuest())

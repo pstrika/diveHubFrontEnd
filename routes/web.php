@@ -24,7 +24,9 @@ use App\Http\Controllers\Auth\GoogleController;
 */
 
 Route::get('/', function () {
-    return redirect('sign-in');
+	return redirect('Landing');
+    //return redirect('sign-in');
+	//return redirect('Trips');
 })->middleware('guest');
 
 
@@ -40,6 +42,16 @@ Route::get('TermsOfUse', function () {
 Route::get('home', function () {
     return view('pages.home');
 })->name('home');
+
+Route::get('Landing', function () {
+    $SEO = [
+        "title" => "Florida dive sites, calendras and operators",
+        "desc" => "All you need to know for diving in Florida: dive operators, dive sites and wreckwiki, calendars, dive planning and more",
+        "keywords" => "scuba diving florida, scuba, dive operators miami, dive operators fort lauderdale, diving florida keys, dive sites florida",
+    ];
+
+    return view('pages.Landing', compact('SEO'));
+})->name('Landing');
 
 /* Google SSO Routes */
 Route::get('login/google', [GoogleController::class, 'redirectToGoogle'])->name('login.google');

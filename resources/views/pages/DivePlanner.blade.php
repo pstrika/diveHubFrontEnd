@@ -254,7 +254,7 @@
             <div class="card p-0 position-relative mt-n5 mx-1 z-index-2 mb-4">
                 
                 <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1 dive-planner-header">
-                    <h2 class="card-title text-info mx-3 mt-0">Decompression Dive Planner</h2>
+                    <h1 class="card-title text-info mx-3 mt-0 text-xl">Decompression Dive Planner</h1>
                     
                     <!--
                     <div class="UnitDropdown">

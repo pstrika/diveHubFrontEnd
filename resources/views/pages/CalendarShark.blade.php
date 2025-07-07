@@ -68,8 +68,8 @@
             
                     <div class="p-0 mt-n4 mx-2 border-radius-lg py-3 pe-1">
                         <div style="float: left;">
-                            <h2 class="card-title text-info mx-3 mt-4">{{ $currentMonthS }}-{{ $year }}</h2>
-                            <h4 class="card-category text-info mx-4">Shark Diving Calendar</h4>
+                            <h1 class="card-category text-info mx-4 mt-3 text-xl">Shark Diving Calendar</h1>
+                            <h2 class="card-title text-info mx-4 text-xl mt-n2">{{ $currentMonthS }}-{{ $year }}</h2>
                         </div>
 
                         {{-----------------NAV to next day}} --}}
@@ -106,8 +106,10 @@
                                     </div>
                                     <div class="col-md-8">
                                         <div id="history" style="flex-grow: 1; max-height: 424px; overflow-y: auto;" class="mt-0">
-                                        South Florida boasts more shark species than any other area globally. During your shark diving adventure, you might encounter hammerheads, nurse sharks, and other fascinating creatures. These baited trips take place beyond three miles from shore, where the Gulf Stream’s deep waters host some of the ocean’s largest predatory sharks. So, if you’re ready for an adrenaline-packed underwater encounter, South Florida is the place to be!
-                                        <br><br>You’re aboard a boat, venturing beyond three miles from the shore. The deep waters of the Gulf Stream surround you, and anticipation fills the air. These baited trips are carefully orchestrated to attract sharks. As you descend into the ocean depths, you’ll find yourself face-to-face with some of the ocean’s largest predatory sharks. It’s an adrenaline-packed experience that leaves a lasting impression.
+                                            <p>
+                                                South Florida boasts more shark species than any other area globally. During your shark diving adventure, you might encounter hammerheads, nurse sharks, and other fascinating creatures. These baited trips take place beyond three miles from shore, where the Gulf Stream’s deep waters host some of the ocean’s largest predatory sharks. So, if you’re ready for an adrenaline-packed underwater encounter, South Florida is the place to be!
+                                                <br><br>You’re aboard a boat, venturing beyond three miles from the shore. The deep waters of the Gulf Stream surround you, and anticipation fills the air. These baited trips are carefully orchestrated to attract sharks. As you descend into the ocean depths, you’ll find yourself face-to-face with some of the ocean’s largest predatory sharks. It’s an adrenaline-packed experience that leaves a lasting impression.
+                                            </p>
                                         </div>
                                     </div>                            
                                 </div>
