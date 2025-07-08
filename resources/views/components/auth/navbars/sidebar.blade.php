@@ -17,7 +17,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('overview') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 7.0.1 (07/07/25)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 7.0.2 (07/07/25)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -27,52 +27,60 @@
             <li class="nav-item mb-2 mt-0">
                 <a data-bs-toggle="collapse" href="#ProfileNav" class="nav-link text-white" aria-controls="ProfileNav"
                     role="button" aria-expanded="false">
-                    @if (auth()->user()->picture)
-                    <img src="{{ asset('assets') }}/img/users/{{(auth()->user()->picture)}}" alt="avatar" class="avatar">
-                    @else
-                    <img src="{{ asset('assets') }}/img/default-avatar.png" alt="avatar" class="avatar">
-                    @endif
+                    @auth
+                        @if (auth()->user()->picture)
+                        <img src="{{ asset('assets') }}/img/users/{{(auth()->user()->picture)}}" alt="avatar" class="avatar">
+                        @else
+                        <img src="{{ asset('assets') }}/img/default-avatar.png" alt="avatar" class="avatar">
+                        @endif
+                    
                     <span class="nav-link-text ms-2 ps-1">{{ auth()->user()->name }}
                     </span>
+                    @endauth
                     
                 </a>
                 <div class="collapse" id="ProfileNav" style="">
                     <ul class="nav ">
-                        @if(auth()->user()->isNotGuest())
-                        <li class="nav-item" style="padding-left: 1rem;">
-                            <a class="nav-link text-white" href="{{ route('overview') }}">
-                                <i class="material-icons-round opacity-10">person</i>
-                                <span class="sidenav-normal  ms-3  ps-1"> My Profile </span>
-                            </a>
-                        </li>
-                        <li class="nav-item" style="padding-left: 1rem;">
-                            <a class="nav-link text-white" href="{{ route('MyVisitedSites') }}">
-                                <i class="material-icons-round opacity-10">where_to_vote</i>
-                                <span class="sidenav-normal  ms-3  ps-1"> My Visited Sites</span>
-                            </a>
-                        </li>
+                        @auth
+                            @if(auth()->user()->isNotGuest())
+                            <li class="nav-item" style="padding-left: 1rem;">
+                                <a class="nav-link text-white" href="{{ route('overview') }}">
+                                    <i class="material-icons-round opacity-10">person</i>
+                                    <span class="sidenav-normal  ms-3  ps-1"> My Profile </span>
+                                </a>
+                            </li>
+                            <li class="nav-item" style="padding-left: 1rem;">
+                                <a class="nav-link text-white" href="{{ route('MyVisitedSites') }}">
+                                    <i class="material-icons-round opacity-10">where_to_vote</i>
+                                    <span class="sidenav-normal  ms-3  ps-1"> My Visited Sites</span>
+                                </a>
+                            </li>
+                            
+                            @endif
                         
-                        @endif
-                        {{--<li class="nav-item">
-                            <a class="nav-link text-white " href="{{ route('settings') }}">
-                                <i class="material-icons-round opacity-10">settings</i>
-                                <span class="sidenav-normal  ms-3  ps-1"> Settings </span>
-                            </a>
-                        </li>--}}
-                        <form method="POST" action="{{ route('logout') }}" class="d-none" id="logout-form">
-                            @csrf
-                        </form>
+                            {{--<li class="nav-item">
+                                <a class="nav-link text-white " href="{{ route('settings') }}">
+                                    <i class="material-icons-round opacity-10">settings</i>
+                                    <span class="sidenav-normal  ms-3  ps-1"> Settings </span>
+                                </a>
+                            </li>--}}
+                            <form method="POST" action="{{ route('logout') }}" class="d-none" id="logout-form">
+                                @csrf
+                            </form>
+                        @endauth
                         
                         <li class="nav-item" style="padding-left: 1rem;">
                             <a class="nav-link text-white " href="{{ route('logout') }} "
                                 onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-                                @if(auth()->user()->isNotGuest())
-                                    <i class="material-icons-round opacity-10">logout</i>
-                                    <span class="sidenav-normal  ms-3  ps-1"> Logout </span>
-                                @else
-                                    <i class="material-icons-round opacity-10">person_add_alt</i>
-                                    <span class="sidenav-normal  ms-3  ps-1"> Create account </span>
-                                @endif
+                                @auth
+                                    @if(auth()->user()->isNotGuest())
+                                        <i class="material-icons-round opacity-10">logout</i>
+                                        <span class="sidenav-normal  ms-3  ps-1"> Logout </span>
+                                    @else
+                                        <i class="material-icons-round opacity-10">person_add_alt</i>
+                                        <span class="sidenav-normal  ms-3  ps-1"> Create account </span>
+                                    @endif
+                                @endauth
                             </a>
                         </li>
                     </ul>
@@ -81,23 +89,25 @@
             <hr class="horizontal light mt-0">
 
             {{-- Dashboard --}}
-            @if(auth()->user()->isNotGuest())
-            <li class="nav-item {{ $activePage == 'Dashboard' ? ' active ' : '' }}">
-                <a class="nav-link text-white {{ $activeItem == 'Dashboard' ? ' active' : '' }}  "
-                    href="{{ route('MyDashboard') }}">
-                    <i class="material-icons-round opacity-10">dashboard</i>
-                    <span class="nav-link-text ms-2 ps-1">My Dashboard</span>
-                </a>
-            </li>
-            @else
-            <li class="nav-item {{ $activePage == 'Dashboard' ? ' active ' : '' }}">
-                <a class="nav-link text-white {{ $activeItem == 'Dashboard' ? ' active' : '' }}  "
-                    href="#" onclick="showModalGuest();">
-                    <i class="material-icons-round opacity-10 text-primary">lock</i>
-                    <span class="nav-link-text ms-2 ps-1 text-primary">My Dashboard</span>
-                </a>
-            </li>
-            @endif
+            @auth
+                @if(auth()->user()->isNotGuest())
+                <li class="nav-item {{ $activePage == 'Dashboard' ? ' active ' : '' }}">
+                    <a class="nav-link text-white {{ $activeItem == 'Dashboard' ? ' active' : '' }}  "
+                        href="{{ route('MyDashboard') }}">
+                        <i class="material-icons-round opacity-10">dashboard</i>
+                        <span class="nav-link-text ms-2 ps-1">My Dashboard</span>
+                    </a>
+                </li>
+                @else
+                <li class="nav-item {{ $activePage == 'Dashboard' ? ' active ' : '' }}">
+                    <a class="nav-link text-white {{ $activeItem == 'Dashboard' ? ' active' : '' }}  "
+                        href="#" onclick="showModalGuest();">
+                        <i class="material-icons-round opacity-10 text-primary">lock</i>
+                        <span class="nav-link-text ms-2 ps-1 text-primary">My Dashboard</span>
+                    </a>
+                </li>
+                @endif
+            @endauth
 
             {{-- Trips today --}}
             <li class="nav-item {{ $activePage == 'trips' ? ' active ' : '' }}">
@@ -109,173 +119,174 @@
             </li>
             
             {{-- Weather --}}
-            @if(auth()->user()->isNotGuest())
-            <li class="nav-item">
-                <a data-bs-toggle="collapse" href="#weather"
-                    class="nav-link text-white {{ $activePage == 'Weather' ? ' active ' : '' }} "
-                    aria-controls="dashboardsExamples" role="button" aria-expanded="false">
-                    <i class="material-icons-round opacity-10">cloud</i>
-                    <span class="nav-link-text ms-2 ps-1">Weather</span>
-                </a>
-                <div class="collapse {{ $activePage == 'Weather' ? ' show ' : '' }}  " id="weather">
-                    <ul class="nav ">
-                        
-                        <li class="nav-item {{ $activeItem == 'WeatherSFL' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'WeatherSFL' ? ' active' : '' }}  "
-                                href="{{ route('Weather') }}">
-                                <span><img style="height:15px;" src="{{ asset('assets') }}/img/icons/flags/US.png"></span>
-                                <span class="sidenav-normal  ms-2  ps-1"> South FL </span>
-                            </a>
-                        </li>
+            @auth
+                @if(auth()->user()->isNotGuest())
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#weather"
+                        class="nav-link text-white {{ $activePage == 'Weather' ? ' active ' : '' }} "
+                        aria-controls="dashboardsExamples" role="button" aria-expanded="false">
+                        <i class="material-icons-round opacity-10">cloud</i>
+                        <span class="nav-link-text ms-2 ps-1">Weather</span>
+                    </a>
+                    <div class="collapse {{ $activePage == 'Weather' ? ' show ' : '' }}  " id="weather">
+                        <ul class="nav ">
+                            
+                            <li class="nav-item {{ $activeItem == 'WeatherSFL' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'WeatherSFL' ? ' active' : '' }}  "
+                                    href="{{ route('Weather') }}">
+                                    <span><img style="height:15px;" src="{{ asset('assets') }}/img/icons/flags/US.png"></span>
+                                    <span class="sidenav-normal  ms-2  ps-1"> South FL </span>
+                                </a>
+                            </li>
 
-                        <li class="nav-item {{ $activeItem == 'WeatherAR' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'WeatherAR' ? ' active' : '' }}  "
-                                href="{{ route('WeatherAR') }}">
-                                <span><img style="height:15px;" src="{{ asset('assets') }}/img/icons/flags/AR.png"></span>
-                                <span class="sidenav-normal  ms-2  ps-1"> Argentina </span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
-            @else
-            <li class="nav-item">
-                <a class="nav-link text-white {{ $activeItem == 'weather' ? ' active' : '' }}  "
-                href="#" onclick="showModalGuest();">
-                    <i class="material-icons-round opacity-10 text-primary">lock</i>
-                    <span class="nav-link-text ms-2 ps-1 text-primary">Weather</span>
-                </a>
-            </li>
-            @endif
+                            <li class="nav-item {{ $activeItem == 'WeatherAR' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'WeatherAR' ? ' active' : '' }}  "
+                                    href="{{ route('WeatherAR') }}">
+                                    <span><img style="height:15px;" src="{{ asset('assets') }}/img/icons/flags/AR.png"></span>
+                                    <span class="sidenav-normal  ms-2  ps-1"> Argentina </span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                @else
+                <li class="nav-item">
+                    <a class="nav-link text-white {{ $activeItem == 'weather' ? ' active' : '' }}  "
+                    href="#" onclick="showModalGuest();">
+                        <i class="material-icons-round opacity-10 text-primary">lock</i>
+                        <span class="nav-link-text ms-2 ps-1 text-primary">Weather</span>
+                    </a>
+                </li>
+                @endif
 
             
 
-            @if(auth()->user()->isNotGuest())
-            {{-- Calendars --}}
-            <li class="nav-item">
-                <a data-bs-toggle="collapse" href="#calendars"
-                    class="nav-link text-white {{ $activePage == 'Calendars' ? ' active ' : '' }} "
-                    aria-controls="dashboardsExamples" role="button" aria-expanded="false">
-                    <i class="material-icons-round opacity-10">calendar_month</i>
-                    <span class="nav-link-text ms-2 ps-1">Calendars</span>
-                </a>
-                <div class="collapse {{ $activePage == 'Calendars' ? ' show ' : '' }}  " id="calendars">
-                    <ul class="nav ">
-                        {{--<li class="nav-item {{ $activeItem == 'CalendarRec' ? ' active ' : '' }}  ">
-                            <a class="nav-link text-white {{ $activeItem == 'CalendarRec' ? ' active' : '' }}  "
-                                href="{{ route('CalendarT') }}/rec">
-                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_rec.png"></span>
-                                <span class="sidenav-normal  ms-2  ps-1"> Recreational </span>
-                            </a>
-                        </li>--}}
-                        <li class="nav-item {{ $activeItem == 'MyCalendar' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'MyCalendar' ? ' active' : '' }}  "
-                                href="{{ route('MyCalendar') }}">
-                                <i class="material-icons-round opacity-10">perm_contact_calendar</i>
-                                <span class="sidenav-normal  ms-2  ps-1"> My Calendar </span>
-                            </a>
-                        </li>
+                @if(auth()->user()->isNotGuest())
+                {{-- Calendars --}}
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#calendars"
+                        class="nav-link text-white {{ $activePage == 'Calendars' ? ' active ' : '' }} "
+                        aria-controls="dashboardsExamples" role="button" aria-expanded="false">
+                        <i class="material-icons-round opacity-10">calendar_month</i>
+                        <span class="nav-link-text ms-2 ps-1">Calendars</span>
+                    </a>
+                    <div class="collapse {{ $activePage == 'Calendars' ? ' show ' : '' }}  " id="calendars">
+                        <ul class="nav ">
+                            {{--<li class="nav-item {{ $activeItem == 'CalendarRec' ? ' active ' : '' }}  ">
+                                <a class="nav-link text-white {{ $activeItem == 'CalendarRec' ? ' active' : '' }}  "
+                                    href="{{ route('CalendarT') }}/rec">
+                                    <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_rec.png"></span>
+                                    <span class="sidenav-normal  ms-2  ps-1"> Recreational </span>
+                                </a>
+                            </li>--}}
+                            <li class="nav-item {{ $activeItem == 'MyCalendar' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'MyCalendar' ? ' active' : '' }}  "
+                                    href="{{ route('MyCalendar') }}">
+                                    <i class="material-icons-round opacity-10">perm_contact_calendar</i>
+                                    <span class="sidenav-normal  ms-2  ps-1"> My Calendar </span>
+                                </a>
+                            </li>
 
-                        <li class="nav-item {{ $activeItem == 'CalendarTec' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'CalendarTec' ? ' active' : '' }}  "
-                                href="{{ route('CalendarT') }}/tec">
-                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_tec.png"></span>
-                                <span class="sidenav-normal  ms-2  ps-1"> Technical </span>
-                            </a>
-                        </li>
+                            <li class="nav-item {{ $activeItem == 'CalendarTec' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'CalendarTec' ? ' active' : '' }}  "
+                                    href="{{ route('CalendarT') }}/tec">
+                                    <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_tec.png"></span>
+                                    <span class="sidenav-normal  ms-2  ps-1"> Technical </span>
+                                </a>
+                            </li>
 
-                        <li class="nav-item {{ $activeItem == 'wreckDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'wreckDiving' ? ' active' : '' }}  "
-                                href="{{ route('CalendarWreck') }}">
-                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/wreck_icon_white.png"></span>
-                                
-                                <span class="sidenav-normal  ms-2  ps-1">Wreck Diving</span>
-                            </a>
-                        </li>
+                            <li class="nav-item {{ $activeItem == 'wreckDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'wreckDiving' ? ' active' : '' }}  "
+                                    href="{{ route('CalendarWreck') }}">
+                                    <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/wreck_icon_white.png"></span>
+                                    
+                                    <span class="sidenav-normal  ms-2  ps-1">Wreck Diving</span>
+                                </a>
+                            </li>
 
-                        <li class="nav-item {{ $activeItem == 'sharkDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'sharkDiving' ? ' active' : '' }}  "
-                                href="{{ route('CalendarShark') }}">
-                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_shark.png"></span>
-                                
-                                <span class="sidenav-normal  ms-2  ps-1">Shark Diving</span>
-                            </a>
-                        </li>
+                            <li class="nav-item {{ $activeItem == 'sharkDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'sharkDiving' ? ' active' : '' }}  "
+                                    href="{{ route('CalendarShark') }}">
+                                    <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_shark.png"></span>
+                                    
+                                    <span class="sidenav-normal  ms-2  ps-1">Shark Diving</span>
+                                </a>
+                            </li>
 
-                        <li class="nav-item {{ $activeItem == 'lobsterDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'lobsterDiving' ? ' active' : '' }}  "
-                                href="{{ route('CalendarLobster') }}">
-                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_lobster.png"></span>
-                                
-                                <span class="sidenav-normal  ms-2  ps-1">Lobster Diving</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
-            @else
-            <li class="nav-item">
-                <a data-bs-toggle="collapse" href="#calendars"
-                    class="nav-link text-white {{ $activePage == 'Calendars' ? ' active ' : '' }} "
-                    aria-controls="dashboardsExamples" role="button" aria-expanded="false">
-                    <i class="material-icons-round opacity-10 text-primary">lock</i>
-                    <span class="nav-link-text ms-2 ps-1 text-primary">Calendars</span>
-                </a>
-                <div class="collapse {{ $activePage == 'Calendars' ? ' show ' : '' }}  " id="calendars">
-                    <ul class="nav ">
-                        {{--<li class="nav-item {{ $activeItem == 'CalendarRec' ? ' active ' : '' }}  ">
-                            <a class="nav-link text-white {{ $activeItem == 'CalendarRec' ? ' active' : '' }}  "
-                                href="{{ route('CalendarT') }}/rec">
-                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_rec.png"></span>
-                                <span class="sidenav-normal  ms-2  ps-1"> Recreational </span>
-                            </a>
-                        </li>--}}
-                        <li class="nav-item {{ $activeItem == 'MyCalendar' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'MyCalendar' ? ' active' : '' }}  "
-                                href="#" onclick="showModalGuest();">
-                                <i class="material-icons-round opacity-10 text-primary">lock</i>
-                                <span class="sidenav-normal  ms-2  ps-1 text-primary"> My Calendar </span>
-                            </a>
-                        </li>
+                            <li class="nav-item {{ $activeItem == 'lobsterDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'lobsterDiving' ? ' active' : '' }}  "
+                                    href="{{ route('CalendarLobster') }}">
+                                    <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_lobster.png"></span>
+                                    
+                                    <span class="sidenav-normal  ms-2  ps-1">Lobster Diving</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                @else
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#calendars"
+                        class="nav-link text-white {{ $activePage == 'Calendars' ? ' active ' : '' }} "
+                        aria-controls="dashboardsExamples" role="button" aria-expanded="false">
+                        <i class="material-icons-round opacity-10 text-primary">lock</i>
+                        <span class="nav-link-text ms-2 ps-1 text-primary">Calendars</span>
+                    </a>
+                    <div class="collapse {{ $activePage == 'Calendars' ? ' show ' : '' }}  " id="calendars">
+                        <ul class="nav ">
+                            {{--<li class="nav-item {{ $activeItem == 'CalendarRec' ? ' active ' : '' }}  ">
+                                <a class="nav-link text-white {{ $activeItem == 'CalendarRec' ? ' active' : '' }}  "
+                                    href="{{ route('CalendarT') }}/rec">
+                                    <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/icons_rec.png"></span>
+                                    <span class="sidenav-normal  ms-2  ps-1"> Recreational </span>
+                                </a>
+                            </li>--}}
+                            <li class="nav-item {{ $activeItem == 'MyCalendar' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'MyCalendar' ? ' active' : '' }}  "
+                                    href="#" onclick="showModalGuest();">
+                                    <i class="material-icons-round opacity-10 text-primary">lock</i>
+                                    <span class="sidenav-normal  ms-2  ps-1 text-primary"> My Calendar </span>
+                                </a>
+                            </li>
 
-                        <li class="nav-item {{ $activeItem == 'CalendarTec' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'CalendarTec' ? ' active' : '' }}  "
-                                href="#" onclick="showModalGuest();">
-                                <i class="material-icons-round opacity-10 text-primary">lock</i>
-                                <span class="sidenav-normal  ms-2  ps-1 text-primary"> Technical </span>
-                            </a>
-                        </li>
+                            <li class="nav-item {{ $activeItem == 'CalendarTec' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'CalendarTec' ? ' active' : '' }}  "
+                                    href="#" onclick="showModalGuest();">
+                                    <i class="material-icons-round opacity-10 text-primary">lock</i>
+                                    <span class="sidenav-normal  ms-2  ps-1 text-primary"> Technical </span>
+                                </a>
+                            </li>
 
-                        <li class="nav-item {{ $activeItem == 'CalendarWreck' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'CalendarWreck' ? ' active' : '' }}  "
-                                href="#" onclick="showModalGuest();">
-                                <i class="material-icons-round opacity-10 text-primary">lock</i>
-                                <span class="sidenav-normal  ms-2  ps-1 text-primary"> Wreck </span>
-                            </a>
-                        </li>
+                            <li class="nav-item {{ $activeItem == 'CalendarWreck' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'CalendarWreck' ? ' active' : '' }}  "
+                                    href="#" onclick="showModalGuest();">
+                                    <i class="material-icons-round opacity-10 text-primary">lock</i>
+                                    <span class="sidenav-normal  ms-2  ps-1 text-primary"> Wreck </span>
+                                </a>
+                            </li>
 
-                        <li class="nav-item {{ $activeItem == 'sharkDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'sharkDiving' ? ' active' : '' }}  "
-                                href="#" onclick="showModalGuest();">
-                                <i class="material-icons-round opacity-10 text-primary">lock</i>
-                                
-                                <span class="sidenav-normal  ms-2  ps-1 text-primary">Shark Diving</span>
-                            </a>
-                        </li>
+                            <li class="nav-item {{ $activeItem == 'sharkDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'sharkDiving' ? ' active' : '' }}  "
+                                    href="#" onclick="showModalGuest();">
+                                    <i class="material-icons-round opacity-10 text-primary">lock</i>
+                                    
+                                    <span class="sidenav-normal  ms-2  ps-1 text-primary">Shark Diving</span>
+                                </a>
+                            </li>
 
-                        <li class="nav-item {{ $activeItem == 'lobsterDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'lobsterDiving' ? ' active' : '' }}  "
-                                href="#" onclick="showModalGuest();">
-                                <i class="material-icons-round opacity-10 text-primary">lock</i>
-                                
-                                <span class="sidenav-normal  ms-2  ps-1 text-primary">Lobster Diving</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
-            @endif
-
+                            <li class="nav-item {{ $activeItem == 'lobsterDiving' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'lobsterDiving' ? ' active' : '' }}  "
+                                    href="#" onclick="showModalGuest();">
+                                    <i class="material-icons-round opacity-10 text-primary">lock</i>
+                                    
+                                    <span class="sidenav-normal  ms-2  ps-1 text-primary">Lobster Diving</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                @endif
+            @endauth
             {{-- Beach diving --}}
             <li class="nav-item">
                 <a class="nav-link text-white {{ $activeItem == 'beachDiving' ? ' active' : '' }}  "
@@ -307,7 +318,7 @@
                         <li class="nav-item {{ $activeItem == 'wreckWiki' ? ' active ' : '' }}  " style="padding-left: 1rem;">
                             <a class="nav-link text-white {{ $activeItem == 'wreckWiki' ? ' active' : '' }}  "
                                 href="{{ route('WreckSites') }}">
-                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/wreckWiki.png"></span>
+                                <span><img style="height:25px;" src="{{ asset('assets') }}/img/icons/wreckWiki.png" alt="wreckwiki"></span>
                                 <span class="sidenav-normal  ms-2  ps-1"> wreckWiki</span>
                             </a>
                         </li>
@@ -371,119 +382,120 @@
             </li>
 
             {{-- Admin Tools --}}
-            @if(auth()->user()->isNotGuest())
-            <li class="nav-item">
-                <a data-bs-toggle="collapse" href="#planningTools"
-                    class="nav-link text-white {{ $activePage == 'planningTools' ? ' active ' : '' }} "
-                    aria-controls="dashboardsExamples" role="button" aria-expanded="false">
-                    <i class="material-icons-round opacity-10">construction</i>
-                    <span class="nav-link-text ms-2 ps-1">Planning Tools</span>
-                </a>
-                <div class="collapse {{ $activePage == 'planningTools' ? ' show ' : '' }}  " id="planningTools">
-                    <ul class="nav ">
-                        
-                        <li class="nav-item {{ $activeItem == 'decoPlanner' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'decoPlanner' ? ' active' : '' }}  "
-                                href="{{ route('DecoPlanner') }}">
-                                <i class="material-icons-round opacity-10">calculate</i>
-                                <span class="nav-link-text ms-2 ps-1">Deco Planning</span>
-                            </a>
-                        </li>
+            @auth
+                @if(auth()->user()->isNotGuest())
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#planningTools"
+                        class="nav-link text-white {{ $activePage == 'planningTools' ? ' active ' : '' }} "
+                        aria-controls="dashboardsExamples" role="button" aria-expanded="false">
+                        <i class="material-icons-round opacity-10">construction</i>
+                        <span class="nav-link-text ms-2 ps-1">Planning Tools</span>
+                    </a>
+                    <div class="collapse {{ $activePage == 'planningTools' ? ' show ' : '' }}  " id="planningTools">
+                        <ul class="nav ">
+                            
+                            <li class="nav-item {{ $activeItem == 'decoPlanner' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'decoPlanner' ? ' active' : '' }}  "
+                                    href="{{ route('DecoPlanner') }}">
+                                    <i class="material-icons-round opacity-10">calculate</i>
+                                    <span class="nav-link-text ms-2 ps-1">Deco Planning</span>
+                                </a>
+                            </li>
 
-                        
+                            
 
-                    </ul>
-                </div>
-            </li>
-            @else
-            <li class="nav-item">
-                <a data-bs-toggle="collapse" href="#planningTools"
-                    class="nav-link text-white {{ $activePage == 'planningTools' ? ' active ' : '' }} "
-                    aria-controls="dashboardsExamples" role="button" aria-expanded="false">
-                    <i class="material-icons-round opacity-10 text-primary">lock</i>
-                    <span class="nav-link-text ms-2 ps-1 text-primary">Planning Tools</span>
-                </a>
-                <div class="collapse {{ $activePage == 'planningTools' ? ' show ' : '' }}  " id="planningTools">
-                    <ul class="nav ">
-                        
-                        <li class="nav-item {{ $activeItem == 'decoPlanner' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'decoPlanner' ? ' active' : '' }}  "
-                            href="#" onclick="showModalGuest();">
-                                <i class="material-icons-round opacity-10 text-primary">lock</i>
-                                <span class="nav-link-text ms-2 ps-1 text-primary">Deco Planner</span>
-                            </a>
-                        </li>
+                        </ul>
+                    </div>
+                </li>
+                @else
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#planningTools"
+                        class="nav-link text-white {{ $activePage == 'planningTools' ? ' active ' : '' }} "
+                        aria-controls="dashboardsExamples" role="button" aria-expanded="false">
+                        <i class="material-icons-round opacity-10 text-primary">lock</i>
+                        <span class="nav-link-text ms-2 ps-1 text-primary">Planning Tools</span>
+                    </a>
+                    <div class="collapse {{ $activePage == 'planningTools' ? ' show ' : '' }}  " id="planningTools">
+                        <ul class="nav ">
+                            
+                            <li class="nav-item {{ $activeItem == 'decoPlanner' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'decoPlanner' ? ' active' : '' }}  "
+                                href="#" onclick="showModalGuest();">
+                                    <i class="material-icons-round opacity-10 text-primary">lock</i>
+                                    <span class="nav-link-text ms-2 ps-1 text-primary">Deco Planner</span>
+                                </a>
+                            </li>
 
-                        
+                            
 
-                    </ul>
-                </div>
-            </li>
-            @endif
+                        </ul>
+                    </div>
+                </li>
+                @endif
 
-            {{-- Admin Tools --}}
-            @can('manage-users', App\Models\User::class)
-            <li class="nav-item">
-                <a data-bs-toggle="collapse" href="#adminTools"
-                    class="nav-link text-white {{ $activePage == 'AdminTools' ? ' active ' : '' }} "
-                    aria-controls="dashboardsExamples" role="button" aria-expanded="false">
-                    <i class="material-icons-round opacity-10">construction</i>
-                    <span class="nav-link-text ms-2 ps-1">Admin Tools</span>
-                </a>
-                <div class="collapse {{ $activePage == 'AdminTools' ? ' show ' : '' }}  " id="adminTools">
-                    <ul class="nav ">
-                        
-                        <li class="nav-item {{ $activeItem == 'platformHealth' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'platformHealth' ? ' active' : '' }}  "
-                                href="{{ route('PlatformHealth') }}">
-                                <i class="material-icons-round opacity-10">health_and_safety</i>
-                                <span class="nav-link-text ms-2 ps-1">Platform Health</span>
-                            </a>
-                        </li>
+                {{-- Admin Tools --}}
+                @can('manage-users', App\Models\User::class)
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#adminTools"
+                        class="nav-link text-white {{ $activePage == 'AdminTools' ? ' active ' : '' }} "
+                        aria-controls="dashboardsExamples" role="button" aria-expanded="false">
+                        <i class="material-icons-round opacity-10">construction</i>
+                        <span class="nav-link-text ms-2 ps-1">Admin Tools</span>
+                    </a>
+                    <div class="collapse {{ $activePage == 'AdminTools' ? ' show ' : '' }}  " id="adminTools">
+                        <ul class="nav ">
+                            
+                            <li class="nav-item {{ $activeItem == 'platformHealth' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'platformHealth' ? ' active' : '' }}  "
+                                    href="{{ route('PlatformHealth') }}">
+                                    <i class="material-icons-round opacity-10">health_and_safety</i>
+                                    <span class="nav-link-text ms-2 ps-1">Platform Health</span>
+                                </a>
+                            </li>
 
-                        <li class="nav-item {{ $activeItem == 'UserAdmin' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'UserAdmin' ? ' active' : '' }}  "
-                                href="{{ route('users') }}">
-                                <i class="material-icons-round opacity-10">people</i>
-                                <span class="sidenav-normal  ms-2  ps-1"> User Management </span>
-                            </a>
-                        </li>
+                            <li class="nav-item {{ $activeItem == 'UserAdmin' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'UserAdmin' ? ' active' : '' }}  "
+                                    href="{{ route('users') }}">
+                                    <i class="material-icons-round opacity-10">people</i>
+                                    <span class="sidenav-normal  ms-2  ps-1"> User Management </span>
+                                </a>
+                            </li>
 
-                    </ul>
-                </div>
-            </li>
-            @endcan
+                        </ul>
+                    </div>
+                </li>
+                @endcan
 
-            {{-- Dive sites Admins --}}
-            @can('manage-items', App\Models\User::class)
-            <li class="nav-item">
-                <a data-bs-toggle="collapse" href="#siteAdmin"
-                    class="nav-link text-white {{ $activePage == 'siteAdmin' ? ' active ' : '' }} "
-                    aria-controls="dashboardsExamples" role="button" aria-expanded="false">
-                    <i class="material-icons-round opacity-10">person_pin_circle</i>
-                    <span class="nav-link-text ms-2 ps-1">Dive Sites Admin</span>
-                </a>
-                <div class="collapse {{ $activePage == 'siteAdmin' ? ' show ' : '' }}  " id="siteAdmin" >
-                    <ul class="nav ">
-                        <li class="nav-item {{ $activeItem == 'siteAdminAdd' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'siteAdminAdd' ? ' active' : '' }}  "
-                                href="{{ route('new-site') }}">
-                                <i class="material-icons-round opacity-10">add_location_alt</i>
-                                <span class="sidenav-normal  ms-2  ps-1"> Add Site </span>
-                            </a>
-                        </li>
-                        <li class="nav-item {{ $activeItem == 'siteAdminEdit' ? ' active ' : '' }}  " style="padding-left: 1rem;">
-                            <a class="nav-link text-white {{ $activeItem == 'siteAdminEdit' ? ' active' : '' }}  "
-                                href="{{ route('DiveSitesAdmin') }}">
-                                <i class="material-icons-round opacity-10">edit_location_alt</i>
-                                <span class="sidenav-normal  ms-2  ps-1"> Edit Site </span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
-            @endcan           
-
+                {{-- Dive sites Admins --}}
+                @can('manage-items', App\Models\User::class)
+                <li class="nav-item">
+                    <a data-bs-toggle="collapse" href="#siteAdmin"
+                        class="nav-link text-white {{ $activePage == 'siteAdmin' ? ' active ' : '' }} "
+                        aria-controls="dashboardsExamples" role="button" aria-expanded="false">
+                        <i class="material-icons-round opacity-10">person_pin_circle</i>
+                        <span class="nav-link-text ms-2 ps-1">Dive Sites Admin</span>
+                    </a>
+                    <div class="collapse {{ $activePage == 'siteAdmin' ? ' show ' : '' }}  " id="siteAdmin" >
+                        <ul class="nav ">
+                            <li class="nav-item {{ $activeItem == 'siteAdminAdd' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'siteAdminAdd' ? ' active' : '' }}  "
+                                    href="{{ route('new-site') }}">
+                                    <i class="material-icons-round opacity-10">add_location_alt</i>
+                                    <span class="sidenav-normal  ms-2  ps-1"> Add Site </span>
+                                </a>
+                            </li>
+                            <li class="nav-item {{ $activeItem == 'siteAdminEdit' ? ' active ' : '' }}  " style="padding-left: 1rem;">
+                                <a class="nav-link text-white {{ $activeItem == 'siteAdminEdit' ? ' active' : '' }}  "
+                                    href="{{ route('DiveSitesAdmin') }}">
+                                    <i class="material-icons-round opacity-10">edit_location_alt</i>
+                                    <span class="sidenav-normal  ms-2  ps-1"> Edit Site </span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                @endcan           
+            @endauth
             
 
             {{--

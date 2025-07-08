@@ -50,11 +50,11 @@
                 <div class="col-lg-5 col-md-8 col-12 m-auto">
 
                 
-                    <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
+                    <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
                         
                         <div class="card-body mt-0">
                             <div class="d-flex justify-content-center">
-                                <img src="{{ asset('assets') }}/img/logos/logo_circle.png" class="img-fluid" width="100">
+                                <img src="{{ asset('assets') }}/img/logos/logo_circle.png" alt="Logo Divers Hub" class="img-fluid" width="100">
                             </div>
                             <h1 class="align-middle text-center text-lg"><b>Divers Hub</b></h1>
                             <h2 class="align-middle text-center text-md">Let's get you to ...</h2>
@@ -62,7 +62,7 @@
                             <a href="{{ route('WreckSites') }}">
                                 <span class="btn bg-gradient-info w-100 position-relative d-flex align-items-center justify-content-center mb-0 mt-3" style="height: 60px;">
                                     <!-- Icon aligned left -->
-                                    <img class="position-absolute start-0 ms-3" style="height:40px;" src="{{ asset('assets') }}/img/icons/wreckWiki.png">
+                                    <img class="position-absolute start-0 ms-3" style="height:40px;" src="{{ asset('assets') }}/img/icons/wreckWiki.png" alt="wreckwiki">
                                     <!-- Centered text -->
                                     <span class="fs-5 text-center w-100">wreckwiki</span>
                                 </span>

@@ -79,7 +79,7 @@ class OperatorController extends Controller
             "title" => $operator->operatorName . " details - divers-hub.com",
             "desc" => "All details for " . $operator->operatorName . ": location, popular dive sites, prices, etc",
             "keywords" => $operator->operatorName . ", " . $operator->location . ", " . $operator->cityAddress,
-            "canonical" => route("OperatorDetails") . "/" . $operator->id,
+            "canonical" => route("OperatorDetails", ['id' => $operator->id]) ,
         );
 
         return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites', 'SEO'));

@@ -39,7 +39,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-center">
-                                    <img src="{{ asset('assets') }}/img/logos/logo_divershub.png" class="img-fluid" width="200">
+                                    <img src="{{ asset('assets') }}/img/logos/logo_divershub.png" alt="logoDiversHub" class="img-fluid" width="200">
                                 </div>
                                 {{--<div class="d-flex justify-content-center">
                                     <img src="{{ asset('assets') }}/img/logos/logo_letters.png" class="img-fluid" width="200">

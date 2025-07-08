@@ -112,7 +112,7 @@
                                                         $level="Technical Hypoxic Trimix";    
                                                 ?>
                                                 {{--<td class="w-25 align-middle text-left text-md"><b>{{ $level}}</b></td> --}}
-                                                <td class="w-5 text-center align-middle" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" height="25"></td>
+                                                <td class="w-5 text-center align-middle" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" alt="levelIcon" height="25"></td>
                                                 
                                                 <td class="w-5 align-middle text-center text-sm">
                                                     <a href="{{ route("edit-site", ['id' => $site->id]) }}"> <i class="material-icons text-success" style="font-size :20pt;">edit</i> </a>

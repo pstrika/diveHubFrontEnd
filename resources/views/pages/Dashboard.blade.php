@@ -117,13 +117,13 @@
                                                 <span class="timeline-step bg-{{ $trip->booked ? "success" : "danger" }} p-3">
                                                     
                                                         @if(strstr($trip->tags, "SHA"))
-                                                            <span class="d-flex align-items-center"><img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_shark_center.png"></span>
+                                                            <span class="d-flex align-items-center"><img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_shark_center.png" alt="S"></span>
                                                         @elseif(strstr($trip->tags, "TEC"))
-                                                            <span class="d-flex align-items-center"><img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_tec_center.png"></span>
+                                                            <span class="d-flex align-items-center"><img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_tec_center.png" alt="T"></span>
                                                         @elseif(strstr($trip->tags, "LOB"))
-                                                            <span class="d-flex align-items-center"><img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_lobster_center.png"></span>
+                                                            <span class="d-flex align-items-center"><img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_lobster_center.png" alt="L"></span>
                                                         @else
-                                                            <span class="d-flex align-items-center"><img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_rec_center.png"></span>
+                                                            <span class="d-flex align-items-center"><img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_rec_center.png" alt="R"></span>
                                                         @endif
                                                     
                                                 </span>

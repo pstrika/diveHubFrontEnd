@@ -29,7 +29,10 @@
   <!--     Metas    -->
   <meta name="description" content="{{ $SEO["desc"] ??  "All you need to know about scuba diving in South Florida"}}">
   <meta name="keywords" content="{{ $SEO["keywords"] ?? "divers-hub, diving, scuba, diving florida, scuba florida, dive" }}">
-  <link rel="canonical" href="{{ $SEO['canonical'] ?? "https://divers-hub.com" }}">
+  
+  @if(!empty($SEO['canonical']))
+    <link rel="canonical" href="{{ $SEO['canonical'] }}">
+  @endif
 
   @if(empty($SEO['title']))
     <meta name="robots" content="noindex, nofollow">

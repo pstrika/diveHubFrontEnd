@@ -23,12 +23,23 @@ use App\Http\Controllers\Auth\GoogleController;
 |
 */
 
-Route::get('/', function () {
+/*Route::get('/', function () {
 	return redirect('Landing');
 	//return view('pages.Landing', ['SEO' => true]);
     //return redirect('sign-in');
 	//return redirect('Trips');
-})->middleware('guest');
+})->middleware('guest');*/
+
+Route::get('/', function () {
+    $SEO = [
+        "title" => "Florida scuba diving sites, calendars and operators",
+        "desc" => "All you need to know for diving in Florida: dive operators, dive sites and wreckwiki, calendars, dive planning and more",
+        "keywords" => "scuba diving florida, scuba, dive operators miami, dive operators fort lauderdale, diving florida keys, dive sites florida",
+		"canonical" => route("/"),
+    ];
+
+    return view('pages.Landing', compact('SEO'));
+})->name('/');
 
 
 /* Privacy Policy */
@@ -49,6 +60,7 @@ Route::get('Landing', function () {
         "title" => "Florida scuba diving sites, calendars and operators",
         "desc" => "All you need to know for diving in Florida: dive operators, dive sites and wreckwiki, calendars, dive planning and more",
         "keywords" => "scuba diving florida, scuba, dive operators miami, dive operators fort lauderdale, diving florida keys, dive sites florida",
+		"canonical" => route("Landing"),
     ];
 
     return view('pages.Landing', compact('SEO'));
@@ -194,6 +206,7 @@ Route::get('sign-in', [SessionsController::class, 'create'])->middleware('guest'
 Route::post('sign-in', [SessionsController::class, 'store'])->middleware('guest');
 
 Route::post('sign-out', [SessionsController::class, 'destroy'])->middleware('guest')->name('logout');
+Route::get('sign-out', [SessionsController::class, 'create'])->middleware('guest');
 
 Route::post('verify', [SessionsController::class, 'show'])->middleware('guest');
 Route::post('reset-password', [SessionsController::class, 'update'])->middleware('guest')->name('password.update');

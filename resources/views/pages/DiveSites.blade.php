@@ -92,23 +92,23 @@
                                             <td class="w-60 align-middle text-start text-sm"><b>Level</b></td>
                                             <td class="w-20 align-middle text-start text-sm"><b>Max Depth (ft)</b></td> </tr>
                                             
-                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_0.png" height="25"></td>
+                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_0.png" alt="OW" height="25"></td>
                                             <td class="align-middle text-info text-start text-sm"><b>Open Water</b></td> 
                                             <td class="align-middle text-info text-center text-sm"><b>60</b></td> </tr>
 
-                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_1.png" height="25"></td>
+                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_1.png" alt="AOW" height="25"></td>
                                             <td class="align-middle text-info text-start text-sm"><b>Advanced Open Water</b></td>
                                             <td class="align-middle text-info text-center text-sm"><b>130</b></td> </tr>
 
-                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7"><img src="{{ asset('assets') }}/img/icons/icons_level_2.png" height="25"></td>
+                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7"><img src="{{ asset('assets') }}/img/icons/icons_level_2.png" alt="Ta" height="25"></td>
                                             <td class="align-middle text-info text-start text-sm"><b>Technical Air</b></td>
                                             <td class="align-middle text-info text-center text-sm"><b>150</b></td> </tr>
 
-                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_3.png" height="25"></td>
+                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_3.png" alt="Tn" height="25"></td>
                                             <td class="align-middle text-info text-start text-sm"><b>Technical Normoxic Trimix</b></td>
                                             <td class="align-middle text-info text-center text-sm"><b>200</b></td> </tr>
 
-                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_4.png" height="25"></td>
+                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_4.png" alt="Th" height="25"></td>
                                             <td class="align-middle text-info text-start text-sm"><b>Technical Hypoxic Trimix</b></td>
                                             <td class="align-middle text-info text-center text-sm"><b>330+</b></td> </tr>
 
@@ -184,7 +184,7 @@
                                                 <td class="w-65 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
                                                 <td class="w-15 align-middle text-md"><div id="rateYoReadOnly_{{ $site->id }}"></div></td> 
                                                 
-                                                <td class="w-5 text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" height="25"></td>
+                                                <td class="w-5 text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" alt="levelIcon" height="25"></td>
 
                                                 <td class="w-10 align-middle text-center text-md"><b>{{ $site->maxDepth }}</b></td> 
                                         
@@ -236,7 +236,7 @@
                                                 <td class="w-65 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
                                                 <td class="w-15 align-middle text-md"><div id="rateYoReadOnly_{{ $site->id }}"></div></td> 
                                                 
-                                                <td class="w-5 text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" height="25"></td>
+                                                <td class="w-5 text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" alt="levelIcon" height="25"></td>
 
                                                 <td class="w-10 align-middle text-center text-md"><b>{{ $site->maxDepth }}</b></td> 
                                         

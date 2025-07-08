@@ -40,19 +40,21 @@
                 </div>
             </a>
         </div>
-        @if(auth()->user()->isGuest())
-            <form method="POST" action="{{ route('logout') }}" class="d-none" id="logout-form">
-                @csrf
-            </form>
-            <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
-                <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-                <a class="nav-link text-white " href="{{ route('logout') }}"
-                onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-                    <span class="badge badge-lg badge-primary"> YOU ARE LOGGED IN AS A "GUEST". Click here to create an account</span>
-                </a>
+        @auth
+            @if(auth()->user()->isGuest())
+                <form method="POST" action="{{ route('logout') }}" class="d-none" id="logout-form">
+                    @csrf
+                </form>
+                <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
+                    <div class="ms-md-auto pe-md-3 d-flex align-items-center">
+                    <a class="nav-link text-white " href="{{ route('logout') }}"
+                    onclick="event.preventDefault();document.getElementById('logout-form').submit();">
+                        <span class="badge badge-lg badge-primary"> YOU ARE LOGGED IN AS A "GUEST". Click here to create an account</span>
+                    </a>
+                    </div>
                 </div>
-            </div>
-        @endif
+            @endif
+        @endauth
         <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
             <div class="ms-md-auto pe-md-3 d-flex align-items-center">
                 <form id="searchForm" action="{{ route('DiveSitesSearch') }}" method="POST" enctype="multipart/form-data">
@@ -65,37 +67,38 @@
             </div>
             
             <ul class="navbar-nav  align-items-center">
-                @if(auth()->user()->isNotGuest())
-                <li class="nav-item">
-                    <a href="{{ route('overview') }}" class="nav-link text-body p-0 position-relative">
+                @auth
+                    @if(auth()->user()->isNotGuest())
+                    <li class="nav-item">
+                        <a href="{{ route('overview') }}" class="nav-link text-body p-0 position-relative">
+                            
+                            <i class="material-icons me-sm-1">
+                                account_circle
+                            </i>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{{ route('Messages') }}" class="nav-link text-body p-0 position-relative">
+                            <i class="material-icons cursor-pointer">
+                                notifications
+                            </i>
+                            <?php
+                                $notif = auth()->user()->unreadNotifications();
+                            ?>
+                            @if($notif)
+                                <span
+                                    class="position-absolute top-5 start-100 translate-middle badge rounded-pill bg-danger border border-white small py-1 px-2">
+                                    <span class="small">{{ $notif }}</span>
+                                    <span class="visually-hidden">unread notifications</span>
+                                </span>
+                            @endif
+                        </a>
                         
-                        <i class="material-icons me-sm-1">
-                            account_circle
-                        </i>
-                    </a>
-                </li>
+                    </li>
 
-                <li class="nav-item">
-                    <a href="{{ route('Messages') }}" class="nav-link text-body p-0 position-relative">
-                        <i class="material-icons cursor-pointer">
-                            notifications
-                        </i>
-                        <?php
-                            $notif = auth()->user()->unreadNotifications();
-                        ?>
-                        @if($notif)
-                            <span
-                                class="position-absolute top-5 start-100 translate-middle badge rounded-pill bg-danger border border-white small py-1 px-2">
-                                <span class="small">{{ $notif }}</span>
-                                <span class="visually-hidden">unread notifications</span>
-                            </span>
-                        @endif
-                    </a>
-                    
-                </li>
-
-                @endif
-                
+                    @endif
+                @endauth
                 <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
                     <a href="javascript:;" class="nav-link text-body p-0" id="iconNavbarSidenav">
                         <div class="sidenav-toggler-inner">
