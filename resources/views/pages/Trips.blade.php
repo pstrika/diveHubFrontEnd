@@ -1,4 +1,4 @@
-<x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
+<x-page-template bodyClass='g-sidenav-show  bg-gray-200' :SEO="$SEO">
     <x-auth.navbars.sidebar activePage="trips" activeItem="trips" activeSubitem=""></x-auth.navbars.sidebar>
     
     

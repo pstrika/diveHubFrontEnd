@@ -31,6 +31,10 @@
   <meta name="keywords" content="{{ $SEO["keywords"] ?? "divers-hub, diving, scuba, diving florida, scuba florida, dive" }}">
   <link rel="canonical" href="{{ $SEO['canonical'] ?? "https://divers-hub.com" }}">
 
+  @if(empty($SEO['title']))
+    <meta name="robots" content="noindex, nofollow">
+  @endif
+
 
   @if (env('IS_DEMO'))
     <meta name="keywords" content="creative tim, updivision, html dashboard, laravel, material, html css dashboard laravel, laravel material dashboard laravel, laravel material dashboard laravel pro, laravel material dashboard, laravel material dashboard pro, material admin, laravel dashboard, laravel dashboard pro, laravel admin, web dashboard, bootstrap 5 dashboard laravel, bootstrap 5, css3 dashboard, bootstrap 5 admin laravel, material dashboard bootstrap 5 laravel, frontend, responsive bootstrap 5 dashboard, material dashboard, material laravel bootstrap 5 dashboard" />

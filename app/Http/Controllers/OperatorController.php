@@ -79,6 +79,7 @@ class OperatorController extends Controller
             "title" => $operator->operatorName . " details - divers-hub.com",
             "desc" => "All details for " . $operator->operatorName . ": location, popular dive sites, prices, etc",
             "keywords" => $operator->operatorName . ", " . $operator->location . ", " . $operator->cityAddress,
+            "canonical" => route("OperatorDetails") . "/" . $operator->id,
         );
 
         return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites', 'SEO'));
@@ -95,6 +96,7 @@ class OperatorController extends Controller
         "title" => "Scuba diving operators in South Florida - divers-hub.com",
         "desc" => "Find all scuba diving operator in Miami, Fort Lauderdale, West Palm Beach and the Florida Keys",
         "keywords" => implode(', ', $operatorNames),
+        "canonical" => route("Operators"),
     );
 
     return view('pages.Operators', compact('operators', 'locationAreas', 'SEO'));

@@ -173,7 +173,15 @@ class TripsController extends Controller
             $controlNav = "";
         
 
-        return view('pages.Trips', compact('trips', 'weathers', 'today', 'previousDay', 'nextDay', 'controlNav', 'user'));
+        /*Provide SEO metadata */
+        $SEO = array(
+            "title" => "Today scuba diving trips in Florida",
+            "desc" => "A calendar for all scuba diving trips going out today in South Florida. From Stuart to key West",
+            "keywords" => "diving, fort lauderdale beach diving, palm beach beach diving,dive sites,scuba diving sites,dive wrecks,dive reefs,wreck,reef",
+            "canonical" => route("Trips")
+        );
+
+        return view('pages.Trips', compact('trips', 'weathers', 'today', 'previousDay', 'nextDay', 'controlNav', 'user', 'SEO'));
         //return view('pages.Trips', compact('trips', 'weathers', 'today', 'previousDay', 'nextDay', 'controlNav'));
 
     }

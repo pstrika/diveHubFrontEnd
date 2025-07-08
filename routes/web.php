@@ -25,6 +25,7 @@ use App\Http\Controllers\Auth\GoogleController;
 
 Route::get('/', function () {
 	return redirect('Landing');
+	//return view('pages.Landing', ['SEO' => true]);
     //return redirect('sign-in');
 	//return redirect('Trips');
 })->middleware('guest');
@@ -45,7 +46,7 @@ Route::get('home', function () {
 
 Route::get('Landing', function () {
     $SEO = [
-        "title" => "Florida dive sites, calendras and operators",
+        "title" => "Florida scuba diving sites, calendars and operators",
         "desc" => "All you need to know for diving in Florida: dive operators, dive sites and wreckwiki, calendars, dive planning and more",
         "keywords" => "scuba diving florida, scuba, dive operators miami, dive operators fort lauderdale, diving florida keys, dive sites florida",
     ];

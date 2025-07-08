@@ -481,7 +481,15 @@ class SiteController extends Controller
         
         $locations = WeatherLocation::all();
 
-        return view('pages.WreckSites', compact('sitesWrecks', 'locations'));
+        /*Provide SEO metadata */
+        $SEO = array(
+            "title" => "Florida wreckwiki",
+            "desc" => "An encyclopedia of all scuaba diving sites in Florida. The evolution of wreckwiki.com",
+            "keywords" => "diving, fort lauderdale beach diving, palm beach beach diving,dive sites,scuba diving sites,dive wrecks,dive reefs,wreck,reef",
+            "canonical" => route("WreckSites")
+        );
+
+        return view('pages.WreckSites', compact('sitesWrecks', 'locations', 'SEO'));
     }
     public function searchSites(Request $request) {
 

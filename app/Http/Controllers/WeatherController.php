@@ -32,9 +32,10 @@ class WeatherController extends Controller
 
         /*Provide SEO metadata */
         $SEO = array(
-            "title" => "Marine forecast for " . $location . " - divers-hub.com",
+            "title" => "Marine forecast for " . $location,
             "desc" => "7-day marine forecast for " . $location . ". Ocean conditions, tides and more",
             "keywords" => "marine weather " . $location . ",dive,diving,scuba,florida diving,tides,florida scuba",
+            "canonical" => route("Weather") . "/" . $location,
         );
 
         return view('pages.Weather', compact('weathers', 'date', 'location', 'allLocations', 'currentLocation', 'SEO'));
@@ -67,7 +68,8 @@ class WeatherController extends Controller
         $SEO = array(
             "title" => "Marine forecast for " . $location . " - divers-hub.com",
             "desc" => "7-day marine forecast for " . $location . ". Ocean conditions, tides and more",
-            "keywords" => "marine weather " . $location . ",dive,diving,scuba,florida diving,tides,florida scuba",
+            "keywords" => "marine weather " . $location . ",dive,diving,scuba,argentina diving,tides,argentina scuba,buceo,buceo argentina,buceo mar del plata,buceo las grutas,buceo ushuaia,buceo puerto madryn",
+            "canonical" => route("WeatherAR") . "/" . $location,
         );
 
         return view('pages.WeatherAR', compact('weathers', 'date', 'location', 'allLocations', 'currentLocation', 'SEO', 'deco_unit'));
@@ -101,6 +103,7 @@ class WeatherController extends Controller
             "title" => "Marine forecast for " . $location . " - divers-hub.com",
             "desc" => "7-day marine forecast for " . $location . ". Ocean conditions, tides and more",
             "keywords" => "marine weather " . $location . ",dive,diving,scuba,florida diving,tides,florida scuba",
+            "canonical" => route("WeatherAR") . "/" . $location,
         );
 
         return view('pages.WeatherAR', compact('weathers', 'date', 'location', 'allLocations', 'currentLocation', 'SEO', 'deco_unit'));
@@ -134,6 +137,7 @@ class WeatherController extends Controller
             "title" => "Marine forecast for " . $location . " - divers-hub.com",
             "desc" => "7-day marine forecast for " . $location . ". Ocean conditions, tides and more",
             "keywords" => "marine weather " . $location . ",dive,diving,scuba,florida diving,tides,florida scuba",
+            "canonical" => route("WeatherAR") . "/" . $location,
         );
 
         return view('pages.WeatherAR', compact('weathers', 'date', 'location', 'allLocations', 'currentLocation', 'SEO', 'deco_unit'));
