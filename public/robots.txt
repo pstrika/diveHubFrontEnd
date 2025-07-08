@@ -1,2 +1,3 @@
 User-agent: *
 Disallow:
+sitemap: https://a357453.sitemaphosting7.com/4440414/sitemap_4440414.xml
