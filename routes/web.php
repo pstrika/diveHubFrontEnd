@@ -60,7 +60,7 @@ Route::get('Landing', function () {
         "title" => "Florida scuba diving sites, calendars and operators",
         "desc" => "All you need to know for diving in Florida: dive operators, dive sites and wreckwiki, calendars, dive planning and more",
         "keywords" => "scuba diving florida, scuba, dive operators miami, dive operators fort lauderdale, diving florida keys, dive sites florida",
-		"canonical" => route("Landing"),
+		"canonical" => route("/"),
     ];
 
     return view('pages.Landing', compact('SEO'));

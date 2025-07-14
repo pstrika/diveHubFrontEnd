@@ -16,7 +16,16 @@ class SessionsController extends Controller
     {
         // Save the URL the user is coming from
         //session()->put('url.intended', url()->previous());
-        return view('sessions.create');
+
+        /*Provide SEO metadata */
+        $SEO = array(
+            "title" => "Sign in to divers-hub.com",
+            "desc" => "Sign up to everything you need to know before diving in South Florida",
+            "keywords" => "beach diving, fort lauderdale beach diving, palm beach beach diving, shore diving, scuba, dive sites, dive operators, marine forecast, dive sites miami",
+            "canonical" => route("login")
+        );
+
+        return view('sessions.create', compact('SEO'));
     }
 
     public function store()

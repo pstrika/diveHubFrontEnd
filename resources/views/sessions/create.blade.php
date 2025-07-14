@@ -1,4 +1,4 @@
-<x-page-template bodyClass='bg-gray-200'>
+<x-page-template bodyClass='bg-gray-200' :SEO="$SEO">
 
     <!-- Navbar -->
     <nav
