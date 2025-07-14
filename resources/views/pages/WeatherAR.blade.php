@@ -120,7 +120,7 @@
                                     <a href="/WeatherAR/ushuaia/" class="position-absolute text-sm material-icons text-black {{ ($location == "ushuaia" ? "animate-icon" : "") }}" style="top:160px; left:70px;">circle</a>
                                     <a href="/WeatherAR/puerto madryn/"class="position-absolute text-sm material-icons text-black {{ ($location == "puerto madryn" ? "animate-icon" : "") }}" style="top:37px; left:101px;">circle</a>
                                     <a href="/WeatherAR/las grutas/"class="position-absolute text-sm material-icons text-black {{ ($location == "las grutas" ? "animate-icon" : "") }}" style="top:16px; left:103px;">circle</a>
-                                    <a href="/WeatherAR/mar del plat/"class="position-absolute text-sm material-icons text-black {{ ($location == "mar del plata" ? "animate-icon" : "") }}" style="top:-10px; left:150px;">circle</a>
+                                    <a href="/WeatherAR/mar del plata/"class="position-absolute text-sm material-icons text-black {{ ($location == "mar del plata" ? "animate-icon" : "") }}" style="top:-10px; left:150px;">circle</a>
                                     
                                         
                                     
