@@ -111,7 +111,15 @@ class SessionsController extends Controller
 
         //return redirect('/sign-in');
 
-        return view('sessions.create');
+        /*Provide SEO metadata */
+        $SEO = array(
+            "title" => "Sign out divers-hub.com",
+            "desc" => "Sign up to everything you need to know before diving in South Florida",
+            "keywords" => "beach diving, fort lauderdale beach diving, palm beach beach diving, shore diving, scuba, dive sites, dive operators, marine forecast, dive sites miami",
+            "canonical" => route("logout")
+        );
+
+        return view('sessions.create', compact('SEO'));
     }
 
 }
