@@ -60,7 +60,7 @@
                                 <a class="nav-link mb-0 px-0 py-1 active" href="#" data-tag="all" data-lat="25.9379" data-lng="-80.9248" data-zoom="6.7">All</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="F.Lauderdale" data-lat="26.22231" data-lng="-80.14338" data-zoom="10">F.Lauderdale</a>
+                                <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="F.Lauderdale" data-lat="26.22231" data-lng="-80.14338" data-zoom="10">Fort Lauderdale</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="WPB-Jupiter" data-lat="26.8000" data-lng="-80.0672" data-zoom="9">WPB-Jupiter</a>

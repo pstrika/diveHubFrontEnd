@@ -3,6 +3,8 @@
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+       
+
         <!-- Navbar -->
         <x-auth.navbars.navs.auth pageTitle="Technical Calendar {{ $currentMonthS}}-{{ $year }}"></x-auth.navbars.navs.auth>
         <!-- End Navbar -->
@@ -275,6 +277,20 @@
     
     <script src="/assets/js/plugins/fullcalendar.min.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
+
+     <style>
+        /* Style the "today" button */
+        .fc .fc-button-primary,
+        .fc .fc-button-secondary,
+        .fc .fc-prev-button,
+        .fc .fc-next-button,
+        .fc .fc-today-button {
+            background-color: #1A73E8 !important;
+            color: #fff !important;
+            border: none !important;
+        }
+
+    </style>
 
 
     <script>

@@ -74,6 +74,11 @@ class OperatorController extends Controller
         } else
             $topSites = null;     
 
+        $trips = Trip::where('operatorId', $id)
+            ->whereDate('date', '>=', Carbon::today())
+            ->get()->sortBy("date");
+            
+            
         /*Provide SEO metadata */
         $SEO = array(
             "title" => $operator->operatorName . " details - divers-hub.com",
@@ -82,7 +87,7 @@ class OperatorController extends Controller
             "canonical" => route("OperatorDetails", ['id' => $operator->id]) ,
         );
 
-        return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites', 'SEO'));
+        return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites', 'trips', 'SEO'));
     }
 
 

@@ -153,7 +153,7 @@
                     <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Boats</h4>
+                                <h2 class="card-title text-white mx-4">Boats</h2>
                                 <div class="table-responsive"></div>
                             </div>
                         </div>
@@ -162,95 +162,90 @@
                                 <table class="table align-items-center mb-0"> 
                                     <tbody>
                                         <tr><td>
-                                        <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
-                                            <div class="carousel-inner">
-                                                @php 
-                                                    $first = true;
-                                                @endphp
-                                                    
-                                                @foreach ($boats as $boat)    
-                                                    <div class="carousel-item {{ ($first ? "active" : "") }}">
-                                                        @php
-                                                            $first = false;
-                                                        @endphp
-                                                        <div class="page-header min-vh-25 m-3 border-radius-xl" style="background-image: url('{{ asset('assets') }}{{ $boat->pic}}');">
+                                            <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
+                                                <div class="carousel-inner">
+                                                    @php 
+                                                        $first = true;
+                                                    @endphp
                                                         
-                                                        <div class="container">
-                                                            <div class="row">
-                                                            <div class="my-auto">
-                                                                <h3 class="text-white mt-10 fadeIn1 fadeInBottom ">{{ $boat->name }}</h4>
-                                                                
-                                                                
+                                                    @foreach ($boats as $boat)    
+                                                        <div class="carousel-item {{ $first ? "active" : "" }}">
+                                                            @php
+                                                                $first = false;
+                                                            @endphp
+                                                            <div class="page-header min-vh-25 m-3 border-radius-xl" style="background-image: url('{{ asset('assets') }}{{ $boat->pic}}');">
+                                                            
+                                                                <div class="container">
+                                                                    <div class="row">
+                                                                        <div class="my-auto">
+                                                                            <h3 class="text-white mt-10 fadeIn1 fadeInBottom ">{{ $boat->name }}</h3>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                            </div>
+
+                                                            <table class="table align-items-center mb-0">
+                                                                <tbody>
+                                                                    @if($boat->type)
+                                                                        <tr class="align-top"><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Type</td>
+                                                                        <td class="align-middle text-left text-wrap text-sm"><b>{{ $boat->type }}</b></td> </tr>
+                                                                    @endif
+                                                                    
+                                                                    @if($boat->capacity)
+                                                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Capacity Rec</td>
+                                                                        <td class="align-middle text-left text-sm"><b>{{ $boat->capacity }} divers</b></td> </tr>
+                                                                    @endif
+
+                                                                    @if($boat->tec_capacity)
+                                                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Capacity Tec</td>
+                                                                        <td class="align-middle text-left text-sm"><b>{{ $boat->tec_capacity }} divers</b></td> </tr>
+                                                                    @endif
+                                                                    
+                                                                    @if($boat->manufacturer)
+                                                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Manufacturer</td>
+                                                                        <td class="align-middle text-left text-sm"><b>{{ $boat->manufacturer }}</b></td> </tr>
+                                                                    @endif
+
+                                                                    @if($boat->beam)
+                                                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Beam</td>
+                                                                        <td class="align-middle text-wrap text-sm"><b>{{ $boat->beam }} ft</b></td> </tr>
+                                                                    @endif
+                                                                    
+                                                                    @if($boat->length)
+                                                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Lentgh</td>
+                                                                        <td class="align-middle text-wrap text-sm"><b>{{ $boat->length }} ft</b></td> </tr>
+                                                                    @endif
+
+                                                                    @if($boat->speed)
+                                                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Speed</td>
+                                                                        <td class="align-middle text-wrap text-sm"><b>{{ $boat->speed }} knots</b></td> </tr>
+                                                                    @endif
+
+                                                                    @if($boat->power)
+                                                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Power</td>
+                                                                        <td class="align-middle text-wrap text-sm"><b>{{ $boat->power }}</b></td> </tr>
+                                                                    @endif
+                                                                </tbody>
+                                                            </table>
+
+
                                                         </div>
-                                                        </div>
-                                                        {{--<h4 class="text-info mb-0 fadeIn1 fadeInBottom align-bottom text-center"> {{ $boat->name }}</h4>--}}
+                                                    @endforeach
+                                                </div>
 
-                                                        <table class="table align-items-center mb-0">
-                                                    
-                                                            @if($boat->type)
-                                                                <tr class="align-top"><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Type</td>
-                                                                <td class="align-middle text-left text-wrap text-sm"><b>{{ $boat->type }}</b></td> </tr>
-                                                            @endif
-                                                            
-                                                            @if($boat->capacity)
-                                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Capacity Rec</td>
-                                                                <td class="align-middle text-left text-sm"><b>{{ $boat->capacity }} divers</b></td> </tr>
-                                                            @endif
-
-                                                            @if($boat->tec_capacity)
-                                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Capacity Tec</td>
-                                                                <td class="align-middle text-left text-sm"><b>{{ $boat->tec_capacity }} divers</b></td> </tr>
-                                                            @endif
-                                                            
-                                                            @if($boat->manufacturer)
-                                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Manufacturer</td>
-                                                                <td class="align-middle text-left text-sm"><b>{{ $boat->manufacturer }}</b></td> </tr>
-                                                            @endif
-
-                                                            @if($boat->beam)
-                                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Beam</td>
-                                                                <td class="align-middle text-wrap text-sm"><b>{{ $boat->beam }} ft</b></td> </tr>
-                                                            @endif
-                                                            
-                                                            @if($boat->length)
-                                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Lentgh</td>
-                                                                <td class="align-middle text-wrap text-sm"><b>{{ $boat->length }} ft</b></td> </tr>
-                                                            @endif
-
-                                                            @if($boat->speed)
-                                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Speed</td>
-                                                                <td class="align-middle text-wrap text-sm"><b>{{ $boat->speed }} knots</b></td> </tr>
-                                                            @endif
-
-                                                            @if($boat->power)
-                                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Power</td>
-                                                                <td class="align-middle text-wrap text-sm"><b>{{ $boat->power }}</b></td> </tr>
-                                                            @endif
-
-                                                        </table>
-
-
-                                                    </div>
-                                                @endforeach
-
+                                                <div class="position-absolute min-vh-25 w-100 top-10">
+                                                    <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-bs-slide="prev">
+                                                        <span class="carousel-control-prev-icon position-absolute bottom-50 text-info" aria-hidden="true"></span>
+                                                        <span class="visually-hidden">Previous</span>
+                                                    </a>
+                                                    <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-bs-slide="next">
+                                                        <span class="carousel-control-next-icon position-absolute bottom-50" aria-hidden="true"></span>
+                                                        <span class="visually-hidden">Next</span>
+                                                    </a>
+                                                </div>
                                                 
                                             </div>
-
-                                            <div class="position-absolute min-vh-25 w-100 top-10">
-                                                <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-bs-slide="prev">
-                                                    <span class="carousel-control-prev-icon position-absolute bottom-50 text-info" aria-hidden="true"></span>
-                                                    <span class="visually-hidden">Previous</span>
-                                                </a>
-                                                <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-bs-slide="next">
-                                                    <span class="carousel-control-next-icon position-absolute bottom-50" aria-hidden="true"></span>
-                                                    <span class="visually-hidden">Next</span>
-                                                </a>
-                                            </div>
-                                            
-                                        </div>
-
+                                        </td></tr>
                                     </tbody>    
                                 </table>
                             </div>    
@@ -261,13 +256,13 @@
                 
                 
                 
-                <div class="col-md-4">
                 {{-- Card Gas Fills--}}
+                <div class="col-md-4">
                     <div class="col-md-12">             
                         <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                                 <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Gas Fills Offered</h4>
+                                    <h2 class="card-title text-white mx-4">Gas Fills Offered</h2>
                                     <div class="table-responsive"></div>
                                 </div>
                             </div>
@@ -290,10 +285,7 @@
                                                             <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillAir ? "check" : "block") }}</i></td>
                                                             <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillNitrox ? "check" : "block") }}</i></td>
                                                             <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillTrimix ? "check" : "block") }}</i></td>
-                                                            <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillO2 ? "check" : "block") }}</i></td>
-                                                            
-                                                            
-                                                            
+                                                            <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillO2 ? "check" : "block") }}</i></td>  
                                                         </tr>
                                                     </tbody>
 
@@ -349,6 +341,28 @@
                     {{-----------------------------}}
                 </div>
 
+
+                <div class="col-md-12">             
+                    <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h2 class="card-title text-white mx-4">Dive Calendar</h2>
+                                <div class="table-responsive"></div>
+                            </div>
+                        </div>
+                        <div class="card-body p-3">
+                            <table>
+                                <tr><td class="text-start text-sm w-1"> 
+                                    <span class="badge badge-md bg-gradient-secondary text-white mx-2">Recreational</span>
+                                    <span class="badge badge-md bg-gradient-success text-white">Technical</span>
+                                </td></tr>
+                                <tr><td><p class="text-xs font-weight-bold mb-0 mt-0 mx-2">reference</p></td></tr>
+                            </table>
+
+                            <div class="calendar" data-bs-toggle="calendar" id="calendar"></div>
+                        </div>
+                    </div>
+                </div>
 
                 {{--card top sites--}}
                 @if( $topSites != null and count($topSites))
@@ -436,6 +450,8 @@
     <script src="{{ asset('assets') }}/js/plugins/flatpickr.min.js"></script>
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
+    <script src="/assets/js/plugins/fullcalendar.min.js"></script>
+    <link href="{{ asset("assets") }}/css/calendar-buttons.css" rel="stylesheet" />
 
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoicHN0cmlrYSIsImEiOiJjbHZsc2p2bXcyY240MmtuMDcydHJzd2UxIn0.KBf79cvk47WseBc9rNu6gQ';
@@ -482,6 +498,92 @@
             window.location.href = `/Trips/${dateStr}`;
         }
     });
+    </script>
+
+    <script>
+        function getResponsiveView() {
+            const width = window.innerWidth;
+            if (width >= 1200) return 'dayGridMonth';     // Large screens
+            if (width >= 768) return 'dayGridWeek';       // Medium screens
+            return 'dayGridThreeDay';                    // Small screens
+        }
+
+        const todayDate = new Date().toISOString().split('T')[0];
+        var calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+        dateClick: function(info) {
+            var link = '/Trips/' + info.dateStr;
+            window.location.href = link;
+        },
+        
+        initialView: getResponsiveView(),
+        windowResize: function(view) {
+            calendar.changeView(getResponsiveView());
+        },
+        firstDay: {{ auth()->user()->firstDayOfWeek }},
+        contentHeight: 'auto',
+        headerToolbar: {
+            start: '', //'title', // will normally be on the left. if RTL, will be on the right
+            center: 'title',
+            end: 'prev,next today'//'today prev,next' // will normally be on the right. if RTL, will be on the left
+        },
+        selectable: true,
+        editable: false,
+        initialDate: todayDate,
+        events: [
+            @php
+                foreach($trips as $trip) {
+                    // fix the ' problem
+                    $tripName = str_replace("'", "\\'", $trip->tripName);
+                    echo "{";
+                    echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) ."',";
+                    echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
+                    echo "url: '/TripDetails/" . str($trip->id) . "',";
+                    if($trip->tripType == "Technical")
+                        echo "className: 'bg-gradient-success text-white tripType=1 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
+                    else
+                        echo "className: 'bg-gradient-secondary text-white tripType=0 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
+                }
+            @endphp
+            
+
+        ],
+        views: {
+            dayGridThreeDay: {
+                type: 'dayGrid',
+                duration: { days: 3 },
+                buttonText: '3 day',
+                titleFormat: {
+                    month: "long",
+                    year: "numeric",
+                    day: "numeric"
+                }
+            },
+            month: {
+            titleFormat: {
+                month: "long",
+                year: "numeric"
+            }
+            },
+            agendaWeek: {
+            titleFormat: {
+                month: "long",
+                year: "numeric",
+                day: "numeric"
+            }
+            },
+            agendaDay: {
+            titleFormat: {
+                month: "short",
+                year: "numeric",
+                day: "numeric"
+            }
+            }
+        },
+        });
+
+        calendar.render();
+
+
     </script>
 
     @endpush
