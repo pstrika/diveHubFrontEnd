@@ -341,7 +341,7 @@
                     {{-----------------------------}}
                 </div>
 
-
+                @if($trips->isNotEmpty())
                 <div class="col-md-12">             
                     <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
@@ -363,7 +363,7 @@
                         </div>
                     </div>
                 </div>
-
+                @endif
                 {{--card top sites--}}
                 @if( $topSites != null and count($topSites))
                     <div class="col-md-6">

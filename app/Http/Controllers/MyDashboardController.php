@@ -197,6 +197,24 @@ class MyDashboardController extends Controller
             }
         }
 
-        return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers', 'wished'));
+        // Get favorite operators calendars
+        $favoriteOperatorsIndex = array_filter(explode(',', $user->favOperators), fn($val) => trim($val) !== '');
+        Log::debug($favoriteOperatorsIndex);
+        if(!empty($favoriteOperatorsIndex)) {
+            $favOperators = Operator::select('id', 'operatorName', 'logoUrl')
+                ->whereIn('id', $favoriteOperatorsIndex)
+                ->get();
+            Log::debug($favOperators);
+            
+        } else
+            $favOperators = [];
+
+        $favCalendars = Trip::whereIn('operatorId', $favoriteOperatorsIndex)
+            ->whereDate('date', '>=', Carbon::today())
+            ->get()->sortBy("date");
+            //Log::debug($favCalendars);
+
+
+        return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers', 'wished', 'favOperators', 'favCalendars'));
     }
 }

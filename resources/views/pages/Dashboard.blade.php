@@ -96,6 +96,52 @@
                 </div>
             </div>
 
+            @if( $favOperators->isNotEmpty())
+            <div class="row mx-1 mt-n1">
+                <div class="col-md-12">             
+                    <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h2 class="card-title text-white mx-4">My favorites dive calendars</h2>
+                                <div class="table-responsive"></div>
+                            </div>
+                        </div>
+                        <div class="card-body p-3">
+                            <table>
+                                <tr></td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <!-- Dropdown -->
+                                        <div class="dropdown">
+                                            <select class="btn bg-info dropdown-toggle text-white" id="filterOperators" data-bs-toggle="dropdown" aria-expanded="false">
+                                                @foreach($favOperators as $favOperator)
+                                                    <option value="{{ $favOperator->id }}">{{ $favOperator->operatorName }}</option>
+                                                @endforeach
+                                            </select>
+                                            <p class="text-xs font-weight-bold mb-2 mt-n3">dive operator</p>
+                                        </div>
+                                        
+
+                                        <!-- Logo -->
+                                        <div class="text-left mx-n2 mt-n3">
+                                            <img id="operatorLogo" src="/images/default-logo.png" height="45" alt="Operator Logo">
+                                            
+                                        </div>
+                                    </div>
+                                </td></tr>
+                                <tr><td class="text-start text-sm w-1"> 
+                                    <span class="badge badge-md bg-gradient-secondary text-white mx-0">Recreational</span>
+                                    <span class="badge badge-md bg-gradient-success text-white">Technical</span>
+                                </td></tr>
+                                <tr><td><p class="text-xs font-weight-bold mb-0 mt-0 mx-0">reference</p></td></tr>
+                            </table>
+
+                            <div class="calendar" data-bs-toggle="calendar" id="calendar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+            
             <div class="row mx-1">
                 {{---Card My Upcoming trips--}}
                 <div class="col-md-4 mb-4">
@@ -349,6 +395,8 @@
     
     @push('js')
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
+    <script src="/assets/js/plugins/fullcalendar.min.js"></script>
+    <link href="{{ asset("assets") }}/css/calendar-buttons.css" rel="stylesheet" />
 
     <!-- Google tag (gtag.js) event -->
     @if(session('newUser'))
@@ -426,6 +474,149 @@
                 document.getElementById("div-button-waiver").hidden = true;
         }
     </script>
+
+    <script>
+        function getResponsiveView() {
+            const width = window.innerWidth;
+            if (width >= 1200) return 'dayGridMonth';     // Large screens
+            if (width >= 768) return 'dayGridWeek';       // Medium screens
+            return 'dayGridThreeDay';                    // Small screens
+        }
+
+        const todayDate = new Date().toISOString().split('T')[0];
+        var calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+        dateClick: function(info) {
+            var link = '/Trips/' + info.dateStr;
+            window.location.href = link;
+        },
+        
+        initialView: getResponsiveView(),
+        windowResize: function(view) {
+            calendar.changeView(getResponsiveView());
+        },
+        firstDay: {{ auth()->user()->firstDayOfWeek }},
+        contentHeight: 'auto',
+        headerToolbar: {
+            start: '', //'title', // will normally be on the left. if RTL, will be on the right
+            center: 'title',
+            end: 'prev,next today'//'today prev,next' // will normally be on the right. if RTL, will be on the left
+        },
+        selectable: true,
+        editable: false,
+        initialDate: todayDate,
+        events: [
+            @php
+                foreach($favCalendars as $trip) {
+                    // fix the ' problem
+                    $tripName = str_replace("'", "\\'", $trip->tripName);
+                    echo "{";
+                    echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) ."',";
+                    echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
+                    echo "url: '/TripDetails/" . str($trip->id) . "',";
+                    if($trip->tripType == "Technical")
+                        echo "className: 'bg-gradient-success text-white op=" . $trip->operatorId  . "f' },";
+                    else
+                        echo "className: 'bg-gradient-secondary text-white op=" . $trip->operatorId  . "f' },";
+                }
+            @endphp
+            
+
+        ],
+        views: {
+            dayGridThreeDay: {
+                type: 'dayGrid',
+                duration: { days: 3 },
+                buttonText: '3 day',
+                titleFormat: {
+                    month: "long",
+                    year: "numeric",
+                    day: "numeric"
+                }
+            },
+            month: {
+            titleFormat: {
+                month: "long",
+                year: "numeric"
+            }
+            },
+            agendaWeek: {
+            titleFormat: {
+                month: "long",
+                year: "numeric",
+                day: "numeric"
+            }
+            },
+            agendaDay: {
+            titleFormat: {
+                month: "short",
+                year: "numeric",
+                day: "numeric"
+            }
+            }
+        },
+        });
+
+        calendar.render();
+
+
+    </script>
+
+
+
+    <script>
+        const favOperators = @json($favOperators);
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterDropdown = document.getElementById('filterOperators');
+            const operatorLogo = document.getElementById('operatorLogo');
+
+            
+            const favOperators = @json($favOperators);
+
+            function applyFilter() {
+                const selectedId = filterDropdown.value;
+
+                // 🔄 Update logo
+                const selectedOperator = favOperators.find(op => op.id == selectedId);
+                if (selectedOperator) {
+                    operatorLogo.src = '{{ asset('assets') }}' + '/' + selectedOperator.logoUrl || '/images/default-logo.png';
+                } else {
+                    operatorLogo.src = '/images/default-logo.png';
+                }
+
+                // ✅ Filter calendar events
+                const rows = document.querySelectorAll('#calendar a[class]');
+                rows.forEach(function(row) {
+                    const tags = row.getAttribute('class');
+                    if (tags.includes('fc-daygrid-event')) {
+                        if (tags.includes('op=' + selectedId + 'f')) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    }
+                });
+            }
+
+            // Initial filter on page load
+            if (filterDropdown.options.length > 0) {
+                filterDropdown.selectedIndex = 0;
+                applyFilter();
+            }
+
+            // Reapply filter on dropdown change
+            filterDropdown.addEventListener('change', applyFilter);
+
+            // Reapply filter on window resize (with debounce)
+            let resizeTimeout;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(applyFilter, 300);
+            });
+        });
+    </script>
+
+
+
 
     @endpush
 </x-page-template>
