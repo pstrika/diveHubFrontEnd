@@ -475,6 +475,59 @@
         }
     </script>
 
+     <script>
+    const favOperators = @json($favOperators);
+
+    // 🔄 Make applyFilter available globally
+    function applyFilter() {
+        const filterDropdown = document.getElementById('filterOperators');
+        const operatorLogo = document.getElementById('operatorLogo');
+        const selectedId = filterDropdown.value;
+
+        // Update logo
+        const selectedOperator = favOperators.find(op => op.id == selectedId);
+        if (selectedOperator) {
+            operatorLogo.src = '{{ asset('assets') }}/' + selectedOperator.logoUrl || '/images/default-logo.png';
+        } else {
+            operatorLogo.src = '/images/default-logo.png';
+        }
+
+        // Filter calendar events
+        const rows = document.querySelectorAll('#calendar a[class]');
+        rows.forEach(function(row) {
+            const tags = row.getAttribute('class');
+            if (tags.includes('fc-daygrid-event')) {
+                if (tags.includes('op=' + selectedId + 'f')) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterDropdown = document.getElementById('filterOperators');
+
+        // Initial filter
+        if (filterDropdown.options.length > 0) {
+            filterDropdown.selectedIndex = 0;
+            applyFilter();
+        }
+
+        // Reapply on change
+        filterDropdown.addEventListener('change', applyFilter);
+
+        // Reapply on window resize (debounced)
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(applyFilter, 300);
+        });
+    });
+</script>
+
+
     <script>
         function getResponsiveView() {
             const width = window.innerWidth;
@@ -493,6 +546,12 @@
         initialView: getResponsiveView(),
         windowResize: function(view) {
             calendar.changeView(getResponsiveView());
+            applyFilter();
+        },
+        datesSet: function() {
+            setTimeout(() => {
+                applyFilter();
+            }, 50); // Slight delay to wait for DOM stabilization
         },
         firstDay: {{ auth()->user()->firstDayOfWeek }},
         contentHeight: 'auto',
@@ -563,57 +622,7 @@
 
 
 
-    <script>
-        const favOperators = @json($favOperators);
-        document.addEventListener('DOMContentLoaded', function() {
-            const filterDropdown = document.getElementById('filterOperators');
-            const operatorLogo = document.getElementById('operatorLogo');
-
-            
-            const favOperators = @json($favOperators);
-
-            function applyFilter() {
-                const selectedId = filterDropdown.value;
-
-                // 🔄 Update logo
-                const selectedOperator = favOperators.find(op => op.id == selectedId);
-                if (selectedOperator) {
-                    operatorLogo.src = '{{ asset('assets') }}' + '/' + selectedOperator.logoUrl || '/images/default-logo.png';
-                } else {
-                    operatorLogo.src = '/images/default-logo.png';
-                }
-
-                // ✅ Filter calendar events
-                const rows = document.querySelectorAll('#calendar a[class]');
-                rows.forEach(function(row) {
-                    const tags = row.getAttribute('class');
-                    if (tags.includes('fc-daygrid-event')) {
-                        if (tags.includes('op=' + selectedId + 'f')) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    }
-                });
-            }
-
-            // Initial filter on page load
-            if (filterDropdown.options.length > 0) {
-                filterDropdown.selectedIndex = 0;
-                applyFilter();
-            }
-
-            // Reapply filter on dropdown change
-            filterDropdown.addEventListener('change', applyFilter);
-
-            // Reapply filter on window resize (with debounce)
-            let resizeTimeout;
-            window.addEventListener('resize', function() {
-                clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(applyFilter, 300);
-            });
-        });
-    </script>
+   
 
 
 
