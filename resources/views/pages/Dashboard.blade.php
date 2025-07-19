@@ -96,7 +96,7 @@
                 </div>
             </div>
 
-            @if( $favOperators->isNotEmpty())
+            @if( !empty($favOperators) )
             <div class="row mx-1 mt-n1">
                 <div class="col-md-12">             
                     <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
