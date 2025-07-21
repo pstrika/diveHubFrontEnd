@@ -6,7 +6,7 @@
         {{--<span class="text-right">v4.0.2 (9/3/2024)</span>--}}
     </a>
     <span class="text-right text-white text-sm fw-bold" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); padding: 20px;">
-        v7.3.1 (07/18/2025)</span>
+        v7.3.2 (07/21/2025)</span>
     {{--<button class="navbar-toggler shadow-none ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navigation"
         aria-controls="navigation" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon mt-2">

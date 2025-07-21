@@ -55,6 +55,16 @@ Route::get('home', function () {
     return view('pages.home');
 })->name('home');
 
+Route::get('gasplanning', function () {
+	$SEO = [
+        "title" => "Florida scuba diving sites, calendars and operators",
+        "desc" => "All you need to know for diving in Florida: dive operators, dive sites and wreckwiki, calendars, dive planning and more",
+        "keywords" => "scuba diving florida, scuba, dive operators miami, dive operators fort lauderdale, diving florida keys, dive sites florida",
+		"canonical" => route("gasplanning"),
+    ];
+    return view('pages.GasPlanning', compact('SEO'));
+})->name('gasplanning');
+
 Route::get('Landing', function () {
     $SEO = [
         "title" => "Florida scuba diving sites, calendars and operators",
