@@ -624,7 +624,7 @@
                                             @endphp
                                         </tr>
                                     
-                                        <tr><td colspan="100%" class="text-uppercase text-white text-sm font-weight-bolder opacity-7 text-center bg-gradient-info" style="border: none;">astrological</td> </tr>
+                                        <tr><td colspan="100%" class="text-uppercase text-white text-sm font-weight-bolder opacity-7 text-center bg-gradient-info" style="border: none;">sunrise/sunset</td> </tr>
                                     
                                         <tr> {{--Sunrise--}}
                                             <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">SUNRISE</td>
