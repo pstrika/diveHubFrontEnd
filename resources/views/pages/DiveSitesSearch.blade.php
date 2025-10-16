@@ -105,8 +105,27 @@
                                 </div>
 
                                 <div class="card-body">
+
+                                    @if(count($resultsOperator))
+                                        <div class="table-responsive mt-0">
+                                            <h4 class="text-info">in operators</h4>
+                                            <table>
+                                                <tbody>
+                                                    @foreach($resultsOperator as $operator)
+                                                        <tr tr style="border-bottom: 1px solid #D3D3D3;">
+                                                            <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/{{ $operator->logoUrl }}" alt="{{ $operator->operatorName }}"></td>
+                                                            <td class="align-middle text-left text-md"><b><a href="/OperatorDetails/{{ $operator->id }}"> {{ $operator->operatorName }}</a></b></td>
+                                                            <td class="align-middle text-right text-sm"><b>{{ $operator->cityAddress }}, {{ $operator->stateAddress }}</b></td> 
+                                                        </tr>
+                                                        
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @endif
+
                                     @if(count($results))
-                                        <div class="table-responsive">
+                                        <div class="table-responsive mt-3">
                                             <h4 class="text-info">in sites name</h4>
                                             <table>
                                                 <tbody>
@@ -116,7 +135,7 @@
                                                             <td class="align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
                                                             @foreach($locations as $location)
                                                                 @if($location->short == $site->location)
-                                                                    <td class="align-middle text-left text-md"><b>{{ $location->location }}</b></td> 
+                                                                    <td class="align-middle text-left text-sm"><b>{{ ucwords($location->location) }}</b></td> 
                                                                 @endif
                                                             @endforeach
                                                             

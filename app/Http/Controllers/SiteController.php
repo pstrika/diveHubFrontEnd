@@ -515,7 +515,10 @@ class SiteController extends Controller
                 ->get();
             Log::info("Got " . str(count($resultsWreckType)) . " matches in the search for wreck type");
 
-            
+            $resultsOperator = Operator::select('id', 'operatorName', 'cityAddress', 'stateAddress', 'logoUrl')
+                ->where('operatorName', 'LIKE', "%$searchString%")
+                ->take(10)
+                ->get();
 
             $resultsDesc = Site::select('id', 'name', 'type', 'level', 'location', 'desc')
                 ->where('desc', 'LIKE', "%$searchString%")
@@ -524,7 +527,7 @@ class SiteController extends Controller
             Log::info("Got " . str(count($resultsDesc)) . " matches in the search for desc");
 
             $resultsDescription = [];
-            $contextWords = 3; // Number of words before and after the match
+            $contextWords = 5; // Number of words before and after the match
             foreach($resultsDesc as $resultDesc) {
                 //get the plain text from the quill json
                 $delta = json_decode($resultDesc->desc);
@@ -537,7 +540,7 @@ class SiteController extends Controller
                 }
 
                 // see where the search token is
-                $position = strpos($desc, $searchString);
+                $position = stripos($desc, $searchString);
                 Log::debug('position is: ' . $position);
 
                 // get pre a pos words
@@ -546,9 +549,13 @@ class SiteController extends Controller
 
                 $preWords = explode(' ', $preString);
                 $posWords = explode(' ', $posString);
+                //Log::debug('Pre words: ' . implode(' ', $preWords));
+                //Log::debug('Pos words: ' . implode(' ', $posWords));
 
                 $afterWords = array_slice($posWords, 0, $contextWords); // Get the first $contextWords elements
                 $beforeWords = array_slice($preWords, -$contextWords, $contextWords, true);
+                //Log::debug("Before words: " . implode(' ', $beforeWords));
+                //Log::debug("After words: " . implode(' ', $afterWords));
 
                 $beforeString = implode(' ', $beforeWords);
                 $afterString = implode(' ', $afterWords);
@@ -574,7 +581,7 @@ class SiteController extends Controller
 
             //check on history
             $resultsHistoryA = [];
-            $contextWords = 3; // Number of words before and after the match
+            $contextWords = 5; // Number of words before and after the match
             foreach($resultsHistory as $resultHistory) {
                 //get the plain text from the quill json
                 $delta = json_decode($resultHistory->history);
@@ -586,8 +593,8 @@ class SiteController extends Controller
                     }
                 }
 
-                // see where the search token is
-                $position = strpos($history, $searchString);
+                // see where the search token is (stripos makes it case insensitive)
+                $position = stripos($history, $searchString);
                 Log::debug('position is: ' . $position);
 
                 // get pre a pos words
@@ -620,7 +627,7 @@ class SiteController extends Controller
             
 
             if(count($results) or count($resultsDescription) or count($resultsHistoryA) or count($resultsWreckType))
-                return view('pages.DiveSitesSearch', compact('searchString', 'results', 'locations', 'resultsDescription', 'resultsHistoryA', 'resultsWreckType'))->withStatus("match");
+                return view('pages.DiveSitesSearch', compact('searchString', 'results', 'locations', 'resultsDescription', 'resultsHistoryA', 'resultsWreckType', 'resultsOperator'))->withStatus("match");
             else
                 return view('pages.DiveSitesSearch', compact('searchString', 'results'))->withStatus("no match");
         }
