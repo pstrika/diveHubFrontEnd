@@ -224,119 +224,137 @@
     
     
     <script>
-        var calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
-        initialView: "dayGridMonth",
-        firstDay: {{ auth()->user()->firstDayOfWeek }},
-        dateClick: function(info) {
-            // Change to day view
-            calendar.changeView('timeGridDay', info.dateStr);
+        document.addEventListener("DOMContentLoaded", function () {
+            setTimeout(function () {
+                var isMobile = window.innerWidth < 768;
 
-            // Format and update the <h2> title
-            var selectedDate = new Date(info.dateStr + 'T00:00:00'); 
-            var options = { weekday: 'long', month: 'long', day: 'numeric' };
-            var formattedDate = selectedDate.toLocaleDateString('en-US', options);
-            document.getElementById('calendar-title').textContent = formattedDate;
-        },
-        
-        contentHeight: 'auto',
-        headerToolbar: {
-            start: '', // Title position
-            center: 'customButton',
-            end: '' // Custom button position
-        },
-        customButtons: {
-            customButton: {
-                text: 'Back to Month View',
-                click: function() {
-                    calendar.changeView('dayGridMonth');
+                var calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+                //initialView: "dayGridMonth",
+                initialView: isMobile ? "listMonth" : "dayGridMonth",
+                firstDay: {{ auth()->user()->firstDayOfWeek }},
+                dateClick: function(info) {
+                    // Change to day view
+                    calendar.changeView('timeGridDay', info.dateStr);
 
-                    // Reset <h2> title back to current month and year
-                    var currentMonthYear = new Date('{{ $currentDate }}').toLocaleDateString('en-US', {
-                        month: 'long',
-                        year: 'numeric'
-                    });
-                    document.getElementById('calendar-title').textContent = currentMonthYear;
+                    // Format and update the <h2> title
+                    var selectedDate = new Date(info.dateStr + 'T00:00:00'); 
+                    var options = { weekday: 'long', month: 'long', day: 'numeric' };
+                    var formattedDate = selectedDate.toLocaleDateString('en-US', options);
+                    document.getElementById('calendar-title').textContent = formattedDate;
                 },
-                className: 'back-to-month-view-button'
-            }
-        },
-        selectable: true,
-        editable: false,
-        initialDate: '{{ $currentDate }}',
-        events: [
-            @php
-                foreach($trips as $trip) {
-                    // fix the ' problem
-                    $tripName = str_replace("'", "\\'", $trip->tripName);
-                    echo "{";
-                    echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) . " (" . str($trip->tripFreeSpots) . "/" . str($trip->boatCapacity) . ")" . "',";
-                    echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
-                    echo "end: '" . $trip->date . " " . date('H:i', strtotime('+210 minutes', strtotime($trip->departureTime))) ."',"; 
-                    echo "url: '" . $trip->linkToBook . "',";
-                    if($trip->tripType == "Technical") {
-                        echo "className: 'technical-event text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
+                
+                contentHeight: 'auto',
+                headerToolbar: {
+                    start: '', // Title position
+                    center: 'customButton',
+                    end: '' // Custom button position
+                },
+                customButtons: {
+                    customButton: {
+                        text: 'Back to Month View',
+                        click: function() {
+                            calendar.changeView('dayGridMonth');
+
+                            // Reset <h2> title back to current month and year
+                            var currentMonthYear = new Date('{{ $currentDate }}').toLocaleDateString('en-US', {
+                                month: 'long',
+                                year: 'numeric'
+                            });
+                            document.getElementById('calendar-title').textContent = currentMonthYear;
+                        },
+                        className: 'back-to-month-view-button'
+                    }
+                },
+                selectable: true,
+                editable: false,
+                initialDate: '{{ $currentDate }}',
+                events: [
+                    @php
+                        foreach($trips as $trip) {
+                            // fix the ' problem
+                            $tripName = str_replace("'", "\\'", $trip->tripName);
+                            echo "{";
+                            echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) . " (" . str($trip->tripFreeSpots) . "/" . str($trip->boatCapacity) . ")" . "',";
+                            echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
+                            echo "end: '" . $trip->date . " " . date('H:i', strtotime('+210 minutes', strtotime($trip->departureTime))) ."',"; 
+                            echo "url: '" . $trip->linkToBook . "',";
+                            if($trip->tripType == "Technical") {
+                                echo "className: 'technical-event text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
+                            } else {
+                                echo "className: 'recreational-event text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
+                            }
+                        }
+                    @endphp
+                ],
+                eventClick: function(info) {
+                    if (info.event.url) {
+                        window.open(info.event.url, '_parent');
+                        info.jsEvent.preventDefault();
+                    }
+                },
+                views: {
+                    month: {
+                        titleFormat: { month: "long", year: "numeric" }
+                    },
+                    agendaWeek: {
+                        titleFormat: { month: "long", year: "numeric", day: "numeric" }
+                    },
+                    agendaDay: {
+                        titleFormat: { month: "short", year: "numeric", day: "numeric" }
+                    }
+                },
+                viewDidMount: function(info) {
+                    if (info.view.type === 'timeGridDay') {
+                        document.querySelector('.fc-customButton-button').style.display = 'inline-block';
                     } else {
-                        echo "className: 'recreational-event text-white isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
+                        document.querySelector('.fc-customButton-button').style.display = 'none';
+                    }
+                },
+                viewWillUnmount: function(info) {
+                    document.querySelector('.fc-customButton-button').style.display = 'none';
+                },
+                dayCellDidMount: function(info) {
+                    var today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    var date = info.date;
+                    if (date < today) {
+                        info.el.classList.add('past-day');
                     }
                 }
-            @endphp
-        ],
-        eventClick: function(info) {
-            if (info.event.url) {
-                window.open(info.event.url, '_parent');
-                info.jsEvent.preventDefault();
-            }
-        },
-        views: {
-            month: {
-                titleFormat: { month: "long", year: "numeric" }
-            },
-            agendaWeek: {
-                titleFormat: { month: "long", year: "numeric", day: "numeric" }
-            },
-            agendaDay: {
-                titleFormat: { month: "short", year: "numeric", day: "numeric" }
-            }
-        },
-        viewDidMount: function(info) {
-            if (info.view.type === 'timeGridDay') {
-                document.querySelector('.fc-customButton-button').style.display = 'inline-block';
-            } else {
-                document.querySelector('.fc-customButton-button').style.display = 'none';
-            }
-        },
-        viewWillUnmount: function(info) {
-            document.querySelector('.fc-customButton-button').style.display = 'none';
-        },
-        dayCellDidMount: function(info) {
-            var today = new Date();
-            today.setHours(0, 0, 0, 0);
-            var date = info.date;
-            if (date < today) {
-                info.el.classList.add('past-day');
-            }
-        }
-    });
+                });
 
-    calendar.render();
+                calendar.render();
 
-    // Apply CSS styles using JavaScript
-    var style = document.createElement('style');
-    style.innerHTML = `
-    .fc-event-title {
-        white-space: normal !important;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    @media (max-width: 767px) {
-        .fc-event-title {
-            white-space: nowrap !important;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-    }`;
-    document.head.appendChild(style);
+                // Apply CSS styles using JavaScript
+                var style = document.createElement('style');
+                style.innerHTML = `
+                .fc-event-title {
+                    white-space: normal !important;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                @media (max-width: 767px) {
+                    .fc-event-title {
+                        white-space: nowrap !important;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                }`;
+                document.head.appendChild(style);
 
+                window.addEventListener('resize', function () {
+                    var isMobile = window.innerWidth < 768;
+
+                    if (isMobile && calendar.view.type !== "listMonth") {
+                        calendar.changeView("listMonth");
+                    }
+
+                    if (!isMobile && calendar.view.type !== "dayGridMonth") {
+                        calendar.changeView("dayGridMonth");
+                    }
+                });
+            }, 50); // delay ensures viewport is correct
+        });
     </script>
 
     <script>
@@ -346,9 +364,10 @@
 
             links.forEach(function(link) {
                 link.setAttribute('target', '_parent');
-        });
+            });
         });
     </script>
+
 
 
 
