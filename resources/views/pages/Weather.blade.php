@@ -260,7 +260,7 @@
                     <div class="col-md-4">
                         <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
-                                <iframe class="img-fluid border-radius-lg" allow-same-origin="" allow-scripts="" allowfullscreen="" alt="EarthCam Video Player Embed" autoplay="" frameborder="0" height="450" id="iframe" marginheight="0" marginwidth="0" scrolling="no" src="//www.earthcam.com/js/video/embed.php?type=h264&amp;vid=windjammerHD2.flv&amp;w=auto&amp;company=Windjammer&amp;timezone=America/New_York&amp;metar=KFLL&amp;ecn=1&amp;requested_version=current" style="top:0;left:0;width:10px;min-width:100%;*width:100%;height:200px;" width="800"></iframe>
+                                <iframe class="img-fluid border-radius-lg" allow-same-origin="" allow-scripts="" allowfullscreen="" alt="EarthCam Video Player Embed" autoplay="" frameborder="0" height="450" id="iframe" marginheight="0" marginwidth="0" scrolling="no" src="https://share.earthcam.net/tJ90CoLmq7TzrY396Yd88FCT6HeEs2TtVzkPrr5MAAs.tJ90CoLmq7TzrY396Yd88MaXCAvecRsuP7jcHcXM2ic" style="top:0;left:0;width:10px;min-width:100%;*width:100%;height:200px;" width="800"></iframe>
                             </div>
                             <div class="card-body">
                                 <h6 class="mb-1 mt-n3"> live web cam</h6>
