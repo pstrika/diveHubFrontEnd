@@ -307,7 +307,8 @@
                         <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                             {{--<iframe loading="lazy" src="https://iframe.dacast.com/live/b5a8e966-0b7f-13a8-9ad4-5637cfb90a9f/8e2f7f51-4653-43e0-7e8e-7e213959bb2b" width="100%" height="100%" allowfullscreen="" style="position:absolute;top:0;left:0;"></iframe>--}}
-                                <iframe class="img-fluid shadow border-radius-lg" src="https://iframe.dacast.com/live/b5a8e966-0b7f-13a8-9ad4-5637cfb90a9f/8e2f7f51-4653-43e0-7e8e-7e213959bb2b" height="100%" width="100%" autoplay="" allow="autoplay;" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe>
+                                <iframe class="img-fluid shadow border-radius-lg" src="https://relay.ozolio.com/pub.api?cmd=embed&oid=EMB_ZUKF00000B65" height="100%" width="100%" autoplay="" allow="autoplay;" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe> 
+                                
                                 
                                 
                                     
