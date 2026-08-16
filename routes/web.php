@@ -235,6 +235,10 @@ Route::post('user-profile/password', [UserController::class, 'passwordUpdate'])-
 Route::get('MyVisitedSites', 'App\Http\Controllers\SiteController@getMyVisitedSites')->middleware('auth')->name('MyVisitedSites');
 Route::post('UpdateAllVisited', 'App\Http\Controllers\SiteController@updateAllVisitedSites')->middleware('auth')->name('UpdateAllVisited');
 
+// Calendar feed routes (UPDATED 2026-08-16)
+Route::post('MyCalendar/regenerate-token', 'App\Http\Controllers\EventController@regenerateToken')->middleware('auth')->name('MyCalendar.regenerateToken');
+Route::get('calendar/feed/{token}.ics', 'App\Http\Controllers\EventController@feed')->name('MyCalendar.feed');
+
 
 Route::get('roles', [RolesController::class, 'index'])->middleware('auth')->name('roles');
 Route::post('roles/{id}', [RolesController::class, 'destroy'])->middleware('auth')->name('delete.role');

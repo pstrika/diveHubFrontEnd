@@ -154,51 +154,12 @@
                             </a>
                         </div>
                         <div style="clear: both;"></div>
-
+                        
                     </div>
                 </div>
+            
 
-                {{-- Subscribe / share calendar feed (hidden for guest sessions) --}}
-                @if($calendarFeedUrl)
-                <div class="col-md-12">
-                    <div class="card p-0 position-relative mt-4 mx-0 z-index-2 mb-0">
-                        <div class="card-body">
-                            @if (session('calendarTokenRegenerated'))
-                                <div class="alert alert-success text-white" role="alert">
-                                    Your calendar link was regenerated. The old link no longer works — re-share the new one below.
-                                </div>
-                            @endif
-
-                            <h5 class="text-info mb-1"><i class="material-icons align-middle">event_available</i> Subscribe to my dive calendar</h5>
-                            <p class="text-sm text-secondary mb-2">
-                                Paste this link into Google Calendar, Apple Calendar or Outlook (as a
-                                subscribed/“from URL” calendar) to keep your dives in sync automatically.
-                                Anyone you give this link to can see your upcoming dives, so only share it with people you trust.
-                            </p>
-
-                            <div class="d-flex align-items-center flex-wrap gap-2">
-                                <input type="text" id="calendarFeedUrl" class="form-control w-auto flex-grow-1"
-                                       value="{{ $calendarFeedUrl }}" readonly onclick="this.select();"
-                                       style="min-width: 260px;">
-
-                                <button type="button" class="btn btn-info mb-0" onclick="copyCalendarFeedUrl()">
-                                    <i class="material-icons align-middle">content_copy</i> Copy
-                                </button>
-
-                                <form action="{{ route('MyCalendar.regenerateToken') }}" method="POST" class="mb-0"
-                                      onsubmit="return confirm('Regenerate your calendar link? Anyone using the current link will lose access.');">
-                                    @csrf
-                                    <button type="submit" class="btn btn-outline-danger mb-0">
-                                        <i class="material-icons align-middle">autorenew</i> Regenerate link
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                @endif
-
-                <div class="col-md-12">
+                <div class="col-md-12">                        
                     <div class="card card-calendar p-0 position-relative mt-4 mx-0 z-index-2 mb-0">
                         
                         
@@ -431,19 +392,6 @@
         calendar.render();
 
 
-    </script>
-
-    <script>
-        function copyCalendarFeedUrl() {
-            var input = document.getElementById('calendarFeedUrl');
-            input.select();
-            input.setSelectionRange(0, 99999); // mobile
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(input.value);
-            } else {
-                document.execCommand('copy'); // fallback for older browsers
-            }
-        }
     </script>
 
 

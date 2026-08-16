@@ -93,14 +93,4 @@ class User extends Authenticatable
     public function unreadNotifications() {
         return Message::where('userId', $this->id)->where('deleted', 0)->where('read', 0)->count();
     }
-
-    public function ensureCalendarToken()
-    {
-        if (!$this->calendar_token) {
-            $this->calendar_token = bin2hex(random_bytes(24));
-            $this->save();
-        }
- 
-        return $this->calendar_token;
-    }
 }
