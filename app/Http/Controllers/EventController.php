@@ -230,8 +230,13 @@ public function show($date = null) {
             $linkToBook   = $trip ? $trip->linkToBook : null;
             $cityAddress  = $trip ? optional($trip->operator)->cityAddress : null;
  
-            // date is 'Y-m-d', time is 'H:i'. Trips carry no duration → assume 3h.
-            $start = Carbon::parse($event->date . ' ' . $event->time, $tz);
+            // events.date is DATETIME ('Y-m-d 00:00:00') so normalize to the date part
+            // before appending time, else Carbon throws 'Double time specification'.
+            // time is 'H:i'. Trips carry no duration → assume 3h.
+            $start = Carbon::parse(
+                Carbon::parse($event->date)->format('Y-m-d') . ' ' . ($event->time ?: '00:00'),
+                $tz
+            );
             $end   = (clone $start)->addHours(3);
  
             $summary  = trim($tripName . ($operatorName ? ' — ' . $operatorName : ''));
