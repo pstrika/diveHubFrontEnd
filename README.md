@@ -70,33 +70,40 @@ Live app: [divers-hub.com](https://divers-hub.com/)
 
 ## Database Schema
 
-Not all tables are defined as Laravel migrations. Migrations exist for:
+The app actually spans **two databases** on the same MySQL server, configured via two separate Laravel connections in [config/database.php](config/database.php):
 
-- `users`, `password_resets`, `failed_jobs`, `personal_access_tokens` (Laravel defaults)
-- `roles`, `categories`, `tags`, `items`, `item_tag`
+| Connection | Database | Tables | Source of truth |
+| --- | --- | --- | --- |
+| `mysql` (default) | `laravelpro` | `users`, `roles`, `categories`, `tags`, `items`, `item_tag`, `password_resets`, `failed_jobs`, `personal_access_tokens` | Laravel migrations in `database/migrations` |
+| `mysql_trips` | `divehub-schema` | `sites`, `sitecomments`, `siteratings`, `photos`, `trips`, `events`, `boats`, `operators`, `visitedsites`, `wishedsites`, `weatherlocations`, `weatherday`, `weatherhour`, `messages`, `products` | Created manually — **no migrations**, until now captured only as a live schema dump |
 
-The following tables (backing dive sites, trips, operators, weather, and related features) were created manually on the production database and have **no corresponding migration**:
+Structure-only dumps (no data) of both databases are checked in under `database/`:
 
-- `sites`, `site_comments`, `site_ratings`, `photos`, `locations`
-- `trips`, `events`, `boats`, `operators`
-- `visited_sites`, `wished_sites`
-- `weather_locations`, `weatherdays`
-- `messages`
+- [`database/laravelpro-schema.sql`](database/laravelpro-schema.sql)
+- [`database/divehub-schema.sql`](database/divehub-schema.sql)
 
-**Implication:** a fresh `php artisan migrate --seed` will not produce a working copy of the app — most of the tables the models in `app/Models` depend on simply won't exist. Until migrations are backfilled, the only reliable way to stand up a new environment is to restore from a dump of the production/staging database.
-
-**Recommended fix:** generate migrations from the current live schema so the app becomes reproducible, e.g.:
+These were generated with:
 
 ```bash
-# Option 1: reverse-engineer migrations from the existing database
-composer require --dev kitloong/laravel-migrations-generator
-php artisan migrate:generate
-
-# Option 2: keep a plain schema dump alongside the repo (structure only, no data)
-mysqldump -u <user> -p --no-data <database> > database/schema.sql
+mysqldump --no-data --triggers --skip-comments --ssl-mode=REQUIRED \
+  -h <host> -P <port> -u <user> -p <database> > database/<database>-schema.sql
 ```
 
-Either output should be committed so the schema lives in version control instead of only in the running database.
+**To reproduce the schema on a new server**, create both databases and load each dump into it:
+
+```sql
+CREATE DATABASE laravelpro;
+CREATE DATABASE `divehub-schema`;
+```
+
+```bash
+mysql -h <host> -u <user> -p laravelpro < database/laravelpro-schema.sql
+mysql -h <host> -u <user> -p divehub-schema < database/divehub-schema.sql
+```
+
+Then run `php artisan migrate --seed` only to apply anything new on top of `laravelpro` — the migrations will no-op on tables that already exist from the dump (Laravel tracks applied migrations in the `migrations` table, which is included in the dump).
+
+**Recommended next step:** the `divehub-schema` tables still aren't backed by real migrations, so future schema changes there can't be tracked or applied automatically. Consider reverse-engineering migrations from the dump (e.g. with [`kitloong/laravel-migrations-generator`](https://github.com/kitloong/laravel-migrations-generator)) so that database gets the same version-controlled, repeatable setup as `laravelpro`. Until then, re-run the `mysqldump` command above periodically to keep `database/divehub-schema.sql` in sync with production.
 
 ## Deployment
 
