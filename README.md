@@ -58,6 +58,7 @@ Live app: [divers-hub.com](https://divers-hub.com/)
    ```bash
    php artisan migrate --seed
    ```
+   > **Note:** the migrations in `database/migrations` only cover `users`, `roles`, `categories`, `tags`, and `items` (plus Laravel's defaults). Tables backing the diving-specific features — sites, trips, operators, boats, events, messages, photos, site ratings/comments, weather locations, and visited/wished sites — were created directly against the database and are **not** captured as migrations. Running `migrate --seed` on a fresh database will not reproduce the full schema; see [Database Schema](#database-schema) below.
 7. Create the storage symlink:
    ```bash
    php artisan storage:link
@@ -66,6 +67,36 @@ Live app: [divers-hub.com](https://divers-hub.com/)
    ```bash
    php artisan serve
    ```
+
+## Database Schema
+
+Not all tables are defined as Laravel migrations. Migrations exist for:
+
+- `users`, `password_resets`, `failed_jobs`, `personal_access_tokens` (Laravel defaults)
+- `roles`, `categories`, `tags`, `items`, `item_tag`
+
+The following tables (backing dive sites, trips, operators, weather, and related features) were created manually on the production database and have **no corresponding migration**:
+
+- `sites`, `site_comments`, `site_ratings`, `photos`, `locations`
+- `trips`, `events`, `boats`, `operators`
+- `visited_sites`, `wished_sites`
+- `weather_locations`, `weatherdays`
+- `messages`
+
+**Implication:** a fresh `php artisan migrate --seed` will not produce a working copy of the app — most of the tables the models in `app/Models` depend on simply won't exist. Until migrations are backfilled, the only reliable way to stand up a new environment is to restore from a dump of the production/staging database.
+
+**Recommended fix:** generate migrations from the current live schema so the app becomes reproducible, e.g.:
+
+```bash
+# Option 1: reverse-engineer migrations from the existing database
+composer require --dev kitloong/laravel-migrations-generator
+php artisan migrate:generate
+
+# Option 2: keep a plain schema dump alongside the repo (structure only, no data)
+mysqldump -u <user> -p --no-data <database> > database/schema.sql
+```
+
+Either output should be committed so the schema lives in version control instead of only in the running database.
 
 ## Deployment
 
