@@ -260,7 +260,16 @@
                     <div class="col-md-4">
                         <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
-                                <iframe class="img-fluid border-radius-lg" allow-same-origin="" allow-scripts="" allowfullscreen="" alt="EarthCam Video Player Embed" autoplay="" frameborder="0" height="450" id="iframe" marginheight="0" marginwidth="0" scrolling="no" src="https://share.earthcam.net/tJ90CoLmq7TzrY396Yd88FCT6HeEs2TtVzkPrr5MAAs.tJ90CoLmq7TzrY396Yd88MaXCAvecRsuP7jcHcXM2ic" style="top:0;left:0;width:10px;min-width:100%;*width:100%;height:200px;" width="800"></iframe>
+                                <!-- <iframe class="img-fluid border-radius-lg" allow-same-origin="" allow-scripts="" allowfullscreen="" alt="EarthCam Video Player Embed" autoplay="" frameborder="0" height="450" id="iframe" marginheight="0" marginwidth="0" scrolling="no" src="https://www.youtube.com/embed/pXx3YQVSUGg?si=rZOs45AdFVYTL4JQ" style="top:0;left:0;width:10px;min-width:100%;*width:100%;height:200px;" width="800"></iframe> -->
+                                <iframe width="100%" height="300"
+                                    src="https://www.youtube.com/embed/pXx3YQVSUGg?autoplay=1&mute=1"
+                                    title="YouTube video player"
+                                    frameborder="0"
+                                    allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    referrerpolicy="strict-origin-when-cross-origin"
+                                    allowfullscreen>
+                                </iframe>
+
                             </div>
                             <div class="card-body">
                                 <h6 class="mb-1 mt-n3"> live web cam</h6>
@@ -275,7 +284,28 @@
                     <div class="col-md-4">
                         <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
-                                <iframe class="img-fluid shadow border-radius-lg" src="https://player.brownrice.com/embed/copbfl1" height="100%" width="100%" autoplay="" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe>
+                                <!-- <iframe class="img-fluid shadow border-radius-lg" src="https://player.brownrice.com/embed/copbfl1" height="100%" width="100%" autoplay="" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe> -->
+                                    <!-- <iframe class="img-fluid shadow border-radius-lg"
+                                        src="https://player.brownrice.com/embed/copbfl1?autoplay=1&muted=1"
+                                        height="100%" width="100%"
+                                        allow="autoplay; fullscreen"
+                                        mozallowfullscreen
+                                        style="top:0;left:0;height:200px;"
+                                        scrolling="no">
+                                    </iframe> -->
+                                <!-- <iframe width="560" height="315" src="https://www.youtube.com/embed/zclpD3QKEK4?si=nRFppTudYpqk4wq3" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe> -->
+                                <iframe width="100%" height="300"
+                                    src="https://www.youtube.com/embed/zclpD3QKEK4?autoplay=1&mute=1"
+                                    title="YouTube video player"
+                                    frameborder="0"
+                                    allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    referrerpolicy="strict-origin-when-cross-origin"
+                                    allowfullscreen>
+                                </iframe>
+
+
+
+
                             </div>
                             <div class="card-body">
                                 <h6 class="mb-0 "> live web cam</h6>  
@@ -302,12 +332,47 @@
                                 </div>
                         </div>
                     </div>
+                @elseif($location == "jupiter")
+                    <div class="col-md-4">
+                        <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
+                            <div class="card-header p-0 mt-n4 mx-3">
+                                <!-- <iframe class="img-fluid shadow border-radius-lg" id="main_content" name="main_content" src="https://video-monitoring.com/beachcams/palmbeachmarriott/stream.htm" width="960" height="540" allowfullscreen="" autoplay="true" style="top:0;left:0;width:10px;min-width:100%;*width:100%;height:200px;"></iframe> -->
+                                <!-- <video data-html5-video="" preload="metadata" src="blob:https://video-monitoring.com/33efa922-17ad-4d2e-bf95-7f0d172dec3c"><style class="clappr-style">[data-html5-video]{position:absolute;height:100%;width:100%;display:block}</style></video> -->
+                            <iframe width="100%" height="300"
+                                src="https://www.youtube.com/embed/4y7kDbwBuh0?autoplay=1&mute=1"
+                                title="YouTube video player"
+                                frameborder="0"
+                                allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerpolicy="strict-origin-when-cross-origin"
+                                allowfullscreen>
+                            </iframe>
+
+                            </div>
+                            <div class="card-body">
+                                    <h6 class="mb-0 "> live web cam</h6>
+                                    
+                                    <div class="d-flex ">
+                                        <i class="material-icons text-sm my-auto me-1">schedule</i>
+                                        <p class="mb-0 text-sm">Last update: now (TBD) </p>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
                 @elseif($location == "miami beach")
                     <div class="col-md-4">
                         <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                             {{--<iframe loading="lazy" src="https://iframe.dacast.com/live/b5a8e966-0b7f-13a8-9ad4-5637cfb90a9f/8e2f7f51-4653-43e0-7e8e-7e213959bb2b" width="100%" height="100%" allowfullscreen="" style="position:absolute;top:0;left:0;"></iframe>--}}
-                                <iframe class="img-fluid shadow border-radius-lg" src="https://relay.ozolio.com/pub.api?cmd=embed&oid=EMB_ZUKF00000B65" height="100%" width="100%" autoplay="" allow="autoplay;" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe> 
+                                <!-- <iframe class="img-fluid shadow border-radius-lg" src="https://relay.ozolio.com/pub.api?cmd=embed&oid=EMB_ZUKF00000B65" height="100%" width="100%" autoplay="" allow="autoplay;" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe>  -->
+                            <iframe width="100%" height="300"
+                                src="https://www.youtube.com/embed/bi7B4EmyHHs?autoplay=1&mute=1"
+                                title="YouTube video player"
+                                frameborder="0"
+                                allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerpolicy="strict-origin-when-cross-origin"
+                                allowfullscreen>
+                            </iframe>
+
                                 
                                 
                                 
@@ -317,7 +382,7 @@
                                 <h6 class="mb-0 "> live web cam</h6>  
                                 <div class="d-flex ">
                                     <i class="material-icons text-sm my-auto me-1">schedule</i>
-                                    <p class="mb-0 text-sm">Last update: now (source 76th Str, Miami Beach) </p>
+                                    <p class="mb-0 text-sm">Last update: now (Sunny Isles Beach, Miami Beach) </p>
                                 </div>
                             </div>
                         </div>
@@ -327,7 +392,16 @@
                         <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                             
-                                <iframe class="img-fluid shadow border-radius-lg" src="https://relay.ozolio.com/pub.api?cmd=embed&amp;oid=EMB_RKNO000004F8" height="100%" width="100%" autoplay="" allow="autoplay;" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe>
+                                <!-- <iframe class="img-fluid shadow border-radius-lg" src="https://relay.ozolio.com/pub.api?cmd=embed&amp;oid=EMB_RKNO000004F8" height="100%" width="100%" autoplay="" allow="autoplay;" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe> -->
+                                <iframe width="100%" height="300"
+                                    src="https://www.youtube.com/embed/sDXwrYQPeOQ?autoplay=1&mute=1"
+                                    title="YouTube video player"
+                                    frameborder="0"
+                                    allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    referrerpolicy="strict-origin-when-cross-origin"
+                                    allowfullscreen>
+                                </iframe>
+
                                     
                                 
                                     
@@ -336,7 +410,7 @@
                                 <h6 class="mb-0 "> live web cam</h6>  
                                 <div class="d-flex ">
                                     <i class="material-icons text-sm my-auto me-1">schedule</i>
-                                    <p class="mb-0 text-sm">Last update: now (source 76th Str, Miami Beach) </p>
+                                    <p class="mb-0 text-sm">Last update: now (source Fort Zachary Taylor Beach) </p>
                                 </div>
                             </div>
                         </div>
