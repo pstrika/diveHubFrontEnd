@@ -229,7 +229,7 @@
 
                                                 <td class="w-15 align-middle text-md"><div id="rateYoReadOnly_{{ $site->id }}"></div></td> 
                                                 
-                                                <td class="w-5 text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" height="25"></td>
+                                                <td class="w-5 text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" alt="levelIcon" height="25" loading="lazy"></td>
 
                                                 <td class="w-10 align-middle text-center text-md"><b>{{ $site->maxDepth }}</b></td> 
                                         

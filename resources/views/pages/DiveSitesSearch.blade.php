@@ -113,7 +113,7 @@
                                                 <tbody>
                                                     @foreach($resultsOperator as $operator)
                                                         <tr tr style="border-bottom: 1px solid #D3D3D3;">
-                                                            <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/{{ $operator->logoUrl }}" alt="{{ $operator->operatorName }}"></td>
+                                                            <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/{{ $operator->logoUrl }}" alt="{{ $operator->operatorName }}" loading="lazy"></td>
                                                             <td class="align-middle text-left text-md"><b><a href="/OperatorDetails/{{ $operator->id }}"> {{ $operator->operatorName }}</a></b></td>
                                                             <td class="align-middle text-right text-sm"><b>{{ $operator->cityAddress }}, {{ $operator->stateAddress }}</b></td> 
                                                         </tr>
@@ -131,7 +131,7 @@
                                                 <tbody>
                                                     @foreach($results as $site)    
                                                         <tr style="border-bottom: 1px solid #D3D3D3;">
-                                                            <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
+                                                            <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}" loading="lazy"></td>
                                                             <td class="align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
                                                             @foreach($locations as $location)
                                                                 @if($location->short == $site->location)
@@ -152,7 +152,7 @@
                                                                 elseif($site->level == 4)
                                                                     $level="Technical Hypoxic Trimix";    
                                                             ?>
-                                                            <td class="w-5 text-center align-middle" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" alt="levelIcon" height="25"></td>
+                                                            <td class="w-5 text-center align-middle" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" alt="levelIcon" height="25" loading="lazy"></td>
                                                     
                                                         </tr>
                                                     @endforeach
@@ -169,7 +169,7 @@
                                                 <tbody>
                                                     @foreach($resultsWreckType as $site)    
                                                         <tr style="border-bottom: 1px solid #D3D3D3;">
-                                                            <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
+                                                            <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}" loading="lazy"></td>
                                                             <td class="w-40 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
                                                             @foreach($locations as $location)
                                                                 @if($location->short == $site->location)
@@ -190,7 +190,7 @@
                                                                 elseif($site->level == 4)
                                                                     $level="Technical Hypoxic Trimix";    
                                                             ?>
-                                                            <td class="w-5 text-center align-middle" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" alt="levelIcon" height="25"></td>
+                                                            <td class="w-5 text-center align-middle" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" alt="levelIcon" height="25" loading="lazy"></td>
                                                     
                                                         </tr>
                                                     @endforeach
@@ -275,10 +275,10 @@
                                                     $level="Technical Hypoxic Trimix";    
                                             ?>
                                             <tr>
-                                                <td class="w-5 text-center align-middle"><small hidden>{{ $result->type}}</small><img src="{{ asset('assets') }}/img/icons/{{ $result->type }}_icon.png" height="35"></td>
+                                                <td class="w-5 text-center align-middle"><small hidden>{{ $result->type}}</small><img src="{{ asset('assets') }}/img/icons/{{ $result->type }}_icon.png" alt="{{ $result->type }}" height="35" loading="lazy"></td>
                                                 <td><a href="/SiteDetails/{{ $result->id }}">{{ $result->name }}</a></td>
                                                 <td>{{ ucwords($result->locationLong->location) }}</td>
-                                                <td class="w-5 text-center align-middle"><small hidden>{{ $result->level}}</small><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $result->level }}.png" alt="levelIcon" height="25"></td>
+                                                <td class="w-5 text-center align-middle"><small hidden>{{ $result->level}}</small><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $result->level }}.png" alt="levelIcon" height="25" loading="lazy"></td>
                                                 <td>{{ $result->maxDepth }}</td>
                                                 <td>{{ $result->gpsLat }}</td>
                                                 <td>{{ $result->gpsLon }}</td>

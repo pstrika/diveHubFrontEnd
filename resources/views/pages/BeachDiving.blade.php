@@ -274,10 +274,10 @@
                                             <tbody>
                                                 @foreach($siteLocation as $site)    
                                                     <tr style="border-bottom: 1px solid #D3D3D3;">
-                                                        <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
-                                                        <td class="w-60 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
+                                                        <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}" loading="lazy"></td>
+                                                        <td class="w-60 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td>
 
-                                                        <td class="w-5 text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" alt="levelIcon" height="25"></td>
+                                                        <td class="w-5 text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" alt="levelIcon" height="25" loading="lazy"></td>
                                                         <td class="w-20 align-middle text-center text-md"><b>{{ $site->distance_from_shore }}</b></td> 
                                                         <td class="w-10 align-middle text-center text-md"><b>{{ $site->maxDepth }}</b></td> 
                                                 

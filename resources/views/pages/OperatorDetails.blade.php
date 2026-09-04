@@ -388,9 +388,9 @@
                                                 
                                                 <tr style="border-bottom: 1px solid #D3D3D3;" class="justify-content-center align-middle">
                                                     <td class="px-4 text-center">{{ $i+1 }}</td>
-                                                    <td class="w-5 text-center align-middle"><img src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" height="35"></td>
+                                                    <td class="w-5 text-center align-middle"><img src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}" height="35" loading="lazy"></td>
                                                     <td class="px-4"><a href="/SiteDetails/{{ $site->id }}">{{ $site->name }}</a></td>
-                                                    <td class="w-5 text-center align-middle"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" height="25"></td>
+                                                    <td class="w-5 text-center align-middle"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" alt="levelIcon" height="25" loading="lazy"></td>
                                                 </tr>
                                         
                                             @endforeach          
