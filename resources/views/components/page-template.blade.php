@@ -38,27 +38,23 @@
     <meta name="robots" content="noindex, nofollow">
   @endif
 
-
-  @if (env('IS_DEMO'))
-    <meta name="keywords" content="creative tim, updivision, html dashboard, laravel, material, html css dashboard laravel, laravel material dashboard laravel, laravel material dashboard laravel pro, laravel material dashboard, laravel material dashboard pro, material admin, laravel dashboard, laravel dashboard pro, laravel admin, web dashboard, bootstrap 5 dashboard laravel, bootstrap 5, css3 dashboard, bootstrap 5 admin laravel, material dashboard bootstrap 5 laravel, frontend, responsive bootstrap 5 dashboard, material dashboard, material laravel bootstrap 5 dashboard" />
-    <meta name="description" content="Fullstack tool for building Laravel apps with hundreds of UI components and ready-made CRUDs" />
-    <meta itemprop="name" content="Material Dashboard 2 PRO Laravel by Creative Tim & UPDIVISION" />
-    <meta itemprop="description" content="Fullstack tool for building Laravel apps with hundreds of UI components and ready-made CRUDs" />
-    <meta itemprop="image" content="https://s3.amazonaws.com/creativetim_bucket/products/158/original/material-dashboard-pro-laravel.jpg" />
-    <meta name="twitter:card" content="product" />
-    <meta name="twitter:site" content="@creativetim" />
-    <meta name="twitter:title" content="Material Dashboard 2 PRO Laravel by Creative Tim & UPDIVISION" />
-    <meta name="twitter:description" content="Fullstack tool for building Laravel apps with hundreds of UI components and ready-made CRUDs" />
-    <meta name="twitter:creator" content="@creativetim" />
-    <meta name="twitter:image" content="https://s3.amazonaws.com/creativetim_bucket/products/158/original/material-dashboard-pro-laravel.jpg" />
-    <meta property="fb:app_id" content="655968634437471" />
-    <meta property="og:title" content="Material Dashboard 2 PRO Laravel by Creative Tim & UPDIVISION" />
-    <meta property="og:type" content="article" />
-    <meta property="og:url" content="https://www.creative-tim.com/live/material-dashboard-pro-laravel" />
-    <meta property="og:image" content="https://s3.amazonaws.com/creativetim_bucket/products/158/original/material-dashboard-pro-laravel.jpg" />
-    <meta property="og:description" content="Fullstack tool for building Laravel apps with hundreds of UI components and ready-made CRUDs" />
-    <meta property="og:site_name" content="Creative Tim" />
-  @endif
+  <!--     Open Graph / Twitter Card     -->
+  @php
+    $ogTitle = $SEO['title'] ?? 'Divers Hub - your one stop for diving in FL!';
+    $ogDesc = $SEO['desc'] ?? 'All you need to know about scuba diving in South Florida';
+    $ogUrl = $SEO['canonical'] ?? url()->current();
+    $ogImage = $SEO['image'] ?? asset('assets/img/diveHub-login.jpg');
+  @endphp
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Divers Hub">
+  <meta property="og:title" content="{{ $ogTitle }}">
+  <meta property="og:description" content="{{ $ogDesc }}">
+  <meta property="og:url" content="{{ $ogUrl }}">
+  <meta property="og:image" content="{{ $ogImage }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ $ogTitle }}">
+  <meta name="twitter:description" content="{{ $ogDesc }}">
+  <meta name="twitter:image" content="{{ $ogImage }}">
 
   <!--     Fonts and icons     -->
   <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900|Roboto+Slab:400,700" />

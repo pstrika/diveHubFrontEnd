@@ -1,5 +1,57 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200' :SEO="$SEO">
-    
+
+    @php
+        try {
+            $jsonLdDesc = trim(strip_tags($site->getPlainTextDesc()));
+        } catch (\Throwable $e) {
+            $jsonLdDesc = trim(strip_tags($site->desc ?? ''));
+        }
+        if (mb_strlen($jsonLdDesc) > 300) {
+            $jsonLdDesc = mb_substr($jsonLdDesc, 0, 297) . '...';
+        }
+
+        $jsonLdImages = collect($photos)->take(5)->map(function ($photo) {
+            return asset('assets') . '/img/sites/' . $photo->file;
+        })->values()->all();
+
+        $jsonLd = [
+            '@context' => 'https://schema.org',
+            '@type' => 'TouristAttraction',
+            'name' => $site->name,
+            'description' => $jsonLdDesc,
+            'url' => $SEO['canonical'] ?? url()->current(),
+        ];
+
+        if (!empty($jsonLdImages)) {
+            $jsonLd['image'] = $jsonLdImages;
+        }
+
+        if (!empty($site->gpsLat) && !empty($site->gpsLon)) {
+            $latParts = sscanf($site->gpsLat, "%d° %f' %c");
+            $lonParts = sscanf($site->gpsLon, "%d° %f' %c");
+            if (count(array_filter($latParts, fn($v) => $v !== null)) === 3 && count(array_filter($lonParts, fn($v) => $v !== null)) === 3) {
+                [$latDeg, $latMin, $latDir] = $latParts;
+                [$lonDeg, $lonMin, $lonDir] = $lonParts;
+                $jsonLd['geo'] = [
+                    '@type' => 'GeoCoordinates',
+                    'latitude' => round(($latDeg + $latMin / 60) * ($latDir === 'N' ? 1 : -1), 6),
+                    'longitude' => round(($lonDeg + $lonMin / 60) * ($lonDir === 'E' ? 1 : -1), 6),
+                ];
+            }
+        }
+
+        if (!empty($site->rate) && !empty($site->votes) && $site->votes > 0) {
+            $jsonLd['aggregateRating'] = [
+                '@type' => 'AggregateRating',
+                'ratingValue' => round($site->rate, 1),
+                'reviewCount' => (int) $site->votes,
+                'bestRating' => 5,
+                'worstRating' => 1,
+            ];
+        }
+    @endphp
+    <script type="application/ld+json">{!! json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+
     <x-auth.navbars.sidebar activePage="siteDetails" activeItem="siteDetails" activeSubitem=""></x-auth.navbars.sidebar>
     
     
@@ -569,15 +621,20 @@
                                                         $first = true;
                                                     @endphp
                                                         
-                                                    @foreach ($photos as $photo)    
-                                                        <div class="carousel-item {{ $first ? "active" : "" }}">
-                                                            @php
-                                                                $first = false;
-                                                            @endphp
-                                                            <div class="page-header min-vh-50 border-radius-xl" style="background-image: url('{{ asset('assets') }}/img/sites/{{ $photo->file}}');">
-                                                            
+                                                    @foreach ($photos as $photo)
+                                                        @php
+                                                            $isFirstPhoto = $first;
+                                                            $first = false;
+                                                        @endphp
+                                                        <div class="carousel-item {{ $isFirstPhoto ? "active" : "" }}">
+                                                            <div class="page-header min-vh-50 border-radius-xl position-relative overflow-hidden">
+                                                                <img src="{{ asset('assets') }}/img/sites/{{ $photo->file }}"
+                                                                    alt="{{ $site->name }}{{ $photo->desc ? ' - ' . $photo->desc : ' dive site photo' }}"
+                                                                    class="position-absolute top-0 start-0 w-100 h-100"
+                                                                    style="object-fit: cover;"
+                                                                    loading="{{ $isFirstPhoto ? 'eager' : 'lazy' }}">
                                                                 <div class="container">
-                                                                    
+
                                                                 </div>
                                                             </div>
                                                             {{--<h4 class="text-info mb-0 fadeIn1 fadeInBottom align-bottom text-center"> {{ $boat->name }}</h4>--}}

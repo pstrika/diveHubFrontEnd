@@ -42,13 +42,25 @@ Route::get('/', function () {
 })->name('/');
 
 
+Route::get('sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+
 /* Privacy Policy */
 Route::get('PrivacyPolicy', function () {
-    return view('pages.PrivacyPolicy');
+    $SEO = [
+        "title" => "Privacy Policy | Divers Hub",
+        "desc" => "Read the Divers Hub privacy policy to learn how we collect, use and protect your information.",
+        "canonical" => route("PrivacyPolicy"),
+    ];
+    return view('pages.PrivacyPolicy', compact('SEO'));
 })->middleware('guest')->name('PrivacyPolicy');
 
 Route::get('TermsOfUse', function () {
-    return view('pages.TermsOfUse');
+    $SEO = [
+        "title" => "Terms of Use | Divers Hub",
+        "desc" => "Read the terms of use governing your access to Divers Hub, the Florida scuba diving community platform.",
+        "canonical" => route("TermsOfUse"),
+    ];
+    return view('pages.TermsOfUse', compact('SEO'));
 })->middleware('guest')->name('TermsOfUse');
 
 Route::get('home', function () {

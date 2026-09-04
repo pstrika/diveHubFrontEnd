@@ -78,7 +78,18 @@ class SiteController extends Controller
     }
 
     public function show($id = null) {
-        $site = Site::with('reviews.user')->findOrFail(intval($id));
+        if (is_numeric($id)) {
+            $site = Site::with('reviews.user')->findOrFail(intval($id));
+
+            // Canonicalize to the slug URL for SEO; old numeric links still work via this redirect.
+            if (!empty($site->slug)) {
+                return redirect(route('SiteDetails') . '/' . $site->slug, 301);
+            }
+        } else {
+            $site = Site::with('reviews.user')->where('slug', $id)->firstOrFail();
+        }
+
+        $id = $site->id;
 
         // get trips for this site
         //$trips = Trip::where(function ($query) use ($site) {
@@ -125,7 +136,7 @@ class SiteController extends Controller
             "title" => $site->name . " ". $site->type,
             "desc" => $site->name . " " . $site->type . " in " . $location->location . ". Max depth " . $site->maxDepth . " ft",
             "keywords" => $site->name . "," . ($site->aka ? $site->aka . "," : "") . $location->location . "," . $site->type,
-            "canonical" => route("SiteDetails") . "/" . $site->id,
+            "canonical" => route("SiteDetails") . "/" . ($site->slug ?? $site->id),
         );
         
         // get site list to print map
@@ -469,7 +480,15 @@ class SiteController extends Controller
             ->get();
         $locations = WeatherLocation::all();
 
-        return view('pages.DiveSites', compact('sitesWrecks', 'sitesReefs', 'locations'));
+        /*Provide SEO metadata */
+        $SEO = array(
+            "title" => "Best Dive Sites in Florida | Top Rated Reefs & Wrecks",
+            "desc" => "Browse the top rated scuba diving sites in Florida, from wrecks to reefs, with depth, conditions and diver ratings.",
+            "keywords" => "florida dive sites, best dive sites florida, top rated dive sites, florida reefs, florida wrecks, scuba diving florida",
+            "canonical" => route("DiveSites")
+        );
+
+        return view('pages.DiveSites', compact('sitesWrecks', 'sitesReefs', 'locations', 'SEO'));
     }
 
     public function showWrecks() {
