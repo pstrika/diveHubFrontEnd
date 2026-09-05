@@ -88,6 +88,10 @@ class GroupController extends Controller
 
         $members = $group->activeMembers()->with('user')->get();
 
+        $invitedMembers = $isAdmin
+            ? $group->members()->where('status', 'invited')->with('user')->get()
+            : collect();
+
         $dives = $group->dives()
             ->whereDate('date', '>=', now())
             ->orderBy('date')
@@ -115,7 +119,7 @@ class GroupController extends Controller
             "robots" => "noindex, nofollow",
         ];
 
-        return view('pages.Groups.Show', compact('group', 'isAdmin', 'members', 'dives', 'messages', 'addDiveDate', 'tripsForDate', 'calendarFeedUrl', 'SEO'));
+        return view('pages.Groups.Show', compact('group', 'isAdmin', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'tripsForDate', 'calendarFeedUrl', 'SEO'));
     }
 
     /**
@@ -335,9 +339,10 @@ class GroupController extends Controller
             return redirect()->back()->with('msg', 'A group must keep at least one admin.');
         }
 
+        $wasInvite = $member->status === 'invited';
         $member->delete();
 
-        return redirect()->back()->with('msg', 'Member removed.');
+        return redirect()->back()->with('msg', $wasInvite ? 'Invite cancelled.' : 'Member removed.');
     }
 
     public function destroy($groupSlug)

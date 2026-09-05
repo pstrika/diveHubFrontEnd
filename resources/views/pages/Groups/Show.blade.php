@@ -229,6 +229,25 @@
                                         @endif
                                     </li>
                                 @endforeach
+                                @foreach($invitedMembers as $member)
+                                    <li class="list-group-item border-0 d-flex justify-content-between align-items-center px-0">
+                                        <span class="d-flex align-items-center">
+                                            <div class="avatar avatar-sm me-2">
+                                                @if($member->user->picture)
+                                                    <img src="{{ asset('assets') }}/img/users/{{ $member->user->picture }}" alt="profile_image" class="w-100 rounded-circle shadow-sm">
+                                                @else
+                                                    <img src="{{ asset('assets') }}/img/default-avatar.png" alt="profile_image" class="w-100 rounded-circle shadow-sm" style="background: black;">
+                                                @endif
+                                            </div>
+                                            <span class="text-secondary">{{ $member->user->name }}</span>
+                                            <span class="badge badge-sm bg-gradient-secondary ms-1">waiting RSVP</span>
+                                        </span>
+                                        <form method="POST" action="{{ route('Groups.removeMember', ['group' => $group->slug, 'member' => $member->id]) }}" onsubmit="return confirm('Cancel this invitation?');">
+                                            @csrf
+                                            <button type="submit" class="btn btn-link text-danger p-0 text-sm">cancel invite</button>
+                                        </form>
+                                    </li>
+                                @endforeach
                             </ul>
                         </div>
                     </div>
