@@ -82,7 +82,7 @@ jobs:
           curl -s -X POST "https://divehub.scm.azurewebsites.net/api/command" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{"command":"rm -f storage/framework/views/*.php","dir":"site/wwwroot"}'
+            -d '{"command":"find storage/framework/views -name *.php -type f -delete","dir":"site/wwwroot"}'
 
       - name: Clear stale Laravel application cache (e.g. sitemap.xml)
         continue-on-error: true
