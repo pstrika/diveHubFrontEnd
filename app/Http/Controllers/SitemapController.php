@@ -17,11 +17,11 @@ class SitemapController extends Controller
         $xml = Cache::remember('sitemap.xml', now()->addHours(6), function () {
             $sitemap = Sitemap::create();
 
-            foreach ($this->staticPages() as $routeName => $priority) {
+            foreach ($this->staticPages() as $routeName => $page) {
                 $sitemap->add(
                     Url::create(route($routeName))
-                        ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
-                        ->setPriority($priority)
+                        ->setChangeFrequency($page['changefreq'])
+                        ->setPriority($page['priority'])
                 );
             }
 
@@ -76,15 +76,15 @@ class SitemapController extends Controller
     private function staticPages(): array
     {
         return [
-            '/' => 1.0,
-            'DiveSites' => 0.9,
-            'WreckSites' => 0.9,
-            'BeachDiving' => 0.8,
-            'Operators' => 0.8,
-            'Trips' => 0.7,
-            'gasplanning' => 0.5,
-            'PrivacyPolicy' => 0.1,
-            'TermsOfUse' => 0.1,
+            '/' => ['priority' => 1.0, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            'Trips' => ['priority' => 0.9, 'changefreq' => Url::CHANGE_FREQUENCY_DAILY],
+            'DiveSites' => ['priority' => 0.9, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            'WreckSites' => ['priority' => 0.9, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            'BeachDiving' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            'Operators' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            'gasplanning' => ['priority' => 0.5, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            'PrivacyPolicy' => ['priority' => 0.1, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            'TermsOfUse' => ['priority' => 0.1, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
         ];
     }
 }
