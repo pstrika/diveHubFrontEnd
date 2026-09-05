@@ -277,14 +277,19 @@ class GroupController extends Controller
             mkdir($fullDir, 0755, true);
         }
 
-        \Intervention\Image\Facades\Image::make($sourcePath)
-            ->orientate()
-            ->resize($maxWidths[$kind], null, function ($constraint) {
+        $image = \Intervention\Image\Facades\Image::make($sourcePath)->orientate();
+
+        if ($kind === 'avatar') {
+            // Square-cropped so it always renders as a circle, never an ellipse.
+            $image->fit($maxWidths[$kind], $maxWidths[$kind]);
+        } else {
+            $image->resize($maxWidths[$kind], null, function ($constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
-            })
-            ->encode('jpg', 85)
-            ->save($fullDir . '/' . $filename);
+            });
+        }
+
+        $image->encode('jpg', 85)->save($fullDir . '/' . $filename);
 
         $relativePath = $dir . '/' . $filename;
 

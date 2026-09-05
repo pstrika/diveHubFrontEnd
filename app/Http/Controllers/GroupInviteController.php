@@ -6,6 +6,8 @@ use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Mailgun\Mailgun;
 
 class GroupInviteController extends Controller
 {
@@ -63,6 +65,8 @@ class GroupInviteController extends Controller
             'invited_by' => auth()->user()->id,
         ]);
 
+        $this->sendInviteEmail(User::find($request->user_id), $group);
+
         return redirect()->back()->with('msg', 'Invite sent!');
     }
 
@@ -83,5 +87,35 @@ class GroupInviteController extends Controller
         $member->delete();
 
         return redirect()->route('MyGroups')->with('msg', 'Invite declined.');
+    }
+
+    /**
+     * Notifies an invited user by email so they know to log in and RSVP.
+     * Best-effort: a mail failure must not block the in-app invite.
+     */
+    private function sendInviteEmail(User $invitedUser, Group $group)
+    {
+        try {
+            $mg = Mailgun::create(env('MAILGUN_KEY'));
+
+            $inviterName = auth()->user()->name;
+            $myGroupsUrl = route('MyGroups');
+
+            $html = '<p>Hi ' . e($invitedUser->name) . ',</p>'
+                . '<p><b>' . e($inviterName) . '</b> invited you to join the diving group <b>' . e($group->name) . '</b> on Divers Hub.</p>'
+                . '<p><a href="' . $myGroupsUrl . '">Log in to accept or decline this invite</a></p>'
+                . '<p>See you underwater!<br>The Divers Hub team</p>';
+
+            Log::info('Sending group invite email to: ' . $invitedUser->name . ' <' . $invitedUser->email . '>');
+
+            $mg->messages()->send('mail.divers-hub.com', [
+                'from' => 'Divers-Hub <postmaster@mail.divers-hub.com>',
+                'to' => $invitedUser->name . ' <' . $invitedUser->email . '>',
+                'subject' => 'You\'re invited to join "' . $group->name . '" on Divers Hub',
+                'html' => $html,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send group invite email: ' . $e->getMessage());
+        }
     }
 }

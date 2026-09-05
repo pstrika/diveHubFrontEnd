@@ -79,7 +79,7 @@
                                                     <a href="{{ route('Groups.show', ['group' => $group->slug]) }}" class="d-flex align-items-center text-dark">
                                                         <div class="avatar avatar-sm me-2">
                                                             @if($group->avatar)
-                                                                <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}" class="w-100 rounded-circle shadow-sm">
+                                                                <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}" class="w-100 h-100 rounded-circle shadow-sm" style="object-fit: cover;">
                                                             @else
                                                                 <div class="w-100 h-100 rounded-circle bg-gradient-info d-flex align-items-center justify-content-center text-white text-sm">
                                                                     <i class="material-icons text-sm">groups</i>

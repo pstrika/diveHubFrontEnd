@@ -39,6 +39,7 @@
                         <label class="form-control mb-0">Group avatar</label>
                         <div class="form-control border dropzone" id="avatarDropzone"></div>
                     </div>
+                    <p class="text-xs text-secondary mb-0">Tip: dragging directly from the macOS Photos app doesn't always work — drag from Finder instead, or click a box above to browse.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn bg-gradient-info" id="customizeSaveBtn">Save</button>
@@ -128,6 +129,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="form-control border dropzone" id="chatDropzone"></div>
+                    <p class="text-xs text-secondary mb-0 mt-2">Tip: dragging directly from the macOS Photos app doesn't always work — drag from Finder instead, or click the box above to browse.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn bg-gradient-info" data-bs-dismiss="modal">Done</button>
@@ -170,7 +172,7 @@
                 <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1 clearfix">
                     <div style="float: left;" class="d-flex align-items-center">
                         @if($group->avatar)
-                            <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}" class="avatar avatar-xl rounded-circle shadow mx-3">
+                            <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}" class="avatar avatar-xl rounded-circle shadow mx-3" style="object-fit: cover;">
                         @endif
                         <div>
                             <h1 class="card-title text-info mx-3 mt-0 mb-0">{{ $group->name }}</h1>
@@ -256,7 +258,7 @@
                                 <div class="timeline timeline-one-side" data-timeline-axis-style="dotted">
                                     @foreach($dives as $dive)
                                         <div class="timeline-block mb-3">
-                                            <span class="timeline-step bg-danger p-3">
+                                            <span class="timeline-step bg-{{ $dive->rsvps->count() > 0 ? 'success' : 'danger' }} p-3">
                                                 <span class="d-flex align-items-center">
                                                     @if($dive->liveTrip && strstr($dive->liveTrip->tags, 'SHA'))
                                                         <img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_shark_center.png" alt="S">
@@ -466,6 +468,7 @@
             chunking: true,
             chunkSize: 2000000,
             paramName: 'img_file',
+            addRemoveLinks: true,
             headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
             sending: function (file, xhr, formData) { formData.append('kind', 'banner'); },
         });
@@ -480,6 +483,7 @@
             chunking: true,
             chunkSize: 2000000,
             paramName: 'img_file',
+            addRemoveLinks: true,
             headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
             sending: function (file, xhr, formData) { formData.append('kind', 'avatar'); },
         });
