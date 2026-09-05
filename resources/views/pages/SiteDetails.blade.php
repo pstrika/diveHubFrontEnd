@@ -40,15 +40,10 @@
             }
         }
 
-        if (!empty($site->rate) && !empty($site->votes) && $site->votes > 0) {
-            $jsonLd['aggregateRating'] = [
-                '@type' => 'AggregateRating',
-                'ratingValue' => round($site->rate, 1),
-                'reviewCount' => (int) $site->votes,
-                'bestRating' => 5,
-                'worstRating' => 1,
-            ];
-        }
+        // Note: aggregateRating is intentionally omitted. Google's Rich Results
+        // system does not support the review/star-rating feature for
+        // TouristAttraction/Place types, so including it here would be flagged
+        // as an invalid field-type combination rather than produce a rich result.
     @endphp
     <script type="application/ld+json">{!! json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 
