@@ -126,14 +126,14 @@ Route::get('DecoPlannerImperial', 'App\Http\Controllers\NDLController@showImperi
 Route::get('DecoPlannerMetric/{id}', 'App\Http\Controllers\NDLController@showMetric')->middleware('auth')->name('DecoPlannerMetric');
 Route::get('DecoPlannerMetric', 'App\Http\Controllers\NDLController@showMetric')->middleware('auth')->name('DecoPlannerMetric');
 
-Route::get('Weather/{location}', 'App\Http\Controllers\WeatherController@show')->middleware('auth')->name('Weather');
-Route::get('Weather/', 'App\Http\Controllers\WeatherController@show')->middleware('auth')->name('Weather');
-Route::get('WeatherAR/{location}', 'App\Http\Controllers\WeatherController@showAR')->middleware('auth')->name('WeatherAR');
-Route::get('WeatherAR/', 'App\Http\Controllers\WeatherController@showAR')->middleware('auth')->name('WeatherAR');
-Route::get('WeatherARImperial/{location}', 'App\Http\Controllers\WeatherController@showARImperial')->middleware('auth')->name('WeatherARImperial');
-Route::get('WeatherARImperial/', 'App\Http\Controllers\WeatherController@showARImperial')->middleware('auth')->name('WeatherARImperial');
-Route::get('WeatherARMetric/{location}', 'App\Http\Controllers\WeatherController@showARMetric')->middleware('auth')->name('WeatherARMetric');
-Route::get('WeatherARMetric/', 'App\Http\Controllers\WeatherController@showARMetric')->middleware('auth')->name('WeatherARMetric');
+Route::get('Weather/{location}', 'App\Http\Controllers\WeatherController@show')->middleware('guest')->name('Weather');
+Route::get('Weather/', 'App\Http\Controllers\WeatherController@show')->middleware('guest')->name('Weather');
+Route::get('WeatherAR/{location}', 'App\Http\Controllers\WeatherController@showAR')->middleware('guest')->name('WeatherAR');
+Route::get('WeatherAR/', 'App\Http\Controllers\WeatherController@showAR')->middleware('guest')->name('WeatherAR');
+Route::get('WeatherARImperial/{location}', 'App\Http\Controllers\WeatherController@showARImperial')->middleware('guest')->name('WeatherARImperial');
+Route::get('WeatherARImperial/', 'App\Http\Controllers\WeatherController@showARImperial')->middleware('guest')->name('WeatherARImperial');
+Route::get('WeatherARMetric/{location}', 'App\Http\Controllers\WeatherController@showARMetric')->middleware('guest')->name('WeatherARMetric');
+Route::get('WeatherARMetric/', 'App\Http\Controllers\WeatherController@showARMetric')->middleware('guest')->name('WeatherARMetric');
 
 Route::get('CalendarT/{tripType}/{date}', 'App\Http\Controllers\CalendarTController@show')->middleware('auth')->name('CalendarT');
 Route::get('CalendarT/{tripType}', 'App\Http\Controllers\CalendarTController@show')->middleware('auth')->name('CalendarT');

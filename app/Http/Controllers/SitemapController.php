@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Operator;
 use App\Models\Site;
+use App\Models\WeatherLocation;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Spatie\Sitemap\Sitemap;
@@ -49,6 +50,19 @@ class SitemapController extends Controller
                             Url::create(route('OperatorDetails', ['id' => $operator->id]))
                                 ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
                                 ->setPriority(0.6)
+                        );
+                    }
+                });
+
+            WeatherLocation::select('location', 'country')
+                ->orderBy('location')
+                ->chunk(200, function ($locations) use ($sitemap) {
+                    foreach ($locations as $weatherLocation) {
+                        $routeName = $weatherLocation->country === 'AR' ? 'WeatherAR' : 'Weather';
+                        $sitemap->add(
+                            Url::create(route($routeName) . '/' . rawurlencode($weatherLocation->location))
+                                ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY)
+                                ->setPriority(0.5)
                         );
                     }
                 });
