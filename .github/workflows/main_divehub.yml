@@ -74,3 +74,12 @@ jobs:
           app-name: 'diveHub'
           slot-name: 'Production'
           package: .
+
+      - name: Clear stale Laravel compiled view cache
+        continue-on-error: true
+        run: |
+          TOKEN=$(az account get-access-token --resource https://management.azure.com/ --query accessToken -o tsv)
+          curl -s -X POST "https://divehub.scm.azurewebsites.net/api/command" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"command":"rm -f storage/framework/views/*.php","dir":"site/wwwroot"}'
