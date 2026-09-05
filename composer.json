@@ -9,6 +9,7 @@
         "devpro/laravel-ga4-event-tracking": "^1.1",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.4",
+        "intervention/image": "^2.7",
         "laravel/framework": "^9.0",
         "laravel/sanctum": "^2.15",
         "laravel/socialite": "^5.15",

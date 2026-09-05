@@ -214,34 +214,57 @@ class GroupController extends Controller
             abort(403);
         }
 
+        // Phone camera photos routinely land in the 8-20MB range - accept them
+        // and downsize server-side rather than rejecting them outright.
         $request->validate([
-            'banner' => 'nullable|image|max:5120',
-            'avatar' => 'nullable|image|max:2048',
+            'banner' => 'nullable|image|max:25600',
+            'avatar' => 'nullable|image|max:25600',
         ]);
 
         if ($request->hasFile('banner')) {
             if ($group->banner) {
                 Storage::disk('siteAssets')->delete($group->banner);
             }
-            $file = $request->file('banner');
-            $filename = 'banner_' . time() . '.' . $file->getClientOriginalExtension();
-            Storage::disk('siteAssets')->putFileAs('img/groups/' . $group->id, $file, $filename);
-            $group->banner = 'img/groups/' . $group->id . '/' . $filename;
+            $group->banner = $this->storeResizedImage($request->file('banner'), $group->id, 'banner', 1600);
         }
 
         if ($request->hasFile('avatar')) {
             if ($group->avatar) {
                 Storage::disk('siteAssets')->delete($group->avatar);
             }
-            $file = $request->file('avatar');
-            $filename = 'avatar_' . time() . '.' . $file->getClientOriginalExtension();
-            Storage::disk('siteAssets')->putFileAs('img/groups/' . $group->id, $file, $filename);
-            $group->avatar = 'img/groups/' . $group->id . '/' . $filename;
+            $group->avatar = $this->storeResizedImage($request->file('avatar'), $group->id, 'avatar', 500);
         }
 
         $group->save();
 
         return redirect()->route('Groups.show', ['group' => $group->slug])->with('msg', 'Group image(s) updated!');
+    }
+
+    /**
+     * Re-orients (EXIF), downsizes to $maxWidth (never upsizes) and
+     * re-encodes as a JPEG so oversized phone-camera photos don't bloat
+     * storage - regardless of how large the original upload was.
+     */
+    private function storeResizedImage($file, $groupId, $prefix, $maxWidth)
+    {
+        $filename = $prefix . '_' . time() . '.jpg';
+        $relativePath = 'img/groups/' . $groupId . '/' . $filename;
+
+        $fullDir = public_path('assets/img/groups/' . $groupId);
+        if (!is_dir($fullDir)) {
+            mkdir($fullDir, 0755, true);
+        }
+
+        \Intervention\Image\Facades\Image::make($file)
+            ->orientate()
+            ->resize($maxWidth, null, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            })
+            ->encode('jpg', 85)
+            ->save($fullDir . '/' . $filename);
+
+        return $relativePath;
     }
 
     public function removeMember(Request $request, $groupSlug, $memberId)

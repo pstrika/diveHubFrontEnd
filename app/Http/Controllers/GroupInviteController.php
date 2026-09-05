@@ -34,7 +34,7 @@ class GroupInviteController extends Controller
             })
             ->whereNotIn('id', $existingUserIds)
             ->take(10)
-            ->get(['id', 'name', 'email']);
+            ->get(['id', 'name', 'email', 'picture']);
 
         return response()->json($users);
     }

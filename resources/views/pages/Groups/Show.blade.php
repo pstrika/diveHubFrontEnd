@@ -1,6 +1,8 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200' :SEO="$SEO ?? []">
     <x-auth.navbars.sidebar activePage="groups" activeItem="myGroups" activeSubitem=""></x-auth.navbars.sidebar>
 
+    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+
     {{--invite modal--}}
     @if($isAdmin)
     <div class="modal fade" id="modalInvite" tabindex="-1" role="dialog" aria-hidden="true">
@@ -11,7 +13,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <input type="text" id="inviteSearchInput" class="form-control" placeholder="Search by name or email..." autocomplete="off">
+                    <input type="text" id="inviteSearchInput" class="form-control border" placeholder="Search by name or email..." autocomplete="off">
                     <div id="inviteSearchResults" class="list-group mt-2"></div>
                 </div>
             </div>
@@ -60,7 +62,7 @@
                 <div class="modal-body">
                     <form method="GET" action="{{ route('Groups.show', ['group' => $group->slug]) }}" class="mb-3">
                         <label class="form-label">Pick a date</label>
-                        <input type="date" name="add_dive_date" class="form-control" value="{{ $addDiveDate }}" min="{{ now()->toDateString() }}" onchange="this.form.submit()">
+                        <input type="date" name="add_dive_date" id="addDiveDateInput" class="form-control border" value="{{ $addDiveDate }}" min="{{ now()->toDateString() }}" onchange="this.form.submit()">
                     </form>
 
                     @if($addDiveDate)
@@ -93,7 +95,50 @@
         </div>
     </div>
 
-    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+    {{--subscribe to .ics modal--}}
+    <div class="modal fade" id="modalSubscribeIcs" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-normal"><i class="material-icons align-middle">event_available</i> Subscribe to this group's calendar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-sm text-secondary mb-2">
+                        Paste this link into Google Calendar, Apple Calendar or Outlook (as a
+                        subscribed/"from URL" calendar) to keep this group's dives in sync automatically.
+                        Anyone with this link can see the group's upcoming dives, so only share it with people you trust.
+                    </p>
+                    <div class="d-flex align-items-center flex-wrap gap-2">
+                        <input type="text" id="calendarFeedUrl" class="form-control border w-auto flex-grow-1"
+                               value="{{ $calendarFeedUrl }}" readonly onclick="this.select();" style="min-width: 200px;">
+                        <button type="button" class="btn btn-info mb-0" onclick="copyCalendarFeedUrl()">
+                            <i class="material-icons align-middle">content_copy</i> Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{--dive details / attendees modal--}}
+    <div class="modal fade" id="modalDiveDetails" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-normal" id="diveDetailsTitle">Dive details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-secondary text-sm mb-2" id="diveDetailsSubtitle"></p>
+                    <p class="fw-bold text-sm mb-2">Who's going</p>
+                    <div id="diveDetailsAttendees"></div>
+                </div>
+                <div class="modal-footer" id="diveDetailsFooter"></div>
+            </div>
+        </div>
+    </div>
+
         <x-auth.navbars.navs.auth pageTitle="{{ $group->name }}"></x-auth.navbars.navs.auth>
         <div class="container-fluid py-0">
 
@@ -138,14 +183,14 @@
 
             <div class="row mx-1">
                 {{-- Members --}}
-                <div class="col-md-3">
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                <div class="col-md-6">
+                    <div class="card mt-3 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info py-3 pe-1 border-radius-xl">
                                 <h2 class="card-title text-white mx-4 text-md">Members</h2>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-3" style="max-height: 350px; overflow-y: scroll">
                             <ul class="list-group">
                                 @foreach($members as $member)
                                     <li class="list-group-item border-0 d-flex justify-content-between align-items-center px-0">
@@ -172,20 +217,19 @@
                     </div>
                 </div>
 
-                {{-- Calendar --}}
-                <div class="col-md-9">
-                    <div class="card mt-3">
+                {{-- Upcoming Dives --}}
+                <div class="col-md-6">
+                    <div class="card mt-3 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Group Calendar</h2>
-                                <div class="table-responsive"></div>
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1 d-flex justify-content-between align-items-center">
+                                <h2 class="card-title text-white mx-4 mb-0">Upcoming Dives</h2>
+                                <button type="button" class="btn btn-sm bg-white text-info me-3 mb-0" data-bs-toggle="modal" data-bs-target="#modalSubscribeIcs">
+                                    <i class="material-icons text-sm align-middle">event</i> Subscribe
+                                </button>
                             </div>
                         </div>
                         <div class="card-body p-3" style="display: block; max-height: 350px; overflow-y: scroll">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <a href="{{ $calendarFeedUrl }}" class="text-info text-sm">
-                                    <i class="material-icons text-sm align-middle">event</i> Subscribe (.ics)
-                                </a>
+                            <div class="d-flex justify-content-end mb-2">
                                 <button type="button" class="btn btn-sm bg-gradient-info mb-0" data-bs-toggle="modal" data-bs-target="#modalAddDive">
                                     <i class="material-icons text-sm align-middle">add</i> Add a dive
                                 </button>
@@ -194,45 +238,80 @@
                             @if($dives->isEmpty())
                                 <p class="text-secondary mb-0">No upcoming dives yet. Be the first to add one!</p>
                             @else
-                                <table class="table align-items-center mb-0">
-                                    <tbody>
-                                        @foreach($dives as $dive)
-                                            <tr style="border-bottom: 1px solid #D3D3D3;">
-                                                <td class="align-middle text-left text-sm">
-                                                    <b>{{ $dive->tripName }}</b><br>
-                                                    <span class="text-secondary">
-                                                        {{ \Carbon\Carbon::parse($dive->date)->format('D, M j') }}
-                                                        @if($dive->time) at {{ $dive->time }} @endif
-                                                        @if($dive->liveTrip) — {{ $dive->liveTrip->operatorName }} @endif
+                                <div class="timeline timeline-one-side" data-timeline-axis-style="dotted">
+                                    @foreach($dives as $dive)
+                                        <div class="timeline-block mb-3">
+                                            <span class="timeline-step bg-{{ $dive->isGoing(auth()->user()->id) ? 'success' : 'danger' }} p-3">
+                                                <i class="material-icons text-white text-sm">pool</i>
+                                            </span>
+                                            <div class="timeline-content pt-1">
+                                                @if($dive->liveTrip)
+                                                    <a href="{{ route('TripDetails', ['tripId' => $dive->liveTrip->id]) }}">
+                                                        <h6 class="text-dark text-sm font-weight-bold mb-0">{{ $dive->tripName }}</h6>
+                                                    </a>
+                                                @else
+                                                    <h6 class="text-dark text-sm font-weight-bold mb-0">{{ $dive->tripName }}</h6>
+                                                @endif
+                                                <p class="text-secondary text-xs mt-1 mb-0">
+                                                    {{ \Carbon\Carbon::parse($dive->date)->format('D, M j') }}
+                                                    @if($dive->time) <b>({{ $dive->time }})</b> @endif
+                                                </p>
+                                                @if($dive->liveTrip)
+                                                    <p class="text-sm text-bold text-info mt-1 mb-2">
+                                                        <a href="{{ route('OperatorDetails', ['id' => $dive->liveTrip->operatorId]) }}">{{ $dive->liveTrip->operatorName }}</a>
+                                                    </p>
+                                                @endif
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <span class="cursor-pointer" onclick="showDiveDetails({{ $dive->id }})" style="cursor: pointer;">
+                                                        <span class="avatar-group">
+                                                            @foreach($dive->rsvps->take(5) as $rsvp)
+                                                                <div class="avatar avatar-xs rounded-circle" style="margin-left: -8px;">
+                                                                    @if($rsvp->user->picture)
+                                                                        <img src="{{ asset('assets') }}/img/users/{{ $rsvp->user->picture }}" alt="profile_image" class="w-100 rounded-circle border border-white">
+                                                                    @else
+                                                                        <img src="{{ asset('assets') }}/img/default-avatar.png" alt="profile_image" class="w-100 rounded-circle border border-white">
+                                                                    @endif
+                                                                </div>
+                                                            @endforeach
+                                                        </span>
+                                                        <span class="text-xs text-secondary ms-1">{{ $dive->rsvps->count() }} going</span>
                                                     </span>
-                                                    @if($dive->notes)
-                                                        <br><span class="text-xs text-secondary">{{ $dive->notes }}</span>
-                                                    @endif
-                                                </td>
-                                                <td class="align-middle text-sm">
-                                                    {{ $dive->rsvps->count() }} going
-                                                    @if($dive->rsvps->isNotEmpty())
-                                                        <br><span class="text-xs text-secondary">{{ $dive->rsvps->pluck('user.name')->implode(', ') }}</span>
-                                                    @endif
-                                                </td>
-                                                <td class="align-middle text-end">
                                                     @if($dive->isGoing(auth()->user()->id))
                                                         <form method="POST" action="{{ route('Groups.dives.leave', ['dive' => $dive->id]) }}">
                                                             @csrf
-                                                            <button type="submit" class="btn btn-sm bg-gradient-secondary">Leave</button>
+                                                            <button type="submit" class="btn btn-sm bg-gradient-secondary mb-0">Leave</button>
                                                         </form>
                                                     @else
                                                         <form method="POST" action="{{ route('Groups.dives.join', ['dive' => $dive->id]) }}">
                                                             @csrf
-                                                            <button type="submit" class="btn btn-sm bg-gradient-success">I'm going</button>
+                                                            <button type="submit" class="btn btn-sm bg-gradient-success mb-0">I'm going</button>
                                                         </form>
                                                     @endif
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
                             @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Full Calendar --}}
+            <div class="row mx-1">
+                <div class="col-md-12">
+                    <div class="card mt-3 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1 d-flex justify-content-between align-items-center">
+                                <h2 class="card-title text-white mx-4 mb-0">Full Calendar</h2>
+                                <button type="button" class="btn btn-sm bg-white text-info me-3 mb-0" data-bs-toggle="modal" data-bs-target="#modalSubscribeIcs">
+                                    <i class="material-icons text-sm align-middle">event</i> Subscribe
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="calendar" id="groupFullCalendar"></div>
                         </div>
                     </div>
                 </div>
@@ -241,7 +320,7 @@
             {{-- Chat --}}
             <div class="row mx-1">
                 <div class="col-md-12">
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                    <div class="card p-0 position-relative mt-4 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info py-3 pe-1 border-radius-xl">
                                 <h2 class="card-title text-white mx-4 text-md">Group Chat</h2>
@@ -319,10 +398,16 @@
                     .then(r => r.json())
                     .then(function (users) {
                         resultsEl.innerHTML = users.map(function (u) {
+                            const avatarSrc = u.picture
+                                ? "{{ asset('assets') }}/img/users/" + u.picture
+                                : "{{ asset('assets') }}/img/default-avatar.png";
                             return '<form method="POST" action="{{ route('Groups.invite', ['group' => $group->slug]) }}" class="list-group-item d-flex justify-content-between align-items-center">' +
                                 '{{ csrf_field() }}' +
                                 '<input type="hidden" name="user_id" value="' + u.id + '">' +
-                                '<span>' + u.name + ' <span class="text-secondary text-xs">' + u.email + '</span></span>' +
+                                '<span class="d-flex align-items-center">' +
+                                    '<div class="avatar avatar-sm me-2"><img src="' + avatarSrc + '" alt="profile_image" class="w-100 rounded-circle shadow-sm"></div>' +
+                                    u.name + ' <span class="text-secondary text-xs ms-1">' + u.email + '</span>' +
+                                '</span>' +
                                 '<button type="submit" class="btn btn-sm bg-gradient-info mb-0">Invite</button>' +
                                 '</form>';
                         }).join('') || '<p class="text-secondary mb-0 mt-2">No matching users found.</p>';
@@ -331,5 +416,107 @@
         });
     </script>
     @endif
+
+    <script src="{{ asset('assets') }}/js/plugins/fullcalendar.min.js"></script>
+    <script>
+        function copyCalendarFeedUrl() {
+            var input = document.getElementById('calendarFeedUrl');
+            input.select();
+            input.setSelectionRange(0, 99999); // mobile
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(input.value);
+            } else {
+                document.execCommand('copy');
+            }
+        }
+
+        var groupDivesData = {
+            @foreach($dives as $dive)
+            {{ $dive->id }}: {
+                title: {!! json_encode($dive->tripName) !!},
+                subtitle: {!! json_encode(
+                    \Carbon\Carbon::parse($dive->date)->format('D, M j') .
+                    ($dive->time ? ' at ' . $dive->time : '') .
+                    ($dive->liveTrip ? ' — ' . $dive->liveTrip->operatorName : '')
+                ) !!},
+                isGoing: {{ $dive->isGoing(auth()->user()->id) ? 'true' : 'false' }},
+                joinUrl: {!! json_encode(route('Groups.dives.join', ['dive' => $dive->id])) !!},
+                leaveUrl: {!! json_encode(route('Groups.dives.leave', ['dive' => $dive->id])) !!},
+                tripUrl: {!! $dive->liveTrip ? json_encode(route('TripDetails', ['tripId' => $dive->liveTrip->id])) : 'null' !!},
+                attendees: [
+                    @foreach($dive->rsvps as $rsvp)
+                    {
+                        name: {!! json_encode($rsvp->user->name) !!},
+                        picture: {!! json_encode($rsvp->user->picture
+                            ? asset('assets') . '/img/users/' . $rsvp->user->picture
+                            : asset('assets') . '/img/default-avatar.png') !!}
+                    },
+                    @endforeach
+                ]
+            },
+            @endforeach
+        };
+
+        function showDiveDetails(diveId) {
+            var dive = groupDivesData[diveId];
+            if (!dive) return;
+
+            document.getElementById('diveDetailsTitle').textContent = dive.title;
+            document.getElementById('diveDetailsSubtitle').textContent = dive.subtitle;
+
+            var attendeesEl = document.getElementById('diveDetailsAttendees');
+            attendeesEl.innerHTML = dive.attendees.length ? dive.attendees.map(function (a) {
+                return '<div class="d-flex align-items-center mb-2">' +
+                    '<div class="avatar avatar-sm me-2"><img src="' + a.picture + '" alt="profile_image" class="w-100 rounded-circle shadow-sm"></div>' +
+                    '<span>' + a.name + '</span></div>';
+            }).join('') : '<p class="text-secondary mb-0">No one is going yet.</p>';
+
+            var footerEl = document.getElementById('diveDetailsFooter');
+            var csrf = '{{ csrf_token() }}';
+            var viewTripBtn = dive.tripUrl ? '<a href="' + dive.tripUrl + '" class="btn bg-gradient-secondary mb-0">View trip</a>' : '';
+            var rsvpBtn = dive.isGoing
+                ? '<form method="POST" action="' + dive.leaveUrl + '"><input type="hidden" name="_token" value="' + csrf + '"><button type="submit" class="btn bg-gradient-secondary mb-0">Leave</button></form>'
+                : '<form method="POST" action="' + dive.joinUrl + '"><input type="hidden" name="_token" value="' + csrf + '"><button type="submit" class="btn bg-gradient-success mb-0">I\'m going</button></form>';
+            footerEl.innerHTML = viewTripBtn + rsvpBtn;
+
+            new bootstrap.Modal(document.getElementById('modalDiveDetails')).show();
+        }
+
+        var groupFullCalendar = new FullCalendar.Calendar(document.getElementById('groupFullCalendar'), {
+            initialView: 'dayGridMonth',
+            firstDay: {{ auth()->user()->firstDayOfWeek }},
+            contentHeight: 'auto',
+            headerToolbar: {
+                start: 'title',
+                center: '',
+                end: 'today prev,next'
+            },
+            selectable: true,
+            editable: false,
+            dateClick: function (info) {
+                window.location.href = "{{ route('Groups.show', ['group' => $group->slug]) }}?add_dive_date=" + info.dateStr;
+            },
+            eventClick: function (info) {
+                showDiveDetails(info.event.extendedProps.diveId);
+            },
+            events: [
+                @foreach($dives as $dive)
+                {
+                    title: {!! json_encode($dive->tripName) !!},
+                    start: {!! json_encode(\Carbon\Carbon::parse($dive->date)->format('Y-m-d') . ' ' . ($dive->time ?: '00:00')) !!},
+                    extendedProps: { diveId: {{ $dive->id }} },
+                    className: '{{ $dive->isGoing(auth()->user()->id) ? "bg-gradient-success" : "bg-gradient-danger" }} text-white'
+                },
+                @endforeach
+            ]
+        });
+        groupFullCalendar.render();
+
+        @if($addDiveDate)
+        document.addEventListener('DOMContentLoaded', function () {
+            new bootstrap.Modal(document.getElementById('modalAddDive')).show();
+        });
+        @endif
+    </script>
     @endpush
 </x-page-template>

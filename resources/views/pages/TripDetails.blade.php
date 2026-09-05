@@ -1,6 +1,8 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200' :SEO="$SEO ?? []">
     <x-auth.navbars.sidebar activePage="trips" activeItem="trips" activeSubitem=""></x-auth.navbars.sidebar>
 
+    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+
     @if(auth()->user()->isNotGuest())
     {{--add to group modal--}}
     <div class="modal fade" id="modalAddToGroup" tabindex="-1" role="dialog" aria-hidden="true">
@@ -36,8 +38,6 @@
         </div>
     </div>
     @endif
-
-    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
 
         <style>
             /* ------ Default Style ---------- */

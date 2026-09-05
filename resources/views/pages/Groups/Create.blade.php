@@ -32,11 +32,11 @@
                                 @csrf
                                 <div class="mb-3">
                                     <label class="form-label">Group name</label>
-                                    <input type="text" name="name" class="form-control" value="{{ old('name') }}" required minlength="3" maxlength="150">
+                                    <input type="text" name="name" class="form-control border" value="{{ old('name') }}" required minlength="3" maxlength="150">
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Description (optional)</label>
-                                    <textarea name="description" class="form-control" rows="4" maxlength="2000">{{ old('description') }}</textarea>
+                                    <textarea name="description" class="form-control border" rows="4" maxlength="2000">{{ old('description') }}</textarea>
                                 </div>
                                 <button type="submit" class="btn bg-gradient-info">Create Group</button>
                                 <a href="{{ route('MyGroups') }}" class="btn bg-gradient-secondary">Cancel</a>
