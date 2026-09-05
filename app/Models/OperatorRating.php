@@ -5,18 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Operator extends Model
+class OperatorRating extends Model
 {
     use HasFactory;
-
     protected $connection = 'mysql_trips'; // Use the new connection for this model
-    protected $table = 'operators';
-
-    // The operators table has no created_at/updated_at columns.
-    public $timestamps = false;
+    protected $table = 'operatorratings';
 
     protected $fillable = [
-        'rate',
-        'votes',
+        'userId',
+        'operatorId',
+        'starRating',
+        'comment',
+        'timeStamp',
     ];
 }

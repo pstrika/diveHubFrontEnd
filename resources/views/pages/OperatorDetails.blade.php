@@ -1,6 +1,87 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200' :SEO="$SEO">
+
+    @php
+        $dayNames = [
+            'Mon' => 'Monday', 'Tue' => 'Tuesday', 'Wed' => 'Wednesday', 'Thu' => 'Thursday',
+            'Fri' => 'Friday', 'Sat' => 'Saturday', 'Sun' => 'Sunday',
+        ];
+
+        $jsonLd = [
+            '@context' => 'https://schema.org',
+            '@type' => 'LocalBusiness',
+            'name' => $operator->operatorName,
+            'url' => $SEO['canonical'] ?? url()->current(),
+        ];
+
+        if (!empty($operator->desc)) {
+            $desc = trim(strip_tags($operator->desc));
+            $jsonLd['description'] = mb_strlen($desc) > 300 ? mb_substr($desc, 0, 297) . '...' : $desc;
+        }
+
+        if (!empty($operator->logoUrl)) {
+            $jsonLd['image'] = asset('assets') . $operator->logoUrl;
+        }
+
+        if (!empty($operator->phone)) {
+            $jsonLd['telephone'] = $operator->phone;
+        }
+
+        if (!empty($operator->email)) {
+            $jsonLd['email'] = $operator->email;
+        }
+
+        if (!empty($operator->webSite)) {
+            $jsonLd['sameAs'] = $operator->webSite;
+        }
+
+        if (!empty($operator->streetAddress) || !empty($operator->cityAddress)) {
+            $jsonLd['address'] = array_filter([
+                '@type' => 'PostalAddress',
+                'streetAddress' => $operator->streetAddress,
+                'addressLocality' => $operator->cityAddress,
+                'addressRegion' => $operator->stateAddress,
+                'postalCode' => $operator->zipAddress,
+                'addressCountry' => $operator->coutryAddress,
+            ]);
+        }
+
+        if (!empty($operator->hourOfOperation)) {
+            try {
+                $hours = json_decode($operator->hourOfOperation, true);
+                $specs = [];
+                if (is_array($hours)) {
+                    foreach ($hours as $entry) {
+                        $day = $dayNames[$entry['day'] ?? ''] ?? null;
+                        if (!$day || empty($entry['hours']) || !str_contains($entry['hours'], '-')) {
+                            continue;
+                        }
+                        [$open, $close] = array_map('trim', explode('-', $entry['hours'], 2));
+                        if (!is_numeric($open) || !is_numeric($close)) {
+                            continue;
+                        }
+                        $specs[] = [
+                            '@type' => 'OpeningHoursSpecification',
+                            'dayOfWeek' => 'https://schema.org/' . $day,
+                            'opens' => sprintf('%02d:00', (int) $open),
+                            'closes' => sprintf('%02d:00', (int) $close),
+                        ];
+                    }
+                }
+                if (!empty($specs)) {
+                    $jsonLd['openingHoursSpecification'] = $specs;
+                }
+            } catch (\Throwable $e) {
+                // Malformed hourOfOperation data - omit rather than break the page.
+            }
+        }
+
+        // Note: aggregateRating is intentionally omitted until enough real
+        // operator ratings have accumulated to be meaningful.
+    @endphp
+    <script type="application/ld+json">{!! json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+
     <x-auth.navbars.sidebar activePage="operators" activeItem="operators" activeSubitem=""></x-auth.navbars.sidebar>
-    
+
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <!-- Navbar -->
@@ -33,6 +114,56 @@
                 </div>
             </div>
             
+            {{--modal rating--}}
+            <div class="modal fade" id="modalRatingOperator" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabelOperator" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title font-weight-normal" id="exampleModalLabelOperator">Rate operator <b>{{ $operator->operatorName }}</b></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form id="myFormOperator" class="multisteps-form__form m-auto" action="{{ route('RateOperator') }}" method="POST" enctype="multipart/form-data">
+                        @csrf <!-- Add CSRF token for security -->
+                        <input type="hidden" name="operatorId" value="{{ $operator->id }}">
+                        <div class="modal-body m-auto">
+                            <input type="hidden" id="valueRateOperator" name="rate">
+                            <div id="rateOperator"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Close</button>
+                            <button class="btn bg-gradient-info ms-auto" id="submit-all-operator-rating" title="Send" onclick="submitform()">Submit</button> {{---type="submit"----}}
+
+                        </div>
+                    </form>
+                    </div>
+                </div>
+            </div>
+
+            <!--modal success rating-->
+            @if(session('msg'))
+            <div class="modal fade" id="modal-notification" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
+                <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header text-center">
+                            <h6 class="modal-title font-weight-normal" id="modal-title-notification">Notification</h6>
+
+                        </div>
+                        <div class="modal-body">
+                            <div class="py-3 text-center">
+                            <i class="material-icons h1 text-secondary">
+                                task_alt
+                            </i>
+                            <h4 class="text-gradient text-info mt-4">{{ session('msg') }}</h4>
+                            <p>Press anywhere outside this dialog to continue</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('/assets/img/illustrations/operators.webp');">
                 <span class="mask  bg-gradient-info  opacity-4"></span>
             </div>
@@ -42,14 +173,34 @@
                     <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
                         <div style="float: left;">
                             <h1 class="card-title text-info mx-3 mt-0">{{ $operator->operatorName }}</h1>
-                            
+
                         </div>
 
-                        @if(auth()->user()->isNotGuest())
-                            <div style="float: right;">
-                                <a href="{{ route('ToggleFav', ['id' => $operator->id]) }}"><i class="justify-content-bottom align-bottom material-icons text-info opacity-10" style="font-size: 50px;">{{ $fav ? "favorite" : "favorite_border"}}</i></a>
+                        {{-- Div for star ratings--}}
+                        <div class="m-auto" style="float: right;">
+                            <div class="d-flex justify-content-end"><div id="rateYoReadOnlyOperator"></div></div>
+
+                            <div class="mt-1">
+                                <p class="align-middle text-end text-md text-info mt-n2"><b>{{ $operator->votes }} ratings</b></p>
                             </div>
-                        @endif
+
+                            {{--Don't allow rating if guest--}}
+                            @if(auth()->user()->isNotGuest())
+                                @if(!$ratedAlready)
+                                <div class="mt-n1">
+                                    <p class="align-middle text-end text-xs text-decoration-underline text-info mt-0"><a href="#" data-bs-toggle="modal" data-bs-target="#modalRatingOperator"><b>rate this operator</b></a></p>
+                                </div>
+                                @else
+                                <div class="mt-n1">
+                                    <p class="align-middle text-end text-xs text-info mt-0"><b>You already rated this operator</b></p>
+                                </div>
+                                @endif
+
+                                <div style="text-align: right;">
+                                    <a href="{{ route('ToggleFav', ['id' => $operator->id]) }}"><i class="justify-content-bottom align-bottom material-icons text-info opacity-10" style="font-size: 50px;">{{ $fav ? "favorite" : "favorite_border"}}</i></a>
+                                </div>
+                            @endif
+                        </div>
 
                     </div>
                 </div>
@@ -447,6 +598,8 @@
     @push('js')
     
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/flatpickr.min.js"></script>
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
@@ -585,6 +738,37 @@
 
 
     </script>
+
+    <script>
+        /* Javascript */
+
+        //Make sure that the dom is ready
+        $(function () {
+            $("#rateOperator").rateYo({
+                precision : 0,
+                onSet: function (rating, rateYoInstance) {
+                    var rateInput = document.getElementById('valueRateOperator');
+                    rateInput.value = rating;
+                }
+            });
+        });
+
+        $(function () {
+            $("#rateYoReadOnlyOperator").rateYo({
+                rating: {{ $operator->rate != null ? $operator->rate : 0 }},
+                readOnly: true
+            });
+        });
+    </script>
+
+    {{---Show modal----}}
+    @if(session('msg'))
+    <script>
+        $(document).ready(function() {
+            $('#modal-notification').modal('show'); // Show the modal
+        });
+    </script>
+    @endif
 
     @endpush
 </x-page-template>

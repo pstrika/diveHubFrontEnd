@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Models\Operator;
+use App\Models\OperatorRating;
 use App\Models\WeatherLocation;
 use App\Models\Boat;
 use App\Models\Trip;
@@ -77,8 +78,9 @@ class OperatorController extends Controller
         $trips = Trip::where('operatorId', $id)
             ->whereDate('date', '>=', Carbon::today())
             ->get()->sortBy("date");
-            
-            
+
+        $ratedAlready = OperatorRating::where('userId', auth()->id())->where('operatorId', $id)->exists();
+
         /*Provide SEO metadata */
         $SEO = array(
             "title" => $operator->operatorName . " details - divers-hub.com",
@@ -87,7 +89,7 @@ class OperatorController extends Controller
             "canonical" => route("OperatorDetails", ['id' => $operator->id]) ,
         );
 
-        return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites', 'trips', 'SEO'));
+        return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites', 'trips', 'ratedAlready', 'SEO'));
     }
 
 

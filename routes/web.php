@@ -192,6 +192,7 @@ Route::get('edit-site-pics/{id}', 'App\Http\Controllers\SiteController@showAdmin
 Route::get('SiteDetails/{id}', 'App\Http\Controllers\SiteController@show')->middleware('guest')->name('SiteDetails');
 Route::get('SiteDetails', 'App\Http\Controllers\SiteController@show')->middleware('guest')->name('SiteDetails');
 Route::post('RateSite', 'App\Http\Controllers\SiteRatingController@new')->middleware('auth')->name('RateSite');
+Route::post('RateOperator', 'App\Http\Controllers\OperatorRatingController@new')->middleware('auth')->name('RateOperator');
 Route::post('UpdateVisited', 'App\Http\Controllers\SiteController@updateVisited')->middleware('auth')->name('UpdateVisited');
 Route::get('UpdateWished/{siteId}', 'App\Http\Controllers\SiteController@updateWished')->middleware('auth')->name('UpdateWished');
 Route::post('AddSiteReview/{siteId}', 'App\Http\Controllers\SiteController@addReview')->middleware('auth')->name('AddSiteReview');
