@@ -44,8 +44,19 @@
         // system does not support the review/star-rating feature for
         // TouristAttraction/Place types, so including it here would be flagged
         // as an invalid field-type combination rather than produce a rich result.
+
+        $breadcrumbJsonLd = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => route('/')],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => 'Dive Sites', 'item' => route('DiveSites')],
+                ['@type' => 'ListItem', 'position' => 3, 'name' => $site->name, 'item' => $SEO['canonical'] ?? url()->current()],
+            ],
+        ];
     @endphp
     <script type="application/ld+json">{!! json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+    <script type="application/ld+json">{!! json_encode($breadcrumbJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 
     <x-auth.navbars.sidebar activePage="siteDetails" activeItem="siteDetails" activeSubitem=""></x-auth.navbars.sidebar>
     

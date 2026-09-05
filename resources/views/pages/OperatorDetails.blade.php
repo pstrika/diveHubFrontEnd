@@ -77,8 +77,19 @@
 
         // Note: aggregateRating is intentionally omitted until enough real
         // operator ratings have accumulated to be meaningful.
+
+        $breadcrumbJsonLd = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => route('/')],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => 'Operators', 'item' => route('Operators')],
+                ['@type' => 'ListItem', 'position' => 3, 'name' => $operator->operatorName, 'item' => $SEO['canonical'] ?? url()->current()],
+            ],
+        ];
     @endphp
     <script type="application/ld+json">{!! json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+    <script type="application/ld+json">{!! json_encode($breadcrumbJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 
     <x-auth.navbars.sidebar activePage="operators" activeItem="operators" activeSubitem=""></x-auth.navbars.sidebar>
 
