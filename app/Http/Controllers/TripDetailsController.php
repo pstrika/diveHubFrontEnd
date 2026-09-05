@@ -14,6 +14,7 @@ use App\Models\Boat;
 use App\Models\Photo;
 use App\Models\User;
 use App\Models\Event;
+use App\Models\Group;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Console\Input\Input;
@@ -78,6 +79,14 @@ class TripDetailsController extends Controller
         // check if for this user this trip is on his calendar
         $alreadyInCalendar = Event::alreadyInCalendar($tripId);
 
+        // Groups this user can add the trip to (real users only - the shared
+        // guest account has no groups and shouldn't see the option anyway).
+        $myGroups = auth()->user()->isNotGuest()
+            ? Group::whereHas('members', function ($q) {
+                $q->where('user_id', auth()->user()->id)->where('status', 'active');
+            })->get()
+            : collect();
+
         /*Provide SEO metadata */
         // Trips are single-day, high-volume, expiring content (thousands generated daily) -
         // not worth indexing, but we still want Google to follow the links to the Site/
@@ -89,7 +98,7 @@ class TripDetailsController extends Controller
             "robots" => "noindex, follow",
         );
 
-        return view('pages.TripDetails', compact('tripDetails', 'operator', 'location', 'boats', 'sites', 'alreadyInCalendar', 'SEO'));
+        return view('pages.TripDetails', compact('tripDetails', 'operator', 'location', 'boats', 'sites', 'alreadyInCalendar', 'myGroups', 'SEO'));
 
     }
 }

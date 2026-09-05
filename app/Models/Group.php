@@ -17,6 +17,9 @@ class Group extends Model
         'name',
         'slug',
         'description',
+        'banner',
+        'avatar',
+        'calendar_token',
         'created_by',
     ];
 
@@ -48,5 +51,15 @@ class Group extends Model
     public function isAdmin($userId): bool
     {
         return $this->members()->where('user_id', $userId)->where('status', 'active')->where('role', 'admin')->exists();
+    }
+
+    public function ensureCalendarToken(): string
+    {
+        if (!$this->calendar_token) {
+            $this->calendar_token = bin2hex(random_bytes(24));
+            $this->save();
+        }
+
+        return $this->calendar_token;
     }
 }

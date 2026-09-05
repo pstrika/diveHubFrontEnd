@@ -19,6 +19,36 @@
     </div>
     @endif
 
+    {{--customize group images modal--}}
+    @if($isAdmin)
+    <div class="modal fade" id="modalCustomize" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('Groups.customize', ['group' => $group->slug]) }}" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title font-weight-normal">Customize {{ $group->name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Cover photo</label>
+                            <input type="file" name="banner" class="form-control" accept="image/*">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Group avatar</label>
+                            <input type="file" name="avatar" class="form-control" accept="image/*">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn bg-gradient-info">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{--add dive modal--}}
     <div class="modal fade" id="modalAddDive" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -67,15 +97,25 @@
         <x-auth.navbars.navs.auth pageTitle="{{ $group->name }}"></x-auth.navbars.navs.auth>
         <div class="container-fluid py-0">
 
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('{{ asset('assets') }}/img/illustrations/beach_diving.webp');">
+            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('{{ $group->banner ? asset('assets/' . $group->banner) : asset('assets') . '/img/illustrations/beach_diving.webp' }}');">
                 <span class="mask bg-gradient-info opacity-4"></span>
+                @if($isAdmin)
+                    <button type="button" class="btn btn-sm bg-white text-info position-absolute" style="top: 12px; right: 12px;" data-bs-toggle="modal" data-bs-target="#modalCustomize">
+                        <i class="material-icons text-sm align-middle">photo_camera</i> Customize
+                    </button>
+                @endif
             </div>
 
             <div class="card p-0 position-relative mt-n5 mx-3 z-index-2 mb-4">
-                <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
-                    <div style="float: left;">
-                        <h1 class="card-title text-info mx-3 mt-0">{{ $group->name }}</h1>
-                        <p class="text-secondary mx-3 mt-n2">{{ $members->count() }} members @if($group->description) — {{ $group->description }} @endif</p>
+                <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1 clearfix">
+                    <div style="float: left;" class="d-flex align-items-center">
+                        @if($group->avatar)
+                            <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}" class="avatar avatar-xl rounded-circle shadow mx-3">
+                        @endif
+                        <div>
+                            <h1 class="card-title text-info mx-3 mt-0 mb-0">{{ $group->name }}</h1>
+                            <p class="text-secondary mx-3 mt-n2">{{ $members->count() }} members @if($group->description) — {{ $group->description }} @endif</p>
+                        </div>
                     </div>
                     @if($isAdmin)
                     <div style="float: right;" class="mx-3">
@@ -94,9 +134,7 @@
                 </div>
             </div>
 
-            @if(session('msg'))
-                <div class="alert alert-info mx-3">{{ session('msg') }}</div>
-            @endif
+            <x-flash-toast />
 
             <div class="row mx-1">
                 {{-- Members --}}
@@ -111,7 +149,16 @@
                             <ul class="list-group">
                                 @foreach($members as $member)
                                     <li class="list-group-item border-0 d-flex justify-content-between align-items-center px-0">
-                                        <span>{{ $member->user->name }} @if($member->role == 'admin') <span class="badge badge-sm bg-gradient-info">admin</span> @endif</span>
+                                        <span class="d-flex align-items-center">
+                                            <div class="avatar avatar-sm me-2">
+                                                @if($member->user->picture)
+                                                    <img src="{{ asset('assets') }}/img/users/{{ $member->user->picture }}" alt="profile_image" class="w-100 rounded-circle shadow-sm">
+                                                @else
+                                                    <img src="{{ asset('assets') }}/img/default-avatar.png" alt="profile_image" class="w-100 rounded-circle shadow-sm" style="background: black;">
+                                                @endif
+                                            </div>
+                                            {{ $member->user->name }} @if($member->role == 'admin') <span class="badge badge-sm bg-gradient-info ms-1">admin</span> @endif
+                                        </span>
                                         @if($isAdmin && $member->user_id != auth()->user()->id)
                                             <form method="POST" action="{{ route('Groups.removeMember', ['group' => $group->slug, 'member' => $member->id]) }}" onsubmit="return confirm('Remove this member?');">
                                                 @csrf
@@ -127,16 +174,23 @@
 
                 {{-- Calendar --}}
                 <div class="col-md-9">
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                    <div class="card mt-3">
                         <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info py-3 pe-1 border-radius-xl d-flex justify-content-between align-items-center mx-4">
-                                <h2 class="card-title text-white text-md mb-0">Group Calendar</h2>
-                                <button type="button" class="btn btn-sm bg-white text-info" data-bs-toggle="modal" data-bs-target="#modalAddDive">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h2 class="card-title text-white mx-4">Group Calendar</h2>
+                                <div class="table-responsive"></div>
+                            </div>
+                        </div>
+                        <div class="card-body p-3" style="display: block; max-height: 350px; overflow-y: scroll">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <a href="{{ $calendarFeedUrl }}" class="text-info text-sm">
+                                    <i class="material-icons text-sm align-middle">event</i> Subscribe (.ics)
+                                </a>
+                                <button type="button" class="btn btn-sm bg-gradient-info mb-0" data-bs-toggle="modal" data-bs-target="#modalAddDive">
                                     <i class="material-icons text-sm align-middle">add</i> Add a dive
                                 </button>
                             </div>
-                        </div>
-                        <div class="card-body">
+
                             @if($dives->isEmpty())
                                 <p class="text-secondary mb-0">No upcoming dives yet. Be the first to add one!</p>
                             @else

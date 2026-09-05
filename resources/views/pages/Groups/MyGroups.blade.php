@@ -2,7 +2,7 @@
     <x-auth.navbars.sidebar activePage="groups" activeItem="myGroups" activeSubitem=""></x-auth.navbars.sidebar>
 
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-        <x-auth.navbars.navs.auth pageTitle="My Groups"></x-auth.navbars.navs.auth>
+        <x-auth.navbars.navs.auth pageTitle="Diving Group"></x-auth.navbars.navs.auth>
         <div class="container-fluid py-0">
 
             <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('{{ asset('assets') }}/img/illustrations/beach_diving.webp');">
@@ -10,9 +10,9 @@
             </div>
 
             <div class="card p-0 position-relative mt-n5 mx-3 z-index-2 mb-4">
-                <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
+                <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1 clearfix">
                     <div style="float: left;">
-                        <h1 class="card-title text-info mx-3 mt-0">My Groups</h1>
+                        <h1 class="card-title text-info mx-3 mt-0">Diving Group</h1>
                     </div>
                     <div style="float: right;" class="mx-3">
                         <a href="{{ route('Groups.create') }}" class="btn bg-gradient-info">
@@ -22,9 +22,7 @@
                 </div>
             </div>
 
-            @if(session('msg'))
-                <div class="alert alert-info mx-3">{{ session('msg') }}</div>
-            @endif
+            <x-flash-toast />
 
             @if($invites->isNotEmpty())
             <div class="row mx-1">
@@ -78,7 +76,18 @@
                                         @foreach($groups as $group)
                                             <tr style="border-bottom: 1px solid #D3D3D3;">
                                                 <td class="align-middle text-left text-md">
-                                                    <a href="{{ route('Groups.show', ['group' => $group->slug]) }}"><b>{{ $group->name }}</b></a>
+                                                    <a href="{{ route('Groups.show', ['group' => $group->slug]) }}" class="d-flex align-items-center text-dark">
+                                                        <div class="avatar avatar-sm me-2">
+                                                            @if($group->avatar)
+                                                                <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}" class="w-100 rounded-circle shadow-sm">
+                                                            @else
+                                                                <div class="w-100 h-100 rounded-circle bg-gradient-info d-flex align-items-center justify-content-center text-white text-sm">
+                                                                    <i class="material-icons text-sm">groups</i>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                        <b>{{ $group->name }}</b>
+                                                    </a>
                                                 </td>
                                                 <td class="align-middle text-secondary text-sm">{{ $group->activeMembers()->count() }} members</td>
                                             </tr>

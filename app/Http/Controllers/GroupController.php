@@ -6,7 +6,9 @@ use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\Trip;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class GroupController extends Controller
@@ -107,11 +109,139 @@ class GroupController extends Controller
 
         $messages = $group->messages()->with(['user', 'photos'])->orderBy('created_at')->get();
 
+        $calendarFeedUrl = route('Groups.feed', ['group' => $group->slug, 'token' => $group->ensureCalendarToken()]);
+
         $SEO = [
             "robots" => "noindex, nofollow",
         ];
 
-        return view('pages.Groups.Show', compact('group', 'isAdmin', 'members', 'dives', 'messages', 'addDiveDate', 'tripsForDate', 'SEO'));
+        return view('pages.Groups.Show', compact('group', 'isAdmin', 'members', 'dives', 'messages', 'addDiveDate', 'tripsForDate', 'calendarFeedUrl', 'SEO'));
+    }
+
+    /**
+     * Public iCalendar subscription feed for a group's shared calendar - no
+     * auth, authenticated purely by the token in the URL, same pattern as
+     * the personal calendar feed (EventController::feed).
+     */
+    public function feed($groupSlug, $token)
+    {
+        $group = Group::where('slug', $groupSlug)->where('calendar_token', $token)->first();
+        if (!$group) {
+            abort(404);
+        }
+
+        $dives = $group->dives()->whereDate('date', '>=', now())->orderBy('date')->get();
+
+        $tz = 'America/New_York';
+        $lines = [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//DiveHub//GroupCalendar//EN",
+            "CALSCALE:GREGORIAN",
+            "METHOD:PUBLISH",
+            "X-WR-CALNAME:" . $group->name . " - Divers Hub",
+            "X-WR-TIMEZONE:{$tz}",
+            "BEGIN:VTIMEZONE",
+            "TZID:America/New_York",
+            "BEGIN:DAYLIGHT",
+            "TZOFFSETFROM:-0500",
+            "TZOFFSETTO:-0400",
+            "TZNAME:EDT",
+            "DTSTART:19700308T020000",
+            "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU",
+            "END:DAYLIGHT",
+            "BEGIN:STANDARD",
+            "TZOFFSETFROM:-0400",
+            "TZOFFSETTO:-0500",
+            "TZNAME:EST",
+            "DTSTART:19701101T020000",
+            "RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU",
+            "END:STANDARD",
+            "END:VTIMEZONE",
+        ];
+
+        $stamp = Carbon::now('UTC')->format('Ymd\THis\Z');
+
+        foreach ($dives as $dive) {
+            $trip = Trip::tripInGroupDive($dive);
+            $operatorName = $trip ? $trip->operatorName : null;
+
+            $start = Carbon::parse(
+                Carbon::parse($dive->date)->format('Y-m-d') . ' ' . ($dive->time ?: '00:00'),
+                $tz
+            );
+            $end = (clone $start)->addHours(3);
+
+            $summary = trim($dive->tripName . ($operatorName ? ' — ' . $operatorName : ''));
+
+            $lines[] = "BEGIN:VEVENT";
+            $lines[] = "UID:divehub-groupdive-{$dive->id}@divers-hub.com";
+            $lines[] = "DTSTAMP:{$stamp}";
+            $lines[] = "DTSTART;TZID={$tz}:" . $start->format('Ymd\THis');
+            $lines[] = "DTEND;TZID={$tz}:" . $end->format('Ymd\THis');
+            $lines[] = "SUMMARY:" . $this->icsEscape($summary);
+            if ($operatorName) {
+                $lines[] = "LOCATION:" . $this->icsEscape($operatorName);
+            }
+            $lines[] = "DESCRIPTION:" . $this->icsEscape(($dive->notes ?: '') . "\nEnd time is an estimate (3h).");
+            $lines[] = "END:VEVENT";
+        }
+
+        $lines[] = "END:VCALENDAR";
+
+        $ics = implode("\r\n", $lines) . "\r\n";
+
+        return response($ics, 200, [
+            'Content-Type' => 'text/calendar; charset=utf-8',
+            'Content-Disposition' => 'inline; filename="' . $group->slug . '-calendar.ics"',
+        ]);
+    }
+
+    private function icsEscape($text)
+    {
+        return str_replace(
+            ["\\", ",", ";", "\n", "\r"],
+            ["\\\\", "\\,", "\\;", "\\n", ""],
+            $text ?? ''
+        );
+    }
+
+    public function customize(Request $request, $groupSlug)
+    {
+        $group = Group::where('slug', $groupSlug)->firstOrFail();
+
+        if (!$group->isAdmin(auth()->user()->id)) {
+            abort(403);
+        }
+
+        $request->validate([
+            'banner' => 'nullable|image|max:5120',
+            'avatar' => 'nullable|image|max:2048',
+        ]);
+
+        if ($request->hasFile('banner')) {
+            if ($group->banner) {
+                Storage::disk('siteAssets')->delete($group->banner);
+            }
+            $file = $request->file('banner');
+            $filename = 'banner_' . time() . '.' . $file->getClientOriginalExtension();
+            Storage::disk('siteAssets')->putFileAs('img/groups/' . $group->id, $file, $filename);
+            $group->banner = 'img/groups/' . $group->id . '/' . $filename;
+        }
+
+        if ($request->hasFile('avatar')) {
+            if ($group->avatar) {
+                Storage::disk('siteAssets')->delete($group->avatar);
+            }
+            $file = $request->file('avatar');
+            $filename = 'avatar_' . time() . '.' . $file->getClientOriginalExtension();
+            Storage::disk('siteAssets')->putFileAs('img/groups/' . $group->id, $file, $filename);
+            $group->avatar = 'img/groups/' . $group->id . '/' . $filename;
+        }
+
+        $group->save();
+
+        return redirect()->route('Groups.show', ['group' => $group->slug])->with('msg', 'Group image(s) updated!');
     }
 
     public function removeMember(Request $request, $groupSlug, $memberId)

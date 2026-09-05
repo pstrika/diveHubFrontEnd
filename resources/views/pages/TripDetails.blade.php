@@ -1,7 +1,42 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200' :SEO="$SEO ?? []">
     <x-auth.navbars.sidebar activePage="trips" activeItem="trips" activeSubitem=""></x-auth.navbars.sidebar>
-    
-    
+
+    @if(auth()->user()->isNotGuest())
+    {{--add to group modal--}}
+    <div class="modal fade" id="modalAddToGroup" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-normal">Add this trip to a group</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                @if($myGroups->isEmpty())
+                    <div class="modal-body">
+                        <p class="text-secondary mb-0">You're not in any groups yet. <a href="{{ route('MyGroups') }}">Create or join one</a> first.</p>
+                    </div>
+                @else
+                    <form method="POST" id="addToGroupForm" action="{{ route('Groups.dives.store', ['group' => $myGroups->first()->slug]) }}">
+                        @csrf
+                        <input type="hidden" name="tripId" value="{{ $tripDetails->id }}">
+                        <div class="modal-body">
+                            <label class="form-label">Which group?</label>
+                            <select class="form-control" onchange="document.getElementById('addToGroupForm').action = this.value;">
+                                @foreach($myGroups as $myGroup)
+                                    <option value="{{ route('Groups.dives.store', ['group' => $myGroup->slug]) }}">{{ $myGroup->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn bg-gradient-info">Add to group calendar</button>
+                        </div>
+                    </form>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
 
         <style>
@@ -131,10 +166,16 @@
                         <h4 class="card-category text-info mx-3"> {{ $location->location }}</h4>
                     </div>
                     @if(auth()->user()->isNotGuest())
-                        <div class="mt-4" style="float: right;" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $alreadyInCalendar ? "This trip is already in your calendar" : "" }}">
-                            <button class="btn btn-icon btn-3 btn-info" type="button" onclick="window.location.href='{{ route('AddEventToCalendar', ['tripId' => $tripDetails->id]) }}';" {{ $alreadyInCalendar ? "disabled" : "" }}>
-                                <span class="btn-inner--icon"><i class="material-icons">event_available</i></span>
-                                <span class="btn-inner--text">Add to my calendar</span>
+                        <div class="mt-4" style="float: right;">
+                            <div class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $alreadyInCalendar ? "This trip is already in your calendar" : "" }}">
+                                <button class="btn btn-icon btn-3 btn-info" type="button" onclick="window.location.href='{{ route('AddEventToCalendar', ['tripId' => $tripDetails->id]) }}';" {{ $alreadyInCalendar ? "disabled" : "" }}>
+                                    <span class="btn-inner--icon"><i class="material-icons">event_available</i></span>
+                                    <span class="btn-inner--text">Add to my calendar</span>
+                                </button>
+                            </div>
+                            <button class="btn btn-icon btn-3 btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#modalAddToGroup">
+                                <span class="btn-inner--icon"><i class="material-icons">groups</i></span>
+                                <span class="btn-inner--text">Add to a group</span>
                             </button>
                         </div>
                     @endif

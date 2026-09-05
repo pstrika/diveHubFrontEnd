@@ -513,6 +513,8 @@ Route::group(['middleware' => 'auth'], function () {
 });
 
 /* Diving Groups */
+Route::get('Groups/{group}/feed/{token}.ics', 'App\Http\Controllers\GroupController@feed')->name('Groups.feed');
+
 Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::get('MyGroups', 'App\Http\Controllers\GroupController@myGroups')->name('MyGroups');
 	Route::get('Groups/create', 'App\Http\Controllers\GroupController@create')->name('Groups.create');
@@ -527,6 +529,7 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::get('Groups/{group}', 'App\Http\Controllers\GroupController@show')->name('Groups.show');
 	Route::post('Groups/{group}/members/{member}/remove', 'App\Http\Controllers\GroupController@removeMember')->name('Groups.removeMember');
 	Route::post('Groups/{group}/delete', 'App\Http\Controllers\GroupController@destroy')->name('Groups.destroy');
+	Route::post('Groups/{group}/customize', 'App\Http\Controllers\GroupController@customize')->name('Groups.customize');
 	Route::get('Groups/{group}/invite/search', 'App\Http\Controllers\GroupInviteController@search')->name('Groups.invite.search');
 	Route::post('Groups/{group}/invite', 'App\Http\Controllers\GroupInviteController@invite')->name('Groups.invite');
 	Route::post('Groups/{group}/dives', 'App\Http\Controllers\GroupDiveController@store')->name('Groups.dives.store');
