@@ -26,26 +26,23 @@
     <div class="modal fade" id="modalCustomize" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
-                <form method="POST" action="{{ route('Groups.customize', ['group' => $group->slug]) }}" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title font-weight-normal">Customize {{ $group->name }}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-normal">Customize {{ $group->name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <label class="form-control mb-0">Cover photo</label>
+                        <div class="form-control border dropzone" id="bannerDropzone"></div>
                     </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Cover photo</label>
-                            <input type="file" name="banner" class="form-control" accept="image/*">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Group avatar</label>
-                            <input type="file" name="avatar" class="form-control" accept="image/*">
-                        </div>
+                    <div class="mb-2">
+                        <label class="form-control mb-0">Group avatar</label>
+                        <div class="form-control border dropzone" id="avatarDropzone"></div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn bg-gradient-info">Save</button>
-                    </div>
-                </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn bg-gradient-info" id="customizeSaveBtn">Save</button>
+                </div>
             </div>
         </div>
     </div>
@@ -121,6 +118,24 @@
         </div>
     </div>
 
+    {{--chat photos modal--}}
+    <div class="modal fade" id="modalChatPhotos" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-normal">Add photos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-control border dropzone" id="chatDropzone"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn bg-gradient-info" data-bs-dismiss="modal">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{--dive details / attendees modal--}}
     <div class="modal fade" id="modalDiveDetails" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
@@ -187,7 +202,7 @@
                     <div class="card mt-3 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info py-3 pe-1 border-radius-xl">
-                                <h2 class="card-title text-white mx-4 text-md">Members</h2>
+                                <h2 class="card-title text-white mx-4">Members</h2>
                             </div>
                         </div>
                         <div class="card-body p-3" style="max-height: 350px; overflow-y: scroll">
@@ -241,8 +256,18 @@
                                 <div class="timeline timeline-one-side" data-timeline-axis-style="dotted">
                                     @foreach($dives as $dive)
                                         <div class="timeline-block mb-3">
-                                            <span class="timeline-step bg-{{ $dive->isGoing(auth()->user()->id) ? 'success' : 'danger' }} p-3">
-                                                <i class="material-icons text-white text-sm">pool</i>
+                                            <span class="timeline-step bg-danger p-3">
+                                                <span class="d-flex align-items-center">
+                                                    @if($dive->liveTrip && strstr($dive->liveTrip->tags, 'SHA'))
+                                                        <img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_shark_center.png" alt="S">
+                                                    @elseif($dive->liveTrip && strstr($dive->liveTrip->tags, 'LOB'))
+                                                        <img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_lobster_center.png" alt="L">
+                                                    @elseif($dive->liveTrip && strstr($dive->liveTrip->tags, 'TEC'))
+                                                        <img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_tec_center.png" alt="T">
+                                                    @else
+                                                        <img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_rec_center.png" alt="R">
+                                                    @endif
+                                                </span>
                                             </span>
                                             <div class="timeline-content pt-1">
                                                 @if($dive->liveTrip)
@@ -323,7 +348,7 @@
                     <div class="card p-0 position-relative mt-4 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info py-3 pe-1 border-radius-xl">
-                                <h2 class="card-title text-white mx-4 text-md">Group Chat</h2>
+                                <h2 class="card-title text-white mx-4">Group Chat</h2>
                             </div>
                         </div>
                         <div class="card-body">
@@ -362,13 +387,18 @@
 
                             <hr class="horizontal dark">
 
-                            <form method="POST" action="{{ route('Groups.messages.store', ['group' => $group->slug]) }}" enctype="multipart/form-data">
+                            <form method="POST" action="{{ route('Groups.messages.store', ['group' => $group->slug]) }}" id="groupChatForm">
                                 @csrf
                                 <div class="mb-2">
-                                    <textarea name="body" class="form-control" rows="2" maxlength="2000" placeholder="Share something with the group..."></textarea>
+                                    <textarea name="body" class="form-control border" rows="2" maxlength="2000" placeholder="Share something with the group..."></textarea>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <input type="file" name="photos[]" accept="image/*" multiple class="form-control form-control-sm w-50">
+                                    <span class="d-flex align-items-center">
+                                        <button type="button" class="btn btn-sm bg-gradient-secondary mb-0 me-2" data-bs-toggle="modal" data-bs-target="#modalChatPhotos">
+                                            <i class="material-icons text-sm align-middle">add_photo_alternate</i>
+                                        </button>
+                                        <span id="chatPhotoPreview" class="d-flex align-items-center flex-wrap gap-1"></span>
+                                    </span>
                                     <button type="submit" class="btn bg-gradient-info mb-0">Post</button>
                                 </div>
                             </form>
@@ -418,6 +448,123 @@
     @endif
 
     <script src="{{ asset('assets') }}/js/plugins/fullcalendar.min.js"></script>
+    <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
+    <script src="{{ asset('assets') }}/js/plugins/dropzone.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    @if($isAdmin)
+    <script>
+        Dropzone.autoDiscover = false;
+
+        var bannerDropzone = new Dropzone(document.getElementById('bannerDropzone'), {
+            url: "{{ route('Groups.uploadImage', ['group' => $group->slug]) }}",
+            autoProcessQueue: false,
+            maxFiles: 1,
+            maxFilesize: 40,
+            acceptedFiles: '.jpeg,.jpg,.png,.webp',
+            resizeWidth: 1600,
+            chunking: true,
+            chunkSize: 2000000,
+            paramName: 'img_file',
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            sending: function (file, xhr, formData) { formData.append('kind', 'banner'); },
+        });
+
+        var avatarDropzone = new Dropzone(document.getElementById('avatarDropzone'), {
+            url: "{{ route('Groups.uploadImage', ['group' => $group->slug]) }}",
+            autoProcessQueue: false,
+            maxFiles: 1,
+            maxFilesize: 40,
+            acceptedFiles: '.jpeg,.jpg,.png,.webp',
+            resizeWidth: 500,
+            chunking: true,
+            chunkSize: 2000000,
+            paramName: 'img_file',
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            sending: function (file, xhr, formData) { formData.append('kind', 'avatar'); },
+        });
+
+        var pendingCustomizeUploads = 0;
+        function afterCustomizeQueueComplete() {
+            pendingCustomizeUploads--;
+            if (pendingCustomizeUploads <= 0) {
+                window.location.reload();
+            }
+        }
+        bannerDropzone.on('queuecomplete', afterCustomizeQueueComplete);
+        avatarDropzone.on('queuecomplete', afterCustomizeQueueComplete);
+
+        document.getElementById('customizeSaveBtn').addEventListener('click', function () {
+            pendingCustomizeUploads = (bannerDropzone.files.length ? 1 : 0) + (avatarDropzone.files.length ? 1 : 0);
+            if (pendingCustomizeUploads === 0) {
+                return;
+            }
+            bannerDropzone.processQueue();
+            avatarDropzone.processQueue();
+        });
+    </script>
+    @endif
+
+    <script>
+        var chatPhotoPaths = [];
+
+        var chatDropzone = new Dropzone(document.getElementById('chatDropzone'), {
+            url: "{{ route('Groups.uploadImage', ['group' => $group->slug]) }}",
+            autoProcessQueue: true,
+            maxFiles: 5,
+            maxFilesize: 40,
+            acceptedFiles: '.jpeg,.jpg,.png,.webp',
+            resizeWidth: 1200,
+            chunking: true,
+            chunkSize: 2000000,
+            parallelUploads: 1,
+            paramName: 'img_file',
+            addRemoveLinks: true,
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            sending: function (file, xhr, formData) { formData.append('kind', 'chat'); },
+            init: function () {
+                this.on('success', function (file, response) {
+                    if (response && response.path) {
+                        file.uploadedPath = response.path;
+                        chatPhotoPaths.push(response.path);
+                        updateChatPhotoPreview();
+                    }
+                });
+                this.on('removedfile', function (file) {
+                    if (file.uploadedPath) {
+                        var idx = chatPhotoPaths.indexOf(file.uploadedPath);
+                        if (idx > -1) {
+                            chatPhotoPaths.splice(idx, 1);
+                            updateChatPhotoPreview();
+                        }
+                    }
+                });
+            },
+        });
+
+        function updateChatPhotoPreview() {
+            var el = document.getElementById('chatPhotoPreview');
+            if (!chatPhotoPaths.length) {
+                el.innerHTML = '';
+                return;
+            }
+            el.innerHTML = chatPhotoPaths.map(function (p) {
+                return '<img src="{{ asset("assets") }}/' + p + '" style="width: 32px; height: 32px; object-fit: cover;" class="border-radius-sm me-1">';
+            }).join('') + '<span class="text-xs text-secondary">' + chatPhotoPaths.length + ' photo(s) attached</span>';
+        }
+
+        document.getElementById('groupChatForm').addEventListener('submit', function () {
+            var form = this;
+            chatPhotoPaths.forEach(function (p) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'existing_photos[]';
+                input.value = p;
+                form.appendChild(input);
+            });
+        });
+    </script>
+
     <script>
         function copyCalendarFeedUrl() {
             var input = document.getElementById('calendarFeedUrl');

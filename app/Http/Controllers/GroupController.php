@@ -206,65 +206,113 @@ class GroupController extends Controller
         );
     }
 
-    public function customize(Request $request, $groupSlug)
+    /**
+     * Chunked image upload endpoint (Dropzone.js, same chunking pattern as
+     * SiteController::upload) for group banners, avatars and chat photos.
+     * Dropzone resizes images client-side before sending, and this still
+     * re-encodes server-side as a safety net - together these mean phone
+     * camera photos never get rejected for being "too large".
+     */
+    public function uploadImage(Request $request, $groupSlug)
     {
         $group = Group::where('slug', $groupSlug)->firstOrFail();
+        $kind = $request->input('kind');
 
-        if (!$group->isAdmin(auth()->user()->id)) {
-            abort(403);
-        }
-
-        // Phone camera photos routinely land in the 8-20MB range - accept them
-        // and downsize server-side rather than rejecting them outright.
-        $request->validate([
-            'banner' => 'nullable|image|max:25600',
-            'avatar' => 'nullable|image|max:25600',
-        ]);
-
-        if ($request->hasFile('banner')) {
-            if ($group->banner) {
-                Storage::disk('siteAssets')->delete($group->banner);
+        if (in_array($kind, ['banner', 'avatar'])) {
+            if (!$group->isAdmin(auth()->user()->id)) {
+                abort(403);
             }
-            $group->banner = $this->storeResizedImage($request->file('banner'), $group->id, 'banner', 1600);
-        }
-
-        if ($request->hasFile('avatar')) {
-            if ($group->avatar) {
-                Storage::disk('siteAssets')->delete($group->avatar);
+        } elseif ($kind === 'chat') {
+            if (!$group->isMember(auth()->user()->id)) {
+                abort(403);
             }
-            $group->avatar = $this->storeResizedImage($request->file('avatar'), $group->id, 'avatar', 500);
+        } else {
+            abort(400, 'Invalid upload kind.');
         }
 
-        $group->save();
+        $chunkNumber = $request->input('dzchunkindex');
+        $totalChunks = $request->input('dztotalchunkcount');
+        $fileUuid = $request->input('dzuuid');
+        $file = $request->file('img_file');
 
-        return redirect()->route('Groups.show', ['group' => $group->slug])->with('msg', 'Group image(s) updated!');
+        if ($chunkNumber === null || $chunkNumber === '') {
+            return $this->finalizeGroupUpload($group, $kind, $file->getRealPath());
+        }
+
+        Storage::disk('siteAssets')->putFileAs(
+            'img/groups/' . $group->id . '/temp/' . $fileUuid,
+            $file,
+            $chunkNumber
+        );
+
+        if ($chunkNumber == $totalChunks - 1) {
+            $mergedRelative = 'img/groups/' . $group->id . '/temp_' . $fileUuid . '.upload';
+            $mergedFullPath = config('filesystems.disks.siteAssets.root') . '/' . $mergedRelative;
+            $this->combineGroupChunks($group->id, $fileUuid, $totalChunks, $mergedFullPath);
+            Storage::disk('siteAssets')->deleteDirectory('img/groups/' . $group->id . '/temp/' . $fileUuid);
+
+            $response = $this->finalizeGroupUpload($group, $kind, $mergedFullPath);
+            if (file_exists($mergedFullPath)) {
+                unlink($mergedFullPath);
+            }
+            return $response;
+        }
+
+        return response()->json(['message' => 'Chunk uploaded successfully']);
     }
 
     /**
-     * Re-orients (EXIF), downsizes to $maxWidth (never upsizes) and
-     * re-encodes as a JPEG so oversized phone-camera photos don't bloat
-     * storage - regardless of how large the original upload was.
+     * Re-orients (EXIF), downsizes and re-encodes as a JPEG, then stores the
+     * result and (for banner/avatar) attaches it to the group.
      */
-    private function storeResizedImage($file, $groupId, $prefix, $maxWidth)
+    private function finalizeGroupUpload(Group $group, $kind, $sourcePath)
     {
-        $filename = $prefix . '_' . time() . '.jpg';
-        $relativePath = 'img/groups/' . $groupId . '/' . $filename;
+        $maxWidths = ['banner' => 1600, 'avatar' => 500, 'chat' => 1200];
+        $subdirs = ['banner' => '', 'avatar' => '', 'chat' => '/chat'];
 
-        $fullDir = public_path('assets/img/groups/' . $groupId);
+        $filename = $kind . '_' . time() . '_' . uniqid() . '.jpg';
+        $dir = 'img/groups/' . $group->id . $subdirs[$kind];
+        $fullDir = public_path('assets/' . $dir);
         if (!is_dir($fullDir)) {
             mkdir($fullDir, 0755, true);
         }
 
-        \Intervention\Image\Facades\Image::make($file)
+        \Intervention\Image\Facades\Image::make($sourcePath)
             ->orientate()
-            ->resize($maxWidth, null, function ($constraint) {
+            ->resize($maxWidths[$kind], null, function ($constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
             })
             ->encode('jpg', 85)
             ->save($fullDir . '/' . $filename);
 
-        return $relativePath;
+        $relativePath = $dir . '/' . $filename;
+
+        if ($kind === 'banner') {
+            if ($group->banner) {
+                Storage::disk('siteAssets')->delete($group->banner);
+            }
+            $group->banner = $relativePath;
+            $group->save();
+        } elseif ($kind === 'avatar') {
+            if ($group->avatar) {
+                Storage::disk('siteAssets')->delete($group->avatar);
+            }
+            $group->avatar = $relativePath;
+            $group->save();
+        }
+
+        return response()->json(['message' => 'ok', 'path' => $relativePath]);
+    }
+
+    private function combineGroupChunks($groupId, $fileUuid, $totalChunks, $outputFilePath)
+    {
+        $outputFile = fopen($outputFilePath, 'ab');
+        for ($i = 0; $i < $totalChunks; $i++) {
+            $chunkPath = config('filesystems.disks.siteAssets.root') . '/img/groups/' . $groupId . '/temp/' . $fileUuid . '/' . $i;
+            fwrite($outputFile, file_get_contents($chunkPath));
+        }
+        fclose($outputFile);
     }
 
     public function removeMember(Request $request, $groupSlug, $memberId)

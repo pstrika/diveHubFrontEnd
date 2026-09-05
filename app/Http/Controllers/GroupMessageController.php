@@ -6,7 +6,6 @@ use App\Models\Group;
 use App\Models\GroupMessage;
 use App\Models\GroupMessagePhoto;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class GroupMessageController extends Controller
 {
@@ -20,11 +19,18 @@ class GroupMessageController extends Controller
 
         $request->validate([
             'body' => 'nullable|max:2000',
-            'photos' => 'nullable|array|max:5',
-            'photos.*' => 'image|max:10240', // 10MB per photo
+            'existing_photos' => 'nullable|array|max:5',
+            'existing_photos.*' => 'string',
         ]);
 
-        if (empty($request->body) && !$request->hasFile('photos')) {
+        // Photos are uploaded ahead of time via the chat dropzone (see
+        // GroupController::uploadImage); only paths already stored under this
+        // group's chat folder are trusted here.
+        $photoPaths = collect($request->input('existing_photos', []))
+            ->filter(fn ($path) => str_starts_with($path, 'img/groups/' . $group->id . '/chat/'))
+            ->values();
+
+        if (empty($request->body) && $photoPaths->isEmpty()) {
             return redirect()->back()->with('msg', 'Write something or attach a photo.');
         }
 
@@ -34,18 +40,13 @@ class GroupMessageController extends Controller
             'body' => $request->body,
         ]);
 
-        if ($request->hasFile('photos')) {
-            foreach ($request->file('photos') as $photo) {
-                $filename = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
-                Storage::disk('siteAssets')->putFileAs('img/groups/' . $group->id, $photo, $filename);
-
-                GroupMessagePhoto::create([
-                    'group_message_id' => $message->id,
-                    'file' => 'img/groups/' . $group->id . '/' . $filename,
-                ]);
-            }
+        foreach ($photoPaths as $path) {
+            GroupMessagePhoto::create([
+                'group_message_id' => $message->id,
+                'file' => $path,
+            ]);
         }
 
-        return redirect()->route('Groups.show', ['group' => $group->slug]);
+        return redirect()->route('Groups.show', ['group' => $group->slug])->with('msg', 'Message posted!');
     }
 }
