@@ -171,9 +171,11 @@
             <div class="card p-0 position-relative mt-n5 mx-3 z-index-2 mb-4">
                 
                     <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
-                        <div style="float: left;">
-                            <h1 class="card-title text-info mx-3 mt-0">{{ $operator->operatorName }}</h1>
-
+                        <div style="float: left;" class="d-flex align-items-center">
+                            <h1 class="card-title text-info mx-3 mt-0 mb-0">{{ $operator->operatorName }}</h1>
+                            @if(auth()->user()->isNotGuest())
+                                <a href="{{ route('ToggleFav', ['id' => $operator->id]) }}"><i class="material-icons text-info opacity-10" style="font-size: 40px;">{{ $fav ? "favorite" : "favorite_border"}}</i></a>
+                            @endif
                         </div>
 
                         {{-- Div for star ratings--}}
@@ -195,10 +197,6 @@
                                     <p class="align-middle text-end text-xs text-info mt-0"><b>You already rated this operator</b></p>
                                 </div>
                                 @endif
-
-                                <div style="text-align: right;">
-                                    <a href="{{ route('ToggleFav', ['id' => $operator->id]) }}"><i class="justify-content-bottom align-bottom material-icons text-info opacity-10" style="font-size: 50px;">{{ $fav ? "favorite" : "favorite_border"}}</i></a>
-                                </div>
                             @endif
                         </div>
 
