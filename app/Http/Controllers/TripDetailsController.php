@@ -77,7 +77,19 @@ class TripDetailsController extends Controller
 
         // check if for this user this trip is on his calendar
         $alreadyInCalendar = Event::alreadyInCalendar($tripId);
-        return view('pages.TripDetails', compact('tripDetails', 'operator', 'location', 'boats', 'sites', 'alreadyInCalendar'));
+
+        /*Provide SEO metadata */
+        // Trips are single-day, high-volume, expiring content (thousands generated daily) -
+        // not worth indexing, but we still want Google to follow the links to the Site/
+        // Operator pages a trip references.
+        $SEO = array(
+            "title" => $tripDetails->tripName . " - " . $tripDetails->operatorName . " - " . $tripDetails->date,
+            "desc" => "Scuba diving trip with " . $tripDetails->operatorName . " on " . $tripDetails->date . ".",
+            "canonical" => route("TripDetails", ['tripId' => $tripDetails->id]),
+            "robots" => "noindex, follow",
+        );
+
+        return view('pages.TripDetails', compact('tripDetails', 'operator', 'location', 'boats', 'sites', 'alreadyInCalendar', 'SEO'));
 
     }
 }

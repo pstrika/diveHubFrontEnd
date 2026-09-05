@@ -34,7 +34,9 @@
     <link rel="canonical" href="{{ $SEO['canonical'] }}">
   @endif
 
-  @if(empty($SEO['title']))
+  @if(!empty($SEO['robots']))
+    <meta name="robots" content="{{ $SEO['robots'] }}">
+  @elseif(empty($SEO['title']))
     <meta name="robots" content="noindex, nofollow">
   @endif
 
