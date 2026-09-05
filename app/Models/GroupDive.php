@@ -22,6 +22,13 @@ class GroupDive extends Model
         'time',
         'tripName',
         'notes',
+        'siteId',
+        'departingFrom',
+        'is_custom',
+    ];
+
+    protected $casts = [
+        'is_custom' => 'boolean',
     ];
 
     public function group(): BelongsTo
@@ -32,6 +39,16 @@ class GroupDive extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function site(): BelongsTo
+    {
+        return $this->belongsTo(Site::class, 'siteId');
+    }
+
+    public function operator(): BelongsTo
+    {
+        return $this->belongsTo(Operator::class, 'operatorId');
     }
 
     public function rsvps(): HasMany

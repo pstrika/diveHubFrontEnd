@@ -49,4 +49,24 @@ class GroupMessageController extends Controller
 
         return redirect()->route('Groups.show', ['group' => $group->slug])->with('msg', 'Message posted!');
     }
+
+    /**
+     * Polled by the chat UI every few seconds. Returns the rendered messages
+     * partial plus a count so the client only re-renders when it changes.
+     */
+    public function poll($groupSlug)
+    {
+        $group = Group::where('slug', $groupSlug)->firstOrFail();
+
+        if (!$group->isMember(auth()->user()->id)) {
+            abort(403);
+        }
+
+        $messages = $group->messages()->with(['user', 'photos'])->orderBy('created_at')->get();
+
+        return response()->json([
+            'count' => $messages->count(),
+            'html' => view('pages.Groups.partials.messages', compact('messages'))->render(),
+        ]);
+    }
 }

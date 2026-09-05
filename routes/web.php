@@ -534,5 +534,9 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::get('Groups/{group}/invite/search', 'App\Http\Controllers\GroupInviteController@search')->name('Groups.invite.search');
 	Route::post('Groups/{group}/invite', 'App\Http\Controllers\GroupInviteController@invite')->name('Groups.invite');
 	Route::post('Groups/{group}/dives', 'App\Http\Controllers\GroupDiveController@store')->name('Groups.dives.store');
+	Route::post('Groups/{group}/dives/custom', 'App\Http\Controllers\GroupDiveController@storeCustom')->name('Groups.dives.storeCustom');
 	Route::post('Groups/{group}/messages', 'App\Http\Controllers\GroupMessageController@store')->name('Groups.messages.store');
+	Route::get('Groups/{group}/messages/poll', 'App\Http\Controllers\GroupMessageController@poll')->name('Groups.messages.poll');
+	Route::post('Groups/{group}/settings', 'App\Http\Controllers\GroupController@updateSettings')->name('Groups.updateSettings');
+	Route::get('Groups/{group}/sites/search', 'App\Http\Controllers\GroupController@searchSites')->name('Groups.sites.search');
 });

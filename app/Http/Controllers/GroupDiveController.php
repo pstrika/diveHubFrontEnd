@@ -26,6 +26,17 @@ class GroupDiveController extends Controller
 
         $trip = Trip::findOrFail($request->tripId);
 
+        $alreadyInGroup = $group->dives()
+            ->where('operatorId', $trip->operatorId)
+            ->where('date', $trip->date)
+            ->where('time', $trip->departureTime)
+            ->where('tripName', $trip->tripName)
+            ->exists();
+
+        if ($alreadyInGroup) {
+            return redirect()->back()->with('msg', 'That trip is already on this group\'s calendar.');
+        }
+
         $dive = GroupDive::create([
             'group_id' => $group->id,
             'created_by' => auth()->user()->id,
@@ -33,6 +44,7 @@ class GroupDiveController extends Controller
             'date' => $trip->date,
             'time' => $trip->departureTime,
             'tripName' => $trip->tripName,
+            'siteId' => !empty($trip->site[0]) ? $trip->site[0]->id : null,
             'notes' => $request->notes,
         ]);
 
@@ -41,6 +53,52 @@ class GroupDiveController extends Controller
 
         return redirect()->route('Groups.show', ['group' => $group->slug])
             ->with('msg', 'Dive added to the group calendar!');
+    }
+
+    /**
+     * A dive not backed by a scraped Trip (e.g. a private charter, or a site
+     * not yet in our database). Since there's no live Trip to re-resolve, all
+     * display fields are stored directly on the GroupDive row.
+     */
+    public function storeCustom(Request $request, $groupSlug)
+    {
+        $group = Group::where('slug', $groupSlug)->firstOrFail();
+
+        if (!$group->isMember(auth()->user()->id)) {
+            abort(403);
+        }
+
+        $request->validate([
+            'date' => 'required|date',
+            'time' => 'nullable',
+            'operatorId' => 'nullable|integer|exists:mysql_trips.operators,id',
+            'departingFrom' => 'nullable|max:150',
+            'siteId' => 'nullable|integer|exists:mysql_trips.sites,id',
+            'notes' => 'nullable|max:1000',
+        ]);
+
+        $site = $request->siteId ? \App\Models\Site::find($request->siteId) : null;
+        $operator = $request->operatorId ? \App\Models\Operator::find($request->operatorId) : null;
+
+        $tripName = $site->name ?? $operator->operatorName ?? 'Custom Dive';
+
+        $dive = GroupDive::create([
+            'group_id' => $group->id,
+            'created_by' => auth()->user()->id,
+            'operatorId' => $request->operatorId,
+            'date' => $request->date,
+            'time' => $request->time,
+            'tripName' => $tripName,
+            'siteId' => $request->siteId,
+            'departingFrom' => $request->departingFrom,
+            'notes' => $request->notes,
+            'is_custom' => true,
+        ]);
+
+        $this->addRsvp($dive, auth()->user()->id);
+
+        return redirect()->route('Groups.show', ['group' => $group->slug])
+            ->with('msg', 'Custom dive added to the group calendar!');
     }
 
     public function join($diveId)

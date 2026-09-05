@@ -16,21 +16,38 @@
                     <div class="modal-body">
                         <p class="text-secondary mb-0">You're not in any groups yet. <a href="{{ route('MyGroups') }}">Create or join one</a> first.</p>
                     </div>
+                @elseif($myGroups->every(fn($g) => $g->alreadyAdded))
+                    <div class="modal-body">
+                        <p class="text-secondary mb-0">This trip is already on the calendar for all of your groups.</p>
+                    </div>
                 @else
-                    <form method="POST" id="addToGroupForm" action="{{ route('Groups.dives.store', ['group' => $myGroups->first()->slug]) }}">
+                    <form method="POST" id="addToGroupForm" action="">
                         @csrf
                         <input type="hidden" name="tripId" value="{{ $tripDetails->id }}">
                         <div class="modal-body">
                             <label class="form-label">Which group?</label>
-                            <select class="form-control" onchange="document.getElementById('addToGroupForm').action = this.value;">
-                                @foreach($myGroups as $myGroup)
-                                    <option value="{{ route('Groups.dives.store', ['group' => $myGroup->slug]) }}">{{ $myGroup->name }}</option>
-                                @endforeach
-                            </select>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary border w-100 d-flex justify-content-between align-items-center dropdown-toggle" type="button" id="groupPickerBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span id="groupPickerLabel" class="d-flex align-items-center text-secondary">Choose a group...</span>
+                                </button>
+                                <ul class="dropdown-menu w-100" aria-labelledby="groupPickerBtn">
+                                    @foreach($myGroups as $myGroup)
+                                        @if(!$myGroup->alreadyAdded)
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"
+                                                   onclick="selectGroupForTrip('{{ route('Groups.dives.store', ['group' => $myGroup->slug]) }}', '{{ addslashes($myGroup->name) }}', '{{ asset('assets/' . $myGroup->avatar) }}')">
+                                                    <img src="{{ asset('assets/' . $myGroup->avatar) }}" class="rounded-circle border-info me-2" style="width: 28px; height: 28px; object-fit: cover; border-width: 2px; border-style: solid;">
+                                                    {{ $myGroup->name }}
+                                                </a>
+                                            </li>
+                                        @endif
+                                    @endforeach
+                                </ul>
+                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" class="btn bg-gradient-info">Add to group calendar</button>
+                            <button type="submit" id="addToGroupSubmitBtn" class="btn bg-gradient-info" disabled>Add to group calendar</button>
                         </div>
                     </form>
                 @endif
@@ -177,6 +194,14 @@
                                 <span class="btn-inner--icon"><i class="material-icons">groups</i></span>
                                 <span class="btn-inner--text">Add to a group</span>
                             </button>
+                            @php $groupsWithTrip = $myGroups->filter(fn($g) => $g->alreadyAdded); @endphp
+                            @if($groupsWithTrip->isNotEmpty())
+                                <div class="text-end mt-1">
+                                    <i class="material-icons text-info text-sm align-middle" data-bs-toggle="tooltip"
+                                       title="This trip is already in group calendar{{ $groupsWithTrip->count() > 1 ? 's' : '' }}: {{ $groupsWithTrip->pluck('name')->implode(', ') }}">info</i>
+                                    <span class="text-xs text-secondary">Already in {{ $groupsWithTrip->pluck('name')->implode(', ') }}</span>
+                                </div>
+                            @endif
                         </div>
                     @endif
                 </div>
@@ -526,7 +551,16 @@
     @push('js')
     <script src="{{ asset('assets') }}/js/plugins/gauge.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
-    
+
+    <script>
+        function selectGroupForTrip(actionUrl, groupName, avatarUrl) {
+            document.getElementById('addToGroupForm').action = actionUrl;
+            document.getElementById('groupPickerLabel').innerHTML =
+                '<img src="' + avatarUrl + '" class="rounded-circle border-info me-2" style="width: 24px; height: 24px; object-fit: cover; border-width: 2px; border-style: solid;">' + groupName;
+            document.getElementById('addToGroupSubmitBtn').disabled = false;
+        }
+    </script>
+
     @if(count($sites))
     <script>
         @foreach($sites as $site)

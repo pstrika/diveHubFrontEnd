@@ -114,25 +114,43 @@ class GroupController extends Controller
         $dives = $group->dives()
             ->whereDate('date', '>=', now())
             ->orderBy('date')
-            ->with('rsvps.user')
+            ->with(['rsvps.user', 'site', 'operator'])
             ->get();
 
         foreach ($dives as $dive) {
-            $dive->liveTrip = Trip::tripInGroupDive($dive);
+            $dive->liveTrip = $dive->is_custom ? null : Trip::tripInGroupDive($dive);
         }
 
-        // "Add a dive" trip browser: pick a date, see that day's live trips.
+        // Existing dives in THIS group, keyed by composite key, so the "Add a
+        // dive" browser can hide trips already on this group's calendar.
+        $existingDiveKeys = $group->dives()->get()
+            ->map(fn ($d) => $d->operatorId . '|' . $d->date . '|' . $d->time . '|' . $d->tripName)
+            ->flip();
+
+        // "Add a dive" trip browser: pick a date (optionally filter by site
+        // name), see that day's live trips.
         $addDiveDate = $request->query('add_dive_date');
+        $addDiveSite = $request->query('add_dive_site');
         $tripsForDate = null;
         if ($addDiveDate) {
-            $tripsForDate = Trip::where('date', $addDiveDate)
-                ->where('siteIdStatus', 'confirmed')
-                ->get()->sortBy('departureTime');
+            $tripsQuery = Trip::where('date', $addDiveDate)->where('siteIdStatus', 'confirmed');
+            if ($addDiveSite) {
+                $tripsQuery->whereHas('site', function ($q) use ($addDiveSite) {
+                    $q->where('name', 'LIKE', "%$addDiveSite%");
+                });
+            }
+            $tripsForDate = $tripsQuery->get()->sortBy('departureTime')->map(function ($trip) use ($existingDiveKeys) {
+                $trip->alreadyInThisGroup = $existingDiveKeys->has($trip->operatorId . '|' . $trip->date . '|' . $trip->departureTime . '|' . $trip->tripName);
+                return $trip;
+            });
         }
 
         $messages = $group->messages()->with(['user', 'photos'])->orderBy('created_at')->get();
 
         $calendarFeedUrl = route('Groups.feed', ['group' => $group->slug, 'token' => $group->ensureCalendarToken()]);
+
+        $operators = $isAdmin ? \App\Models\Operator::orderBy('operatorName')->get(['id', 'operatorName']) : collect();
+        $favoriteOperatorIds = $isAdmin ? $group->favoriteOperators()->pluck('operators.id')->toArray() : [];
 
         $SEO = [
             "robots" => "noindex, nofollow",
@@ -140,7 +158,7 @@ class GroupController extends Controller
 
         $callingCards = self::CALLING_CARDS;
 
-        return view('pages.Groups.Show', compact('group', 'isAdmin', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'SEO'));
+        return view('pages.Groups.Show', compact('group', 'isAdmin', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'addDiveSite', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'operators', 'favoriteOperatorIds', 'SEO'));
     }
 
     /**
@@ -355,6 +373,51 @@ class GroupController extends Controller
             fwrite($outputFile, file_get_contents($chunkPath));
         }
         fclose($outputFile);
+    }
+
+    /**
+     * Simple site-name search for the "Custom Dive" form's site picker.
+     */
+    public function searchSites(Request $request, $groupSlug)
+    {
+        $group = Group::where('slug', $groupSlug)->firstOrFail();
+
+        if (!$group->isMember(auth()->user()->id)) {
+            abort(403);
+        }
+
+        $q = trim((string) $request->input('q'));
+        if (mb_strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $sites = \App\Models\Site::where('name', 'LIKE', "%$q%")
+            ->take(10)
+            ->get(['id', 'name', 'level']);
+
+        return response()->json($sites);
+    }
+
+    public function updateSettings(Request $request, $groupSlug)
+    {
+        $group = Group::where('slug', $groupSlug)->firstOrFail();
+
+        if (!$group->isAdmin(auth()->user()->id)) {
+            abort(403);
+        }
+
+        $request->validate([
+            'reminders_enabled' => 'nullable|boolean',
+            'favorite_operators' => 'nullable|array',
+            'favorite_operators.*' => 'integer|exists:mysql_trips.operators,id',
+        ]);
+
+        $group->reminders_enabled = $request->boolean('reminders_enabled');
+        $group->save();
+
+        $group->favoriteOperators()->sync($request->input('favorite_operators', []));
+
+        return redirect()->route('Groups.show', ['group' => $group->slug])->with('msg', 'Group settings updated!');
     }
 
     public function removeMember(Request $request, $groupSlug, $memberId)

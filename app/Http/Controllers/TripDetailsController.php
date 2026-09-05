@@ -87,6 +87,15 @@ class TripDetailsController extends Controller
             })->get()
             : collect();
 
+        foreach ($myGroups as $myGroup) {
+            $myGroup->alreadyAdded = $myGroup->dives()
+                ->where('operatorId', $tripDetails->operatorId)
+                ->where('date', $tripDetails->date)
+                ->where('time', $tripDetails->departureTime)
+                ->where('tripName', $tripDetails->tripName)
+                ->exists();
+        }
+
         /*Provide SEO metadata */
         // Trips are single-day, high-volume, expiring content (thousands generated daily) -
         // not worth indexing, but we still want Google to follow the links to the Site/

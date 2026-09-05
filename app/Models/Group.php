@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Group extends Model
@@ -20,8 +21,18 @@ class Group extends Model
         'banner',
         'avatar',
         'calendar_token',
+        'reminders_enabled',
         'created_by',
     ];
+
+    protected $casts = [
+        'reminders_enabled' => 'boolean',
+    ];
+
+    public function favoriteOperators(): BelongsToMany
+    {
+        return $this->belongsToMany(Operator::class, 'group_favorite_operators', 'group_id', 'operator_id');
+    }
 
     public function members(): HasMany
     {

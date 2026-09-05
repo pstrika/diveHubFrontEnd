@@ -63,6 +63,44 @@
     </div>
     @endif
 
+    {{--group settings modal--}}
+    @if($isAdmin)
+    <div class="modal fade" id="modalGroupSettings" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('Groups.updateSettings', ['group' => $group->slug]) }}">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title font-weight-normal">{{ $group->name }} Settings</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-check form-switch mb-4">
+                            <input class="form-check-input" type="checkbox" name="reminders_enabled" value="1" id="remindersEnabledInput" {{ $group->reminders_enabled ? 'checked' : '' }}>
+                            <label class="form-check-label" for="remindersEnabledInput">
+                                Email trip reminders (3 days and 1 day before an upcoming dive)
+                            </label>
+                        </div>
+                        <label class="form-label">Favorite operators</label>
+                        <p class="text-xs text-secondary mt-n2">Used to keep the group updated on upcoming trips from these operators.</p>
+                        <div style="max-height: 250px; overflow-y: auto;" class="border rounded p-2">
+                            @foreach($operators as $operator)
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="favorite_operators[]" value="{{ $operator->id }}" id="favOp{{ $operator->id }}" {{ in_array($operator->id, $favoriteOperatorIds) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="favOp{{ $operator->id }}">{{ $operator->operatorName }}</label>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn bg-gradient-info">Save Settings</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{--add dive modal--}}
     <div class="modal fade" id="modalAddDive" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -73,9 +111,24 @@
                 </div>
                 <div class="modal-body">
                     <form method="GET" action="{{ route('Groups.show', ['group' => $group->slug]) }}" class="mb-3">
-                        <label class="form-label">Pick a date</label>
-                        <input type="date" name="add_dive_date" id="addDiveDateInput" class="form-control border" value="{{ $addDiveDate }}" min="{{ now()->toDateString() }}" onchange="this.form.submit()">
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="form-label">Pick a date</label>
+                                <input type="date" name="add_dive_date" id="addDiveDateInput" class="form-control border" value="{{ $addDiveDate }}" min="{{ now()->toDateString() }}">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Search by dive site (optional)</label>
+                                <input type="text" name="add_dive_site" class="form-control border" placeholder="e.g. Vandenberg" value="{{ $addDiveSite }}">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-sm bg-gradient-info mt-2">Search</button>
                     </form>
+
+                    <div class="d-flex justify-content-end mb-2">
+                        <button type="button" class="btn btn-sm bg-gradient-secondary mb-0" id="openCustomDiveBtn">
+                            <i class="material-icons text-sm align-middle">add</i> Add a Custom Dive
+                        </button>
+                    </div>
 
                     @if($addDiveDate)
                         @if($tripsForDate && $tripsForDate->isNotEmpty())
@@ -88,11 +141,15 @@
                                                 <span class="text-secondary">{{ $trip->operatorName }} — {{ $trip->departureTime }}</span>
                                             </td>
                                             <td class="align-middle text-end">
-                                                <form method="POST" action="{{ route('Groups.dives.store', ['group' => $group->slug]) }}">
-                                                    @csrf
-                                                    <input type="hidden" name="tripId" value="{{ $trip->id }}">
-                                                    <button type="submit" class="btn btn-sm bg-gradient-info">Add</button>
-                                                </form>
+                                                @if($trip->alreadyInThisGroup)
+                                                    <span class="badge bg-secondary">Already added</span>
+                                                @else
+                                                    <form method="POST" action="{{ route('Groups.dives.store', ['group' => $group->slug]) }}">
+                                                        @csrf
+                                                        <input type="hidden" name="tripId" value="{{ $trip->id }}">
+                                                        <button type="submit" class="btn btn-sm bg-gradient-info">Add</button>
+                                                    </form>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
@@ -103,6 +160,59 @@
                         @endif
                     @endif
                 </div>
+            </div>
+        </div>
+    </div>
+
+    {{--add custom dive modal--}}
+    <div class="modal fade" id="modalAddCustomDive" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('Groups.dives.storeCustom', ['group' => $group->slug]) }}">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title font-weight-normal">Add a custom dive</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Date</label>
+                                <input type="date" name="date" class="form-control border" min="{{ now()->toDateString() }}" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Departure time</label>
+                                <input type="time" name="time" class="form-control border">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Operator (optional)</label>
+                            <select name="operatorId" class="form-control border">
+                                <option value="">— none —</option>
+                                @foreach($operators as $operator)
+                                    <option value="{{ $operator->id }}">{{ $operator->operatorName }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Departing from (optional)</label>
+                            <input type="text" name="departingFrom" class="form-control border" placeholder="e.g. Private boat, Haulover Marina">
+                        </div>
+                        <div class="mb-3 position-relative">
+                            <label class="form-label">Dive site (optional)</label>
+                            <input type="text" id="customDiveSiteInput" class="form-control border" placeholder="Search for a site..." autocomplete="off">
+                            <input type="hidden" name="siteId" id="customDiveSiteId">
+                            <div id="customDiveSiteResults" class="list-group position-absolute w-100" style="z-index: 1060; max-height: 200px; overflow-y: auto;"></div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Notes</label>
+                            <textarea name="notes" class="form-control border" rows="2" maxlength="1000"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn bg-gradient-info">Add Custom Dive</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -186,7 +296,7 @@
                 <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1 clearfix">
                     <div style="float: left;" class="d-flex align-items-center">
                         @if($group->avatar)
-                            <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}" class="avatar avatar-xl rounded-circle shadow mx-3" style="object-fit: cover;">
+                            <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}" class="avatar avatar-xl rounded-circle shadow border-info mx-3" style="object-fit: cover; border-width: 3px; border-style: solid;">
                         @endif
                         <div>
                             <h1 class="card-title text-info mx-3 mt-0 mb-0">{{ $group->name }}</h1>
@@ -197,6 +307,9 @@
                     <div style="float: right;" class="mx-3">
                         <button type="button" class="btn bg-gradient-info" data-bs-toggle="modal" data-bs-target="#modalInvite">
                             <i class="material-icons text-sm align-middle me-1">person_add</i> Invite
+                        </button>
+                        <button type="button" class="btn bg-gradient-secondary" data-bs-toggle="modal" data-bs-target="#modalGroupSettings">
+                            <i class="material-icons text-sm align-middle me-1">settings</i> Settings
                         </button>
                         <form method="POST" action="{{ route('Groups.destroy', ['group' => $group->slug]) }}" class="d-inline"
                             onsubmit="return confirm('Delete &quot;{{ $group->name }}&quot; permanently? This removes all dives, RSVPs and chat history for every member. This cannot be undone.');">
@@ -226,12 +339,13 @@
                                 @foreach($members as $member)
                                     <li class="list-group-item border-0 d-flex justify-content-between align-items-center px-0">
                                         <span class="d-flex align-items-center">
-                                            <div class="avatar avatar-sm me-2">
+                                            <div class="avatar avatar-sm me-2 position-relative">
                                                 @if($member->user->picture)
                                                     <img src="{{ asset('assets') }}/img/users/{{ $member->user->picture }}" alt="profile_image" class="w-100 rounded-circle shadow-sm">
                                                 @else
                                                     <img src="{{ asset('assets') }}/img/default-avatar.png" alt="profile_image" class="w-100 rounded-circle shadow-sm" style="background: black;">
                                                 @endif
+                                                <span class="position-absolute border border-white rounded-circle {{ $member->user->isOnline() ? 'bg-success' : 'bg-secondary' }}" style="width: 10px; height: 10px; bottom: 0; right: 0;" data-bs-toggle="tooltip" title="{{ $member->user->isOnline() ? 'Online' : 'Offline' }}"></span>
                                             </div>
                                             {{ $member->user->name }}
                                             @if($member->user->certLevel !== null)
@@ -310,9 +424,14 @@
                                             </span>
                                             <div class="timeline-content pt-1">
                                                 @php
-                                                    $diveLevel = ($dive->liveTrip && !empty($dive->liveTrip->site[0])) ? $dive->liveTrip->site[0]->level : null;
+                                                    $diveSite = $dive->site ?: (($dive->liveTrip && !empty($dive->liveTrip->site[0])) ? $dive->liveTrip->site[0] : null);
+                                                    $diveLevel = $diveSite->level ?? null;
                                                     $userCertLevel = auth()->user()->certLevel;
                                                     $exceedsCert = $diveLevel !== null && $userCertLevel !== null && $diveLevel > $userCertLevel;
+                                                    $diveOperator = $dive->liveTrip ?: $dive->operator;
+                                                    $operatorId = $dive->liveTrip ? $dive->liveTrip->operatorId : ($dive->operator->id ?? null);
+                                                    $operatorName = $dive->liveTrip ? $dive->liveTrip->operatorName : ($dive->operator->operatorName ?? null);
+                                                    $operatorLogo = $dive->operator->logoUrl ?? null;
                                                 @endphp
                                                 <div class="d-flex align-items-center">
                                                     @if($diveLevel !== null)
@@ -326,17 +445,26 @@
                                                             <h6 class="text-dark text-sm font-weight-bold mb-0">{{ $dive->tripName }}</h6>
                                                         </a>
                                                     @else
-                                                        <h6 class="text-dark text-sm font-weight-bold mb-0">{{ $dive->tripName }}</h6>
+                                                        <h6 class="text-dark text-sm font-weight-bold mb-0">{{ $dive->tripName }} @if($dive->is_custom) <span class="badge badge-sm bg-secondary">custom</span> @endif</h6>
                                                     @endif
                                                 </div>
                                                 <p class="text-secondary text-xs mt-1 mb-0">
                                                     {{ \Carbon\Carbon::parse($dive->date)->format('D, M j') }}
                                                     @if($dive->time) <b>({{ $dive->time }})</b> @endif
                                                 </p>
-                                                @if($dive->liveTrip)
-                                                    <p class="text-sm text-bold text-info mt-1 mb-2">
-                                                        <a href="{{ route('OperatorDetails', ['id' => $dive->liveTrip->operatorId]) }}">{{ $dive->liveTrip->operatorName }}</a>
+                                                @if($operatorName)
+                                                    <p class="text-sm text-bold text-info mt-1 mb-2 d-flex align-items-center">
+                                                        @if($operatorLogo)
+                                                            <img src="{{ $operatorLogo }}" alt="" style="width: 18px; height: 18px; object-fit: contain;" class="me-1">
+                                                        @endif
+                                                        @if($operatorId)
+                                                            <a href="{{ route('OperatorDetails', ['id' => $operatorId]) }}">{{ $operatorName }}</a>
+                                                        @else
+                                                            {{ $operatorName }}
+                                                        @endif
                                                     </p>
+                                                @elseif($dive->departingFrom)
+                                                    <p class="text-sm text-secondary mt-1 mb-2">Departing from {{ $dive->departingFrom }}</p>
                                                 @endif
                                                 <div class="d-flex align-items-center justify-content-between">
                                                     <span class="cursor-pointer" onclick="showDiveDetails({{ $dive->id }})" style="cursor: pointer;">
@@ -404,37 +532,8 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <div id="groupChatMessages" style="max-height: 400px; overflow-y: auto;">
-                                @forelse($messages as $message)
-                                    <div class="d-flex mb-3">
-                                        <div class="avatar avatar-sm me-2">
-                                            @if($message->user->picture)
-                                                <img src="{{ asset('assets') }}/img/users/{{ $message->user->picture }}" alt="profile_image" class="w-100 rounded-circle shadow-sm">
-                                            @else
-                                                <img src="{{ asset('assets') }}/img/default-avatar.png" alt="profile_image" class="w-100 rounded-circle shadow-sm" style="background: black;">
-                                            @endif
-                                        </div>
-                                        <div>
-                                            <div class="text-xs text-secondary">
-                                                <b>{{ $message->user->name }}</b> · {{ $message->created_at->diffForHumans() }}
-                                            </div>
-                                            @if($message->body)
-                                                <div class="text-sm">{{ $message->body }}</div>
-                                            @endif
-                                            @if($message->photos->isNotEmpty())
-                                                <div class="d-flex flex-wrap mt-1">
-                                                    @foreach($message->photos as $photo)
-                                                        <a href="{{ asset('assets/' . $photo->file) }}" target="_blank">
-                                                            <img src="{{ asset('assets/' . $photo->file) }}" style="width: 120px; height: 120px; object-fit: cover;" class="border-radius-md me-1 mb-1">
-                                                        </a>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                @empty
-                                    <p class="text-secondary mb-0">No messages yet — say hi!</p>
-                                @endforelse
+                            <div id="groupChatMessages" data-count="{{ $messages->count() }}" style="max-height: 400px; overflow-y: auto;">
+                                @include('pages.Groups.partials.messages')
                             </div>
 
                             <hr class="horizontal dark">
@@ -627,6 +726,26 @@
                 form.appendChild(input);
             });
         });
+
+        // Poll for new chat messages without a manual page refresh.
+        (function () {
+            var messagesEl = document.getElementById('groupChatMessages');
+            setInterval(function () {
+                fetch("{{ route('Groups.messages.poll', ['group' => $group->slug]) }}")
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (String(data.count) !== messagesEl.getAttribute('data-count')) {
+                            var wasScrolledToBottom = messagesEl.scrollTop + messagesEl.clientHeight >= messagesEl.scrollHeight - 20;
+                            messagesEl.innerHTML = data.html;
+                            messagesEl.setAttribute('data-count', data.count);
+                            if (wasScrolledToBottom) {
+                                messagesEl.scrollTop = messagesEl.scrollHeight;
+                            }
+                        }
+                    })
+                    .catch(function () {});
+            }, 5000);
+        })();
     </script>
 
     <script>
@@ -728,6 +847,43 @@
             new bootstrap.Modal(document.getElementById('modalAddDive')).show();
         });
         @endif
+
+        document.getElementById('openCustomDiveBtn').addEventListener('click', function () {
+            var addDiveModalEl = document.getElementById('modalAddDive');
+            addDiveModalEl.addEventListener('hidden.bs.modal', function () {
+                new bootstrap.Modal(document.getElementById('modalAddCustomDive')).show();
+            }, { once: true });
+            bootstrap.Modal.getInstance(addDiveModalEl).hide();
+        });
+
+        var customDiveSiteTimeout;
+        document.getElementById('customDiveSiteInput').addEventListener('input', function () {
+            var q = this.value;
+            document.getElementById('customDiveSiteId').value = '';
+            clearTimeout(customDiveSiteTimeout);
+            var resultsEl = document.getElementById('customDiveSiteResults');
+            if (q.length < 2) {
+                resultsEl.innerHTML = '';
+                return;
+            }
+            customDiveSiteTimeout = setTimeout(function () {
+                fetch("{{ route('Groups.sites.search', ['group' => $group->slug]) }}?q=" + encodeURIComponent(q))
+                    .then(function (r) { return r.json(); })
+                    .then(function (sites) {
+                        resultsEl.innerHTML = sites.map(function (s) {
+                            return '<button type="button" class="list-group-item list-group-item-action" data-id="' + s.id + '" data-name="' + s.name.replace(/"/g, '&quot;') + '">' + s.name + '</button>';
+                        }).join('') || '<p class="list-group-item text-secondary mb-0">No matching sites.</p>';
+
+                        resultsEl.querySelectorAll('button[data-id]').forEach(function (btn) {
+                            btn.addEventListener('click', function () {
+                                document.getElementById('customDiveSiteInput').value = btn.getAttribute('data-name');
+                                document.getElementById('customDiveSiteId').value = btn.getAttribute('data-id');
+                                resultsEl.innerHTML = '';
+                            });
+                        });
+                    });
+            }, 300);
+        });
     </script>
     @endpush
 </x-page-template>
