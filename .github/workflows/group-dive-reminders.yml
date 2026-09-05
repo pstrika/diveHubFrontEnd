@@ -8,20 +8,8 @@ on:
 jobs:
   send-reminders:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
 
     steps:
-      - name: Log in to Azure
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Run groups:send-reminders via Kudu
+      - name: Trigger groups:send-reminders
         run: |
-          TOKEN=$(az account get-access-token --resource https://management.azure.com/ --query accessToken -o tsv)
-          curl -s -X POST "https://divehub.scm.azurewebsites.net/api/command" \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: application/json" \
-            -d '{"command":"php artisan groups:send-reminders","dir":"site/wwwroot"}'
+          curl -sf "https://divers-hub.com/cron/send-group-reminders?secret=${{ secrets.CRON_SECRET }}"
