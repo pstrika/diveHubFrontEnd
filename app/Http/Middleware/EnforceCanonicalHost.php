@@ -20,7 +20,7 @@ class EnforceCanonicalHost
 
         $canonicalHost = parse_url(config('app.url'), PHP_URL_HOST);
 
-        if ($canonicalHost && $request->getHost() !== $canonicalHost && $request->isMethod('GET')) {
+        if ($canonicalHost && $request->getHost() !== $canonicalHost && ($request->isMethod('GET') || $request->isMethod('HEAD'))) {
             return redirect()->to(
                 'https://' . $canonicalHost . $request->getRequestUri(),
                 301
