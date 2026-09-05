@@ -511,3 +511,23 @@ Route::group(['middleware' => 'auth'], function () {
 		return view('applications.wizard');
 	})->name('wizard');
 });
+
+/* Diving Groups */
+Route::middleware(['auth', 'not_guest'])->group(function () {
+	Route::get('MyGroups', 'App\Http\Controllers\GroupController@myGroups')->name('MyGroups');
+	Route::get('Groups/create', 'App\Http\Controllers\GroupController@create')->name('Groups.create');
+	Route::post('Groups', 'App\Http\Controllers\GroupController@store')->name('Groups.store');
+
+	Route::post('Groups/invites/{member}/accept', 'App\Http\Controllers\GroupInviteController@accept')->name('Groups.invites.accept');
+	Route::post('Groups/invites/{member}/decline', 'App\Http\Controllers\GroupInviteController@decline')->name('Groups.invites.decline');
+
+	Route::post('Groups/dives/{dive}/join', 'App\Http\Controllers\GroupDiveController@join')->name('Groups.dives.join');
+	Route::post('Groups/dives/{dive}/leave', 'App\Http\Controllers\GroupDiveController@leave')->name('Groups.dives.leave');
+
+	Route::get('Groups/{group}', 'App\Http\Controllers\GroupController@show')->name('Groups.show');
+	Route::post('Groups/{group}/members/{member}/remove', 'App\Http\Controllers\GroupController@removeMember')->name('Groups.removeMember');
+	Route::get('Groups/{group}/invite/search', 'App\Http\Controllers\GroupInviteController@search')->name('Groups.invite.search');
+	Route::post('Groups/{group}/invite', 'App\Http\Controllers\GroupInviteController@invite')->name('Groups.invite');
+	Route::post('Groups/{group}/dives', 'App\Http\Controllers\GroupDiveController@store')->name('Groups.dives.store');
+	Route::post('Groups/{group}/messages', 'App\Http\Controllers\GroupMessageController@store')->name('Groups.messages.store');
+});

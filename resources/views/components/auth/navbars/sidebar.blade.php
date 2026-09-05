@@ -17,7 +17,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('overview') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 8.2.6 (09/05/26)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 8.3.0 (09/05/26)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -104,6 +104,27 @@
                         href="#" onclick="showModalGuest();">
                         <i class="material-icons-round opacity-10 text-primary">lock</i>
                         <span class="nav-link-text ms-2 ps-1 text-primary">My Dashboard</span>
+                    </a>
+                </li>
+                @endif
+            @endauth
+
+            {{-- My Groups --}}
+            @auth
+                @if(auth()->user()->isNotGuest())
+                <li class="nav-item {{ $activePage == 'groups' ? ' active ' : '' }}">
+                    <a class="nav-link text-white {{ $activeItem == 'myGroups' ? ' active' : '' }}  "
+                        href="{{ route('MyGroups') }}">
+                        <i class="material-icons-round opacity-10">groups</i>
+                        <span class="nav-link-text ms-2 ps-1">My Groups</span>
+                    </a>
+                </li>
+                @else
+                <li class="nav-item {{ $activePage == 'groups' ? ' active ' : '' }}">
+                    <a class="nav-link text-white {{ $activeItem == 'myGroups' ? ' active' : '' }}  "
+                        href="#" onclick="showModalGuest();">
+                        <i class="material-icons-round opacity-10 text-primary">lock</i>
+                        <span class="nav-link-text ms-2 ps-1 text-primary">My Groups</span>
                     </a>
                 </li>
                 @endif

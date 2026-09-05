@@ -40,20 +40,37 @@ class Trip extends Model
     }
 
     public static function tripInEvent($event) {
-        Log::debug("tripInEvent received event = " . str($event));
+        return self::findByComposite($event->date, $event->time, $event->operatorId, $event->tripName);
+    }
 
+    /**
+     * Re-resolves a GroupDive's snapshot back to today's live Trip row, the
+     * same way tripInEvent() does for the personal calendar - trip ids churn
+     * daily (re-scraped), so group_dives stores the identifying fields
+     * instead of a raw tripId.
+     */
+    public static function tripInGroupDive($groupDive) {
+        return self::findByComposite($groupDive->date, $groupDive->time, $groupDive->operatorId, $groupDive->tripName);
+    }
+
+    /**
+     * Trip ids are not durable (re-scraped daily with new auto-increment
+     * ids), so anything that needs to remember "this trip" long-term stores
+     * this composite key instead and re-resolves the live row via this
+     * lookup when needed.
+     */
+    private static function findByComposite($date, $time, $operatorId, $tripName) {
         $trip = Trip::where([
-            [ 'date', '=', $event->date],
-            [ 'departureTime', '=', $event->time],
-            [ 'operatorId', '=', $event->operatorId],
-            [ 'tripName', '=', $event->tripName]
+            [ 'date', '=', $date],
+            [ 'departureTime', '=', $time],
+            [ 'operatorId', '=', $operatorId],
+            [ 'tripName', '=', $tripName]
         ])->get();
 
-        Log::debug("trip info: " . $trip);
         if(count($trip) == 1)
             return $trip[0];
         else
             return 0;
-        
+
     }
 }
