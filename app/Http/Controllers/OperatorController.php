@@ -140,11 +140,17 @@ class OperatorController extends Controller
         return redirect()->back();
     }
     public function getWaivers() {
-        
-        
+
         $operators = Operator::all();
-    
-        return view('pages.Waivers', compact('operators'));
+
+        /*Provide SEO metadata */
+        $SEO = array(
+            "title" => "Online Dive Waivers | Divers Hub",
+            "desc" => "Find online liability waiver links for scuba diving operators in South Florida.",
+            "canonical" => route("Waivers"),
+        );
+
+        return view('pages.Waivers', compact('operators', 'SEO'));
     
         }
 

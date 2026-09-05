@@ -364,8 +364,14 @@ class CalendarTController extends Controller
         $year = Carbon::parse($date)->format('Y');
         $currentDate = Carbon::parse($date)->startOfMonth()->toDateString();
 
+        /*Provide SEO metadata */
+        $SEO = array(
+            "title" => "Hydrotherapy Dive Trip Calendar | Divers Hub",
+            "desc" => "Calendar of upcoming hydrotherapy scuba diving trips in South Florida.",
+            "canonical" => route("CalendarHydrotherapy"),
+        );
 
-        return view('pages.CalendarHydrotherapy', compact('trips', 'currentDate', 'currentMonthS', 'year', 'prevMonthS', 'nextMonthS', 'controlNav'));
+        return view('pages.CalendarHydrotherapy', compact('trips', 'currentDate', 'currentMonthS', 'year', 'prevMonthS', 'nextMonthS', 'controlNav', 'SEO'));
 
     }
     

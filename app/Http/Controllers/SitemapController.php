@@ -85,6 +85,10 @@ class SitemapController extends Controller
             'BeachDiving' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'Operators' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'gasplanning' => ['priority' => 0.5, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            'home' => ['priority' => 0.6, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            'Waivers' => ['priority' => 0.4, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            'CalendarHydrotherapy' => ['priority' => 0.4, 'changefreq' => Url::CHANGE_FREQUENCY_DAILY],
+            'AboutUs' => ['priority' => 0.3, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'PrivacyPolicy' => ['priority' => 0.1, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'TermsOfUse' => ['priority' => 0.1, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
         ];

@@ -64,7 +64,12 @@ Route::get('TermsOfUse', function () {
 })->middleware('guest')->name('TermsOfUse');
 
 Route::get('home', function () {
-    return view('pages.home');
+    $SEO = [
+        "title" => "Divers Hub - your one stop for diving in FL!",
+        "desc" => "Everything you need to know about scuba diving in South Florida: dive calendars, dive sites database and marine weather.",
+        "canonical" => route("home"),
+    ];
+    return view('pages.home', compact('SEO'));
 })->name('home');
 
 Route::get('gasplanning', function () {
@@ -219,7 +224,12 @@ Route::get('dashboard', [DashboardController::class, 'index'])->middleware('auth
 Route::get('MyDashboard', 'App\Http\Controllers\MyDashboardController@showDashboard')->middleware('auth')->name('MyDashboard');
 
 Route::get('AboutUs', function () {
-	return view('pages.Contact');
+	$SEO = [
+		"title" => "About Us | Divers Hub",
+		"desc" => "Learn who's behind Divers Hub and how to get in touch with us.",
+		"canonical" => route("AboutUs"),
+	];
+	return view('pages.Contact', compact('SEO'));
 })->name('AboutUs');
 
 Route::get('sign-up', [RegisterController::class, 'create'])->middleware('guest')->name('register');

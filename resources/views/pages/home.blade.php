@@ -1,4 +1,4 @@
-<x-page-template bodyClass=''>
+<x-page-template bodyClass='' :SEO="$SEO ?? []">
     <!-- Navbar -->
      <style>
         .image-container {
