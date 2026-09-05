@@ -41,13 +41,15 @@ class SitemapController extends Controller
                     }
                 });
 
+            $operatorHasSlug = Schema::connection('mysql_trips')->hasColumn('operators', 'slug');
+
             Operator::where('private', '<>', 1)
-                ->select('id')
+                ->select(array_filter(['id', $operatorHasSlug ? 'slug' : null]))
                 ->orderBy('id')
                 ->chunk(200, function ($operators) use ($sitemap) {
                     foreach ($operators as $operator) {
                         $sitemap->add(
-                            Url::create(route('OperatorDetails', ['id' => $operator->id]))
+                            Url::create(route('OperatorDetails', ['id' => $operator->slug ?? $operator->id]))
                                 ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
                                 ->setPriority(0.6)
                         );

@@ -24,7 +24,20 @@ class OperatorController extends Controller
 
     if ($id != null) {
         $user = User::findorFail(auth()->user()->id);
-        $operator = Operator::findOrFail($id);
+
+        if (is_numeric($id)) {
+            $operator = Operator::findOrFail(intval($id));
+
+            // Canonicalize to the slug URL for SEO; old numeric links still work via this redirect.
+            if (!empty($operator->slug)) {
+                return redirect(route('OperatorDetails', ['id' => $operator->slug]), 301);
+            }
+        } else {
+            $operator = Operator::where('slug', $id)->firstOrFail();
+        }
+
+        $id = $operator->id;
+
         $boats = Boat::where("operatorId", $id)->get();
         $favOperators = explode(',', $user->favOperators);
         if(in_array($id, $favOperators)) {
@@ -86,7 +99,7 @@ class OperatorController extends Controller
             "title" => $operator->operatorName . " details - divers-hub.com",
             "desc" => "All details for " . $operator->operatorName . ": location, popular dive sites, prices, etc",
             "keywords" => $operator->operatorName . ", " . $operator->location . ", " . $operator->cityAddress,
-            "canonical" => route("OperatorDetails", ['id' => $operator->id]) ,
+            "canonical" => route("OperatorDetails", ['id' => $operator->slug ?? $operator->id]) ,
         );
 
         return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites', 'trips', 'ratedAlready', 'SEO'));
