@@ -133,4 +133,32 @@ class GroupController extends Controller
 
         return redirect()->back()->with('msg', 'Member removed.');
     }
+
+    public function destroy($groupSlug)
+    {
+        $group = Group::where('slug', $groupSlug)->firstOrFail();
+
+        if (!$group->isAdmin(auth()->user()->id)) {
+            abort(403);
+        }
+
+        $groupName = $group->name;
+
+        foreach ($group->messages()->with('photos')->get() as $message) {
+            foreach ($message->photos as $photo) {
+                $photo->deletePhoto();
+            }
+            $message->delete();
+        }
+
+        foreach ($group->dives as $dive) {
+            $dive->rsvps()->delete();
+            $dive->delete();
+        }
+
+        $group->members()->delete();
+        $group->delete();
+
+        return redirect()->route('MyGroups')->with('msg', 'Group "' . $groupName . '" was deleted.');
+    }
 }

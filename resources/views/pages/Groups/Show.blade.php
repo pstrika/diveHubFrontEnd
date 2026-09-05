@@ -82,6 +82,13 @@
                         <button type="button" class="btn bg-gradient-info" data-bs-toggle="modal" data-bs-target="#modalInvite">
                             <i class="material-icons text-sm align-middle me-1">person_add</i> Invite
                         </button>
+                        <form method="POST" action="{{ route('Groups.destroy', ['group' => $group->slug]) }}" class="d-inline"
+                            onsubmit="return confirm('Delete &quot;{{ $group->name }}&quot; permanently? This removes all dives, RSVPs and chat history for every member. This cannot be undone.');">
+                            @csrf
+                            <button type="submit" class="btn bg-gradient-danger">
+                                <i class="material-icons text-sm align-middle me-1">delete</i> Delete Group
+                            </button>
+                        </form>
                     </div>
                     @endif
                 </div>
