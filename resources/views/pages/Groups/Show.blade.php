@@ -36,10 +36,24 @@
                         <div class="form-control border dropzone" id="bannerDropzone"></div>
                     </div>
                     <div class="mb-2">
-                        <label class="form-control mb-0">Group avatar</label>
-                        <div class="form-control border dropzone" id="avatarDropzone"></div>
+                        <label class="form-control mb-0">Calling Card</label>
+                        <div class="d-flex flex-wrap gap-3 p-2">
+                            @foreach($callingCards as $key => $label)
+                                @php
+                                    $cardPath = 'img/icons/CC_' . $key . '.webp';
+                                    $isSelected = $group->avatar === $cardPath;
+                                @endphp
+                                <div class="text-center calling-card-choice" data-card="{{ $key }}" style="cursor: pointer; width: 72px;">
+                                    <img src="{{ asset('assets/' . $cardPath) }}" alt="{{ $label }}"
+                                         class="rounded-circle shadow-sm calling-card-img {{ $isSelected ? 'border-info' : '' }}"
+                                         style="width: 64px; height: 64px; object-fit: cover; border-width: 3px; border-style: solid; border-color: {{ $isSelected ? '' : 'transparent' }};">
+                                    <div class="text-xs text-secondary mt-1">{{ $label }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                        <input type="hidden" id="selectedCallingCard" value="">
                     </div>
-                    <p class="text-xs text-secondary mb-0">Tip: dragging directly from the macOS Photos app doesn't always work — drag from Finder instead, or click a box above to browse.</p>
+                    <p class="text-xs text-secondary mb-0">Tip: dragging directly from the macOS Photos app doesn't always work — drag from Finder instead, or click the box above to browse.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn bg-gradient-info" id="customizeSaveBtn">Save</button>
@@ -219,7 +233,11 @@
                                                     <img src="{{ asset('assets') }}/img/default-avatar.png" alt="profile_image" class="w-100 rounded-circle shadow-sm" style="background: black;">
                                                 @endif
                                             </div>
-                                            {{ $member->user->name }} @if($member->role == 'admin') <span class="badge badge-sm bg-gradient-info ms-1">admin</span> @endif
+                                            {{ $member->user->name }}
+                                            @if($member->user->certLevel !== null)
+                                                <img src="{{ asset('assets') }}/img/icons/icons_level_{{ $member->user->certLevel }}.png" height="18" class="ms-1" data-bs-toggle="tooltip" title="Certification level {{ $member->user->certLevel }}">
+                                            @endif
+                                            @if($member->role == 'admin') <span class="badge badge-sm bg-gradient-info ms-1">admin</span> @endif
                                         </span>
                                         @if($isAdmin && $member->user_id != auth()->user()->id)
                                             <form method="POST" action="{{ route('Groups.removeMember', ['group' => $group->slug, 'member' => $member->id]) }}" onsubmit="return confirm('Remove this member?');">
@@ -291,13 +309,26 @@
                                                 </span>
                                             </span>
                                             <div class="timeline-content pt-1">
-                                                @if($dive->liveTrip)
-                                                    <a href="{{ route('TripDetails', ['tripId' => $dive->liveTrip->id]) }}">
+                                                @php
+                                                    $diveLevel = ($dive->liveTrip && !empty($dive->liveTrip->site[0])) ? $dive->liveTrip->site[0]->level : null;
+                                                    $userCertLevel = auth()->user()->certLevel;
+                                                    $exceedsCert = $diveLevel !== null && $userCertLevel !== null && $diveLevel > $userCertLevel;
+                                                @endphp
+                                                <div class="d-flex align-items-center">
+                                                    @if($diveLevel !== null)
+                                                        <img src="{{ asset('assets') }}/img/icons/icons_level_{{ $diveLevel }}.png" height="20" class="me-1" data-bs-toggle="tooltip" title="Minimum certification level {{ $diveLevel }}">
+                                                    @endif
+                                                    @if($exceedsCert)
+                                                        <i class="material-icons text-danger text-sm me-1" data-bs-toggle="tooltip" title="This dive may be beyond your certification level">error</i>
+                                                    @endif
+                                                    @if($dive->liveTrip)
+                                                        <a href="{{ route('TripDetails', ['tripId' => $dive->liveTrip->id]) }}">
+                                                            <h6 class="text-dark text-sm font-weight-bold mb-0">{{ $dive->tripName }}</h6>
+                                                        </a>
+                                                    @else
                                                         <h6 class="text-dark text-sm font-weight-bold mb-0">{{ $dive->tripName }}</h6>
-                                                    </a>
-                                                @else
-                                                    <h6 class="text-dark text-sm font-weight-bold mb-0">{{ $dive->tripName }}</h6>
-                                                @endif
+                                                    @endif
+                                                </div>
                                                 <p class="text-secondary text-xs mt-1 mb-0">
                                                     {{ \Carbon\Carbon::parse($dive->date)->format('D, M j') }}
                                                     @if($dive->time) <b>({{ $dive->time }})</b> @endif
@@ -492,21 +523,6 @@
             sending: function (file, xhr, formData) { formData.append('kind', 'banner'); },
         });
 
-        var avatarDropzone = new Dropzone(document.getElementById('avatarDropzone'), {
-            url: "{{ route('Groups.uploadImage', ['group' => $group->slug]) }}",
-            autoProcessQueue: false,
-            maxFiles: 1,
-            maxFilesize: 40,
-            acceptedFiles: '.jpeg,.jpg,.png,.webp',
-            resizeWidth: 500,
-            chunking: true,
-            chunkSize: 2000000,
-            paramName: 'img_file',
-            addRemoveLinks: true,
-            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-            sending: function (file, xhr, formData) { formData.append('kind', 'avatar'); },
-        });
-
         var pendingCustomizeUploads = 0;
         function afterCustomizeQueueComplete() {
             pendingCustomizeUploads--;
@@ -515,15 +531,40 @@
             }
         }
         bannerDropzone.on('queuecomplete', afterCustomizeQueueComplete);
-        avatarDropzone.on('queuecomplete', afterCustomizeQueueComplete);
+
+        var selectedCallingCard = null;
+        document.querySelectorAll('.calling-card-choice').forEach(function (el) {
+            el.addEventListener('click', function () {
+                selectedCallingCard = el.getAttribute('data-card');
+                document.querySelectorAll('.calling-card-img').forEach(function (img) {
+                    img.classList.remove('border-info');
+                    img.style.borderColor = 'transparent';
+                });
+                var img = el.querySelector('.calling-card-img');
+                img.classList.add('border-info');
+                img.style.borderColor = '';
+            });
+        });
 
         document.getElementById('customizeSaveBtn').addEventListener('click', function () {
-            pendingCustomizeUploads = (bannerDropzone.files.length ? 1 : 0) + (avatarDropzone.files.length ? 1 : 0);
+            pendingCustomizeUploads = bannerDropzone.files.length ? 1 : 0;
+
+            if (selectedCallingCard) {
+                pendingCustomizeUploads++;
+                fetch("{{ route('Groups.callingCard', ['group' => $group->slug]) }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'card=' + encodeURIComponent(selectedCallingCard),
+                }).then(afterCustomizeQueueComplete);
+            }
+
             if (pendingCustomizeUploads === 0) {
                 return;
             }
             bannerDropzone.processQueue();
-            avatarDropzone.processQueue();
         });
     </script>
     @endif

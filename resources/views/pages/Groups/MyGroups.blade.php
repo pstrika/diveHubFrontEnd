@@ -87,9 +87,25 @@
                                                             @endif
                                                         </div>
                                                         <b>{{ $group->name }}</b>
+                                                        <span class="avatar-group ms-3">
+                                                            @foreach($group->activeMembers->take(6) as $member)
+                                                                <div class="avatar avatar-xs rounded-circle" style="margin-left: -8px;">
+                                                                    @if($member->user->picture)
+                                                                        <img src="{{ asset('assets') }}/img/users/{{ $member->user->picture }}" alt="profile_image" class="w-100 rounded-circle border border-white">
+                                                                    @else
+                                                                        <img src="{{ asset('assets') }}/img/default-avatar.png" alt="profile_image" class="w-100 rounded-circle border border-white">
+                                                                    @endif
+                                                                </div>
+                                                            @endforeach
+                                                            @if($group->activeMembers->count() > 6)
+                                                                <div class="avatar avatar-xs rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center text-xs" style="margin-left: -8px;">
+                                                                    +{{ $group->activeMembers->count() - 6 }}
+                                                                </div>
+                                                            @endif
+                                                        </span>
                                                     </a>
                                                 </td>
-                                                <td class="align-middle text-secondary text-sm">{{ $group->activeMembers()->count() }} members</td>
+                                                <td class="align-middle text-secondary text-sm">{{ $group->activeMembers->count() }} members</td>
                                             </tr>
                                         @endforeach
                                     </tbody>

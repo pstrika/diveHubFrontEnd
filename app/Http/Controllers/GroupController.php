@@ -13,13 +13,31 @@ use Illuminate\Support\Str;
 
 class GroupController extends Controller
 {
+    /**
+     * Selectable "Calling Card" avatar images (public/assets/img/icons/CC_*),
+     * keyed by the token stored in Group::avatar. Replaces free-form avatar
+     * uploads - every group picks one of these instead.
+     */
+    public const CALLING_CARDS = [
+        'Recreational' => 'Recreational',
+        'Technical' => 'Technical',
+        'Cave' => 'Cave',
+        'Wreck' => 'Wreck',
+        'Shark' => 'Shark',
+        'Lobster' => 'Lobster',
+        'Lionfish' => 'Lionfish',
+        'Beach' => 'Beach',
+        'Training' => 'Training',
+        'ReefConservartion' => 'Reef Conservation',
+    ];
+
     public function myGroups()
     {
         $userId = auth()->user()->id;
 
         $groups = Group::whereHas('members', function ($q) use ($userId) {
             $q->where('user_id', $userId)->where('status', 'active');
-        })->get();
+        })->with('activeMembers.user')->get();
 
         $invites = GroupMember::with('group')
             ->where('user_id', $userId)
@@ -61,6 +79,7 @@ class GroupController extends Controller
             'name' => $request->name,
             'slug' => $slug,
             'description' => $request->description,
+            'avatar' => 'img/icons/CC_Recreational.webp',
             'created_by' => auth()->user()->id,
         ]);
 
@@ -119,7 +138,9 @@ class GroupController extends Controller
             "robots" => "noindex, nofollow",
         ];
 
-        return view('pages.Groups.Show', compact('group', 'isAdmin', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'tripsForDate', 'calendarFeedUrl', 'SEO'));
+        $callingCards = self::CALLING_CARDS;
+
+        return view('pages.Groups.Show', compact('group', 'isAdmin', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'SEO'));
     }
 
     /**
@@ -222,7 +243,7 @@ class GroupController extends Controller
         $group = Group::where('slug', $groupSlug)->firstOrFail();
         $kind = $request->input('kind');
 
-        if (in_array($kind, ['banner', 'avatar'])) {
+        if ($kind === 'banner') {
             if (!$group->isAdmin(auth()->user()->id)) {
                 abort(403);
             }
@@ -267,12 +288,12 @@ class GroupController extends Controller
 
     /**
      * Re-orients (EXIF), downsizes and re-encodes as a JPEG, then stores the
-     * result and (for banner/avatar) attaches it to the group.
+     * result and (for banner) attaches it to the group.
      */
     private function finalizeGroupUpload(Group $group, $kind, $sourcePath)
     {
-        $maxWidths = ['banner' => 1600, 'avatar' => 500, 'chat' => 1200];
-        $subdirs = ['banner' => '', 'avatar' => '', 'chat' => '/chat'];
+        $maxWidths = ['banner' => 1600, 'chat' => 1200];
+        $subdirs = ['banner' => '', 'chat' => '/chat'];
 
         $filename = $kind . '_' . time() . '_' . uniqid() . '.jpg';
         $dir = 'img/groups/' . $group->id . $subdirs[$kind];
@@ -281,19 +302,14 @@ class GroupController extends Controller
             mkdir($fullDir, 0755, true);
         }
 
-        $image = \Intervention\Image\Facades\Image::make($sourcePath)->orientate();
-
-        if ($kind === 'avatar') {
-            // Square-cropped so it always renders as a circle, never an ellipse.
-            $image->fit($maxWidths[$kind], $maxWidths[$kind]);
-        } else {
-            $image->resize($maxWidths[$kind], null, function ($constraint) {
+        \Intervention\Image\Facades\Image::make($sourcePath)
+            ->orientate()
+            ->resize($maxWidths[$kind], null, function ($constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
-            });
-        }
-
-        $image->encode('jpg', 85)->save($fullDir . '/' . $filename);
+            })
+            ->encode('jpg', 85)
+            ->save($fullDir . '/' . $filename);
 
         $relativePath = $dir . '/' . $filename;
 
@@ -303,15 +319,32 @@ class GroupController extends Controller
             }
             $group->banner = $relativePath;
             $group->save();
-        } elseif ($kind === 'avatar') {
-            if ($group->avatar) {
-                Storage::disk('siteAssets')->delete($group->avatar);
-            }
-            $group->avatar = $relativePath;
-            $group->save();
         }
 
         return response()->json(['message' => 'ok', 'path' => $relativePath]);
+    }
+
+    /**
+     * Sets the group's "Calling Card" - one of a fixed set of shared icon
+     * images (public/assets/img/icons/CC_*.webp) - instead of an uploaded
+     * avatar image.
+     */
+    public function setCallingCard(Request $request, $groupSlug)
+    {
+        $group = Group::where('slug', $groupSlug)->firstOrFail();
+
+        if (!$group->isAdmin(auth()->user()->id)) {
+            abort(403);
+        }
+
+        $request->validate([
+            'card' => 'required|string|in:' . implode(',', array_keys(self::CALLING_CARDS)),
+        ]);
+
+        $group->avatar = 'img/icons/CC_' . $request->input('card') . '.webp';
+        $group->save();
+
+        return response()->json(['message' => 'ok', 'path' => $group->avatar]);
     }
 
     private function combineGroupChunks($groupId, $fileUuid, $totalChunks, $outputFilePath)
