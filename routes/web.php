@@ -241,6 +241,10 @@ Route::get('sign-in', [SessionsController::class, 'create'])->middleware('guest'
 Route::post('sign-in', [SessionsController::class, 'store'])->middleware('guest');
 
 Route::post('sign-out', [SessionsController::class, 'destroy'])->middleware('guest')->name('logout');
+// Guest to sign up in one hop. Guests are logged in as the shared guest user, so
+// this logs them out first, then redirects to the register page. Every
+// "Create account" link should point here rather than at sign-out.
+Route::get('create-account', [SessionsController::class, 'createAccount'])->name('create-account');
 Route::get('sign-out', [SessionsController::class, 'create'])->middleware('guest');
 
 Route::post('verify', [SessionsController::class, 'show'])->middleware('guest');

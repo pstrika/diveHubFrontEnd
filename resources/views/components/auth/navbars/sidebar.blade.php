@@ -17,7 +17,8 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('overview') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 9.15.1 (09/06/26)</span>
+            {{-- Brand only. The release stamp moved to the footer (<x-version />) per finding F-05. --}}
+            <span class="ms-2 font-weight-bold text-white">Divers Hub</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -69,20 +70,31 @@
                             </form>
                         @endauth
                         
-                        <li class="nav-item" style="padding-left: 1rem;">
-                            <a class="nav-link text-white " href="{{ route('logout') }} "
-                                onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-                                @auth
-                                    @if(auth()->user()->isNotGuest())
-                                        <i class="material-icons-round opacity-10">logout</i>
-                                        <span class="sidenav-normal  ms-3  ps-1"> Logout </span>
-                                    @else
-                                        <i class="material-icons-round opacity-10">person_add_alt</i>
-                                        <span class="sidenav-normal  ms-3  ps-1"> Create account </span>
-                                    @endif
-                                @endauth
-                            </a>
-                        </li>
+                        {{--
+                            Two different actions that used to share one logout link.
+                            Real users get Logout. Guests (the shared guest user, see
+                            AuthenticateAsGuest) get Create account, which must log the
+                            guest out first or sign up would bounce them home. That is
+                            what the create-account route does, in one hop (F-04).
+                        --}}
+                        @auth
+                            @if(auth()->user()->isNotGuest())
+                            <li class="nav-item" style="padding-left: 1rem;">
+                                <a class="nav-link text-white " href="{{ route('logout') }} "
+                                    onclick="event.preventDefault();document.getElementById('logout-form').submit();">
+                                    <i class="material-icons-round opacity-10">logout</i>
+                                    <span class="sidenav-normal  ms-3  ps-1"> Logout </span>
+                                </a>
+                            </li>
+                            @else
+                            <li class="nav-item" style="padding-left: 1rem;">
+                                <a class="nav-link text-white " href="{{ route('create-account') }}">
+                                    <i class="material-icons-round opacity-10">person_add_alt</i>
+                                    <span class="sidenav-normal  ms-3  ps-1"> Create account </span>
+                                </a>
+                            </li>
+                            @endif
+                        @endauth
                     </ul>
                 </div>
             </li>
@@ -1439,11 +1451,6 @@
         </ul>
     </div>
     
-    @push('js')
-    <script>
-        function showModalGuest() {
-            $('#modal_logged_as_guest').modal('show'); // Show the modal
-        };
-    </script>
-    @endpush
+    {{-- The guest prompt and its showModalGuest() helper now live in one component. --}}
+    <x-guest-modal />
 </aside>

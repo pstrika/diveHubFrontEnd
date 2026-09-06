@@ -46,82 +46,6 @@
         <div class="container-fluid py-0">
             <div class="d-none" data-color="info" id="sidebarColorDiv"></div> {{--Set active element on sidenav bar color (goes together wih JS below--}}
 
-            {{--modal guest--}}
-            <div class="modal fade" id="modal_logged_as_guest" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
-                <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header text-center">
-                            <h6 class="modal-title font-weight-normal" id="modal-title-notification">Logged as a guest</h6>
-                            
-                        </div>
-                        <div class="modal-body">
-                            <div class="py-3 text-center">
-                            <i class="material-icons h1 text-primary">
-                                lock
-                            </i>
-                            <h4 class="text-gradient text-info text-md mt-4">Create an account to access all features. It's free - no credit cards, no payment methods EVER required.</h4>
-                            <a class="nav-link text-white " href="{{ route('logout') }} "
-                                    onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-                                    <span class="badge badge-lg badge-info"> Create an account</span>
-                                </a>
-                            <p>Press anywhere outside this dialog to continue</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            {{--modal Level--}}
-            <div class="modal fade" id="modalLevel" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
-                <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header text-center">
-                            <h6 class="modal-title font-weight-normal" id="modal-title-notification">Site levels</h6>
-                            
-                            
-                            
-                        </div>
-                        <div class="modal-body">
-                            <div class="py-3 text-center">
-                                <h4 class="text-gradient text-info text-md mt-4"></h4>
-                                <div class="table-responsive">
-                                    <table class="table align-items-left mb-0"> 
-                                        <tbody>
-                                            
-                                            <tr><td class="w-20 text-secondary text-end text-lg font-weight-bolder opacity-7"> </td>
-                                            <td class="w-60 align-middle text-start text-sm"><b>Level</b></td>
-                                            <td class="w-20 align-middle text-start text-sm"><b>Max Depth (ft)</b></td> </tr>
-                                            
-                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_0.png" alt="OW" height="25"></td>
-                                            <td class="align-middle text-info text-start text-sm"><b>Open Water</b></td> 
-                                            <td class="align-middle text-info text-center text-sm"><b>60</b></td> </tr>
-
-                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_1.png" alt="AOW" height="25"></td>
-                                            <td class="align-middle text-info text-start text-sm"><b>Advanced Open Water</b></td>
-                                            <td class="align-middle text-info text-center text-sm"><b>130</b></td> </tr>
-
-                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7"><img src="{{ asset('assets') }}/img/icons/icons_level_2.png" alt="Ta" height="25"></td>
-                                            <td class="align-middle text-info text-start text-sm"><b>Technical Air</b></td>
-                                            <td class="align-middle text-info text-center text-sm"><b>150</b></td> </tr>
-
-                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_3.png" alt="Tn" height="25"></td>
-                                            <td class="align-middle text-info text-start text-sm"><b>Technical Normoxic Trimix</b></td>
-                                            <td class="align-middle text-info text-center text-sm"><b>200</b></td> </tr>
-
-                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_4.png" alt="Th" height="25"></td>
-                                            <td class="align-middle text-info text-start text-sm"><b>Technical Hypoxic Trimix</b></td>
-                                            <td class="align-middle text-info text-center text-sm"><b>330+</b></td> </tr>
-
-                                        </tbody>
-                                    </table>
-                                </div>   
-                                <p>Press anywhere outside this dialog to continue</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
 
             <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/dive_sites.webp');">
                 <span class="mask  bg-gradient-info  opacity-4"></span>
@@ -134,6 +58,18 @@
                             <h1 class="card-title text-info mx-3 mt-0">Top Rated Dive Sites</h1>
                         </div>
 
+                    </div>
+
+                    {{--
+                        Level filter and sort (W4 in the proposal). Both are plain links
+                        that reload with ?level= and ?sort=, handled in
+                        SiteController::showTopRated. The legend replaces the old
+                        "(?)" modal so divers can read the levels without a click.
+                    --}}
+                    <div class="px-3 pb-3 d-flex flex-column gap-2">
+                        <x-dive-level.filter-chips :selected="$filters['level']" />
+                        <x-sort-chips :options="$sortOptions" :selected="$filters['sort']" />
+                        <x-dive-level.legend class="mt-1" />
                     </div>
                 </div>
             </div>
@@ -171,7 +107,7 @@
                                             Rating
                                         </th>
                                         <th class="px-4 align-top text-center">
-                                            Level<a href="#" onclick="showModalLevel();"><p class="text-xs text-info text-center mt-0 px-1">(?)</p></a>
+                                            Level
                                         </th>
                                         <th class="px-4 align-top text-center" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
                                             Max Depth
@@ -181,10 +117,10 @@
                                         @foreach($sitesWrecks as $site)    
                                             <tr style="border-bottom: 1px solid #D3D3D3;">
                                                 <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}" loading="lazy"></td>
-                                                <td class="w-65 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
+                                                <td class="w-65 align-middle text-left text-md"><b><a href="{{ route('SiteDetails') }}/{{ $site->slug ?? $site->id }}"> {{ $site->name }}</a></b></td> 
                                                 <td class="w-15 align-middle text-md"><div id="rateYoReadOnly_{{ $site->id }}"></div></td> 
                                                 
-                                                <td class="w-5 text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" alt="levelIcon" height="25" loading="lazy"></td>
+                                                <td class="w-5 text-center" style="border: none;"><x-dive-level.icon :level="$site->level" /></td>
 
                                                 <td class="w-10 align-middle text-center text-md"><b>{{ $site->maxDepth }}</b></td> 
                                         
@@ -223,7 +159,7 @@
                                             Rating
                                         </th>
                                         <th class="px-4 align-top text-center">
-                                            Level<a href="#" onclick="showModalLevel();"><p class="text-xs text-info text-center mt-0 px-1">(?)</p></a>
+                                            Level
                                         </th>
                                         <th class="px-4 align-top text-center" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
                                             Max Depth
@@ -233,10 +169,10 @@
                                         @foreach($sitesReefs as $site)    
                                             <tr style="border-bottom: 1px solid #D3D3D3;">
                                                 <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}" loading="lazy"></td>
-                                                <td class="w-65 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
+                                                <td class="w-65 align-middle text-left text-md"><b><a href="{{ route('SiteDetails') }}/{{ $site->slug ?? $site->id }}"> {{ $site->name }}</a></b></td> 
                                                 <td class="w-15 align-middle text-md"><div id="rateYoReadOnly_{{ $site->id }}"></div></td> 
                                                 
-                                                <td class="w-5 text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" alt="levelIcon" height="25" loading="lazy"></td>
+                                                <td class="w-5 text-center" style="border: none;"><x-dive-level.icon :level="$site->level" /></td>
 
                                                 <td class="w-10 align-middle text-center text-md"><b>{{ $site->maxDepth }}</b></td> 
                                         
@@ -463,10 +399,5 @@
         });
     </script>
 
-    <script>
-        function showModalLevel() {
-            $('#modalLevel').modal('show'); // Show the modal
-        };
-    </script>
     @endpush
 </x-page-template>

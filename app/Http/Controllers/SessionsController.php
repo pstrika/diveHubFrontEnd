@@ -122,4 +122,25 @@ class SessionsController extends Controller
         return view('sessions.create', compact('SEO'));
     }
 
+    /**
+     * Take a guest straight to the sign up form.
+     *
+     * Anonymous visitors are logged in as the shared guest user by the
+     * AuthenticateAsGuest middleware. If they click a link to the register
+     * page while still "logged in" as that guest the request is treated as
+     * an authenticated user and they get bounced. Until now the "Create
+     * account" links worked around that by pointing at sign-out, which
+     * landed people on a sign in screen and read like a bug (finding F-04).
+     *
+     * This logs the guest out (a real user hitting it by mistake is simply
+     * logged out too, which is harmless) and redirects to the register page.
+     */
+    public function createAccount()
+    {
+        session()->forget('url.intended');
+        auth()->logout();
+
+        return redirect()->route('register');
+    }
+
 }
