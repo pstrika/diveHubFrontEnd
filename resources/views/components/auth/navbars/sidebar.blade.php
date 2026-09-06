@@ -1451,6 +1451,5 @@
         </ul>
     </div>
     
-    {{-- The guest prompt and its showModalGuest() helper now live in one component. --}}
-    <x-guest-modal />
+    {{-- The guest prompt and its showModalGuest() helper live in <x-guest-modal />, rendered by page-template. --}}
 </aside>

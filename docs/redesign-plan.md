@@ -51,8 +51,9 @@ Each chunk is one pull request into `redesign`.
 - Shared dive level helper: one class that maps level values to names, short
   codes, icons, and depth ranges. Reused by the sites lists, trip cards, and
   site cards.
-- Level and type filter chips on Dive Sites and wreckWiki, legend inline.
-  This is the live user request.
+- Level filter chips and a sort control on Top Rated and wreckWiki, legend
+  inline. This is the live user request. Type chips arrive with the explorer
+  in chunk 3, since Top Rated already splits by type and wreckWiki is wrecks only.
 - Redirect map document.
 - Design tokens stylesheet, added but not yet applied, so the visual direction
   can be reviewed before it lands everywhere.

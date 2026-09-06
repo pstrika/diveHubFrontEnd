@@ -1,13 +1,15 @@
 {{--
-    "Logged in as a guest" prompt, rendered once from the sidebar.
+    "Logged in as a guest" prompt, rendered once by the page template.
 
     Background: anonymous visitors are logged in as a shared guest user (see
     App\Http\Middleware\AuthenticateAsGuest). Locked sidebar items call
     showModalGuest() to explain why and offer an account. Before this
     component the modal markup was copy pasted into about eighteen page
     views, and the pages that lacked it (Home, Weather, the calendars,
-    Groups) made every locked link a dead click. Rendering it here, next to
-    the links that open it, fixes that everywhere at once.
+    Groups) made every locked link a dead click. Rendering it once from
+    page-template.blade.php fixes that everywhere at once. It sits at the
+    body level, outside the sidebar, because Bootstrap modals must not be
+    inside an element that gets a CSS transform (the sidenav does on phones).
 
     The "Create an account" link goes to the create-account route, which
     logs the guest user out and lands on sign up in one hop. A plain link to
@@ -40,9 +42,14 @@
 @push('js')
 <script>
     // Called by the locked sidebar links. Defined here, beside the modal,
-    // so both always ship together.
+    // so both always ship together. Uses the Bootstrap 5 API directly
+    // because jQuery is only loaded on some pages, and the old jQuery call
+    // would throw on the pages that never had the modal before.
     function showModalGuest() {
-        $('#modal_logged_as_guest').modal('show');
+        var el = document.getElementById('modal_logged_as_guest');
+        if (el && window.bootstrap) {
+            bootstrap.Modal.getOrCreateInstance(el).show();
+        }
     }
 </script>
 @endpush

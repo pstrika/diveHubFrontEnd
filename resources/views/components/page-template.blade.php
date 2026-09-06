@@ -80,6 +80,9 @@
 
 {{ $slot }}
 
+{{-- Guest account prompt, once per page, only when the visitor is the shared guest user. --}}
+<x-guest-modal />
+
 <script src="{{ asset('assets') }}/js/core/popper.min.js"></script>
 <script src="{{ asset('assets') }}/js/core/bootstrap.min.js"></script>
 <script src="{{ asset('assets') }}/js/plugins/smooth-scrollbar.min.js"></script>
