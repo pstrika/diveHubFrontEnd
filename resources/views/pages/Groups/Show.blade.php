@@ -935,7 +935,7 @@
         });
         groupFullCalendar.render();
 
-        @if($addDiveDate)
+        @if($addDiveDate || $addDiveSite)
         document.addEventListener('DOMContentLoaded', function () {
             new bootstrap.Modal(document.getElementById('modalAddDive')).show();
         });
