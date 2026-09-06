@@ -31,6 +31,7 @@ class GroupFacebookController extends Controller
         // permissions are defined on a pre-created Configuration instead,
         // referenced here by its config_id.
         return Socialite::driver('facebook')
+            ->usingGraphVersion(self::GRAPH_VERSION)
             ->setScopes([])
             ->with(['config_id' => config('services.facebook.config_id')])
             ->redirect();
@@ -52,7 +53,7 @@ class GroupFacebookController extends Controller
         }
 
         try {
-            $fbUser = Socialite::driver('facebook')->user();
+            $fbUser = Socialite::driver('facebook')->usingGraphVersion(self::GRAPH_VERSION)->user();
 
             // Exchange the short-lived user token (~2 hours) for a long-lived
             // one (~60 days) - the Page token we derive from it inherits that
