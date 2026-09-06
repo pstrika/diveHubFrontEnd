@@ -166,7 +166,11 @@ class GroupController extends Controller
 
         $callingCards = self::CALLING_CARDS;
 
-        return view('pages.Groups.Show', compact('group', 'isAdmin', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'addDiveSite', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'operators', 'favoriteOperatorIds', 'SEO'));
+        $fbFeed = $group->isFacebookConnected()
+            ? app(GroupFacebookController::class)->getRecentPosts($group)
+            : [];
+
+        return view('pages.Groups.Show', compact('group', 'isAdmin', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'addDiveSite', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'operators', 'favoriteOperatorIds', 'fbFeed', 'SEO'));
     }
 
     /**

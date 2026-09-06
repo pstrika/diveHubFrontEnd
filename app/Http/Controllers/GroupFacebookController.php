@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Group;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
@@ -11,6 +12,40 @@ use Laravel\Socialite\Facades\Socialite;
 class GroupFacebookController extends Controller
 {
     public const GRAPH_VERSION = 'v21.0';
+
+    /**
+     * The group page's last few Page posts (with a handful of top comments
+     * each), for the read-only feed card. Cached briefly since this loads
+     * on every page view and the Graph API is comparatively slow - a
+     * failure here just means the feed card doesn't render, it never
+     * blocks the page.
+     */
+    public function getRecentPosts(Group $group): array
+    {
+        if (!$group->isFacebookConnected()) {
+            return [];
+        }
+
+        return Cache::remember('group_fb_feed_' . $group->id, now()->addMinutes(5), function () use ($group) {
+            try {
+                $response = Http::get('https://graph.facebook.com/' . self::GRAPH_VERSION . '/' . $group->fb_page_id . '/posts', [
+                    'fields' => 'message,created_time,permalink_url,full_picture,likes.summary(true),comments.limit(3).summary(true){message,from,created_time}',
+                    'limit' => 5,
+                    'access_token' => $group->fb_page_access_token,
+                ]);
+
+                if ($response->failed()) {
+                    Log::error('Facebook feed fetch failed for group ' . $group->id . ': ' . $response->body());
+                    return [];
+                }
+
+                return $response->json('data') ?? [];
+            } catch (\Throwable $e) {
+                Log::error('Facebook feed fetch exception for group ' . $group->id . ': ' . $e->getMessage());
+                return [];
+            }
+        });
+    }
 
     /**
      * Kicks off the OAuth flow. The group id has to survive the round-trip
@@ -37,7 +72,7 @@ class GroupFacebookController extends Controller
 
         return Socialite::driver('facebook')
             ->usingGraphVersion(self::GRAPH_VERSION)
-            ->setScopes(['pages_show_list', 'pages_manage_posts'])
+            ->setScopes(['pages_show_list', 'pages_manage_posts', 'pages_read_engagement'])
             ->redirect();
     }
 
