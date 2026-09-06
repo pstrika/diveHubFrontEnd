@@ -182,8 +182,9 @@ class GroupDiveController extends Controller
      * Best-effort announcement to the group's linked Facebook Page, if any.
      * Must never block adding the dive - a broken/revoked Page token or a
      * Graph API hiccup just gets logged. Posts as a photo (site photo, then
-     * operator logo, then a generic fallback) rather than a plain text post
-     * since photo posts get far more reach/engagement on Facebook.
+     * operator logo) when one is available, since photo posts get more
+     * reach/engagement; falls back to a plain text post otherwise (e.g. a
+     * custom dive with neither a known site nor operator).
      */
     private function postDiveToFacebook(Group $group, GroupDive $dive)
     {
@@ -196,11 +197,20 @@ class GroupDiveController extends Controller
             $message = "New dive added to \"{$group->name}\": {$dive->tripName}\n{$when}\n\n"
                 . route('Groups.show', ['group' => $group->slug]);
 
-            $response = Http::post('https://graph.facebook.com/' . GroupFacebookController::GRAPH_VERSION . '/' . $group->fb_page_id . '/photos', [
-                'url' => $this->resolveDiveImageUrl($dive),
-                'caption' => $message,
-                'access_token' => $group->fb_page_access_token,
-            ]);
+            $imageUrl = $this->resolveDiveImageUrl($dive);
+
+            if ($imageUrl) {
+                $response = Http::post('https://graph.facebook.com/' . GroupFacebookController::GRAPH_VERSION . '/' . $group->fb_page_id . '/photos', [
+                    'url' => $imageUrl,
+                    'caption' => $message,
+                    'access_token' => $group->fb_page_access_token,
+                ]);
+            } else {
+                $response = Http::post('https://graph.facebook.com/' . GroupFacebookController::GRAPH_VERSION . '/' . $group->fb_page_id . '/feed', [
+                    'message' => $message,
+                    'access_token' => $group->fb_page_access_token,
+                ]);
+            }
 
             if ($response->failed()) {
                 Log::error('Facebook post failed for group ' . $group->id . ': ' . $response->body());
@@ -218,10 +228,10 @@ class GroupDiveController extends Controller
 
     /**
      * Picks the most relevant public image URL for a dive's Facebook post:
-     * a photo of the dive site, then the operator's logo, then a generic
-     * branded fallback so every post always carries an image.
+     * a photo of the dive site, then the operator's logo, or null (post
+     * plain text) when neither is available - e.g. a custom dive.
      */
-    private function resolveDiveImageUrl(GroupDive $dive): string
+    private function resolveDiveImageUrl(GroupDive $dive): ?string
     {
         if ($dive->siteId) {
             $sitePhoto = Photo::where('siteId', $dive->siteId)->first();
@@ -234,7 +244,7 @@ class GroupDiveController extends Controller
             return asset('assets') . $dive->operator->logoUrl;
         }
 
-        return asset('assets') . '/img/illustrations/beach_diving.webp';
+        return null;
     }
 
     /**
