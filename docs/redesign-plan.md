@@ -25,9 +25,10 @@ document wins, because it was checked against the code.
   from numeric ids to slugs, canonical tags, titles, and schema.org markup, and
   they are in the sitemap. F-08 is done. Only the Map and Search pages are
   noindex, which is correct for tools.
-- Dive site level is a four value field (1 Open Water, 2 Advanced, 3 Technical
-  Normoxic, 4 Technical Hypoxic), not three. The inline legend uses the depth
-  table already shown on the sites pages.
+- Dive site level is a five value field (0 Open Water, 1 Advanced Open Water,
+  2 Technical Air, 3 Technical Normoxic Trimix, 4 Technical Hypoxic Trimix),
+  not three. `App\Support\DiveLevel` is the single definition and the inline
+  legend uses the depth table already shown on the sites pages.
 - The load time guest modal is gone. In its place: locked sidebar items call
   `showModalGuest()` on every page, but the modal markup only exists on the
   Beach Diving page, so the click does nothing elsewhere.
