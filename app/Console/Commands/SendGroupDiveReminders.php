@@ -97,7 +97,8 @@ class SendGroupDiveReminders extends Command
                     'from' => 'Divers-Hub <postmaster@mail.divers-hub.com>',
                     'to' => $member->user->name . ' <' . $member->user->email . '>',
                     'subject' => 'Reminder: ' . $dive->tripName . ' in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : ''),
-                    'html' => $html,
+                    'template' => 'tripreminder',
+                    'h:X-Mailgun-Variables' => json_encode(['body' => $html]),
                 ]);
             }
         } catch (\Throwable $e) {

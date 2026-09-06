@@ -22,6 +22,7 @@ class Event extends Model
         'operatorId',
         'tripName',
         'booked',
+        'waiver_signed',
         '_token', // Add _token to the fillable property
         
         // Other fields...

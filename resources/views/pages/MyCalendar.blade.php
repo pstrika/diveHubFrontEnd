@@ -70,6 +70,7 @@
                         <div class="modal-content">
                             <span id="span-booked" class="badge badge-md bg-gradient-success text-white">Booked</span>
                             <span id="span-not-booked" class="badge badge-md bg-gradient-danger text-white">Not Booked</span>
+                            <span id="span-waiver-signed" class="badge badge-md bg-gradient-success text-white" hidden>Waiver Signed</span>
                             <div class="modal-header text-center">
                                 
                                 <h6 class="modal-title font-weight-normal text-start" id="modal-title-notification-calendar">Edit calendar</h6>
@@ -99,15 +100,21 @@
                                                         </button></a>
                                                     </td>
 
-                                                    <td id="div-button-waiver" class="align-middle text-center text-sm">    
+                                                    <td id="div-button-waiver" class="align-middle text-center text-sm">
                                                         <a id="button-waiver" href="" target="_blank"><button class="btn btn-icon btn-3 btn-info" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Open online waiver">
                                                             <span class="btn-inner--icon"><i class="material-icons">description</i></span>
                                                             {{--<span class="btn-inner--text">Click to book</span>--}}
                                                         </button></a>
                                                     </td>
-                                                
-                                                
-                                                    <td id="div-button-book" class="align-middle text-center text-sm">    
+
+                                                    <td id="div-button-waiver-signed" class="align-middle text-center text-sm" hidden>
+                                                        <a id="button-waiver-signed" href=""><button class="btn btn-icon btn-3 btn-success" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="I've signed the waiver!">
+                                                            <span class="btn-inner--icon"><i class="material-icons">assignment_turned_in</i></span>
+                                                        </button></a>
+                                                    </td>
+
+
+                                                    <td id="div-button-book" class="align-middle text-center text-sm">
                                                         <a id="button-book" href=""><button class="btn btn-icon btn-3 btn-success" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="I'm already booked for this trip!">
                                                             <span class="btn-inner--icon"><i class="material-icons">check</i></span>
                                                             {{--<span class="btn-inner--text">I'm booked already!</span>--}}
@@ -349,8 +356,12 @@
             document.getElementById("button-remove").href = '/RemoveFromCalendar/' + info.event.extendedProps.eventId;
             document.getElementById("button-link").href = info.event.extendedProps.linkToBook;
             document.getElementById("button-waiver").href = info.event.extendedProps.waiver;
-            
-            if(info.event.extendedProps.booked == '1') {
+            document.getElementById("button-waiver-signed").href = '/SetEventWaiverSigned/' + info.event.extendedProps.eventId;
+
+            var isBooked = info.event.extendedProps.booked == '1';
+            var isWaiverSigned = info.event.extendedProps.waiverSigned == '1';
+
+            if(isBooked) {
                 document.getElementById("div-button-book").hidden = true;
                 document.getElementById("div-button-link").hidden = true;
                 document.getElementById("span-booked").hidden = false;
@@ -367,6 +378,16 @@
                 document.getElementById("div-button-waiver").hidden = false;
             else
                 document.getElementById("div-button-waiver").hidden = true;
+
+            // "Mark waiver signed" only makes sense once booked and only
+            // while there's actually a waiver to sign; once signed, show a
+            // badge instead of the button.
+            if (isBooked && info.event.extendedProps.waiver && !isWaiverSigned) {
+                document.getElementById("div-button-waiver-signed").hidden = false;
+            } else {
+                document.getElementById("div-button-waiver-signed").hidden = true;
+            }
+            document.getElementById("span-waiver-signed").hidden = !(isBooked && info.event.extendedProps.waiver && isWaiverSigned);
 
 
             
@@ -393,7 +414,7 @@
                     echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) ."',";
                     echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
                     //echo "url: '/TripDetails/" . str($trip->id) . "',";
-                    echo "extendedProps: {myId: '" . str($trip->id) . "', operator: '" . $trip->operatorName . "', eventId: '" . $trip->eventId ."', booked: '" . $trip->booked . "', linkToBook: '" . $trip->linkToBook . "', waiver: '" . $trip->waiver . "'},";
+                    echo "extendedProps: {myId: '" . str($trip->id) . "', operator: '" . $trip->operatorName . "', eventId: '" . $trip->eventId ."', booked: '" . $trip->booked . "', waiverSigned: '" . $trip->waiverSigned . "', linkToBook: '" . $trip->linkToBook . "', waiver: '" . $trip->waiver . "'},";
                     if($trip->booked)
                         echo "className: 'bg-gradient-success text-white opId=$trip->operatorId isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
                     else

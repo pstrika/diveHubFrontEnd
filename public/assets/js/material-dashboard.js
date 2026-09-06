@@ -38,9 +38,11 @@ var popoverList = popoverTriggerList.map(function(popoverTriggerEl) {
 })
 
 // initialization of Tooltips
+// container: 'body' so tooltips on triggers inside a modal (hidden at page
+// load) render above the modal's own stacking context instead of behind it.
 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
 var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-  return new bootstrap.Tooltip(tooltipTriggerEl)
+  return new bootstrap.Tooltip(tooltipTriggerEl, { container: 'body' })
 })
 
 // initialization of Toasts

@@ -66,6 +66,7 @@ public function show($date = null) {
             $trip = Trip::tripInEvent($event);
             if($trip) {
                 $trip->booked = $event->booked;
+                $trip->waiverSigned = $event->waiver_signed;
                 $trip->eventId = $event->id;
                 $trip->waiver = $trip->operator->waiverLink;
                 //Log::debug("waiver: " . $trip->waiver);
@@ -158,6 +159,15 @@ public function show($date = null) {
         return redirect()->back();
     }
 
+    public function setEventWaiverSigned($eventId) {
+        $event = Event::findOrFail($eventId);
+        $event->waiver_signed = true;
+
+        $event->save();
+
+        return redirect()->back();
+    }
+
     public function removeFromCalendar($eventId) {
         $event = Event::findOrFail($eventId);
         $event->delete();
@@ -226,9 +236,11 @@ public function show($date = null) {
             // Prefer the live Trip row for richer data; fall back to the event's
             // own snapshot fields if the trip no longer exists.
             $tripName     = $trip ? $trip->tripName : $event->tripName;
-            $operatorName = $trip ? $trip->operatorName : optional(Operator::find($event->operatorId))->operatorName;
+            $operator     = $trip ? $trip->operator : Operator::find($event->operatorId);
+            $operatorName = $trip ? $trip->operatorName : optional($operator)->operatorName;
             $linkToBook   = $trip ? $trip->linkToBook : null;
             $cityAddress  = $trip ? optional($trip->operator)->cityAddress : null;
+            $waiverLink   = $event->booked ? optional($operator)->waiverLink : null;
  
             // events.date is DATETIME ('Y-m-d 00:00:00') so normalize to the date part
             // before appending time, else Carbon throws 'Double time specification'.
@@ -245,6 +257,9 @@ public function show($date = null) {
             $descParts = [$event->booked ? 'Status: Booked' : 'Status: Not yet booked'];
             if ($linkToBook) {
                 $descParts[] = 'Booking: ' . $linkToBook;
+            }
+            if ($waiverLink) {
+                $descParts[] = 'Waiver (' . ($event->waiver_signed ? 'signed' : 'not yet signed') . '): ' . $waiverLink;
             }
             $descParts[] = 'End time is an estimate (3h) — DiveHub trips have no set end time.';
  

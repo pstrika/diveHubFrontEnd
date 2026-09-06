@@ -16,6 +16,7 @@ class GroupMember extends Model
     protected $fillable = [
         'group_id',
         'user_id',
+        'invited_email',
         'role',
         'status',
         'invited_by',

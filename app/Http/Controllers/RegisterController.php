@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GroupMember;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -33,6 +34,13 @@ class RegisterController extends Controller
         $attributes['prefersLocation'] = 0;
 
         $user = User::create($attributes);
+
+        // Link any pending group invites sent to this email before they had
+        // an account - they'll now show up on MyGroups to accept/decline.
+        GroupMember::where('invited_email', strtolower($user->email))
+            ->whereNull('user_id')
+            ->update(['user_id' => $user->id]);
+
         auth()->login($user);
         
         session()->put('newUser', 1);

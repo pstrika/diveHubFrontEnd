@@ -70,6 +70,67 @@ class GroupInviteController extends Controller
         return redirect()->back()->with('msg', 'Invite sent!');
     }
 
+    /**
+     * Invites someone who isn't found in the search box - either because
+     * they're a Divers Hub user who just didn't match the name/email query,
+     * or (the main case) they have no account at all yet. For the latter,
+     * the invite is stored against their email with no user_id; both
+     * RegisterController and GoogleController link it to their account
+     * automatically the moment they sign up with that same email, so it
+     * simply appears on their MyGroups page to accept/decline like any
+     * other invite - no separate accept-by-token flow needed.
+     */
+    public function inviteByEmail(Request $request, $groupSlug)
+    {
+        $group = Group::where('slug', $groupSlug)->firstOrFail();
+
+        if (!$group->isAdmin(auth()->user()->id)) {
+            abort(403);
+        }
+
+        $request->validate([
+            'email' => 'required|email|max:255',
+        ]);
+
+        $email = strtolower($request->email);
+
+        $existingUser = User::whereRaw('LOWER(email) = ?', [$email])->first();
+
+        if ($existingUser) {
+            if ($group->members()->where('user_id', $existingUser->id)->exists()) {
+                return redirect()->back()->with('msg', 'That user is already a member or has a pending invite.');
+            }
+
+            GroupMember::create([
+                'group_id' => $group->id,
+                'user_id' => $existingUser->id,
+                'role' => 'member',
+                'status' => 'invited',
+                'invited_by' => auth()->user()->id,
+            ]);
+
+            $this->sendInviteEmail($existingUser, $group);
+
+            return redirect()->back()->with('msg', 'Invite sent!');
+        }
+
+        if ($group->members()->where('invited_email', $email)->exists()) {
+            return redirect()->back()->with('msg', 'That email already has a pending invite to this group.');
+        }
+
+        GroupMember::create([
+            'group_id' => $group->id,
+            'invited_email' => $email,
+            'role' => 'member',
+            'status' => 'invited',
+            'invited_by' => auth()->user()->id,
+        ]);
+
+        $this->sendExternalInviteEmail($email, $group);
+
+        return redirect()->back()->with('msg', 'Invite sent to ' . $email . '!');
+    }
+
     public function accept($memberId)
     {
         $member = GroupMember::where('user_id', auth()->user()->id)->findOrFail($memberId);
@@ -116,6 +177,34 @@ class GroupInviteController extends Controller
             ]);
         } catch (\Throwable $e) {
             Log::error('Failed to send group invite email: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Invites someone with no Divers Hub account yet, via the Mailgun
+     * "invite" template - its only variable is the inviter's name, since
+     * (unlike sendInviteEmail above) there's no account to deep-link into
+     * yet. They just need to register; the pending invite links to their
+     * account automatically by matching email at that point.
+     */
+    private function sendExternalInviteEmail(string $email, Group $group)
+    {
+        try {
+            $mg = Mailgun::create(env('MAILGUN_KEY'));
+
+            $inviterName = auth()->user()->name;
+
+            Log::info('Sending external group invite email to: ' . $email);
+
+            $mg->messages()->send('mail.divers-hub.com', [
+                'from' => 'Divers-Hub <postmaster@mail.divers-hub.com>',
+                'to' => $email,
+                'subject' => 'You\'re invited to join "' . $group->name . '" on Divers Hub',
+                'template' => 'invite',
+                'h:X-Mailgun-Variables' => json_encode(['name' => $inviterName]),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send external group invite email: ' . $e->getMessage());
         }
     }
 }

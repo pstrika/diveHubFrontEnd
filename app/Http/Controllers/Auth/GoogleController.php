@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\GroupMember;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
@@ -43,6 +44,12 @@ class GoogleController extends Controller
                     'certLevel' => 0,
                     'prefersLocation' => 0,
                 ]);
+
+                // Link any pending group invites sent to this email before
+                // they had an account - they'll now show up on MyGroups.
+                GroupMember::where('invited_email', strtolower($newUser->email))
+                    ->whereNull('user_id')
+                    ->update(['user_id' => $newUser->id]);
 
                 Auth::login($newUser);
                 return redirect()->intended('MyDashboard');

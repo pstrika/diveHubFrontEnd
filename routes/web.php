@@ -161,6 +161,7 @@ Route::get('MyCalendar/', 'App\Http\Controllers\EventController@show')->middlewa
 Route::get('TripDetails/{tripId}', 'App\Http\Controllers\TripDetailsController@show')->middleware('guest')->name('TripDetails');
 Route::get('AddEventToCalendar/{tripId}', 'App\Http\Controllers\EventController@addEventToCalendar')->middleware('auth')->name('AddEventToCalendar');
 Route::get('SetEventBook/{tripId}', 'App\Http\Controllers\EventController@setEventBook')->middleware('auth')->name('SetEventBook');
+Route::get('SetEventWaiverSigned/{tripId}', 'App\Http\Controllers\EventController@setEventWaiverSigned')->middleware('auth')->name('SetEventWaiverSigned');
 Route::get('RemoveFromCalendar/{tripId}', 'App\Http\Controllers\EventController@removeFromCalendar')->middleware('auth')->name('RemoveFromCalendar');
 
 Route::get('Operators/', 'App\Http\Controllers\OperatorController@show')->middleware('guest')->name('Operators');
@@ -535,11 +536,13 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::post('Groups/{group}/calling-card', 'App\Http\Controllers\GroupController@setCallingCard')->name('Groups.callingCard');
 	Route::get('Groups/{group}/invite/search', 'App\Http\Controllers\GroupInviteController@search')->name('Groups.invite.search');
 	Route::post('Groups/{group}/invite', 'App\Http\Controllers\GroupInviteController@invite')->name('Groups.invite');
+	Route::post('Groups/{group}/invite-by-email', 'App\Http\Controllers\GroupInviteController@inviteByEmail')->name('Groups.invite.byEmail');
 	Route::post('Groups/{group}/dives', 'App\Http\Controllers\GroupDiveController@store')->name('Groups.dives.store');
 	Route::post('Groups/{group}/dives/custom', 'App\Http\Controllers\GroupDiveController@storeCustom')->name('Groups.dives.storeCustom');
 	Route::post('Groups/{group}/messages', 'App\Http\Controllers\GroupMessageController@store')->name('Groups.messages.store');
 	Route::get('Groups/{group}/messages/poll', 'App\Http\Controllers\GroupMessageController@poll')->name('Groups.messages.poll');
 	Route::post('Groups/{group}/settings', 'App\Http\Controllers\GroupController@updateSettings')->name('Groups.updateSettings');
+	Route::post('Groups/{group}/info', 'App\Http\Controllers\GroupController@updateInfo')->name('Groups.updateInfo');
 	Route::get('Groups/{group}/sites/search', 'App\Http\Controllers\GroupController@searchSites')->name('Groups.sites.search');
 
 	Route::get('Groups/{group}/facebook/connect', 'App\Http\Controllers\GroupFacebookController@connect')->name('Groups.facebook.connect');

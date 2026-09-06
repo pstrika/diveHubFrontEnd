@@ -15,6 +15,12 @@
                 <div class="modal-body">
                     <input type="text" id="inviteSearchInput" class="form-control border" placeholder="Search by name or email..." autocomplete="off">
                     <div id="inviteSearchResults" class="list-group mt-2"></div>
+                    <form method="POST" action="{{ route('Groups.invite.byEmail', ['group' => $group->slug]) }}" id="inviteByEmailForm" class="d-none mt-2">
+                        @csrf
+                        <input type="hidden" name="email" id="inviteByEmailInput">
+                        <p class="text-xs text-secondary mb-2">No Divers Hub account found for <b id="inviteByEmailAddress"></b>.</p>
+                        <button type="submit" class="btn btn-sm bg-gradient-info mb-0">Invite by email</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -341,24 +347,37 @@
                 <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1 clearfix">
                     <div style="float: left;" class="d-flex align-items-center">
                         @if($group->avatar)
-                            <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}" class="avatar avatar-xl rounded-circle shadow border-info mx-3" style="object-fit: cover; border-width: 3px; border-style: solid;">
+                            <a href="javascript:;" data-bs-toggle="modal" data-bs-target="#modalCallingCardFull">
+                                <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}" class="avatar avatar-xl rounded-circle shadow border-info mx-3" style="object-fit: cover; border-width: 3px; border-style: solid; cursor: pointer;">
+                            </a>
                         @endif
                         <div>
-                            <h1 class="card-title text-info mx-3 mt-0 mb-0">{{ $group->name }}</h1>
+                            <h1 class="card-title text-info mx-3 mt-0 mb-0">
+                                {{ $group->name }}
+                                @if($isAdmin)
+                                    <i class="material-icons text-sm text-secondary ms-1" style="cursor: pointer; vertical-align: middle;" data-bs-toggle="modal" data-bs-target="#modalEditGroupInfo" title="Edit name/description">edit</i>
+                                @endif
+                            </h1>
                             <p class="text-secondary mx-3 mt-n2">{{ $members->count() }} members @if($group->description) — {{ $group->description }} @endif</p>
                         </div>
                     </div>
-                    @if($isAdmin)
                     <div style="float: right;" class="mx-3">
-                        @if($group->isFacebookConnected())
-                            <span class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalGroupSettings">
-                                <i class="fa-brands fa-facebook align-middle me-1"></i> Connected: {{ $group->fb_page_name }}
-                            </span>
+                        @if(auth()->user()->isAdmin())
+                            @if($group->isFacebookConnected())
+                                <span class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalGroupSettings">
+                                    <i class="fa-brands fa-facebook align-middle me-1"></i> Connected: {{ $group->fb_page_name }}
+                                </span>
+                            @else
+                                <a href="{{ route('Groups.facebook.connect', ['group' => $group->slug]) }}" class="btn bg-gradient-info">
+                                    <i class="fa-brands fa-facebook align-middle me-1"></i> Connect FB Page
+                                </a>
+                            @endif
                         @else
-                            <a href="{{ route('Groups.facebook.connect', ['group' => $group->slug]) }}" class="btn bg-gradient-info">
+                            <span class="btn btn-secondary" style="opacity: 0.6; cursor: not-allowed;" data-bs-toggle="tooltip" title="Coming soon">
                                 <i class="fa-brands fa-facebook align-middle me-1"></i> Connect FB Page
-                            </a>
+                            </span>
                         @endif
+                        @if($isAdmin)
                         <button type="button" class="btn bg-gradient-secondary" data-bs-toggle="modal" data-bs-target="#modalGroupSettings">
                             <i class="material-icons text-sm align-middle me-1">settings</i> Settings
                         </button>
@@ -369,10 +388,52 @@
                                 <i class="material-icons text-sm align-middle me-1">delete</i> Delete Group
                             </button>
                         </form>
+                        @endif
                     </div>
-                    @endif
                 </div>
             </div>
+
+            {{--full-size calling card modal--}}
+            @if($group->avatar)
+            <div class="modal fade" id="modalCallingCardFull" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+                    <div class="modal-content bg-transparent border-0">
+                        <button type="button" class="btn-close btn-close-white align-self-end mb-1" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <img src="{{ asset('assets/' . \Illuminate\Support\Str::replaceLast('.webp', '.png', $group->avatar)) }}" alt="{{ $group->name }}" class="img-fluid border-radius-lg mx-auto">
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            {{--edit group name/description modal--}}
+            @if($isAdmin)
+            <div class="modal fade" id="modalEditGroupInfo" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <form method="POST" action="{{ route('Groups.updateInfo', ['group' => $group->slug]) }}">
+                            @csrf
+                            <div class="modal-header">
+                                <h5 class="modal-title font-weight-normal">Edit group info</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Name</label>
+                                    <input type="text" name="name" class="form-control border" value="{{ $group->name }}" minlength="3" maxlength="150" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    <textarea name="description" class="form-control border" rows="3" maxlength="2000">{{ $group->description }}</textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn bg-gradient-info">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            @endif
 
             <x-flash-toast />
 
@@ -504,6 +565,9 @@
                 resultsEl.innerHTML = '';
                 return;
             }
+            const emailFormEl = document.getElementById('inviteByEmailForm');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
             inviteSearchTimeout = setTimeout(function () {
                 fetch("{{ route('Groups.invite.search', ['group' => $group->slug]) }}?q=" + encodeURIComponent(q))
                     .then(r => r.json())
@@ -522,6 +586,14 @@
                                 '<button type="submit" class="btn btn-sm bg-gradient-info mb-0">Invite</button>' +
                                 '</form>';
                         }).join('') || '<p class="text-secondary mb-0 mt-2">No matching users found.</p>';
+
+                        if (users.length === 0 && emailRegex.test(q)) {
+                            document.getElementById('inviteByEmailInput').value = q;
+                            document.getElementById('inviteByEmailAddress').textContent = q;
+                            emailFormEl.classList.remove('d-none');
+                        } else {
+                            emailFormEl.classList.add('d-none');
+                        }
                     });
             }, 300);
         });

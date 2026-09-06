@@ -443,6 +443,31 @@ class GroupController extends Controller
         return redirect()->route('Groups.show', ['group' => $group->slug])->with('msg', 'Group settings updated!');
     }
 
+    /**
+     * Admin-only rename/re-describe. Slug is deliberately left untouched -
+     * changing it would break bookmarked URLs, the calendar feed link and
+     * anything else keyed off it.
+     */
+    public function updateInfo(Request $request, $groupSlug)
+    {
+        $group = Group::where('slug', $groupSlug)->firstOrFail();
+
+        if (!$group->isAdmin(auth()->user()->id)) {
+            abort(403);
+        }
+
+        $request->validate([
+            'name' => 'required|min:3|max:150',
+            'description' => 'nullable|max:2000',
+        ]);
+
+        $group->name = $request->name;
+        $group->description = $request->description;
+        $group->save();
+
+        return redirect()->route('Groups.show', ['group' => $group->slug])->with('msg', 'Group info updated!');
+    }
+
     public function removeMember(Request $request, $groupSlug, $memberId)
     {
         $group = Group::where('slug', $groupSlug)->firstOrFail();
