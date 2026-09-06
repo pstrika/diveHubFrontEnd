@@ -11,6 +11,7 @@ use App\Models\WeatherDay;
 use App\Models\VisitedSite;
 use App\Models\WishedSite;
 use App\Models\Site;
+use App\Support\DiveLevel;
 use App\Models\SiteComment;
 use App\Models\Photo;
 use App\Models\SiteRating;
@@ -465,19 +466,74 @@ class SiteController extends Controller
         return view('pages.DiveSitesSearch', compact('searchString', 'results'))->withStatus("show all");
     }
 
-    public function showTopRated() {
+    /**
+     * Read the level filter and sort choice from the query string.
+     *
+     * Shared by the Top Rated and wreckWiki pages so both accept the same
+     * URLs: ?level=0..4 (see App\Support\DiveLevel) and ?sort=rate|name|maxDepth.
+     * Anything unrecognised falls back to the default, so a hand edited URL
+     * can never break the page or reach the database.
+     *
+     * @return array{filters: array{level: ?int, sort: string}, sortOptions: array<string,string>}
+     */
+    private function siteListFilters(Request $request, string $defaultSort): array
+    {
+        $sortOptions = [
+            'rate'     => 'Top rated',
+            'name'     => 'A to Z',
+            'maxDepth' => 'Deepest',
+        ];
+
+        $level = $request->query('level');
+        $sort  = $request->query('sort', $defaultSort);
+
+        return [
+            'filters' => [
+                'level' => DiveLevel::isValid($level) ? (int) $level : null,
+                'sort'  => array_key_exists($sort, $sortOptions) ? $sort : $defaultSort,
+            ],
+            'sortOptions' => $sortOptions,
+        ];
+    }
+
+    /**
+     * Apply the filters from siteListFilters() to a Site query.
+     * Rating sorts put unrated sites last; name sorts are A to Z; depth is deepest first.
+     */
+    private function applySiteListFilters($query, array $filters)
+    {
+        if ($filters['level'] !== null) {
+            $query->where('level', $filters['level']);
+        }
+
+        switch ($filters['sort']) {
+            case 'name':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'maxDepth':
+                $query->orderBy('maxDepth', 'desc');
+                break;
+            default:
+                $query->orderBy('rate', 'desc');
+        }
+
+        return $query;
+    }
+
+    public function showTopRated(Request $request) {
+        ['filters' => $filters, 'sortOptions' => $sortOptions] = $this->siteListFilters($request, 'rate');
+
         //$sites = Site::all()->sortByDesc("rate");
-        $sitesWrecks = Site::where('type', 'wreck')
-            ->where('_hidden', '<>', 1)
-            ->orderBy('rate', 'desc')
-            ->take(10)
-            ->get();
-        
-        $sitesReefs = Site::where('type', '!=', 'wreck')
-            ->where('_hidden', '<>', 1)
-            ->orderBy('rate', 'desc')
-            ->take(10)
-            ->get();
+        // Top ten wrecks and top ten reefs, as before. When a level filter is
+        // active the ten are the best matches for that level, which is what a
+        // diver asking "what can I dive at Open Water" wants to see.
+        $sitesWrecks = $this->applySiteListFilters(
+            Site::where('type', 'wreck')->where('_hidden', '<>', 1), $filters
+        )->take(10)->get();
+
+        $sitesReefs = $this->applySiteListFilters(
+            Site::where('type', '!=', 'wreck')->where('_hidden', '<>', 1), $filters
+        )->take(10)->get();
         $locations = WeatherLocation::all();
 
         /*Provide SEO metadata */
@@ -488,16 +544,17 @@ class SiteController extends Controller
             "canonical" => route("DiveSites")
         );
 
-        return view('pages.DiveSites', compact('sitesWrecks', 'sitesReefs', 'locations', 'SEO'));
+        return view('pages.DiveSites', compact('sitesWrecks', 'sitesReefs', 'locations', 'SEO', 'filters', 'sortOptions'));
     }
 
-    public function showWrecks() {
-        //$sites = Site::all()->sortByDesc("rate");
-        $sitesWrecks = Site::where('type', 'wreck')
-            ->where('_hidden', '<>', 1)
-            ->orderBy('name', 'asc')
-            ->get();
-        
+    public function showWrecks(Request $request) {
+        // wreckWiki lists every wreck. Default order stays A to Z as it always has.
+        ['filters' => $filters, 'sortOptions' => $sortOptions] = $this->siteListFilters($request, 'name');
+
+        $sitesWrecks = $this->applySiteListFilters(
+            Site::where('type', 'wreck')->where('_hidden', '<>', 1), $filters
+        )->get();
+
         $locations = WeatherLocation::all();
 
         /*Provide SEO metadata */
@@ -508,7 +565,7 @@ class SiteController extends Controller
             "canonical" => route("WreckSites")
         );
 
-        return view('pages.WreckSites', compact('sitesWrecks', 'locations', 'SEO'));
+        return view('pages.WreckSites', compact('sitesWrecks', 'locations', 'SEO', 'filters', 'sortOptions'));
     }
     public function searchSites(Request $request) {
 
