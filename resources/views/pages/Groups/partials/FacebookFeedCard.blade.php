@@ -8,27 +8,23 @@
         </div>
     </div>
     <div class="card-body p-3" style="max-height: 320px; overflow-y: auto;">
-        <div class="row">
-            @foreach($fbFeed as $post)
-                <div class="col-md-6 mb-3">
-                    <div class="d-flex h-100" style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                        @if(!empty($post['full_picture']))
-                            <img src="{{ $post['full_picture'] }}" style="width: 70px; height: 70px; object-fit: cover;" class="border-radius-md me-2 flex-shrink-0" alt="">
-                        @endif
-                        <div style="min-width: 0;">
-                            @if(!empty($post['message']))
-                                <p class="text-sm mb-1" style="overflow-wrap: break-word;">{{ \Illuminate\Support\Str::limit($post['message'], 140) }}</p>
-                            @endif
-                            <p class="text-xs text-secondary mb-1">
-                                {{ \Carbon\Carbon::parse($post['created_time'])->diffForHumans() }}
-                            </p>
-                            @if(!empty($post['permalink_url']))
-                                <a href="{{ $post['permalink_url'] }}" target="_blank" rel="noopener" class="text-xs">View on Facebook</a>
-                            @endif
-                        </div>
-                    </div>
+        @foreach($fbFeed as $post)
+            <div class="d-flex mb-3 pb-3" style="border-bottom: 1px solid #eee;">
+                @if(!empty($post['full_picture']))
+                    <img src="{{ $post['full_picture'] }}" style="width: 70px; height: 70px; object-fit: cover;" class="border-radius-md me-2 flex-shrink-0" alt="">
+                @endif
+                <div style="min-width: 0;">
+                    @if(!empty($post['message']))
+                        <p class="text-sm mb-1" style="overflow-wrap: break-word;">{{ \Illuminate\Support\Str::limit($post['message'], 140) }}</p>
+                    @endif
+                    <p class="text-xs text-secondary mb-1">
+                        {{ \Carbon\Carbon::parse($post['created_time'])->diffForHumans() }}
+                    </p>
+                    @if(!empty($post['permalink_url']))
+                        <a href="{{ $post['permalink_url'] }}" target="_blank" rel="noopener" class="text-xs">View on Facebook</a>
+                    @endif
                 </div>
-            @endforeach
-        </div>
+            </div>
+        @endforeach
     </div>
 </div>
