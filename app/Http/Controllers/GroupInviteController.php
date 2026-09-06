@@ -28,7 +28,10 @@ class GroupInviteController extends Controller
             return response()->json([]);
         }
 
-        $existingUserIds = $group->members()->pluck('user_id');
+        // whereNotNull matters here: a NULL in a NOT IN list makes the whole
+        // comparison UNKNOWN for every row in MySQL, silently returning zero
+        // results - and email-invited members have a null user_id.
+        $existingUserIds = $group->members()->whereNotNull('user_id')->pluck('user_id');
 
         $users = User::where(function ($query) use ($q) {
                 $query->where('name', 'LIKE', "%$q%")
