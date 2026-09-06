@@ -22,12 +22,24 @@ class Group extends Model
         'avatar',
         'calendar_token',
         'reminders_enabled',
+        'allow_members_add_dives',
         'created_by',
     ];
 
     protected $casts = [
         'reminders_enabled' => 'boolean',
+        'allow_members_add_dives' => 'boolean',
     ];
+
+    /**
+     * Whether this user may add dives (real or custom) to the group
+     * calendar - admins always can; regular members only when the group
+     * allows it.
+     */
+    public function canAddDives($userId): bool
+    {
+        return $this->isAdmin($userId) || $this->allow_members_add_dives;
+    }
 
     public function favoriteOperators(): BelongsToMany
     {

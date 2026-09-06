@@ -31,6 +31,9 @@ class GroupMessageController extends Controller
             ->values();
 
         if (empty($request->body) && $photoPaths->isEmpty()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Write something or attach a photo.'], 422);
+            }
             return redirect()->back()->with('msg', 'Write something or attach a photo.');
         }
 
@@ -45,6 +48,10 @@ class GroupMessageController extends Controller
                 'group_message_id' => $message->id,
                 'file' => $path,
             ]);
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true]);
         }
 
         return redirect()->route('Groups.show', ['group' => $group->slug])->with('msg', 'Message posted!');

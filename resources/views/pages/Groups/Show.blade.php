@@ -75,10 +75,16 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="form-check form-switch mb-4">
+                        <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" name="reminders_enabled" value="1" id="remindersEnabledInput" {{ $group->reminders_enabled ? 'checked' : '' }}>
                             <label class="form-check-label" for="remindersEnabledInput">
                                 Email trip reminders (3 days and 1 day before an upcoming dive)
+                            </label>
+                        </div>
+                        <div class="form-check form-switch mb-4">
+                            <input class="form-check-input" type="checkbox" name="allow_members_add_dives" value="1" id="allowMembersAddDivesInput" {{ $group->allow_members_add_dives ? 'checked' : '' }}>
+                            <label class="form-check-label" for="allowMembersAddDivesInput">
+                                Allow any member to add dives (otherwise only admins can)
                             </label>
                         </div>
                         <label class="form-label">Favorite operators</label>
@@ -110,27 +116,31 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form method="GET" action="{{ route('Groups.show', ['group' => $group->slug]) }}" class="mb-3">
-                        <div class="row">
-                            <div class="col-6">
+                    <p class="text-xs text-secondary mb-1">Find a trip either by date, or by dive site (these search independently of each other).</p>
+                    <div class="row">
+                        <div class="col-6">
+                            <form method="GET" action="{{ route('Groups.show', ['group' => $group->slug]) }}">
                                 <label class="form-label">Pick a date</label>
                                 <input type="date" name="add_dive_date" id="addDiveDateInput" class="form-control border" value="{{ $addDiveDate }}" min="{{ now()->toDateString() }}">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Search by dive site (optional)</label>
-                                <input type="text" name="add_dive_site" class="form-control border" placeholder="e.g. Vandenberg" value="{{ $addDiveSite }}">
-                            </div>
+                                <button type="submit" class="btn btn-sm bg-gradient-info mt-2">Search by date</button>
+                            </form>
                         </div>
-                        <button type="submit" class="btn btn-sm bg-gradient-info mt-2">Search</button>
-                    </form>
+                        <div class="col-6">
+                            <form method="GET" action="{{ route('Groups.show', ['group' => $group->slug]) }}">
+                                <label class="form-label">Search by dive site</label>
+                                <input type="text" name="add_dive_site" class="form-control border" placeholder="e.g. Vandenberg" value="{{ $addDiveSite }}">
+                                <button type="submit" class="btn btn-sm bg-gradient-info mt-2">Search by site</button>
+                            </form>
+                        </div>
+                    </div>
 
-                    <div class="d-flex justify-content-end mb-2">
+                    <div class="d-flex justify-content-end my-2">
                         <button type="button" class="btn btn-sm bg-gradient-secondary mb-0" id="openCustomDiveBtn">
                             <i class="material-icons text-sm align-middle">add</i> Add a Custom Dive
                         </button>
                     </div>
 
-                    @if($addDiveDate)
+                    @if($addDiveDate || $addDiveSite)
                         @if($tripsForDate && $tripsForDate->isNotEmpty())
                             <table class="table align-items-center mb-0">
                                 <tbody>
@@ -138,7 +148,10 @@
                                         <tr style="border-bottom: 1px solid #D3D3D3;">
                                             <td class="align-middle text-left text-sm">
                                                 <b>{{ $trip->tripName }}</b><br>
-                                                <span class="text-secondary">{{ $trip->operatorName }} — {{ $trip->departureTime }}</span>
+                                                <span class="text-secondary">
+                                                    {{ $trip->operatorName }} — {{ $trip->departureTime }}
+                                                    @if($addDiveSite) · {{ \Carbon\Carbon::parse($trip->date)->format('D, M j') }} @endif
+                                                </span>
                                             </td>
                                             <td class="align-middle text-end">
                                                 @if($trip->alreadyInThisGroup)
@@ -156,7 +169,7 @@
                                 </tbody>
                             </table>
                         @else
-                            <p class="text-secondary">No trips found for that date.</p>
+                            <p class="text-secondary">No trips found.</p>
                         @endif
                     @endif
                 </div>
@@ -187,7 +200,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Operator (optional)</label>
-                            <select name="operatorId" class="form-control border">
+                            <select name="operatorId" id="customDiveOperatorSelect" class="form-control border">
                                 <option value="">— none —</option>
                                 @foreach($operators as $operator)
                                     <option value="{{ $operator->id }}">{{ $operator->operatorName }}</option>
@@ -272,6 +285,7 @@
                 </div>
                 <div class="modal-body">
                     <p class="text-secondary text-sm mb-2" id="diveDetailsSubtitle"></p>
+                    <div id="diveDetailsInfo" class="mb-2"></div>
                     <p class="fw-bold text-sm mb-2">Who's going</p>
                     <div id="diveDetailsAttendees"></div>
                 </div>
@@ -397,11 +411,13 @@
                             </div>
                         </div>
                         <div class="card-body p-3" style="display: block; max-height: 350px; overflow-y: scroll">
+                            @if($group->canAddDives(auth()->user()->id))
                             <div class="d-flex justify-content-end mb-2">
                                 <button type="button" class="btn btn-sm bg-gradient-info mb-0" data-bs-toggle="modal" data-bs-target="#modalAddDive">
                                     <i class="material-icons text-sm align-middle">add</i> Add a dive
                                 </button>
                             </div>
+                            @endif
 
                             @if($dives->isEmpty())
                                 <p class="text-secondary mb-0">No upcoming dives yet. Be the first to add one!</p>
@@ -445,7 +461,9 @@
                                                             <h6 class="text-dark text-sm font-weight-bold mb-0">{{ $dive->tripName }}</h6>
                                                         </a>
                                                     @else
-                                                        <h6 class="text-dark text-sm font-weight-bold mb-0">{{ $dive->tripName }} @if($dive->is_custom) <span class="badge badge-sm bg-secondary">custom</span> @endif</h6>
+                                                        <h6 class="text-dark text-sm font-weight-bold mb-0 cursor-pointer" style="cursor: pointer;" onclick="showDiveDetails({{ $dive->id }})">
+                                                            {{ $dive->tripName }} @if($dive->is_custom) <span class="badge badge-sm bg-secondary">custom</span> @endif
+                                                        </h6>
                                                     @endif
                                                 </div>
                                                 <p class="text-secondary text-xs mt-1 mb-0">
@@ -455,7 +473,7 @@
                                                 @if($operatorName)
                                                     <p class="text-sm text-bold text-info mt-1 mb-2 d-flex align-items-center">
                                                         @if($operatorLogo)
-                                                            <img src="{{ $operatorLogo }}" alt="" style="width: 18px; height: 18px; object-fit: contain;" class="me-1">
+                                                            <img src="{{ asset('assets') }}{{ $operatorLogo }}" alt="" style="width: 18px; height: 18px; object-fit: contain;" class="me-1">
                                                         @endif
                                                         @if($operatorId)
                                                             <a href="{{ route('OperatorDetails', ['id' => $operatorId]) }}">{{ $operatorName }}</a>
@@ -541,7 +559,7 @@
                             <form method="POST" action="{{ route('Groups.messages.store', ['group' => $group->slug]) }}" id="groupChatForm">
                                 @csrf
                                 <div class="mb-2">
-                                    <textarea name="body" class="form-control border" rows="2" maxlength="2000" placeholder="Share something with the group..."></textarea>
+                                    <textarea name="body" id="chatBodyInput" class="form-control border" rows="2" maxlength="2000" placeholder="Share something with the group... (Enter to send, Shift+Enter for a new line)"></textarea>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="d-flex align-items-center">
@@ -601,7 +619,12 @@
     <script src="{{ asset('assets') }}/js/plugins/fullcalendar.min.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     <script src="{{ asset('assets') }}/js/plugins/dropzone.min.js"></script>
+    <script src="{{ asset('assets') }}/js/plugins/choices.min.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <script>
+        new Choices(document.getElementById('customDiveOperatorSelect'), { searchEnabled: true, itemSelectText: '' });
+    </script>
 
     @if($isAdmin)
     <script>
@@ -626,7 +649,9 @@
         function afterCustomizeQueueComplete() {
             pendingCustomizeUploads--;
             if (pendingCustomizeUploads <= 0) {
-                window.location.reload();
+                // Navigate to the clean group URL (no leftover query string like
+                // ?add_dive_date=...) so the Add a Dive modal doesn't auto-reopen.
+                window.location.href = "{{ route('Groups.show', ['group' => $group->slug]) }}";
             }
         }
         bannerDropzone.on('queuecomplete', afterCustomizeQueueComplete);
@@ -716,36 +741,79 @@
             }).join('') + '<span class="text-xs text-secondary">' + chatPhotoPaths.length + ' photo(s) attached</span>';
         }
 
-        document.getElementById('groupChatForm').addEventListener('submit', function () {
-            var form = this;
-            chatPhotoPaths.forEach(function (p) {
-                var input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'existing_photos[]';
-                input.value = p;
-                form.appendChild(input);
-            });
-        });
+        var chatSendAudio = new Audio("{{ asset('assets/sounds/chat-send.wav') }}");
+        var chatReceiveAudio = new Audio("{{ asset('assets/sounds/chat-receive.wav') }}");
+        function playChatSendSound() { try { chatSendAudio.currentTime = 0; chatSendAudio.play().catch(function () {}); } catch (e) {} }
+        function playChatReceiveSound() { try { chatReceiveAudio.currentTime = 0; chatReceiveAudio.play().catch(function () {}); } catch (e) {} }
 
-        // Poll for new chat messages without a manual page refresh.
-        (function () {
+        var suppressNextReceiveSound = false;
+
+        function refreshChatMessages() {
             var messagesEl = document.getElementById('groupChatMessages');
-            setInterval(function () {
-                fetch("{{ route('Groups.messages.poll', ['group' => $group->slug]) }}")
-                    .then(function (r) { return r.json(); })
-                    .then(function (data) {
-                        if (String(data.count) !== messagesEl.getAttribute('data-count')) {
-                            var wasScrolledToBottom = messagesEl.scrollTop + messagesEl.clientHeight >= messagesEl.scrollHeight - 20;
-                            messagesEl.innerHTML = data.html;
-                            messagesEl.setAttribute('data-count', data.count);
-                            if (wasScrolledToBottom) {
-                                messagesEl.scrollTop = messagesEl.scrollHeight;
+            return fetch("{{ route('Groups.messages.poll', ['group' => $group->slug]) }}")
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    var oldCount = parseInt(messagesEl.getAttribute('data-count'), 10);
+                    if (String(data.count) !== messagesEl.getAttribute('data-count')) {
+                        var wasScrolledToBottom = messagesEl.scrollTop + messagesEl.clientHeight >= messagesEl.scrollHeight - 20;
+                        messagesEl.innerHTML = data.html;
+                        messagesEl.setAttribute('data-count', data.count);
+                        if (wasScrolledToBottom) {
+                            messagesEl.scrollTop = messagesEl.scrollHeight;
+                        }
+                        if (data.count > oldCount) {
+                            if (suppressNextReceiveSound) {
+                                suppressNextReceiveSound = false;
+                            } else {
+                                playChatReceiveSound();
                             }
                         }
-                    })
-                    .catch(function () {});
-            }, 5000);
-        })();
+                    }
+                })
+                .catch(function () {});
+        }
+
+        setInterval(refreshChatMessages, 5000);
+
+        function submitChatMessage() {
+            var form = document.getElementById('groupChatForm');
+            var formData = new FormData(form);
+            chatPhotoPaths.forEach(function (p) { formData.append('existing_photos[]', p); });
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                body: formData,
+            })
+                .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+                .then(function (result) {
+                    if (result.ok && result.data.success) {
+                        document.getElementById('chatBodyInput').value = '';
+                        chatPhotoPaths = [];
+                        updateChatPhotoPreview();
+                        playChatSendSound();
+                        suppressNextReceiveSound = true;
+                        refreshChatMessages();
+                    } else {
+                        alert(result.data.message || 'Could not post message.');
+                    }
+                })
+                .catch(function () {
+                    alert('Could not post message. Please try again.');
+                });
+        }
+
+        document.getElementById('groupChatForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            submitChatMessage();
+        });
+
+        document.getElementById('chatBodyInput').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitChatMessage();
+            }
+        });
     </script>
 
     <script>
@@ -769,10 +837,16 @@
                     ($dive->time ? ' at ' . $dive->time : '') .
                     ($dive->liveTrip ? ' — ' . $dive->liveTrip->operatorName : '')
                 ) !!},
+                isCustom: {{ $dive->is_custom ? 'true' : 'false' }},
                 isGoing: {{ $dive->isGoing(auth()->user()->id) ? 'true' : 'false' }},
                 joinUrl: {!! json_encode(route('Groups.dives.join', ['dive' => $dive->id])) !!},
                 leaveUrl: {!! json_encode(route('Groups.dives.leave', ['dive' => $dive->id])) !!},
+                deleteUrl: {!! json_encode(route('Groups.dives.destroy', ['dive' => $dive->id])) !!},
                 tripUrl: {!! $dive->liveTrip ? json_encode(route('TripDetails', ['tripId' => $dive->liveTrip->id])) : 'null' !!},
+                operatorName: {!! json_encode($dive->liveTrip ? $dive->liveTrip->operatorName : ($dive->operator->operatorName ?? null)) !!},
+                siteName: {!! json_encode($dive->site->name ?? null) !!},
+                departingFrom: {!! json_encode($dive->departingFrom) !!},
+                notes: {!! json_encode($dive->notes) !!},
                 attendees: [
                     @foreach($dive->rsvps as $rsvp)
                     {
@@ -794,6 +868,14 @@
             document.getElementById('diveDetailsTitle').textContent = dive.title;
             document.getElementById('diveDetailsSubtitle').textContent = dive.subtitle;
 
+            var infoEl = document.getElementById('diveDetailsInfo');
+            var infoLines = [];
+            if (dive.operatorName) infoLines.push('<b>Operator:</b> ' + dive.operatorName);
+            if (dive.siteName) infoLines.push('<b>Dive site:</b> ' + dive.siteName);
+            if (dive.departingFrom) infoLines.push('<b>Departing from:</b> ' + dive.departingFrom);
+            if (dive.notes) infoLines.push('<b>Notes:</b> ' + dive.notes);
+            infoEl.innerHTML = infoLines.length ? infoLines.map(function (l) { return '<p class="text-sm mb-1">' + l + '</p>'; }).join('') : '';
+
             var attendeesEl = document.getElementById('diveDetailsAttendees');
             attendeesEl.innerHTML = dive.attendees.length ? dive.attendees.map(function (a) {
                 return '<div class="d-flex align-items-center mb-2">' +
@@ -807,7 +889,16 @@
             var rsvpBtn = dive.isGoing
                 ? '<form method="POST" action="' + dive.leaveUrl + '"><input type="hidden" name="_token" value="' + csrf + '"><button type="submit" class="btn bg-gradient-secondary mb-0">Leave</button></form>'
                 : '<form method="POST" action="' + dive.joinUrl + '"><input type="hidden" name="_token" value="' + csrf + '"><button type="submit" class="btn bg-gradient-success mb-0">I\'m going</button></form>';
-            footerEl.innerHTML = viewTripBtn + rsvpBtn;
+            @if($isAdmin)
+            var deleteBtn = dive.attendees.length === 0
+                ? '<form method="POST" action="' + dive.deleteUrl + '" onsubmit="return confirm(\'Remove this dive from the group calendar entirely?\');">' +
+                    '<input type="hidden" name="_token" value="' + csrf + '"><input type="hidden" name="_method" value="DELETE">' +
+                    '<button type="submit" class="btn btn-outline-danger mb-0">Remove dive</button></form>'
+                : '<span class="text-xs text-secondary align-self-center me-2" data-bs-toggle="tooltip" title="Can\'t remove while people are going - ask them to leave first">Remove dive (unavailable)</span>';
+            @else
+            var deleteBtn = '';
+            @endif
+            footerEl.innerHTML = deleteBtn + viewTripBtn + rsvpBtn;
 
             new bootstrap.Modal(document.getElementById('modalDiveDetails')).show();
         }
@@ -824,7 +915,9 @@
             selectable: true,
             editable: false,
             dateClick: function (info) {
+                @if($group->canAddDives(auth()->user()->id))
                 window.location.href = "{{ route('Groups.show', ['group' => $group->slug]) }}?add_dive_date=" + info.dateStr;
+                @endif
             },
             eventClick: function (info) {
                 showDiveDetails(info.event.extendedProps.diveId);

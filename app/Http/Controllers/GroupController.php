@@ -127,18 +127,24 @@ class GroupController extends Controller
             ->map(fn ($d) => $d->operatorId . '|' . $d->date . '|' . $d->time . '|' . $d->tripName)
             ->flip();
 
-        // "Add a dive" trip browser: pick a date (optionally filter by site
-        // name), see that day's live trips.
+        // "Add a dive" trip browser: two independent ways to find a trip -
+        // pick a single date, OR search by dive site across all upcoming
+        // dates. Whichever the request actually sent wins; they don't combine.
         $addDiveDate = $request->query('add_dive_date');
         $addDiveSite = $request->query('add_dive_site');
         $tripsForDate = null;
-        if ($addDiveDate) {
-            $tripsQuery = Trip::where('date', $addDiveDate)->where('siteIdStatus', 'confirmed');
-            if ($addDiveSite) {
-                $tripsQuery->whereHas('site', function ($q) use ($addDiveSite) {
+        if ($addDiveSite) {
+            $tripsQuery = Trip::where('date', '>=', now()->toDateString())
+                ->where('siteIdStatus', 'confirmed')
+                ->whereHas('site', function ($q) use ($addDiveSite) {
                     $q->where('name', 'LIKE', "%$addDiveSite%");
                 });
-            }
+            $tripsForDate = $tripsQuery->get()->sortBy(['date', 'departureTime'])->take(50)->map(function ($trip) use ($existingDiveKeys) {
+                $trip->alreadyInThisGroup = $existingDiveKeys->has($trip->operatorId . '|' . $trip->date . '|' . $trip->departureTime . '|' . $trip->tripName);
+                return $trip;
+            });
+        } elseif ($addDiveDate) {
+            $tripsQuery = Trip::where('date', $addDiveDate)->where('siteIdStatus', 'confirmed');
             $tripsForDate = $tripsQuery->get()->sortBy('departureTime')->map(function ($trip) use ($existingDiveKeys) {
                 $trip->alreadyInThisGroup = $existingDiveKeys->has($trip->operatorId . '|' . $trip->date . '|' . $trip->departureTime . '|' . $trip->tripName);
                 return $trip;
@@ -149,7 +155,9 @@ class GroupController extends Controller
 
         $calendarFeedUrl = route('Groups.feed', ['group' => $group->slug, 'token' => $group->ensureCalendarToken()]);
 
-        $operators = $isAdmin ? \App\Models\Operator::orderBy('operatorName')->get(['id', 'operatorName']) : collect();
+        // All members (not just admins) need the operators list for the
+        // Custom Dive form's operator picker.
+        $operators = \App\Models\Operator::orderBy('operatorName')->get(['id', 'operatorName']);
         $favoriteOperatorIds = $isAdmin ? $group->favoriteOperators()->pluck('operators.id')->toArray() : [];
 
         $SEO = [
@@ -408,11 +416,13 @@ class GroupController extends Controller
 
         $request->validate([
             'reminders_enabled' => 'nullable|boolean',
+            'allow_members_add_dives' => 'nullable|boolean',
             'favorite_operators' => 'nullable|array',
             'favorite_operators.*' => 'integer|exists:mysql_trips.operators,id',
         ]);
 
         $group->reminders_enabled = $request->boolean('reminders_enabled');
+        $group->allow_members_add_dives = $request->boolean('allow_members_add_dives');
         $group->save();
 
         $group->favoriteOperators()->sync($request->input('favorite_operators', []));

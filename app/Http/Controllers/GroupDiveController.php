@@ -15,7 +15,7 @@ class GroupDiveController extends Controller
     {
         $group = Group::where('slug', $groupSlug)->firstOrFail();
 
-        if (!$group->isMember(auth()->user()->id)) {
+        if (!$group->isMember(auth()->user()->id) || !$group->canAddDives(auth()->user()->id)) {
             abort(403);
         }
 
@@ -64,7 +64,7 @@ class GroupDiveController extends Controller
     {
         $group = Group::where('slug', $groupSlug)->firstOrFail();
 
-        if (!$group->isMember(auth()->user()->id)) {
+        if (!$group->isMember(auth()->user()->id) || !$group->canAddDives(auth()->user()->id)) {
             abort(403);
         }
 
@@ -171,5 +171,29 @@ class GroupDiveController extends Controller
                 'booked' => false,
             ]);
         }
+    }
+
+    /**
+     * Admin-only: removes a dive from the group calendar entirely, along
+     * with every attendee's personal-calendar entry for it.
+     */
+    public function destroy($diveId)
+    {
+        $dive = GroupDive::findOrFail($diveId);
+        $group = $dive->group;
+
+        if (!$group->isAdmin(auth()->user()->id)) {
+            abort(403);
+        }
+
+        if ($dive->rsvps()->count() > 0) {
+            return redirect()->route('Groups.show', ['group' => $group->slug])
+                ->with('msg', 'Can\'t remove this dive - people are still going. Ask them to leave first.');
+        }
+
+        $dive->delete();
+
+        return redirect()->route('Groups.show', ['group' => $group->slug])
+            ->with('msg', 'Dive removed from the group calendar.');
     }
 }

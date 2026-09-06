@@ -526,6 +526,7 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 
 	Route::post('Groups/dives/{dive}/join', 'App\Http\Controllers\GroupDiveController@join')->name('Groups.dives.join');
 	Route::post('Groups/dives/{dive}/leave', 'App\Http\Controllers\GroupDiveController@leave')->name('Groups.dives.leave');
+	Route::delete('Groups/dives/{dive}', 'App\Http\Controllers\GroupDiveController@destroy')->name('Groups.dives.destroy');
 
 	Route::get('Groups/{group}', 'App\Http\Controllers\GroupController@show')->name('Groups.show');
 	Route::post('Groups/{group}/members/{member}/remove', 'App\Http\Controllers\GroupController@removeMember')->name('Groups.removeMember');
