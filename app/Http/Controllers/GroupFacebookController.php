@@ -70,9 +70,15 @@ class GroupFacebookController extends Controller
 
         session(['fb_connect_group_id' => $group->id]);
 
+        // auth_type=rerequest forces Facebook to show the consent screen
+        // again for every listed scope - without it, an admin who already
+        // authorized this app for a subset of permissions gets silently
+        // re-approved for just that subset when the scope list grows,
+        // with no prompt for the newly added permission at all.
         return Socialite::driver('facebook')
             ->usingGraphVersion(self::GRAPH_VERSION)
             ->setScopes(['pages_show_list', 'pages_manage_posts', 'pages_read_engagement'])
+            ->with(['auth_type' => 'rerequest'])
             ->redirect();
     }
 
