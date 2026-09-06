@@ -27,8 +27,12 @@ class GroupFacebookController extends Controller
 
         session(['fb_connect_group_id' => $group->id]);
 
+        // Facebook Login for Business doesn't accept ad-hoc scopes - the
+        // permissions are defined on a pre-created Configuration instead,
+        // referenced here by its config_id.
         return Socialite::driver('facebook')
-            ->setScopes(['pages_show_list', 'pages_manage_posts', 'pages_read_engagement'])
+            ->setScopes([])
+            ->with(['config_id' => config('services.facebook.config_id')])
             ->redirect();
     }
 
