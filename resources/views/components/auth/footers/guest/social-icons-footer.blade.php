@@ -31,9 +31,8 @@
       <div class="row">
         <div class="col-8 mx-auto text-center mt-1">
           <p class="mb-0 text-secondary">
-            Copyright © <script>
-              document.write(new Date().getFullYear())
-            </script> Divers Hub.
+            Copyright © {{ date('Y') }} Divers Hub.
+            <span class="mx-1 opacity-5">|</span> <x-version />
           </p>
         </div>
       </div>

@@ -1,0 +1,83 @@
+/*
+ * Divers Hub design tokens and small shared components.
+ *
+ * Loaded after material-dashboard.css by the page template. Chunk 1 of the
+ * redesign only ADDS this file and uses the .chip classes on the sites pages.
+ * The variables are the palette and scale the new shell (chunk 2) will use,
+ * published early so the direction can be reviewed before it lands
+ * everywhere. Nothing in here restyles existing Material Dashboard markup.
+ *
+ * Naming: --dh-* so nothing collides with Bootstrap or Material variables.
+ */
+
+:root {
+  /* Water palette: deep to shallow. */
+  --dh-ink:        #0b2a3a;   /* text, primary buttons */
+  --dh-deep:       #0e4d68;   /* headers, active states */
+  --dh-sea:        #0e7c9e;   /* links, accents */
+  --dh-shallow:    #5fb4cf;   /* highlights */
+  --dh-foam:       #e3f1f6;   /* soft fills, selected chip background */
+  --dh-sand:       #fbfbf9;   /* page background */
+  --dh-paper:      #ffffff;   /* cards */
+  --dh-line:       #d8dee3;   /* borders */
+  --dh-muted:      #5a6b78;   /* secondary text */
+
+  /* Conditions: good / average / poor. Used by sea state pills later. */
+  --dh-good:       #2e7d4f;
+  --dh-good-bg:    #eaf5ee;
+  --dh-avg:        #9c7c15;
+  --dh-avg-bg:     #fbf6e4;
+  --dh-poor:       #b0532a;
+  --dh-poor-bg:    #f8e9e2;
+
+  /* Type and spacing scale. */
+  --dh-font:       "Roboto", -apple-system, "Segoe UI", Arial, sans-serif;
+  --dh-radius:     10px;
+  --dh-radius-pill: 999px;
+  --dh-space-1:    4px;
+  --dh-space-2:    8px;
+  --dh-space-3:    12px;
+  --dh-space-4:    16px;
+  --dh-space-6:    24px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Filter chips. Plain anchors so they work without JavaScript.        */
+/* ------------------------------------------------------------------ */
+.chip {
+  display: inline-block;
+  padding: 4px 12px;
+  border: 1px solid var(--dh-line);
+  border-radius: var(--dh-radius-pill);
+  background: var(--dh-paper);
+  color: var(--dh-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color .12s ease, border-color .12s ease, color .12s ease;
+}
+.chip:hover,
+.chip:focus-visible {
+  border-color: var(--dh-sea);
+  color: var(--dh-deep);
+  background: var(--dh-foam);
+  outline: none;
+}
+.chip.chip-on,
+.chip[aria-current="true"] {
+  background: var(--dh-ink);
+  border-color: var(--dh-ink);
+  color: #fff;
+}
+
+/* Legend row under the sites tables. */
+.dive-level-legend img { vertical-align: middle; }
+
+/* Version stamp in footers. Quiet by design (finding F-05). */
+.divehub-version {
+  font-size: 0.75rem;
+  color: var(--dh-muted);
+  opacity: .8;
+}

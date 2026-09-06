@@ -4,10 +4,8 @@
       <div class="row align-items-center justify-content-lg-between">
         <div class="col-12 col-md-6 my-auto">
           <div class="{{ $textColor}} copyright text-center text-sm text-lg-start">
-            © <script>
-              document.write(new Date().getFullYear())
-            </script>,
-            Divers Hub
+            © {{ date('Y') }} Divers Hub
+            <span class="mx-1 opacity-5">|</span> <x-version />
           </div>
         </div>
         <div class="col-12 col-md-6">

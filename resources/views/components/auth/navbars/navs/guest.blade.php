@@ -5,8 +5,7 @@
     <img src="/assets/img/logos/logo_horizontal.png" alt="Logo Divers Hub" class="img-fluid mt-2" style="height:50px;"> 
         {{--<span class="text-right">v4.0.2 (9/3/2024)</span>--}}
     </a>
-    <span class="text-right text-white text-sm fw-bold" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); padding: 20px;">
-        v9.15.1 (09/06/2026)</span>
+    {{-- Release stamp removed from the header; footers show <x-version /> instead (F-05). --}}
     {{--<button class="navbar-toggler shadow-none ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navigation"
         aria-controls="navigation" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon mt-2">

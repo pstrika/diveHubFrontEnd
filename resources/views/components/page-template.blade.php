@@ -73,6 +73,8 @@
   <link href="{{ asset('assets') }}/css/nucleo-svg.css" rel="stylesheet" />
   <!-- CSS Files -->
   <link id="pagestyle" href="{{ asset('assets') }}/css/material-dashboard.css?v=3.0.1" rel="stylesheet" />
+  <!-- Divers Hub tokens and shared components (chips, legend). Versioned by release so caches refresh. -->
+  <link href="{{ asset('assets') }}/css/divershub.css?v={{ config('divehub.version') }}" rel="stylesheet" />
 </head>
 <body class="{{ $bodyClass }}">
 
