@@ -216,5 +216,9 @@ class GroupFacebookController extends Controller
         $group->fb_connected_by = auth()->user()->id;
         $group->fb_connected_at = now();
         $group->save();
+
+        // Otherwise switching Pages can show the previous Page's cached
+        // feed for up to 5 minutes.
+        Cache::forget('group_fb_feed_' . $group->id);
     }
 }
