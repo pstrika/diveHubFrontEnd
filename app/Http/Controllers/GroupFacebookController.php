@@ -14,11 +14,15 @@ class GroupFacebookController extends Controller
     public const GRAPH_VERSION = 'v21.0';
 
     /**
-     * The group page's last few Page posts (with a handful of top comments
-     * each), for the read-only feed card. Cached briefly since this loads
-     * on every page view and the Graph API is comparatively slow - a
-     * failure here just means the feed card doesn't render, it never
-     * blocks the page.
+     * The group page's last few Page posts, for the read-only feed card.
+     * Cached briefly since this loads on every page view and the Graph API
+     * is comparatively slow - a failure here just means the feed card
+     * doesn't render, it never blocks the page.
+     *
+     * Deliberately omits like counts and comments: those need
+     * pages_read_engagement / pages_read_user_content at Advanced Access,
+     * which requires Meta App Review - plain post fields (message, image,
+     * date, link) work fine at Standard Access for the app's own admin.
      */
     public function getRecentPosts(Group $group): array
     {
@@ -29,7 +33,7 @@ class GroupFacebookController extends Controller
         return Cache::remember('group_fb_feed_' . $group->id, now()->addMinutes(5), function () use ($group) {
             try {
                 $response = Http::get('https://graph.facebook.com/' . self::GRAPH_VERSION . '/' . $group->fb_page_id . '/posts', [
-                    'fields' => 'message,created_time,permalink_url,full_picture,likes.summary(true),comments.limit(3).summary(true){message,from,created_time}',
+                    'fields' => 'message,created_time,permalink_url,full_picture',
                     'limit' => 5,
                     'access_token' => $group->fb_page_access_token,
                 ]);

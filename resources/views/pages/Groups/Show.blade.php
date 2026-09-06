@@ -403,16 +403,7 @@
                                                     @endif
                                                     <p class="text-xs text-secondary mb-1">
                                                         {{ \Carbon\Carbon::parse($post['created_time'])->diffForHumans() }}
-                                                        @if(!empty($post['likes']['summary']['total_count']))
-                                                            · <i class="material-icons text-xs align-middle">thumb_up</i> {{ $post['likes']['summary']['total_count'] }}
-                                                        @endif
-                                                        @if(!empty($post['comments']['summary']['total_count']))
-                                                            · {{ $post['comments']['summary']['total_count'] }} comments
-                                                        @endif
                                                     </p>
-                                                    @foreach($post['comments']['data'] ?? [] as $comment)
-                                                        <p class="text-xs text-secondary mb-0"><b>{{ $comment['from']['name'] ?? 'Someone' }}:</b> {{ \Illuminate\Support\Str::limit($comment['message'] ?? '', 60) }}</p>
-                                                    @endforeach
                                                     @if(!empty($post['permalink_url']))
                                                         <a href="{{ $post['permalink_url'] }}" target="_blank" rel="noopener" class="text-xs">View on Facebook</a>
                                                     @endif

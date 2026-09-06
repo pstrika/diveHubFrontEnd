@@ -17,7 +17,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('overview') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 9.12.1 (09/06/26)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 9.13.0 (09/06/26)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
