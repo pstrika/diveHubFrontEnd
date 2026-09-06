@@ -6,18 +6,24 @@ use App\Models\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Laravel\Socialite\Facades\Socialite;
 
 class GroupFacebookController extends Controller
 {
     public const GRAPH_VERSION = 'v21.0';
 
     /**
-     * Renders the connect page. The Meta App's Configuration is a "Facebook
-     * Login for Business" config_id, which Meta only supports through the
-     * JS SDK's FB.login() (a client-side popup) - a plain server-side
-     * redirect to /dialog/oauth is rejected outright. So this just shows
-     * the page that runs FB.login() and posts the resulting token back to
-     * token() below.
+     * Kicks off the OAuth flow. The group id has to survive the round-trip
+     * via session, not the URL, since Meta's redirect URI is a fixed string
+     * registered on the Meta App - it can't carry a per-group path segment.
+     *
+     * Uses the classic scope-based dialog rather than a Facebook Login for
+     * Business config_id: the config_id/Business Login mechanism proved
+     * broken for this app (generic "isn't available" error regardless of
+     * setup), while a plain scope grant for these same permissions was
+     * confirmed working via Graph API Explorer. Only scopes actually added
+     * to the app's Use Case are requested - anything else gets rejected
+     * with "Invalid Scopes".
      */
     public function connect($groupSlug)
     {
@@ -27,25 +33,32 @@ class GroupFacebookController extends Controller
             abort(403);
         }
 
-        return view('pages.Groups.FacebookConnect', ['group' => $group]);
+        session(['fb_connect_group_id' => $group->id]);
+
+        return Socialite::driver('facebook')
+            ->usingGraphVersion(self::GRAPH_VERSION)
+            ->setScopes(['pages_show_list', 'pages_manage_posts'])
+            ->redirect();
     }
 
-    /**
-     * Receives the short-lived user access token FB.login() produced
-     * client-side, exchanges it for a long-lived one, and lists/saves the
-     * admin's Facebook Pages.
-     */
-    public function token(Request $request, $groupSlug)
+    public function callback()
     {
-        $group = Group::where('slug', $groupSlug)->firstOrFail();
+        $groupId = session('fb_connect_group_id');
+        session()->forget('fb_connect_group_id');
+
+        if (!$groupId) {
+            return redirect()->route('MyGroups')->with('msg', 'Facebook connection expired - please try again.');
+        }
+
+        $group = Group::findOrFail($groupId);
 
         if (!$group->isAdmin(auth()->user()->id)) {
             abort(403);
         }
 
-        $request->validate(['access_token' => 'required|string']);
-
         try {
+            $fbUser = Socialite::driver('facebook')->usingGraphVersion(self::GRAPH_VERSION)->user();
+
             // Exchange the short-lived user token (~2 hours) for a long-lived
             // one (~60 days) - the Page token we derive from it inherits that
             // longevity and, per Meta, effectively never expires afterward.
@@ -53,10 +66,10 @@ class GroupFacebookController extends Controller
                 'grant_type' => 'fb_exchange_token',
                 'client_id' => config('services.facebook.client_id'),
                 'client_secret' => config('services.facebook.client_secret'),
-                'fb_exchange_token' => $request->input('access_token'),
+                'fb_exchange_token' => $fbUser->token,
             ])->json();
 
-            $longLivedUserToken = $exchange['access_token'] ?? $request->input('access_token');
+            $longLivedUserToken = $exchange['access_token'] ?? $fbUser->token;
 
             $pagesResponse = Http::get('https://graph.facebook.com/' . self::GRAPH_VERSION . '/me/accounts', [
                 'access_token' => $longLivedUserToken,
