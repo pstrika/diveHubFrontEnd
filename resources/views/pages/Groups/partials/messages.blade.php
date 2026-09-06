@@ -17,9 +17,7 @@
             @if($message->photos->isNotEmpty())
                 <div class="d-flex flex-wrap mt-1">
                     @foreach($message->photos as $photo)
-                        <a href="{{ asset('assets/' . $photo->file) }}" target="_blank">
-                            <img src="{{ asset('assets/' . $photo->file) }}" style="width: 120px; height: 120px; object-fit: cover;" class="border-radius-md me-1 mb-1">
-                        </a>
+                        <img src="{{ asset('assets/' . $photo->file) }}" style="width: 120px; height: 120px; object-fit: cover; cursor: pointer;" class="border-radius-md me-1 mb-1" onclick="showChatPhoto('{{ asset('assets/' . $photo->file) }}')">
                     @endforeach
                 </div>
             @endif

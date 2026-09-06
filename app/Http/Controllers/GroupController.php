@@ -328,14 +328,23 @@ class GroupController extends Controller
             mkdir($fullDir, 0755, true);
         }
 
-        \Intervention\Image\Facades\Image::make($sourcePath)
-            ->orientate()
-            ->resize($maxWidths[$kind], null, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            })
-            ->encode('jpg', 85)
-            ->save($fullDir . '/' . $filename);
+        try {
+            \Intervention\Image\Facades\Image::make($sourcePath)
+                ->orientate()
+                ->resize($maxWidths[$kind], null, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                })
+                ->encode('jpg', 85)
+                ->save($fullDir . '/' . $filename);
+        } catch (\Intervention\Image\Exception\NotReadableException $e) {
+            // Most likely an unconverted HEIC/HEIF file (client-side
+            // conversion failed) - our image library can't decode it.
+            return response()->json([
+                'message' => 'error',
+                'error' => 'That image format isn\'t supported. Please try converting it to JPEG first.',
+            ], 422);
+        }
 
         $relativePath = $dir . '/' . $filename;
 

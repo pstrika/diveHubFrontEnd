@@ -275,6 +275,16 @@
         </div>
     </div>
 
+    {{--chat photo viewer modal--}}
+    <div class="modal fade" id="modalChatPhotoViewer" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content bg-transparent border-0">
+                <button type="button" class="btn-close btn-close-white align-self-end mb-1" data-bs-dismiss="modal" aria-label="Close"></button>
+                <img id="chatPhotoViewerImg" src="" class="img-fluid border-radius-lg mx-auto" style="max-height: 80vh;">
+            </div>
+        </div>
+    </div>
+
     {{--dive details / attendees modal--}}
     <div class="modal fade" id="modalDiveDetails" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
@@ -619,6 +629,43 @@
     <script src="{{ asset('assets') }}/js/plugins/fullcalendar.min.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     <script src="{{ asset('assets') }}/js/plugins/dropzone.min.js"></script>
+    <script src="{{ asset('assets') }}/js/plugins/heic2any.min.js"></script>
+    <script>
+        // iPhones commonly upload .heic/.heif photos, which no browser can
+        // decode into a <canvas> for Dropzone's built-in resize step - so we
+        // convert to JPEG first (via heic2any, a WASM HEIC decoder), then run
+        // the same resize Dropzone would have done for a normal image.
+        function dropzoneTransformFile(file, done) {
+            var isHeic = /\.(heic|heif)$/i.test(file.name) || file.type === 'image/heic' || file.type === 'image/heif';
+            var dz = this;
+
+            function resizeThenDone(f) {
+                if (dz.options.resizeWidth || dz.options.resizeHeight) {
+                    dz.resizeImage(f, dz.options.resizeWidth, dz.options.resizeHeight, dz.options.resizeMethod, done);
+                } else {
+                    done(f);
+                }
+            }
+
+            if (isHeic && typeof heic2any === 'function') {
+                heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 })
+                    .then(function (convertedBlob) {
+                        var convertedFile = new File(
+                            [convertedBlob],
+                            file.name.replace(/\.(heic|heif)$/i, '.jpg'),
+                            { type: 'image/jpeg' }
+                        );
+                        resizeThenDone(convertedFile);
+                    })
+                    .catch(function (err) {
+                        console.error('HEIC conversion failed, uploading original file', err);
+                        done(file);
+                    });
+            } else {
+                resizeThenDone(file);
+            }
+        }
+    </script>
     <script src="{{ asset('assets') }}/js/plugins/choices.min.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -635,12 +682,13 @@
             autoProcessQueue: false,
             maxFiles: 1,
             maxFilesize: 40,
-            acceptedFiles: '.jpeg,.jpg,.png,.webp',
+            acceptedFiles: '.jpeg,.jpg,.png,.webp,.heic,.heif',
             resizeWidth: 1600,
             chunking: true,
             chunkSize: 2000000,
             paramName: 'img_file',
             addRemoveLinks: true,
+            transformFile: dropzoneTransformFile,
             headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
             sending: function (file, xhr, formData) { formData.append('kind', 'banner'); },
         });
@@ -701,13 +749,14 @@
             autoProcessQueue: true,
             maxFiles: 5,
             maxFilesize: 40,
-            acceptedFiles: '.jpeg,.jpg,.png,.webp',
+            acceptedFiles: '.jpeg,.jpg,.png,.webp,.heic,.heif',
             resizeWidth: 1200,
             chunking: true,
             chunkSize: 2000000,
             parallelUploads: 1,
             paramName: 'img_file',
             addRemoveLinks: true,
+            transformFile: dropzoneTransformFile,
             headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
             sending: function (file, xhr, formData) { formData.append('kind', 'chat'); },
             init: function () {
@@ -774,6 +823,11 @@
         }
 
         setInterval(refreshChatMessages, 5000);
+
+        function showChatPhoto(url) {
+            document.getElementById('chatPhotoViewerImg').src = url;
+            new bootstrap.Modal(document.getElementById('modalChatPhotoViewer')).show();
+        }
 
         function submitChatMessage() {
             var form = document.getElementById('groupChatForm');
