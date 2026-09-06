@@ -541,4 +541,9 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::get('Groups/{group}/messages/poll', 'App\Http\Controllers\GroupMessageController@poll')->name('Groups.messages.poll');
 	Route::post('Groups/{group}/settings', 'App\Http\Controllers\GroupController@updateSettings')->name('Groups.updateSettings');
 	Route::get('Groups/{group}/sites/search', 'App\Http\Controllers\GroupController@searchSites')->name('Groups.sites.search');
+
+	Route::get('Groups/{group}/facebook/connect', 'App\Http\Controllers\GroupFacebookController@connect')->name('Groups.facebook.connect');
+	Route::get('login/facebook/callback', 'App\Http\Controllers\GroupFacebookController@callback')->name('Groups.facebook.callback');
+	Route::post('Groups/{group}/facebook/pick-page', 'App\Http\Controllers\GroupFacebookController@pickPage')->name('Groups.facebook.pickPage');
+	Route::post('Groups/{group}/facebook/disconnect', 'App\Http\Controllers\GroupFacebookController@disconnect')->name('Groups.facebook.disconnect');
 });

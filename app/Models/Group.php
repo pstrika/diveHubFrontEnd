@@ -23,12 +23,19 @@ class Group extends Model
         'calendar_token',
         'reminders_enabled',
         'allow_members_add_dives',
+        'fb_page_id',
+        'fb_page_name',
+        'fb_page_access_token',
+        'fb_connected_by',
+        'fb_connected_at',
         'created_by',
     ];
 
     protected $casts = [
         'reminders_enabled' => 'boolean',
         'allow_members_add_dives' => 'boolean',
+        'fb_page_access_token' => 'encrypted',
+        'fb_connected_at' => 'datetime',
     ];
 
     /**
@@ -39,6 +46,11 @@ class Group extends Model
     public function canAddDives($userId): bool
     {
         return $this->isAdmin($userId) || $this->allow_members_add_dives;
+    }
+
+    public function isFacebookConnected(): bool
+    {
+        return !empty($this->fb_page_id) && !empty($this->fb_page_access_token);
     }
 
     public function favoriteOperators(): BelongsToMany

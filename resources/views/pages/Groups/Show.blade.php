@@ -102,6 +102,25 @@
                         <button type="submit" class="btn bg-gradient-info">Save Settings</button>
                     </div>
                 </form>
+
+                <div class="modal-body border-top pt-3">
+                    <label class="form-label mb-0">Facebook</label>
+                    @if($group->isFacebookConnected())
+                        <p class="text-sm mb-2">
+                            <i class="material-icons text-success text-sm align-middle">check_circle</i>
+                            Connected to <b>{{ $group->fb_page_name }}</b>. New dives are posted there automatically.
+                        </p>
+                        <form method="POST" action="{{ route('Groups.facebook.disconnect', ['group' => $group->slug]) }}" onsubmit="return confirm('Disconnect this Facebook Page? New dives will stop posting there.');">
+                            @csrf
+                            <button type="submit" class="btn btn-sm bg-gradient-secondary mb-0">Disconnect</button>
+                        </form>
+                    @else
+                        <p class="text-xs text-secondary mt-n1">Connect a Facebook Page to automatically post new dives there.</p>
+                        <a href="{{ route('Groups.facebook.connect', ['group' => $group->slug]) }}" class="btn btn-sm bg-gradient-info mb-0">
+                            <i class="material-icons text-sm align-middle">link</i> Connect a Facebook Page
+                        </a>
+                    @endif
+                </div>
             </div>
         </div>
     </div>

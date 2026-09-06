@@ -8,6 +8,8 @@ use App\Models\GroupDive;
 use App\Models\GroupDiveRsvp;
 use App\Models\Trip;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class GroupDiveController extends Controller
 {
@@ -50,6 +52,7 @@ class GroupDiveController extends Controller
 
         // The person who added the dive is automatically going.
         $this->addRsvp($dive, auth()->user()->id);
+        $this->postDiveToFacebook($group, $dive);
 
         return redirect()->route('Groups.show', ['group' => $group->slug])
             ->with('msg', 'Dive added to the group calendar!');
@@ -96,6 +99,7 @@ class GroupDiveController extends Controller
         ]);
 
         $this->addRsvp($dive, auth()->user()->id);
+        $this->postDiveToFacebook($group, $dive);
 
         return redirect()->route('Groups.show', ['group' => $group->slug])
             ->with('msg', 'Custom dive added to the group calendar!');
@@ -170,6 +174,35 @@ class GroupDiveController extends Controller
                 'tripName' => $dive->tripName,
                 'booked' => false,
             ]);
+        }
+    }
+
+    /**
+     * Best-effort announcement to the group's linked Facebook Page, if any.
+     * Must never block adding the dive - a broken/revoked Page token or a
+     * Graph API hiccup just gets logged.
+     */
+    private function postDiveToFacebook(Group $group, GroupDive $dive)
+    {
+        if (!$group->isFacebookConnected()) {
+            return;
+        }
+
+        try {
+            $when = \Carbon\Carbon::parse($dive->date)->format('l, F j') . ($dive->time ? ' at ' . $dive->time : '');
+            $message = "New dive added to \"{$group->name}\": {$dive->tripName}\n{$when}\n\n"
+                . route('Groups.show', ['group' => $group->slug]);
+
+            $response = Http::post('https://graph.facebook.com/v21.0/' . $group->fb_page_id . '/feed', [
+                'message' => $message,
+                'access_token' => $group->fb_page_access_token,
+            ]);
+
+            if ($response->failed()) {
+                Log::error('Facebook post failed for group ' . $group->id . ': ' . $response->body());
+            }
+        } catch (\Throwable $e) {
+            Log::error('Facebook post exception for group ' . $group->id . ': ' . $e->getMessage());
         }
     }
 
