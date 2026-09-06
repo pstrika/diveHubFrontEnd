@@ -130,6 +130,21 @@ class GroupFacebookController extends Controller
             ->with('msg', 'Connected to Facebook Page "' . $chosen['name'] . '"!');
     }
 
+    public function toggleAutoPost(Request $request, $groupSlug)
+    {
+        $group = Group::where('slug', $groupSlug)->firstOrFail();
+
+        if (!$group->isAdmin(auth()->user()->id)) {
+            abort(403);
+        }
+
+        $group->fb_auto_post = $request->boolean('fb_auto_post');
+        $group->save();
+
+        return redirect()->route('Groups.show', ['group' => $group->slug])
+            ->with('msg', $group->fb_auto_post ? 'Auto-posting new dives to Facebook enabled.' : 'Auto-posting new dives to Facebook disabled.');
+    }
+
     public function disconnect($groupSlug)
     {
         $group = Group::where('slug', $groupSlug)->firstOrFail();

@@ -187,7 +187,7 @@ class GroupDiveController extends Controller
      */
     private function postDiveToFacebook(Group $group, GroupDive $dive)
     {
-        if (!$group->isFacebookConnected()) {
+        if (!$group->isFacebookConnected() || !$group->fb_auto_post) {
             return;
         }
 

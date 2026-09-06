@@ -28,6 +28,7 @@ class Group extends Model
         'fb_page_access_token',
         'fb_connected_by',
         'fb_connected_at',
+        'fb_auto_post',
         'created_by',
     ];
 
@@ -36,6 +37,7 @@ class Group extends Model
         'allow_members_add_dives' => 'boolean',
         'fb_page_access_token' => 'encrypted',
         'fb_connected_at' => 'datetime',
+        'fb_auto_post' => 'boolean',
     ];
 
     /**

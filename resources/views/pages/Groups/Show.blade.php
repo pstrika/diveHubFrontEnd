@@ -108,8 +108,13 @@
                     @if($group->isFacebookConnected())
                         <p class="text-sm mb-2">
                             <i class="material-icons text-success text-sm align-middle">check_circle</i>
-                            Connected to <b>{{ $group->fb_page_name }}</b>. New dives are posted there automatically.
+                            Connected to <b>{{ $group->fb_page_name }}</b>.
                         </p>
+                        <form method="POST" action="{{ route('Groups.facebook.toggleAutoPost', ['group' => $group->slug]) }}" class="form-check form-switch mb-2">
+                            @csrf
+                            <input class="form-check-input" type="checkbox" name="fb_auto_post" value="1" id="fbAutoPostInput" {{ $group->fb_auto_post ? 'checked' : '' }} onchange="this.form.submit()">
+                            <label class="form-check-label" for="fbAutoPostInput">Automatically post new dives to Facebook</label>
+                        </form>
                         <form method="POST" action="{{ route('Groups.facebook.disconnect', ['group' => $group->slug]) }}" onsubmit="return confirm('Disconnect this Facebook Page? New dives will stop posting there.');">
                             @csrf
                             <button type="submit" class="btn btn-sm bg-gradient-secondary mb-0">Disconnect</button>
