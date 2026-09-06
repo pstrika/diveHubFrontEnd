@@ -23,8 +23,8 @@
                                 @csrf
                                 <div class="list-group mb-3">
                                     @foreach($pages as $page)
-                                        <label class="list-group-item d-flex align-items-center">
-                                            <input class="form-check-input me-2" type="radio" name="page_id" value="{{ $page['id'] }}" {{ $loop->first ? 'checked' : '' }}>
+                                        <label class="list-group-item d-flex align-items-center fb-page-option {{ $loop->first ? 'fb-page-option-selected' : '' }}">
+                                            <input class="form-check-input me-2 fb-page-radio" type="radio" name="page_id" value="{{ $page['id'] }}" {{ $loop->first ? 'checked' : '' }} onchange="document.querySelectorAll('.fb-page-option').forEach(function(el){el.classList.remove('fb-page-option-selected');}); this.closest('.fb-page-option').classList.add('fb-page-option-selected');">
                                             {{ $page['name'] }}
                                         </label>
                                     @endforeach
@@ -32,6 +32,12 @@
                                 <button type="submit" class="btn bg-gradient-info">Connect this Page</button>
                                 <a href="{{ route('Groups.show', ['group' => $group->slug]) }}" class="btn bg-gradient-secondary">Cancel</a>
                             </form>
+
+                            <style>
+                                .fb-page-radio { accent-color: #1a73e8; }
+                                .fb-page-option { cursor: pointer; border-color: #dee2e6; transition: background-color .15s ease, color .15s ease; }
+                                .fb-page-option-selected { background-color: #1a73e8; color: #fff; border-color: #1a73e8; }
+                            </style>
                         </div>
                     </div>
                 </div>

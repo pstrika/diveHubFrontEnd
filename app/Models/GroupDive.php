@@ -25,6 +25,7 @@ class GroupDive extends Model
         'siteId',
         'departingFrom',
         'is_custom',
+        'fb_post_id',
     ];
 
     protected $casts = [

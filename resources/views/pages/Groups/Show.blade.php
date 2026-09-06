@@ -115,10 +115,7 @@
                             <button type="submit" class="btn btn-sm bg-gradient-secondary mb-0">Disconnect</button>
                         </form>
                     @else
-                        <p class="text-xs text-secondary mt-n1">Connect a Facebook Page to automatically post new dives there.</p>
-                        <a href="{{ route('Groups.facebook.connect', ['group' => $group->slug]) }}" class="btn btn-sm bg-gradient-info mb-0">
-                            <i class="material-icons text-sm align-middle">link</i> Connect a Facebook Page
-                        </a>
+                        <p class="text-xs text-secondary mt-n1">Use the "Connect FB Page" button at the top of this page to link a Facebook Page.</p>
                     @endif
                 </div>
             </div>
@@ -348,9 +345,15 @@
                     </div>
                     @if($isAdmin)
                     <div style="float: right;" class="mx-3">
-                        <button type="button" class="btn bg-gradient-info" data-bs-toggle="modal" data-bs-target="#modalInvite">
-                            <i class="material-icons text-sm align-middle me-1">person_add</i> Invite
-                        </button>
+                        @if($group->isFacebookConnected())
+                            <span class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalGroupSettings">
+                                <i class="fa-brands fa-facebook align-middle me-1"></i> Connected: {{ $group->fb_page_name }}
+                            </span>
+                        @else
+                            <a href="{{ route('Groups.facebook.connect', ['group' => $group->slug]) }}" class="btn bg-gradient-info">
+                                <i class="fa-brands fa-facebook align-middle me-1"></i> Connect FB Page
+                            </a>
+                        @endif
                         <button type="button" class="btn bg-gradient-secondary" data-bs-toggle="modal" data-bs-target="#modalGroupSettings">
                             <i class="material-icons text-sm align-middle me-1">settings</i> Settings
                         </button>
@@ -373,8 +376,13 @@
                 <div class="col-md-6">
                     <div class="card mt-3 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info py-3 pe-1 border-radius-xl">
-                                <h2 class="card-title text-white mx-4">Members</h2>
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1 d-flex justify-content-between align-items-center">
+                                <h2 class="card-title text-white mx-4 mb-0">Members</h2>
+                                @if($isAdmin)
+                                    <button type="button" class="btn btn-sm bg-white text-info me-3 mb-0" data-bs-toggle="modal" data-bs-target="#modalInvite">
+                                        <i class="material-icons text-sm align-middle">person_add</i> Invite
+                                    </button>
+                                @endif
                             </div>
                         </div>
                         <div class="card-body p-3" style="max-height: 350px; overflow-y: scroll">
@@ -502,7 +510,7 @@
                                                 @if($operatorName)
                                                     <p class="text-sm text-bold text-info mt-1 mb-2 d-flex align-items-center">
                                                         @if($operatorLogo)
-                                                            <img src="{{ asset('assets') }}{{ $operatorLogo }}" alt="" style="width: 18px; height: 18px; object-fit: contain;" class="me-1">
+                                                            <img src="{{ asset('assets') }}{{ $operatorLogo }}" alt="" style="width: 28px; height: 28px; object-fit: contain;" class="me-1">
                                                         @endif
                                                         @if($operatorId)
                                                             <a href="{{ route('OperatorDetails', ['id' => $operatorId]) }}">{{ $operatorName }}</a>
