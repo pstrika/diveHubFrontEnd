@@ -28,7 +28,7 @@ class GroupFacebookController extends Controller
         session(['fb_connect_group_id' => $group->id]);
 
         return Socialite::driver('facebook')
-            ->scopes(['pages_show_list', 'pages_manage_posts'])
+            ->setScopes(['pages_show_list', 'pages_manage_posts'])
             ->redirect();
     }
 
