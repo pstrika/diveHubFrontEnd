@@ -82,9 +82,15 @@ final class TripBoard
         // Type chips only offer what exists in the current selection. Count
         // each type against every other active filter (region, level, seats),
         // so a diver never taps "Shark" to find the day has none.
-        $typeCounts = array_fill_keys(array_keys(self::TYPE_OPTIONS), 0);
-        $withoutType = $filters;
-        $withoutType['type'] = null;
+        // Region and level chips stay static but show a count; the count for a
+        // chip is computed with that chip's own filter switched off and every
+        // other filter kept, so it reads "how many if I picked this".
+        $typeCounts   = array_fill_keys(array_keys(self::TYPE_OPTIONS), 0);
+        $regionCounts = array_fill_keys(array_keys(Coast::chipOptions()), 0);
+        $levelCounts  = array_fill_keys(array_keys(DiveLevel::all()), 0);
+        $withoutType   = array_merge($filters, ['type' => null]);
+        $withoutRegion = array_merge($filters, ['region' => null]);
+        $withoutLevel  = array_merge($filters, ['level' => null]);
 
         foreach ($trips as $trip) {
             $total++;
@@ -95,6 +101,15 @@ final class TripBoard
                         $typeCounts[$type]++;
                     }
                 }
+            }
+            if (self::passes($card, $withoutRegion)) {
+                $coastKey = Coast::forCode($card['locationCode']);
+                if (isset($regionCounts[$coastKey])) {
+                    $regionCounts[$coastKey]++;
+                }
+            }
+            if (self::passes($card, $withoutLevel) && $card['level'] !== null) {
+                $levelCounts[$card['level']]++;
             }
             if (!self::passes($card, $filters)) {
                 continue;
@@ -132,16 +147,22 @@ final class TripBoard
         $typeOptions = [];
         foreach (self::TYPE_OPTIONS as $type => $label) {
             if ($typeCounts[$type] > 0 || $filters['type'] === $type) {
-                $typeOptions[$type] = $label . ' ' . $typeCounts[$type];
+                $typeOptions[$type] = $label . ' (' . $typeCounts[$type] . ')';
             }
+        }
+        $regionOptions = [];
+        foreach (Coast::chipOptions() as $key => $label) {
+            $regionOptions[$key] = $label . ' (' . $regionCounts[$key] . ')';
         }
 
         return [
-            'groups'      => $ordered,
-            'total'       => $total,
-            'shown'       => $shown,
-            'filters'     => $filters,
-            'typeOptions' => $typeOptions,
+            'groups'        => $ordered,
+            'total'         => $total,
+            'shown'         => $shown,
+            'filters'       => $filters,
+            'typeOptions'   => $typeOptions,
+            'regionOptions' => $regionOptions,
+            'levelCounts'   => $levelCounts,
         ];
     }
 

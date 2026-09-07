@@ -7,10 +7,11 @@
     bookmarkable. The controller reads the parameter and filters the query.
 
     $selected is the currently active level value or null for "All levels".
+    $counts, optional, is level value => number of matches; shown in parentheses.
 
-    Usage: <x-dive-level.filter-chips :selected="$filters['level']" />
+    Usage: <x-dive-level.filter-chips :selected="$filters['level']" :counts="$levelCounts" />
 --}}
-@props(['selected' => null])
+@props(['selected' => null, 'counts' => null])
 
 @php
     // Build each chip's URL from the current request so other filters survive.
@@ -36,6 +37,6 @@
         <a href="{{ $chipUrl($lvl['value']) }}"
            class="chip {{ $on ? 'chip-on' : '' }}"
            title="{{ $lvl['name'] }}, max {{ \App\Support\DiveLevel::depthLabel($lvl['value']) }}"
-           @if($on) aria-current="true" @endif>{{ $lvl['short'] }}</a>
+           @if($on) aria-current="true" @endif>{{ $lvl['short'] }}@if(is_array($counts)) ({{ $counts[$lvl['value']] ?? 0 }})@endif</a>
     @endforeach
 </nav>

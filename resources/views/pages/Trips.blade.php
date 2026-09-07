@@ -36,8 +36,9 @@
 
             {{-- Filter chips (W2 note 2). Themed calendars became these type chips. --}}
             <div class="dh-filters">
-                <x-query-chips param="region" :options="\App\Support\Coast::chipOptions()" :selected="$board['filters']['region']" all="All regions" label="Region" />
-                <x-dive-level.filter-chips :selected="$board['filters']['level']" />
+                {{-- Region and level chips are always shown, with the count each would give. --}}
+                <x-query-chips param="region" :options="$board['regionOptions']" :selected="$board['filters']['region']" all="All regions" label="Region" />
+                <x-dive-level.filter-chips :selected="$board['filters']['level']" :counts="$board['levelCounts']" />
                 {{-- Only the types present in the current selection, each with its count. --}}
                 @if(count($board['typeOptions']) > 1 || $board['filters']['type'])
                     <x-query-chips param="type" :options="$board['typeOptions']" :selected="$board['filters']['type']" all="All trips" label="Type" />
