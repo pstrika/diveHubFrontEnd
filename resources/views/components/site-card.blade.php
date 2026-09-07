@@ -30,7 +30,7 @@
         {{-- One row: level badge (icon plus name), depth, rating. Own class name; .dh-site-facts is the detail page header. --}}
         <span class="dh-site-card-facts">
             @if($levelInfo)
-                <span class="dh-site-level" title="{{ $levelInfo['name'] }}"><x-dive-level.icon :level="$site->level" height="22" />{{ $levelInfo['name'] }}</span>
+                <span class="dh-site-level" title="{{ $levelInfo['name'] }}"><x-dive-level.icon :level="$site->level" height="22" />{{ $levelInfo['code'] }}</span>
             @endif
             @if($site->maxDepth)<span class="dh-site-fact">{{ $site->maxDepth }} ft</span>@endif
             @if($site->rate)<span class="dh-site-fact dh-site-rate" title="{{ $site->votes }} diver ratings">★ {{ number_format($site->rate, 1) }}</span>@endif

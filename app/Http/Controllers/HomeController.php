@@ -84,7 +84,8 @@ class HomeController extends Controller
         $photos = Photo::whereIn('siteId', $featured->pluck('id'))->get()->groupBy('siteId');
         foreach ($featured as $site) {
             $photo = $photos->get($site->id)?->first();
-            $site->photoUrl = $photo ? asset('assets') . '/img/sites/' . $photo->file : null;
+            // The site card component picks the web sized copy from this filename (SitePhoto::thumb).
+            $site->photoFile = $photo?->file;
         }
 
         $SEO = [

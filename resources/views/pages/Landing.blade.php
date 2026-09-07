@@ -64,24 +64,7 @@
                 </div>
                 <div class="dh-site-grid">
                     @foreach($featured as $site)
-                        @php
-                            $fallback = strtolower($site->type) === 'wreck' ? 'site_wreck.webp' : 'dive-site.webp';
-                            $img = $site->photoUrl ?? asset('assets') . '/img/illustrations/' . $fallback;
-                        @endphp
-                        <a class="dh-site-card" href="{{ route('SiteDetails') }}/{{ $site->slug ?? $site->id }}">
-                            <span class="dh-site-img" style="background-image:url('{{ $img }}')">
-                                <span class="chip chip-static dh-site-type">{{ ucfirst($site->type) }}</span>
-                            </span>
-                            <span class="dh-site-body">
-                                <span class="dh-site-name">{{ $site->name }}</span>
-                                <span class="dh-site-facts">
-                                    <x-dive-level.icon :level="$site->level" height="18" />
-                                    <span class="chip chip-static">{{ \App\Support\DiveLevel::code($site->level) }}</span>
-                                    @if($site->maxDepth)<span class="chip chip-static">{{ $site->maxDepth }} ft</span>@endif
-                                    @if($site->rate)<span class="chip chip-static" title="Diver rating">★ {{ number_format($site->rate, 1) }}</span>@endif
-                                </span>
-                            </span>
-                        </a>
+                        <x-site-card :site="$site" />
                     @endforeach
                 </div>
             </section>

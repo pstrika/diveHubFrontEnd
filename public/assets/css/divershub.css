@@ -316,8 +316,8 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-site-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 6px; }
 .dh-site-name { font-weight: 700; line-height: 1.25; }
 .dh-site-card-facts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 2px; }
-.dh-site-level { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; font-weight: 700; color: var(--dh-deep); }
-.dh-site-level img { width: 22px; height: 22px; }
+.dh-site-level { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; font-weight: 700; color: var(--dh-deep); background: var(--dh-foam); border-radius: var(--dh-radius-pill); padding: 2px 10px 2px 4px; }
+.dh-site-level img { width: 22px; height: 22px; display: block; }
 .dh-site-fact { font-size: .85rem; font-weight: 600; color: var(--dh-muted); }
 .dh-site-fact + .dh-site-fact::before, .dh-site-level + .dh-site-fact::before { content: "·"; margin-right: 8px; color: var(--dh-line); }
 .dh-site-rate { color: var(--dh-ink); }
