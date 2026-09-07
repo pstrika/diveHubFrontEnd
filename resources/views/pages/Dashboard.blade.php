@@ -109,9 +109,10 @@
                         <div class="card-body p-3">
                             <table>
                                 <tr></td>
-                                    <div class="d-flex align-items-center gap-3">
+                                    {{-- flex-wrap and min-width so a long operator name plus the logo cannot push past the card on phones --}}
+                                    <div class="d-flex flex-wrap align-items-center gap-3 dh-fav-operator">
                                         <!-- Dropdown -->
-                                        <div class="dropdown">
+                                        <div class="dropdown flex-grow-1" style="min-width: 0;">
                                             <select class="btn bg-info dropdown-toggle text-white" id="filterOperators" data-bs-toggle="dropdown" aria-expanded="false">
                                                 @foreach($favOperators as $favOperator)
                                                     <option value="{{ $favOperator->id }}">{{ $favOperator->operatorName }}</option>

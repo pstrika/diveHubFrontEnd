@@ -499,3 +499,9 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-guest-note { display: flex; gap: var(--dh-space-4); align-items: flex-start; }
 .dh-guest-note > .material-icons-round { font-size: 40px; color: var(--dh-sea); }
 .dh-guest-note .dh-btn { margin-right: 6px; }
+
+/* Dashboard: favorite operator picker. The select shrinks to the card, the logo never overflows. */
+.dh-fav-operator { max-width: 100%; }
+.dh-fav-operator #filterOperators { max-width: 100%; white-space: normal; text-overflow: ellipsis; overflow: hidden; }
+.dh-fav-operator #operatorLogo { max-width: 120px; height: 45px; object-fit: contain; }
+.dh-shell .card-body table { max-width: 100%; }
