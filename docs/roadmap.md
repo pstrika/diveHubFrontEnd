@@ -118,7 +118,54 @@ site, approved) or the `photos` table needs user, source and approval columns.
 - **Originals folder**: once every photo has copies, decide whether the camera
   originals stay in the web root.
 - **Offline app** (manifest and icons already ship): service worker, cached
-  trip board and saved sites, queued actions. Its own epic.
+  trip board and saved sites, queued actions. Its own epic; the rEvo companion
+  (section 6) is the natural first page to make offline.
+
+## 6. rEvo dive companion: a tool for the boat, offline first
+
+Zach and Pablo both dive rEvo rebreathers, and Zach already uses a single file
+web app for it on every dive: `docs/tools/revo-dive-companion.html` (72 KB, no
+dependencies, no network). Tabs: Home (current dive, recent dives), Dive (plan
+and gases, per dive checklists, finish dive), Scrubbers (unit wide status, log
+time by hand, service, history), Gas (diluent, bailout MOD and END, scrubber
+check, check a mix), Settings (units, gas planning defaults, scrubber limits,
+save and restore as JSON). Everything lives in page memory, so it resets every
+time the tab closes. That is the problem to solve.
+
+**Why Divers Hub.** The app is the natural home for it: an account to persist
+scrubber hours and dive history against, the trip and site already known when
+you are on a boat from the board, and a user base of exactly the divers who
+would use it. Scrubber management is the feature nobody else has and it is
+specific to the rEvo (two canisters, hours per canister, swap order, temp stick
+reading), so start with rEvo and generalize later if there is demand.
+
+**Offline is not optional.** On the boat there is no signal. The tool must
+open, work and save with no network, then sync when back on shore:
+
+- Ship as a page inside Divers Hub under the shell, installable from the
+  manifest we already ship, with a service worker that precaches the page and
+  its assets (this is the first real use of the PWA groundwork).
+- State in IndexedDB on the device: current dive, checklists in progress,
+  scrubber hours, settings. Writes never wait on the network.
+- A small sync layer: when online and signed in, push changes to the account
+  and pull the latest; last write wins per record with a timestamp. A guest can
+  use it fully on one device and pick up an account later without losing data.
+- Pre dive checklist and post dive finish already exist in the prototype; tie
+  "finish dive" to the trip on the calendar so the dive report (roadmap item 3)
+  is prefilled with site, date and operator.
+
+**Schema.** Yes. Tables for rebreather units (user, model, serial, scrubber
+canisters with hours and service dates), companion dives (user, unit, trip
+natural key, plan, gases, checklist results, timings) and a per user settings
+blob. All additive, nothing touches the existing tables.
+
+**Steps.**
+
+1. Port the prototype into a Blade page under the shell with its state moved to
+   IndexedDB (no server yet). Already useful and already offline.
+2. Service worker precache for that page only.
+3. Sign in sync with the new tables.
+4. Later: other rebreathers, sharing a unit's scrubber log between buddies.
 
 ## Suggested order
 
@@ -127,4 +174,5 @@ site, approved) or the `photos` table needs user, source and approval columns.
 2. Dive reports (the content we want most, and the thing notifications ask for).
 3. Notifications by email, then SMS reminders, aligned with Pablo's push work.
 4. Group media to site pages.
-5. Operator coordinates and one search whenever convenient.
+5. rEvo dive companion, offline first (Zach and Pablo use it every dive).
+6. Operator coordinates and one search whenever convenient.
