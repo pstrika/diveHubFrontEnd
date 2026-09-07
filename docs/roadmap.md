@@ -117,7 +117,8 @@ site, approved) or the `photos` table needs user, source and approval columns.
   (about 2,600 cards). Paginate by week or point the menu at the trip board.
 - **Originals folder**: once every photo has copies, decide whether the camera
   originals stay in the web root.
-- **Offline app** (manifest and icons already ship): service worker, cached
+- **Offline app** (manifest, icons, an install only service worker and the add to home
+  screen bar already ship): caching service worker, cached
   trip board and saved sites, queued actions. Its own epic; the rEvo companion
   (section 6) is the natural first page to make offline.
 

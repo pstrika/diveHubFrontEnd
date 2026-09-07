@@ -89,6 +89,8 @@
 
 {{-- Guest account prompt, once per page, only when the visitor is the shared guest user. --}}
 <x-guest-modal />
+{{-- Add to home screen bar (shown by divershub.js on phones, second visit onward). --}}
+<x-install-prompt />
 
 <script src="{{ asset('assets') }}/js/core/popper.min.js"></script>
 <script src="{{ asset('assets') }}/js/core/bootstrap.min.js"></script>

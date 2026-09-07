@@ -142,6 +142,11 @@ the offline queue belong to the PWA epic after the redesign.
   default order on the explorer and the home picks, trip count shown on cards,
   home picks capped at a member's level range. No schema change.
 
+- **Add to home screen (2026-09-07, Zach: "go").** Install only service worker
+  (`public/sw.js`), install bar component shown on phones from the second visit:
+  native prompt on Android via beforeinstallprompt, Share then Add to Home Screen
+  hint on iOS Safari. Never on desktop, never when installed, dismissal remembered.
+
 ## Open questions
 
 1. Originals folder: delete, resize in place, or move out of the repo.
