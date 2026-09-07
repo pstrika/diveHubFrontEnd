@@ -154,6 +154,16 @@ open, work and save with no network, then sync when back on shore:
   "finish dive" to the trip on the calendar so the dive report (roadmap item 3)
   is prefilled with site, date and operator.
 
+**Gas planning stays Pablo's.** Divers Hub already has a real deco planner
+(`NDLController`, the `/DecoPlanner` pages with gradient factors, gas loading and
+the metric and imperial views) and the gas planning page. The companion's Gas tab
+is a convenience calculator by comparison and must not become a second planner.
+Rule: the companion calls into the existing planner for anything that is a plan
+(deco profile, gas needs, MOD and END for a mix), and keeps only what is rEvo
+specific and boat side (scrubber check, checklists, timings). Either the planner
+is embedded in the companion as the Gas tab, or the companion links out to it
+with the dive's gases prefilled. Same numbers, one implementation, Pablo's.
+
 **Schema.** Yes. Tables for rebreather units (user, model, serial, scrubber
 canisters with hours and service dates), companion dives (user, unit, trip
 natural key, plan, gases, checklist results, timings) and a per user settings
@@ -162,7 +172,8 @@ blob. All additive, nothing touches the existing tables.
 **Steps.**
 
 1. Port the prototype into a Blade page under the shell with its state moved to
-   IndexedDB (no server yet). Already useful and already offline.
+   IndexedDB (no server yet), dropping its own gas math in favor of the existing
+   planner. Already useful and already offline.
 2. Service worker precache for that page only.
 3. Sign in sync with the new tables.
 4. Later: other rebreathers, sharing a unit's scrubber log between buddies.
