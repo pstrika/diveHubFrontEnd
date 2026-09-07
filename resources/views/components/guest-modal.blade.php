@@ -15,8 +15,13 @@
     logs the guest user out and lands on sign up in one hop. A plain link to
     sign up would bounce, because the guest is technically logged in.
 --}}
-@auth
-@if(!auth()->user()->isNotGuest())
+@php
+    // Anonymous (no session yet, e.g. a first hit on "/") and the shared guest
+    // user both count as guests here. Only real accounts skip the prompt.
+    $__u = auth()->user();
+    $__isGuest = !$__u || !$__u->isNotGuest();
+@endphp
+@if($__isGuest)
 <div class="modal fade" id="modal_logged_as_guest" tabindex="-1" role="dialog"
      aria-labelledby="modal_logged_as_guest_title" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -54,4 +59,3 @@
 </script>
 @endpush
 @endif
-@endauth

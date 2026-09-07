@@ -38,7 +38,10 @@
             <div class="dh-filters">
                 <x-query-chips param="region" :options="\App\Support\Coast::chipOptions()" :selected="$board['filters']['region']" all="All regions" label="Region" />
                 <x-dive-level.filter-chips :selected="$board['filters']['level']" />
-                <x-query-chips param="type" :options="\App\Support\TripBoard::TYPE_OPTIONS" :selected="$board['filters']['type']" all="All trips" label="Type" />
+                {{-- Only the types present in the current selection, each with its count. --}}
+                @if(count($board['typeOptions']) > 1 || $board['filters']['type'])
+                    <x-query-chips param="type" :options="$board['typeOptions']" :selected="$board['filters']['type']" all="All trips" label="Type" />
+                @endif
                 <x-query-chips param="seats" :options="['1' => 'Seats available only']" :selected="$board['filters']['seats'] ? '1' : null" all="" label="" toggle />
             </div>
 
@@ -72,7 +75,7 @@
                     <div class="dh-region-trips {{ $collapsed ? 'is-collapsed' : '' }}">
                         @foreach($group['trips'] as $i => $trip)
                             @if($i === 0 || $trip['period'] !== $group['trips'][$i - 1]['period'])
-                                <div class="dh-period">{{ $trip['period'] === 'AM' ? 'Morning' : 'Afternoon and evening' }}</div>
+                                <div class="dh-period">{{ ['AM' => 'Morning', 'PM' => 'Afternoon and evening', 'TBD' => 'Time to be confirmed'][$trip['period']] }}</div>
                             @endif
                             <x-trip-card :trip="$trip" />
                         @endforeach

@@ -87,8 +87,9 @@
             </section>
 
             {{-- Account invitation as a band, not a modal (W1 note 5, F-04). --}}
-            @auth
-            @if(!auth()->user()->isNotGuest())
+            @php $__u = auth()->user(); @endphp
+            @if(!$__u || !$__u->isNotGuest())
+            {{-- Shown to anonymous visitors (no session on a first hit) and the shared guest user. --}}
             <section class="dh-cta">
                 <div>
                     <h2>Plan your diving, not just read about it</h2>
@@ -97,7 +98,6 @@
                 <a class="dh-btn dh-btn-primary" href="{{ route('create-account') }}">Create free account</a>
             </section>
             @endif
-            @endauth
 
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>

@@ -12,12 +12,12 @@
     @if($title !== '')
         <h6 class="dh-pagehead-title">{{ $title }}</h6>
     @endif
-    @auth
-        @if(!auth()->user()->isNotGuest())
-            <a class="dh-pagehead-guest" href="{{ route('create-account') }}">
-                <span class="material-icons-round" aria-hidden="true">person_add_alt</span>
-                Browsing as a guest. Create a free account to save trips and plan dives.
-            </a>
-        @endif
-    @endauth
+    @php $__u = auth()->user(); @endphp
+    @if(!$__u || !$__u->isNotGuest())
+        {{-- Anonymous visitors and the shared guest user both see this. --}}
+        <a class="dh-pagehead-guest" href="{{ route('create-account') }}">
+            <span class="material-icons-round" aria-hidden="true">person_add_alt</span>
+            Browsing as a guest. Create a free account to save trips and plan dives.
+        </a>
+    @endif
 </div>

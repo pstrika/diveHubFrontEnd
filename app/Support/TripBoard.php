@@ -79,9 +79,23 @@ final class TripBoard
         $total = 0;
         $shown = 0;
 
+        // Type chips only offer what exists in the current selection. Count
+        // each type against every other active filter (region, level, seats),
+        // so a diver never taps "Shark" to find the day has none.
+        $typeCounts = array_fill_keys(array_keys(self::TYPE_OPTIONS), 0);
+        $withoutType = $filters;
+        $withoutType['type'] = null;
+
         foreach ($trips as $trip) {
             $total++;
             $card = self::card($trip, $now, $operators);
+            if (self::passes($card, $withoutType)) {
+                foreach (array_keys(self::TYPE_OPTIONS) as $type) {
+                    if (self::passes($card, ['region' => null, 'level' => null, 'seats' => false, 'type' => $type])) {
+                        $typeCounts[$type]++;
+                    }
+                }
+            }
             if (!self::passes($card, $filters)) {
                 continue;
             }
@@ -108,17 +122,26 @@ final class TripBoard
         $ordered = [];
         foreach (array_keys(Coast::all()) as $key) {
             if (isset($groups[$key])) {
-                usort($groups[$key]['trips'], fn ($a, $b) => strcmp($a['time24'], $b['time24']));
+                usort($groups[$key]['trips'], fn ($a, $b) => strcmp($a['sortKey'], $b['sortKey']));
                 $groups[$key]['locations'] = array_values($groups[$key]['locations']);
                 $ordered[] = $groups[$key];
             }
         }
 
+        // Chips: label with count, only types present (the active one always stays so it can be cleared).
+        $typeOptions = [];
+        foreach (self::TYPE_OPTIONS as $type => $label) {
+            if ($typeCounts[$type] > 0 || $filters['type'] === $type) {
+                $typeOptions[$type] = $label . ' ' . $typeCounts[$type];
+            }
+        }
+
         return [
-            'groups'  => $ordered,
-            'total'   => $total,
-            'shown'   => $shown,
-            'filters' => $filters,
+            'groups'      => $ordered,
+            'total'       => $total,
+            'shown'       => $shown,
+            'filters'     => $filters,
+            'typeOptions' => $typeOptions,
         ];
     }
 
@@ -148,7 +171,10 @@ final class TripBoard
         $siteNames = array_values(array_unique(array_filter(array_map(fn ($s) => $s->name ?? null, $sites))));
 
         $departure = Carbon::parse($trip->date . ' ' . $trip->departureTime);
-        $departed = $departure->lt($now);
+        // Crawlers store 00:00 when the operator publishes no time. Such a trip
+        // is only "departed" once its whole day is over, never at 00:01.
+        $timeUnknown = (string) $trip->departureTime === '00:00';
+        $departed = $timeUnknown ? $departure->copy()->endOfDay()->lt($now) : $departure->lt($now);
         $hour = (int) substr((string) $trip->departureTime, 0, 2);
 
         $isTech = stripos((string) $trip->tripType, 'tech') !== false || str_contains($tags, 'TEC');
@@ -158,9 +184,11 @@ final class TripBoard
             'id'            => $trip->id,
             'date'          => $trip->date,
             'time24'        => $trip->departureTime,
+            // Sort key: unknown times go last in their region instead of first.
+            'sortKey'       => $timeUnknown ? '99:99' : (string) $trip->departureTime,
             'time'          => $departure->format('g:i'),
             'meridiem'      => $departure->format('A'),
-            'period'        => $hour < 12 ? 'AM' : 'PM',
+            'period'        => $timeUnknown ? 'TBD' : ($hour < 12 ? 'AM' : 'PM'),
             'departed'      => $departed,
             'title'         => self::cleanTitle($trip->tripName, $siteNames),
             'fullTitle'     => (string) $trip->tripName,

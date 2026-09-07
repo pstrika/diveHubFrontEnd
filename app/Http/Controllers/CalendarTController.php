@@ -46,7 +46,7 @@ class CalendarTController extends Controller
         }
         ksort($days);
         foreach ($days as &$day) {
-            usort($day['trips'], fn ($a, $b) => strcmp($a['time24'], $b['time24']));
+            usort($day['trips'], fn ($a, $b) => strcmp($a['sortKey'], $b['sortKey']));
         }
         unset($day);
 

@@ -40,7 +40,13 @@
         {!! $link('My Calendar', route('MyCalendar'), 'event') !!}
         {!! $link('My Groups', route('MyGroups'), 'groups') !!}
         {!! $link('My Visited Sites', route('MyVisitedSites'), 'check_circle') !!}
-        {!! $link('Messages', route('Messages'), 'notifications') !!}
+        @php $unread = (int) $user->unreadNotifications(); @endphp
+        {{-- Unread count moved here from the old navbar bell. --}}
+        <a class="dh-menu-link" href="{{ route('Messages') }}">
+            <span class="material-icons-round" aria-hidden="true">notifications</span>
+            <span>Messages</span>
+            @if($unread > 0)<span class="dh-menu-badge" aria-label="{{ $unread }} unread">{{ $unread }}</span>@endif
+        </a>
     </div>
 @endif
 
@@ -96,6 +102,13 @@
             <span class="material-icons-round" aria-hidden="true">logout</span><span>Log out</span>
         </a>
     @endif
+</div>
+
+{{-- Website translator (Elfsight) moved here from the old navbar so Spanish speaking and Argentine users keep it. --}}
+<div class="dh-menu-group dh-menu-translate">
+    <h6>Language</h6>
+    <script src="https://static.elfsight.com/platform/platform.js" async></script>
+    <div class="elfsight-app-559bf1d4-b8b3-4ee4-9754-85f637b79d6a" data-elfsight-app-lazy></div>
 </div>
 
 <p class="dh-menu-version"><x-version /></p>
