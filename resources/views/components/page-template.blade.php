@@ -51,7 +51,8 @@
     $ogTitle = $SEO['title'] ?? 'Divers Hub - your one stop for diving in FL!';
     $ogDesc = $SEO['desc'] ?? 'All you need to know about scuba diving in South Florida';
     $ogUrl = $SEO['canonical'] ?? url()->current();
-    $ogImage = $SEO['image'] ?? asset('assets/img/diveHub-login.jpg');
+    // Default social preview: a 1200x630 web copy (165 KB) of the 17 MB login photo that used to be served here.
+    $ogImage = $SEO['image'] ?? asset('assets/img/og-default.jpg');
   @endphp
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Divers Hub">

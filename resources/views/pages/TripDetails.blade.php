@@ -140,381 +140,148 @@
         </style>
         
         <!-- Navbar -->
-        <x-shell.header title="Dive Trips" />
-        <!-- End Navbar -->
-        <div class="container-fluid py-0">
+        <x-shell.header title="Dive Today" />
 
-            <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('/assets/img/illustrations/tripDetails.jpeg');">
-                <span class="mask  bg-gradient-info  opacity-4"></span>
-            </div>
+        <div class="container-fluid py-0 dh-board">
+            {{--
+                Trip details, re-skinned with the redesign (companion to the trip
+                board and the site page, W2/W3). Same controller data as before:
+                $tripDetails, $operator, $location, $boats, $sites, $alreadyInCalendar,
+                $myGroups. The add-to-group modal above and its script below are
+                unchanged.
+            --}}
+            @php
+                $card = \App\Support\TripBoard::card($tripDetails, now(), [$operator->id => $operator]);
+                $when = \Carbon\Carbon::parse($tripDetails->date);
+                $isMember = auth()->user() && auth()->user()->isNotGuest();
+                $a = $card['availability'];
+            @endphp
 
-            <div class="card p-0 position-relative mt-n7 mx-3 z-index-2 mb-4">
-                <div class="p-0 mt-n4 mx-2 border-radius-lg py-3 pe-1">
-                    @php
-                        $date = new DateTime($tripDetails->date);
-                    @endphp
-                    <div style="float: left;">
-                        <h1 class="card-title text-info mx-3 mt-4">Trip on {{ $date->format('l, F-d') }}</h1>
-                        <h4 class="card-category text-info mx-3"> {{ $location->location }}</h4>
+            <section class="dh-site-facts dh-trip-head">
+                <div class="dh-site-facts-main">
+                    <p class="dh-trip-kicker">{{ $when->format('l, F j') }} · {{ ucwords($location->location) }}</p>
+                    <h1 class="dh-site-title">{{ $tripDetails->tripName }}</h1>
+                    <p class="dh-site-sub">
+                        <a href="{{ route('OperatorDetails', ['id' => $operator->slug ?? $operator->id]) }}">{{ $operator->operatorName }}</a>
+                        @if($card['time24'] !== '00:00') · departs {{ $card['time'] }} {{ $card['meridiem'] }} @else · departure time to be confirmed @endif
+                        @if($tripDetails->checkInTime && $tripDetails->checkInTime !== '00:00') · check in {{ $tripDetails->checkInTime }} @endif
+                    </p>
+                    <div class="dh-site-chips">
+                        <span class="dh-avail dh-avail-{{ $a['state'] }}">{{ $a['label'] }}</span>
+                        @if($tripDetails->tripPrice)<span class="chip chip-static">${{ $tripDetails->tripPrice }} USD</span>@endif
+                        @if($tripDetails->tripType)<span class="chip chip-static">{{ $tripDetails->tripType }}</span>@endif
+                        @if($card['level'] !== null)<span class="chip chip-static"><x-dive-level.icon :level="$card['level']" height="16" /> {{ \App\Support\DiveLevel::name($card['level']) }}</span>@endif
+                        @if($card['maxDepth'])<span class="chip chip-static">Max {{ $card['maxDepth'] }} ft</span>@endif
                     </div>
-                    @if(auth()->user()->isNotGuest())
-                        <div class="mt-4" style="float: right;">
-                            <div class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $alreadyInCalendar ? "This trip is already in your calendar" : "" }}">
-                                <button class="btn btn-icon btn-3 btn-info" type="button" onclick="window.location.href='{{ route('AddEventToCalendar', ['tripId' => $tripDetails->id]) }}';" {{ $alreadyInCalendar ? "disabled" : "" }}>
-                                    <span class="btn-inner--icon"><i class="material-icons">event_available</i></span>
-                                    <span class="btn-inner--text">Add to my calendar</span>
-                                </button>
-                            </div>
-                            <button class="btn btn-icon btn-3 btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#modalAddToGroup">
-                                <span class="btn-inner--icon"><i class="material-icons">groups</i></span>
-                                <span class="btn-inner--text">Add to a group</span>
+                </div>
+                <div class="dh-site-facts-side">
+                    <div class="dh-site-actions">
+                        @if($card['bookUrl'] && $a['state'] !== 'full')
+                            <a class="dh-btn dh-btn-primary" href="{{ $card['bookUrl'] }}" target="_blank" rel="noopener">Book this trip</a>
+                        @elseif($operator->phone)
+                            <a class="dh-btn dh-btn-primary" href="tel:{{ preg_replace('/[^0-9+]/', '', $operator->phone) }}">Call to book</a>
+                        @endif
+                        @if($isMember)
+                            <a class="dh-btn dh-btn-ghost-dark" href="{{ route('AddEventToCalendar', ['tripId' => $tripDetails->id]) }}" title="{{ $alreadyInCalendar ? 'This trip is already in your calendar' : 'Add this trip to your calendar' }}">
+                                <span class="material-icons-round">{{ $alreadyInCalendar ? 'event_available' : 'event' }}</span>{{ $alreadyInCalendar ? 'In my calendar' : 'Add to my calendar' }}
+                            </a>
+                            <button class="dh-btn dh-btn-ghost-dark" type="button" data-bs-toggle="modal" data-bs-target="#modalAddToGroup">
+                                <span class="material-icons-round">groups</span>Add to a group
                             </button>
-                            @php $groupsWithTrip = $myGroups->filter(fn($g) => $g->alreadyAdded); @endphp
-                            @if($groupsWithTrip->isNotEmpty())
-                                <div class="text-end mt-1">
-                                    <i class="material-icons text-info text-sm align-middle" data-bs-toggle="tooltip"
-                                       title="This trip is already in group calendar{{ $groupsWithTrip->count() > 1 ? 's' : '' }}: {{ $groupsWithTrip->pluck('name')->implode(', ') }}">info</i>
-                                    <span class="text-xs text-secondary">Already in {{ $groupsWithTrip->pluck('name')->implode(', ') }}</span>
-                                </div>
-                            @endif
-                        </div>
+                        @else
+                            {{-- Show, then gate (F-04). --}}
+                            <a class="dh-btn dh-btn-ghost-dark" href="#" onclick="event.preventDefault();showModalGuest();"><span class="material-icons-round">event</span>Add to my calendar</a>
+                        @endif
+                    </div>
+                    @if($isMember)
+                        @php $groupsWithTrip = $myGroups->filter(fn($g) => $g->alreadyAdded); @endphp
+                        @if($groupsWithTrip->isNotEmpty())
+                            <span class="text-xs text-muted">Already in {{ $groupsWithTrip->pluck('name')->implode(', ') }}</span>
+                        @endif
                     @endif
                 </div>
-            </div>    
+            </section>
 
-            <div class="row">
-                {{-- Card Trip Details and Site Details--}}
-                <div class="col-md-4">
-                    {{-- Card Trip Details --}}
-                    <div class="row">
-                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                            <div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Trip Details</h4>
-                                    <div class="table-responsive"></div>
-                                </div>
+            <div class="row mx-0 dh-site-columns">
+                <div class="col-lg-8 px-0 pe-lg-3">
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Dive sites on this trip</h2>
+                        @if($tripDetails->siteIdStatus == "suggested")
+                            <p class="dh-note">The operator did not name the site. These are our best guess from the trip name.</p>
+                        @endif
+                        @if(count($sites))
+                            <div class="dh-site-grid">
+                                @foreach($sites as $s)
+                                    @php $s->photoFile = isset($s->photos[0]) ? $s->photos[0]->file : null; @endphp
+                                    <x-site-card :site="$s" />
+                                @endforeach
                             </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table align-items-center mb-0">
-                                        
-                                        <tbody>    
-                                            <tr> <td >
-                                                <table class="table align-items-center mb-0">
-                                                
-                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Departure time</td>
-                                                    <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $tripDetails->departureTime}}</b></td> </tr>
+                        @else
+                            <p class="text-sm text-muted mb-0">No site listed for this trip. As advertised: "{{ $tripDetails->tripName }}".</p>
+                        @endif
+                    </section>
 
-                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Check-in time</td>
-                                                    <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $tripDetails->checkInTime}}</b></td> </tr>
-                                                    
-                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Availability</td>
-                                                    @if( $tripDetails->tripFreeSpots > 0 and $tripDetails->tripFreeSpots != 1000 and count($boats) == 1 and $boats != null)
-                                                        <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $tripDetails->tripFreeSpots }} / {{ $tripDetails->tripType == 'Technical' ? $boats[0]->tec_capacity : $boats[0]->capacity }}</b></td> </tr>
-                                                    @else
-                                                        <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $tripDetails->tripFreeSpots == 1000 ? "Yes" : $tripDetails->tripFreeSpots }}</b></td> </tr>
-                                                    @endif
-
-
-                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Price ($)</td>
-                                                    <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $tripDetails->tripPrice}} USD</b></td> </tr>
-
-                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Trip type</td>
-                                                    <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $tripDetails->tripType}}</b></td> </tr>
-
-                                                </table>
-                                                @if($tripDetails->linkToBook)
-                                                    <tr><td style="border: none;" class="text-center"><a type="button" href="{{ $tripDetails->linkToBook }}" target="_blank" class="btn btn-info">book this trip</a>
-                                                @endif
-                                            </td></tr>
-                                            
-                                            
-                                            
-                                        
-                                        
-                                        </tbody>    
-                                    </table>
-
-                                </div>    
-                            </div>
-                        </div>
-                    </div>
-                    {{-----------------------------}}
-                    {{-- Card Site Details --}}
-                    <div class="row">
-                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                            <div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Site Details</h4>
-                                    <div class="table-responsive"></div>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table align-items-center mb-0">
-                                        <tbody>    
-                                            <tr> <td style="border: none;">
-                                                <table class="table align-items-center mb-0">
-                                                
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">As advertised</td>
-                                                    <td class="align-middle text-left text-sm text-wrap"><b>"{{ $tripDetails->tripName}}"</b></td> </tr>
-                                                    
-                                                    
-                                                </table>
-                                                @if( $tripDetails->siteIdStatus == "suggested")
-                                                    <tr><td height="20" style="border: none;"><p class="mt-0 text-danger align-middle text-center text-xs font-weight-bolder opacity-7">Sites are not confirmed, but this operator often visits...</p></td>    
-                                                @endif
-                                                @if(count($sites))
-                                                    @foreach($sites as $site)
-                                                        {{--name and type--}}
-                                                        <table class="table align-items-center mb-0" >
-                                                            <tr style="border-top: 1px solid #D3D3D3;"><td class="text-uppercase text-secondary text-xl font-weight-bolder opacity-7 text-center" style="border: none;"><a href="{{ route("SiteDetails") }}/{{ $site->id }}"><b>{{ $site->name}}</b></a></td> </tr>
-                                                            <tr><td style="border: none;"><p class="mt-n3 text-secondary align-top text-center text-xs font-weight-bolder opacity-7">{{ $site->type }}</p></td>
-                                                        </table>
-                                                        {{--gauge and minimum cert--}}
-                                                        <table class="table align-items-center mb-0" >
-                                                            <tbody>
-                                                            <tr><td class="row justify-content-center mx-auto mt-n4">
-                                                                <div id="gauge{{ $site->id }}" class="gauge-container five"> </div>
-                                                                @php
-                                                                    if($site->level == 0)
-                                                                        $level="Open Water";
-                                                                    elseif($site->level == 1)
-                                                                        $level="Advanced Open Water";
-                                                                    elseif($site->level == 2)
-                                                                        $level="Technical Air";
-                                                                    elseif($site->level == 3)
-                                                                        $level="Technical Normoxic Trimix";
-                                                                    elseif($site->level == 4)
-                                                                        $level="Technical Hypoxic Trimix";
-                                                                    
-                                                                @endphp
-                                                                <div class="align-middle text-center text-md"><b>{{ $level }}</b></div>
-                                                                <div class="align-middle text-center text-xs">Minimum Recommended Certification</div>
-                                                        </td></tr>
-                                                            </tbody>
-
-                                                        </table>
-
-                                                        {{--max depth and location--}}
-                                                        <table class="table align-items-center mb-0">
-
-                                                            <tr><td style="border: none;" class="w-50 text-secondary text-end text-lg font-weight-bolder opacity-7">Max Depth</td>
-                                                            <td style="border: none;" class="align-middle text-left text-sm text-wrap"><b>{{ $site->maxDepth}} ft</b></td> </tr>
-
-                                                            <tr><td style="border: none;" class="w-50 text-secondary text-end text-lg font-weight-bolder opacity-7">Location</td>
-                                                            <td style="border: none;" class="align-middle text-left text-sm text-wrap"><b>{{ ucwords($site->locationLong->location) }}</b></td> </tr>
-
-                                                            
-
-                                                            
-
-
-                                                        </table>
-
-                                                        {{--picture--}}
-                                                        @if(isset($site->photos[0]))
-                                                        <table class="table align-items-center mb-0">
-                                                            <tr><td><div class="page-header min-height-250 max-height-250 border-radius-xl mt-0 mx-0" style="background-image: url('{{ asset('assets') }}/img/sites/{{ $site->photos[0]->file }}');"></div></td></tr>
-                                                            <tr><td style="border: none;" class="align-middle"><p class="text-center text-sm text-wrap"> {{ $site->photos[0]->desc}}</p></td> </tr>
-                                                        </table>
-                                                        @endif
-
-                                                    @endforeach
-                                                @endif
-                                            </td></tr>
-                                        </tbody>    
-                                    </table>
-
-                                </div>    
-                            </div>
-                        </div>
-                    </div> 
-                    {{-----------------------------}}
-                </div>
-                {{-----------------------------}}
-
-                {{-- Card Dive Center --}}
-                <div class="col-md-4">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Dive Center</h4>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table align-items-center mb-0"> 
-                                    <tbody>
-                                        <tr><td class="text-center"><img src="{{ asset('assets') }}{{ $operator->logoUrl}}" alt="img-blur-shadow" class="img-fluid"></td></tr> 
-                                        <tr><td class="text-uppercase text-secondary text-xl font-weight-bolder opacity-7 text-center" style="border: none;"> {{ $operator->operatorName}}</td> </tr>
-                                        
-                                        
-                                        <tr> <td>
-                                            <table class="table align-items-center mb-0">
-                                            
-                                                <tr class="align-top" ><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7" >Address</td>
-                                                <td style="border: none;" class="align-middle text-left text-wrap text-sm"><b>{{ $operator->streetAddress}}<br>{{ $operator->cityAddress}}, {{ $operator->stateAddress}} {{ $operator->zipAddress}} </b></td> </tr>
-
-                                                <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Phone</td>
-                                                <td style="border: none;" class="align-middle text-left text-sm"><b>{{ $operator->phone}}</b></td> </tr>
-                                                
-                                                @if($operator->email)
-                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">email</td>
-                                                    <td style="border: none;" class="align-middle text-left text-sm"><b><a href="mailto:{{ $operator->email}}">{{ $operator->email}}</a></b></td> </tr>
-                                                @endif
-
-                                                @if($operator->operatorName == "Stuart Scuba")
-                                                    @if(count($sites))
-                                                        @if($sites[0]->location == "STU" || $sites[0]->location == "PSL")
-                                                            <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Marina address</td>
-                                                            <td style="border: none;" class="align-middle text-wrap text-sm"><b>{{ $operator->marinaAddressAlt}}</b></td> </tr>
-                                                        @else
-                                                            <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Marina address</td>
-                                                            <td style="border: none;" class="align-middle text-wrap text-sm"><b>{{ $operator->marinaAddress}}</b></td> </tr>
-                                                        @endif
-                                                    @endif
-                                                @else
-                                                    @if($operator->marinaAddress)
-                                                        <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Marina address</td>
-                                                        <td style="border: none;" class="align-middle text-wrap text-sm"><b>{{ $operator->marinaAddress}}</b></td> </tr>
-                                                    @endif
-                                                @endif
-                                                
-                                                @if($operator->webSite)
-                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Website</td>
-                                                    <td style="border: none;" class="align-middle text-left text-sm"><b><a href="{{ $operator->webSite}}">here</a></b></td> </tr>
-                                                @endif
-
-                                                @if($operator->waiverLink)
-                                                    <tr><td style="border: none;" class="text-secondary text-end text-lg font-weight-bolder opacity-7">Online waiver</td>
-                                                    <td style="border: none;" class="align-middle text-left text-sm"><b><a href="{{ $operator->waiverLink}}">here</a></b></td> </tr>
-                                                @endif
-
-                                            </table>
-                                            <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Gas fills offered</td> </tr>
-                                            <table class="table align-items-center mb-0">
-                                                <tbody>
-                                                    <tr>
-                                                        <td class="align-middle text-center text-sm">Air</td>
-                                                        <td class="align-middle text-center text-sm">Nitrox</td>
-                                                        <td class="align-middle text-center text-sm">Trimix</td>
-                                                        <td class="align-middle text-center text-sm">Oxygen</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillAir ? "check" : "block") }}</i></td>
-                                                        <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillNitrox ? "check" : "block") }}</i></td>
-                                                        <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillTrimix ? "check" : "block") }}</i></td>
-                                                        <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillO2 ? "check" : "block") }}</i></td>
-                                                        
-                                                    </tr>
-                                                </tbody>
-
-                                            </table>
-                                        </td></tr>
-                                        
-                                        
-                                        
-                                    
-                                    
-                                    </tbody>    
-                                </table>
-                            </div>    
-                        </div>
-                    </div>
-                </div>
-                {{-----------------------------}}
-
-                {{-- Card Boat Details --}}
-                @if( $boats != null )
-                    <div class="col-md-4">             
-                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                            <div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Boat Details</h4>
-                                    <div class="table-responsive"></div>
-                                </div>
-                            </div>
-                            @if( count($boats) > 1 )
-                                <h5 class="card-title text-info text-center text-sm text-wrap mx-3 mt-3">Boat not defined for this trip. {{ $operator->operatorName}} runs more than 1 boat.</h4>
-                            @endif
+                    @if($boats != null)
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">{{ count($boats) > 1 ? 'Boats' : 'Boat' }}</h2>
+                        @if(count($boats) > 1)
+                            <p class="dh-note">Boat not defined for this trip. {{ $operator->operatorName }} runs these boats.</p>
+                        @endif
+                        <div class="dh-boat-list">
                             @foreach($boats as $boat)
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table align-items-center mb-0"> 
-
-                                            <tbody>
-
-                                                <tr><td><div class="page-header min-height-250 max-height-250 border-radius-xl mt-0 mx-0" style="background-image: url('{{ asset('assets') }}{{ $boat->pic}}');"></div></td></tr>
-
-                                                <tr><td class="text-uppercase text-secondary text-xl font-weight-bolder opacity-7 text-center" style="border: none;"> {{ $boat->name}}</td> </tr>
-
-                                                <tr> <td>
-                                                    <table class="table align-items-center mb-0">
-                                                    
-                                                        @if($boat->type)
-                                                            <tr class="align-top"><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Type</td>
-                                                            <td class="align-middle text-left text-wrap text-sm"><b>{{ $boat->type }}</b></td> </tr>
-                                                        @endif
-                                                        
-                                                        @if($boat->capacity)
-                                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Capacity Rec</td>
-                                                            <td class="align-middle text-left text-sm"><b>{{ $boat->capacity }} divers</b></td> </tr>
-                                                        @endif
-
-                                                        @if($boat->tec_capacity)
-                                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Capacity Tec</td>
-                                                            <td class="align-middle text-left text-sm"><b>{{ $boat->tec_capacity }} divers</b></td> </tr>
-                                                        @endif
-                                                        
-                                                        @if($boat->manufacturer)
-                                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Manufacturer</td>
-                                                            <td class="align-middle text-left text-sm"><b>{{ $boat->manufacturer }}</b></td> </tr>
-                                                        @endif
-
-                                                        @if($boat->beam)
-                                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Beam</td>
-                                                            <td class="align-middle text-wrap text-sm"><b>{{ $boat->beam }} ft</b></td> </tr>
-                                                        @endif
-                                                        
-                                                        @if($boat->length)
-                                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Length</td>
-                                                            <td class="align-middle text-wrap text-sm"><b>{{ $boat->length }} ft</b></td> </tr>
-                                                        @endif
-
-                                                        @if($boat->speed)
-                                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Speed</td>
-                                                            <td class="align-middle text-wrap text-sm"><b>{{ $boat->speed }} knots</b></td> </tr>
-                                                        @endif
-
-                                                        @if($boat->power)
-                                                            <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Power</td>
-                                                            <td class="align-middle text-wrap text-sm"><b>{{ $boat->power }}</b></td> </tr>
-                                                        @endif
-
-                                                    </table>
-                                                    
-                                                </td></tr>
-                                                
-                                                
-                                                
-                                            
-                                            
-                                            </tbody>    
-                                        </table>
-                                    </div>    
-                                </div>
+                                <article class="dh-boat">
+                                    @if($boat->pic)<span class="dh-boat-img" style="background-image:url('{{ asset('assets') }}/img/boats/{{ $boat->pic }}')"></span>@endif
+                                    <div>
+                                        <h3 class="dh-boat-name">{{ $boat->name }}</h3>
+                                        <dl class="dh-facts-list dh-facts-list-tight">
+                                            @if($boat->type)<div><dt>Type</dt><dd>{{ $boat->type }}</dd></div>@endif
+                                            @if($boat->capacity)<div><dt>Capacity</dt><dd>{{ $boat->capacity }} divers</dd></div>@endif
+                                            @if($boat->tec_capacity)<div><dt>Tech capacity</dt><dd>{{ $boat->tec_capacity }} divers</dd></div>@endif
+                                            @if($boat->manufacturer)<div><dt>Builder</dt><dd>{{ $boat->manufacturer }}</dd></div>@endif
+                                            @if($boat->length)<div><dt>Length</dt><dd>{{ $boat->length }} ft</dd></div>@endif
+                                            @if($boat->beam)<div><dt>Beam</dt><dd>{{ $boat->beam }} ft</dd></div>@endif
+                                            @if($boat->speed)<div><dt>Speed</dt><dd>{{ $boat->speed }} kn</dd></div>@endif
+                                            @if($boat->power)<div><dt>Power</dt><dd>{{ $boat->power }}</dd></div>@endif
+                                        </dl>
+                                    </div>
+                                </article>
                             @endforeach
                         </div>
-                    </div>
-                @endif
-                {{-----------------------------}}
+                    </section>
+                    @endif
+                </div>
 
-                
-
+                <div class="col-lg-4 px-0">
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Dive center</h2>
+                        <div class="dh-operator-card">
+                            @if($operator->logoUrl)<img src="{{ asset('assets') }}{{ $operator->logoUrl }}" alt="" class="dh-operator-logo">@endif
+                            <a class="dh-operator-name" href="{{ route('OperatorDetails', ['id' => $operator->slug ?? $operator->id]) }}">{{ $operator->operatorName }}</a>
+                        </div>
+                        <dl class="dh-facts-list dh-facts-list-stack">
+                            @php
+                                // Stuart Scuba runs from two marinas depending on the site; the rule below is theirs.
+                                $marina = $operator->marinaAddress;
+                                if ($operator->operatorName == "Stuart Scuba" && count($sites) && !in_array($sites[0]->location, ['STU', 'PSL'])) {
+                                    $marina = $operator->marinaAddressAlt ?: $marina;
+                                }
+                            @endphp
+                            @if($operator->streetAddress)<div><dt>Shop</dt><dd>{{ $operator->streetAddress }}, {{ $operator->cityAddress }} {{ $operator->stateAddress }} {{ $operator->zipAddress }}</dd></div>@endif
+                            @if($marina)<div><dt>Marina</dt><dd>{{ $marina }}</dd></div>@endif
+                            @if($operator->phone)<div><dt>Phone</dt><dd><a href="tel:{{ preg_replace('/[^0-9+]/', '', $operator->phone) }}">{{ $operator->phone }}</a></dd></div>@endif
+                            @if($operator->email)<div><dt>Email</dt><dd><a href="mailto:{{ $operator->email }}">{{ $operator->email }}</a></dd></div>@endif
+                            @if($operator->webSite)<div><dt>Website</dt><dd><a href="{{ $operator->webSite }}" target="_blank" rel="noopener">{{ parse_url($operator->webSite, PHP_URL_HOST) ?: $operator->webSite }}</a></dd></div>@endif
+                            @if($operator->waiverLink)<div><dt>Waiver</dt><dd><a href="{{ $operator->waiverLink }}" target="_blank" rel="noopener">Sign online</a></dd></div>@endif
+                        </dl>
+                        <h3 class="dh-panel-subtitle">Fills on site</h3>
+                        <div class="dh-fills">
+                            @foreach(['Air' => $operator->onSiteFillAir, 'Nitrox' => $operator->onSiteFillNitrox, 'Trimix' => $operator->onSiteFillTrimix, 'Oxygen' => $operator->onSiteFillO2] as $gas => $has)
+                                <span class="chip chip-static {{ $has ? 'chip-yes' : 'chip-no' }}"><span class="material-icons-round" aria-hidden="true">{{ $has ? 'check' : 'close' }}</span>{{ $gas }}</span>
+                            @endforeach
+                        </div>
+                    </section>
+                </div>
             </div>
-
 
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>
@@ -524,7 +291,6 @@
     {{--<x-plugins></x-plugins>--}}
     
     @push('js')
-    <script src="{{ asset('assets') }}/js/plugins/gauge.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
 
     <script>
@@ -537,49 +303,7 @@
     </script>
 
     @if(count($sites))
-    <script>
-        @foreach($sites as $site)
-        var gauge{{ $site->id }} = Gauge(
-            document.getElementById("gauge{{ $site->id }}"), {
-                min: 0,
-                max: 10,
-                dialStartAngle: 180,
-                dialEndAngle: 0,
-                value: -1,
-                /*color: function(value) {
-                    if(value < 1) {
-                    return "#ccdfe5";
-                    }else if(value < 3) {
-                    return "#aedced";
-                    }else if(value < 5) {
-                    return "#88d0ea";
-                    }else if(value < 7) {
-                    return "#43c3ef";
-                    }else {
-                    return "#03a9f4";
-                    }
-                }
 
-                */
-
-                color: function(value) {
-                    if(value < 1) {
-                    return "#e95544";
-                    }else if(value < 3) {
-                    return "#5fb664";
-                    }else if(value < 5) {
-                    return "#eddc4c";
-                    }else if(value < 7) {
-                    return "#fdcd82";
-                    }else if(value <9) {
-                    return "#f69a71";
-                    }
-                }
-            }
-        );
-        gauge{{ $site->id }}.setValueAnimated({{ $site->level * 2 + 2}}, 2);
-        @endforeach
-    </script>
     @endif
     @endpush
 </x-page-template>

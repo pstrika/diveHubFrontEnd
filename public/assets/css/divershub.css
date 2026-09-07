@@ -377,3 +377,27 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
   .dh-site-rating { align-items: flex-start; }
   .dh-site-details { grid-template-columns: 1fr; }
 }
+
+/* Trip details. */
+.dh-trip-kicker { font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--dh-sea); margin: 0 0 2px; }
+.dh-trip-head .dh-site-sub a { color: var(--dh-deep); }
+.dh-trip-head .dh-avail { font-size: .85rem; }
+.dh-note { font-size: .85rem; color: var(--dh-avg); background: var(--dh-avg-bg); border-radius: var(--dh-radius); padding: 8px 12px; margin: 0 0 var(--dh-space-3); }
+.dh-boat-list { display: flex; flex-direction: column; gap: var(--dh-space-3); }
+.dh-boat { display: grid; grid-template-columns: 180px 1fr; gap: var(--dh-space-3); align-items: start; }
+.dh-boat-img { display: block; aspect-ratio: 4 / 3; border-radius: var(--dh-radius); background-size: cover; background-position: center; background-color: var(--dh-foam); }
+.dh-boat-name { font-size: 1rem; font-weight: 800; margin: 0 0 6px; color: var(--dh-ink); }
+.dh-facts-list-tight { gap: var(--dh-space-2); grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+.dh-facts-list-stack { grid-template-columns: 1fr; }
+.dh-facts-list dd a { color: var(--dh-sea); text-decoration: none; }
+.dh-operator-card { display: flex; align-items: center; gap: var(--dh-space-3); margin-bottom: var(--dh-space-3); }
+.dh-operator-logo { width: 56px; height: 56px; object-fit: contain; border-radius: 10px; border: 1px solid var(--dh-line); background: #fff; }
+.dh-operator-name { font-weight: 800; color: var(--dh-ink); text-decoration: none; font-size: 1.05rem; }
+.dh-operator-name:hover { color: var(--dh-sea); }
+.dh-panel-subtitle { font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--dh-muted); font-weight: 700; margin: var(--dh-space-3) 0 6px; }
+.dh-fills { display: flex; flex-wrap: wrap; gap: 6px; }
+.dh-fills .chip { display: inline-flex; align-items: center; gap: 2px; }
+.dh-fills .material-icons-round { font-size: 14px; }
+.chip-yes { color: var(--dh-good); border-color: var(--dh-good); background: var(--dh-good-bg); }
+.chip-no { color: var(--dh-muted); opacity: .7; }
+@media (max-width: 575.98px) { .dh-boat { grid-template-columns: 1fr; } }
