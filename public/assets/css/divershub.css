@@ -295,7 +295,8 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-site-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--dh-space-3); }
 .dh-site-card { display: flex; flex-direction: column; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: var(--dh-radius); overflow: hidden; text-decoration: none; color: var(--dh-ink); }
 .dh-site-card:hover { border-color: var(--dh-sea); color: var(--dh-ink); box-shadow: 0 4px 14px rgba(14,124,158,.12); }
-.dh-site-img { position: relative; display: block; aspect-ratio: 16 / 9; background-size: cover; background-position: center; background-color: var(--dh-foam); }
+.dh-site-img { position: relative; display: block; aspect-ratio: 16 / 9; background-size: cover; background-position: center; background-color: var(--dh-foam); overflow: hidden; }
+.dh-site-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .dh-site-type { position: absolute; top: 8px; left: 8px; background: rgba(255,255,255,.92); }
 .dh-site-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 6px; }
 .dh-site-name { font-weight: 700; line-height: 1.25; }

@@ -589,7 +589,7 @@ class SiteController extends Controller
             "canonical" => route("DiveSites")
         );
         return $this->explorer($request, [
-            'heading'     => 'Dive Sites',
+            'heading'     => 'Top rated dive sites in Florida',
             'intro'       => 'Every reef, wreck and shore entry from Stuart to Key West, rated by the divers who have been there.',
             'fixedType'   => null,
             'defaultSort' => 'rate',
@@ -606,7 +606,7 @@ class SiteController extends Controller
         );
         return $this->explorer($request, [
             'heading'     => 'wreckWiki',
-            'intro'       => 'The wreck collection: every artificial reef and shipwreck in Florida with depth, level, history and photos.',
+            'intro'       => 'Powered by wreckwiki.com. Every artificial reef and shipwreck in Florida with depth, level, history and photos.',
             'fixedType'   => 'wreck',
             'defaultSort' => 'name',
         ], $SEO);

@@ -42,9 +42,9 @@ the target. **noindex** means the page is not indexed today and stays that way.
 
 | URL | Disposition | Notes |
 |---|---|---|
-| `/DiveSitesMap` | redirect to `/DiveSites?view=map` | Chunk 3. Map becomes a view of the explorer (W4). Not indexed, so no equity lost. |
-| `/DiveSitesSearch` | redirect to `/DiveSites` | Chunk 3. Search becomes the explorer omnibox (W4). Not indexed. |
-| `/DiveSitesAll` | unchanged | |
+| `/DiveSitesMap` | redirect (301) to `/DiveSites?view=map` | Done in chunk 3. Map is a view of the explorer (W4). Was noindex. |
+| `/DiveSitesSearch` | redirect (301) to `/DiveSites?q=...` | Done in chunk 3. Search is the explorer box (W4). Was noindex. The POST from the old search form forwards the term. |
+| `/DiveSitesAll` | redirect (301) to `/DiveSites?sort=name` | Done in chunk 3. The plain "all sites" table is the explorer sorted A to Z. Was noindex. Changed from "unchanged" in the first plan. |
 | `/DecoPlanner*` | unchanged | |
 | `/WeatherAR*` | unchanged | |
 | `/MyCalendar`, `/MyDashboard`, `/MyVisitedSites` | unchanged | Account pages |

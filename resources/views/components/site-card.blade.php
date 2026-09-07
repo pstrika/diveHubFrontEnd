@@ -18,7 +18,9 @@
 @endphp
 
 <a class="dh-site-card" href="{{ route('SiteDetails') }}/{{ $site->slug ?? $site->id }}">
-    <span class="dh-site-img" style="background-image:url('{{ $img }}')" role="img" aria-label="{{ $site->name }}">
+    {{-- A real <img> so the browser can lazy load it: the explorer renders hundreds of cards. --}}
+    <span class="dh-site-img">
+        <img src="{{ $img }}" alt="" loading="lazy" decoding="async">
         <span class="chip chip-static dh-site-type">{{ ucfirst($site->type) }}</span>
         @if(($site->access ?? '') === 'Beach Access')<span class="chip chip-static dh-site-shore">Shore entry</span>@endif
     </span>

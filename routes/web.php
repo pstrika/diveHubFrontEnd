@@ -204,7 +204,8 @@ Route::get('DiveSites', 'App\Http\Controllers\SiteController@showTopRated')->mid
 Route::get('DiveSitesSearch', fn () => redirect()->route('DiveSites', request()->query(), 301))->name('DiveSitesSearch');
 Route::post('DiveSitesSearch', fn () => redirect()->route('DiveSites', array_filter(['q' => request()->input('searchString')])))->middleware('guest');
 Route::get('DiveSitesMap', fn () => redirect()->route('DiveSites', ['view' => 'map'] + request()->query(), 301))->name('DiveSitesMap');
-Route::get('DiveSitesAll', 'App\Http\Controllers\SiteController@showAllSearch')->middleware('guest')->name('DiveSitesAll');
+// "Show me all sites" was a plain table of the catalog; the explorer sorted A to Z is that list. Noindex before, so a 301 costs nothing.
+Route::get('DiveSitesAll', fn () => redirect()->route('DiveSites', ['sort' => 'name'] + request()->query(), 301))->name('DiveSitesAll');
 Route::get('DiveSitesAdmin', 'App\Http\Controllers\SiteController@showAllAdmin')->middleware('auth')->name('DiveSitesAdmin');
 Route::post('Calculate-ndl', 'App\Http\Controllers\NDLController@calculateNDL')->middleware('guest')->name('Calculate-ndl');
 Route::post('calculateDecoProfile', 'App\Http\Controllers\NDLController@calculateDecoProfile')->middleware('guest')->name('calculateDecoProfile');
