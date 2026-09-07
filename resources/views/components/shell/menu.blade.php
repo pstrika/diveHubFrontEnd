@@ -14,15 +14,24 @@
 
     // Renders one drawer link. Locked items keep their label visible but
     // open the guest prompt instead of navigating.
-    $link = function (string $label, string $href, string $icon, bool $locked = false) {
+    // $icon is a Material icon name, or "img:<file>" for one of Pablo's own icons
+    // in public/assets/img/icons (the calendar icons are white line art drawn for
+    // the old dark sidebar, so they sit on a dark round badge here).
+    $iconHtml = function (string $icon) {
+        if (str_starts_with($icon, 'img:')) {
+            return '<span class="dh-menu-icon-img" aria-hidden="true"><img src="' . asset('assets') . '/img/icons/' . e(substr($icon, 4)) . '" alt=""></span>';
+        }
+        return '<span class="material-icons-round" aria-hidden="true">' . $icon . '</span>';
+    };
+    $link = function (string $label, string $href, string $icon, bool $locked = false) use ($iconHtml) {
         if ($locked) {
             return '<a class="dh-menu-link is-locked" href="#" onclick="event.preventDefault();showModalGuest();">'
-                . '<span class="material-icons-round" aria-hidden="true">' . $icon . '</span>'
+                . $iconHtml($icon)
                 . '<span>' . e($label) . '</span>'
                 . '<span class="material-icons-round dh-menu-lock" aria-label="Account required">lock</span></a>';
         }
         return '<a class="dh-menu-link" href="' . $href . '">'
-            . '<span class="material-icons-round" aria-hidden="true">' . $icon . '</span>'
+            . $iconHtml($icon)
             . '<span>' . e($label) . '</span></a>';
     };
 @endphp
@@ -52,11 +61,11 @@
 
 <div class="dh-menu-group">
     <h6>Calendars</h6>
-    {!! $link('Recreational', route('CalendarT') . '/rec', 'event_available') !!}
-    {!! $link('Technical', route('CalendarT') . '/tec', 'event_available', $isGuest) !!}
-    {!! $link('Wreck diving', route('CalendarWreck'), 'event_available', $isGuest) !!}
-    {!! $link('Shark diving', route('CalendarShark'), 'event_available', $isGuest) !!}
-    {!! $link('Lobster diving', route('CalendarLobster'), 'event_available', $isGuest) !!}
+    {!! $link('Recreational', route('CalendarT') . '/rec', 'img:icons_rec.png') !!}
+    {!! $link('Technical', route('CalendarT') . '/tec', 'img:icons_tec.png', $isGuest) !!}
+    {!! $link('Wreck diving', route('CalendarWreck'), 'img:wreck_icon_white.png', $isGuest) !!}
+    {!! $link('Shark diving', route('CalendarShark'), 'img:icons_shark.png', $isGuest) !!}
+    {!! $link('Lobster diving', route('CalendarLobster'), 'img:icons_lobster.png', $isGuest) !!}
 </div>
 
 <div class="dh-menu-group">

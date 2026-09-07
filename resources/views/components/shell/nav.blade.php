@@ -62,8 +62,16 @@
             @endif
 
             <button type="button" class="dh-avatar-btn {{ $active === 'me' ? 'is-active' : '' }}" data-bs-toggle="offcanvas" data-bs-target="#dh-me" aria-controls="dh-me" aria-label="Open your menu">
-                @if($user && $user->picture)
-                    <img src="{{ asset('assets') }}/img/users/{{ $user->picture }}" alt="">
+                @php
+                    // Profile pictures are uploaded to the "public" disk (storage/app/public/profile/...)
+                    // and served through the public/storage link. Google sign in may store a full URL.
+                    $avatar = null;
+                    if ($user && $user->picture) {
+                        $avatar = str_starts_with($user->picture, 'http') ? $user->picture : asset('storage/' . ltrim($user->picture, '/'));
+                    }
+                @endphp
+                @if($avatar)
+                    <img src="{{ $avatar }}" alt="" onerror="this.remove()">
                 @else
                     <span class="material-icons-round" aria-hidden="true">{{ $isGuest ? 'menu' : 'account_circle' }}</span>
                 @endif

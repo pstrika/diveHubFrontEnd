@@ -505,3 +505,7 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-fav-operator #filterOperators { max-width: 100%; white-space: normal; text-overflow: ellipsis; overflow: hidden; }
 .dh-fav-operator #operatorLogo { max-width: 120px; height: 45px; object-fit: contain; }
 .dh-shell .card-body table { max-width: 100%; }
+
+/* Drawer links that use one of the original white line icons instead of a Material glyph. */
+.dh-menu-icon-img { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--dh-deep); flex: 0 0 auto; }
+.dh-menu-icon-img img { width: 17px; height: 17px; object-fit: contain; }

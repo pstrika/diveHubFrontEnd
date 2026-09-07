@@ -68,12 +68,22 @@ picker. That deploys the branch straight to production.
    GD lacks WebP support, the site still works (pages fall back to the original
    photo); tell Zach and we will look at the PHP image on the host.
 
-2. **Config cache.** If you ever run `php artisan config:cache` on the server,
+2. **Profile pictures.** Uploaded avatars live on the `public` disk
+   (`storage/app/public/profile/...`) and are served through the `public/storage`
+   link. The header shows them from there now (the old sidebar looked in
+   `img/users/`, which is why avatars were broken before too). Check the link
+   exists on the server; if `/storage/profile/<file>` 404s, run once:
+
+   ```bash
+   php artisan storage:link
+   ```
+
+3. **Config cache.** If you ever run `php artisan config:cache` on the server,
    note the workflow now deletes that cache on every deploy so the version in
    `config/divehub.php` is always read. Running `config:cache` again after a deploy
    is fine; running it and then editing config without a deploy is not.
 
-3. **Smoke test on production** (each should return 200, footer shows the new version):
+4. **Smoke test on production** (each should return 200, footer shows the new version):
 
    - `/` and `/Landing`
    - `/Trips` and `/Trips/<next Saturday>`
@@ -85,7 +95,7 @@ picker. That deploys the branch straight to production.
    - `/MyDashboard` while signed in
    - `/sitemap.xml` (406 URLs, unchanged set)
 
-4. **Redirects** (each should answer 301 to the target):
+5. **Redirects** (each should answer 301 to the target):
 
    - `/DiveSitesMap` to `/DiveSites?view=map`
    - `/DiveSitesSearch` to `/DiveSites`
