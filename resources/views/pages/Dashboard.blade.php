@@ -210,7 +210,8 @@
                     <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Recommended for this weekend</h2>
+                                @php $ws = \Carbon\Carbon::parse($weekendStart ?? now()); $weekendLabel = $ws->isCurrentWeek() ? 'this weekend' : 'the weekend of ' . $ws->format('M j'); @endphp
+                                <h2 class="card-title text-white mx-4">Recommended for {{ $weekendLabel }}</h2>
                             </div>
                         </div>
                         <div class="card-body">
@@ -225,7 +226,7 @@
                                 }
                             ?>
                             @if(!$hasFavorite)
-                                <p>There is no recommendation for this weekend at the moment. Go to <a href=" {{ route('overview') }}"><b class="text-info">"My Profile"</b></a> on the menu to set your favorite preferences.</p>
+                                <p>There is no recommendation for {{ $weekendLabel }} at the moment. Go to <a href=" {{ route('overview') }}"><b class="text-info">"My Profile"</b></a> on the menu to set your favorite preferences.</p>
                             @else
                                 <div class="table-responsive">
                                     <div class="table-responsive">

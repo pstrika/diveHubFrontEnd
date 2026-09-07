@@ -54,17 +54,22 @@ class MyDashboardController extends Controller
             ->pluck('short')
             ->toArray();
 
+        // Which weekend? This week's Saturday and Sunday (weeks start Monday), or
+        // next weekend once every boat of this one has left, so a Sunday night
+        // visit is not an empty table. Both weekends are loaded here and the
+        // choice is made after departed trips are dropped (see the ranking below).
+        $thisSaturday = now()->startOfWeek()->addDays(5)->toDateString();
+        $nextSunday   = now()->startOfWeek()->addDays(13)->toDateString();
+
         // NEED TO OPTIMIZE THIS QUERY TO GET ONLY POTENTIAL FAVs BASED ON LOCATION AND OPERATORS
-        $favTrips =  Trip::whereBetween('date', [
-            now()->startOfWeek()->addDays(5), // Saturday
-            now()->startOfWeek()->addDays(6), // Sunday
-            ])
+        $favTrips =  Trip::whereBetween('date', [$thisSaturday, $nextSunday])
+            ->whereRaw('DAYOFWEEK(date) IN (1, 7)') // Sunday = 1, Saturday = 7 in MySQL
             ->get()
             ->sortBy('departureTime')
             ->sortBy('date');
             
         Log::debug("Size of fav trips is" . count($favTrips));
-        $sites = collect(Site::select('id', 'maxDepth', 'level')->get());
+        $sites = collect(Site::select('id', 'maxDepth', 'level', 'rate')->get());
 
         foreach($favTrips as $i => $trip) {
             if($trip->siteId != null) {
@@ -163,6 +168,33 @@ class MyDashboardController extends Controller
         }
         
 
+        // Rank the weekend list (redesign chunk 4). Before this the table was
+        // date then time, so a 7:30 open water reef led even for a tech diver.
+        // Order: favorites first, the top of the diver's level range first,
+        // better rated sites first, boats with seats before full ones, then
+        // date and time. Trips that already departed today drop off.
+        $now = now();
+        $favTrips = $favTrips
+            ->reject(function ($t) use ($now) {
+                if ($t->date > $now->toDateString()) return false;
+                if ($t->date < $now->toDateString()) return true;
+                return $t->departureTime !== '00:00' && $t->departureTime < $now->format('H:i');
+            })
+            ->values();
+        // Keep this weekend while it still has boats to catch, otherwise next weekend.
+        $thisWeekend = $favTrips->filter(fn ($t) => $t->date <= now()->startOfWeek()->addDays(6)->toDateString());
+        $favTrips = $thisWeekend->isNotEmpty() ? $thisWeekend : $favTrips->filter(fn ($t) => $t->date > now()->startOfWeek()->addDays(6)->toDateString());
+        $weekendStart = $favTrips->min('date') ?: $thisSaturday;
+        $favTrips = $favTrips
+            ->sortBy([
+                fn ($a, $b) => (int) ($b->fav ?? 0) <=> (int) ($a->fav ?? 0),
+                fn ($a, $b) => (int) ($b->level ?? -1) <=> (int) ($a->level ?? -1),
+                fn ($a, $b) => (float) ($b->site[0]->rate ?? 0) <=> (float) ($a->site[0]->rate ?? 0),
+                fn ($a, $b) => (int) ($b->tripFreeSpots > 0) <=> (int) ($a->tripFreeSpots > 0),
+                fn ($a, $b) => strcmp($a->date . $a->departureTime, $b->date . $b->departureTime),
+            ])
+            ->values();
+
         $favoriteLocationsIndex = explode(',', $user->favLocations);
         Log::debug("favor locations: " . str(count($favoriteLocationsIndex)));
         $weatherLocationsNames = WeatherLocation::whereIn('id', $favoriteLocationsIndex)->get()->pluck('location')->toArray();
@@ -215,6 +247,6 @@ class MyDashboardController extends Controller
             //Log::debug($favCalendars);
 
 
-        return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers', 'wished', 'favOperators', 'favCalendars'));
+        return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers', 'wished', 'favOperators', 'favCalendars', 'weekendStart'));
     }
 }

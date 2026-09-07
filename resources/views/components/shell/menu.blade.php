@@ -61,15 +61,15 @@
 
 <div class="dh-menu-group">
     <h6>Conditions and shore</h6>
-    {!! $link('Weather, South Florida', route('Weather'), 'waves', $isGuest) !!}
-    {!! $link('Weather, Argentina', route('WeatherAR'), 'waves', $isGuest) !!}
+    {!! $link('Weather, South Florida', route('Weather'), 'waves') !!}
+    {!! $link('Weather, Argentina', route('WeatherAR'), 'waves') !!}
     {!! $link('Beach diving', route('BeachDiving'), 'beach_access') !!}
     {!! $link('Online waivers', route('Waivers'), 'assignment') !!}
 </div>
 
 <div class="dh-menu-group">
     <h6>Planning tools</h6>
-    {!! $link('Deco planner', route('DecoPlanner'), 'timer', $isGuest) !!}
+    {!! $link('Deco planner', route('DecoPlanner'), 'timer') !!}
     {!! $link('Best gases', route('gasplanning'), 'science', $isGuest) !!}
 </div>
 

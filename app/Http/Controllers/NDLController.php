@@ -902,7 +902,8 @@ class NDLController extends Controller
     
     public function show($id = null) {
 
-        $deco_unit = auth()->user()->deco_unit;
+        // Guests (shared user 5) have no unit preference; imperial is the Florida default.
+        $deco_unit = auth()->user()->deco_unit ?? 0;
 
         Log::debug("In NDLController@show with id " . str($id));
         if($id == null)

@@ -54,12 +54,18 @@ public function show($date = null) {
        
         $dateFrom = Carbon::parse($date)->format('Y-m-d');
         $dateTo = Carbon::parse($date)->addWeek(6)->format('Y-m-d');
-        $events = Event::whereBetween('date', [$dateFrom, $dateTo])
-            ->where('userId', auth()->user()->id)
-            //->where('userId', '8')
-            ->whereDate('date', '>=', Carbon::today())
-            ->get()->sortBy("date");
- 
+        // Show, then gate (proposal F-04): guests see the calendar page with an
+        // empty state instead of a login wall. The shared guest user must never
+        // list events, even if some end up on user 5 by accident.
+        if ($user->isNotGuest()) {
+            $events = Event::whereBetween('date', [$dateFrom, $dateTo])
+                ->where('userId', auth()->user()->id)
+                ->whereDate('date', '>=', Carbon::today())
+                ->get()->sortBy("date");
+        } else {
+            $events = collect();
+        }
+
         Log::debug("Got " . str(count($events)) . " event for user " . $user->name);
         $trips = [];
         foreach($events as $event) {

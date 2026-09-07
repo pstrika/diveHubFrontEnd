@@ -87,13 +87,39 @@ the offline queue belong to the PWA epic after the redesign.
 - Image pass: web sized copies of the photos the new pages use, and the social
   preview image replaced. Fate of the originals folder is Pablo's call.
 
-### Chunk 4: Show then gate, switchover
+### Chunk 4: Show then gate, switchover (built 2026-09-06, awaiting merge)
 
-- Guest previews of Weather, Deco Planner, and personal calendar, with sign up
-  prompted at the moment of saving.
-- Pre launch: redirect map checked against the sitemap, canonicals confirmed,
-  robots and sitemap confirmed.
-- Merge `redesign` into `main`.
+- Show, then gate: Deco Planner and My Calendar render for guests (routes moved
+  from `auth` to `guest`); the saving actions (add to calendar, book, remove,
+  regenerate feed link) stay behind `auth`. Guests get an empty calendar with a
+  create account prompt and never see the shared guest user's events. Weather
+  was already open. Menu items unlocked accordingly.
+- Dashboard "Recommended for this weekend" is ranked: favorites first, the top
+  of the diver's level range first, better rated sites, boats with seats, then
+  date and time. Departed trips drop off, and once this weekend has no boats
+  left the card rolls to next weekend and says so in its title. This ordering
+  was Zach's open question; done on the "take it home" go, revert is one block
+  in `MyDashboardController`.
+- Photos: `SitePhoto::makeCopies()` (PHP GD, no package) makes the web and
+  thumbnail copies at upload time, best effort, and `php artisan
+  photos:web-copies` backfills the photos uploaded before this release. This
+  retires the Python tool for server use.
+- Deploy workflow: one more post deploy step clears cached config and routes so
+  `config/divehub.php` is always read. The trigger (push to `main`) is unchanged.
+- Pre launch checks run locally against the production dump: every parameterless
+  GET route as anonymous, guest, member and admin; every sitemap URL 200 with a
+  self canonical; redirect targets 200; head tags and JSON-LD of indexed pages
+  compared with production; PHP lint on every changed file; component, view and
+  asset references checked for exact filename case (Linux is case sensitive).
+- Merge `redesign` into `main` is Pablo's step (fast forward, no conflicts as of
+  the last check). After deploy: run the photo backfill command once.
+
+### Server tasks after the first deploy
+
+1. Kudu console, `site/wwwroot`: `php artisan photos:web-copies` (a few minutes,
+   safe to rerun). Needs PHP GD with WebP; the command says so if it is missing.
+2. Confirm the beta or new host is in `APP_URL`, or `EnforceCanonicalHost` will
+   redirect it to the live site.
 
 ## Scope added after the proposal (agreed with Zach, 2026-09-06)
 

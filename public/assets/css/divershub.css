@@ -489,3 +489,8 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
   .dh-hours { grid-template-columns: repeat(4, 1fr); }
 }
 .dh-btn.is-on { background: var(--dh-good-bg); border-color: var(--dh-good); color: var(--dh-good); }
+
+/* Guest empty state on personal pages (show, then gate). */
+.dh-guest-note { display: flex; gap: var(--dh-space-4); align-items: flex-start; }
+.dh-guest-note > .material-icons-round { font-size: 40px; color: var(--dh-sea); }
+.dh-guest-note .dh-btn { margin-right: 6px; }

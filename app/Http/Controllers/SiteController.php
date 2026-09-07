@@ -926,6 +926,9 @@ class SiteController extends Controller
                     'file'=> $filename,
                     'siteId'=> $request->input('siteId'),
                 ]);   
+                // Web sized copies for the redesigned pages. Best effort: a failure is logged
+                // and the upload still succeeds (pages fall back to the original).
+                \App\Support\SitePhoto::makeCopies($filename);
 
                 //agregar el id de la photo al Model del sitio (coma separated)
                 $site = Site::findOrFail($request->input('siteId'));
@@ -943,6 +946,9 @@ class SiteController extends Controller
             'file'=> $filename,
             'siteId'=> $request->input('siteId'),
         ]);    
+        // Web sized copies for the redesigned pages. Best effort: a failure is logged
+        // and the upload still succeeds (pages fall back to the original).
+        \App\Support\SitePhoto::makeCopies($filename);
 
         //agregar el id de la photo al Model del sitio (coma separated)
         $site = Site::findOrFail($request->input('siteId'));

@@ -27,6 +27,7 @@ the target. **noindex** means the page is not indexed today and stays that way.
 | `/AboutUs` | unchanged | |
 | `/PrivacyPolicy` | unchanged | |
 | `/TermsOfUse` | unchanged | |
+| `/DataDeletion` | unchanged | Added on main in 9.16.0, merged into redesign |
 | `/sitemap.xml` | unchanged | |
 
 ## Themed calendars (stay live, render the trip board pre filtered)

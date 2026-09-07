@@ -127,12 +127,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
 	
 });
 
-Route::get('DecoPlanner/{id}', 'App\Http\Controllers\NDLController@show')->middleware('auth')->name('DecoPlanner');
-Route::get('DecoPlanner', 'App\Http\Controllers\NDLController@show')->middleware('auth')->name('DecoPlanner');
-Route::get('DecoPlannerImperial/{id}', 'App\Http\Controllers\NDLController@showImperial')->middleware('auth')->name('DecoPlannerImperial');
-Route::get('DecoPlannerImperial', 'App\Http\Controllers\NDLController@showImperial')->middleware('auth')->name('DecoPlannerImperial');
-Route::get('DecoPlannerMetric/{id}', 'App\Http\Controllers\NDLController@showMetric')->middleware('auth')->name('DecoPlannerMetric');
-Route::get('DecoPlannerMetric', 'App\Http\Controllers\NDLController@showMetric')->middleware('auth')->name('DecoPlannerMetric');
+// Deco planner and My Calendar render for guests (show, then gate); saving actions below stay on 'auth'.
+Route::get('DecoPlanner/{id}', 'App\Http\Controllers\NDLController@show')->middleware('guest')->name('DecoPlanner');
+Route::get('DecoPlanner', 'App\Http\Controllers\NDLController@show')->middleware('guest')->name('DecoPlanner');
+Route::get('DecoPlannerImperial/{id}', 'App\Http\Controllers\NDLController@showImperial')->middleware('guest')->name('DecoPlannerImperial');
+Route::get('DecoPlannerImperial', 'App\Http\Controllers\NDLController@showImperial')->middleware('guest')->name('DecoPlannerImperial');
+Route::get('DecoPlannerMetric/{id}', 'App\Http\Controllers\NDLController@showMetric')->middleware('guest')->name('DecoPlannerMetric');
+Route::get('DecoPlannerMetric', 'App\Http\Controllers\NDLController@showMetric')->middleware('guest')->name('DecoPlannerMetric');
 
 Route::get('Weather/{location}', 'App\Http\Controllers\WeatherController@show')->middleware('guest')->name('Weather');
 Route::get('Weather/', 'App\Http\Controllers\WeatherController@show')->middleware('guest')->name('Weather');
@@ -157,8 +158,8 @@ Route::get('CalendarWreck/', 'App\Http\Controllers\CalendarTController@showWreck
 Route::get('CalendarHydrotherapy/{date}', 'App\Http\Controllers\CalendarTController@showHydrotherapy')->middleware('guest')->name('CalendarHydrotherapy');
 Route::get('CalendarHydrotherapy/', 'App\Http\Controllers\CalendarTController@showHydrotherapy')->middleware('guest')->name('CalendarHydrotherapy');
 
-Route::get('MyCalendar/{date}', 'App\Http\Controllers\EventController@show')->middleware('auth')->name('MyCalendar');
-Route::get('MyCalendar/', 'App\Http\Controllers\EventController@show')->middleware('auth')->name('MyCalendar');
+Route::get('MyCalendar/{date}', 'App\Http\Controllers\EventController@show')->middleware('guest')->name('MyCalendar');
+Route::get('MyCalendar/', 'App\Http\Controllers\EventController@show')->middleware('guest')->name('MyCalendar');
 
 Route::get('TripDetails/{tripId}', 'App\Http\Controllers\TripDetailsController@show')->middleware('guest')->name('TripDetails');
 Route::get('AddEventToCalendar/{tripId}', 'App\Http\Controllers\EventController@addEventToCalendar')->middleware('auth')->name('AddEventToCalendar');

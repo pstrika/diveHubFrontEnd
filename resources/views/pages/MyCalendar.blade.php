@@ -205,6 +205,21 @@
                 </div>
                 @endif
 
+                @if(!auth()->user()->isNotGuest())
+                {{-- Guest empty state (show, then gate). The calendar below still renders, just empty. --}}
+                <div class="col-md-12">
+                    <div class="dh-panel mt-4 dh-guest-note">
+                        <span class="material-icons-round" aria-hidden="true">event_available</span>
+                        <div>
+                            <h2 class="dh-panel-title mb-1">This is your dive calendar</h2>
+                            <p class="mb-2">Save any trip from <a href="{{ route('Trips') }}">Dive Today</a> and it shows up here, with a link you can subscribe to from Google or Apple Calendar.</p>
+                            <a class="dh-btn dh-btn-primary" href="{{ route('create-account') }}">Create a free account</a>
+                            <a class="dh-btn dh-btn-ghost-dark" href="{{ route('login') }}">Sign in</a>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
                 <div class="col-md-12">
                     <div class="card card-calendar p-0 position-relative mt-4 mx-0 z-index-2 mb-0">
                         
@@ -395,7 +410,7 @@
 
         },
         initialView: "dayGridMonth",
-        firstDay: {{ auth()->user()->firstDayOfWeek }},
+        firstDay: {{ (int) (auth()->user()->firstDayOfWeek ?? 0) }}, // guest user has no preference; 0 = Sunday
         contentHeight: 'auto',
         headerToolbar: {
             start: '', //'title', // will normally be on the left. if RTL, will be on the right
