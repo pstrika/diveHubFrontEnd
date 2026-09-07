@@ -316,3 +316,64 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-menu-badge { margin-left: auto; background: var(--dh-poor); color: #fff; font-size: .7rem; font-weight: 700; border-radius: var(--dh-radius-pill); padding: 2px 8px; }
 .dh-menu-translate { padding: 0 12px; }
 .dh-trip-hour-tbd { font-size: .9rem; color: var(--dh-muted); }
+
+/* ------------------------------------------------------------------ */
+/* Sites explorer (W4) and site detail (W3).                           */
+/* ------------------------------------------------------------------ */
+.dh-explorer-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--dh-space-3); margin: var(--dh-space-3) 0 var(--dh-space-3); }
+.dh-explorer-title { font-size: 1.5rem; font-weight: 800; color: var(--dh-ink); margin: 0; }
+.dh-explorer-intro { color: var(--dh-muted); margin: 4px 0 0; font-size: .9rem; max-width: 60ch; }
+.dh-omnibox { position: relative; display: flex; align-items: center; gap: 8px; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill); padding: 8px 14px; min-width: min(360px, 100%); flex: 1 1 320px; max-width: 480px; }
+.dh-omnibox:focus-within { border-color: var(--dh-sea); box-shadow: 0 0 0 3px var(--dh-foam); }
+.dh-omnibox input { border: 0; outline: none; background: transparent; flex: 1; font-size: .95rem; color: var(--dh-ink); }
+.dh-omnibox .material-icons-round { color: var(--dh-muted); }
+.dh-omnibox-clear { color: var(--dh-muted); text-decoration: none; font-size: 1.2rem; line-height: 1; }
+.dh-site-grid-wide { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.dh-site-loc { font-size: .8rem; color: var(--dh-muted); }
+.dh-site-shore { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,.92); }
+.dh-map { width: 100%; height: 70vh; min-height: 420px; border-radius: var(--dh-radius); border: 1px solid var(--dh-line); background: var(--dh-foam); }
+.dh-map-small { height: 280px; min-height: 0; }
+
+/* Site detail. */
+.dh-site-hero { display: grid; grid-template-columns: 2fr 1fr; gap: var(--dh-space-2); margin-top: var(--dh-space-3); height: 340px; }
+.dh-site-hero-main, .dh-site-hero-side a { display: block; border-radius: 14px; background-size: cover; background-position: center; background-color: var(--dh-foam); }
+.dh-site-hero-side { display: grid; grid-template-rows: 1fr 1fr; gap: var(--dh-space-2); position: relative; }
+.dh-site-hero-more { position: absolute; right: 10px; bottom: 10px; background: rgba(11,42,58,.85); color: #fff; font-size: .75rem; font-weight: 700; padding: 4px 10px; border-radius: var(--dh-radius-pill); }
+.dh-site-facts { display: flex; flex-wrap: wrap; gap: var(--dh-space-4); justify-content: space-between; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 14px; padding: var(--dh-space-4) var(--dh-space-6); margin: var(--dh-space-3) 0; }
+.dh-site-facts-main { flex: 1 1 360px; min-width: 0; }
+.dh-site-title { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; color: var(--dh-ink); margin: 0 0 4px; letter-spacing: -.01em; }
+.dh-site-sub { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; color: var(--dh-deep); font-weight: 600; margin: 0 0 10px; }
+.dh-site-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.dh-site-chips .chip img { vertical-align: -3px; margin-right: 2px; }
+.dh-site-facts-side { display: flex; flex-direction: column; align-items: flex-end; gap: var(--dh-space-3); }
+.dh-site-rating { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.dh-site-actions { display: flex; gap: var(--dh-space-2); flex-wrap: wrap; }
+.dh-site-actions .material-icons-round { font-size: 18px; }
+.dh-dived-toggle input[type="checkbox"] { position: absolute; opacity: 0; pointer-events: none; }
+.dh-dived-toggle label { cursor: pointer; }
+.dh-dived-toggle .is-on { background: var(--dh-good-bg); border-color: var(--dh-good); color: var(--dh-good); }
+.dh-site-columns { margin-bottom: var(--dh-space-3); }
+.dh-panel { background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 14px; padding: var(--dh-space-4); margin-bottom: var(--dh-space-3); }
+.dh-panel-title { font-size: 1rem; font-weight: 800; color: var(--dh-ink); margin: 0 0 var(--dh-space-3); }
+.dh-site-details { display: grid; grid-template-columns: 200px 1fr; gap: var(--dh-space-4); align-items: center; }
+.dh-facts-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--dh-space-3); margin: 0; }
+.dh-facts-list dt { font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--dh-muted); font-weight: 700; }
+.dh-facts-list dd { margin: 0; font-weight: 700; color: var(--dh-ink); }
+.dh-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--dh-space-2); }
+.dh-gallery-item { margin: 0; }
+.dh-gallery-item img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--dh-radius); display: block; }
+.dh-gallery-item figcaption { font-size: .75rem; color: var(--dh-muted); margin-top: 4px; }
+.dh-operator-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.dh-operator-list a { display: flex; align-items: center; gap: 10px; color: var(--dh-ink); text-decoration: none; font-weight: 600; font-size: .9rem; padding: 6px 8px; border-radius: var(--dh-radius); }
+.dh-operator-list a:hover { background: var(--dh-foam); color: var(--dh-deep); }
+.dh-operator-list img { width: 36px; height: 36px; object-fit: contain; border-radius: 8px; background: #fff; border: 1px solid var(--dh-line); }
+
+@media (max-width: 767.98px) {
+  .dh-site-hero { grid-template-columns: 1fr; height: auto; }
+  .dh-site-hero-main { height: 220px; }
+  .dh-site-hero-side { grid-template-rows: none; grid-template-columns: 1fr 1fr; height: 90px; }
+  .dh-site-facts { padding: var(--dh-space-3) var(--dh-space-4); }
+  .dh-site-facts-side { align-items: flex-start; width: 100%; }
+  .dh-site-rating { align-items: flex-start; }
+  .dh-site-details { grid-template-columns: 1fr; }
+}

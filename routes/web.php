@@ -198,9 +198,12 @@ Route::get('UpdateWished/{siteId}', 'App\Http\Controllers\SiteController@updateW
 Route::post('AddSiteReview/{siteId}', 'App\Http\Controllers\SiteController@addReview')->middleware('auth')->name('AddSiteReview');
 
 Route::get('DiveSites', 'App\Http\Controllers\SiteController@showTopRated')->middleware('guest')->name('DiveSites');
-Route::get('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites')->middleware('guest')->name('DiveSitesSearch');
-Route::post('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites')->middleware('guest')->name('DiveSitesSearch');
-Route::get('DiveSitesMap', 'App\Http\Controllers\SiteController@showAll')->middleware('guest')->name('DiveSitesMap');
+// Redesign W4: Search and Map became views of the Dive Sites explorer. Both
+// pages were noindex, so the 301s cost nothing. Listed in docs/seo/redirect-map.md.
+// The POST kept the old navbar search form working; it forwards the term.
+Route::get('DiveSitesSearch', fn () => redirect()->route('DiveSites', request()->query(), 301))->name('DiveSitesSearch');
+Route::post('DiveSitesSearch', fn () => redirect()->route('DiveSites', array_filter(['q' => request()->input('searchString')])))->middleware('guest');
+Route::get('DiveSitesMap', fn () => redirect()->route('DiveSites', ['view' => 'map'] + request()->query(), 301))->name('DiveSitesMap');
 Route::get('DiveSitesAll', 'App\Http\Controllers\SiteController@showAllSearch')->middleware('guest')->name('DiveSitesAll');
 Route::get('DiveSitesAdmin', 'App\Http\Controllers\SiteController@showAllAdmin')->middleware('auth')->name('DiveSitesAdmin');
 Route::post('Calculate-ndl', 'App\Http\Controllers\NDLController@calculateNDL')->middleware('guest')->name('Calculate-ndl');

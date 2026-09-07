@@ -1,0 +1,37 @@
+{{--
+    Dive site card (proposal W4 note 3, W1 note 4).
+
+    Photo thumbnail plus the three facts a diver scans: type, level, depth,
+    and the rating when there is one. Used by the explorer, wreckWiki and the
+    homepage. $site is a Site model; an optional $site->photoFile (first
+    photo filename) picks the image, otherwise a type illustration is used.
+
+    Usage: <x-site-card :site="$site" />
+--}}
+@props(['site'])
+
+@php
+    $file = $site->photoFile ?? null;
+    $img = $file ? \App\Support\SitePhoto::thumb($file)
+                 : asset('assets') . '/img/illustrations/' . (strtolower($site->type) === 'wreck' ? 'site_wreck.webp' : 'dive-site.webp');
+    $levelInfo = \App\Support\DiveLevel::get($site->level);
+@endphp
+
+<a class="dh-site-card" href="{{ route('SiteDetails') }}/{{ $site->slug ?? $site->id }}">
+    <span class="dh-site-img" style="background-image:url('{{ $img }}')" role="img" aria-label="{{ $site->name }}">
+        <span class="chip chip-static dh-site-type">{{ ucfirst($site->type) }}</span>
+        @if(($site->access ?? '') === 'Beach Access')<span class="chip chip-static dh-site-shore">Shore entry</span>@endif
+    </span>
+    <span class="dh-site-body">
+        <span class="dh-site-name">{{ $site->name }}</span>
+        @if(!empty($site->locationName))<span class="dh-site-loc">{{ $site->locationName }}</span>@endif
+        <span class="dh-site-facts">
+            @if($levelInfo)
+                <x-dive-level.icon :level="$site->level" height="18" />
+                <span class="chip chip-static" title="{{ $levelInfo['name'] }}">{{ $levelInfo['code'] }}</span>
+            @endif
+            @if($site->maxDepth)<span class="chip chip-static">{{ $site->maxDepth }} ft</span>@endif
+            @if($site->rate)<span class="chip chip-static" title="{{ $site->votes }} diver ratings">★ {{ number_format($site->rate, 1) }}</span>@endif
+        </span>
+    </span>
+</a>

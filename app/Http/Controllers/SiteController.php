@@ -146,7 +146,16 @@ class SiteController extends Controller
              ->get()
              ->sortBy('name');
 
-        return view('pages.SiteDetails', compact('site','photos', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'sites', 'gasMixes'));
+        // Redesign W3: live "diveable today" pill from this location's forecast,
+        // and the next boats to this site as trip cards (the board's card).
+        $forecast = $location
+            ? \App\Models\Weatherday::where('date', Carbon::today()->toDateString())->where('location', $location->location)->first()
+            : null;
+        $now = Carbon::now();
+        $operatorsById = Operator::select('id', 'location', 'phone')->get()->keyBy('id')->all();
+        $nextTrips = $trips->take(8)->map(fn ($t) => \App\Support\TripBoard::card($t, $now, $operatorsById))->values()->all();
+
+        return view('pages.SiteDetails', compact('site','photos', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'sites', 'gasMixes', 'forecast', 'nextTrips'));
 
     }
     public function getMyVisitedSites() {
@@ -467,75 +476,111 @@ class SiteController extends Controller
     }
 
     /**
-     * Read the level filter and sort choice from the query string.
+     * Dive Sites explorer (redesign W4). Serves two indexed URLs:
+     *   /DiveSites   all sites, "Top Rated" intent, default sort by rating
+     *   /WreckSites  wreckWiki, the wreck collection, default A to Z
+     * Sites Map and Search redirect here; the map is ?view=map and search is ?q=.
      *
-     * Shared by the Top Rated and wreckWiki pages so both accept the same
-     * URLs: ?level=0..4 (see App\Support\DiveLevel) and ?sort=rate|name|maxDepth.
-     * Anything unrecognised falls back to the default, so a hand edited URL
-     * can never break the page or reach the database.
-     *
-     * @return array{filters: array{level: ?int, sort: string}, sortOptions: array<string,string>}
+     * Every control is a query parameter (q, type, level, sort, view) and every
+     * value is validated against a fixed list, so a hand edited URL can never
+     * break the page or reach the database with junk.
      */
-    private function siteListFilters(Request $request, string $defaultSort): array
+    private const EXPLORER_TYPES = ['wreck' => 'Wrecks', 'reef' => 'Reefs', 'other' => 'Other', 'shore' => 'Shore entry'];
+    private const EXPLORER_SORTS = ['rate' => 'Top rated', 'name' => 'A to Z', 'maxDepth' => 'Deepest'];
+
+    private function explorer(Request $request, array $explorer, array $SEO)
     {
-        $sortOptions = [
-            'rate'     => 'Top rated',
-            'name'     => 'A to Z',
-            'maxDepth' => 'Deepest',
-        ];
-
+        $q     = trim((string) $request->query('q', ''));
+        $type  = $explorer['fixedType'] ?? $request->query('type');
+        $type  = array_key_exists((string) $type, self::EXPLORER_TYPES) ? $type : null;
         $level = $request->query('level');
-        $sort  = $request->query('sort', $defaultSort);
+        $level = DiveLevel::isValid($level) ? (int) $level : null;
+        $sort  = $request->query('sort', $explorer['defaultSort']);
+        $sort  = array_key_exists((string) $sort, self::EXPLORER_SORTS) ? $sort : $explorer['defaultSort'];
+        $view  = $request->query('view') === 'map' ? 'map' : 'list';
 
-        return [
-            'filters' => [
-                'level' => DiveLevel::isValid($level) ? (int) $level : null,
-                'sort'  => array_key_exists($sort, $sortOptions) ? $sort : $defaultSort,
-            ],
-            'sortOptions' => $sortOptions,
-        ];
+        $base = Site::where('_hidden', '<>', 1);
+        if ($q !== '') {
+            $base->where(fn ($w) => $w->where('name', 'LIKE', "%$q%")->orWhere('aka', 'LIKE', "%$q%"));
+        }
+        $applyType = function ($query, $t) {
+            if ($t === 'shore') {
+                return $query->where('access', 'Beach Access');
+            }
+            return $t ? $query->where('type', $t) : $query;
+        };
+
+        // Counts for the level chips are computed with the level filter off, so
+        // each chip reads "how many if I picked this" (same idea as the board).
+        $levelCounts = $applyType((clone $base), $type)
+            ->selectRaw('level, COUNT(*) c')->groupBy('level')->pluck('c', 'level')->all();
+        $levelCounts = array_replace(array_fill_keys(array_keys(DiveLevel::all()), 0), array_intersect_key($levelCounts, DiveLevel::all()));
+
+        $query = $applyType($base, $type);
+        if ($level !== null) {
+            $query->where('level', $level);
+        }
+        switch ($sort) {
+            case 'name':     $query->orderBy('name'); break;
+            case 'maxDepth': $query->orderBy('maxDepth', 'desc'); break;
+            default:         $query->orderByRaw('rate IS NULL, rate DESC')->orderBy('votes', 'desc')->orderBy('name');
+        }
+        $sites = $query->get();
+
+        // First photo per site for the cards, one query for the whole page.
+        $firstPhotos = Photo::whereIn('siteId', $sites->pluck('id'))->orderBy('id')->get()->groupBy('siteId');
+        $locationNames = WeatherLocation::all()->pluck('location', 'short')->map(fn ($n) => ucwords($n));
+        foreach ($sites as $site) {
+            $site->photoFile = $firstPhotos->get($site->id)?->first()?->file;
+            $site->locationName = $locationNames[$site->location] ?? null;
+        }
+
+        // Map features: sites store GPS as DMS text ("26° 22.838' N"); convert here so the page ships plain numbers.
+        $mapFeatures = [];
+        if ($view === 'map') {
+            foreach ($sites as $site) {
+                $lat = self::dmsToDecimal($site->gpsLat);
+                $lon = self::dmsToDecimal($site->gpsLon);
+                if ($lat === null || $lon === null) {
+                    continue;
+                }
+                $mapFeatures[] = [
+                    'type' => 'Feature',
+                    'properties' => ['name' => $site->name, 'icon' => 'icon_' . (in_array($site->type, ['wreck', 'reef']) ? $site->type : 'other'), 'url' => route('SiteDetails') . '/' . ($site->slug ?? $site->id)],
+                    'geometry' => ['type' => 'Point', 'coordinates' => [$lon, $lat]],
+                ];
+            }
+        }
+
+        return view('pages.SitesExplorer', [
+            'explorer'    => $explorer,
+            'SEO'         => $SEO,
+            'sites'       => $sites,
+            'filters'     => ['q' => $q, 'type' => $type, 'level' => $level, 'sort' => $sort, 'view' => $view],
+            'typeOptions' => self::EXPLORER_TYPES,
+            'sortOptions' => self::EXPLORER_SORTS,
+            'levelCounts' => $levelCounts,
+            'mapFeatures' => $mapFeatures,
+            'mapboxToken' => 'pk.eyJ1IjoicHN0cmlrYSIsImEiOiJjbHZsc2p2bXcyY240MmtuMDcydHJzd2UxIn0.KBf79cvk47WseBc9rNu6gQ',
+        ]);
     }
 
-    /**
-     * Apply the filters from siteListFilters() to a Site query.
-     * Rating sorts put unrated sites last; name sorts are A to Z; depth is deepest first.
-     */
-    private function applySiteListFilters($query, array $filters)
+    /** "26° 22.838' N" to 26.38063. Null when the text does not parse. */
+    public static function dmsToDecimal(?string $dms): ?float
     {
-        if ($filters['level'] !== null) {
-            $query->where('level', $filters['level']);
+        if (!$dms) {
+            return null;
         }
-
-        switch ($filters['sort']) {
-            case 'name':
-                $query->orderBy('name', 'asc');
-                break;
-            case 'maxDepth':
-                $query->orderBy('maxDepth', 'desc');
-                break;
-            default:
-                $query->orderBy('rate', 'desc');
+        $parts = sscanf(str_replace('&#039;', "'", $dms), "%d° %f' %c");
+        if (!is_array($parts) || count(array_filter($parts, fn ($v) => $v !== null)) !== 3) {
+            return null;
         }
-
-        return $query;
+        [$deg, $min, $dir] = $parts;
+        $val = $deg + $min / 60;
+        return round(in_array($dir, ['S', 'W'], true) ? -$val : $val, 6);
     }
 
     public function showTopRated(Request $request) {
-        ['filters' => $filters, 'sortOptions' => $sortOptions] = $this->siteListFilters($request, 'rate');
-
-        //$sites = Site::all()->sortByDesc("rate");
-        // Top ten wrecks and top ten reefs, as before. When a level filter is
-        // active the ten are the best matches for that level, which is what a
-        // diver asking "what can I dive at Open Water" wants to see.
-        $sitesWrecks = $this->applySiteListFilters(
-            Site::where('type', 'wreck')->where('_hidden', '<>', 1), $filters
-        )->take(10)->get();
-
-        $sitesReefs = $this->applySiteListFilters(
-            Site::where('type', '!=', 'wreck')->where('_hidden', '<>', 1), $filters
-        )->take(10)->get();
-        $locations = WeatherLocation::all();
-
         /*Provide SEO metadata */
         $SEO = array(
             "title" => "Best Dive Sites in Florida | Top Rated Reefs & Wrecks",
@@ -543,20 +588,15 @@ class SiteController extends Controller
             "keywords" => "florida dive sites, best dive sites florida, top rated dive sites, florida reefs, florida wrecks, scuba diving florida",
             "canonical" => route("DiveSites")
         );
-
-        return view('pages.DiveSites', compact('sitesWrecks', 'sitesReefs', 'locations', 'SEO', 'filters', 'sortOptions'));
+        return $this->explorer($request, [
+            'heading'     => 'Dive Sites',
+            'intro'       => 'Every reef, wreck and shore entry from Stuart to Key West, rated by the divers who have been there.',
+            'fixedType'   => null,
+            'defaultSort' => 'rate',
+        ], $SEO);
     }
 
     public function showWrecks(Request $request) {
-        // wreckWiki lists every wreck. Default order stays A to Z as it always has.
-        ['filters' => $filters, 'sortOptions' => $sortOptions] = $this->siteListFilters($request, 'name');
-
-        $sitesWrecks = $this->applySiteListFilters(
-            Site::where('type', 'wreck')->where('_hidden', '<>', 1), $filters
-        )->get();
-
-        $locations = WeatherLocation::all();
-
         /*Provide SEO metadata */
         $SEO = array(
             "title" => "Florida wreckwiki",
@@ -564,9 +604,14 @@ class SiteController extends Controller
             "keywords" => "diving, fort lauderdale beach diving, palm beach beach diving,dive sites,scuba diving sites,dive wrecks,dive reefs,wreck,reef",
             "canonical" => route("WreckSites")
         );
-
-        return view('pages.WreckSites', compact('sitesWrecks', 'locations', 'SEO', 'filters', 'sortOptions'));
+        return $this->explorer($request, [
+            'heading'     => 'wreckWiki',
+            'intro'       => 'The wreck collection: every artificial reef and shipwreck in Florida with depth, level, history and photos.',
+            'fixedType'   => 'wreck',
+            'defaultSort' => 'name',
+        ], $SEO);
     }
+
     public function searchSites(Request $request) {
 
         Log::info('Request data:', $request->all());
