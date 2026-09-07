@@ -8,6 +8,7 @@ use App\Models\GroupDive;
 use App\Models\GroupDiveRsvp;
 use App\Models\Photo;
 use App\Models\Trip;
+use App\Services\PushNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -54,6 +55,7 @@ class GroupDiveController extends Controller
         // The person who added the dive is automatically going.
         $this->addRsvp($dive, auth()->user()->id);
         $this->postDiveToFacebook($group, $dive);
+        $this->notifyNewDive($group, $dive);
 
         return redirect()->route('Groups.show', ['group' => $group->slug])
             ->with('msg', 'Dive added to the group calendar!');
@@ -101,6 +103,7 @@ class GroupDiveController extends Controller
 
         $this->addRsvp($dive, auth()->user()->id);
         $this->postDiveToFacebook($group, $dive);
+        $this->notifyNewDive($group, $dive);
 
         return redirect()->route('Groups.show', ['group' => $group->slug])
             ->with('msg', 'Custom dive added to the group calendar!');
@@ -268,6 +271,23 @@ class GroupDiveController extends Controller
         } catch (\Throwable $e) {
             Log::error('Facebook post delete exception for dive ' . $dive->id . ': ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Push-notifies every other active member of the group. Best-effort -
+     * PushNotificationService swallows its own failures.
+     */
+    private function notifyNewDive(Group $group, GroupDive $dive)
+    {
+        $when = \Carbon\Carbon::parse($dive->date)->format('D, M j') . ($dive->time ? ' at ' . $dive->time : '');
+
+        PushNotificationService::notify(
+            $group->activeMembers()->pluck('user_id'),
+            $group->name,
+            'New dive added: ' . $dive->tripName . ' - ' . $when,
+            route('Groups.show', ['group' => $group->slug]),
+            auth()->user()->id
+        );
     }
 
     /**

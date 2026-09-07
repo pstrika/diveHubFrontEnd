@@ -17,7 +17,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('overview') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 9.16.0 (09/06/26)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 9.17.0 (09/07/26)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -125,6 +125,18 @@
                         href="#" onclick="showModalGuest();">
                         <i class="material-icons-round opacity-10 text-primary">lock</i>
                         <span class="nav-link-text ms-2 ps-1 text-primary">My Groups</span>
+                    </a>
+                </li>
+                @endif
+            @endauth
+
+            {{-- Push Notifications --}}
+            @auth
+                @if(auth()->user()->isNotGuest())
+                <li class="nav-item" id="pushNotifNavItem" hidden>
+                    <a class="nav-link text-white" href="javascript:;" id="pushNotifToggle">
+                        <i class="material-icons-round opacity-10" id="pushNotifIcon">notifications_none</i>
+                        <span class="nav-link-text ms-2 ps-1" id="pushNotifLabel">Enable Notifications</span>
                     </a>
                 </li>
                 @endif
@@ -1445,5 +1457,85 @@
             $('#modal_logged_as_guest').modal('show'); // Show the modal
         };
     </script>
+    @auth
+        @if(auth()->user()->isNotGuest())
+        <script>
+            (function () {
+                var navItem = document.getElementById('pushNotifNavItem');
+                var toggle = document.getElementById('pushNotifToggle');
+                var icon = document.getElementById('pushNotifIcon');
+                var label = document.getElementById('pushNotifLabel');
+                var vapidPublicKey = @json(config('services.webpush.public_key'));
+
+                if (!navItem || !('serviceWorker' in navigator) || !('PushManager' in window) || !vapidPublicKey) {
+                    return; // unsupported browser or VAPID not configured - leave the nav item hidden
+                }
+
+                navItem.hidden = false;
+
+                function urlBase64ToUint8Array(base64String) {
+                    var padding = '='.repeat((4 - base64String.length % 4) % 4);
+                    var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+                    var rawData = window.atob(base64);
+                    var outputArray = new Uint8Array(rawData.length);
+                    for (var i = 0; i < rawData.length; ++i) {
+                        outputArray[i] = rawData.charCodeAt(i);
+                    }
+                    return outputArray;
+                }
+
+                function setSubscribedUi(isSubscribed) {
+                    icon.textContent = isSubscribed ? 'notifications_active' : 'notifications_none';
+                    label.textContent = isSubscribed ? 'Notifications On' : 'Enable Notifications';
+                }
+
+                function getRegistration() {
+                    return navigator.serviceWorker.register('/sw.js');
+                }
+
+                getRegistration()
+                    .then(function (reg) { return reg.pushManager.getSubscription(); })
+                    .then(function (sub) { setSubscribedUi(!!sub); })
+                    .catch(function () {});
+
+                toggle.addEventListener('click', function () {
+                    getRegistration().then(function (reg) {
+                        reg.pushManager.getSubscription().then(function (existingSub) {
+                            if (existingSub) {
+                                var endpoint = existingSub.endpoint;
+                                existingSub.unsubscribe().then(function () {
+                                    fetch(@json(route('push.unsubscribe')), {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': @json(csrf_token()) },
+                                        body: JSON.stringify({ endpoint: endpoint })
+                                    });
+                                    setSubscribedUi(false);
+                                });
+                            } else {
+                                Notification.requestPermission().then(function (permission) {
+                                    if (permission !== 'granted') {
+                                        return;
+                                    }
+                                    reg.pushManager.subscribe({
+                                        userVisibleOnly: true,
+                                        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+                                    }).then(function (sub) {
+                                        fetch(@json(route('push.subscribe')), {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': @json(csrf_token()) },
+                                            body: JSON.stringify(sub.toJSON())
+                                        }).then(function () {
+                                            setSubscribedUi(true);
+                                        });
+                                    });
+                                });
+                            }
+                        });
+                    });
+                });
+            })();
+        </script>
+        @endif
+    @endauth
     @endpush
 </aside>

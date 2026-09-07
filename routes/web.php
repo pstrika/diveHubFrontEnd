@@ -531,6 +531,9 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::get('Groups/create', 'App\Http\Controllers\GroupController@create')->name('Groups.create');
 	Route::post('Groups', 'App\Http\Controllers\GroupController@store')->name('Groups.store');
 
+	Route::post('push/subscribe', 'App\Http\Controllers\PushSubscriptionController@store')->name('push.subscribe');
+	Route::post('push/unsubscribe', 'App\Http\Controllers\PushSubscriptionController@destroy')->name('push.unsubscribe');
+
 	Route::post('Groups/invites/{member}/accept', 'App\Http\Controllers\GroupInviteController@accept')->name('Groups.invites.accept');
 	Route::post('Groups/invites/{member}/decline', 'App\Http\Controllers\GroupInviteController@decline')->name('Groups.invites.decline');
 
