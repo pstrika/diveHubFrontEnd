@@ -18,8 +18,14 @@
 <article class="dh-trip {{ $trip['departed'] ? 'is-departed' : '' }} {{ $trip['fav'] ? 'is-fav' : '' }}" data-trip-id="{{ $trip['id'] }}">
     <div class="dh-trip-time" aria-label="Departs {{ $trip['time'] }} {{ $trip['meridiem'] }}">
         @if($showDate)<span class="dh-trip-date">{{ \Carbon\Carbon::parse($trip['date'])->format('D M j') }}</span>@endif
-        <span class="dh-trip-hour">{{ $trip['time'] }}</span>
-        <span class="dh-trip-ampm">{{ $trip['meridiem'] }}</span>
+        @if($trip['time24'] === '00:00')
+            {{-- Crawlers store midnight when an operator publishes no departure time. --}}
+            <span class="dh-trip-hour dh-trip-hour-tbd">TBD</span>
+            <span class="dh-trip-ampm">time</span>
+        @else
+            <span class="dh-trip-hour">{{ $trip['time'] }}</span>
+            <span class="dh-trip-ampm">{{ $trip['meridiem'] }}</span>
+        @endif
     </div>
 
     <div class="dh-trip-body">

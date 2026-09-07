@@ -71,9 +71,13 @@ class HomeController extends Controller
         $totalBoats = array_sum(array_column($coasts, 'boats'));
 
         // Featured sites: highest rated, with a photo when one exists.
+        // Ratings are sparse (many sites have two or three votes), so a plain
+        // sort by rate puts a 5.0 with two votes above a 4.8 with forty. The
+        // score below pulls low vote counts toward the catalog average (4.2)
+        // with the weight of three votes, a standard damped average.
         $featured = Site::where('_hidden', '<>', 1)
             ->whereNotNull('rate')
-            ->orderBy('rate', 'desc')
+            ->orderByRaw('(rate * COALESCE(votes, 0) + 4.2 * 3) / (COALESCE(votes, 0) + 3) DESC')
             ->orderBy('votes', 'desc')
             ->take(self::FEATURED)
             ->get();

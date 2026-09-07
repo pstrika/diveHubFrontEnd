@@ -60,6 +60,14 @@ Each chunk is one pull request into `redesign`.
 
 ### Chunk 2: Shell, trip board, home (W1, W2, W5)
 
+Built mobile first: the phone layout is the base and desktop grows from it.
+Also lays PWA groundwork at no cost to this work: web app manifest, theme
+color and home screen icons in the page template; the trip board is built
+from plain card arrays (`App\Support\TripBoard`) so a JSON feed for the
+offline app is one controller method later; the shell is a single component
+a service worker can cache as the app shell. Service worker, IndexedDB and
+the offline queue belong to the PWA epic after the redesign.
+
 - Top nav with Dive Today, Dive Sites, Operators, and a profile menu. Bottom
   tab bar on mobile. One layout component swap propagates to every page.
 - Trip board as region grouped cards with conditions pills, filter chips, and

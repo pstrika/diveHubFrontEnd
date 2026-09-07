@@ -134,7 +134,16 @@ final class TripBoard
             $locationCode = $operators[$trip->operatorId]->location;
         }
 
-        $sites = is_array($trip->site ?? null) ? $trip->site : [];
+        // Controllers attach sites with `$trip->site[] = $site`. On an Eloquent
+        // model that pushes onto the lazily loaded `site()` relation, so what
+        // comes back is a Collection, not an array. Accept both.
+        $sites = $trip->site ?? [];
+        if ($sites instanceof Collection) {
+            $sites = $sites->all();
+        } elseif (!is_array($sites)) {
+            $sites = [];
+        }
+        $sites = array_values(array_filter($sites, fn ($s) => is_object($s) && isset($s->id)));
         $first = $sites[0] ?? null;
         $siteNames = array_values(array_unique(array_filter(array_map(fn ($s) => $s->name ?? null, $sites))));
 

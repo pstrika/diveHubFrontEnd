@@ -17,13 +17,20 @@ namespace App\Support;
 final class Coast
 {
     /** Display order, north to south. key => [label, location short codes]. */
+    /*
+     * Codes are weatherlocations.short as stored in production (checked against
+     * the 2026-09-06 dump): KLA Key Largo, ISM Islamorada, MAR Marathon, KWE Key
+     * West, MIA Miami Beach, FLL Fort Lauderdale, POM Pompano, DEB Deerfield,
+     * BOY Boynton, WPB West Palm, JUP Jupiter, STU Stuart, PSL Port St Lucie,
+     * and MDQ, LGR, PMY, USH in Argentina.
+     */
     private const COASTS = [
         'treasure'  => ['label' => 'Treasure Coast',   'codes' => ['STU', 'PSL']],
         'palm'      => ['label' => 'Palm Beach',       'codes' => ['JUP', 'WPB', 'BOY']],
-        'broward'   => ['label' => 'Fort Lauderdale',  'codes' => ['DFB', 'POM', 'FLL']],
+        'broward'   => ['label' => 'Fort Lauderdale',  'codes' => ['DEB', 'POM', 'FLL']],
         'miami'     => ['label' => 'Miami',            'codes' => ['MIA']],
-        'keys'      => ['label' => 'Florida Keys',     'codes' => ['KEY', 'ISL', 'MAR', 'KW']],
-        'argentina' => ['label' => 'Argentina',        'codes' => ['MDP']],
+        'keys'      => ['label' => 'Florida Keys',     'codes' => ['KLA', 'ISM', 'MAR', 'KWE']],
+        'argentina' => ['label' => 'Argentina',        'codes' => ['MDQ', 'LGR', 'PMY', 'USH']],
         'other'     => ['label' => 'Other',            'codes' => []],
     ];
 
