@@ -26,7 +26,9 @@
             <li class="nav-item">
               <a href="/PrivacyPolicy" class="nav-link text-muted">Privacy Policy</a>
             </li>
-            
+            <li class="nav-item">
+              <a href="/DataDeletion" class="nav-link text-muted">Data Deletion</a>
+            </li>
           </ul>
         </div>
       </div>

@@ -64,6 +64,15 @@ Route::get('TermsOfUse', function () {
     return view('pages.TermsOfUse', compact('SEO'));
 })->middleware('guest')->name('TermsOfUse');
 
+Route::get('DataDeletion', function () {
+    $SEO = [
+        "title" => "Data Deletion Instructions | Divers Hub",
+        "desc" => "How to request deletion of your data from Divers Hub, including data connected via Facebook Login.",
+        "canonical" => route("DataDeletion"),
+    ];
+    return view('pages.DataDeletion', compact('SEO'));
+})->middleware('guest')->name('DataDeletion');
+
 Route::get('home', function () {
     $SEO = [
         "title" => "Divers Hub - your one stop for diving in FL!",
