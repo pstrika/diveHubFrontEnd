@@ -2933,12 +2933,26 @@
                 'filter': ['!', ['get', 'isThis']],
                 'layout': {
                     'icon-image': ['get', 'icon'],
-                    'icon-size': 0.18,
+                    'icon-size': 0.22,
                     'icon-anchor': 'bottom',
                     'icon-allow-overlap': true,
+                    // Neighbour names are small and Mapbox hides the ones that would collide,
+                    // so a dense cluster shows a few readable names instead of a pile of text.
+                    // text-optional keeps the pin when its label is dropped.
+                    'text-field': ['get', 'name'],
+                    'text-size': 11,
+                    'text-anchor': 'top',
+                    'text-offset': [0, 0.2],
+                    'text-allow-overlap': false,
+                    'text-optional': true,
+                    'text-padding': 4,
                 },
                 'paint': {
-                    'icon-opacity': 0.55,
+                    'icon-opacity': 0.7,
+                    'text-color': 'white',
+                    'text-opacity': 0.85,
+                    'text-halo-color': '#0b2a3a',
+                    'text-halo-width': 1,
                 },
             });
 
