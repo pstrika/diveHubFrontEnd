@@ -230,7 +230,7 @@
                         <div class="dh-boat-list">
                             @foreach($boats as $boat)
                                 <article class="dh-boat">
-                                    @if($boat->pic)<span class="dh-boat-img" style="background-image:url('{{ asset('assets') }}/img/boats/{{ $boat->pic }}')"></span>@endif
+                                    @if($boat->pic)<span class="dh-boat-img" style="background-image:url('{{ asset('assets') }}{{ $boat->pic }}')"></span>@endif
                                     <div>
                                         <h3 class="dh-boat-name">{{ $boat->name }}</h3>
                                         <dl class="dh-facts-list dh-facts-list-tight">

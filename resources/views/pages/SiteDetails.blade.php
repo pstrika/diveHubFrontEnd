@@ -2904,6 +2904,7 @@
                                     "'name': \"" . $site->name . "\"," .
                                     "'icon': 'icon_" . $site->type . $suffixIcon . "'," .
                                     "'url': '" . $site->id . "'," .
+                                    "'isThis': " . ($thisSiteId == $site->id ? 'true' : 'false') . "," .
                             "}," .
                             "'geometry': {" .
                                 "'type': 'Point'," .
@@ -2922,33 +2923,57 @@
                 'data': sites
             });
 
+            // Two layers so the site you are reading about stands out (Zach, chunk 3 review):
+            // neighbours are small, faded pins with no label; this site is a big pin
+            // with a labelled name, drawn last so it sits on top of the cluster.
+            map.addLayer({
+                'id': 'poi-others',
+                'type': 'symbol',
+                'source': 'sites',
+                'filter': ['!', ['get', 'isThis']],
+                'layout': {
+                    'icon-image': ['get', 'icon'],
+                    'icon-size': 0.18,
+                    'icon-anchor': 'bottom',
+                    'icon-allow-overlap': true,
+                },
+                'paint': {
+                    'icon-opacity': 0.55,
+                },
+            });
+
             map.addLayer({
                 'id': 'poi-labels',
                 'type': 'symbol',
                 'source': 'sites',
-                
+                'filter': ['get', 'isThis'],
                 'layout': {
                     'text-field': ['get', 'name'],
                     'text-variable-anchor': ['top'],
-                    'text-allow-overlap' : true,
-                    'text-radial-offset': 0.1,
+                    'text-allow-overlap': true,
+                    'text-radial-offset': 0.2,
                     'text-justify': 'auto',
-                    'text-size': 12,
+                    'text-size': 14,
+                    'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
                     'icon-image': ['get', 'icon'],
-                    'icon-size': 0.3,
+                    'icon-size': 0.5,
                     'icon-anchor': 'bottom',
-                    'icon-allow-overlap' : true,
+                    'icon-allow-overlap': true,
+                    'text-ignore-placement': true,
+                    'icon-ignore-placement': true,
                 },
                 'paint': {
                     'text-color': 'white',
+                    'text-halo-color': '#0b2a3a',
+                    'text-halo-width': 1.5,
                 },
             });
-
-            
         });
 
+        // Clicking any pin (this site or a neighbour) opens that site.
+        const pinLayers = ['poi-labels', 'poi-others'];
         map.on('click', function (e) {
-            var features = map.queryRenderedFeatures(e.point, { layers: ['poi-labels'] });
+            var features = map.queryRenderedFeatures(e.point, { layers: pinLayers });
 
             if (!features.length) {
                 return;
@@ -2963,7 +2988,7 @@
         });
 
         map.on('mousemove', function (e) {
-            var features = map.queryRenderedFeatures(e.point, { layers: ['poi-labels'] });
+            var features = map.queryRenderedFeatures(e.point, { layers: pinLayers });
             map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
 
         });
