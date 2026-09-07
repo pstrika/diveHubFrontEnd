@@ -30,16 +30,9 @@ use App\Http\Controllers\Auth\GoogleController;
 	//return redirect('Trips');
 })->middleware('guest');*/
 
-Route::get('/', function () {
-    $SEO = [
-        "title" => "Florida scuba diving sites, calendars and operators",
-        "desc" => "All you need to know for diving in Florida: dive operators, dive sites and wreckwiki, calendars, dive planning and more",
-        "keywords" => "scuba diving florida, scuba, dive operators miami, dive operators fort lauderdale, diving florida keys, dive sites florida",
-		"canonical" => route("/"),
-    ];
-
-    return view('pages.Landing', compact('SEO'));
-})->name('/');
+// Front door (redesign W1). Same URL, route name and SEO metadata as before;
+// the page content moved into HomeController so it can load today's data.
+Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('/');
 
 
 Route::get('sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');

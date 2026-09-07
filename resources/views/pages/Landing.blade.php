@@ -1,120 +1,105 @@
 <x-page-template bodyClass='dh-shell bg-gray-200' :SEO="$SEO">
     <x-shell.nav active="" />
-    
-    
-    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-        <!-- Navbar -->
-        <x-shell.header title="Home" />
-        <!-- End Navbar -->
 
-        <style>
-            iframe {
-                aspect-ratio: 16 / 9; /* Set the desired aspect ratio (16:9 for YouTube) */
-                height: auto; /* Let the height adjust automatically */
-                width: 100%; /* Fill the available width */
-            }
-        </style>
-        
-        <div class="container-fluid py-0">
+    <main class="main-content position-relative h-100 border-radius-lg">
+        {{--
+            Home (redesign proposal W1). Replaces the "Let's get you to..." card.
+            Order matters: the live answer to "can I dive today?" first (hero and
+            conditions strip), then the catalog as content (featured sites), then
+            the account invitation as an in page band rather than a modal.
+            Data comes from HomeController@index.
+        --}}
+        <div class="container-fluid py-0 dh-home">
 
-            <div class="d-none" data-color="info" id="sidebarColorDiv"></div>
-
-
-
-            <div class="row">
-                <div class="col-lg-5 col-md-8 col-12 m-auto">
-
-                
-                    <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
-                        
-                        <div class="card-body mt-0">
-                            <div class="d-flex justify-content-center">
-                                <img src="{{ asset('assets') }}/img/logos/logo_circle.png" alt="Logo Divers Hub" class="img-fluid" width="100">
-                            </div>
-                            <h1 class="align-middle text-center text-lg"><b>Divers Hub</b></h1>
-                            <h2 class="align-middle text-center text-md">Let's get you to ...</h2>
-
-                            <a href="{{ route('WreckSites') }}">
-                                <span class="btn bg-gradient-info w-100 position-relative d-flex align-items-center justify-content-center mb-0 mt-3" style="height: 60px;">
-                                    <!-- Icon aligned left -->
-                                    <img class="position-absolute start-0 ms-3" style="height:40px;" src="{{ asset('assets') }}/img/icons/wreckWiki.png" alt="wreckwiki">
-                                    <!-- Centered text -->
-                                    <span class="fs-5 text-center w-100">wreckwiki</span>
-                                </span>
-                            </a>
-
-                            <a href="{{ route('Trips') }}">
-                                <span class="btn bg-gradient-info w-100 position-relative d-flex align-items-center justify-content-center mb-0 mt-3" style="height: 60px;">
-                                    <!-- Icon aligned left -->
-                                    <i class="material-icons-round opacity-10 position-absolute start-0 ms-3" style="font-size: 40px;">calendar_today</i>
-
-                                    <!-- Centered text -->
-                                    <span class="fs-5 text-center w-100">Today's dive trips</span>
-                                </span>
-                            </a>
-
-                            <a href="{{ route('Operators') }}">
-                                <span class="btn bg-gradient-info w-100 position-relative d-flex align-items-center justify-content-center mb-0 mt-3" style="height: 60px;">
-                                    <!-- Icon aligned left -->
-                                    <i class="material-icons-round opacity-10 position-absolute start-0 ms-3" style="font-size: 40px;">directions_boat</i>
-
-                                    <!-- Centered text -->
-                                    <span class="fs-5 text-center w-100">Dive Boats directory</span>
-                                </span>
-                            </a>
-
-                            <a href="{{ route('login') }}">
-                                <span class="btn bg-gradient-info w-100 position-relative d-flex align-items-center justify-content-center mb-0 mt-3" style="height: 60px;">
-                                    <!-- Icon aligned left -->
-                                    <i class="material-icons-round opacity-10 position-absolute start-0 ms-3" style="font-size: 40px;">login</i>
-
-                                    <!-- Centered text -->
-                                    <span class="fs-5 text-center w-100">sign-in / sign-up</span>
-                                </span>
-                            </a>
-                            <div class="mt-4 card border border-secondary opacity-4">
-                            <!-- card content -->
-                            </div>
-                            <p class="align-middle text-center text-sm"><b>Click the menu on the left to access all features</b></p>
-                            <p class="align-middle text-center text-sm mt-n3">If not visibile, click on <i class="material-icons-round opacity-10">dehaze</i> at the top to expand menu</p>
-
-                        </div>
+            {{-- Hero with a claim (W1 note 2). Image is an existing web sized illustration; the photo pass is chunk 3. --}}
+            <section class="dh-hero" style="background-image:url('{{ asset('assets') }}/img/illustrations/dive_sites.webp')">
+                <div class="dh-hero-card">
+                    <h1>Every dive boat in Florida. One board.</h1>
+                    <p>
+                        @if($totalBoats > 0)
+                            {{ $totalBoats }} {{ Str::plural('boat', $totalBoats) }} leaving today from Stuart to Key West, with today's sea state for every coast.
+                        @else
+                            Today's boats, today's conditions and every dive site from Stuart to Key West.
+                        @endif
+                    </p>
+                    <div class="dh-hero-actions">
+                        <a class="dh-btn dh-btn-primary" href="{{ route('Trips') }}">See today's boats</a>
+                        <a class="dh-btn dh-btn-ghost-dark" href="{{ route('DiveSites') }}">Explore sites</a>
                     </div>
-                
-                
-
                 </div>
-            </div>
+            </section>
 
-            
+            {{-- Conditions strip (W1 note 3). Each card links into the board pre filtered to that coast. --}}
+            <section class="dh-strip" aria-labelledby="dh-strip-title">
+                <div class="dh-section-head">
+                    <h2 id="dh-strip-title">Today's conditions and departures</h2>
+                    <a class="dh-why" href="{{ route('Weather') }}">Full forecast</a>
+                </div>
+                <div class="dh-strip-row">
+                    @foreach($coasts as $coast)
+                        <a class="dh-coast" href="{{ route('Trips') }}?region={{ $coast['key'] }}">
+                            <span class="dh-coast-name">{{ $coast['label'] }}</span>
+                            <span class="dh-coast-pills">
+                                <x-conditions-pill :text="$coast['am']" label="AM" />
+                                <x-conditions-pill :text="$coast['pm']" label="PM" />
+                            </span>
+                            <span class="dh-coast-boats">
+                                @if($coast['boats'] > 0)
+                                    <b>{{ $coast['boats'] }}</b> {{ Str::plural('boat', $coast['boats']) }}
+                                    @if($coast['nextTime']) <span class="text-muted">· next {{ $coast['nextTime']->format('g:i A') }}</span>@endif
+                                @else
+                                    <span class="text-muted">No boats listed today</span>
+                                @endif
+                            </span>
+                        </a>
+                    @endforeach
+                </div>
+            </section>
 
-            
-            
-                
+            {{-- Featured sites (W1 note 4). Highest rated with a photo when the site has one. --}}
+            <section class="dh-featured" aria-labelledby="dh-featured-title">
+                <div class="dh-section-head">
+                    <h2 id="dh-featured-title">Top rated dive sites</h2>
+                    <a class="dh-why" href="{{ route('DiveSites') }}">All sites</a>
+                </div>
+                <div class="dh-site-grid">
+                    @foreach($featured as $site)
+                        @php
+                            $fallback = strtolower($site->type) === 'wreck' ? 'site_wreck.webp' : 'dive-site.webp';
+                            $img = $site->photoUrl ?? asset('assets') . '/img/illustrations/' . $fallback;
+                        @endphp
+                        <a class="dh-site-card" href="{{ route('SiteDetails') }}/{{ $site->slug ?? $site->id }}">
+                            <span class="dh-site-img" style="background-image:url('{{ $img }}')">
+                                <span class="chip chip-static dh-site-type">{{ ucfirst($site->type) }}</span>
+                            </span>
+                            <span class="dh-site-body">
+                                <span class="dh-site-name">{{ $site->name }}</span>
+                                <span class="dh-site-facts">
+                                    <x-dive-level.icon :level="$site->level" height="18" />
+                                    <span class="chip chip-static">{{ \App\Support\DiveLevel::code($site->level) }}</span>
+                                    @if($site->maxDepth)<span class="chip chip-static">{{ $site->maxDepth }} ft</span>@endif
+                                    @if($site->rate)<span class="chip chip-static" title="Diver rating">★ {{ number_format($site->rate, 1) }}</span>@endif
+                                </span>
+                            </span>
+                        </a>
+                    @endforeach
+                </div>
+            </section>
 
+            {{-- Account invitation as a band, not a modal (W1 note 5, F-04). --}}
+            @auth
+            @if(!auth()->user()->isNotGuest())
+            <section class="dh-cta">
+                <div>
+                    <h2>Plan your diving, not just read about it</h2>
+                    <p>A free account saves trips to your calendar, tracks the sites you have dived, and opens the deco planner and the full forecast. No credit card, ever.</p>
+                </div>
+                <a class="dh-btn dh-btn-primary" href="{{ route('create-account') }}">Create free account</a>
+            </section>
+            @endif
+            @endauth
 
-                
-            
-            
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>
     </main>
-    
-    
-    {{--<x-plugins></x-plugins>--}}
-    
-    @push('js')
-    
-    <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
-
-    
-    
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
-
-
-    <script>
-
-    </script>
-    @endpush
 </x-page-template>
