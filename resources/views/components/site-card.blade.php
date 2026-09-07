@@ -27,13 +27,13 @@
     <span class="dh-site-body">
         <span class="dh-site-name">{{ $site->name }}</span>
         @if(!empty($site->locationName))<span class="dh-site-loc">{{ $site->locationName }}</span>@endif
-        <span class="dh-site-facts">
+        {{-- One row: level badge (icon plus name), depth, rating. Own class name; .dh-site-facts is the detail page header. --}}
+        <span class="dh-site-card-facts">
             @if($levelInfo)
-                <x-dive-level.icon :level="$site->level" height="18" />
-                <span class="chip chip-static" title="{{ $levelInfo['name'] }}">{{ $levelInfo['code'] }}</span>
+                <span class="dh-site-level" title="{{ $levelInfo['name'] }}"><x-dive-level.icon :level="$site->level" height="22" />{{ $levelInfo['name'] }}</span>
             @endif
-            @if($site->maxDepth)<span class="chip chip-static">{{ $site->maxDepth }} ft</span>@endif
-            @if($site->rate)<span class="chip chip-static" title="{{ $site->votes }} diver ratings">★ {{ number_format($site->rate, 1) }}</span>@endif
+            @if($site->maxDepth)<span class="dh-site-fact">{{ $site->maxDepth }} ft</span>@endif
+            @if($site->rate)<span class="dh-site-fact dh-site-rate" title="{{ $site->votes }} diver ratings">★ {{ number_format($site->rate, 1) }}</span>@endif
         </span>
     </span>
 </a>

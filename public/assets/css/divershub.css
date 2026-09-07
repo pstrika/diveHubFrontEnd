@@ -315,7 +315,12 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-site-type { position: absolute; top: 8px; left: 8px; background: rgba(255,255,255,.92); }
 .dh-site-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 6px; }
 .dh-site-name { font-weight: 700; line-height: 1.25; }
-.dh-site-facts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.dh-site-card-facts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 2px; }
+.dh-site-level { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; font-weight: 700; color: var(--dh-deep); }
+.dh-site-level img { width: 22px; height: 22px; }
+.dh-site-fact { font-size: .85rem; font-weight: 600; color: var(--dh-muted); }
+.dh-site-fact + .dh-site-fact::before, .dh-site-level + .dh-site-fact::before { content: "·"; margin-right: 8px; color: var(--dh-line); }
+.dh-site-rate { color: var(--dh-ink); }
 
 .dh-cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--dh-space-4); margin: var(--dh-space-6) 0; padding: var(--dh-space-4) var(--dh-space-6); background: var(--dh-foam); border: 1px solid var(--dh-line); border-radius: 16px; }
 .dh-cta h2 { font-size: 1.1rem; font-weight: 800; margin: 0 0 4px; color: var(--dh-deep); }
