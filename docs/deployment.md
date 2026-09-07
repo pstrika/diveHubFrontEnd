@@ -13,8 +13,8 @@ also running on the `divehub-redesign` slot.
 | `.env` | **None.** No new keys. | Nothing |
 | Config | New file `config/divehub.php` (release version and date). | Bump the version before merging (section 3) |
 | Routes | Three old tool URLs now 301 into the explorer. `/Landing` renders the home page. Deco Planner and My Calendar pages open to guests. All other URLs unchanged. | Nothing; see section 6 |
-| Public assets | New `divershub.css`, `divershub.js`, `manifest.webmanifest`, PWA icons, `og-default.jpg`, and 1,600 WebP copies of the site photos (94 MB) under `public/assets/img/sites/web/`. | Nothing; ships in the zip |
-| Photos uploaded through the admin | 189 photos exist only on the server, so they have no web copies yet. | Run the backfill command once after deploy (section 4) |
+| Public assets | New `divershub.css`, `divershub.js`, `manifest.webmanifest`, PWA icons, `og-default.jpg`, and 1,900 WebP copies of the site photos (109 MB) under `public/assets/img/sites/web/`. | Nothing; ships in the zip |
+| Photos uploaded through the admin | 151 photos exist only on the server. Their WebP copies were generated from production and are in the repo, so nothing is missing at launch. | Optional: run the backfill command once after deploy to catch anything uploaded in between (section 4) |
 | Deploy workflow | One extra post deploy step deletes cached config and routes. Trigger unchanged (push to `main`). | Nothing |
 
 ## 2. Before merging
@@ -60,8 +60,10 @@ picker. That deploys the branch straight to production.
    php artisan photos:web-copies
    ```
 
-   Expected: a progress bar and a line like `Done: 378 written, 1600 already up to
-   date, 0 failed`. Takes a few minutes. Safe to run again at any time. If it says
+   Expected: a progress bar and a line like `Done: 0 written, 951 already up to
+   date, 0 failed`. Anything "written" is a photo uploaded after 2026-09-07. Takes
+   a minute or two. Safe to run again at any time. New uploads make their own
+   copies from now on, so this is a one time catch up. If it says
    GD lacks WebP support, the site still works (pages fall back to the original
    photo); tell Zach and we will look at the PHP image on the host.
 
