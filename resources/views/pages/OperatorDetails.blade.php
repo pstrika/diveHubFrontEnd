@@ -1,4 +1,4 @@
-<x-page-template bodyClass='g-sidenav-show  bg-gray-200' :SEO="$SEO">
+<x-page-template bodyClass='dh-shell bg-gray-200' :SEO="$SEO">
 
     @php
         $dayNames = [
@@ -91,12 +91,12 @@
     <script type="application/ld+json">{!! json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
     <script type="application/ld+json">{!! json_encode($breadcrumbJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 
-    <x-auth.navbars.sidebar activePage="operators" activeItem="operators" activeSubitem=""></x-auth.navbars.sidebar>
+    <x-shell.nav active="operators" />
 
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Dive Operators"></x-auth.navbars.navs.auth>
+        <x-shell.header title="Dive Operators" />
         <!-- End Navbar -->
         <div class="container-fluid py-0">
 

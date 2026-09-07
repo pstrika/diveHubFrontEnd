@@ -1,11 +1,11 @@
-<x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
-    <x-auth.navbars.sidebar activePage="Notifications" activeItem="" activeSubitem=""></x-auth.navbars.sidebar>
+<x-page-template bodyClass='dh-shell bg-gray-200'>
+    <x-shell.nav active="me" />
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Notifications"></x-auth.navbars.navs.auth>
+        <x-shell.header title="Notifications" />
         <!-- End Navbar -->
 
 

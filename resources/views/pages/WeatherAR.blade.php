@@ -1,5 +1,5 @@
-<x-page-template bodyClass='g-sidenav-show  bg-gray-200' :SEO="$SEO">
-    <x-auth.navbars.sidebar activePage="Weather" activeItem="WeatherAR" activeSubitem=""></x-auth.navbars.sidebar>
+<x-page-template bodyClass='dh-shell bg-gray-200' :SEO="$SEO">
+    <x-shell.nav active="me" />
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
@@ -34,7 +34,7 @@
 
     
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Dive Trips"></x-auth.navbars.navs.auth>
+        <x-shell.header title="Dive Trips" />
         <!-- End Navbar -->
         <div class="container-fluid py-4">
 
@@ -911,9 +911,7 @@
     </script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            sidebarColor(document.getElementById("sidebarColorDiv")); // Execute the sidebarColor function once the HTML is loaded
-        });
+
     </script>
     @endpush
 </x-page-template>

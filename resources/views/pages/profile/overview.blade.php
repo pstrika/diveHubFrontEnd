@@ -1,9 +1,8 @@
-<x-page-template bodyClass='g-sidenav-show bg-gray-200'>
-    <x-auth.navbars.sidebar activePage='pages' activeItem='profile' activeSubitem='profile-overview'>
-    </x-auth.navbars.sidebar>
+<x-page-template bodyClass='dh-shell bg-gray-200'>
+    <x-shell.nav active="me" />
     <div class="main-content position-relative bg-gray-100 max-height-vh-100 h-100">
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle='Profile Overview'></x-auth.navbars.navs.auth>
+        <x-shell.header title="Profile Overview" />
         <!-- End Navbar -->
         <div class="container-fluid px-2 px-md-4">
 

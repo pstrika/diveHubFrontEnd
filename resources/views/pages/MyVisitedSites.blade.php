@@ -1,10 +1,10 @@
-<x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
-    <x-auth.navbars.sidebar activePage="User" activeItem="MyVisitedSites" activeSubitem=""></x-auth.navbars.sidebar>
+<x-page-template bodyClass='dh-shell bg-gray-200'>
+    <x-shell.nav active="me" />
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="My Visited Sites"></x-auth.navbars.navs.auth>
+        <x-shell.header title="My Visited Sites" />
         <!-- End Navbar -->
         <div class="container-fluid py-0">
 

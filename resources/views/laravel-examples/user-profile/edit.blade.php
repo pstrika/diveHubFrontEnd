@@ -1,8 +1,7 @@
-<x-page-template bodyClass='g-sidenav-show bg-gray-200'>
-    <x-auth.navbars.sidebar activePage='laravel-examples' activeItem='user-profile' activeSubitem=''>
-    </x-auth.navbars.sidebar>
+<x-page-template bodyClass='dh-shell bg-gray-200'>
+    <x-shell.nav active="" />
     <main class="main-content">
-        <x-auth.navbars.navs.auth pageTitle='User Profile'></x-auth.navbars.navs.auth>
+        <x-shell.header title="User Profile" />
         <div class="container-fluid my-3 py-3">
             <div class="row mb-5">
                 <div class="col-lg-12 mt-lg-0 mt-4">

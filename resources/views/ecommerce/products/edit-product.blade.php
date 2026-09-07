@@ -1,10 +1,9 @@
-<x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
+<x-page-template bodyClass='dh-shell bg-gray-200'>
     <div class="g-sidenav-show  bg-gray-200">
-        <x-auth.navbars.sidebar activePage="ecommerce" activeItem="products" activeSubitem="edit-product">
-        </x-auth.navbars.sidebar>
+        <x-shell.nav active="" />
         <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
             <!-- Navbar -->
-            <x-auth.navbars.navs.auth pageTitle="Edit Product"></x-auth.navbars.navs.auth>
+            <x-shell.header title="Edit Product" />
             <!-- End Navbar -->
             <div class="container-fluid py-4">
                 <div class="row">

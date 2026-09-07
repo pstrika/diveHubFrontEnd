@@ -1,7 +1,7 @@
-<x-page-template bodyClass='g-sidenav-show bg-gray-200'>
-    <x-auth.navbars.sidebar activePage='pages' activeItem='account' activeSubitem='billing'></x-auth.navbars.sidebar>
+<x-page-template bodyClass='dh-shell bg-gray-200'>
+    <x-shell.nav active="me" />
     <main class="main-content main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-        <x-auth.navbars.navs.auth pageTitle='Billing'></x-auth.navbars.navs.auth>
+        <x-shell.header title="Billing" />
         <div class="container-fluid mt-4">
             <div class="row align-items-center">
                 <div class="col-lg-4 col-sm-8">

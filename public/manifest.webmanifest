@@ -1,0 +1,16 @@
+{
+  "name": "Divers Hub",
+  "short_name": "Divers Hub",
+  "description": "Every dive boat in Florida on one board, with today's conditions and every dive site.",
+  "start_url": "/Trips",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b2a3a",
+  "theme_color": "#0b2a3a",
+  "icons": [
+    { "src": "/assets/img/pwa/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/img/pwa/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/assets/img/pwa/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

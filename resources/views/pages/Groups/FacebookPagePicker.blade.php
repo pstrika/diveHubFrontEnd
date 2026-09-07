@@ -1,8 +1,8 @@
-<x-page-template bodyClass='g-sidenav-show  bg-gray-200' :SEO="['robots' => 'noindex, nofollow']">
-    <x-auth.navbars.sidebar activePage="groups" activeItem="myGroups" activeSubitem=""></x-auth.navbars.sidebar>
+<x-page-template bodyClass='dh-shell bg-gray-200' :SEO="['robots' => 'noindex, nofollow']">
+    <x-shell.nav active="me" />
 
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-        <x-auth.navbars.navs.auth pageTitle="Connect a Facebook Page"></x-auth.navbars.navs.auth>
+        <x-shell.header title="Connect a Facebook Page" />
         <div class="container-fluid py-0">
 
             <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('{{ asset('assets') }}/img/illustrations/beach_diving.webp');">

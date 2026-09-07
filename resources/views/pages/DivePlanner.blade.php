@@ -1,11 +1,11 @@
-<x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
-    <x-auth.navbars.sidebar activePage="planningTools" activeItem="decoPlanner" activeSubitem=""></x-auth.navbars.sidebar>
+<x-page-template bodyClass='dh-shell bg-gray-200'>
+    <x-shell.nav active="me" />
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Dive Planner"></x-auth.navbars.navs.auth>
+        <x-shell.header title="Dive Planner" />
         <!-- End Navbar -->
         <div class="container-fluid py-0">
 
@@ -4895,9 +4895,7 @@
 
     {{--  Script to change the color of the sidemenu to theme --}}
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            sidebarColor(document.getElementById("sidebarColorDiv")); // Execute the sidebarColor function once the HTML is loaded
-        });
+
     </script>
 
     {{-- Scripts to create Tissue chart --}}

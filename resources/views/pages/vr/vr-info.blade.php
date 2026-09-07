@@ -1,13 +1,12 @@
 <x-page-template bodyClass='g-sidenav-show  bg-gray-200 virtual-reality'>
     <div class="mt-n3">
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle='VR Info'></x-auth.navbars.navs.auth>
+        <x-shell.header title="VR Info" />
         <!-- End Navbar -->
     </div>
     <div class="border-radius-xl mx-2 mx-md-3 position-relative"
         style="background-image: url('{{ asset('assets') }}/img/vr-bg.jpg'); background-size: cover;">
-        <x-auth.navbars.sidebar activePage='pages' activeItem='virtual-reality' activeSubitem='vr-info'>
-        </x-auth.navbars.sidebar>
+        <x-shell.nav active="me" />
         <main class="main-content border-radius-lg h-100">
             <div class="section min-vh-85 position-relative transform-scale-0 transform-scale-md-7">
                 <div class="container-fluid">

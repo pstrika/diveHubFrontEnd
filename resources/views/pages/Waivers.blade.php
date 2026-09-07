@@ -1,10 +1,10 @@
-<x-page-template bodyClass='g-sidenav-show  bg-gray-200' :SEO="$SEO ?? []">
-    <x-auth.navbars.sidebar activePage="" activeItem="waivers" activeSubitem=""></x-auth.navbars.sidebar>
+<x-page-template bodyClass='dh-shell bg-gray-200' :SEO="$SEO ?? []">
+    <x-shell.nav active="" />
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Dive Operators"></x-auth.navbars.navs.auth>
+        <x-shell.header title="Dive Operators" />
         <!-- End Navbar -->
         <div class="container-fluid py-0">
 

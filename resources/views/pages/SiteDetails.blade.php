@@ -1,4 +1,4 @@
-<x-page-template bodyClass='g-sidenav-show  bg-gray-200' :SEO="$SEO">
+<x-page-template bodyClass='dh-shell bg-gray-200' :SEO="$SEO">
 
     @php
         try {
@@ -58,7 +58,7 @@
     <script type="application/ld+json">{!! json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
     <script type="application/ld+json">{!! json_encode($breadcrumbJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 
-    <x-auth.navbars.sidebar activePage="siteDetails" activeItem="siteDetails" activeSubitem=""></x-auth.navbars.sidebar>
+    <x-shell.nav active="sites" />
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
@@ -224,7 +224,7 @@
         </style>
 
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Dive Sites"></x-auth.navbars.navs.auth>
+        <x-shell.header title="Dive Sites" />
         <!-- End Navbar -->
         <div class="container-fluid py-0">
 
