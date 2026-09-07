@@ -92,6 +92,8 @@
 
 <script src="{{ asset('assets') }}/js/core/popper.min.js"></script>
 <script src="{{ asset('assets') }}/js/core/bootstrap.min.js"></script>
+<!-- Divers Hub shared behaviour (chip row "more" arrows). Versioned by release like the stylesheet. -->
+<script src="{{ asset('assets') }}/js/divershub.js?v={{ config('divehub.version') }}" defer></script>
 <script src="{{ asset('assets') }}/js/plugins/smooth-scrollbar.min.js"></script>
 <!-- Kanban scripts -->
 <script src="{{ asset('assets') }}/js/plugins/dragula/dragula.min.js"></script>
