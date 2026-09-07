@@ -8,6 +8,8 @@ use App\Models\Boat;
 use App\Models\Trip;
 use App\Models\Site;
 use App\Models\User;
+use App\Models\Photo;
+use App\Support\OperatorBoard;
 use Illuminate\Support\Facades\Log;
 
 use Illuminate\Http\Request;
@@ -18,9 +20,12 @@ use Symfony\Component\Console\Input\Input;
 class OperatorController extends Controller
 {
     //
-    public function show($id = null) {
-    
-    
+    /**
+     * /Operators (no id) renders the operators explorer; /OperatorDetails/{id}
+     * renders one operator. Laravel injects $request and passes the route
+     * parameter as $id, so one method serves both routes as it always has.
+     */
+    public function show(Request $request, $id = null) {
 
     if ($id != null) {
         $user = User::findorFail(auth()->user()->id);
@@ -94,6 +99,15 @@ class OperatorController extends Controller
 
         $ratedAlready = OperatorRating::where('userId', auth()->id())->where('operatorId', $id)->exists();
 
+        // First photo per top site so the detail page can show site cards.
+        if ($topSites) {
+            $firstPhotos = Photo::whereIn('siteId', $topSites->pluck('id'))->orderBy('id')->get()->groupBy('siteId');
+            foreach ($topSites as $s) {
+                $s->photoFile = $firstPhotos->get($s->id)?->first()?->file;
+            }
+        }
+        $card = OperatorBoard::card($operator);
+
         /*Provide SEO metadata */
         $SEO = array(
             "title" => $operator->operatorName . " details - divers-hub.com",
@@ -102,16 +116,15 @@ class OperatorController extends Controller
             "canonical" => route("OperatorDetails", ['id' => $operator->slug ?? $operator->id]) ,
         );
 
-        return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites', 'trips', 'ratedAlready', 'SEO'));
+        return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites', 'trips', 'ratedAlready', 'SEO', 'card'));
     }
 
 
-    $operators = Operator::all()->sortBy('operatorName');
-
-    $locationAreas = Operator::distinct()->pluck('locationArea')->toArray();
+    // Explorer: filters, counts and cards come from OperatorBoard (query string driven).
+    $board = OperatorBoard::build($request);
 
     /*Provide SEO metadata */
-    $operatorNames = $operators->pluck('operatorName')->toArray();
+    $operatorNames = Operator::pluck('operatorName')->toArray();
     $SEO = array(
         "title" => "Scuba diving operators in South Florida - divers-hub.com",
         "desc" => "Find all scuba diving operator in Miami, Fort Lauderdale, West Palm Beach and the Florida Keys",
@@ -119,7 +132,7 @@ class OperatorController extends Controller
         "canonical" => route("Operators"),
     );
 
-    return view('pages.Operators', compact('operators', 'locationAreas', 'SEO'));
+    return view('pages.Operators', ['board' => $board, 'SEO' => $SEO, 'mapboxToken' => 'pk.eyJ1IjoicHN0cmlrYSIsImEiOiJjbHZsc2p2bXcyY240MmtuMDcydHJzd2UxIn0.KBf79cvk47WseBc9rNu6gQ']);
 
     }
 

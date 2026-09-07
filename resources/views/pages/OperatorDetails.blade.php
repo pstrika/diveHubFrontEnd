@@ -94,7 +94,7 @@
     <x-shell.nav active="operators" />
 
     
-    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+    <main class="main-content position-relative h-100 border-radius-lg">
         <!-- Navbar -->
         <x-shell.header title="Dive Operators" />
         <!-- End Navbar -->
@@ -150,428 +150,167 @@
             </div>
             @endif
 
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('/assets/img/illustrations/operators.webp');">
-                <span class="mask  bg-gradient-info  opacity-4"></span>
-            </div>
+            {{--
+                Operator detail, re-skinned to match the site and trip pages. Same
+                controller data as before ($operator, $boats, $fav, $topSites, $trips,
+                $ratedAlready) plus $card from OperatorBoard::card() for the chips.
+                The JSON-LD at the top of this file, the two modals above, the
+                rating widget and the FullCalendar script below are unchanged.
+            --}}
+            @php
+                $isMember = auth()->user() && auth()->user()->isNotGuest();
+                $hoursOfOperation = json_decode((string) $operator->hourOfOperation, true) ?: [];
+                $tripPrices = json_decode((string) $operator->tripPrice, true) ?: [];
+                $phoneHref = $operator->phone ? 'tel:' . preg_replace('/[^0-9+]/', '', $operator->phone) : null;
+            @endphp
 
-            <div class="card p-0 position-relative mt-n5 mx-3 z-index-2 mb-4">
-                
-                    <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
-                        <div style="float: left;" class="d-flex align-items-center">
-                            <h1 class="card-title text-info mx-3 mt-0 mb-0">{{ $operator->operatorName }}</h1>
-                            @if(auth()->user()->isNotGuest())
-                                <a href="{{ route('ToggleFav', ['id' => $operator->id]) }}"><i class="material-icons text-info opacity-10" style="font-size: 40px;">{{ $fav ? "favorite" : "favorite_border"}}</i></a>
+            <section class="dh-site-facts">
+                <div class="dh-op-head dh-site-facts-main">
+                    <span class="dh-op-logo">
+                        @if($operator->logoUrl)<img src="{{ asset('assets') }}{{ $operator->logoUrl }}" alt="{{ $operator->operatorName }} logo">@else<span class="material-icons-round">sailing</span>@endif
+                    </span>
+                    <div>
+                        <p class="dh-trip-kicker">{{ $operator->cityAddress }}@if($card['coast'] !== 'Other' && strcasecmp($card['coast'], $operator->cityAddress) !== 0) · {{ $card['coast'] }}@endif</p>
+                        <h1 class="dh-site-title">{{ $operator->operatorName }}</h1>
+                        <div class="dh-site-chips">
+                            @if($card['price'])<span class="chip chip-static" title="{{ $card['priceLabel'] }}">from ${{ $card['price'] }}</span>@endif
+                            @if($card['tec'])<span class="chip chip-static chip-tec">Technical trips</span>@endif
+                            @if($card['private'])<span class="chip chip-static">Private charters only</span>@endif
+                            @if($boats->isNotEmpty())<span class="chip chip-static">{{ $boats->count() }} {{ Str::plural('boat', $boats->count()) }}</span>@endif
+                        </div>
+                    </div>
+                </div>
+                <div class="dh-site-facts-side">
+                    <div class="dh-site-rating">
+                        <div id="rateYoReadOnlyOperator"></div>
+                        <span class="text-xs text-muted">{{ $operator->votes ?: 'No' }} {{ Str::plural('rating', (int) $operator->votes) }}</span>
+                        @if($isMember)
+                            @if(!$ratedAlready)
+                                <a href="#" class="text-xs" data-bs-toggle="modal" data-bs-target="#modalRatingOperator">Rate this operator</a>
+                            @else
+                                <span class="text-xs text-muted">You rated this operator</span>
                             @endif
-                        </div>
-
-                        {{-- Div for star ratings--}}
-                        <div class="m-auto" style="float: right;">
-                            <div class="d-flex justify-content-end"><div id="rateYoReadOnlyOperator"></div></div>
-
-                            <div class="mt-1">
-                                <p class="align-middle text-end text-md text-info mt-n2"><b>{{ $operator->votes }} ratings</b></p>
-                            </div>
-
-                            {{--Don't allow rating if guest--}}
-                            @if(auth()->user()->isNotGuest())
-                                @if(!$ratedAlready)
-                                <div class="mt-n1">
-                                    <p class="align-middle text-end text-xs text-decoration-underline text-info mt-0"><a href="#" data-bs-toggle="modal" data-bs-target="#modalRatingOperator"><b>rate this operator</b></a></p>
-                                </div>
-                                @else
-                                <div class="mt-n1">
-                                    <p class="align-middle text-end text-xs text-info mt-0"><b>You already rated this operator</b></p>
-                                </div>
-                                @endif
-                            @endif
-                        </div>
-
+                        @else
+                            {{-- Show, then gate (F-04): the action is visible, the modal explains the account. --}}
+                            <a href="#" class="text-xs" onclick="event.preventDefault();showModalGuest();">Rate this operator</a>
+                        @endif
                     </div>
+                    <div class="dh-site-actions">
+                        @if($phoneHref)<a class="dh-btn dh-btn-primary" href="{{ $phoneHref }}"><span class="material-icons-round">call</span>Call</a>@endif
+                        @if($operator->webSite)<a class="dh-btn dh-btn-ghost-dark" href="{{ $operator->webSite }}" target="_blank" rel="noopener"><span class="material-icons-round">open_in_new</span>Website</a>@endif
+                        @if($isMember)
+                            <a class="dh-btn dh-btn-ghost-dark {{ $fav ? 'is-on' : '' }}" href="{{ route('ToggleFav', ['id' => $operator->id]) }}" title="{{ $fav ? 'Remove from my favorite operators' : 'Add to my favorite operators' }}">
+                                <span class="material-icons-round">{{ $fav ? 'favorite' : 'favorite_border' }}</span>{{ $fav ? 'Favorite' : 'Save' }}
+                            </a>
+                        @else
+                            <a class="dh-btn dh-btn-ghost-dark" href="#" onclick="event.preventDefault();showModalGuest();"><span class="material-icons-round">favorite_border</span>Save</a>
+                        @endif
+                    </div>
+                </div>
+            </section>
+
+            <div class="row mx-0 dh-site-columns">
+                <div class="col-lg-8 px-0 pe-lg-3">
+                    @if($trips->isNotEmpty())
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Upcoming trips</h2>
+                        <p class="dh-note">Click a day to open the trip board for that date. <span class="chip chip-static">Recreational</span> <span class="chip chip-static chip-yes">Technical</span></p>
+                        <div class="calendar" data-bs-toggle="calendar" id="calendar"></div>
+                    </section>
+                    @endif
+
+                    @if($boats->isNotEmpty())
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">{{ $boats->count() > 1 ? 'Boats' : 'Boat' }}</h2>
+                        <div class="dh-boat-list">
+                            @foreach($boats as $boat)
+                                <article class="dh-boat">
+                                    @if($boat->pic)<span class="dh-boat-img" style="background-image:url('{{ asset('assets') }}{{ $boat->pic }}')"></span>@endif
+                                    <div>
+                                        <h3 class="dh-boat-name">{{ $boat->name }}</h3>
+                                        <dl class="dh-facts-list dh-facts-list-tight">
+                                            @if($boat->type)<div><dt>Type</dt><dd>{{ $boat->type }}</dd></div>@endif
+                                            @if($boat->capacity)<div><dt>Capacity</dt><dd>{{ $boat->capacity }} divers</dd></div>@endif
+                                            @if($boat->tec_capacity)<div><dt>Tech capacity</dt><dd>{{ $boat->tec_capacity }} divers</dd></div>@endif
+                                            @if($boat->manufacturer)<div><dt>Builder</dt><dd>{{ $boat->manufacturer }}</dd></div>@endif
+                                            @if($boat->length)<div><dt>Length</dt><dd>{{ $boat->length }} ft</dd></div>@endif
+                                            @if($boat->beam)<div><dt>Beam</dt><dd>{{ $boat->beam }} ft</dd></div>@endif
+                                            @if($boat->speed)<div><dt>Speed</dt><dd>{{ $boat->speed }} kn</dd></div>@endif
+                                            @if($boat->power)<div><dt>Power</dt><dd>{{ $boat->power }}</dd></div>@endif
+                                        </dl>
+                                    </div>
+                                </article>
+                            @endforeach
+                        </div>
+                    </section>
+                    @endif
+
+                    @if($topSites != null && count($topSites))
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Most visited sites</h2>
+                        <p class="dh-note">Ranked by how often {{ $operator->operatorName }} has run trips there.</p>
+                        <div class="dh-site-grid">
+                            @foreach($topSites as $s)
+                                <x-site-card :site="$s" />
+                            @endforeach
+                        </div>
+                    </section>
+                    @endif
+
+                    @if($operator->desc)
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">About {{ $operator->operatorName }}</h2>
+                        <p class="dh-op-desc">{{ $operator->desc }}</p>
+                    </section>
+                    @endif
+                </div>
+
+                <div class="col-lg-4 px-0">
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Contact</h2>
+                        <div id="map" class="dh-map dh-map-small mb-3" role="application" aria-label="Map of the dive shop"></div>
+                        <dl class="dh-facts-list dh-facts-list-stack">
+                            @if($operator->streetAddress)<div><dt>Shop</dt><dd>{{ $operator->streetAddress }}, {{ $operator->cityAddress }} {{ $operator->stateAddress }} {{ $operator->zipAddress }}</dd></div>@endif
+                            @if($operator->marinaAddress)<div><dt>Marina</dt><dd>{{ $operator->marinaAddress }}</dd></div>@endif
+                            @if($operator->marinaAddressAlt)<div><dt>Second marina</dt><dd>{{ $operator->marinaAddressAlt }}</dd></div>@endif
+                            @if($operator->phone)<div><dt>Phone</dt><dd><a href="{{ $phoneHref }}">{{ $operator->phone }}</a></dd></div>@endif
+                            @if($operator->email)<div><dt>Email</dt><dd><a href="mailto:{{ $operator->email }}">{{ $operator->email }}</a></dd></div>@endif
+                            @if($operator->webSite)<div><dt>Website</dt><dd><a href="{{ $operator->webSite }}" target="_blank" rel="noopener">{{ parse_url($operator->webSite, PHP_URL_HOST) ?: $operator->webSite }}</a></dd></div>@endif
+                            @if($operator->waiverLink)<div><dt>Waiver</dt><dd><a href="{{ $operator->waiverLink }}" target="_blank" rel="noopener">Sign online</a></dd></div>@endif
+                        </dl>
+                        @if($hoursOfOperation)
+                            <h3 class="dh-panel-subtitle">Hours</h3>
+                            <dl class="dh-hours">
+                                @foreach($hoursOfOperation as $h)
+                                    <div><dt>{{ $h['day'] ?? '' }}</dt><dd>{{ $h['hours'] ?? '' }}</dd></div>
+                                @endforeach
+                            </dl>
+                        @endif
+                    </section>
+
+                    @if($tripPrices)
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Trip prices</h2>
+                        <dl class="dh-price-list">
+                            @foreach($tripPrices as $p)
+                                <div><dt>{{ $p['type'] ?? '' }}</dt><dd>${{ $p['price'] ?? '' }}</dd></div>
+                            @endforeach
+                        </dl>
+                        <p class="text-xs text-muted mb-0 mt-2">USD, as advertised by the operator. Confirm when booking.</p>
+                    </section>
+                    @endif
+
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Fills on site</h2>
+                        <div class="dh-fills">
+                            @foreach(['Air' => $operator->onSiteFillAir, 'Nitrox' => $operator->onSiteFillNitrox, 'Trimix' => $operator->onSiteFillTrimix, 'Oxygen' => $operator->onSiteFillO2] as $gas => $has)
+                                <span class="chip chip-static {{ $has ? 'chip-yes' : 'chip-no' }}"><span class="material-icons-round" aria-hidden="true">{{ $has ? 'check' : 'close' }}</span>{{ $gas }}</span>
+                            @endforeach
+                        </div>
+                    </section>
                 </div>
             </div>
 
-            <div class="row">
-                
-                
-                {{-- Card Dive Center --}}
-                <div class="col-md-4">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Contact</h4>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table align-items-center mb-0"> 
-                                    <tbody>
-                                        <tr><td class="text-center"><img src="{{ asset('assets') }}{{ $operator->logoUrl}}" alt="img-blur-shadow" class="img-fluid"></td></tr> 
-                                        <tr><td class="text-uppercase text-secondary text-xl font-weight-bolder opacity-7 text-center" style="border: none;"> {{ $operator->operatorName}}</td> </tr>
-
-                                        <tr> <td>
-                                            <table class="table align-items-center mb-0">
-                                            
-                                                <tr class="align-top"><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Address</td>
-                                                <td class="align-middle text-left text-wrap text-sm"><b>{{ $operator->streetAddress}}<br>{{ $operator->cityAddress}}, {{ $operator->stateAddress}} {{ $operator->zipAddress}} </b></td> </tr>
-                                            </table>
-                                            <table class="table align-items-center mb-0">
-                                                <tr><td class="text-center">
-                                                {{--<div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">--}}
-                                                    <div class="border-radius-xl">
-                                                        <div id="map" style="width: 100%; height: 250px; border-radius: 1rem; background-color: #f0f0f0; padding: 1rem;"></div>
-                                                    </div>
-
-                                                </td></tr>
-                                            </table>
-                                            <table class="table align-items-center mb-0">
-
-                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Phone</td>
-                                                <td class="align-middle text-left text-sm"><b>{{ $operator->phone}}</b></td> </tr>
-                                                
-                                                @if($operator->email)
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">email</td>
-                                                    <td class="align-middle text-left text-sm"><b><a href="mailto:{{ $operator->email}}">{{ $operator->email}}</a></b></td> </tr>
-                                                @endif
-
-                                                @if($operator->marinaAddress)
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Marina address</td>
-                                                    <td class="align-middle text-wrap text-sm"><b>{{ $operator->marinaAddress}}</b></td> </tr>
-                                                @endif
-                                                
-                                                @if($operator->webSite)
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Website</td>
-                                                    <td class="align-middle text-left text-sm"><b><a href="{{ $operator->webSite}}">here</a></b></td> </tr>
-                                                @endif
-
-                                                @if($operator->waiverLink)
-                                                    <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Online waiver</td>
-                                                    <td class="align-middle text-left text-sm"><b><a href="{{ $operator->waiverLink}}">here</a></b></td> </tr>
-                                                @endif
-                                            </table>
-
-                                            <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Hours of Operation</td> </tr>
-                                            <table class="table align-items-center mb-0">
-                                                <tbody>
-                                                    @php
-                                                        $hoursOfOperation = json_decode($operator->hourOfOperation, true);
-                                                    @endphp
-                                                    <tr>
-                                                        @foreach($hoursOfOperation as $hourOfOperation)
-                                                            <td class="align-middle text-center text-sm">{{ $hourOfOperation['day'] }}</td>
-                                                        @endforeach
-                                                    </tr>
-                                                    <tr>
-                                                        @foreach($hoursOfOperation as $hourOfOperation)
-                                                            <td class="align-middle text-center text-sm">{{ $hourOfOperation['hours'] }}</td>
-                                                        @endforeach
-                                                    </tr>
-
-                                                    
-                                                    
-                                                </tbody>
-                                            </table>
-                                        </td></td>
-                                        
-                                        
-                                                   
-                                    </tbody>
-                                </table>
-                            </div>    
-                        </div>
-                    </div>
-                </div>
-                {{-----------------------------}}
-
-                {{-- Boats --}}
-                <div class="col-md-4">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Boats</h2>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table align-items-center mb-0"> 
-                                    <tbody>
-                                        <tr><td>
-                                            <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
-                                                <div class="carousel-inner">
-                                                    @php 
-                                                        $first = true;
-                                                    @endphp
-                                                        
-                                                    @foreach ($boats as $boat)    
-                                                        <div class="carousel-item {{ $first ? "active" : "" }}">
-                                                            @php
-                                                                $first = false;
-                                                            @endphp
-                                                            <div class="page-header min-vh-25 m-3 border-radius-xl" style="background-image: url('{{ asset('assets') }}{{ $boat->pic}}');">
-                                                            
-                                                                <div class="container">
-                                                                    <div class="row">
-                                                                        <div class="my-auto">
-                                                                            <h3 class="text-white mt-10 fadeIn1 fadeInBottom ">{{ $boat->name }}</h3>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <table class="table align-items-center mb-0">
-                                                                <tbody>
-                                                                    @if($boat->type)
-                                                                        <tr class="align-top"><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Type</td>
-                                                                        <td class="align-middle text-left text-wrap text-sm"><b>{{ $boat->type }}</b></td> </tr>
-                                                                    @endif
-                                                                    
-                                                                    @if($boat->capacity)
-                                                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Capacity Rec</td>
-                                                                        <td class="align-middle text-left text-sm"><b>{{ $boat->capacity }} divers</b></td> </tr>
-                                                                    @endif
-
-                                                                    @if($boat->tec_capacity)
-                                                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Capacity Tec</td>
-                                                                        <td class="align-middle text-left text-sm"><b>{{ $boat->tec_capacity }} divers</b></td> </tr>
-                                                                    @endif
-                                                                    
-                                                                    @if($boat->manufacturer)
-                                                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Manufacturer</td>
-                                                                        <td class="align-middle text-left text-sm"><b>{{ $boat->manufacturer }}</b></td> </tr>
-                                                                    @endif
-
-                                                                    @if($boat->beam)
-                                                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Beam</td>
-                                                                        <td class="align-middle text-wrap text-sm"><b>{{ $boat->beam }} ft</b></td> </tr>
-                                                                    @endif
-                                                                    
-                                                                    @if($boat->length)
-                                                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Lentgh</td>
-                                                                        <td class="align-middle text-wrap text-sm"><b>{{ $boat->length }} ft</b></td> </tr>
-                                                                    @endif
-
-                                                                    @if($boat->speed)
-                                                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Speed</td>
-                                                                        <td class="align-middle text-wrap text-sm"><b>{{ $boat->speed }} knots</b></td> </tr>
-                                                                    @endif
-
-                                                                    @if($boat->power)
-                                                                        <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7">Power</td>
-                                                                        <td class="align-middle text-wrap text-sm"><b>{{ $boat->power }}</b></td> </tr>
-                                                                    @endif
-                                                                </tbody>
-                                                            </table>
-
-
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-
-                                                <div class="position-absolute min-vh-25 w-100 top-10">
-                                                    <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-bs-slide="prev">
-                                                        <span class="carousel-control-prev-icon position-absolute bottom-50 text-info" aria-hidden="true"></span>
-                                                        <span class="visually-hidden">Previous</span>
-                                                    </a>
-                                                    <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-bs-slide="next">
-                                                        <span class="carousel-control-next-icon position-absolute bottom-50" aria-hidden="true"></span>
-                                                        <span class="visually-hidden">Next</span>
-                                                    </a>
-                                                </div>
-                                                
-                                            </div>
-                                        </td></tr>
-                                    </tbody>    
-                                </table>
-                            </div>    
-                        </div>
-                    </div>
-                </div>
-                {{-----------------------------}}
-                
-                
-                
-                {{-- Card Gas Fills--}}
-                <div class="col-md-4">
-                    <div class="col-md-12">             
-                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                            <div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Gas Fills Offered</h2>
-                                    <div class="table-responsive"></div>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table align-items-center mb-0"> 
-                                        <tbody>
-
-                                            <tr> <td>
-
-                                                <table class="table align-items-center mb-0">
-                                                    <tbody>
-                                                        <tr>
-                                                            <td class="align-middle text-center text-sm">Air</td>
-                                                            <td class="align-middle text-center text-sm">Nitrox</td>
-                                                            <td class="align-middle text-center text-sm">Trimix</td>
-                                                            <td class="align-middle text-center text-sm">Oxygen</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillAir ? "check" : "block") }}</i></td>
-                                                            <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillNitrox ? "check" : "block") }}</i></td>
-                                                            <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillTrimix ? "check" : "block") }}</i></td>
-                                                            <td class="align-middle text-center text-sm"> <i class="material-icons">{{ ($operator->onSiteFillO2 ? "check" : "block") }}</i></td>  
-                                                        </tr>
-                                                    </tbody>
-
-                                                </table>
-                                            </td></tr>
-
-                                        </tbody>    
-                                    </table>
-                                </div>    
-                            </div>
-                        </div>
-                    </div>
-                
-                    {{-----------------------------}}
-                    {{-- Card Prices--}}
-                    <div class="col-md-12">             
-                        <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
-                            <div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Trip Prices</h2>
-                                    <div class="table-responsive"></div>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table align-items-center mb-0"> 
-                                        <tbody>
-                                            @php
-                                                $tripPrices = json_decode($operator->tripPrice, true);
-                                            @endphp
-
-                                            <tr><td>
-                                                <table class="table align-items-center mb-0">
-                                                    <tr class="align-top">
-                                                        <td class="text-info text-lg font-weight-bolder opacity-7">Type</td>
-                                                        <td class="text-info align-middle text-left text-wrap text-lg">Price</td>
-                                                    </tr>
-                                                    @foreach($tripPrices as $tripPrice)
-                                                    <tr class="align-top" style="border-bottom: 1px solid #D3D3D3;">
-                                                        <td class="text-lg font-weight-bolder opacity-7">{{ $tripPrice['type'] }}</td>
-                                                        <td class="align-middle text-left text-wrap text-lg">${{ $tripPrice['price'] }}</td>
-                                                    </tr>
-                                                    @endforeach
-                                                </table>
-                                            
-                                            </td></td>       
-                                        </tbody>
-                                    </table>
-                                </div>    
-                            </div>
-                        </div>
-                    </div>
-                    {{-----------------------------}}
-                </div>
-
-                @if($trips->isNotEmpty())
-                <div class="col-md-12">             
-                    <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Dive Calendar</h2>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body p-3">
-                            <table>
-                                <tr><td class="text-start text-sm w-1"> 
-                                    <span class="badge badge-md bg-gradient-secondary text-white mx-2">Recreational</span>
-                                    <span class="badge badge-md bg-gradient-success text-white">Technical</span>
-                                </td></tr>
-                                <tr><td><p class="text-xs font-weight-bold mb-0 mt-0 mx-2">reference</p></td></tr>
-                            </table>
-
-                            <div class="calendar" data-bs-toggle="calendar" id="calendar"></div>
-                        </div>
-                    </div>
-                </div>
-                @endif
-                {{--card top sites--}}
-                @if( $topSites != null and count($topSites))
-                    <div class="col-md-6">
-                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                            <div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Most visited sites</h2>
-                                    <div class="table-responsive"></div>
-                                </div>
-                            </div>
-                            <div class="card-body mt-4">
-                                <div class="table-responsive">
-                                    <table style="display: block; height: 300px; overflow-y: scroll">
-                                        <thead class="text-info">
-                                            <th class="align-top text-center">Rank</th> 
-                                            <th class="align-top">Type</th>
-                                            <th class="px-4 align-top">Name</th> 
-                                            <th class="px-4 align-top">Level</th>
-                                        </thead>
-                                        <tbody> 
-                                            @foreach($topSites as $i => $site)
-                                                
-                                                <tr style="border-bottom: 1px solid #D3D3D3;" class="justify-content-center align-middle">
-                                                    <td class="px-4 text-center">{{ $i+1 }}</td>
-                                                    <td class="w-5 text-center align-middle"><img src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}" height="35" loading="lazy"></td>
-                                                    <td class="px-4"><a href="/SiteDetails/{{ $site->id }}">{{ $site->name }}</a></td>
-                                                    <td class="w-5 text-center align-middle"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" alt="levelIcon" height="25" loading="lazy"></td>
-                                                </tr>
-                                        
-                                            @endforeach          
-                                        </tbody>
-                                    </table>
-                                </div>   
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                @else
-                    <div class="col-md-12">
-                @endif
-
-
-                             
-                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                            <div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Description</h4>
-                                    <div class="table-responsive"></div>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table align-items-center mb-0"> 
-                                        <tbody>
-                                            <tr> <td>
-                                                <p class="text-justify-left text-wrap">{{ $operator->desc }}</p>
-                                            </td></tr>
-
-                                        </tbody>    
-                                    </table>
-                                </div>    
-                            </div>
-                        </div>
-                    </div>
-            </div>
-            
-                
-
-
-                
-            
-            
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>
     </main>
@@ -584,7 +323,6 @@
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.js"></script>
-    <script src="{{ asset('assets') }}/js/plugins/flatpickr.min.js"></script>
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
     <script src="/assets/js/plugins/fullcalendar.min.js"></script>
@@ -609,7 +347,7 @@
                 projection: 'albers'
             });
 
-            const marker1 = new mapboxgl.Marker()
+            const marker1 = new mapboxgl.Marker({ color: '#0e4d68' })
                 .setLngLat([lng, lat])
                 .addTo(map);
 
@@ -623,19 +361,6 @@
         
     </script>
 
-    <script>
-    flatpickr("#datePicker", {
-        altInput: true,
-        altFormat: "F j, Y",
-        dateFormat: "Y-m-d",
-        minDate: "today",
-        
-        maxDate: new Date().fp_incr(90),
-        onChange: function(selectedDates, dateStr, instance) {
-            window.location.href = `/Trips/${dateStr}`;
-        }
-    });
-    </script>
 
     <script>
         function getResponsiveView() {
@@ -656,7 +381,7 @@
         windowResize: function(view) {
             calendar.changeView(getResponsiveView());
         },
-        firstDay: {{ auth()->user()->firstDayOfWeek }},
+        firstDay: {{ (int) (auth()->user()->firstDayOfWeek ?? 0) }}, // guest user has no preference; 0 = Sunday
         contentHeight: 'auto',
         headerToolbar: {
             start: '', //'title', // will normally be on the left. if RTL, will be on the right

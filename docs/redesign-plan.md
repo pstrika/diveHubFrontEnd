@@ -95,6 +95,22 @@ the offline queue belong to the PWA epic after the redesign.
   robots and sitemap confirmed.
 - Merge `redesign` into `main`.
 
+## Scope added after the proposal (agreed with Zach, 2026-09-06)
+
+- **Operators explorer and operator detail.** Not in the proposal. The Operators
+  page was a table with client side location tabs, unsortable and unsearchable.
+  It is now the same explorer pattern as Dive Sites (search box, coast chips
+  with counts, feature chips that show only what is present, sort chips, list or
+  map view, all in the query string) built on `App\Support\OperatorBoard`.
+  Operator detail follows the site and trip page layout. URL, title, description,
+  canonical and JSON-LD are unchanged.
+- **Template palette remap.** Material Dashboard's "info" blue and "primary" pink
+  are repainted with the Divers Hub palette on shell pages (one block at the end
+  of `divershub.css`).
+- **Operators map view still geocodes in the browser.** Operators have no stored
+  coordinates. A lat/lon pair on the operators table (set once from the admin)
+  would remove one Mapbox geocoding call per operator per map view.
+
 ## Open questions
 
 1. Originals folder: delete, resize in place, or move out of the repo.

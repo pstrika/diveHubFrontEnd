@@ -1,242 +1,114 @@
 <x-page-template bodyClass='dh-shell bg-gray-200' :SEO="$SEO">
     <x-shell.nav active="operators" />
-    
-    
-    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-        <!-- Navbar -->
+
+    <main class="main-content position-relative h-100 border-radius-lg">
         <x-shell.header title="Dive Operators" />
-        <!-- End Navbar -->
-        <div class="container-fluid py-0">
 
+        <div class="container-fluid py-0 dh-board">
+            {{--
+                Dive Operators explorer. Same shape as the Dive Sites explorer so the
+                two read as one product: search box, filter chips, sort chips, a
+                list or map view, all driven by the query string. The work happens
+                in App\Support\OperatorBoard so the controller stays small and the
+                same data can feed a JSON endpoint later.
 
+                The public URL (/Operators), title, description and canonical are
+                unchanged from the table version.
+            --}}
 
+            <header class="dh-explorer-head">
+                <div>
+                    <h1 class="dh-explorer-title">Dive operators in South Florida</h1>
+                    <p class="dh-explorer-intro">Every charter and dive center from Stuart to Key West, with prices, boats, gas fills and who runs technical trips.</p>
+                </div>
+                <form class="dh-omnibox" method="GET" action="{{ url()->current() }}" role="search">
+                    @foreach(request()->except(['q', 'page']) as $k => $v)
+                        <input type="hidden" name="{{ $k }}" value="{{ $v }}">
+                    @endforeach
+                    <span class="material-icons-round" aria-hidden="true">search</span>
+                    <input type="search" name="q" value="{{ $board['filters']['q'] }}" placeholder="Search operators, cities, boats" aria-label="Search dive operators">
+                    @if($board['filters']['q'] !== '')
+                        <a class="dh-omnibox-clear" href="{{ url()->current() }}?{{ http_build_query(request()->except(['q','page'])) }}" aria-label="Clear search">&times;</a>
+                    @endif
+                </form>
+            </header>
 
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/operators.webp');">
-                <span class="mask  bg-gradient-info  opacity-4"></span>
-            </div>
-
-            <div class="card p-0 position-relative mt-n5 mx-1 z-index-2 mb-4">
-                
-                    <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
-                        <div style="float: left;">
-                            <h1 class="card-title text-info mx-3 mt-0">Dive Operators</h1>
-                        </div>
-
-                    </div>
+            <div class="dh-filters">
+                @php
+                    $regionOptions = collect(\App\Support\Coast::chipOptions())->map(fn ($label, $key) => $label . ' (' . ($board['regionCounts'][$key] ?? 0) . ')')->all();
+                    $featureOptions = collect($board['featureCounts'])->map(fn ($c, $key) => \App\Support\OperatorBoard::FEATURES[$key]['label'] . ' (' . $c . ')')->all();
+                @endphp
+                <x-query-chips param="region" :options="$regionOptions" :selected="$board['filters']['region']" all="All coasts" label="Coast" />
+                @if($featureOptions)
+                    <x-query-chips param="has" :options="$featureOptions" :selected="$board['filters']['has']" all="" label="Offers" :toggle="true" />
+                @endif
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <x-sort-chips :options="\App\Support\OperatorBoard::SORTS" :selected="$board['filters']['sort']" />
+                    <x-query-chips param="view" :options="['map' => 'Map']" :selected="$board['filters']['view'] === 'map' ? 'map' : null" all="List" label="" />
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-12">
-                    
-                    <div class="nav-wrapper position-relative end-0">
-                        <ul class="nav nav-pills nav-fill p-1" role="tablist" id="nav-tabs">
-                            <li class="nav-item">
-                                <a class="nav-link mb-0 px-0 py-1 active" href="#" data-tag="all" data-lat="25.9379" data-lng="-80.9248" data-zoom="6.7">All</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="F.Lauderdale" data-lat="26.22231" data-lng="-80.14338" data-zoom="10">Fort Lauderdale</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="WPB-Jupiter" data-lat="26.8000" data-lng="-80.0672" data-zoom="9">WPB-Jupiter</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="Miami" data-lat="25.793449" data-lng="-80.139198" data-zoom="10">Miami</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="Upper Keys" data-lat="25.05" data-lng="-80.54728" data-zoom="10">Upper Keys</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="Lower Keys" data-lat="24.65524" data-lng="-81.60163" data-zoom="10">Lower Keys</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="Middle Keys" data-lat="24.7263" data-lng="-81" data-zoom="11">Middle Keys</a>
-                            </li>
-                        </ul>
-                    </div>
-               
+            <p class="dh-board-count">
+                {{ count($board['cards']) }} of {{ $board['total'] }} {{ Str::plural('operator', $board['total']) }}
+                @if($board['filters']['q'] !== '' || $board['filters']['region'] || $board['filters']['has'])
+                    <a href="{{ url()->current() }}">clear filters</a>
+                @endif
+            </p>
+
+            @if($board['filters']['view'] === 'map')
+                {{-- Map view. Operators have no stored coordinates, so the browser geocodes each
+                     shop address through Mapbox when this view is opened (as the old page did on
+                     every visit). A lat/lon pair on the operators table would remove those calls. --}}
+                <div id="map" class="dh-map" role="application" aria-label="Map of dive operators"></div>
+            @elseif(empty($board['cards']))
+                <div class="dh-empty">
+                    <span class="material-icons-round" aria-hidden="true">sailing</span>
+                    <p>No operators match. Try fewer filters or another spelling.</p>
+                    <a class="dh-btn dh-btn-primary" href="{{ url()->current() }}">Show all</a>
                 </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card p-0 position-relative mt-3 mx-2 z-index-2 mb-4">
-                        <div class="card-body">
-                            <div class="text-center text-sm" style="background-color: #EBFBFF;" >
-                                Operators offering ONLY private charters will show in light blue
-                            </div>
-                            <div class="table-responsive">
-                                <table>
-                                    <thead class="text-info">
-                                        <th class="align-top">
-                                            
-                                        </th>
-                                        <th class="align-middle text-left">
-                                            Name
-                                        </th>
-                                        <th class="align-middle text-center text-xs">
-                                            Trip Price (USD)
-                                        </th>
-                                        <th class="align-middle text-center text-xs">
-                                            Location
-                                        </th>
-                                        <th class="align-middle text-center text-xs">
-                                            Tec?
-                                        </th>
-                                        <th class="align-middle text-center text-xs">
-                                            Phone
-                                        </th>
-                                        <th class="align-middle text-center text-xs">
-                                            email
-                                        </th>
-                                        <th class="align-middle text-center text-xs">
-                                            web
-                                        </th>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($operators as $operator)
-                                            <?php
-                                                $data = json_decode($operator->tripPrice, true);        
-                                                $price = "-";
-                                                foreach ($data as $item) {
-                                                    if ($item['type'] === "Recreational - 2 Tank") {
-                                                        $price = $item['price'];
-                                                        break;
-                                                    }
-                                                    elseif ($item['type'] === "Recreational - 3 Tank") {
-                                                        $price = $item['price'];
-                                                        break;
-                                                    }
-                                                    elseif ($item['type'] === "Recreational - 2 Tank Reef") {
-                                                        $price = $item['price'];
-                                                        break;
-                                                    }
-                                                    elseif ($item['type'] === "Private - Half Day") {
-                                                        $price = $item['price'];
-                                                        break;
-                                                    }
-                                                }
-                                            ?>
-                                            <tr style="border-bottom: 1px solid #D3D3D3;{{ $operator->private ? ' background-color: #EBFBFF;' :''}}" data-tag="{{ $operator->locationArea}}">
-                                                <td class="w-10"><img src="{{ asset('assets') }}{{ $operator->logoUrl}}" alt="img-blur-shadow" class="img-fluid align-items-center border-radius-lg"></td>
-                                                <td class="text-sm"><a href="OperatorDetails/{{ $operator->id }}"> {{ $operator->operatorName }}</a></td>
-                                                <td class="w-10 text-center text-sm">${{ $price }}</td>
-                                                <td class="w-10 text-center text-sm">{{ $operator->cityAddress }}</td>
-                                                <td class="w-5 align-middle text-center text-sm"><i class="material-icons">{{ ($operator->tec ? "check" : "block") }}</i></td>
-                                                <td class="w-20 text-center text-sm">{{ $operator->phone }}</td>
-                                                <td class="align-middle text-center text-sm"><a href="mailto:{{ $operator->email}}"><i class="material-icons">mail</a></td>
-                                                <td class="align-middle text-center text-sm"><a href="{{ $operator->webSite}}" target="_blank"><i class="material-icons">link</a></td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>    
-                
-                <div class="col-md-6">
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-body">
-                            <div class="border-radius-xl">
-                                <div id="map" style="width: 100%; height: 500px; border-radius: 1rem; background-color: #f0f0f0; padding: 1rem;"></div>
-                            </div>
-                        </div>
-                    </div>
+            @else
+                <div class="dh-op-grid">
+                    @foreach($board['cards'] as $card)
+                        <x-operator-card :card="$card" />
+                    @endforeach
                 </div>
-                    
-            </div>
-            
-                
+            @endif
 
-
-                
-            
-            
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>
     </main>
-    
-    
-    {{--<x-plugins></x-plugins>--}}
-    
+
+    @if($board['filters']['view'] === 'map')
     @push('js')
-    
-    <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
-    
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
-
     <script>
-        mapboxgl.accessToken = 'pk.eyJ1IjoicHN0cmlrYSIsImEiOiJjbHZsc2p2bXcyY240MmtuMDcydHJzd2UxIn0.KBf79cvk47WseBc9rNu6gQ';
-
-        const operators = [
-            <?php
-            foreach($operators as $operator)
-                echo "{ streetAddress: '" . $operator->streetAddress . "', cityAddress: '" . $operator->cityAddress . "', stateAddress: '" . $operator->stateAddress . "', zipAddress: '" . $operator->zipAddress . "', operatorName: '" . addslashes($operator->operatorName) . "' },";
-            
-            ?>
-            // Add more operators as needed
-        ];
-
+        mapboxgl.accessToken = @json($mapboxToken);
+        @php $pins = array_map(fn ($c) => ['name' => $c['name'], 'address' => $c['address'], 'url' => $c['url']], $board['cards']); @endphp
+        const operators = @json($pins);
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/pstrika/clx0wsurg01yj01qmhmvb9pd6',
-            center: [-80.9248, 25.9379], // Center of the US
-            zoom: 6.7, // Zoom level to show the entire US
+            center: [-80.9248, 25.9379],
+            zoom: 6.7,
             projection: 'albers'
         });
-
-
-        operators.forEach(operator => {
-            const address = `${operator.streetAddress}, ${operator.cityAddress}, ${operator.stateAddress} ${operator.zipAddress}`;
-
-            fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${mapboxgl.accessToken}`)
-                .then(response => response.json())
+        const bounds = new mapboxgl.LngLatBounds();
+        let placed = 0;
+        operators.forEach(op => {
+            fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(op.address)}.json?access_token=${mapboxgl.accessToken}&limit=1`)
+                .then(r => r.json())
                 .then(data => {
+                    if (!data.features || !data.features.length) return;
                     const [lng, lat] = data.features[0].center;
-                    console.log(`Latitude: ${lat}, Longitude: ${lng}`);
-
-                    const marker = new mapboxgl.Marker()
-                        .setLngLat([lng, lat])
-                        .addTo(map);
-
-                    const popup = new mapboxgl.Popup().setText(operator.operatorName);
-                    marker.setPopup(popup);
+                    const popup = new mapboxgl.Popup({ offset: 24 }).setHTML(`<a href="${op.url}">${op.name}</a>`);
+                    new mapboxgl.Marker({ color: '#0e4d68' }).setLngLat([lng, lat]).setPopup(popup).addTo(map);
+                    bounds.extend([lng, lat]);
+                    if (++placed > 1) map.fitBounds(bounds, { padding: 40, maxZoom: 11 });
                 })
-                .catch(error => console.error('Error fetching geocoding data:', error));
+                .catch(() => {});
         });
     </script>
-
-<script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const navLinks = document.querySelectorAll('#nav-tabs .nav-link');
-            navLinks.forEach(link => {
-                link.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    const tag = this.getAttribute('data-tag');
-                    const lat = parseFloat(this.getAttribute('data-lat'));
-                    const lng = parseFloat(this.getAttribute('data-lng'));
-                    const zoom = parseFloat(this.getAttribute('data-zoom'));
-                    filterTable(tag);
-                    map.setCenter([lng, lat]); // Update map center
-                    map.setZoom(zoom); // Update map zoom
-                });
-            });
-        });
-
-        function filterTable(tag) {
-            console.log('filterTable called with tag:', tag); // Debugging line
-            const rows = document.querySelectorAll('table tbody tr');
-            rows.forEach(row => {
-                if (tag === 'all' || row.getAttribute('data-tag') === tag) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
-    </script>
-  
     @endpush
+    @endif
 </x-page-template>
