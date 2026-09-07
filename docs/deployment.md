@@ -16,7 +16,7 @@ also running on the `divehub-redesign` slot.
 | Public assets | New `divershub.css`, `divershub.js`, `manifest.webmanifest`, PWA icons, `og-default.jpg`, and 1,900 WebP copies of the site photos (109 MB) under `public/assets/img/sites/web/`. | Nothing; ships in the zip |
 | Photos uploaded through the admin | 151 photos exist only on the server. Their WebP copies were generated from production and are in the repo, so nothing is missing at launch. | Optional: run the backfill command once after deploy to catch anything uploaded in between (section 4) |
 | Deploy workflow | One extra post deploy step deletes cached config and routes. The zip step now leaves out three things the app never serves (see below). Trigger unchanged (push to `main`). | Nothing |
-| Package size | Azure's deploy endpoint rejects a package of 1 GB or more with `400 Bad Request` (the redesign slot hit this on 2026-09-07 at exactly 1,000 MB). The repo carries about 350 MB of dead weight: 15 stray 7 MB chunk upload files at `public/assets<uuid>`, `public/assets/img/illustrations/originals/` (229 MB, unreferenced) and `screens/` (11 MB). The zip step excludes them; the package is about 650 MB. | Consider deleting those from the repo later; the exclusions make it unnecessary for launch |
+| Concurrent deploys | Azure answers `400 Bad Request` when a deployment starts while another is still running on the same app or slot. Both workflows now carry a concurrency group so runs queue. If a run fails with that message, just rerun it once the other finishes. The zip step also leaves out about 350 MB the app never serves (stray `public/assets<uuid>` chunk files, `illustrations/originals/`, `screens/`), so the package is about 650 MB. |
 
 ## 2. Before merging
 

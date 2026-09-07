@@ -9,6 +9,13 @@ on:
       - main
   workflow_dispatch:
 
+# One deploy at a time per target. Azure answers 400 Bad Request when a second
+# deployment starts while one is still running on the same app or slot, which
+# is what happened when several pushes landed minutes apart. Later runs wait.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
