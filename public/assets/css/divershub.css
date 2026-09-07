@@ -402,3 +402,30 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .chip-yes { color: var(--dh-good); border-color: var(--dh-good); background: var(--dh-good-bg); }
 .chip-no { color: var(--dh-muted); opacity: .7; }
 @media (max-width: 575.98px) { .dh-boat { grid-template-columns: 1fr; } }
+
+/* ------------------------------------------------------------------ */
+/* Template palette remap.                                             */
+/* Material Dashboard paints card headers, switches and buttons with   */
+/* its own "info" blue (#1A73E8) on about forty pages we did not       */
+/* redesign. Instead of editing each page, the shell repaints those    */
+/* classes with the Divers Hub palette so old and new sections match.  */
+/* Scoped to body.dh-shell so the admin and template demo pages are    */
+/* untouched. Remove a rule here if a page needs the stock colour.      */
+/* ------------------------------------------------------------------ */
+.dh-shell .bg-gradient-info,
+.dh-shell .bg-gradient-primary { background-image: linear-gradient(195deg, var(--dh-deep) 0%, var(--dh-ink) 100%) !important; }
+.dh-shell .shadow-info,
+.dh-shell .shadow-primary { box-shadow: 0 4px 16px 0 rgba(11, 42, 58, 0.22) !important; }
+.dh-shell .bg-info,
+.dh-shell .bg-primary,
+.dh-shell .btn-info,
+.dh-shell .btn-primary { background-color: var(--dh-deep) !important; border-color: var(--dh-deep) !important; }
+.dh-shell .text-info,
+.dh-shell .text-primary { color: var(--dh-sea) !important; }
+.dh-shell .form-check-input:checked,
+.dh-shell .form-switch .form-check-input:checked { border-color: var(--dh-sea) !important; background-color: var(--dh-sea) !important; }
+.dh-shell .form-switch .form-check-input:checked:after { border-color: var(--dh-sea) !important; }
+.dh-shell .btn.bg-gradient-info,
+.dh-shell .btn.bg-gradient-primary,
+.dh-shell .btn.bg-gradient-info:hover,
+.dh-shell .btn.bg-gradient-primary:hover { box-shadow: 0 3px 8px 0 rgba(11, 42, 58, 0.25) !important; }
