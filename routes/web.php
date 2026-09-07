@@ -85,16 +85,8 @@ Route::get('gasplanning', function () {
     return view('pages.GasPlanning', compact('SEO'));
 })->name('gasplanning');
 
-Route::get('Landing', function () {
-    $SEO = [
-        "title" => "Florida scuba diving sites, calendars and operators",
-        "desc" => "All you need to know for diving in Florida: dive operators, dive sites and wreckwiki, calendars, dive planning and more",
-        "keywords" => "scuba diving florida, scuba, dive operators miami, dive operators fort lauderdale, diving florida keys, dive sites florida",
-		"canonical" => route("/"),
-    ];
-
-    return view('pages.Landing', compact('SEO'));
-})->name('Landing');
+// /Landing is the same page as / (the redesigned home) and keeps its canonical on /.
+Route::get('Landing', [App\Http\Controllers\HomeController::class, 'index'])->middleware('guest')->name('Landing');
 
 /* Google SSO Routes */
 Route::get('login/google', [GoogleController::class, 'redirectToGoogle'])->name('login.google');
