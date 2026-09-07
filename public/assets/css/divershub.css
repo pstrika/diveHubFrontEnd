@@ -182,8 +182,16 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-pagehead-guest:hover { text-decoration: underline; color: var(--dh-deep); }
 
 /* Horizontal chip rows on phones: swipe instead of wrap. */
+/* !important beats Bootstrap's .flex-wrap utility on the same element. min-width: 0
+   lets the row shrink below its content width inside .dh-filters (a column flex
+   box), which is what makes overflow-x actually scroll instead of pushing the
+   page wider. */
 @media (max-width: 767.98px) {
-  .dive-filter-chips { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; }
+  .dive-filter-chips { flex-wrap: nowrap !important; min-width: 0; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; scroll-snap-type: x proximity; }
+  .dive-filter-chips > .chip { scroll-snap-align: start; flex: 0 0 auto; }
+  .dive-filter-chips > span { flex: 0 0 auto; }
+  /* Fade the right edge as a "there is more, swipe" hint. */
+  .dive-filter-chips { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); padding-right: 28px; }
   .dive-filter-chips::-webkit-scrollbar { display: none; }
 }
 
