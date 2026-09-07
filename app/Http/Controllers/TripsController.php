@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Weatherday;
+use App\Models\Operator;
+use App\Support\TripBoard;
 use Illuminate\Http\Request;
 
 
@@ -20,7 +22,7 @@ class TripsController extends Controller
     //
 
 
-    public function show($date = null)
+    public function show(Request $request, $date = null)
     {
         //$user = User::findorFail(auth()->user()->id);
         $user = User::find(auth()->user()->id);
@@ -34,7 +36,8 @@ class TripsController extends Controller
 
         $trips = Trip::where('date', $date)->get()->sortBy('departureTime');
 
-        $sites = collect(Site::select('id', 'maxDepth', 'level')->get());
+        // name, type and slug are needed by the trip cards (site link, wreck chip).
+        $sites = collect(Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get());
         //$trips = Trip::where('date', $date)->with(['site' => function ($query) {
         //    $query->select('id', 'maxDepth', 'level');
         //}])->get()->sortBy('departureTime');
@@ -181,7 +184,23 @@ class TripsController extends Controller
             "canonical" => route("Trips")
         );
 
-        return view('pages.Trips', compact('trips', 'weathers', 'today', 'previousDay', 'nextDay', 'controlNav', 'user', 'SEO'));
+        /*
+         * Trip board (redesign W2). The enriched $trips collection above is
+         * turned into plain card arrays grouped by coast. Conditions come from
+         * every location for the day, not only the user's favourites, because
+         * each region header shows its own sea state. $weathers (favourites
+         * only) is kept for anything else that still reads it.
+         */
+        $filters   = TripBoard::filtersFromRequest($request);
+        $locations = WeatherLocation::all();
+        $allWeather = Weatherday::where('date', $date)->get();
+        $operators = Operator::select('id', 'location', 'phone')->get()->keyBy('id')->all();
+        $board = TripBoard::build($trips, $allWeather, $locations, $filters, $operators);
+
+        // Query string to carry the active filters across the day stepper links.
+        $query = $request->query() ? '?' . http_build_query($request->query()) : '';
+
+        return view('pages.Trips', compact('board', 'date', 'today', 'previousDay', 'nextDay', 'controlNav', 'user', 'SEO', 'query'));
         //return view('pages.Trips', compact('trips', 'weathers', 'today', 'previousDay', 'nextDay', 'controlNav'));
 
     }
