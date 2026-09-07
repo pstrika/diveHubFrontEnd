@@ -137,6 +137,11 @@ the offline queue belong to the PWA epic after the redesign.
   coordinates. A lat/lon pair on the operators table (set once from the admin)
   would remove one Mapbox geocoding call per operator per map view.
 
+- **Site ranking blend (2026-09-07, Zach: "build the ranking blend now").** Trip
+  counts over twelve months blended with damped ratings (`App\Support\SiteRank`),
+  default order on the explorer and the home picks, trip count shown on cards,
+  home picks capped at a member's level range. No schema change.
+
 ## Open questions
 
 1. Originals folder: delete, resize in place, or move out of the repo.

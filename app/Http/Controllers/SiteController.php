@@ -486,7 +486,7 @@ class SiteController extends Controller
      * break the page or reach the database with junk.
      */
     private const EXPLORER_TYPES = ['wreck' => 'Wrecks', 'reef' => 'Reefs', 'other' => 'Other', 'shore' => 'Shore entry'];
-    private const EXPLORER_SORTS = ['rate' => 'Top rated', 'name' => 'A to Z', 'maxDepth' => 'Deepest'];
+    private const EXPLORER_SORTS = ['popular' => 'Popular', 'rate' => 'Top rated', 'name' => 'A to Z', 'maxDepth' => 'Deepest'];
 
     private function explorer(Request $request, array $explorer, array $SEO)
     {
@@ -523,9 +523,16 @@ class SiteController extends Controller
         switch ($sort) {
             case 'name':     $query->orderBy('name'); break;
             case 'maxDepth': $query->orderBy('maxDepth', 'desc'); break;
+            case 'popular':  $query->orderBy('name'); break; // ordered below by SiteRank
             default:         $query->orderByRaw('rate IS NULL, rate DESC')->orderBy('votes', 'desc')->orderBy('name');
         }
         $sites = $query->get();
+        // Trip counts are attached for every sort so cards can show "N trips this
+        // year"; "Popular" orders by the blend of trips and ratings (App\Support\SiteRank).
+        $ranked = \App\Support\SiteRank::apply($sites);
+        if ($sort === 'popular') {
+            $sites = $ranked;
+        }
 
         // First photo per site for the cards, one query for the whole page.
         $firstPhotos = Photo::whereIn('siteId', $sites->pluck('id'))->orderBy('id')->get()->groupBy('siteId');
@@ -590,9 +597,9 @@ class SiteController extends Controller
         );
         return $this->explorer($request, [
             'heading'     => 'Top rated dive sites in Florida',
-            'intro'       => 'Every reef, wreck and shore entry from Stuart to Key West, rated by the divers who have been there.',
+            'intro'       => 'Every reef, wreck and shore entry from Stuart to Key West, ordered by how often the boats go there and what divers rate them.',
             'fixedType'   => null,
-            'defaultSort' => 'rate',
+            'defaultSort' => 'popular',
         ], $SEO);
     }
 
@@ -608,7 +615,7 @@ class SiteController extends Controller
             'heading'     => 'wreckWiki',
             'intro'       => 'Powered by wreckwiki.com. Every artificial reef and shipwreck in Florida with depth, level, history and photos.',
             'fixedType'   => 'wreck',
-            'defaultSort' => 'name',
+            'defaultSort' => 'popular',
         ], $SEO);
     }
 

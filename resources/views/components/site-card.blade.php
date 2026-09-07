@@ -34,6 +34,7 @@
             @endif
             @if($site->maxDepth)<span class="dh-site-fact">{{ $site->maxDepth }} ft</span>@endif
             @if($site->rate)<span class="dh-site-fact dh-site-rate" title="{{ $site->votes }} diver ratings">★ {{ number_format($site->rate, 1) }}</span>@endif
+            @if(!empty($site->tripCount))<span class="dh-site-fact" title="Boat trips to this site in the last {{ \App\Support\SiteRank::WINDOW_MONTHS }} months">{{ number_format($site->tripCount) }} {{ Str::plural('trip', $site->tripCount) }}</span>@endif
         </span>
     </span>
 </a>

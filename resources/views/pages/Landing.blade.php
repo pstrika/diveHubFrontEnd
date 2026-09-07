@@ -59,7 +59,7 @@
             {{-- Featured sites (W1 note 4). Highest rated with a photo when the site has one. --}}
             <section class="dh-featured" aria-labelledby="dh-featured-title">
                 <div class="dh-section-head">
-                    <h2 id="dh-featured-title">Top rated dive sites</h2>
+                    <h2 id="dh-featured-title">Popular dive sites</h2>
                     <a class="dh-why" href="{{ route('DiveSites') }}">All sites</a>
                 </div>
                 <div class="dh-site-grid">

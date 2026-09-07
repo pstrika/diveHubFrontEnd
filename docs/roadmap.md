@@ -9,7 +9,12 @@ The thread running through all of it: more content from divers, shown to the
 divers who are deciding where to go next. Trips are the hook, dive sites are the
 destination pages, groups are where the content already gets made.
 
-## 1. Site ranking: popularity blended with ratings
+## 1. Site ranking: popularity blended with ratings (shipped in the redesign branch, 2026-09-07)
+
+Built as `App\Support\SiteRank`: home "Popular dive sites", the explorer's default
+"Popular" sort with the trip count on every card, the dashboard weekend picks, and
+a certification cap on the home picks for members with a level range. Trip counts
+are cached for an hour. What follows is the original note.
 
 **Problem.** "Top rated dive sites" is really "our tech divers' favorite
 sites". Most people who rate today are technical divers, so the deep wrecks win

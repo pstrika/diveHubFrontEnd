@@ -8,6 +8,7 @@ use App\Models\Trip;
 use App\Models\Weatherday;
 use App\Models\WeatherLocation;
 use App\Support\Coast;
+use App\Support\SiteRank;
 use Carbon\Carbon;
 
 /**
@@ -70,17 +71,15 @@ class HomeController extends Controller
         }
         $totalBoats = array_sum(array_column($coasts, 'boats'));
 
-        // Featured sites: highest rated, with a photo when one exists.
-        // Ratings are sparse (many sites have two or three votes), so a plain
-        // sort by rate puts a 5.0 with two votes above a 4.8 with forty. The
-        // score below pulls low vote counts toward the catalog average (4.2)
-        // with the weight of three votes, a standard damped average.
-        $featured = Site::where('_hidden', '<>', 1)
-            ->whereNotNull('rate')
-            ->orderByRaw('(rate * COALESCE(votes, 0) + 4.2 * 3) / (COALESCE(votes, 0) + 3) DESC')
-            ->orderBy('votes', 'desc')
-            ->take(self::FEATURED)
+        // Featured sites: the SiteRank blend of trip counts and damped ratings
+        // (see App\Support\SiteRank for the why). Members with a level range in
+        // their profile only see sites they can dive; guests see everything.
+        $cap = SiteRank::levelCap(auth()->user());
+        $candidates = Site::where('_hidden', '<>', 1)
+            ->when($cap !== null, fn ($q) => $q->where('level', '<=', $cap))
+            ->select('id', 'name', 'slug', 'type', 'level', 'maxDepth', 'rate', 'votes', 'access')
             ->get();
+        $featured = SiteRank::apply($candidates)->take(self::FEATURED);
         $photos = Photo::whereIn('siteId', $featured->pluck('id'))->get()->groupBy('siteId');
         foreach ($featured as $site) {
             $photo = $photos->get($site->id)?->first();

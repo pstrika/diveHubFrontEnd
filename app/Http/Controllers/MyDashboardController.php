@@ -69,7 +69,7 @@ class MyDashboardController extends Controller
             ->sortBy('date');
             
         Log::debug("Size of fav trips is" . count($favTrips));
-        $sites = collect(Site::select('id', 'maxDepth', 'level', 'rate')->get());
+        $sites = collect(Site::select('id', 'maxDepth', 'level', 'rate', 'votes')->get());
 
         foreach($favTrips as $i => $trip) {
             if($trip->siteId != null) {
@@ -174,6 +174,15 @@ class MyDashboardController extends Controller
         // better rated sites first, boats with seats before full ones, then
         // date and time. Trips that already departed today drop off.
         $now = now();
+        // Same blend as the home page and the explorer: trips to the site plus damped rating.
+        $ranked = \App\Support\SiteRank::apply(collect($sites->all()))->keyBy('id');
+        $siteScore = function ($trip) use ($ranked) {
+            $best = 0.0;
+            foreach ($trip->site ?? [] as $s) {
+                $best = max($best, (float) ($ranked->get($s->id)?->rankScore ?? 0));
+            }
+            return $best;
+        };
         $favTrips = $favTrips
             ->reject(function ($t) use ($now) {
                 if ($t->date > $now->toDateString()) return false;
@@ -189,7 +198,7 @@ class MyDashboardController extends Controller
             ->sortBy([
                 fn ($a, $b) => (int) ($b->fav ?? 0) <=> (int) ($a->fav ?? 0),
                 fn ($a, $b) => (int) ($b->level ?? -1) <=> (int) ($a->level ?? -1),
-                fn ($a, $b) => (float) ($b->site[0]->rate ?? 0) <=> (float) ($a->site[0]->rate ?? 0),
+                fn ($a, $b) => ($siteScore($b) <=> $siteScore($a)),
                 fn ($a, $b) => (int) ($b->tripFreeSpots > 0) <=> (int) ($a->tripFreeSpots > 0),
                 fn ($a, $b) => strcmp($a->date . $a->departureTime, $b->date . $b->departureTime),
             ])
