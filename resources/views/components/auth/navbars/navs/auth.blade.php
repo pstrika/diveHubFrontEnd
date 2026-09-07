@@ -42,13 +42,10 @@
         </div>
         @auth
             @if(auth()->user()->isGuest())
-                <form method="POST" action="{{ route('logout') }}" class="d-none" id="logout-form">
-                    @csrf
-                </form>
+                {{-- Same one hop as the sidebar link: create-account logs the guest out, then shows sign up. --}}
                 <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
                     <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-                    <a class="nav-link text-white " href="{{ route('logout') }}"
-                    onclick="event.preventDefault();document.getElementById('logout-form').submit();">
+                    <a class="nav-link text-white " href="{{ route('create-account') }}">
                         <span class="badge badge-lg badge-primary"> YOU ARE LOGGED IN AS A "GUEST". Click here to create an account</span>
                     </a>
                     </div>
