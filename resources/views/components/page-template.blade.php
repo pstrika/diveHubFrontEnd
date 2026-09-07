@@ -20,7 +20,15 @@
   <link rel="apple-touch-icon" sizes="76x76" href="{{ asset('assets') }}/img/apple-icon.png">
   <!--<link rel="icon" type="image/png" href="{{ asset('assets') }}/img/logos/logo_divershub_white.png">-->
   <link rel="icon" href="{{ asset('assets') }}/img/favicon.ico">
- 
+
+  <!-- PWA - manifest lives on main now so the redesign branch can build a
+       full install/PWA experience on top without starting from scratch. -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1a73e8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Divers Hub">
+
   <title>{{ $SEO["title"] ?? "Divers Hub - your one stop for diving in FL!" }}</title>
  
   <!-- Google AdSense -->

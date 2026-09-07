@@ -1,0 +1,23 @@
+{
+  "name": "Divers Hub",
+  "short_name": "Divers Hub",
+  "description": "Florida scuba diving sites, calendars and operators",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a73e8",
+  "icons": [
+    {
+      "src": "/assets/img/logos/logo_square_small.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/img/logos/logo_circle.png",
+      "sizes": "610x610",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

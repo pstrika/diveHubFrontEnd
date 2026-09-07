@@ -8,7 +8,7 @@ use App\Models\GroupDive;
 use App\Models\GroupDiveRsvp;
 use App\Models\Photo;
 use App\Models\Trip;
-use App\Services\PushNotificationService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -274,14 +274,15 @@ class GroupDiveController extends Controller
     }
 
     /**
-     * Push-notifies every other active member of the group. Best-effort -
-     * PushNotificationService swallows its own failures.
+     * Notifies every other active member of the group - both the in-app
+     * notification center and a browser push. Best-effort -
+     * NotificationService swallows its own failures.
      */
     private function notifyNewDive(Group $group, GroupDive $dive)
     {
         $when = \Carbon\Carbon::parse($dive->date)->format('D, M j') . ($dive->time ? ' at ' . $dive->time : '');
 
-        PushNotificationService::notify(
+        NotificationService::notify(
             $group->activeMembers()->pluck('user_id'),
             $group->name,
             'New dive added: ' . $dive->tripName . ' - ' . $when,

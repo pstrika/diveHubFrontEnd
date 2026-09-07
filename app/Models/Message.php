@@ -12,8 +12,11 @@ class Message extends Model
     protected $table = 'messages';
 
     protected $fillable = [
+        'userId',
+        'subject',
+        'body',
         'read',
         'mail_sent_on',
-        'deleted'
+        'deleted',
     ];
 }

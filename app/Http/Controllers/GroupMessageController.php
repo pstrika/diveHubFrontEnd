@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Group;
 use App\Models\GroupMessage;
 use App\Models\GroupMessagePhoto;
-use App\Services\PushNotificationService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -82,14 +82,15 @@ class GroupMessageController extends Controller
     }
 
     /**
-     * Push-notifies every other active member of the group. Best-effort -
-     * PushNotificationService swallows its own failures.
+     * Notifies every other active member of the group - both the in-app
+     * notification center and a browser push. Best-effort -
+     * NotificationService swallows its own failures.
      */
     private function notifyNewMessage(Group $group, GroupMessage $message)
     {
         $body = $message->body ? Str::limit($message->body, 100) : 'Sent a photo';
 
-        PushNotificationService::notify(
+        NotificationService::notify(
             $group->activeMembers()->pluck('user_id'),
             $group->name,
             auth()->user()->name . ': ' . $body,

@@ -30,7 +30,7 @@ class MessageController extends Controller
         // Logic to mark the note as read
         // ...
         Log::debug("Marking as read note id: " . str($noteId));
-        $message = Message::where('id', $noteId)->first();
+        $message = Message::where('id', $noteId)->where('userId', auth()->user()->id)->first();
         Log::debug("message: " . str($message));
         if($message) {
             $message->read = 1;
@@ -45,7 +45,7 @@ class MessageController extends Controller
         // Logic to mark the note as read
         // ...
         Log::debug("Marking as deleted note id: " . str($noteId));
-        $message = Message::where('id', $noteId)->first();
+        $message = Message::where('id', $noteId)->where('userId', auth()->user()->id)->first();
         Log::debug("message: " . str($message));
         if($message) {
             $message->deleted = 1;
