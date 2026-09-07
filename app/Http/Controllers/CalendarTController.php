@@ -92,13 +92,13 @@ class CalendarTController extends Controller
         */
         
         $dateFrom = Carbon::parse($date)->format('Y-m-d');
-        $dateTo = Carbon::parse($date)->addWeek(6)->format('Y-m-d');
+        $dateTo = Carbon::parse($date)->endOfMonth()->format('Y-m-d'); // the page shows one month; fetching six weeks made the recreational list 4,000+ trips and 20+ seconds
         $trips = Trip::whereBetween('date', [$dateFrom, $dateTo])
             ->where('tripType', 'like', "%" . $tripType . "%")
             ->whereDate('date', '>=', Carbon::today())
             ->get()->sortBy("date");
 
-        $sites = collect(Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get());
+        $sites = Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get()->keyBy('id'); // keyed so each trip is a lookup, not a scan of 380 sites
         
         Log::debug("size of sites: " . count($sites));
         Log::debug("size of trips: " . count($trips));
@@ -106,7 +106,7 @@ class CalendarTController extends Controller
         foreach($trips as $i => $trip) {
             if($trip->siteId != null) {
                 $siteIds = explode(',', $trip->siteId);
-                $relatedSites = $sites->whereIn('id', $siteIds)->all();
+                $relatedSites = array_filter(array_map(fn ($id) => $sites->get((int) trim($id)), $siteIds));
                 
                 #$j=0;
                 foreach($relatedSites as $relatedSite) {
@@ -158,20 +158,20 @@ class CalendarTController extends Controller
         $year = date('Y', strtotime($date)); // Extract the year from the 'date' variable
         
         $dateFrom = Carbon::parse($date)->format('Y-m-d');
-        $dateTo = Carbon::parse($date)->addWeek(6)->format('Y-m-d');
+        $dateTo = Carbon::parse($date)->endOfMonth()->format('Y-m-d'); // the page shows one month; fetching six weeks made the recreational list 4,000+ trips and 20+ seconds
         $trips = Trip::whereBetween('date', [$dateFrom, $dateTo])
             ->where('tags', 'like', "%SHA%")
             ->whereDate('date', '>=', Carbon::today())
             ->get()->sortBy("date");
 
-        $sites = collect(Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get());
+        $sites = Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get()->keyBy('id'); // keyed so each trip is a lookup, not a scan of 380 sites
         
         Log::debug("size of sites: " . $sites);
 
         foreach($trips as $i => $trip) {
             if($trip->siteId != null) {
                 $siteIds = explode(',', $trip->siteId);
-                $relatedSites = $sites->whereIn('id', $siteIds)->all();
+                $relatedSites = array_filter(array_map(fn ($id) => $sites->get((int) trim($id)), $siteIds));
                 
                 #$j=0;
                 foreach($relatedSites as $relatedSite) {
@@ -219,20 +219,20 @@ class CalendarTController extends Controller
         $year = date('Y', strtotime($date)); // Extract the year from the 'date' variable
         
         $dateFrom = Carbon::parse($date)->format('Y-m-d');
-        $dateTo = Carbon::parse($date)->addWeek(6)->format('Y-m-d');
+        $dateTo = Carbon::parse($date)->endOfMonth()->format('Y-m-d'); // the page shows one month; fetching six weeks made the recreational list 4,000+ trips and 20+ seconds
         $trips = Trip::whereBetween('date', [$dateFrom, $dateTo])
             ->where('tags', 'like', "%LOB%")
             ->whereDate('date', '>=', Carbon::today())
             ->get()->sortBy("date");
 
-        $sites = collect(Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get());
+        $sites = Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get()->keyBy('id'); // keyed so each trip is a lookup, not a scan of 380 sites
         
         Log::debug("size of sites: " . $sites);
 
         foreach($trips as $i => $trip) {
             if($trip->siteId != null) {
                 $siteIds = explode(',', $trip->siteId);
-                $relatedSites = $sites->whereIn('id', $siteIds)->all();
+                $relatedSites = array_filter(array_map(fn ($id) => $sites->get((int) trim($id)), $siteIds));
                 
                 #$j=0;
                 foreach($relatedSites as $relatedSite) {
@@ -280,7 +280,7 @@ class CalendarTController extends Controller
         $year = date('Y', strtotime($date)); // Extract the year from the 'date' variable
         
         $dateFrom = Carbon::parse($date)->format('Y-m-d');
-        $dateTo = Carbon::parse($date)->addWeek(6)->format('Y-m-d');
+        $dateTo = Carbon::parse($date)->endOfMonth()->format('Y-m-d'); // the page shows one month; fetching six weeks made the recreational list 4,000+ trips and 20+ seconds
         
         $trips = Trip::whereBetween('date', [$dateFrom, $dateTo])
             ->where('siteIdStatus', 'confirmed')
@@ -302,13 +302,13 @@ class CalendarTController extends Controller
 
         
 
-        $sites = collect(Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get());
+        $sites = Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get()->keyBy('id'); // keyed so each trip is a lookup, not a scan of 380 sites
         Log::debug("size of sites: " . count($sites));
 
         foreach($trips as $i => $trip) {
             if($trip->siteId != null) {
                 $siteIds = explode(',', $trip->siteId);
-                $relatedSites = $sites->whereIn('id', $siteIds)->all();
+                $relatedSites = array_filter(array_map(fn ($id) => $sites->get((int) trim($id)), $siteIds));
                 foreach($relatedSites as $relatedSite) {
                     if ($relatedSite->type == 'wreck')
                         $trips[$i]->site[] = $relatedSite;   
@@ -357,7 +357,7 @@ class CalendarTController extends Controller
         $year = date('Y', strtotime($date)); // Extract the year from the 'date' variable
         
         $dateFrom = Carbon::parse($date)->format('Y-m-d');
-        $dateTo = Carbon::parse($date)->addWeek(6)->format('Y-m-d');
+        $dateTo = Carbon::parse($date)->endOfMonth()->format('Y-m-d'); // the page shows one month; fetching six weeks made the recreational list 4,000+ trips and 20+ seconds
         $trips = Trip::whereBetween('date', [$dateFrom, $dateTo])
             ->where('operatorId', '=', "46")
             ->whereDate('date', '>=', Carbon::today())
@@ -367,7 +367,7 @@ class CalendarTController extends Controller
         Log::debug($boat);
         Log::debug("Boat: " . $boat->name);
         
-        $sites = collect(Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get());
+        $sites = Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get()->keyBy('id'); // keyed so each trip is a lookup, not a scan of 380 sites
         
         Log::debug("size of sites: " . $sites);
 
@@ -379,7 +379,7 @@ class CalendarTController extends Controller
                 $trips[$i]->boatCapacity = $boat->capacity;
             if($trip->siteId != null) {
                 $siteIds = explode(',', $trip->siteId);
-                $relatedSites = $sites->whereIn('id', $siteIds)->all();
+                $relatedSites = array_filter(array_map(fn ($id) => $sites->get((int) trim($id)), $siteIds));
                 
                 #$j=0;
                 foreach($relatedSites as $relatedSite) {
