@@ -98,7 +98,7 @@
                                                                 @include('pages.Groups.partials.GroupAvatars', ['members' => $groupMembers, 'totalCount' => $groupMemberCount])
                                                             </div>
                                                         </div>
-                                                        {{-- Mobile: stacked 3-line layout so avatars never overflow the card --}}
+                                                        {{-- Mobile: stacked 2-line layout so avatars never overflow the card --}}
                                                         <div class="d-flex d-md-none flex-column">
                                                             <div class="d-flex align-items-center mb-1">
                                                                 <div class="avatar avatar-sm me-2">
@@ -112,8 +112,10 @@
                                                                 </div>
                                                                 <b>{{ $group->name }}</b>
                                                             </div>
-                                                            <span class="text-secondary text-sm mb-1">{{ $groupMemberCount }} members</span>
-                                                            @include('pages.Groups.partials.GroupAvatars', ['members' => $groupMembers, 'totalCount' => $groupMemberCount])
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="text-secondary text-sm me-2">{{ $groupMemberCount }} members</span>
+                                                                @include('pages.Groups.partials.GroupAvatars', ['members' => $groupMembers, 'totalCount' => $groupMemberCount])
+                                                            </div>
                                                         </div>
                                                     </a>
                                                 </td>
