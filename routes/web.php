@@ -31,6 +31,13 @@ use App\Http\Controllers\Auth\GoogleController;
 })->middleware('guest');*/
 
 Route::get('/', function () {
+    // start_url in manifest.json is "/" - an installed PWA relaunches here
+    // even with a valid session, so an authenticated user needs to be sent
+    // to their dashboard instead of seeing the guest marketing page.
+    if (auth()->check()) {
+        return redirect()->route(auth()->id() == 5 ? 'Trips' : 'MyDashboard');
+    }
+
     $SEO = [
         "title" => "Florida scuba diving sites, calendars and operators",
         "desc" => "All you need to know for diving in Florida: dive operators, dive sites and wreckwiki, calendars, dive planning and more",
@@ -533,6 +540,12 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 
 	Route::post('push/subscribe', 'App\Http\Controllers\PushSubscriptionController@store')->name('push.subscribe');
 	Route::post('push/unsubscribe', 'App\Http\Controllers\PushSubscriptionController@destroy')->name('push.unsubscribe');
+	// These endpoints are only ever called via fetch(), never navigated to -
+	// but some standalone-PWA browsers (notably iOS Safari on resume) can
+	// replay an in-flight POST as a top-level GET, which would otherwise
+	// 405 the user to a crash screen. Bounce a stray GET home instead.
+	Route::get('push/subscribe', fn () => redirect()->route('MyDashboard'));
+	Route::get('push/unsubscribe', fn () => redirect()->route('MyDashboard'));
 
 	Route::post('Groups/invites/{member}/accept', 'App\Http\Controllers\GroupInviteController@accept')->name('Groups.invites.accept');
 	Route::post('Groups/invites/{member}/decline', 'App\Http\Controllers\GroupInviteController@decline')->name('Groups.invites.decline');
