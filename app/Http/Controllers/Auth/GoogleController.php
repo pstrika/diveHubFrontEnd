@@ -27,11 +27,12 @@ class GoogleController extends Controller
             $userExists = User::where('email', $user->email)->first();
 
             if ($finduser) {
-                Auth::login($finduser);
+                Auth::login($finduser, true);
                 return redirect()->intended('MyDashboard');
             } elseif($userExists) { //if the user already exists, we add the google_id to the account to allow SSO
                 $userExists->google_id = $user->id;
                 $userExists->save();
+                Auth::login($userExists, true);
                 return redirect()->intended('MyDashboard');
             } else {
                 $newUser = User::create([
@@ -69,7 +70,7 @@ class GoogleController extends Controller
                     }
                 }
 
-                Auth::login($newUser);
+                Auth::login($newUser, true);
                 return redirect()->intended('MyDashboard');
             }
         } catch (\Exception $e) {
