@@ -74,40 +74,49 @@
                                 <table class="table align-items-center mb-0">
                                     <tbody>
                                         @foreach($groups as $group)
+                                            @php
+                                                $groupMembers = $group->activeMembers->take(8);
+                                                $groupMemberCount = $group->activeMembers->count();
+                                            @endphp
                                             <tr style="border-bottom: 1px solid #D3D3D3;">
-                                                <td class="align-middle text-left text-md">
-                                                    <a href="{{ route('Groups.show', ['group' => $group->slug]) }}" class="d-flex align-items-center text-dark">
-                                                        <div class="avatar avatar-sm me-2">
-                                                            @if($group->avatar)
-                                                                <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}" class="w-100 h-100 rounded-circle shadow-sm border-info" style="object-fit: cover; border-width: 2px; border-style: solid;">
-                                                            @else
-                                                                <div class="w-100 h-100 rounded-circle bg-gradient-info d-flex align-items-center justify-content-center text-white text-sm">
-                                                                    <i class="material-icons text-sm">groups</i>
-                                                                </div>
-                                                            @endif
+                                                <td class="align-middle text-left text-md" colspan="2">
+                                                    <a href="{{ route('Groups.show', ['group' => $group->slug]) }}" class="text-dark text-decoration-none d-block">
+                                                        {{-- Desktop: single inline row --}}
+                                                        <div class="d-none d-md-flex align-items-center">
+                                                            <div class="avatar avatar-sm me-2">
+                                                                @if($group->avatar)
+                                                                    <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}" class="w-100 h-100 rounded-circle shadow-sm border-info" style="object-fit: cover; border-width: 2px; border-style: solid;">
+                                                                @else
+                                                                    <div class="w-100 h-100 rounded-circle bg-gradient-info d-flex align-items-center justify-content-center text-white text-sm">
+                                                                        <i class="material-icons text-sm">groups</i>
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                            <b>{{ $group->name }}</b>
+                                                            <span class="text-secondary text-sm ms-3">{{ $groupMemberCount }} members</span>
+                                                            <div class="ms-3">
+                                                                @include('pages.Groups.partials.GroupAvatars', ['members' => $groupMembers, 'totalCount' => $groupMemberCount])
+                                                            </div>
                                                         </div>
-                                                        <b>{{ $group->name }}</b>
-                                                        <span class="avatar-group ms-3">
-                                                            @foreach($group->activeMembers->take(8) as $member)
-                                                                <div class="avatar avatar-xs rounded-circle" style="margin-left: -8px;">
-                                                                    @if($member->user->picture)
-                                                                        <img src="{{ asset('assets') }}/img/users/{{ $member->user->picture }}" alt="profile_image" class="w-100 rounded-circle border border-white">
+                                                        {{-- Mobile: stacked 3-line layout so avatars never overflow the card --}}
+                                                        <div class="d-flex d-md-none flex-column">
+                                                            <div class="d-flex align-items-center mb-1">
+                                                                <div class="avatar avatar-sm me-2">
+                                                                    @if($group->avatar)
+                                                                        <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}" class="w-100 h-100 rounded-circle shadow-sm border-info" style="object-fit: cover; border-width: 2px; border-style: solid;">
                                                                     @else
-                                                                        <div class="w-100 h-100 rounded-circle bg-gradient-info d-flex align-items-center justify-content-center text-white border border-white" style="font-size: 10px; font-weight: bold;">
-                                                                            {{ strtoupper(substr($member->user->name, 0, 1)) }}
+                                                                        <div class="w-100 h-100 rounded-circle bg-gradient-info d-flex align-items-center justify-content-center text-white text-sm">
+                                                                            <i class="material-icons text-sm">groups</i>
                                                                         </div>
                                                                     @endif
                                                                 </div>
-                                                            @endforeach
-                                                            @if($group->activeMembers->count() > 8)
-                                                                <div class="avatar avatar-xs rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center text-xs" style="margin-left: -8px;">
-                                                                    +{{ $group->activeMembers->count() - 8 }}
-                                                                </div>
-                                                            @endif
-                                                        </span>
+                                                                <b>{{ $group->name }}</b>
+                                                            </div>
+                                                            <span class="text-secondary text-sm mb-1">{{ $groupMemberCount }} members</span>
+                                                            @include('pages.Groups.partials.GroupAvatars', ['members' => $groupMembers, 'totalCount' => $groupMemberCount])
+                                                        </div>
                                                     </a>
                                                 </td>
-                                                <td class="align-middle text-secondary text-sm">{{ $group->activeMembers->count() }} members</td>
                                             </tr>
                                         @endforeach
                                     </tbody>

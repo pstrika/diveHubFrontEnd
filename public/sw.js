@@ -21,8 +21,8 @@ self.addEventListener('push', function (event) {
     var title = data.title || 'Divers Hub';
     var options = {
         body: data.body || '',
-        icon: '/assets/img/logos/logo_square_small.png',
-        badge: '/assets/img/logos/logo_square_small.png',
+        icon: '/assets/img/pwa/icon-192.png',
+        badge: '/assets/img/pwa/icon-192.png',
         data: { url: data.url || '/' },
     };
 
