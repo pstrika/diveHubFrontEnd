@@ -63,11 +63,14 @@
 
             <button type="button" class="dh-avatar-btn {{ $active === 'me' ? 'is-active' : '' }}" data-bs-toggle="offcanvas" data-bs-target="#dh-me" aria-controls="dh-me" aria-label="Open your menu">
                 @php
-                    // Profile pictures are uploaded to the "public" disk (storage/app/public/profile/...)
-                    // and served through the public/storage link. Google sign in may store a full URL.
+                    // users.picture is a bare file name under public/assets/img/users, written by
+                    // the profile page's crop and upload flow (UserController::updateProfilePic).
+                    // Every other page (groups, reviews, profile) builds the URL the same way.
+                    // Google sign in can leave a full URL, passed through as is.
                     $avatar = null;
                     if ($user && $user->picture) {
-                        $avatar = str_starts_with($user->picture, 'http') ? $user->picture : asset('storage/' . ltrim($user->picture, '/'));
+                        $pic = ltrim($user->picture, '/');
+                        $avatar = str_starts_with($pic, 'http') ? $pic : asset('assets') . '/img/users/' . $pic;
                     }
                 @endphp
                 @if($avatar)

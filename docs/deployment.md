@@ -70,15 +70,13 @@ picker. That deploys the branch straight to production.
    GD lacks WebP support, the site still works (pages fall back to the original
    photo); tell Zach and we will look at the PHP image on the host.
 
-2. **Profile pictures.** Uploaded avatars live on the `public` disk
-   (`storage/app/public/profile/...`) and are served through the `public/storage`
-   link. The header shows them from there now (the old sidebar looked in
-   `img/users/`, which is why avatars were broken before too). Check the link
-   exists on the server; if `/storage/profile/<file>` 404s, run once:
-
-   ```bash
-   php artisan storage:link
-   ```
+2. **Profile pictures.** The crop and upload flow on the profile page was broken
+   on the live site too: it loaded Cropper.js from a CDN without a version, the
+   CDN moved to Cropper.js 2, and the Confirm button called a method that no
+   longer exists. The library is now vendored at 1.6.2. Avatars upload to
+   `public/assets/img/users/` and the header, profile page and reviews read
+   from there. Like the site photos, avatars uploaded on the server are not in
+   the repo, so they show on production but not on the beta slot. No action.
 
 3. **Config cache.** If you ever run `php artisan config:cache` on the server,
    note the workflow now deletes that cache on every deploy so the version in

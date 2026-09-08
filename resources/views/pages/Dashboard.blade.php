@@ -124,7 +124,7 @@
 
                                         <!-- Logo -->
                                         <div class="text-left mx-n2 mt-n3">
-                                            <img id="operatorLogo" src="/images/default-logo.png" height="45" alt="Operator Logo">
+                                            <img id="operatorLogo" src="{{ asset('assets') }}/img/logos/logo_circle.png" height="45" alt="Operator Logo">
                                             
                                         </div>
                                     </div>
@@ -489,9 +489,9 @@
         // Update logo
         const selectedOperator = favOperators.find(op => op.id == selectedId);
         if (selectedOperator) {
-            operatorLogo.src = '{{ asset('assets') }}/' + selectedOperator.logoUrl || '/images/default-logo.png';
+            operatorLogo.src = '{{ asset('assets') }}/' + selectedOperator.logoUrl || '{{ asset('assets') }}/img/logos/logo_circle.png';
         } else {
-            operatorLogo.src = '/images/default-logo.png';
+            operatorLogo.src = '{{ asset('assets') }}/img/logos/logo_circle.png';
         }
 
         // Filter calendar events

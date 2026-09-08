@@ -503,8 +503,12 @@
     <script src="{{ asset('assets') }}/js/plugins/choices.min.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/dropzone.min.js"></script>
 
-    <link href="https://unpkg.com/cropperjs/dist/cropper.css" rel="stylesheet"/>
-    <script src="https://unpkg.com/cropperjs"></script>
+    {{-- Cropper.js 1.6.2, vendored. The unpinned CDN link this page used to load
+         started serving Cropper.js 2 (a rewrite without getCroppedCanvas), which
+         silently broke the Confirm button on the crop screen. Local copy, fixed
+         version, no surprises. --}}
+    <link href="{{ asset('assets') }}/css/cropper.min.css?v=1.6.2" rel="stylesheet"/>
+    <script src="{{ asset('assets') }}/js/plugins/cropper.min.js?v=1.6.2"></script>
 
     <script>
         var divButton = document.getElementById('divButton');
