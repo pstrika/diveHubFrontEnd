@@ -16,16 +16,24 @@
   @sendGA4ClientID
   <!-- </head> -->
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="apple-touch-icon" sizes="76x76" href="{{ asset('assets') }}/img/apple-icon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover">
   <!--<link rel="icon" type="image/png" href="{{ asset('assets') }}/img/logos/logo_divershub_white.png">-->
   <link rel="icon" href="{{ asset('assets') }}/img/favicon.ico">
-  <!-- Installable web app: manifest, theme color and home screen icon. Groundwork for the offline PWA; no service worker yet. -->
-  <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
-  <meta name="theme-color" content="#0b2a3a">
+  <!-- PWA - manifest lives on main now so the redesign branch can build a
+       full install/PWA experience on top without starting from scratch.
+       apple-touch-icon is what iOS actually uses for the Home Screen icon
+       (manifest.json icons are ignored by iOS Safari for this purpose). -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets') }}/img/pwa/apple-touch-icon.png">
+  <meta name="theme-color" content="#0b2a3a"> {{-- redesign shell colour; manifest.json matches --}}
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Divers Hub">
-  <link rel="apple-touch-icon" href="{{ asset('assets') }}/img/pwa/icon-192.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="Divers Hub">
+  <meta name="msapplication-TileColor" content="#0b2a3a">
+  <meta name="msapplication-TileImage" content="{{ asset('assets') }}/img/pwa/icon-192.png">
+
 
   <title>{{ $SEO["title"] ?? "Divers Hub - your one stop for diving in FL!" }}</title>
  

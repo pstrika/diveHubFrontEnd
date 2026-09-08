@@ -48,6 +48,7 @@
         {!! $link('My Dashboard', route('MyDashboard'), 'dashboard') !!}
         {!! $link('My Calendar', route('MyCalendar'), 'event') !!}
         {!! $link('My Groups', route('MyGroups'), 'groups') !!}
+        <x-shell.push-toggle />
         {!! $link('My Visited Sites', route('MyVisitedSites'), 'check_circle') !!}
         @php $unread = (int) $user->unreadNotifications(); @endphp
         {{-- Unread count moved here from the old navbar bell. --}}

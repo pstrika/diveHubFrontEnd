@@ -15,9 +15,10 @@ class MessageController extends Controller
         $user = User::findorFail(auth()->user()->id);
         $messages = Message::where('userid', $user->id)
                    ->where('deleted', false)
+                   ->with('fromUser:id,name')
                    ->latest()
                    ->take(200)
-                   ->get(['id', 'read', 'subject', 'body', 'created_at']);
+                   ->get(['id', 'from_user_id', 'read', 'subject', 'body', 'created_at']);
 
         Log::debug("Count of messages:" . count($messages));
 
@@ -30,7 +31,7 @@ class MessageController extends Controller
         // Logic to mark the note as read
         // ...
         Log::debug("Marking as read note id: " . str($noteId));
-        $message = Message::where('id', $noteId)->first();
+        $message = Message::where('id', $noteId)->where('userId', auth()->user()->id)->first();
         Log::debug("message: " . str($message));
         if($message) {
             $message->read = 1;
@@ -45,7 +46,7 @@ class MessageController extends Controller
         // Logic to mark the note as read
         // ...
         Log::debug("Marking as deleted note id: " . str($noteId));
-        $message = Message::where('id', $noteId)->first();
+        $message = Message::where('id', $noteId)->where('userId', auth()->user()->id)->first();
         Log::debug("message: " . str($message));
         if($message) {
             $message->deleted = 1;

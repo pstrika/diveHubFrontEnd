@@ -1,26 +1,57 @@
-/*
- * Divers Hub service worker, minimal on purpose.
- *
- * Its only job today is to make the site installable: Chrome on Android shows
- * the install prompt (and fires beforeinstallprompt, which divershub.js uses)
- * only when a manifest AND a registered service worker with a fetch listener
- * are present. The fetch listener below does not intercept anything; every
- * request goes to the network exactly as before.
- *
- * Offline caching (trip board, saved sites, queued actions) belongs to the PWA
- * epic on the roadmap and will replace this file. Bump the version string when
- * that happens so browsers pick up the new worker.
- */
-const VERSION = 'install-only-1';
+// Service worker for Web Push notifications only - Divers Hub doesn't use
+// this for offline caching/PWA behavior, just to receive pushes while no
+// tab is open and to route a click on one back into the app.
 
-self.addEventListener('install', () => {
-  self.skipWaiting();
+self.addEventListener('install', function (event) {
+    self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+self.addEventListener('activate', function (event) {
+    event.waitUntil(self.clients.claim());
 });
 
-self.addEventListener('fetch', () => {
-  // Intentionally empty: no caching yet. See the note above.
+self.addEventListener('push', function (event) {
+    var data = {};
+    try {
+        data = event.data ? event.data.json() : {};
+    } catch (e) {
+        data = { title: 'Divers Hub', body: event.data ? event.data.text() : '' };
+    }
+
+    var title = data.title || 'Divers Hub';
+    var options = {
+        body: data.body || '',
+        icon: '/assets/img/pwa/icon-192.png',
+        badge: '/assets/img/pwa/icon-192.png',
+        data: { url: data.url || '/' },
+    };
+
+    event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', function (event) {
+    event.notification.close();
+    var url = (event.notification.data && event.notification.data.url) || '/';
+
+    event.waitUntil(
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (windowClients) {
+            // Reuse the first open window/app instance for this origin,
+            // navigating it to the target page, rather than requiring an
+            // exact URL match - an exact match meant any open window on a
+            // *different* page fell through to openWindow(), which launches
+            // a second instance of an installed PWA instead of reusing it.
+            for (var i = 0; i < windowClients.length; i++) {
+                var client = windowClients[i];
+                if ('focus' in client) {
+                    if ('navigate' in client) {
+                        client.navigate(url);
+                    }
+                    return client.focus();
+                }
+            }
+            if (self.clients.openWindow) {
+                return self.clients.openWindow(url);
+            }
+        })
+    );
 });

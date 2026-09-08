@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Mailgun\Mailgun;
@@ -69,6 +70,7 @@ class GroupInviteController extends Controller
         ]);
 
         $this->sendInviteEmail(User::find($request->user_id), $group);
+        $this->notifyInvite($group, $request->user_id);
 
         return redirect()->back()->with('msg', 'Invite sent!');
     }
@@ -113,6 +115,7 @@ class GroupInviteController extends Controller
             ]);
 
             $this->sendInviteEmail($existingUser, $group);
+            $this->notifyInvite($group, $existingUser->id);
 
             return redirect()->back()->with('msg', 'Invite sent!');
         }
@@ -157,6 +160,24 @@ class GroupInviteController extends Controller
      * Notifies an invited user by email so they know to log in and RSVP.
      * Best-effort: a mail failure must not block the in-app invite.
      */
+    /**
+     * In-app notification center entry + browser push for the invited
+     * user, "from" the inviting admin. Separate from sendInviteEmail()
+     * (that's a real transactional email; this is the same event landing
+     * in the bell/Messages page and, if subscribed, a push).
+     */
+    private function notifyInvite(Group $group, int $invitedUserId)
+    {
+        NotificationService::notify(
+            [$invitedUserId],
+            $group->name,
+            auth()->user()->name . ' invited you to join "' . $group->name . '"',
+            route('MyGroups'),
+            null,
+            auth()->user()->id
+        );
+    }
+
     private function sendInviteEmail(User $invitedUser, Group $group)
     {
         try {

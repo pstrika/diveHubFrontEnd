@@ -657,7 +657,6 @@
             maxFiles: 1,
             maxFilesize: 40,
             acceptedFiles: '.jpeg,.jpg,.png,.webp,.heic,.heif',
-            resizeWidth: 1600,
             chunking: true,
             chunkSize: 2000000,
             paramName: 'img_file',
@@ -724,7 +723,6 @@
             maxFiles: 5,
             maxFilesize: 40,
             acceptedFiles: '.jpeg,.jpg,.png,.webp,.heic,.heif',
-            resizeWidth: 1200,
             chunking: true,
             chunkSize: 2000000,
             parallelUploads: 1,
@@ -795,6 +793,13 @@
                 })
                 .catch(function () {});
         }
+
+        // Scroll to the newest messages on initial load - without this the
+        // chat opens showing the oldest messages first.
+        (function () {
+            var messagesEl = document.getElementById('groupChatMessages');
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        })();
 
         setInterval(refreshChatMessages, 5000);
 

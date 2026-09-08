@@ -78,7 +78,7 @@
                                     <p class='text-danger inputerror'>{{ $message }} </p>
                                     @enderror
                                     <div class="form-check form-switch d-flex align-items-center my-3">
-                                        <input class="form-check-input" type="checkbox" id="rememberMe">
+                                        <input class="form-check-input" type="checkbox" name="remember" id="rememberMe" checked>
                                         <label class="form-check-label mb-0 ms-2" for="rememberMe" id="rememberMeLabel">Remember me</label>
                                     </div>
                                     <div class="text-center" id="buttonDiv">

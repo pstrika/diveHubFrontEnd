@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\GroupMember;
 use App\Models\Role;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use App\Models\User;
 use DevPro\GA4EventTracking\Facades\GA4;
@@ -37,9 +38,26 @@ class RegisterController extends Controller
 
         // Link any pending group invites sent to this email before they had
         // an account - they'll now show up on MyGroups to accept/decline.
-        GroupMember::where('invited_email', strtolower($user->email))
+        $pendingInvites = GroupMember::where('invited_email', strtolower($user->email))
             ->whereNull('user_id')
-            ->update(['user_id' => $user->id]);
+            ->with('group')
+            ->get();
+
+        foreach ($pendingInvites as $invite) {
+            $invite->user_id = $user->id;
+            $invite->save();
+
+            if ($invite->group) {
+                NotificationService::notify(
+                    [$user->id],
+                    $invite->group->name,
+                    'You\'ve been invited to join "' . $invite->group->name . '"',
+                    route('MyGroups'),
+                    null,
+                    $invite->invited_by
+                );
+            }
+        }
 
         auth()->login($user);
         

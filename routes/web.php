@@ -30,9 +30,16 @@ use App\Http\Controllers\Auth\GoogleController;
 	//return redirect('Trips');
 })->middleware('guest');*/
 
-// Front door (redesign W1). Same URL, route name and SEO metadata as before;
-// the page content moved into HomeController so it can load today's data.
-Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('/');
+// Front door. Pablo (9.21.1): an installed PWA relaunches at "/" even with a
+// valid session, so a signed in member goes to their dashboard and the shared
+// guest user to the trip board. Everyone else gets the redesigned home page
+// (HomeController::index, same URL, route name and SEO metadata as before).
+Route::get('/', function (\Illuminate\Http\Request $request) {
+    if (auth()->check()) {
+        return redirect()->route(auth()->id() == 5 ? 'Trips' : 'MyDashboard');
+    }
+    return app(\App\Http\Controllers\HomeController::class)->index($request);
+})->name('/');
 
 
 Route::get('sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
@@ -524,6 +531,15 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::get('MyGroups', 'App\Http\Controllers\GroupController@myGroups')->name('MyGroups');
 	Route::get('Groups/create', 'App\Http\Controllers\GroupController@create')->name('Groups.create');
 	Route::post('Groups', 'App\Http\Controllers\GroupController@store')->name('Groups.store');
+
+	Route::post('push/subscribe', 'App\Http\Controllers\PushSubscriptionController@store')->name('push.subscribe');
+	Route::post('push/unsubscribe', 'App\Http\Controllers\PushSubscriptionController@destroy')->name('push.unsubscribe');
+	// These endpoints are only ever called via fetch(), never navigated to -
+	// but some standalone-PWA browsers (notably iOS Safari on resume) can
+	// replay an in-flight POST as a top-level GET, which would otherwise
+	// 405 the user to a crash screen. Bounce a stray GET home instead.
+	Route::get('push/subscribe', fn () => redirect()->route('MyDashboard'));
+	Route::get('push/unsubscribe', fn () => redirect()->route('MyDashboard'));
 
 	Route::post('Groups/invites/{member}/accept', 'App\Http\Controllers\GroupInviteController@accept')->name('Groups.invites.accept');
 	Route::post('Groups/invites/{member}/decline', 'App\Http\Controllers\GroupInviteController@decline')->name('Groups.invites.decline');

@@ -17,8 +17,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('overview') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            {{-- Brand only. The release stamp moved to the footer (<x-version />) per finding F-05. --}}
-            <span class="ms-2 font-weight-bold text-white">Divers Hub</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 9.22.0 (09/07/26)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -70,31 +69,20 @@
                             </form>
                         @endauth
                         
-                        {{--
-                            Two different actions that used to share one logout link.
-                            Real users get Logout. Guests (the shared guest user, see
-                            AuthenticateAsGuest) get Create account, which must log the
-                            guest out first or sign up would bounce them home. That is
-                            what the create-account route does, in one hop (F-04).
-                        --}}
-                        @auth
-                            @if(auth()->user()->isNotGuest())
-                            <li class="nav-item" style="padding-left: 1rem;">
-                                <a class="nav-link text-white " href="{{ route('logout') }} "
-                                    onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-                                    <i class="material-icons-round opacity-10">logout</i>
-                                    <span class="sidenav-normal  ms-3  ps-1"> Logout </span>
-                                </a>
-                            </li>
-                            @else
-                            <li class="nav-item" style="padding-left: 1rem;">
-                                <a class="nav-link text-white " href="{{ route('create-account') }}">
-                                    <i class="material-icons-round opacity-10">person_add_alt</i>
-                                    <span class="sidenav-normal  ms-3  ps-1"> Create account </span>
-                                </a>
-                            </li>
-                            @endif
-                        @endauth
+                        <li class="nav-item" style="padding-left: 1rem;">
+                            <a class="nav-link text-white " href="{{ route('logout') }} "
+                                onclick="event.preventDefault();document.getElementById('logout-form').submit();">
+                                @auth
+                                    @if(auth()->user()->isNotGuest())
+                                        <i class="material-icons-round opacity-10">logout</i>
+                                        <span class="sidenav-normal  ms-3  ps-1"> Logout </span>
+                                    @else
+                                        <i class="material-icons-round opacity-10">person_add_alt</i>
+                                        <span class="sidenav-normal  ms-3  ps-1"> Create account </span>
+                                    @endif
+                                @endauth
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </li>
@@ -137,6 +125,18 @@
                         href="#" onclick="showModalGuest();">
                         <i class="material-icons-round opacity-10 text-primary">lock</i>
                         <span class="nav-link-text ms-2 ps-1 text-primary">My Groups</span>
+                    </a>
+                </li>
+                @endif
+            @endauth
+
+            {{-- Push Notifications --}}
+            @auth
+                @if(auth()->user()->isNotGuest())
+                <li class="nav-item" id="pushNotifNavItem" hidden>
+                    <a class="nav-link text-white" href="javascript:;" id="pushNotifToggle">
+                        <i class="material-icons-round opacity-10" id="pushNotifIcon">notifications_none</i>
+                        <span class="nav-link-text ms-2 ps-1" id="pushNotifLabel">Enable Notifications</span>
                     </a>
                 </li>
                 @endif
@@ -1451,5 +1451,156 @@
         </ul>
     </div>
     
-    {{-- The guest prompt and its showModalGuest() helper live in <x-guest-modal />, rendered by page-template. --}}
+    @push('js')
+    <script>
+        function showModalGuest() {
+            $('#modal_logged_as_guest').modal('show'); // Show the modal
+        };
+    </script>
+    @auth
+        @if(auth()->user()->isNotGuest())
+        <script>
+            (function () {
+                var navItem = document.getElementById('pushNotifNavItem');
+                var toggle = document.getElementById('pushNotifToggle');
+                var icon = document.getElementById('pushNotifIcon');
+                var label = document.getElementById('pushNotifLabel');
+                var vapidPublicKey = @json(config('services.webpush.public_key'));
+
+                if (!navItem || !('serviceWorker' in navigator) || !('PushManager' in window) || !vapidPublicKey) {
+                    return; // unsupported browser or VAPID not configured - leave the nav item hidden
+                }
+
+                navItem.hidden = false;
+
+                function urlBase64ToUint8Array(base64String) {
+                    var padding = '='.repeat((4 - base64String.length % 4) % 4);
+                    var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+                    var rawData = window.atob(base64);
+                    var outputArray = new Uint8Array(rawData.length);
+                    for (var i = 0; i < rawData.length; ++i) {
+                        outputArray[i] = rawData.charCodeAt(i);
+                    }
+                    return outputArray;
+                }
+
+                function setSubscribedUi(isSubscribed) {
+                    icon.textContent = isSubscribed ? 'notifications_active' : 'notifications_none';
+                    label.textContent = isSubscribed ? 'Notifications On' : 'Enable Notifications';
+                }
+
+                function getRegistration() {
+                    return navigator.serviceWorker.register('/sw.js');
+                }
+
+                getRegistration()
+                    .then(function (reg) { return reg.pushManager.getSubscription(); })
+                    .then(function (sub) { setSubscribedUi(!!sub); })
+                    .catch(function () {});
+
+                toggle.addEventListener('click', function () {
+                    getRegistration().then(function (reg) {
+                        reg.pushManager.getSubscription().then(function (existingSub) {
+                            if (existingSub) {
+                                var endpoint = existingSub.endpoint;
+                                existingSub.unsubscribe().then(function () {
+                                    fetch(@json(route('push.unsubscribe')), {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': @json(csrf_token()) },
+                                        body: JSON.stringify({ endpoint: endpoint })
+                                    });
+                                    setSubscribedUi(false);
+                                });
+                            } else {
+                                Notification.requestPermission().then(function (permission) {
+                                    if (permission !== 'granted') {
+                                        return;
+                                    }
+                                    reg.pushManager.subscribe({
+                                        userVisibleOnly: true,
+                                        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+                                    }).then(function (sub) {
+                                        fetch(@json(route('push.subscribe')), {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': @json(csrf_token()) },
+                                            body: JSON.stringify(sub.toJSON())
+                                        }).then(function () {
+                                            setSubscribedUi(true);
+                                        });
+                                    });
+                                });
+                            }
+                        });
+                    });
+                });
+            })();
+        </script>
+        @endif
+    @endauth
+    @endpush
 </aside>
+
+@auth
+    @if(auth()->user()->isNotGuest())
+        <style>
+            .mobile-bottom-nav {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 1030;
+                background: #1a1a1a;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+            .mobile-bottom-nav-item {
+                flex: 1 1 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 8px 4px 6px;
+                color: rgba(255, 255, 255, 0.6);
+                text-decoration: none;
+            }
+            .mobile-bottom-nav-item i {
+                font-size: 22px;
+                line-height: 1;
+            }
+            .mobile-bottom-nav-item span {
+                font-size: 10px;
+                margin-top: 2px;
+            }
+            .mobile-bottom-nav-item.active {
+                color: #1a73e8;
+            }
+            @media (max-width: 767.98px) {
+                body {
+                    padding-bottom: calc(56px + env(safe-area-inset-bottom));
+                }
+            }
+        </style>
+        <nav class="mobile-bottom-nav d-flex d-md-none">
+            <a href="{{ route('MyDashboard') }}" class="mobile-bottom-nav-item {{ ($activePage ?? '') == 'Dashboard' ? 'active' : '' }}">
+                <i class="material-icons-round">space_dashboard</i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ route('Trips') }}" class="mobile-bottom-nav-item {{ ($activePage ?? '') == 'trips' ? 'active' : '' }}">
+                <i class="material-icons-round">explore</i>
+                <span>Trips</span>
+            </a>
+            <a href="{{ route('Weather') }}" class="mobile-bottom-nav-item {{ ($activePage ?? '') == 'Weather' ? 'active' : '' }}">
+                <i class="material-icons-round">wb_sunny</i>
+                <span>Weather</span>
+            </a>
+            <a href="{{ route('MyGroups') }}" class="mobile-bottom-nav-item {{ ($activePage ?? '') == 'groups' ? 'active' : '' }}">
+                <i class="material-icons-round">groups</i>
+                <span>Groups</span>
+            </a>
+            <a href="javascript:;" class="mobile-bottom-nav-item" onclick="var t=document.getElementById('iconNavbarSidenav'); if(t){ t.click(); }">
+                <i class="material-icons-round">person</i>
+                <span>Me</span>
+            </a>
+        </nav>
+    @endif
+@endauth
