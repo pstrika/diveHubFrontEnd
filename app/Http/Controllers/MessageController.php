@@ -15,9 +15,10 @@ class MessageController extends Controller
         $user = User::findorFail(auth()->user()->id);
         $messages = Message::where('userid', $user->id)
                    ->where('deleted', false)
+                   ->with('fromUser:id,name')
                    ->latest()
                    ->take(200)
-                   ->get(['id', 'read', 'subject', 'body', 'created_at']);
+                   ->get(['id', 'from_user_id', 'read', 'subject', 'body', 'created_at']);
 
         Log::debug("Count of messages:" . count($messages));
 

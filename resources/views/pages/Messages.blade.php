@@ -78,7 +78,7 @@
                                         @endif
                                         <td class="w-5 text-center align-middle text-danger"><a href="javascript:void();"><i class="material-icons cursor-pointer">delete</i></a></td>
                                         <td class="w-15 text-left align-middle"> {{ $message->created_at }}</td>
-                                        <td class="w-20 text-left align-middle">Admin</td>
+                                        <td class="w-20 text-left align-middle">{{ $message->fromUser->name ?? 'Divers Hub' }}</td>
                                         @if( $message->read)
                                             <td class="text-left align-middle" id="subject-inner-{{ $message->id}}"><a href="javascript:showMessage({{ $message->id}});">{{$message->subject}}</a></td>
                                         @else
@@ -209,7 +209,7 @@
                     modalTitle.innerHTML = '<i class="material-icons" style="font-size: 30px; vertical-align: middle;">drafts</i>' + message.subject;
 
                     var modalSubTitle1 = document.getElementById('modal-subtitle-1');
-                    modalSubTitle1.textContent = "From: " + "Admin";
+                    modalSubTitle1.textContent = "From: " + (message.from_user ? message.from_user.name : "Divers Hub");
 
                     var modalSubTitle2 = document.getElementById('modal-subtitle-2');
                     modalSubTitle2.textContent = "on: " + formatDate(message.created_at);

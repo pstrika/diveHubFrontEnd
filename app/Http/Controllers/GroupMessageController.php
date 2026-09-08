@@ -95,6 +95,7 @@ class GroupMessageController extends Controller
             $group->name,
             auth()->user()->name . ': ' . $body,
             route('Groups.show', ['group' => $group->slug]),
+            auth()->user()->id,
             auth()->user()->id
         );
     }

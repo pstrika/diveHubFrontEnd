@@ -287,6 +287,7 @@ class GroupDiveController extends Controller
             $group->name,
             'New dive added: ' . $dive->tripName . ' - ' . $when,
             route('Groups.show', ['group' => $group->slug]),
+            auth()->user()->id,
             auth()->user()->id
         );
     }

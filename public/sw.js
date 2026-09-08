@@ -35,9 +35,17 @@ self.addEventListener('notificationclick', function (event) {
 
     event.waitUntil(
         self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (windowClients) {
+            // Reuse the first open window/app instance for this origin,
+            // navigating it to the target page, rather than requiring an
+            // exact URL match - an exact match meant any open window on a
+            // *different* page fell through to openWindow(), which launches
+            // a second instance of an installed PWA instead of reusing it.
             for (var i = 0; i < windowClients.length; i++) {
                 var client = windowClients[i];
-                if (client.url === url && 'focus' in client) {
+                if ('focus' in client) {
+                    if ('navigate' in client) {
+                        client.navigate(url);
+                    }
                     return client.focus();
                 }
             }

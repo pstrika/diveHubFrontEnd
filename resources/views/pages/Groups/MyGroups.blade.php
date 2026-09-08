@@ -88,18 +88,20 @@
                                                         </div>
                                                         <b>{{ $group->name }}</b>
                                                         <span class="avatar-group ms-3">
-                                                            @foreach($group->activeMembers->take(6) as $member)
+                                                            @foreach($group->activeMembers->take(8) as $member)
                                                                 <div class="avatar avatar-xs rounded-circle" style="margin-left: -8px;">
                                                                     @if($member->user->picture)
                                                                         <img src="{{ asset('assets') }}/img/users/{{ $member->user->picture }}" alt="profile_image" class="w-100 rounded-circle border border-white">
                                                                     @else
-                                                                        <img src="{{ asset('assets') }}/img/default-avatar.png" alt="profile_image" class="w-100 rounded-circle border border-white">
+                                                                        <div class="w-100 h-100 rounded-circle bg-gradient-info d-flex align-items-center justify-content-center text-white border border-white" style="font-size: 10px; font-weight: bold;">
+                                                                            {{ strtoupper(substr($member->user->name, 0, 1)) }}
+                                                                        </div>
                                                                     @endif
                                                                 </div>
                                                             @endforeach
-                                                            @if($group->activeMembers->count() > 6)
+                                                            @if($group->activeMembers->count() > 8)
                                                                 <div class="avatar avatar-xs rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center text-xs" style="margin-left: -8px;">
-                                                                    +{{ $group->activeMembers->count() - 6 }}
+                                                                    +{{ $group->activeMembers->count() - 8 }}
                                                                 </div>
                                                             @endif
                                                         </span>
