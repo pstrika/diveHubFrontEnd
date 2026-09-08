@@ -17,7 +17,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('overview') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 9.21.1 (09/07/26)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 9.22.0 (09/07/26)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -1539,3 +1539,68 @@
     @endauth
     @endpush
 </aside>
+
+@auth
+    @if(auth()->user()->isNotGuest())
+        <style>
+            .mobile-bottom-nav {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 1030;
+                background: #1a1a1a;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+            .mobile-bottom-nav-item {
+                flex: 1 1 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 8px 4px 6px;
+                color: rgba(255, 255, 255, 0.6);
+                text-decoration: none;
+            }
+            .mobile-bottom-nav-item i {
+                font-size: 22px;
+                line-height: 1;
+            }
+            .mobile-bottom-nav-item span {
+                font-size: 10px;
+                margin-top: 2px;
+            }
+            .mobile-bottom-nav-item.active {
+                color: #1a73e8;
+            }
+            @media (max-width: 767.98px) {
+                body {
+                    padding-bottom: calc(56px + env(safe-area-inset-bottom));
+                }
+            }
+        </style>
+        <nav class="mobile-bottom-nav d-flex d-md-none">
+            <a href="{{ route('MyDashboard') }}" class="mobile-bottom-nav-item {{ ($activePage ?? '') == 'Dashboard' ? 'active' : '' }}">
+                <i class="material-icons-round">space_dashboard</i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ route('Trips') }}" class="mobile-bottom-nav-item {{ ($activePage ?? '') == 'trips' ? 'active' : '' }}">
+                <i class="material-icons-round">explore</i>
+                <span>Trips</span>
+            </a>
+            <a href="{{ route('Weather') }}" class="mobile-bottom-nav-item {{ ($activePage ?? '') == 'Weather' ? 'active' : '' }}">
+                <i class="material-icons-round">wb_sunny</i>
+                <span>Weather</span>
+            </a>
+            <a href="{{ route('MyGroups') }}" class="mobile-bottom-nav-item {{ ($activePage ?? '') == 'groups' ? 'active' : '' }}">
+                <i class="material-icons-round">groups</i>
+                <span>Groups</span>
+            </a>
+            <a href="javascript:;" class="mobile-bottom-nav-item" onclick="var t=document.getElementById('iconNavbarSidenav'); if(t){ t.click(); }">
+                <i class="material-icons-round">person</i>
+                <span>Me</span>
+            </a>
+        </nav>
+    @endif
+@endauth
