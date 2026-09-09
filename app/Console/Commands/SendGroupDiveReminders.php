@@ -101,8 +101,7 @@ class SendGroupDiveReminders extends Command
                     'from' => 'Divers-Hub <postmaster@mail.divers-hub.com>',
                     'to' => $member->user->name . ' <' . $member->user->email . '>',
                     'subject' => 'Reminder: ' . $dive->tripName . ' in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : ''),
-                    'template' => 'tripreminder',
-                    'h:X-Mailgun-Variables' => json_encode(['body' => $html]),
+                    'html' => $html,
                 ]);
             }
         } catch (\Throwable $e) {
@@ -114,8 +113,8 @@ class SendGroupDiveReminders extends Command
      * In-app notification center entry + browser push, alongside the email
      * above. Deliberately a separate call rather than folded into
      * NotificationService's own email path - this reminder's email is a
-     * specific templated Mailgun send, not the generic digest the
-     * external emailQueueFlush function sends for other message types.
+     * one-off Mailgun send with its own HTML body, not the generic digest
+     * the external emailQueueFlush function sends for other message types.
      */
     private function notifyReminderInApp(GroupDive $dive, int $daysAhead)
     {
