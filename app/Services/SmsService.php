@@ -14,11 +14,12 @@ class SmsService
      */
     public static function send(?string $rawPhone, string $body): void
     {
-        $sid = config('services.twilio.sid');
-        $token = config('services.twilio.auth_token');
+        $accountSid = config('services.twilio.account_sid');
+        $authUser = config('services.twilio.api_key_sid') ?: $accountSid;
+        $authPass = config('services.twilio.api_key_secret');
         $from = config('services.twilio.from');
 
-        if (!$sid || !$token || !$from) {
+        if (!$accountSid || !$authUser || !$authPass || !$from) {
             return;
         }
 
@@ -28,9 +29,13 @@ class SmsService
         }
 
         try {
+            // The URL path always takes the Account SID (AC...), regardless
+            // of whether auth is the classic Account SID + Auth Token pair
+            // or (as configured here) an API Key SID (SK...) + Secret -
+            // Twilio's recommended, revocable auth method.
             $response = Http::asForm()
-                ->withBasicAuth($sid, $token)
-                ->post("https://api.twilio.com/2010-04-01/Accounts/{$sid}/Messages.json", [
+                ->withBasicAuth($authUser, $authPass)
+                ->post("https://api.twilio.com/2010-04-01/Accounts/{$accountSid}/Messages.json", [
                     'To' => $to,
                     'From' => $from,
                     'Body' => $body,
