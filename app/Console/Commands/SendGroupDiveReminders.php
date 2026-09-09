@@ -151,8 +151,12 @@ class SendGroupDiveReminders extends Command
         $timeFormatted = $dive->time ? Carbon::parse($dive->time)->format('g:i A') : 'TBD';
         $url = route('Groups.show', ['group' => $group->slug]);
 
+        // Opt-out language is repeated in every message on purpose - Twilio's
+        // A2P 10DLC campaign is registered with sample messages that include
+        // it, and carriers filter traffic that doesn't match its registered
+        // samples.
         $body = 'Divers Hub: ' . $dive->tripName . ' is in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '')
-            . ' - ' . $dateFormatted . ' at ' . $timeFormatted . '. ' . $url;
+            . ' - ' . $dateFormatted . ' at ' . $timeFormatted . '. ' . $url . ' Reply STOP to unsubscribe.';
 
         foreach ($members as $member) {
             if (!$member->user || !$member->user->phone || !$member->user->sms_notifications) {
