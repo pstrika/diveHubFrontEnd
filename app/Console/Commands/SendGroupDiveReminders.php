@@ -76,16 +76,17 @@ class SendGroupDiveReminders extends Command
         $dateFormatted = Carbon::parse($dive->date)->format('l, F j');
         $timeFormatted = $dive->time ? Carbon::parse($dive->time)->format('g:i A') : 'TBD';
 
-        $html = '<p>Hi there,</p>'
-            . '<p>This is a reminder that <b>' . e($group->name) . '</b> has a dive coming up in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '') . ':</p>'
+        // No opening greeting or sign-off here - the "tripreminder" Mailgun
+        // template supplies "Dear {{name}}:" and "Kind regards, Divers Hub."
+        // around this body already.
+        $html = '<p>This is a reminder that <b>' . e($group->name) . '</b> has a dive coming up in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '') . ':</p>'
             . '<p><b>' . e($dive->tripName) . '</b><br>'
             . e($dateFormatted) . ' at ' . e($timeFormatted) . '<br>'
             . ($operator ? 'Operator: ' . e($operator->operatorName) . '<br>' : '')
             . '</p>'
             . ($operator && $operator->waiverLink ? '<p><a href="' . e($operator->waiverLink) . '">Sign the operator\'s waiver</a></p>' : '')
             . '<p><b>Who\'s going so far:</b> ' . e($goingNames) . '</p>'
-            . '<p><a href="' . route('Groups.show', ['group' => $group->slug]) . '">View the group calendar</a></p>'
-            . '<p>See you underwater!<br>The Divers Hub team</p>';
+            . '<p><a href="' . route('Groups.show', ['group' => $group->slug]) . '">View the group calendar</a></p>';
 
         try {
             $mg = Mailgun::create(env('MAILGUN_KEY'));
@@ -101,7 +102,10 @@ class SendGroupDiveReminders extends Command
                     'from' => 'Divers-Hub <postmaster@mail.divers-hub.com>',
                     'to' => $member->user->name . ' <' . $member->user->email . '>',
                     'subject' => 'Reminder: ' . $dive->tripName . ' in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : ''),
-                    'html' => $html,
+                    'template' => 'tripreminder',
+                    // {{body}} must be {{{body}}} (triple-brace, unescaped) in the
+                    // Mailgun template - see SendGroupDiveReminders history for why.
+                    'h:X-Mailgun-Variables' => json_encode(['body' => $html, 'name' => $member->user->name]),
                 ]);
             }
         } catch (\Throwable $e) {
@@ -112,8 +116,8 @@ class SendGroupDiveReminders extends Command
     /**
      * In-app notification center entry + browser push, alongside the email
      * above. Deliberately a separate call rather than folded into
-     * NotificationService's own email path - this reminder's email is a
-     * one-off Mailgun send with its own HTML body, not the generic digest
+     * NotificationService's own email path - this reminder's email uses its
+     * own branded Mailgun template ("tripreminder"), not the generic digest
      * the external emailQueueFlush function sends for other message types.
      */
     private function notifyReminderInApp(GroupDive $dive, int $daysAhead)
