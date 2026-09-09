@@ -132,9 +132,11 @@ class SendGroupDiveReminders extends Command
     }
 
     /**
-     * SMS reminder via Twilio, only for members who have a phone number on
-     * file - SmsService itself no-ops if Twilio isn't configured, so this
-     * is safe to call unconditionally.
+     * SMS reminder via Twilio, only for members who have both a phone
+     * number on file AND have opted in via the `sms_notifications` profile
+     * checkbox (required consent for Twilio's A2P 10DLC campaign, and not
+     * pre-selected by default). SmsService itself no-ops if Twilio isn't
+     * configured, so this is safe to call unconditionally.
      */
     private function sendReminderSms(GroupDive $dive, int $daysAhead)
     {
@@ -153,7 +155,7 @@ class SendGroupDiveReminders extends Command
             . ' - ' . $dateFormatted . ' at ' . $timeFormatted . '. ' . $url;
 
         foreach ($members as $member) {
-            if (!$member->user || !$member->user->phone) {
+            if (!$member->user || !$member->user->phone || !$member->user->sms_notifications) {
                 continue;
             }
 

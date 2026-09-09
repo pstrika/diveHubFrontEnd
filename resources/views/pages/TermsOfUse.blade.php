@@ -43,17 +43,19 @@
                                 </ul>
                                 <h2>6. Third-Party Integrations</h2>
                                 <p>If you connect a Facebook Page to a Diving Group, that connection is also governed by Meta's own terms and policies. You can disconnect a Facebook Page at any time from the group's settings, which immediately deletes the stored connection data from Divers Hub. See our <a href="{{ route('PrivacyPolicy') }}">Privacy Policy</a> for details on what data is collected through this integration.</p>
-                                <h2>7. Intellectual Property</h2>
+                                <h2>7. SMS/Text Messaging</h2>
+                                <p>If you opt in by checking the SMS notifications preference on your account page, Divers Hub will send text messages to the phone number on file reminding you of upcoming dive trips for groups you belong to (typically 3 days and 1 day before a scheduled trip). Message frequency varies depending on how many groups you belong to and how many trips are scheduled - typically a few messages per month. Message and data rates may apply. You can opt out at any time by unchecking that preference on your account page or by replying STOP to any message; reply HELP for help. Your phone number is shared only with our SMS delivery provider (Twilio), solely to send these messages.</p>
+                                <h2>8. Intellectual Property</h2>
                                 <p>All content, trademarks, and data on Divers Hub are the property of Divers Hub or its licensors and are protected by intellectual property laws. Dive trip and operator information displayed in the app remains the property of the respective third-party operators.</p>
-                                <h2>8. Limitation of Liability</h2>
+                                <h2>9. Limitation of Liability</h2>
                                 <p>Divers Hub is provided "as is" and "as available." To the fullest extent permitted by law, Divers Hub will not be liable for any damages - including injury, loss, or damages arising from a dive trip found or coordinated through the app - arising from your use of, or inability to use, the app.</p>
-                                <h2>9. Termination</h2>
+                                <h2>10. Termination</h2>
                                 <p>You may stop using Divers Hub and delete your account at any time. We may suspend or terminate your access if you violate these Terms.</p>
-                                <h2>10. Dispute Resolution</h2>
+                                <h2>11. Dispute Resolution</h2>
                                 <p>Any disputes arising out of or in connection with these terms shall be resolved through binding arbitration in accordance with the rules of the American Arbitration Association.</p>
-                                <h2>11. Changes to Terms</h2>
+                                <h2>12. Changes to Terms</h2>
                                 <p>We reserve the right to modify these terms at any time. We will notify you of any changes by posting the new terms on this page.</p>
-                                <h2>12. Contact Us</h2>
+                                <h2>13. Contact Us</h2>
                                 <p>If you have any questions about these Terms of Use, please contact us at info@divers-hub.com</p>
                             </div>
                         </div>
