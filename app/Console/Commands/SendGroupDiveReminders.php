@@ -7,6 +7,7 @@ use App\Models\GroupDive;
 use App\Models\Operator;
 use App\Models\Trip;
 use App\Services\NotificationService;
+use App\Services\SmsService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -49,6 +50,7 @@ class SendGroupDiveReminders extends Command
 
             $this->sendReminderEmail($dive, $daysAhead);
             $this->notifyReminderInApp($dive, $daysAhead);
+            $this->sendReminderSms($dive, $daysAhead);
 
             DB::connection('mysql_trips')->table('group_dive_reminders_sent')->insert([
                 'group_dive_id' => $dive->id,
@@ -127,5 +129,35 @@ class SendGroupDiveReminders extends Command
             'Reminder: ' . $dive->tripName . ' in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '') . ' - ' . $dateFormatted . ' at ' . $timeFormatted,
             route('Groups.show', ['group' => $group->slug])
         );
+    }
+
+    /**
+     * SMS reminder via Twilio, only for members who have a phone number on
+     * file - SmsService itself no-ops if Twilio isn't configured, so this
+     * is safe to call unconditionally.
+     */
+    private function sendReminderSms(GroupDive $dive, int $daysAhead)
+    {
+        $group = $dive->group;
+        $members = $group->activeMembers;
+
+        if ($members->isEmpty()) {
+            return;
+        }
+
+        $dateFormatted = Carbon::parse($dive->date)->format('D, M j');
+        $timeFormatted = $dive->time ? Carbon::parse($dive->time)->format('g:i A') : 'TBD';
+        $url = route('Groups.show', ['group' => $group->slug]);
+
+        $body = 'Divers Hub: ' . $dive->tripName . ' is in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '')
+            . ' - ' . $dateFormatted . ' at ' . $timeFormatted . '. ' . $url;
+
+        foreach ($members as $member) {
+            if (!$member->user || !$member->user->phone) {
+                continue;
+            }
+
+            SmsService::send($member->user->phone, $body);
+        }
     }
 }
