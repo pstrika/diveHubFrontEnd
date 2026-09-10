@@ -12,6 +12,7 @@
             <span class="material-icons-round" aria-hidden="true" id="pushNotifIcon">notifications_none</span>
             <span id="pushNotifLabel">Enable Notifications</span>
         </a>
+        <script>
             (function () {
                 var navItem = document.getElementById('pushNotifToggle'); // drawer link is both the container and the toggle
                 var toggle = document.getElementById('pushNotifToggle');
