@@ -17,8 +17,14 @@ use Illuminate\Support\Facades\Log;
 class MyDashboardController extends Controller
 {
     //
-    public function showDashboard() {
+    public function showDashboard(\Illuminate\Http\Request $request) {
         $user = User::findorFail(auth()->user()->id);
+
+        // New members (or old ones with an empty profile) get the welcome wizard
+        // first; it saves the fields the dashboard personalises on. Skippable.
+        if (\App\Http\Controllers\OnboardingController::shouldPrompt($request, $user)) {
+            return redirect()->route('welcome');
+        }
         // if we didn't receive $date, we just put today's
     
         // Get calendar in timeline --------------------

@@ -219,7 +219,15 @@ class TripsController extends Controller
         // Query string to carry the active filters (not the dates) across the
         // day stepper, the preset chips and the "full board" links.
         $filterParams = array_filter($request->only(['region', 'level', 'type', 'seats']), fn ($v) => $v !== null && $v !== '');
+        if ($filters['ops']) {
+            $filterParams['op'] = implode(',', $filters['ops']); // one param, readable URL
+        }
         $query = $filterParams ? '?' . http_build_query($filterParams) : '';
+
+        // The member's favourite operators (users.favOperators, comma list) for the "My favorites" shortcut.
+        $favOperatorIds = ($user && $user->isNotGuest() && $user->favOperators)
+            ? array_values(array_filter(array_map('intval', explode(',', $user->favOperators))))
+            : [];
 
         if ($mode === 'range') {
             // Range views are query string pages: useful, shareable, not indexed.
@@ -227,7 +235,7 @@ class TripsController extends Controller
             $SEO['robots'] = 'noindex, follow';
         }
 
-        return view('pages.Trips', compact('board', 'days', 'mode', 'from', 'to', 'rangeKey', 'presets', 'filterParams',
+        return view('pages.Trips', compact('board', 'days', 'mode', 'from', 'to', 'rangeKey', 'presets', 'filterParams', 'favOperatorIds',
             'date', 'today', 'previousDay', 'nextDay', 'controlNav', 'user', 'SEO', 'query'));
         //return view('pages.Trips', compact('trips', 'weathers', 'today', 'previousDay', 'nextDay', 'controlNav'));
 

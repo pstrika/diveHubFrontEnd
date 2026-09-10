@@ -231,6 +231,10 @@ Route::post('upload-profile-pic', 'App\Http\Controllers\UserController@updatePro
 //Route::get('dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
 Route::get('dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
 Route::get('MyDashboard', 'App\Http\Controllers\MyDashboardController@showDashboard')->middleware('auth')->name('MyDashboard');
+// Welcome wizard: first visit profile walk through (level, places, operators, photo). Members only.
+Route::get('welcome', 'App\Http\Controllers\OnboardingController@show')->middleware('auth')->name('welcome');
+Route::post('welcome', 'App\Http\Controllers\OnboardingController@save')->middleware('auth')->name('welcome.save');
+Route::post('welcome/skip', 'App\Http\Controllers\OnboardingController@skip')->middleware('auth')->name('welcome.skip');
 
 Route::get('AboutUs', function () {
 	$SEO = [

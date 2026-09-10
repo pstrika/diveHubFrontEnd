@@ -165,6 +165,16 @@ the offline queue belong to the PWA epic after the redesign.
   filtered operators by class name substring; now guarded and matched on a data
   attribute. Same guard applied to the Hydrotherapy calendar and the group page.
 
+- **Operator filter on the finder (2026-09-10, Zach).** Multi select picker of
+  the operators present in the selection, counts, "My favorites" from the profile,
+  `?op=1,7` in links.
+- **Welcome wizard (2026-09-10, Zach and Pablo).** First visit walk through for
+  members with an empty profile: name and photo, level, places, boats, then a
+  done page. Writes existing `users` columns only; skippable for two weeks via
+  cookie; the drawer offers "Finish setting up your profile" until complete.
+- **Main merged again at 9.24.3** (SMS reminders, reminder email, old sitemap
+  files removed). Push toggle in the drawer had lost its script tag; fixed.
+
 ## Open questions
 
 1. Originals folder: delete, resize in place, or move out of the repo.

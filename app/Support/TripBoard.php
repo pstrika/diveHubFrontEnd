@@ -47,11 +47,17 @@ final class TripBoard
         $level  = $request->query('level');
         $type   = $request->query('type');
 
+        // Operators: ?op=1,7 (links) or op[]=1&op[]=7 (the picker's checkboxes).
+        $op = $request->query('op');
+        $ops = is_array($op) ? $op : explode(',', (string) $op);
+        $ops = array_values(array_unique(array_filter(array_map('intval', $ops), fn ($id) => $id > 0)));
+
         return [
             'region' => Coast::isValid($region) ? $region : null,
             'level'  => DiveLevel::isValid($level) ? (int) $level : null,
             'type'   => array_key_exists((string) $type, self::TYPE_OPTIONS) ? $type : null,
             'seats'  => $request->boolean('seats'),
+            'ops'    => $ops,
         ];
     }
 
@@ -91,6 +97,9 @@ final class TripBoard
         $withoutType   = array_merge($filters, ['type' => null]);
         $withoutRegion = array_merge($filters, ['region' => null]);
         $withoutLevel  = array_merge($filters, ['level' => null]);
+        $withoutOps    = array_merge($filters, ['ops' => []]);
+        // Operators present in the selection (every other filter applied): id => [name, count].
+        $operatorCounts = [];
 
         foreach ($trips as $trip) {
             $total++;
@@ -110,6 +119,11 @@ final class TripBoard
             }
             if (self::passes($card, $withoutLevel) && $card['level'] !== null) {
                 $levelCounts[$card['level']]++;
+            }
+            if (self::passes($card, $withoutOps) && $card['operatorId']) {
+                $oid = (int) $card['operatorId'];
+                $operatorCounts[$oid] ??= ['name' => $card['operatorName'], 'n' => 0];
+                $operatorCounts[$oid]['n']++;
             }
             if (!self::passes($card, $filters)) {
                 continue;
@@ -156,7 +170,15 @@ final class TripBoard
             // Numeric counts too, so several days can be merged (range mode).
             'typeCounts'    => $typeCounts,
             'regionCounts'  => $regionCounts,
+            'operatorCounts' => self::sortOperators($operatorCounts),
         ];
+    }
+
+    /** Operators A to Z; a selected operator with no trips left in the selection stays listed so it can be unticked. */
+    private static function sortOperators(array $counts): array
+    {
+        uasort($counts, fn ($a, $b) => strcasecmp($a['name'], $b['name']));
+        return $counts;
     }
 
     /**
@@ -193,9 +215,14 @@ final class TripBoard
         $regionCounts = array_fill_keys(array_keys(Coast::chipOptions()), 0);
         $levelCounts  = array_fill_keys(array_keys(DiveLevel::all()), 0);
         $total = $shown = 0;
+        $operatorCounts = [];
         foreach ($boards as $b) {
             $total += $b['total'];
             $shown += $b['shown'];
+            foreach ($b['operatorCounts'] ?? [] as $id => $o) {
+                $operatorCounts[$id] ??= ['name' => $o['name'], 'n' => 0];
+                $operatorCounts[$id]['n'] += $o['n'];
+            }
             foreach ($b['typeCounts'] as $k => $n)   { $typeCounts[$k]   = ($typeCounts[$k] ?? 0) + $n; }
             foreach ($b['regionCounts'] as $k => $n) { $regionCounts[$k] = ($regionCounts[$k] ?? 0) + $n; }
             foreach ($b['levelCounts'] as $k => $n)  { $levelCounts[$k]  = ($levelCounts[$k] ?? 0) + $n; }
@@ -205,6 +232,7 @@ final class TripBoard
             'groups' => [], 'total' => $total, 'shown' => $shown, 'filters' => $first['filters'],
             'typeOptions' => $typeOptions, 'regionOptions' => $regionOptions, 'levelCounts' => $levelCounts,
             'typeCounts' => $typeCounts, 'regionCounts' => $regionCounts,
+            'operatorCounts' => self::sortOperators($operatorCounts),
         ];
     }
 
@@ -362,6 +390,9 @@ final class TripBoard
             return false;
         }
         if ($filters['seats'] && in_array($card['availability']['state'], ['full', 'departed'], true)) {
+            return false;
+        }
+        if (!empty($filters['ops']) && !in_array((int) $card['operatorId'], $filters['ops'], true)) {
             return false;
         }
         switch ($filters['type']) {

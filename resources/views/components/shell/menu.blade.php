@@ -46,6 +46,9 @@
     <div class="dh-menu-group">
         <h6>My diving</h6>
         {!! $link('My Dashboard', route('MyDashboard'), 'dashboard') !!}
+        @if(\App\Http\Controllers\OnboardingController::needs(auth()->user()))
+            {!! $link('Finish setting up your profile', route('welcome'), 'tune') !!}
+        @endif
         {!! $link('My Calendar', route('MyCalendar'), 'event') !!}
         {!! $link('My Groups', route('MyGroups'), 'groups') !!}
         <x-shell.push-toggle />

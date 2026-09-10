@@ -17,6 +17,9 @@ also running on the `divehub-redesign` slot.
 | Photos uploaded through the admin | 151 photos exist only on the server. Their WebP copies were generated from production and are in the repo, so nothing is missing at launch. | Optional: run the backfill command once after deploy to catch anything uploaded in between (section 4) |
 | Site ranking | Home, explorer and dashboard order sites by trip counts blended with ratings (`App\Support\SiteRank`). Counts are computed from `trips` and cached one hour under the key `siterank.tripcounts.v1`. No schema change. | Nothing. `php artisan cache:clear` refreshes the counts early if ever needed |
 | Add to home screen and push | `public/sw.js` and `public/manifest.json` are Pablo's (push notifications, 9.17.0 to 9.20.0); the redesign's placeholder worker and manifest were dropped in favour of his. The redesign adds the install bar on phones from the second visit (native one tap install on Android, the Share then Add to Home Screen hint on iOS) and carries his notification toggle into the Me drawer. | Nothing |
+| Welcome wizard | Members whose profile lacks a certification level and any favourite places or boats are sent from the dashboard to `/welcome`: four short steps (name and photo, level, places, boats) that write the same `users` columns the profile page writes. "Skip for now" sets a two week cookie. No schema change. | Nothing. Expect most existing members to see it once after launch |
+| Trip finder operators | `/Trips` accepts `op=1,7` (also `op[]`), a picker lists operators with trips in the selection, members get a "My favorites" shortcut from `users.favOperators`. | Nothing |
+| `.env` (SMS) | Pablo's SMS reminders (main 9.23.0 to 9.24.3) read the Twilio keys in `config/services.php`. | Set if not already set |
 | Deploy workflow | One extra post deploy step deletes cached config and routes. The zip step now leaves out three things the app never serves (see below). Trigger unchanged (push to `main`). | Nothing |
 | Concurrent deploys | Azure answers `400 Bad Request` when a deployment starts while another is still running on the same app or slot. Both workflows now carry a concurrency group so runs queue. If a run fails with that message, just rerun it once the other finishes. The zip step also leaves out about 350 MB the app never serves (stray `public/assets<uuid>` chunk files, `illustrations/originals/`, `screens/`), so the package is about 650 MB. |
 
@@ -32,7 +35,7 @@ also running on the `divehub-redesign` slot.
    ```
 
 3. Decide the version number. It is one line in `config/divehub.php` and shows in
-   every footer. The branch currently says `9.22.0` to match main. A redesign
+   every footer. The branch currently says `9.24.3` to match main. A redesign
    release probably deserves `10.0.0`; your call. Set `released` on the same line.
 
 ## 3. Merge and deploy

@@ -31,6 +31,7 @@
                     <x-query-chips param="type" :options="$board['typeOptions']" :selected="$board['filters']['type']" all="All trips" label="Type" />
                 @endif
                 <x-query-chips param="seats" :options="['1' => 'Seats available only']" :selected="$board['filters']['seats'] ? '1' : null" all="" label="" toggle />
+                @include('pages.trips._operators')
             </div>
 
             @php
