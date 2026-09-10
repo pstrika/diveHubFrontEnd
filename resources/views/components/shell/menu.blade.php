@@ -60,13 +60,14 @@
     </div>
 @endif
 
+{{-- Rule (Zach): tools and calendars are open to everyone; only personal data (dashboard, groups, saving) needs an account. --}}
 <div class="dh-menu-group">
     <h6>Calendars</h6>
     {!! $link('Recreational', route('CalendarT') . '/rec', 'img:icons_rec.png') !!}
-    {!! $link('Technical', route('CalendarT') . '/tec', 'img:icons_tec.png', $isGuest) !!}
-    {!! $link('Wreck diving', route('CalendarWreck'), 'img:wreck_icon_white.png', $isGuest) !!}
-    {!! $link('Shark diving', route('CalendarShark'), 'img:icons_shark.png', $isGuest) !!}
-    {!! $link('Lobster diving', route('CalendarLobster'), 'img:icons_lobster.png', $isGuest) !!}
+    {!! $link('Technical', route('CalendarT') . '/tec', 'img:icons_tec.png') !!}
+    {!! $link('Wreck diving', route('CalendarWreck'), 'img:wreck_icon_white.png') !!}
+    {!! $link('Shark diving', route('CalendarShark'), 'img:icons_shark.png') !!}
+    {!! $link('Lobster diving', route('CalendarLobster'), 'img:icons_lobster.png') !!}
 </div>
 
 <div class="dh-menu-group">
@@ -80,7 +81,7 @@
 <div class="dh-menu-group">
     <h6>Planning tools</h6>
     {!! $link('Deco planner', route('DecoPlanner'), 'timer') !!}
-    {!! $link('Best gases', route('gasplanning'), 'science', $isGuest) !!}
+    {!! $link('Best gases', route('gasplanning'), 'science') !!}
 </div>
 
 @auth

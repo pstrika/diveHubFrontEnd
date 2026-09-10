@@ -231,7 +231,7 @@
                 var calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
                 //initialView: "dayGridMonth",
                 initialView: isMobile ? "listMonth" : "dayGridMonth",
-                firstDay: {{ auth()->user()->firstDayOfWeek }},
+                firstDay: {{ (int) (auth()->user()->firstDayOfWeek ?? 0) }}, // guests and new accounts have no preference; a bare value broke the script
                 dateClick: function(info) {
                     // Change to day view
                     calendar.changeView('timeGridDay', info.dateStr);

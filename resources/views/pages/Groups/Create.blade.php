@@ -1,5 +1,5 @@
 <x-page-template bodyClass='dh-shell bg-gray-200' :SEO="$SEO ?? []">
-    <x-shell.nav active="me" />
+    <x-shell.nav active="groups" />
 
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <x-shell.header title="Create a Group" />

@@ -143,17 +143,7 @@ final class TripBoard
             }
         }
 
-        // Chips: label with count, only types present (the active one always stays so it can be cleared).
-        $typeOptions = [];
-        foreach (self::TYPE_OPTIONS as $type => $label) {
-            if ($typeCounts[$type] > 0 || $filters['type'] === $type) {
-                $typeOptions[$type] = $label . ' (' . $typeCounts[$type] . ')';
-            }
-        }
-        $regionOptions = [];
-        foreach (Coast::chipOptions() as $key => $label) {
-            $regionOptions[$key] = $label . ' (' . $regionCounts[$key] . ')';
-        }
+        [$typeOptions, $regionOptions] = self::chipOptions($typeCounts, $regionCounts, $filters);
 
         return [
             'groups'        => $ordered,
@@ -163,8 +153,89 @@ final class TripBoard
             'typeOptions'   => $typeOptions,
             'regionOptions' => $regionOptions,
             'levelCounts'   => $levelCounts,
+            // Numeric counts too, so several days can be merged (range mode).
+            'typeCounts'    => $typeCounts,
+            'regionCounts'  => $regionCounts,
         ];
     }
+
+    /**
+     * Chip labels with counts. Types only list what exists in the selection
+     * (the active one always stays so it can be cleared); regions are static.
+     *
+     * @return array{0: array, 1: array} [typeOptions, regionOptions]
+     */
+    public static function chipOptions(array $typeCounts, array $regionCounts, array $filters): array
+    {
+        $typeOptions = [];
+        foreach (self::TYPE_OPTIONS as $type => $label) {
+            if (($typeCounts[$type] ?? 0) > 0 || $filters['type'] === $type) {
+                $typeOptions[$type] = $label . ' (' . ($typeCounts[$type] ?? 0) . ')';
+            }
+        }
+        $regionOptions = [];
+        foreach (Coast::chipOptions() as $key => $label) {
+            $regionOptions[$key] = $label . ' (' . ($regionCounts[$key] ?? 0) . ')';
+        }
+        return [$typeOptions, $regionOptions];
+    }
+
+    /**
+     * Combine one board per day into the totals the chips show in range mode.
+     * Groups are left empty: the range view renders each day's own board.
+     *
+     * @param array<string, array> $boards date => build() result
+     */
+    public static function merge(array $boards): array
+    {
+        $first = reset($boards) ?: ['filters' => ['region' => null, 'level' => null, 'type' => null, 'seats' => false]];
+        $typeCounts   = array_fill_keys(array_keys(self::TYPE_OPTIONS), 0);
+        $regionCounts = array_fill_keys(array_keys(Coast::chipOptions()), 0);
+        $levelCounts  = array_fill_keys(array_keys(DiveLevel::all()), 0);
+        $total = $shown = 0;
+        foreach ($boards as $b) {
+            $total += $b['total'];
+            $shown += $b['shown'];
+            foreach ($b['typeCounts'] as $k => $n)   { $typeCounts[$k]   = ($typeCounts[$k] ?? 0) + $n; }
+            foreach ($b['regionCounts'] as $k => $n) { $regionCounts[$k] = ($regionCounts[$k] ?? 0) + $n; }
+            foreach ($b['levelCounts'] as $k => $n)  { $levelCounts[$k]  = ($levelCounts[$k] ?? 0) + $n; }
+        }
+        [$typeOptions, $regionOptions] = self::chipOptions($typeCounts, $regionCounts, $first['filters']);
+        return [
+            'groups' => [], 'total' => $total, 'shown' => $shown, 'filters' => $first['filters'],
+            'typeOptions' => $typeOptions, 'regionOptions' => $regionOptions, 'levelCounts' => $levelCounts,
+            'typeCounts' => $typeCounts, 'regionCounts' => $regionCounts,
+        ];
+    }
+
+    /**
+     * Quick date ranges for the finder, all relative to today.
+     * "This weekend" is the coming Saturday and Sunday, or the rest of the
+     * current weekend when today already is one.
+     *
+     * @return array<string, array{label: string, from: string, to: string}>
+     */
+    public static function rangePresets(Carbon $today): array
+    {
+        $today = $today->copy()->startOfDay();
+        if ($today->isWeekend()) {
+            $satFrom = $today->copy();
+            $sunTo   = $today->isSunday() ? $today->copy() : $today->copy()->addDay();
+        } else {
+            $satFrom = $today->copy()->next(Carbon::SATURDAY);
+            $sunTo   = $satFrom->copy()->addDay();
+        }
+        $nextSat = $sunTo->copy()->next(Carbon::SATURDAY);
+        return [
+            'weekend'     => ['label' => 'This weekend', 'from' => $satFrom->toDateString(), 'to' => $sunTo->toDateString()],
+            'nextweekend' => ['label' => 'Next weekend', 'from' => $nextSat->toDateString(), 'to' => $nextSat->copy()->addDay()->toDateString()],
+            '7d'          => ['label' => 'Next 7 days',  'from' => $today->toDateString(), 'to' => $today->copy()->addDays(6)->toDateString()],
+            '30d'         => ['label' => 'Next 30 days', 'from' => $today->toDateString(), 'to' => $today->copy()->addDays(29)->toDateString()],
+        ];
+    }
+
+    /** Longest custom range the finder accepts, in days. */
+    public const MAX_RANGE_DAYS = 31;
 
     /** One normalised trip card. Keys are stable; views and the future JSON feed rely on them. */
     public static function card($trip, Carbon $now, array $operators = []): array

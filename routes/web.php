@@ -143,15 +143,16 @@ Route::get('WeatherARImperial/', 'App\Http\Controllers\WeatherController@showARI
 Route::get('WeatherARMetric/{location}', 'App\Http\Controllers\WeatherController@showARMetric')->middleware('guest')->name('WeatherARMetric');
 Route::get('WeatherARMetric/', 'App\Http\Controllers\WeatherController@showARMetric')->middleware('guest')->name('WeatherARMetric');
 
-Route::get('CalendarT/{tripType}/{date}', 'App\Http\Controllers\CalendarTController@show')->middleware('auth')->name('CalendarT');
-Route::get('CalendarT/{tripType}', 'App\Http\Controllers\CalendarTController@show')->middleware('auth')->name('CalendarT');
-Route::get('CalendarT/', 'App\Http\Controllers\CalendarTController@show')->middleware('auth')->name('CalendarT');
-Route::get('CalendarShark/{date}', 'App\Http\Controllers\CalendarTController@showShark')->middleware('auth')->name('CalendarShark');
-Route::get('CalendarShark/', 'App\Http\Controllers\CalendarTController@showShark')->middleware('auth')->name('CalendarShark');
-Route::get('CalendarLobster/{date}', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('auth')->name('CalendarLobster');
-Route::get('CalendarLobster/', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('auth')->name('CalendarLobster');
-Route::get('CalendarWreck/{date}', 'App\Http\Controllers\CalendarTController@showWreck')->middleware('auth')->name('CalendarWreck');
-Route::get('CalendarWreck/', 'App\Http\Controllers\CalendarTController@showWreck')->middleware('auth')->name('CalendarWreck');
+// Themed calendars render the trip finder with a type preset; open to guests like the board itself.
+Route::get('CalendarT/{tripType}/{date}', 'App\Http\Controllers\CalendarTController@show')->middleware('guest')->name('CalendarT');
+Route::get('CalendarT/{tripType}', 'App\Http\Controllers\CalendarTController@show')->middleware('guest')->name('CalendarT');
+Route::get('CalendarT/', 'App\Http\Controllers\CalendarTController@show')->middleware('guest')->name('CalendarT');
+Route::get('CalendarShark/{date}', 'App\Http\Controllers\CalendarTController@showShark')->middleware('guest')->name('CalendarShark');
+Route::get('CalendarShark/', 'App\Http\Controllers\CalendarTController@showShark')->middleware('guest')->name('CalendarShark');
+Route::get('CalendarLobster/{date}', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('guest')->name('CalendarLobster');
+Route::get('CalendarLobster/', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('guest')->name('CalendarLobster');
+Route::get('CalendarWreck/{date}', 'App\Http\Controllers\CalendarTController@showWreck')->middleware('guest')->name('CalendarWreck');
+Route::get('CalendarWreck/', 'App\Http\Controllers\CalendarTController@showWreck')->middleware('guest')->name('CalendarWreck');
 
 /* Special routes for Hydrotherapy integration */
 Route::get('CalendarHydrotherapy/{date}', 'App\Http\Controllers\CalendarTController@showHydrotherapy')->middleware('guest')->name('CalendarHydrotherapy');

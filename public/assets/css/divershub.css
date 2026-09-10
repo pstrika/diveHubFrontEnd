@@ -139,12 +139,12 @@ body.dh-shell .sidenav, body.dh-shell #sidenav-main { display: none !important; 
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 1030;
   height: calc(var(--dh-tabbar-h) + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: repeat(5, 1fr); /* Dives, Sites, Operators, Groups, Me */
   background: var(--dh-paper); border-top: 1px solid var(--dh-line);
 }
 .dh-tab {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  color: var(--dh-muted); text-decoration: none; font-size: .7rem; font-weight: 600;
+  color: var(--dh-muted); text-decoration: none; font-size: .66rem; font-weight: 600; min-width: 0;
   border: 0; background: transparent; padding: 0;
 }
 .dh-tab .material-icons-round { font-size: 24px; }
@@ -523,3 +523,37 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-install-close { border: 0; background: transparent; color: var(--dh-muted); padding: 4px; margin: -4px -4px -4px 0; flex: 0 0 auto; }
 .dh-install-close .material-icons-round { font-size: 20px; }
 @media (min-width: 768px) { .dh-install { display: none !important; } } /* desktop never sees it */
+
+/* ------------------------------------------------------------------ */
+/* Home: coast tiles centred, so an odd count does not leave an orphan */
+/* hanging on the left.                                               */
+/* ------------------------------------------------------------------ */
+.dh-strip-row { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--dh-space-3); }
+.dh-strip-row .dh-coast { flex: 1 1 200px; max-width: 260px; }
+/* Phones: two per row, and an odd last tile stays half width and centred rather than stretching. */
+@media (max-width: 575.98px) { .dh-strip-row .dh-coast { flex: 0 1 calc(50% - var(--dh-space-3) / 2); max-width: none; } }
+
+/* ------------------------------------------------------------------ */
+/* Trip finder: date presets, custom range, day strip, day sections.   */
+/* ------------------------------------------------------------------ */
+.dh-range-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 var(--dh-space-2); }
+.dh-range-custom { display: inline-block; }
+.dh-range-custom summary { list-style: none; cursor: pointer; }
+.dh-range-custom summary::-webkit-details-marker { display: none; }
+.dh-range-form { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.dh-range-form input[type="date"] { border: 1px solid var(--dh-line); border-radius: var(--dh-radius); padding: 6px 8px; font: inherit; color: var(--dh-ink); background: var(--dh-paper); }
+.dh-range-title { font-size: 1.35rem; font-weight: 800; color: var(--dh-ink); margin: var(--dh-space-3) 0 4px; }
+.dh-daystrip { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0 8px; scrollbar-width: none; }
+.dh-daystrip::-webkit-scrollbar { display: none; }
+.dh-daystrip a { flex: 0 0 auto; width: 52px; text-align: center; text-decoration: none; color: var(--dh-ink); border: 1px solid var(--dh-line); border-radius: var(--dh-radius); padding: 6px 2px; background: var(--dh-paper); }
+.dh-daystrip a .dh-ds-dow { display: block; font-size: .65rem; letter-spacing: .05em; text-transform: uppercase; color: var(--dh-muted); }
+.dh-daystrip a .dh-ds-day { display: block; font-weight: 800; font-size: 1rem; line-height: 1.2; }
+.dh-daystrip a .dh-ds-n { display: block; font-size: .7rem; color: var(--dh-sea); font-weight: 700; }
+.dh-daystrip a.is-empty { opacity: .45; }
+.dh-daystrip a.is-empty .dh-ds-n { color: var(--dh-muted); font-weight: 400; }
+.dh-daystrip a.is-weekend { background: var(--dh-foam); }
+.dh-day { margin-top: var(--dh-space-4); }
+.dh-day-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; font-size: 1.1rem; font-weight: 800; color: var(--dh-ink); margin: 0 0 var(--dh-space-2); }
+.dh-day-title .dh-region-count { font-weight: 600; color: var(--dh-muted); font-size: .85rem; }
+.dh-day-title .dh-why { margin-left: auto; }
+.dh-more-link { display: inline-block; margin: 4px 0 0; font-size: .85rem; font-weight: 700; color: var(--dh-sea); text-decoration: none; }

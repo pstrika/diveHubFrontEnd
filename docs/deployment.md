@@ -12,7 +12,7 @@ also running on the `divehub-redesign` slot.
 | Composer / npm | **Nothing from the redesign.** Pablo added `minishlink/web-push` on main (9.17.0); the workflow's composer install picks it up. No new PHP extensions beyond GD (already loaded). | Nothing |
 | `.env` | **Nothing from the redesign.** Pablo's push notifications read `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (main 9.17.0). Without them the notification toggle stays hidden and everything else works. | Set if not already set |
 | Config | New file `config/divehub.php` (release version and date). | Bump the version before merging (section 3) |
-| Routes | Three old tool URLs now 301 into the explorer. `/Landing` renders the home page. Deco Planner and My Calendar pages open to guests. All other URLs unchanged. | Nothing; see section 6 |
+| Routes | Three old tool URLs now 301 into the explorer. `/Landing` renders the home page. Deco Planner, My Calendar and the five themed calendars open to guests; the themed calendars render the trip finder with a type preset. `/Trips` accepts `range`, `from` and `to` (noindex). All other URLs unchanged. | Nothing; see section 6 |
 | Public assets | New `divershub.css`, `divershub.js`, `manifest.webmanifest`, PWA icons, `og-default.jpg`, and 1,900 WebP copies of the site photos (109 MB) under `public/assets/img/sites/web/`. | Nothing; ships in the zip |
 | Photos uploaded through the admin | 151 photos exist only on the server. Their WebP copies were generated from production and are in the repo, so nothing is missing at launch. | Optional: run the backfill command once after deploy to catch anything uploaded in between (section 4) |
 | Site ranking | Home, explorer and dashboard order sites by trip counts blended with ratings (`App\Support\SiteRank`). Counts are computed from `trips` and cached one hour under the key `siterank.tripcounts.v1`. No schema change. | Nothing. `php artisan cache:clear` refreshes the counts early if ever needed |
@@ -86,7 +86,7 @@ picker. That deploys the branch straight to production.
 4. **Smoke test on production** (each should return 200, footer shows the new version):
 
    - `/` and `/Landing`
-   - `/Trips` and `/Trips/<next Saturday>`
+   - `/Trips`, `/Trips/<next Saturday>`, `/Trips?range=weekend`, `/CalendarShark` (renders the finder)
    - `/DiveSites`, `/DiveSites?view=map`, `/WreckSites`
    - `/SiteDetails/spiegel-grove` (check the gallery loads WebP files from `img/sites/web/`)
    - `/Operators`, `/OperatorDetails/pura-vida-divers`

@@ -147,6 +147,24 @@ the offline queue belong to the PWA epic after the redesign.
   native prompt on Android via beforeinstallprompt, Share then Add to Home Screen
   hint on iOS Safari. Never on desktop, never when installed, dismissal remembered.
 
+- **Trip finder with date ranges (2026-09-10, Zach: "go").** `/Trips` keeps its
+  day board and gains range mode: preset chips (this weekend, next weekend, next
+  7 and 30 days) and a custom from/to, capped at 31 days, all in the query string.
+  Range results show a day strip with counts, then each day's board with three
+  cards per coast and a link to the full day. The five themed calendars keep their
+  URLs and render the finder with their type preset (`CalendarTController`
+  delegates to `TripsController`; the ThemedCalendar view is gone).
+- **Consistent gating (same day).** Tools and calendars are open to everyone
+  (Deco planner, Best gases, the five calendars); only personal data needs an
+  account (dashboard, groups, saving to the calendar). Menu locks removed.
+- **Bottom tabs (same day).** Five: Dives, Sites, Operators, Groups, Me. "Today"
+  was not read as the place to find a dive, and "Boats" read as trips. Groups
+  opens the account prompt for guests.
+- **Dashboard favorites calendar (same day).** Rendered nothing for any member
+  without a first day of week preference (a stray comma killed the script) and
+  filtered operators by class name substring; now guarded and matched on a data
+  attribute. Same guard applied to the Hydrotherapy calendar and the group page.
+
 ## Open questions
 
 1. Originals folder: delete, resize in place, or move out of the repo.

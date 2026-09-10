@@ -32,12 +32,21 @@ class TripsController extends Controller
         if (!$date) {
             $date = Carbon::today()->toDateString();
         }
-        
 
-        $trips = Trip::where('date', $date)->get()->sortBy('departureTime');
+        // Trip finder (redesign): the same page serves one day (the default) or a
+        // date range. ?range=weekend|nextweekend|7d|30d picks a preset, ?from=&to=
+        // a custom range (capped at TripBoard::MAX_RANGE_DAYS). Day mode is from == to.
+        [$from, $to, $rangeKey] = $this->resolveRange($request, $date, Carbon::today());
+        $mode = $from === $to ? 'day' : 'range';
+        if ($mode === 'day') {
+            $date = $from;
+        }
+
+        $trips = Trip::whereBetween('date', [$from, $to])->get()->sortBy('departureTime');
 
         // name, type and slug are needed by the trip cards (site link, wreck chip).
-        $sites = collect(Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get());
+        // Keyed by id: a range search enriches thousands of trips, and a scan per trip was the slow part.
+        $sites = Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get()->keyBy('id');
         //$trips = Trip::where('date', $date)->with(['site' => function ($query) {
         //    $query->select('id', 'maxDepth', 'level');
         //}])->get()->sortBy('departureTime');
@@ -52,7 +61,7 @@ class TripsController extends Controller
                 //Log::debug("trip->siteTd " . $trip->siteId);
                 $siteIds = explode(',', $trip->siteId);
                 //$relatedSites = Site::whereIn('id', $siteIds)->get();
-                $relatedSites = $sites->whereIn('id', $siteIds)->all();
+                $relatedSites = array_filter(array_map(fn ($id) => $sites->get((int) trim($id)), $siteIds));
                 //Log::debug("size of relatedSites: " . count($relatedSites));
                 //$trips[$i]->site = $relatedSites;
                 
@@ -193,17 +202,66 @@ class TripsController extends Controller
          */
         $filters   = TripBoard::filtersFromRequest($request);
         $locations = WeatherLocation::all();
-        $allWeather = Weatherday::where('date', $date)->get();
+        $allWeather = Weatherday::whereBetween('date', [$from, $to])->get()->groupBy('date');
         $operators = Operator::select('id', 'location', 'phone')->get()->keyBy('id')->all();
-        $board = TripBoard::build($trips, $allWeather, $locations, $filters, $operators);
 
-        // Query string to carry the active filters across the day stepper links.
-        $query = $request->query() ? '?' . http_build_query($request->query()) : '';
+        // One board per day in the range (a single day in day mode). Every date
+        // is present, even with no trips, so the day strip has a cell for each.
+        $byDate = $trips->groupBy('date');
+        $days = [];
+        for ($d = Carbon::parse($from); $d->lte(Carbon::parse($to)); $d->addDay()) {
+            $key = $d->toDateString();
+            $days[$key] = TripBoard::build($byDate->get($key, collect()), $allWeather->get($key, collect()), $locations, $filters, $operators);
+        }
+        $board = $mode === 'day' ? $days[$date] : TripBoard::merge($days);
+        $presets = TripBoard::rangePresets(Carbon::today());
 
-        return view('pages.Trips', compact('board', 'date', 'today', 'previousDay', 'nextDay', 'controlNav', 'user', 'SEO', 'query'));
+        // Query string to carry the active filters (not the dates) across the
+        // day stepper, the preset chips and the "full board" links.
+        $filterParams = array_filter($request->only(['region', 'level', 'type', 'seats']), fn ($v) => $v !== null && $v !== '');
+        $query = $filterParams ? '?' . http_build_query($filterParams) : '';
+
+        if ($mode === 'range') {
+            // Range views are query string pages: useful, shareable, not indexed.
+            $SEO['title'] = 'Scuba diving trips in Florida, ' . Carbon::parse($from)->format('M j') . ' to ' . Carbon::parse($to)->format('M j');
+            $SEO['robots'] = 'noindex, follow';
+        }
+
+        return view('pages.Trips', compact('board', 'days', 'mode', 'from', 'to', 'rangeKey', 'presets', 'filterParams',
+            'date', 'today', 'previousDay', 'nextDay', 'controlNav', 'user', 'SEO', 'query'));
         //return view('pages.Trips', compact('trips', 'weathers', 'today', 'previousDay', 'nextDay', 'controlNav'));
 
     }
 
-    
+    /**
+     * Work out the dates the finder shows.
+     *
+     * @return array{0: string, 1: string, 2: ?string} [from, to, preset key or null]
+     */
+    private function resolveRange(Request $request, string $date, Carbon $today): array
+    {
+        $presets = TripBoard::rangePresets($today);
+        $key = $request->query('range');
+        if (is_string($key) && isset($presets[$key])) {
+            return [$presets[$key]['from'], $presets[$key]['to'], $key];
+        }
+        $valid = fn ($v) => is_string($v) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) && strtotime($v) !== false;
+        $from = $request->query('from');
+        $to   = $request->query('to');
+        if ($valid($from) || $valid($to)) {
+            $f = Carbon::parse($valid($from) ? $from : $to)->startOfDay();
+            $t = Carbon::parse($valid($to) ? $to : $from)->startOfDay();
+            if ($f->lt($today)) {
+                $f = $today->copy();
+            }
+            if ($t->lt($f)) {
+                $t = $f->copy();
+            }
+            if ($f->diffInDays($t) > TripBoard::MAX_RANGE_DAYS - 1) {
+                $t = $f->copy()->addDays(TripBoard::MAX_RANGE_DAYS - 1);
+            }
+            return [$f->toDateString(), $t->toDateString(), null];
+        }
+        return [$date, $date, null];
+    }
 }

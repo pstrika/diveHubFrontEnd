@@ -494,17 +494,12 @@
             operatorLogo.src = '{{ asset('assets') }}/img/logos/logo_circle.png';
         }
 
-        // Filter calendar events
-        const rows = document.querySelectorAll('#calendar a[class]');
+        // Filter calendar events. Each event element carries data-op (set in
+        // eventDidMount below) so this is an exact match on the operator id, not a
+        // substring search through the class list.
+        const rows = document.querySelectorAll('#calendar .fc-event[data-op]');
         rows.forEach(function(row) {
-            const tags = row.getAttribute('class');
-            if (tags.includes('fc-daygrid-event')) {
-                if (tags.includes('op=' + selectedId + 'f')) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            }
+            row.style.display = (row.dataset.op === String(selectedId)) ? '' : 'none';
         });
     }
 
@@ -550,12 +545,15 @@
             calendar.changeView(getResponsiveView());
             applyFilter();
         },
+        eventDidMount: function(info) {
+            info.el.dataset.op = info.event.extendedProps.op; // read by applyFilter()
+        },
         datesSet: function() {
             setTimeout(() => {
                 applyFilter();
             }, 50); // Slight delay to wait for DOM stabilization
         },
-        firstDay: {{ auth()->user()->firstDayOfWeek }},
+        firstDay: {{ (int) (auth()->user()->firstDayOfWeek ?? 0) }}, // null preference broke the whole script (stray comma); 0 = Sunday
         contentHeight: 'auto',
         headerToolbar: {
             start: '', //'title', // will normally be on the left. if RTL, will be on the right
@@ -574,10 +572,11 @@
                     echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) ."',";
                     echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
                     echo "url: '/TripDetails/" . str($trip->id) . "',";
+                    echo "extendedProps: { op: '" . (int) $trip->operatorId . "' },";
                     if($trip->tripType == "Technical")
-                        echo "className: 'bg-gradient-success text-white op=" . $trip->operatorId  . "f' },";
+                        echo "className: 'bg-gradient-success text-white' },";
                     else
-                        echo "className: 'bg-gradient-secondary text-white op=" . $trip->operatorId  . "f' },";
+                        echo "className: 'bg-gradient-secondary text-white' },";
                 }
             @endphp
             

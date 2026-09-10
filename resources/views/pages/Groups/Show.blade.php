@@ -1,5 +1,5 @@
 <x-page-template bodyClass='dh-shell bg-gray-200' :SEO="$SEO ?? []">
-    <x-shell.nav active="me" />
+    <x-shell.nav active="groups" />
 
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
 
@@ -940,7 +940,7 @@
 
         var groupFullCalendar = new FullCalendar.Calendar(document.getElementById('groupFullCalendar'), {
             initialView: groupCalendarIsMobile ? 'listMonth' : 'dayGridMonth',
-            firstDay: {{ auth()->user()->firstDayOfWeek }},
+            firstDay: {{ (int) (auth()->user()->firstDayOfWeek ?? 0) }}, // guests and new accounts have no preference; a bare value broke the script
             contentHeight: 'auto',
             headerToolbar: {
                 start: 'title',

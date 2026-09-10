@@ -23,13 +23,16 @@
 @props(['active' => ''])
 
 @php
-    $tabs = [
-        'today'     => ['label' => 'Dive Today', 'short' => 'Today', 'icon' => 'today',           'href' => route('Trips')],
-        'sites'     => ['label' => 'Dive Sites', 'short' => 'Sites', 'icon' => 'scuba_diving',    'href' => route('DiveSites')],
-        'operators' => ['label' => 'Operators',  'short' => 'Boats', 'icon' => 'directions_boat', 'href' => route('Operators')],
-    ];
     $user = auth()->user();
     $isGuest = !$user || !$user->isNotGuest();
+    // Five destinations. "Dives" is the trip finder (day board plus date ranges);
+    // "Groups" is personal, so for guests it opens the account prompt instead.
+    $tabs = [
+        'today'     => ['label' => 'Dives',      'short' => 'Dives',     'icon' => 'sailing',      'href' => route('Trips')],
+        'sites'     => ['label' => 'Dive Sites', 'short' => 'Sites',     'icon' => 'scuba_diving', 'href' => route('DiveSites')],
+        'operators' => ['label' => 'Operators',  'short' => 'Operators', 'icon' => 'storefront',   'href' => route('Operators')],
+        'groups'    => ['label' => 'Groups',     'short' => 'Groups',    'icon' => 'groups',       'href' => $isGuest ? '#' : route('MyGroups'), 'gated' => $isGuest],
+    ];
 @endphp
 
 {{-- One logout form for the whole shell; menu links submit it. --}}
@@ -46,7 +49,7 @@
 
         <nav class="dh-topnav" aria-label="Main">
             @foreach($tabs as $key => $tab)
-                <a href="{{ $tab['href'] }}" class="dh-topnav-link {{ $active === $key ? 'is-active' : '' }}" @if($active === $key) aria-current="page" @endif>{{ $tab['label'] }}</a>
+                <a href="{{ $tab['href'] }}" class="dh-topnav-link {{ $active === $key ? 'is-active' : '' }}" @if($active === $key) aria-current="page" @endif @if(!empty($tab['gated'])) onclick="event.preventDefault();showModalGuest();" @endif>{{ $tab['label'] }}</a>
             @endforeach
         </nav>
 
@@ -86,7 +89,7 @@
 {{-- Bottom tab bar, phones only (hidden from lg up in CSS). --}}
 <nav class="dh-tabbar" aria-label="Main, mobile">
     @foreach($tabs as $key => $tab)
-        <a href="{{ $tab['href'] }}" class="dh-tab {{ $active === $key ? 'is-active' : '' }}" @if($active === $key) aria-current="page" @endif>
+        <a href="{{ $tab['href'] }}" class="dh-tab {{ $active === $key ? 'is-active' : '' }}" @if($active === $key) aria-current="page" @endif @if(!empty($tab['gated'])) onclick="event.preventDefault();showModalGuest();" @endif>
             <span class="material-icons-round" aria-hidden="true">{{ $tab['icon'] }}</span>
             <span>{{ $tab['short'] }}</span>
         </a>

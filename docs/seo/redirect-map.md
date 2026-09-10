@@ -30,14 +30,19 @@ the target. **noindex** means the page is not indexed today and stays that way.
 | `/DataDeletion` | unchanged | Added on main in 9.16.0, merged into redesign |
 | `/sitemap.xml` | unchanged | |
 
-## Themed calendars (stay live, render the trip board pre filtered)
+## Themed calendars (URLs unchanged, now presets of the trip finder)
+
+Each renders `/Trips` in range mode with its type preset and the next 30 days from
+the given date (2026-09-10). They were behind login and never indexed, so there is
+no ranking to protect; they are open to guests now like the board itself.
 
 | URL | Disposition |
 |---|---|
-| `/CalendarT`, `/CalendarT/{tripType}`, `/CalendarT/{tripType}/{date}` | unchanged |
-| `/CalendarWreck`, `/CalendarWreck/{date}` | unchanged |
-| `/CalendarShark`, `/CalendarShark/{date}` | unchanged |
-| `/CalendarLobster`, `/CalendarLobster/{date}` | unchanged |
+| `/CalendarT`, `/CalendarT/{tripType}`, `/CalendarT/{tripType}/{date}` | unchanged URL; renders the finder, recreational or technical preset |
+| `/CalendarWreck`, `/CalendarWreck/{date}` | unchanged URL; finder, wreck preset |
+| `/CalendarShark`, `/CalendarShark/{date}` | unchanged URL; finder, shark preset |
+| `/CalendarLobster`, `/CalendarLobster/{date}` | unchanged URL; finder, lobster preset |
+| `/Trips?range=…`, `/Trips?from=…&to=…` | new query string views of `/Trips`, `noindex, follow`, canonical stays `/Trips` |
 
 ## Tools (noindex today)
 
