@@ -119,6 +119,16 @@ picker. That deploys the branch straight to production.
 
 ## 5. What to watch in the first two weeks
 
+- **Tab bar use.** Every tab tap sends a GA event, `dh_tab_tap`, with the tab
+  name (today, sites, weather, groups, me). After a month, compare weather
+  against the `/Operators` page views. Weather took Operators' slot on a
+  judgement call; if Operators still outdraws it, swap them back, one line in
+  `resources/views/components/shell/nav.blade.php`.
+- **Weather page load.** It was a drawer item and is now a tab, so it will get
+  many times its old traffic. It reads `weatherday` for one location per hit,
+  no heavier than before, but it is the page most likely to show the first
+  slow query.
+
 - **Search Console.** Coverage should not move: every indexed URL is unchanged
   and the three redirected URLs were `noindex`. Titles, descriptions and
   canonicals were diffed page by page against production before the merge and

@@ -155,3 +155,15 @@
     installSetup();
   }
 })();
+
+/* ------------------------------------------------------------------ */
+/* Tab taps. One GA event per tap so the tab bar decision (Weather over  */
+/* Operators, 2026-09-10) can be checked against real use in a month.    */
+/* ------------------------------------------------------------------ */
+(function () {
+    document.addEventListener('click', function (e) {
+        var tab = e.target.closest('[data-dh-tab]');
+        if (!tab || typeof window.gtag !== 'function') return;
+        window.gtag('event', 'dh_tab_tap', { tab: tab.getAttribute('data-dh-tab') });
+    }, true);
+})();

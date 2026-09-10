@@ -94,7 +94,7 @@
                 because some divers use nothing else, but it is a poor first
                 impression and a bad use of the top of the page.
             --}}
-<div class="row mx-1">
+<div class="row mx-1 dh-dash-cards">
                 {{---Card My Upcoming trips--}}
                 <div class="col-md-4 mb-4">
                     <div class="card mt-3">
@@ -395,6 +395,9 @@
             </div>
             </details>
             @endif
+
+            {{-- The Me tab lands here instead of opening a pop out, so the menu rows live on the page. --}}
+            <x-shell.me-rows />
 
             
             

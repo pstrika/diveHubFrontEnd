@@ -11,8 +11,12 @@ Nothing here needs a migration unless marked.
   week preference (a stray comma killed the whole script). Also on the
   Hydrotherapy calendar (guests) and the group page.
 - Coast tiles on the home page are centred; an odd fifth tile no longer hangs left.
-- Bottom tabs: Dives, Sites, Operators, Groups, Me. "Today" was not read as
-  "find a dive", and "Boats" read as trips.
+- Bottom tabs: Dives, Sites, Weather, Groups, Me, the same bar signed in or out
+  (settled 2026-09-10). "Today" was not read as "find a dive", "Boats" read as
+  trips, and Operators gave its slot to Weather: the go or no go call in South
+  Florida is sea state, so the forecast is a nightly visit, while the operator
+  list is read once. Me is the dashboard, not a pop out, with the diver's avatar
+  as the icon; Groups carries the unread count.
 - Tools open to everyone: Deco planner, Best gases, the five calendars.
   Account only for personal data. Consistent rule, consistent drawer.
 - Trip finder with date ranges; themed calendars became presets of it.

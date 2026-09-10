@@ -88,9 +88,25 @@ The single biggest change and the one to test first.
 
 ### 3. Navigation and consistency
 
-- **Five bottom tabs**: Dives, Sites, Operators, Groups, Me. Was Today, Sites,
-  Boats, Me. "Today" was not read as the place to find a dive, and "Boats" read
-  as trips rather than shops. Groups opens the account prompt for guests.
+- **Five bottom tabs, settled**: Dives, Sites, Weather, Groups, Me, and the bar
+  is identical whether you are signed in or not. Was Today, Sites, Boats, Me for
+  a while, then Dives, Sites, Operators, Groups, Me. "Today" was not read as the
+  place to find a dive and "Boats" read as trips. Operators gave its slot to
+  Weather on 2026-09-10: in South Florida the go or no go call is sea state, so
+  the forecast is a nightly visit, while the operator list is a directory people
+  read once and every real path to a shop is a trip card, a site page or the
+  finder's operator filter. Operators stays one tap away in the drawer and as a
+  row on the dashboard. Groups opens the account prompt for guests and carries
+  the unread count for members; almost every notification comes from a group.
+- **Me is a page, not a pop out.** The Me tab opens the dashboard, with the
+  diver's own avatar as the icon. The drawer still exists for everything else,
+  behind the avatar in the top bar, and it is what a guest's Me tab opens since
+  a guest has no dashboard yet. The rows a member used to reach from the pop out
+  (calendar, visited sites, messages, operators, tools, profile, settings, log
+  out) sit at the foot of the dashboard.
+- **Every tab tap is a GA event** (`dh_tab_tap`, with the tab name), so the
+  Weather over Operators call can be checked against real use in a month
+  rather than argued.
 - **One gating rule.** Tools and calendars are open to everyone: Deco Planner,
   Best Gases, and all five calendars. Only personal data needs an account:
   dashboard, groups, saving a trip, rating. Before this, Deco Planner was open
@@ -256,7 +272,9 @@ Sign out first, then work through as a guest, then sign in.
 | Operators row: Choose operators, tick two, Apply | The count drops, the chip says 2 selected |
 | Swipe the Region and Level chip rows | They scroll sideways, arrows appear on the edges |
 | Sites tab, then a site | Popular order, trip counts on the cards, photo led detail page |
-| Operators tab | Cards with logos, coast and feature chips, map view |
+| Weather tab | The marine forecast, the Weather tab lit |
+| Menu (top right), Dive operators | Cards with logos, coast and feature chips, map view |
+| Me tab | The menu slides in with Create a free account and Sign in |
 | Me drawer, Deco planner and Best gases | Both open, no lock |
 | Me drawer, My Groups | The account prompt, not a login page |
 | `/CalendarShark` | The finder with Shark selected and the next 30 days |
@@ -274,7 +292,9 @@ Sign out first, then work through as a guest, then sign in.
 | Profile, Communication preferences | Three checkboxes with consent wording, and a note if you have no phone number |
 | Tick WhatsApp, Save, then untick and Save | Both decisions are recorded; ask me and I can show you the audit rows |
 | Welcome wizard, last step before done | "How should we reach you?" with the same three checkboxes |
-| Dashboard | Upcoming dives first, no banner photo, the operator calendars collapsed at the bottom |
+| Dashboard | Upcoming dives first, no banner photo, the operator calendars collapsed at the bottom, menu rows under them |
+| Me tab, signed in | Your avatar as the icon; it opens the dashboard, no pop out |
+| Groups tab with an unread message | A red count on the icon |
 | Groups tab while signed out | Both "Create an account" and "I already have one, sign in" |
 | Me drawer, Enable Notifications | Pablo's toggle, unchanged |
 | Save a site, add a trip to your calendar | Both work, My Calendar shows the trip |

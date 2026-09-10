@@ -1,6 +1,7 @@
 {{--
-    Contents of the "Me" drawer. Every link that used to be in the sidebar
-    and is not one of the three main destinations is here, grouped by task.
+    Contents of the drawer behind the avatar button (and the Me tab for guests,
+    who have no dashboard yet). Every link that used to be in the sidebar and is
+    not one of the tab bar destinations is here, grouped by task.
 
     Guests see the same groups. Items that need an account are marked with a
     lock and open the guest prompt (showModalGuest, from <x-guest-modal />),
@@ -74,7 +75,10 @@
 </div>
 
 <div class="dh-menu-group">
-    <h6>Conditions and shore</h6>
+    <h6>Operators and shore</h6>
+    {{-- Operators left the tab bar for Weather (2026-09-10); this row, trip cards,
+         site pages and the finder's operator filter are the ways in. --}}
+    {!! $link('Dive operators', route('Operators'), 'storefront') !!}
     {!! $link('Weather, South Florida', route('Weather'), 'waves') !!}
     {!! $link('Weather, Argentina', route('WeatherAR'), 'waves') !!}
     {!! $link('Beach diving', route('BeachDiving'), 'beach_access') !!}
