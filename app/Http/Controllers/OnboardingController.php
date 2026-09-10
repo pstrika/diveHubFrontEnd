@@ -30,7 +30,7 @@ class OnboardingController extends Controller
     private const SKIP_DAYS = 14;
 
     /** Steps in order; the view renders one at a time. */
-    public const STEPS = ['welcome', 'level', 'places', 'operators', 'done'];
+    public const STEPS = ['welcome', 'level', 'places', 'operators', 'comms', 'done'];
 
     /** True when the member is missing what the personalised features need. */
     public static function needs(?User $user): bool
@@ -127,6 +127,19 @@ class OnboardingController extends Controller
                 $user->favOperators = $ids ? implode(', ', $ids) : null;
                 // The dashboard's weekend picks follow either favourite places or favourite boats.
                 $user->prefersLocation = ($data['recommendBy'] ?? 'locations') === 'locations';
+                break;
+
+            case 'comms':
+                // The consent screen. Absent means unticked, same as the profile page.
+                $before = \App\Support\NotificationConsent::state($user);
+                foreach (\App\Support\NotificationConsent::CHANNELS as $column) {
+                    $user->{$column} = $request->boolean($column) ? 1 : 0;
+                }
+                if ($request->filled('phone')) {
+                    $user->phone = $request->input('phone');
+                }
+                $user->save();
+                \App\Support\NotificationConsent::sync($user, $before, 'welcome');
                 break;
         }
         $user->save();

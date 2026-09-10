@@ -62,21 +62,45 @@
    * (manifest plus the service worker registered below). We keep that event and
    * show the bar with an Add button; the button calls prompt(), which opens the
    * native install sheet. iOS Safari has no such API, so there we show the
-   * Share, then Add to Home Screen hint. Nothing shows on desktop, on the first
-   * visit, when already installed, or after the diver has dismissed it.
+   * Share, then Add to Home Screen hint.
+   *
+   * Whether it shows is decided on every page load from whether the app is
+   * actually installed, so it keeps offering until they install and it comes
+   * back if they uninstall. It never shows on desktop, inside an iframe, or
+   * again in the same browser session once dismissed.
    */
-  var INSTALL_KEYS = { visits: 'dh.visits', dismissed: 'dh.install.dismissed' };
+  // Dismissing hides the bar for the rest of this browser session only. Zach's
+  // rule (2026-09-10): the bar is driven by whether the app is installed, not by a
+  // one time flag, so it comes back on the next visit and it comes back if they
+  // uninstall. sessionStorage clears itself, which is exactly that behaviour.
+  var INSTALL_DISMISSED = 'dh.install.dismissed';
 
-  function storage(get, key, value) {
+  function dismissedThisSession() {
     try {
-      if (get) return window.localStorage.getItem(key);
-      window.localStorage.setItem(key, value);
-    } catch (e) { /* private mode or blocked storage: behave as first visit */ }
-    return null;
+      return window.sessionStorage.getItem(INSTALL_DISMISSED) === '1';
+    } catch (e) {
+      return false; // blocked storage: show the bar, it is only a bar
+    }
+  }
+
+  function rememberDismissal() {
+    try {
+      window.sessionStorage.setItem(INSTALL_DISMISSED, '1');
+    } catch (e) { /* nothing to do */ }
   }
 
   function isStandalone() {
     return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+
+  // Never prompt inside an iframe: some of our pages are embedded in a client's
+  // own website and an install bar over their content would be ours, not theirs.
+  function isEmbedded() {
+    try {
+      return window.self !== window.top;
+    } catch (e) {
+      return true; // cross origin frame, so definitely embedded
+    }
   }
 
   function isIosSafari() {
@@ -92,11 +116,8 @@
     }
 
     var bar = document.getElementById('dh-install');
-    if (!bar || isStandalone() || storage(true, INSTALL_KEYS.dismissed)) return;
-
-    var visits = parseInt(storage(true, INSTALL_KEYS.visits) || '0', 10) + 1;
-    storage(false, INSTALL_KEYS.visits, String(visits));
-    if (visits < 2) return;
+    // Checked on every page load: installed apps and embedded frames never see it.
+    if (!bar || isStandalone() || isEmbedded() || dismissedThisSession()) return;
 
     var deferred = null;
     var show = function (kind) {
@@ -106,7 +127,7 @@
     };
     var dismiss = function () {
       bar.hidden = true;
-      storage(false, INSTALL_KEYS.dismissed, new Date().toISOString());
+      rememberDismissal();
     };
 
     bar.querySelector('.dh-install-close').addEventListener('click', dismiss);

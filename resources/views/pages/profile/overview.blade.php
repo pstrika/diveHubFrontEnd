@@ -289,31 +289,14 @@
                                             <div class="slider-styled" id="sliderLevel"></div>
                                         </div>
                                         
-                                        <h6 class="text-uppercase text-body text-xs mt-5 font-weight-bolder">Preferences</h6>
-                                        <ul class="list-group">
-                                            <li class="list-group-item border-0 px-0">
-                                                <div class="form-check form-switch ps-0">
-                                                    <input class="form-check-input ms-auto" type="checkbox"
-                                                        id="email_notifications" name="email_notifications" {{ $user->email_notifications ? "checked" : ""}}>
-                                                    <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                        for="flexSwitchCheckDefault">Email me with dive updates</label>
-                                                </div>
-                                            </li>
-                                        </ul>
+                                        {{-- Communication preferences: the consent screen. One component so the
+                                             wording here is the same as in the welcome wizard and the same as the
+                                             text recorded against the consent (Twilio A2P 10DLC). --}}
+                                        <h6 class="text-uppercase text-body text-xs mt-5 font-weight-bolder" id="communication-preferences">Communication preferences</h6>
+                                        <x-comms-preferences :user="$user" />
 
+                                        <h6 class="text-uppercase text-body text-xs mt-4 font-weight-bolder">Preferences</h6>
                                         <ul class="list-group">
-                                            <li class="list-group-item border-0 px-0">
-                                                <div class="form-check form-switch ps-0">
-                                                    <input class="form-check-input ms-auto" type="checkbox"
-                                                        id="sms_notifications" name="sms_notifications" {{ $user->sms_notifications ? "checked" : ""}}>
-                                                    <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                        for="sms_notifications">Yes, I'd like to receive SMS trip reminders from Divers Hub about upcoming dives for the groups I belong to.</label>
-                                                </div>
-                                                <p class="text-xs text-secondary ms-3 mt-2 mb-0">
-                                                    Message frequency varies (typically a few messages per month, depending on how many groups you're in). Message and data rates may apply. Reply HELP for help or STOP to cancel at any time.
-                                                    <a href="{{ route('TermsOfUse') }}" target="_blank">Terms of Service</a> | <a href="{{ route('PrivacyPolicy') }}" target="_blank">Privacy Policy</a>
-                                                </p>
-                                            </li>
                                         </ul>
 
                                         <ul class="list-group">
@@ -858,6 +841,14 @@
         sms_notifications.addEventListener('click', () => {
             divButton.style.display = 'block';
         });
+
+        // WhatsApp joined email and SMS (2026-09-10); same behaviour, reveal Save.
+        var whatsapp_notifications = document.getElementById('whatsapp_notifications');
+        if (whatsapp_notifications) {
+            whatsapp_notifications.addEventListener('click', () => {
+                divButton.style.display = 'block';
+            });
+        }
 
         var show_visited =document.getElementById('show_visited');
         show_visited.addEventListener('click', () => {

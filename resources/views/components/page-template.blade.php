@@ -1,4 +1,13 @@
 @props(['bodyClass', 'SEO'])
+@php
+    /*
+     * Frozen pages are the ones a client embeds in their own site, so they must
+     * render exactly as they did before the redesign: no tokens stylesheet, no
+     * shared script, no guest prompt, no add to home screen bar, no release
+     * stamp, and the head colours they had before. See App\Support\EmbeddedPage.
+     */
+    $dhFrozen = \App\Support\EmbeddedPage::isFrozen();
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 
@@ -25,13 +34,14 @@
        (manifest.json icons are ignored by iOS Safari for this purpose). -->
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets') }}/img/pwa/apple-touch-icon.png">
-  <meta name="theme-color" content="#0b2a3a"> {{-- redesign shell colour; manifest.json matches --}}
+  {{-- Redesign shell colour, except on frozen pages which keep the colour they had. --}}
+  <meta name="theme-color" content="{{ $dhFrozen ? \App\Support\EmbeddedPage::LEGACY_THEME_COLOR : '#0b2a3a' }}">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Divers Hub">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="application-name" content="Divers Hub">
-  <meta name="msapplication-TileColor" content="#0b2a3a">
+  <meta name="msapplication-TileColor" content="{{ $dhFrozen ? \App\Support\EmbeddedPage::LEGACY_THEME_COLOR : '#0b2a3a' }}">
   <meta name="msapplication-TileImage" content="{{ asset('assets') }}/img/pwa/icon-192.png">
 
 
@@ -60,7 +70,7 @@
     $ogDesc = $SEO['desc'] ?? 'All you need to know about scuba diving in South Florida';
     $ogUrl = $SEO['canonical'] ?? url()->current();
     // Default social preview: a 1200x630 web copy (165 KB) of the 17 MB login photo that used to be served here.
-    $ogImage = $SEO['image'] ?? asset('assets/img/og-default.jpg');
+    $ogImage = $SEO['image'] ?? asset($dhFrozen ? \App\Support\EmbeddedPage::LEGACY_OG_IMAGE : 'assets/img/og-default.jpg');
   @endphp
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Divers Hub">
@@ -88,24 +98,30 @@
   <link href="{{ asset('assets') }}/css/nucleo-svg.css" rel="stylesheet" />
   <!-- CSS Files -->
   <link id="pagestyle" href="{{ asset('assets') }}/css/material-dashboard.css?v=3.0.1" rel="stylesheet" />
+  @unless($dhFrozen)
   <!-- Divers Hub tokens and shared components (chips, legend). Versioned by release so caches refresh. -->
   <link href="{{ asset('assets') }}/css/divershub.css?v={{ config('divehub.version') }}" rel="stylesheet" />
+  @endunless
 </head>
 <body class="{{ $bodyClass }}">
 
 {{ $slot }}
 
+@unless($dhFrozen)
 {{-- Guest account prompt, once per page, only when the visitor is the shared guest user. --}}
 <x-guest-modal />
-{{-- Add to home screen bar (shown by divershub.js on phones, second visit onward). --}}
+{{-- Add to home screen bar (shown by divershub.js on phones, every visit until installed). --}}
 <x-install-prompt />
+@endunless
 {{-- Pablo's mobile bottom nav hook (main 9.22.0); the old sidebar pushes into it, the shell has its own tab bar. --}}
 @stack('bottom-nav')
 
 <script src="{{ asset('assets') }}/js/core/popper.min.js"></script>
 <script src="{{ asset('assets') }}/js/core/bootstrap.min.js"></script>
-<!-- Divers Hub shared behaviour (chip row "more" arrows). Versioned by release like the stylesheet. -->
+@unless($dhFrozen)
+<!-- Divers Hub shared behaviour (chip row arrows, add to home screen). Versioned by release like the stylesheet. -->
 <script src="{{ asset('assets') }}/js/divershub.js?v={{ config('divehub.version') }}" defer></script>
+@endunless
 <script src="{{ asset('assets') }}/js/plugins/smooth-scrollbar.min.js"></script>
 <!-- Kanban scripts -->
 <script src="{{ asset('assets') }}/js/plugins/dragula/dragula.min.js"></script>

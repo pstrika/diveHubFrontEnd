@@ -8,7 +8,9 @@ also running on the `divehub-redesign` slot.
 
 | Area | Change | Action needed |
 |---|---|---|
-| Database schema | **Nothing from the redesign.** The only migrations on the branch are Pablo's own from main 9.17.0 and 9.19.0 (`push_subscriptions` on the users database, `messages.from_user_id` on the dive database). If they already ran on production with those releases, nothing to do; otherwise `php artisan migrate --force` for those two. | Confirm the two migrations ran |
+| Database schema | **One approved migration set**, for communication consent only (Zach, 2026-09-10): `users.whatsapp_notifications` and a new `notification_consents` audit table, both on the users database. Plus Pablo's own two from main 9.17.0 and 9.19.0. | `php artisan migrate --force` after deploy |
+| Communication consent | Email, SMS and WhatsApp each have their own checkbox with the consent wording next to it, on the profile page under "Communication preferences" and as a step in the welcome wizard. Every change appends a row to `notification_consents` with the exact wording shown, the phone number at that moment, the source screen, IP and user agent. That is the answer if Twilio ever asks where a person consented. | Nothing |
+| Frozen client pages | `/CalendarHydrotherapy` renders in an iframe on the client's own site and is frozen to its pre redesign output. Its controller and view live apart (`HydrotherapyCalendarController`, `pages/CalendarHydrotherapy.blade.php`) and the shared layout gives it none of the redesign chrome. Verified against production: identical apart from live trip data. Do not edit either file, and check `App\Support\EmbeddedPage` before changing anything shared. | Nothing |
 | Composer / npm | **Nothing from the redesign.** Pablo added `minishlink/web-push` on main (9.17.0); the workflow's composer install picks it up. No new PHP extensions beyond GD (already loaded). | Nothing |
 | `.env` | **Nothing from the redesign.** Pablo's push notifications read `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (main 9.17.0). Without them the notification toggle stays hidden and everything else works. | Set if not already set |
 | Config | New file `config/divehub.php` (release version and date). | Bump the version before merging (section 3) |
@@ -19,7 +21,7 @@ also running on the `divehub-redesign` slot.
 | Add to home screen and push | `public/sw.js` and `public/manifest.json` are Pablo's (push notifications, 9.17.0 to 9.20.0); the redesign's placeholder worker and manifest were dropped in favour of his. The redesign adds the install bar on phones from the second visit (native one tap install on Android, the Share then Add to Home Screen hint on iOS) and carries his notification toggle into the Me drawer. | Nothing |
 | Welcome wizard | Members whose profile lacks a certification level and any favourite places or boats are sent from the dashboard to `/welcome`: four short steps (name and photo, level, places, boats) that write the same `users` columns the profile page writes. "Skip for now" sets a two week cookie. No schema change. | Nothing. Expect most existing members to see it once after launch |
 | Trip finder operators | `/Trips` accepts `op=1,7` (also `op[]`), a picker lists operators with trips in the selection, members get a "My favorites" shortcut from `users.favOperators`. | Nothing |
-| `.env` (SMS) | Pablo's SMS reminders (main 9.23.0 to 9.24.3) read the Twilio keys in `config/services.php`. | Set if not already set |
+| `.env` (SMS and WhatsApp) | Pablo's SMS reminders (main 9.23.0 to 9.24.3) read the Twilio keys in `config/services.php`. WhatsApp sending uses the same Twilio account and the Meta business connection; the checkbox and the consent record ship now, the sending is Pablo's side. | Set if not already set |
 | Deploy workflow | One extra post deploy step deletes cached config and routes. The zip step now leaves out three things the app never serves (see below). Trigger unchanged (push to `main`). | Nothing |
 | Concurrent deploys | Azure answers `400 Bad Request` when a deployment starts while another is still running on the same app or slot. Both workflows now carry a concurrency group so runs queue. If a run fails with that message, just rerun it once the other finishes. The zip step also leaves out about 350 MB the app never serves (stray `public/assets<uuid>` chunk files, `illustrations/originals/`, `screens/`), so the package is about 650 MB. |
 
@@ -35,8 +37,7 @@ also running on the `divehub-redesign` slot.
    ```
 
 3. Decide the version number. It is one line in `config/divehub.php` and shows in
-   every footer. The branch currently says `9.24.3` to match main. A redesign
-   release probably deserves `10.0.0`; your call. Set `released` on the same line.
+   every footer. Set to `10.0.0` (09/10/26). Pablo on the 2026-09-10 call: "release 10, it deserves it."
 
 ## 3. Merge and deploy
 

@@ -9,11 +9,11 @@ Everything below is live at https://divehub-redesign.azurewebsites.net.
 | | |
 |---|---|
 | Branch | `redesign`, head `4e1726f` |
-| Version in the footer | 9.24.3 (09/09/26) |
+| Version in the footer | 10.0.0 (09/10/26) |
 | Commits on the branch | 55, of which 43 landed after the first beta walkthrough |
 | Beta deploys | 21. Four failed early on package size and overlapping deploys, both fixed. The last ten are green |
 | Main merged in | three times, latest at 9.24.3. Merging to main is a fast forward |
-| Migrations from the redesign | none. The only two on the branch are Pablo's own |
+| Migrations from the redesign | one approved set, for communication consent only |
 
 ## What you and Pablo already walked (the first four chunks)
 
@@ -196,6 +196,37 @@ Several of these were broken on the live site too, not just on the branch.
   as the first item.
 - `docs/tools/revo-dive-companion.html` is the working prototype of the rEvo tool.
 
+### 9. From the 2026-09-10 call with Pablo
+
+- **Communication preferences.** Email, SMS and WhatsApp each get their own
+  checkbox with the consent wording beside it, under a "Communication
+  preferences" heading on the profile page and as a step in the welcome wizard.
+  One shared component, so the wording is the same in both places and the same
+  as the text stored with the consent. Every change appends a row to a new
+  `notification_consents` table recording the channel, whether they opted in or
+  out, the exact wording shown, the phone number at that moment, which screen it
+  came from, the IP and the user agent. This is the one approved migration set:
+  `users.whatsapp_notifications` plus that table. It exists so that if Twilio
+  ever audits the A2P 10DLC registration, "where did this person consent" is a
+  query and a screenshot rather than a guess.
+- **Add to home screen shows more than once.** It was a one time bar: dismissing
+  it hid it forever on that device. Now the decision is made on every page load
+  from whether the app is actually installed, so it keeps offering until they
+  install it and it comes back if they uninstall. Dismissing quiets it for the
+  rest of that browser session only. It still never shows on desktop, and it now
+  never shows inside an iframe.
+- **The Hydrotherapy calendar is frozen.** It renders in an iframe on the
+  client's own website, so it has to look exactly as it did before the redesign.
+  It had picked up three changes during the redesign: the shared controller was
+  tuned for speed and that changed its date range from six weeks to one month,
+  and the shared footer had gained the release version badge. All reverted. It
+  now has its own controller, and the shared layout gives it none of the redesign
+  chrome. Verified line by line against production: identical apart from live
+  trip data.
+- **Version is 10.0.0.**
+- Operator coordinates were reviewed and deliberately left for later, because
+  the pins land in the right place today.
+
 ## Test list
 
 Sign out first, then work through as a guest, then sign in.
@@ -204,7 +235,9 @@ Sign out first, then work through as a guest, then sign in.
 
 | Do this | Expect |
 |---|---|
-| Open the site, leave, come back | The add to home screen bar on the second visit. Android shows Add, iPhone shows the Share hint |
+| Open the site on a phone | The add to home screen bar on the first visit. Android shows Add, iPhone shows the Share hint |
+| Dismiss it, then come back later | It is back. It only stays hidden for that browser session, and it stops entirely once installed |
+| `/CalendarHydrotherapy` | Renders exactly as production: no install bar, no version badge, nothing from the redesign |
 | Dives tab | Today's board, region groups, sea state pills |
 | Dates row: This weekend | Two day cells with counts, then Saturday and Sunday boards |
 | Dates row: Pick dates, choose a week | The day strip fills, each day shows three cards per coast |
@@ -226,6 +259,9 @@ Sign out first, then work through as a guest, then sign in.
 | Dashboard, recommended card | Ranked, favourites first, title names the weekend |
 | Trip finder, My favorites chip | Only your operators, count matches |
 | Profile, upload a photo | Crop and confirm work, the photo shows in the header |
+| Profile, Communication preferences | Three checkboxes with consent wording, and a note if you have no phone number |
+| Tick WhatsApp, Save, then untick and Save | Both decisions are recorded; ask me and I can show you the audit rows |
+| Welcome wizard, last step before done | "How should we reach you?" with the same three checkboxes |
 | Me drawer, Enable Notifications | Pablo's toggle, unchanged |
 | Save a site, add a trip to your calendar | Both work, My Calendar shows the trip |
 

@@ -9,8 +9,9 @@
         (Share, then Add to Home Screen). Only on iOS Safari, only when not
         already installed.
 
-    Rules: second visit or later, never when already running as an installed
-    app, never on desktop, and a dismissal is remembered on the device.
+    Rules: shown on every visit until the app is installed, never when already
+    running as an installed app, never on desktop, never inside an iframe, and
+    dismissing it hides it for the rest of that browser session.
 --}}
 <div id="dh-install" class="dh-install" hidden role="region" aria-label="Add Divers Hub to your home screen">
     <img src="{{ asset('assets') }}/img/pwa/icon-192.png" alt="" width="40" height="40">

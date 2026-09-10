@@ -182,6 +182,8 @@ class UserController extends Controller
     public function updateProfile(Request $request) {
 
         $user = User::findorFail(auth()->user()->id);
+        // Channel state before the save, so we can record what actually changed.
+        $commsBefore = \App\Support\NotificationConsent::state($user);
 
         Log::info('Request data:', $request->all());
 
@@ -261,6 +263,15 @@ class UserController extends Controller
             $user->sms_notifications = 0;
         }
 
+        // WhatsApp, same shape as the other two: absent means the box was unticked.
+        if($request->has('whatsapp_notifications')) {
+            Log::info("Got whatsapp_notifications. Updating to: 1");
+            $user->whatsapp_notifications = 1;
+        } else {
+            Log::info("Didn't get whatsapp_notifications. Updating to: 0");
+            $user->whatsapp_notifications = 0;
+        }
+
         if($request->has('show_visited')) {
             Log::info("Got show_visited. Updating to: 1");
             $user->show_visited = 1;
@@ -279,6 +290,9 @@ class UserController extends Controller
 
 
         $user->save();
+
+        // Audit trail for Twilio A2P 10DLC: one row per channel that changed.
+        \App\Support\NotificationConsent::sync($user, $commsBefore, 'profile');
 
         return redirect()->back();
     }

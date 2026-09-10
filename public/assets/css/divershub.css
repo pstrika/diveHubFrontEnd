@@ -607,3 +607,18 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-wizard-skip { margin-top: var(--dh-space-4); text-align: center; }
 .dh-link-btn { border: 0; background: transparent; color: var(--dh-muted); text-decoration: underline; font-size: .85rem; cursor: pointer; }
 @media (max-width: 575.98px) { .dh-wizard { padding: var(--dh-space-4); margin: var(--dh-space-3) 0; } }
+
+/* ------------------------------------------------------------------ */
+/* Communication preferences (the consent screen). Shared by the        */
+/* profile page and the welcome wizard.                                */
+/* ------------------------------------------------------------------ */
+.dh-comms { display: flex; flex-direction: column; gap: var(--dh-space-3); }
+.dh-comms-row { border: 1px solid var(--dh-line); border-radius: 12px; padding: 12px 14px; background: var(--dh-paper); }
+.dh-comms-label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin: 0; }
+.dh-comms-label input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--dh-deep); flex: 0 0 auto; }
+.dh-comms-label span { font-size: .92rem; color: var(--dh-ink); line-height: 1.4; }
+.dh-comms-label strong { display: block; font-weight: 800; }
+.dh-comms-note { font-size: .78rem; color: var(--dh-muted); margin: 6px 0 0 30px; line-height: 1.45; }
+.dh-comms-warn { display: flex; align-items: flex-start; gap: 6px; margin-left: 0; color: var(--dh-avg); background: var(--dh-avg-bg); border-radius: var(--dh-radius); padding: 8px 10px; }
+.dh-comms-warn .material-icons-round { font-size: 16px; }
+.dh-comms-legal { font-size: .78rem; color: var(--dh-muted); margin: 0; }

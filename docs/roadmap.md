@@ -111,6 +111,8 @@ site, approved) or the `photos` table needs user, source and approval columns.
 
 - **Operators map** geocodes each shop in the browser. A `lat` and `lon` on
   `operators` set once from the admin removes that. Schema: yes, two columns.
+  Reviewed on the 2026-09-10 call and deliberately deferred: the pins land in the
+  right place today, so this is a performance improvement, not a fix.
 - **One search** across sites, operators and trips from the top bar box. No
   schema; needs ranking rules.
 - **Recreational month calendar** renders every recreational trip in the month
@@ -179,6 +181,33 @@ blob. All additive, nothing touches the existing tables.
 3. Sign in sync with the new tables.
 4. Later: other rebreathers, sharing a unit's scrubber log between buddies.
 
+## 7. Blog and community feed (Pablo, 2026-09-10 call)
+
+Google rewards blogs and Divers Hub has none. Pablo wants one, mostly for SEO,
+and it doubles as the community surface.
+
+- Original articles where we have something to say, rewrites and summaries
+  elsewhere, always labelled as AI generated where they are. Pablo does not want
+  to mislead anybody about how a piece was written.
+- **User submitted stories** with a moderation and approval step, so it reads
+  like a local dive magazine. Fresh content helps ranking and engagement at the
+  same time.
+- **An agent watching the forums** (Scubaboard and similar), flagging threads
+  this community would care about, summarising them with a link back to the
+  original thread and a picture, and drafting a post for review. Never published
+  without a person approving it, always crediting and linking the source.
+- A "news from the community" feed on the dashboard once the blog exists.
+
+**Schema.** Yes: posts, authors, status, tags, plus moderation fields.
+
+## 8. Trip finder performance (Pablo owns the backend)
+
+A 30 day range takes a few seconds. The database is fast; the cost is the work
+the controller does per trip after the query, correlating sites, levels, depths
+and availability before anything is filtered. Pablo took this on the 2026-09-10
+call and it is his to fix in the backend logic. The same work makes the dashboard
+slow to load. Nothing to do on the view side.
+
 ## Suggested order
 
 1. Ranking blend with certification cap (no migration, visible win, answers
@@ -186,5 +215,10 @@ blob. All additive, nothing touches the existing tables.
 2. Dive reports (the content we want most, and the thing notifications ask for).
 3. Notifications by email, then SMS reminders, aligned with Pablo's push work.
 4. Group media to site pages.
-5. rEvo dive companion, offline first (Zach and Pablo use it every dive).
-6. Operator coordinates and one search whenever convenient.
+5. Dashboard rebuild, in Pablo's priority order: my upcoming dives, then
+   recommended for this weekend, then the wishlist with a way to add sites, with
+   the favourite operator calendars kept but collapsed or moved down the page.
+   A groups feed comes after.
+6. rEvo dive companion, offline first (Zach and Pablo use it every dive).
+7. Blog, then the community feed.
+8. Operator coordinates and one search whenever convenient.

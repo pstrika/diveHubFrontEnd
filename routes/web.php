@@ -155,8 +155,11 @@ Route::get('CalendarWreck/{date}', 'App\Http\Controllers\CalendarTController@sho
 Route::get('CalendarWreck/', 'App\Http\Controllers\CalendarTController@showWreck')->middleware('guest')->name('CalendarWreck');
 
 /* Special routes for Hydrotherapy integration */
-Route::get('CalendarHydrotherapy/{date}', 'App\Http\Controllers\CalendarTController@showHydrotherapy')->middleware('guest')->name('CalendarHydrotherapy');
-Route::get('CalendarHydrotherapy/', 'App\Http\Controllers\CalendarTController@showHydrotherapy')->middleware('guest')->name('CalendarHydrotherapy');
+// Hydrotherapy renders in an iframe on the client's own site. Its controller and
+// view are frozen and deliberately live apart from the other calendars so nothing
+// here can change them by accident. See HydrotherapyCalendarController.
+Route::get('CalendarHydrotherapy/{date}', 'App\Http\Controllers\HydrotherapyCalendarController@show')->middleware('guest')->name('CalendarHydrotherapy');
+Route::get('CalendarHydrotherapy/', 'App\Http\Controllers\HydrotherapyCalendarController@show')->middleware('guest')->name('CalendarHydrotherapy');
 
 Route::get('MyCalendar/{date}', 'App\Http\Controllers\EventController@show')->middleware('guest')->name('MyCalendar');
 Route::get('MyCalendar/', 'App\Http\Controllers\EventController@show')->middleware('guest')->name('MyCalendar');

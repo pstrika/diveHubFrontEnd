@@ -18,7 +18,7 @@ class User extends Authenticatable
      *
      * @var string[]
      */
-    protected $fillable=['name', 'email', 'password', 'role_id','password_confirmation', 'phone', 'location', 'old_password','picture', 'certLevel', 'favOperators', 'favLocations', 'showLevel', 'prefersLocation', 'firstDayOfWeek', 'google_id', 'show_visited', 'deco_unit', 'calendar_token', 'last_seen_at'];
+    protected $fillable=['name', 'email', 'password', 'role_id','password_confirmation', 'phone', 'location', 'old_password','picture', 'certLevel', 'favOperators', 'favLocations', 'showLevel', 'prefersLocation', 'firstDayOfWeek', 'google_id', 'show_visited', 'deco_unit', 'calendar_token', 'last_seen_at', 'whatsapp_notifications'];
 
     protected $connection = 'mysql';
     /**

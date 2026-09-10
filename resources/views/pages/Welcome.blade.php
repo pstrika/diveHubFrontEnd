@@ -125,6 +125,23 @@
                             <label class="dh-radio"><input type="radio" name="recommendBy" value="operators" @if($user->prefersLocation === 0 || $user->prefersLocation === false) checked @endif> the boats I picked</label>
                         </fieldset>
                         <div class="dh-wizard-actions">
+                            <button type="submit" class="dh-btn dh-btn-primary">Next</button>
+                            <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl('comms') }}">Skip this</a>
+                        </div>
+                    </form>
+
+                @elseif($step === 'comms')
+                    <h1 class="dh-wizard-title">How should we reach you?</h1>
+                    <p class="dh-wizard-lead">Only about diving: a reminder the day before a trip you saved, and what your groups are up to. Pick the ones you want and leave the rest.</p>
+                    <form method="POST" action="{{ route('welcome.save') }}" class="dh-wizard-form">
+                        @csrf
+                        <input type="hidden" name="step" value="comms">
+                        <label class="dh-wizard-field">
+                            <span>Mobile number <small>(only needed for SMS or WhatsApp)</small></span>
+                            <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" autocomplete="tel" inputmode="tel">
+                        </label>
+                        <x-comms-preferences :user="$user" :ids="false" :showPhone="false" />
+                        <div class="dh-wizard-actions">
                             <button type="submit" class="dh-btn dh-btn-primary">Finish</button>
                             <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl('done') }}">Skip this</a>
                         </div>
