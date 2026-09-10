@@ -307,8 +307,12 @@
                                                     <input class="form-check-input ms-auto" type="checkbox"
                                                         id="sms_notifications" name="sms_notifications" {{ $user->sms_notifications ? "checked" : ""}}>
                                                     <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                        for="flexSwitchCheckDefault">Send SMS with dive updates - (*) additional costs may apply</label>
+                                                        for="sms_notifications">Yes, I'd like to receive SMS trip reminders from Divers Hub about upcoming dives for the groups I belong to.</label>
                                                 </div>
+                                                <p class="text-xs text-secondary ms-3 mt-2 mb-0">
+                                                    Message frequency varies (typically a few messages per month, depending on how many groups you're in). Message and data rates may apply. Reply HELP for help or STOP to cancel at any time.
+                                                    <a href="{{ route('TermsOfUse') }}" target="_blank">Terms of Service</a> | <a href="{{ route('PrivacyPolicy') }}" target="_blank">Privacy Policy</a>
+                                                </p>
                                             </li>
                                         </ul>
 

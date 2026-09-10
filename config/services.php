@@ -48,4 +48,11 @@ return [
         'subject' => env('VAPID_SUBJECT'),
     ],
 
+    'twilio' => [
+        'account_sid' => env('TWILIO_ACCOUNT_SID'),
+        'api_key_sid' => env('TWILIO_API_KEY_SID'),
+        'api_key_secret' => env('TWILIO_API_KEY_SECRET'),
+        'from' => env('TWILIO_FROM_NUMBER'),
+    ],
+
 ];

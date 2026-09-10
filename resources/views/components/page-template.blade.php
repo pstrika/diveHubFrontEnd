@@ -99,6 +99,8 @@
 <x-guest-modal />
 {{-- Add to home screen bar (shown by divershub.js on phones, second visit onward). --}}
 <x-install-prompt />
+{{-- Pablo's mobile bottom nav hook (main 9.22.0); the old sidebar pushes into it, the shell has its own tab bar. --}}
+@stack('bottom-nav')
 
 <script src="{{ asset('assets') }}/js/core/popper.min.js"></script>
 <script src="{{ asset('assets') }}/js/core/bootstrap.min.js"></script>

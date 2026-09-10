@@ -7,6 +7,7 @@ use App\Models\GroupDive;
 use App\Models\Operator;
 use App\Models\Trip;
 use App\Services\NotificationService;
+use App\Services\SmsService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -49,6 +50,7 @@ class SendGroupDiveReminders extends Command
 
             $this->sendReminderEmail($dive, $daysAhead);
             $this->notifyReminderInApp($dive, $daysAhead);
+            $this->sendReminderSms($dive, $daysAhead);
 
             DB::connection('mysql_trips')->table('group_dive_reminders_sent')->insert([
                 'group_dive_id' => $dive->id,
@@ -74,16 +76,17 @@ class SendGroupDiveReminders extends Command
         $dateFormatted = Carbon::parse($dive->date)->format('l, F j');
         $timeFormatted = $dive->time ? Carbon::parse($dive->time)->format('g:i A') : 'TBD';
 
-        $html = '<p>Hi there,</p>'
-            . '<p>This is a reminder that <b>' . e($group->name) . '</b> has a dive coming up in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '') . ':</p>'
+        // No opening greeting or sign-off here - the "tripreminder" Mailgun
+        // template supplies "Dear {{name}}:" and "Kind regards, Divers Hub."
+        // around this body already.
+        $html = '<p>This is a reminder that <b>' . e($group->name) . '</b> has a dive coming up in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '') . ':</p>'
             . '<p><b>' . e($dive->tripName) . '</b><br>'
             . e($dateFormatted) . ' at ' . e($timeFormatted) . '<br>'
             . ($operator ? 'Operator: ' . e($operator->operatorName) . '<br>' : '')
             . '</p>'
             . ($operator && $operator->waiverLink ? '<p><a href="' . e($operator->waiverLink) . '">Sign the operator\'s waiver</a></p>' : '')
             . '<p><b>Who\'s going so far:</b> ' . e($goingNames) . '</p>'
-            . '<p><a href="' . route('Groups.show', ['group' => $group->slug]) . '">View the group calendar</a></p>'
-            . '<p>See you underwater!<br>The Divers Hub team</p>';
+            . '<p><a href="' . route('Groups.show', ['group' => $group->slug]) . '">View the group calendar</a></p>';
 
         try {
             $mg = Mailgun::create(env('MAILGUN_KEY'));
@@ -100,7 +103,9 @@ class SendGroupDiveReminders extends Command
                     'to' => $member->user->name . ' <' . $member->user->email . '>',
                     'subject' => 'Reminder: ' . $dive->tripName . ' in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : ''),
                     'template' => 'tripreminder',
-                    'h:X-Mailgun-Variables' => json_encode(['body' => $html]),
+                    // {{body}} must be {{{body}}} (triple-brace, unescaped) in the
+                    // Mailgun template - see SendGroupDiveReminders history for why.
+                    'h:X-Mailgun-Variables' => json_encode(['body' => $html, 'name' => $member->user->name]),
                 ]);
             }
         } catch (\Throwable $e) {
@@ -111,9 +116,9 @@ class SendGroupDiveReminders extends Command
     /**
      * In-app notification center entry + browser push, alongside the email
      * above. Deliberately a separate call rather than folded into
-     * NotificationService's own email path - this reminder's email is a
-     * specific templated Mailgun send, not the generic digest the
-     * external emailQueueFlush function sends for other message types.
+     * NotificationService's own email path - this reminder's email uses its
+     * own branded Mailgun template ("tripreminder"), not the generic digest
+     * the external emailQueueFlush function sends for other message types.
      */
     private function notifyReminderInApp(GroupDive $dive, int $daysAhead)
     {
@@ -127,5 +132,41 @@ class SendGroupDiveReminders extends Command
             'Reminder: ' . $dive->tripName . ' in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '') . ' - ' . $dateFormatted . ' at ' . $timeFormatted,
             route('Groups.show', ['group' => $group->slug])
         );
+    }
+
+    /**
+     * SMS reminder via Twilio, only for members who have both a phone
+     * number on file AND have opted in via the `sms_notifications` profile
+     * checkbox (required consent for Twilio's A2P 10DLC campaign, and not
+     * pre-selected by default). SmsService itself no-ops if Twilio isn't
+     * configured, so this is safe to call unconditionally.
+     */
+    private function sendReminderSms(GroupDive $dive, int $daysAhead)
+    {
+        $group = $dive->group;
+        $members = $group->activeMembers;
+
+        if ($members->isEmpty()) {
+            return;
+        }
+
+        $dateFormatted = Carbon::parse($dive->date)->format('D, M j');
+        $timeFormatted = $dive->time ? Carbon::parse($dive->time)->format('g:i A') : 'TBD';
+        $url = route('Groups.show', ['group' => $group->slug]);
+
+        // Opt-out language is repeated in every message on purpose - Twilio's
+        // A2P 10DLC campaign is registered with sample messages that include
+        // it, and carriers filter traffic that doesn't match its registered
+        // samples.
+        $body = 'Divers Hub: ' . $dive->tripName . ' is in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '')
+            . ' - ' . $dateFormatted . ' at ' . $timeFormatted . '. ' . $url . ' Reply STOP to unsubscribe.';
+
+        foreach ($members as $member) {
+            if (!$member->user || !$member->user->phone || !$member->user->sms_notifications) {
+                continue;
+            }
+
+            SmsService::send($member->user->phone, $body);
+        }
     }
 }

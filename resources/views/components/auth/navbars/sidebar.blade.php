@@ -17,7 +17,7 @@
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0 d-flex align-items-center text-wrap" href="{{ route('overview') }}">
             <img src="{{ asset('assets') }}/img/logos/logo_divershub_white.png" class="navbar-brand-img h-100" alt="main_logo">
-            <span class="ms-2 font-weight-bold text-white">DiversHub ver 9.22.0 (09/07/26)</span>
+            <span class="ms-2 font-weight-bold text-white">DiversHub ver 9.24.3 (09/09/26)</span>
         </a>
     </div>
     <hr class="horizontal light mt-0 mb-2">
@@ -1542,6 +1542,12 @@
 
 @auth
     @if(auth()->user()->isNotGuest())
+        {{-- Pushed to render at the end of <body> (see page-template.blade.php's
+             @stack('bottom-nav')), not inline here - the desktop layout CSS relies
+             on `.sidenav.fixed-start + .main-content` (an adjacent-sibling
+             selector) to offset page content, so this markup can't sit between
+             the sidenav and <main> without breaking that selector. --}}
+        @push('bottom-nav')
         <style>
             .mobile-bottom-nav {
                 position: fixed;
@@ -1602,5 +1608,6 @@
                 <span>Me</span>
             </a>
         </nav>
+        @endpush
     @endif
 @endauth
