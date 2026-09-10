@@ -9,72 +9,49 @@
         <div class="container-fluid py-0">
 
         
-        {{--modal edit calendar--}}
-        <div class="modal fade" id="modal-calendar" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
-            <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
-                <div class="modal-content">
-                    <span id="span-booked" class="badge badge-md bg-gradient-success text-white">Booked</span>
-                    <span id="span-not-booked" class="badge badge-md bg-gradient-danger text-white">Not Booked</span>
-                    <div class="modal-header text-center">
-                        
-                        <h6 class="modal-title font-weight-normal text-start" id="modal-title-notification-calendar">Edit calendar</h6>
-                        {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
-                        {{--<span aria-hidden="true">×</span>--}}
-                        </button>
+        {{--
+            Options for one saved dive. Opened from the status pill in the list and
+            from a dive on the month grid (clickOnMyTrips). The ids are what that
+            script fills in, so they stay; the icon-only buttons with tooltips did
+            not, because on a phone there is no hover and "Options" has to read as
+            options (Zach, 2026-09-10).
+        --}}
+        <div class="modal fade" id="modal-calendar" tabindex="-1" role="dialog" aria-labelledby="modal-title-notification-calendar" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content dh-sheet">
+                    <div class="dh-sheet-head">
+                        <span id="span-booked" class="dh-dive-status is-booked"><span class="material-icons-round" aria-hidden="true">check_circle</span>Booked</span>
+                        <span id="span-not-booked" class="dh-dive-status is-open"><span class="material-icons-round" aria-hidden="true">radio_button_unchecked</span>Not booked yet</span>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
-                        <div class="py-3 text-center">
-                            <h4 class="text-gradient text-info text-md mt-4"></h4>
-                            <div class="table-responsive">
-                                <table class="table align-items-left mb-0"> 
-                                    <tbody>
-                                        
-                                        <tr>
-                                            <td class="align-middle text-center text-sm">    
-                                                <a id="button-go" href=""><button class="btn btn-icon btn-3 btn-info" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="See details for this trip">
-                                                    <span class="btn-inner--icon"><i class="material-icons">visibility</i></span>
-                                                    {{--<span class="btn-inner--text">Go to trip</span>--}}
-                                                </button></a>
-                                            </td>
-                                        
-                                            <td id="div-button-link" class="align-middle text-center text-sm">    
-                                                <a id="button-link" href="" target="_blank"><button class="btn btn-icon btn-3 btn-info" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Open booking page">
-                                                    <span class="btn-inner--icon"><i class="material-icons">link</i></span>
-                                                    {{--<span class="btn-inner--text">Click to book</span>--}}
-                                                </button></a>
-                                            </td>
-
-                                            <td id="div-button-waiver" class="align-middle text-center text-sm">    
-                                                <a id="button-waiver" href="" target="_blank"><button class="btn btn-icon btn-3 btn-info" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Open online waiver">
-                                                    <span class="btn-inner--icon"><i class="material-icons">description</i></span>
-                                                    {{--<span class="btn-inner--text">Click to book</span>--}}
-                                                </button></a>
-                                            </td>
-                                        
-                                        
-                                            <td id="div-button-book" class="align-middle text-center text-sm">    
-                                                <a id="button-book" href=""><button class="btn btn-icon btn-3 btn-success" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="I'm already booked for this trip!">
-                                                    <span class="btn-inner--icon"><i class="material-icons">check</i></span>
-                                                    {{--<span class="btn-inner--text">I'm booked already!</span>--}}
-                                                </button></a>
-                                            </td>
-                                        
-                                        
-                                        
-                                            <td class="align-middle text-center text-sm">    
-                                                <a id="button-remove" href=""><button class="btn btn-icon btn-3 btn-danger" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Remove trip from My Calendar">
-                                                    <span class="btn-inner--icon"><i class="material-icons">delete</i></span>
-                                                    {{--<span class="btn-inner--text">Remove from calendar</span>--}}
-                                                </button></a>
-                                            </td>
-                                        </tr>
-                                        
-
-                                    </tbody>
-                                </table>
-                            </div>   
-                            <p>Press anywhere outside this dialog to continue</p>
+                    <h6 class="dh-sheet-title" id="modal-title-notification-calendar">Edit calendar</h6>
+                    <div class="dh-sheet-actions">
+                        <a id="button-go" class="dh-sheet-action" href="">
+                            <span class="material-icons-round" aria-hidden="true">sailing</span>
+                            <span><strong>Go to the dive</strong><small>Sites, seats, price and the boat</small></span>
+                        </a>
+                        <div id="div-button-link">
+                            <a id="button-link" class="dh-sheet-action" href="" target="_blank" rel="noopener">
+                                <span class="material-icons-round" aria-hidden="true">open_in_new</span>
+                                <span><strong>Book with the operator</strong><small>Opens the shop's booking page</small></span>
+                            </a>
                         </div>
+                        <div id="div-button-book">
+                            <a id="button-book" class="dh-sheet-action" href="">
+                                <span class="material-icons-round" aria-hidden="true">check_circle</span>
+                                <span><strong>I am booked</strong><small>Marks this dive booked</small></span>
+                            </a>
+                        </div>
+                        <div id="div-button-waiver">
+                            <a id="button-waiver" class="dh-sheet-action" href="" target="_blank" rel="noopener">
+                                <span class="material-icons-round" aria-hidden="true">description</span>
+                                <span><strong>Sign the waiver</strong><small>The operator's online waiver</small></span>
+                            </a>
+                        </div>
+                        <a id="button-remove" class="dh-sheet-action is-danger" href="">
+                            <span class="material-icons-round" aria-hidden="true">event_busy</span>
+                            <span><strong>Remove from my calendar</strong><small>You can add it again from the dive page</small></span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -106,52 +83,55 @@
                         </div>
                         <div class="card-body p-3" style="display: block; max-height: 350px; overflow-y: scroll">
                             @if(count($trips) == 0)
-                                <p>You have no upcoming dives in you calendar. Go to <a href=" {{ route('Trips')}} "><b class="text-info">"Upcoming Trips"</b></a> on the menu, select and add trips to your personal calendar.</p>
+                                <p class="text-sm mb-2">Nothing saved yet. Find a dive and add it to your calendar; it shows up here and in the calendar below.</p>
+                                <a class="dh-btn dh-btn-primary" href="{{ route('Trips') }}"><span class="material-icons-round">sailing</span>Find a dive</a>
                             @else
-                                <div class="timeline timeline-one-side" data-timeline-axis-style="dotted">
+                                {{--
+                                    One row per saved dive (Zach, 2026-09-10). The row itself is the
+                                    dive: title, date and operator all go to the trip page, and the
+                                    operator name is plain text because "I wanted to go to the dive".
+                                    Booked or not is said in words on a pill, not by the colour of an
+                                    icon, and that pill is the visible control that opens the options
+                                    (mark booked, book with the shop, waiver, remove). The tank icon is
+                                    trip type only.
+                                --}}
+                                <ul class="dh-dive-list">
                                     @foreach($trips as $trip)
-                                        <div class="timeline-block mb-3">
-                                            <a href="javascript:clickOnMyTrips({{ $trip->eventId }});">
-                                                <span class="timeline-step bg-{{ $trip->booked ? "success" : "danger" }} p-3">
-                                                    
-                                                        @if(strstr($trip->tags, "SHA"))
-                                                            <span class="d-flex align-items-center"><img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_shark_center.png" alt="S"></span>
-                                                        @elseif(strstr($trip->tags, "TEC"))
-                                                            <span class="d-flex align-items-center"><img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_tec_center.png" alt="T"></span>
-                                                        @elseif(strstr($trip->tags, "LOB"))
-                                                            <span class="d-flex align-items-center"><img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_lobster_center.png" alt="L"></span>
-                                                        @else
-                                                            <span class="d-flex align-items-center"><img style="height:20px;" src="{{ asset('assets') }}/img/icons/icons_rec_center.png" alt="R"></span>
-                                                        @endif
-                                                    
+                                        @php
+                                            $tags = (string) $trip->tags;
+                                            $typeIcon = str_contains($tags, 'SHA') ? 'icons_shark_center.png' : (str_contains($tags, 'TEC') ? 'icons_tec_center.png' : (str_contains($tags, 'LOB') ? 'icons_lobster_center.png' : 'icons_rec_center.png'));
+                                            $typeName = str_contains($tags, 'SHA') ? 'Shark' : (str_contains($tags, 'TEC') ? 'Technical' : (str_contains($tags, 'LOB') ? 'Lobster' : 'Recreational'));
+                                            $when = DateTime::createFromFormat('Y-m-d', $trip->date);
+                                        @endphp
+                                        <li class="dh-dive-row">
+                                            {{-- Hidden fields read by clickOnMyTrips() for the options sheet. --}}
+                                            <label id="upComingTripsDate-{{ $trip->eventId }}" hidden>{{ $trip->date }}</label>
+                                            <label id="upComingTripsTime-{{ $trip->eventId }}" hidden>{{ $trip->departureTime }}</label>
+                                            <label id="upComingTripsEventId-{{ $trip->eventId }}" hidden>{{ $trip->eventId }}</label>
+                                            <label id="upComingTripsTripId-{{ $trip->eventId }}" hidden>{{ $trip->id }}</label>
+                                            <label id="upComingTripsLinkToBook-{{ $trip->eventId }}" hidden>{{ $trip->linkToBook }}</label>
+                                            <label id="upComingTripsWaiver-{{ $trip->eventId }}" hidden>{{ $trip->waiver }}</label>
+                                            <label id="upComingTripsBooked-{{ $trip->eventId }}" hidden>{{ $trip->booked}}</label>
+                                            <label id="upComingTripsOperator-{{ $trip->eventId }}" hidden>{{ $trip->operatorName}}</label>
+                                            <label id="upComingTripsTitle-{{ $trip->eventId }}" hidden>{{ $trip->tripName}}</label>
+
+                                            <a class="dh-dive-main" href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">
+                                                <span class="dh-dive-type" title="{{ $typeName }} dive"><img src="{{ asset('assets') }}/img/icons/{{ $typeIcon }}" alt="{{ $typeName }}"></span>
+                                                <span class="dh-dive-text">
+                                                    <span class="dh-dive-title do-not-translate">{{ $trip->tripName }}</span>
+                                                    <span class="dh-dive-when">{{ $when ? $when->format('D, M j') : $trip->date }} <b>{{ $trip->departureTime }}</b></span>
+                                                    <span class="dh-dive-op do-not-translate">{{ $trip->operatorName }}</span>
                                                 </span>
+                                                <span class="material-icons-round dh-dive-chevron" aria-hidden="true">chevron_right</span>
                                             </a>
-                                            <div class="timeline-content pt-1">
-                                                <label id="upComingTripsDate-{{ $trip->eventId }}" hidden>{{ $trip->date }}</label>
-                                                <label id="upComingTripsTime-{{ $trip->eventId }}" hidden>{{ $trip->departureTime }}</label>
-                                                <label id="upComingTripsEventId-{{ $trip->eventId }}" hidden>{{ $trip->eventId }}</label>
-                                                <label id="upComingTripsTripId-{{ $trip->eventId }}" hidden>{{ $trip->id }}</label>
-                                                <label id="upComingTripsLinkToBook-{{ $trip->eventId }}" hidden>{{ $trip->linkToBook }}</label>
-                                                <label id="upComingTripsWaiver-{{ $trip->eventId }}" hidden>{{ $trip->waiver }}</label>
-                                                <label id="upComingTripsBooked-{{ $trip->eventId }}" hidden>{{ $trip->booked}}</label>
-                                                <label id="upComingTripsOperator-{{ $trip->eventId }}" hidden>{{ $trip->operatorName}}</label>
-                                                <label id="upComingTripsTitle-{{ $trip->eventId }}" hidden>{{ $trip->tripName}}</label>
-                                                <a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">
-                                                    <h6 class="do-not-translate text-dark text-sm font-weight-bold mb-0">{{ $trip->tripName}}</h6>
-                                                </a>
-                                                <?php 
-                                                    $dateTime = DateTime::createFromFormat('Y-m-d', $trip->date);
-                                                    $formattedDate = $dateTime->format('l, M j, Y');
-                                                ?>
-                                                <p class="text-secondary text-xs mt-1 mb-0"> {{$formattedDate}} <b>({{ $trip->departureTime}})</b></p>
-                                                <p class="text-sm text-bold text-info mt-1 mb-2">
-                                                <a href="{{ route('OperatorDetails', ['id' => $trip->operatorId] )}}">{{ $trip->operatorName }}</a>
-                                                </p>
-                                            </div>
-                                        </div>
+                                            <button type="button" class="dh-dive-status {{ $trip->booked ? 'is-booked' : 'is-open' }}" onclick="clickOnMyTrips({{ $trip->eventId }})" aria-haspopup="dialog">
+                                                <span class="material-icons-round" aria-hidden="true">{{ $trip->booked ? 'check_circle' : 'radio_button_unchecked' }}</span>
+                                                <span>{{ $trip->booked ? 'Booked' : 'Not booked yet' }}</span>
+                                                <span class="dh-dive-status-more">Options</span>
+                                            </button>
+                                        </li>
                                     @endforeach
-                                    
-                                </div>
+                                </ul>
                             @endif
                         </div>
                     </div>
@@ -337,28 +317,114 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            @if( !empty($favOperators) )
-            {{-- Last on the page and closed by default. A diver opens this when they
-                 already know what they are looking for, which is not on arrival. --}}
-            <details class="dh-dash-collapse">
-                <summary>
-                    <span class="material-icons-round" aria-hidden="true">calendar_month</span>
-                    <span>Browse my favorite operators' calendars</span>
-                    <span class="dh-dash-collapse-hint">month view</span>
-                </summary>
-
-            <div class="row mx-1 mt-n1">
-                <div class="col-md-12">             
-                    <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
+                {{--
+                    My groups. Small on purpose: this is the slot the group feed will
+                    grow into (what people posted, who is going, unread), once group
+                    chat has read tracking. Today it answers "what is my group doing
+                    next" and surfaces invites, which is the one group action a diver
+                    should never miss.
+                --}}
+                <div class="col-md-12">
+                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">My favorites dive calendars</h2>
-                                <div class="table-responsive"></div>
+                                <h2 class="card-title text-white mx-4"><i class="material-icons justify-content-middle align-middle" style="font-size: 40px;">groups</i>My groups
+                                    <a class="dh-dash-headlink" href="{{ route('MyGroups') }}">All groups</a></h2>
                             </div>
                         </div>
                         <div class="card-body p-3">
+                            @if(($groupInvites ?? 0) > 0)
+                                <a class="dh-group-invite" href="{{ route('MyGroups') }}">
+                                    <span class="material-icons-round" aria-hidden="true">mail</span>
+                                    <span>You have {{ $groupInvites }} group {{ $groupInvites === 1 ? 'invite' : 'invites' }} waiting</span>
+                                    <span class="material-icons-round" aria-hidden="true">chevron_right</span>
+                                </a>
+                            @endif
+                            @if(($myGroups ?? collect())->isEmpty())
+                                <p class="text-sm mb-3">Dive with your people. A group has its own calendar, chat and dive reminders, and you can invite by email, WhatsApp or a Facebook page.</p>
+                                <a class="dh-btn dh-btn-primary" href="{{ route('MyGroups') }}"><span class="material-icons-round">group_add</span>Create or join a group</a>
+                            @else
+                                <ul class="dh-group-list">
+                                    @foreach($myGroups as $group)
+                                        @php $next = $group->dives->first(); @endphp
+                                        <li>
+                                            <a class="dh-group-row" href="{{ route('Groups.show', $group->slug) }}">
+                                                <span class="dh-group-avatar">
+                                                    @if($group->avatar)
+                                                        <img src="{{ str_starts_with($group->avatar, 'http') ? $group->avatar : asset('assets/' . ltrim($group->avatar, '/')) }}" alt="" onerror="this.remove()">
+                                                    @else
+                                                        <span class="material-icons-round" aria-hidden="true">groups</span>
+                                                    @endif
+                                                </span>
+                                                <span class="dh-group-text">
+                                                    <span class="dh-group-name do-not-translate">{{ $group->name }}</span>
+                                                    <span class="dh-group-meta">
+                                                        {{ $group->active_members_count }} {{ $group->active_members_count === 1 ? 'member' : 'members' }}
+                                                        @if($next)
+                                                            &middot; next dive {{ \Carbon\Carbon::parse($next->date)->format('D, M j') }}@if($next->tripName), {{ $next->tripName }}@endif
+                                                        @else
+                                                            &middot; no dive planned yet
+                                                        @endif
+                                                    </span>
+                                                </span>
+                                                <span class="material-icons-round dh-dive-chevron" aria-hidden="true">chevron_right</span>
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{--
+                My calendar (Zach, 2026-09-10). The month grid at the foot of the page
+                used to be the favourite operators' calendar, which is not what a
+                diver expects under "my dashboard". Now it is their own calendar first,
+                with the subscribe link that keeps their phone's calendar in sync, and
+                the operators' calendar one switch away for the divers who plan from
+                it. Both grids read the same data the page already had.
+            --}}
+            <div class="row mx-1 dh-cal-row">
+                <div class="col-md-12">
+                    <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h2 class="card-title text-white mx-4"><i class="material-icons justify-content-middle align-middle" style="font-size: 40px;">calendar_month</i>My calendar
+                                    <a class="dh-dash-headlink" href="{{ route('MyCalendar') }}">Open full calendar</a></h2>
+                            </div>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="dh-seg" role="tablist" aria-label="Which calendar">
+                                <button type="button" class="dh-seg-btn is-active" role="tab" aria-selected="true" data-dh-cal="mine">My dives</button>
+                                @if( !empty($favOperators) )
+                                <button type="button" class="dh-seg-btn" role="tab" aria-selected="false" data-dh-cal="ops">Favorite operators</button>
+                                @endif
+                            </div>
+
+                            <div id="dh-cal-mine" data-dh-cal-panel="mine">
+                                <p class="text-xs text-secondary mb-2"><span class="dh-cal-key is-booked"></span> booked &nbsp; <span class="dh-cal-key is-open"></span> not booked yet &nbsp;&middot;&nbsp; tap a dive for options, tap a day to find a dive</p>
+                                <div class="calendar" id="my-calendar"></div>
+
+                                @if($calendarFeedUrl ?? null)
+                                <div class="dh-subscribe">
+                                    <div class="dh-subscribe-text">
+                                        <strong><span class="material-icons-round" aria-hidden="true">event_available</span> Subscribe to my dive calendar</strong>
+                                        <span>Paste this link into Google Calendar, Apple Calendar or Outlook as a calendar from URL and your dives stay in sync. Anyone with the link can see your upcoming dives.</span>
+                                    </div>
+                                    <div class="dh-subscribe-row">
+                                        <input type="text" id="calendarFeedUrl" class="form-control" value="{{ $calendarFeedUrl }}" readonly onclick="this.select();" aria-label="Calendar subscription link">
+                                        <button type="button" class="dh-btn dh-btn-primary" onclick="copyCalendarFeedUrl(this)"><span class="material-icons-round">content_copy</span>Copy link</button>
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+
+                            @if( !empty($favOperators) )
+                            <div id="dh-cal-ops" data-dh-cal-panel="ops" hidden>
+                                <div class="dh-fav-cal">
                             <table>
                                 <tr></td>
                                     {{-- flex-wrap and min-width so a long operator name plus the logo cannot push past the card on phones --}}
@@ -389,12 +455,13 @@
                             </table>
 
                             <div class="calendar" data-bs-toggle="calendar" id="calendar"></div>
+                                </div>
+                            </div>
+                            @endif
                         </div>
                     </div>
                 </div>
             </div>
-            </details>
-            @endif
 
             {{-- The Me tab lands here instead of opening a pop out, so the menu rows live on the page. --}}
             <x-shell.me-rows />
@@ -545,6 +612,10 @@
 
 
     <script>
+        const todayDate = new Date().toISOString().split('T')[0];
+    </script>
+    @if( !empty($favOperators) )
+    <script>
         function getResponsiveView() {
             const width = window.innerWidth;
             if (width >= 1200) return 'dayGridMonth';     // Large screens
@@ -552,7 +623,6 @@
             return 'dayGridThreeDay';                    // Small screens
         }
 
-        const todayDate = new Date().toISOString().split('T')[0];
         var calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
         dateClick: function(info) {
             var link = '/Trips/' + info.dateStr;
@@ -635,7 +705,68 @@
         },
         });
 
-        calendar.render();
+    </script>
+    @else
+    <script>
+        var calendar = null, applyFilter = function () {};
+    </script>
+    @endif
+    <script>
+        // The favourite operators grid lives in a hidden panel; FullCalendar lays out
+        // at zero width when hidden, so it renders on first switch, not on load.
+        var opsRendered = false;
+
+        // ------------------------------------------------------------------
+        // My dives: the diver's own saved trips, the same list as the card above.
+        // Booked and not booked are colours here and words in the list.
+        // ------------------------------------------------------------------
+        var myCalendar = new FullCalendar.Calendar(document.getElementById("my-calendar"), {
+            dateClick: function(info) { window.location.href = '/Trips/' + info.dateStr; },
+            eventClick: function(info) {
+                info.jsEvent.preventDefault();
+                clickOnMyTrips(info.event.extendedProps.eventId);
+            },
+            initialView: 'dayGridMonth',
+            firstDay: {{ (int) (auth()->user()->firstDayOfWeek ?? 0) }},
+            contentHeight: 'auto',
+            headerToolbar: { start: '', center: 'title', end: 'prev,next today' },
+            selectable: true,
+            editable: false,
+            initialDate: todayDate,
+            events: [
+                @php
+                    foreach($trips as $trip) {
+                        $tripName = str_replace("'", "\\'", $trip->tripName);
+                        echo "{";
+                        echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) . "',";
+                        echo "start: '" . $trip->date . " " . $trip->departureTime . "',";
+                        echo "extendedProps: { eventId: " . (int) $trip->eventId . " },";
+                        echo "className: '" . ($trip->booked ? 'dh-fc-booked' : 'dh-fc-open') . "' },";
+                    }
+                @endphp
+            ]
+        });
+        myCalendar.render();
+
+        document.querySelectorAll('[data-dh-cal]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var which = btn.getAttribute('data-dh-cal');
+                document.querySelectorAll('[data-dh-cal]').forEach(function (b) {
+                    var on = b === btn;
+                    b.classList.toggle('is-active', on);
+                    b.setAttribute('aria-selected', on ? 'true' : 'false');
+                });
+                document.querySelectorAll('[data-dh-cal-panel]').forEach(function (panel) {
+                    panel.hidden = panel.getAttribute('data-dh-cal-panel') !== which;
+                });
+                if (which === 'ops') {
+                    if (!opsRendered) { calendar.render(); opsRendered = true; applyFilter(); }
+                    else { calendar.updateSize(); }
+                } else {
+                    myCalendar.updateSize();
+                }
+            });
+        });
 
 
     </script>

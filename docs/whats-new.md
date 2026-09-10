@@ -251,6 +251,25 @@ Several of these were broken on the live site too, not just on the branch.
   month grid of favourite operator calendars last and collapsed behind one line.
   That calendar stays because some divers use nothing else. The wishlist gained
   two ways in, since it only earns its place if people fill it.
+- **Upcoming dives read as dives** (Zach, second pass). Each row is the dive:
+  title, date and operator all open the trip page, and the operator name is
+  plain text, because tapping it used to land on the shop when you wanted the
+  boat. Booked or not is now said in words on a pill, green "Booked" or red "Not
+  booked yet", with "Options" beside it, instead of a red or green tank icon that
+  nobody knew was tappable. The tank icon only says the trip type now.
+- **The options sheet has words.** Go to the dive, Book with the operator, I am
+  booked, Sign the waiver, Remove from my calendar. Before it was five icon
+  buttons with hover tooltips, and phones do not hover.
+- **My calendar is on the dashboard.** The month grid at the foot of the page is
+  the diver's own calendar first, booked in green and not booked in red, with
+  the Subscribe to my dive calendar link and a Copy button right under it, and
+  "Open full calendar" for the big version. The favourite operators' calendar is
+  one switch away on the same card for the divers who plan from it, rather than
+  sitting there pretending to be your calendar.
+- **My groups card**, small on purpose. Each group with its member count and its
+  next planned dive, pending invites called out at the top, and "Create or join
+  a group" when there are none. This is the slot the group feed grows into once
+  group chat has read tracking; today it answers "what is my group doing next".
 - **The guest prompt offers sign in as well as sign up.** Tapping Groups as a
   guest used to offer only "Create an account", which is no use to somebody who
   already has one. It now offers both, and the sign in route drops the shared
@@ -298,7 +317,11 @@ Sign out first, then work through as a guest, then sign in.
 | Profile, Communication preferences | Three checkboxes with consent wording, and a note if you have no phone number |
 | Tick WhatsApp, Save, then untick and Save | Both decisions are recorded; ask me and I can show you the audit rows |
 | Welcome wizard, last step before done | "How should we reach you?" with the same three checkboxes |
-| Dashboard | Upcoming dives first, no banner photo, the operator calendars collapsed at the bottom, menu rows under them |
+| Dashboard | Upcoming dives first, no banner photo, then the weekend picks, wishlist, my groups, my calendar, menu rows |
+| Dashboard, an upcoming dive | Tap the title: the trip page. Tap the pill: the options sheet with five labelled rows |
+| Dashboard, "I am booked" in the sheet | The pill turns green, the dive on the month grid turns green |
+| Dashboard, My calendar, Copy link | The button says Copied; the link pastes into Google Calendar as a URL calendar |
+| Dashboard, Favorite operators switch | The operators' month grid, same as before, full width |
 | Me tab, signed in | Your avatar as the icon; it opens the dashboard, no pop out |
 | Weather tab, signed in | Opens on the first of your favourite places |
 | Groups tab with an unread message | A red count on the icon |

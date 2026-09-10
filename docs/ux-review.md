@@ -23,6 +23,11 @@ Nothing here needs a migration unless marked.
 
 ## 1. The dashboard should be the diver's morning, not a set of tables
 
+*Update, 2026-09-10: the banner is gone, the order is upcoming dives, weekend
+picks, wishlist, my groups, my calendar. Items 3 and 5 below are partly done
+(a groups card without the feed; the operators' calendar kept behind a switch on
+the my calendar card). Items 1, 2 and 4 are still the plan; see the roadmap.*
+
 Today it is a banner photo, a title card, then three template tables. On a phone
 the first screen is the photo and the words "My Dashboard". Nothing a diver
 needs is above the fold. Pablo is right that it could be better, and it is the

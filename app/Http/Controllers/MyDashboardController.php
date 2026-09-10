@@ -35,9 +35,34 @@ class MyDashboardController extends Controller
         
         $dateFrom = Carbon::parse($date)->format('Y-m-d');
         $dateTo = Carbon::parse($date)->addWeek(6)->format('Y-m-d');
+        // Everything the diver has saved from today on, soonest first. The upcoming
+        // list and the month grid on the page both draw from this one collection,
+        // so an event can never be on the grid without the row (and the modal data)
+        // behind it. A date window would hide a dive saved months ahead.
         $events = Event::whereDate('date', '>=', Carbon::today())
             ->where('userId', auth()->user()->id)
-            ->take(10)->get()->sortBy("date");
+            ->orderBy('date')->orderBy('time')->take(40)->get();
+
+        // Subscribe link for the "My calendar" card, same as the calendar page.
+        // Never for the shared guest user; the dashboard is members only anyway.
+        $calendarFeedUrl = null;
+        if ($user->isNotGuest()) {
+            $user->ensureCalendarToken();
+            $calendarFeedUrl = route('MyCalendar.feed', ['token' => $user->calendar_token]);
+        }
+
+        // Groups the diver is in, each with its next planned dive. This card is the
+        // slot the group feed will grow into; for now it answers "what is my group
+        // doing next" and shows pending invites.
+        $myGroups = \App\Models\Group::whereHas('members', function ($q) use ($user) {
+                $q->where('user_id', $user->id)->where('status', 'active');
+            })
+            ->withCount('activeMembers')
+            ->with(['dives' => function ($q) {
+                $q->whereDate('date', '>=', Carbon::today())->orderBy('date')->orderBy('time')->limit(1);
+            }])
+            ->orderBy('name')->get();
+        $groupInvites = \App\Models\GroupMember::where('user_id', $user->id)->where('status', 'invited')->count();
 
         Log::debug("Got " . str(count($events)) . " event for user " . $user->name);
         $trips = [];
@@ -262,6 +287,6 @@ class MyDashboardController extends Controller
             //Log::debug($favCalendars);
 
 
-        return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers', 'wished', 'favOperators', 'favCalendars', 'weekendStart'));
+        return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers', 'wished', 'favOperators', 'favCalendars', 'weekendStart', 'calendarFeedUrl', 'myGroups', 'groupInvites'));
     }
 }

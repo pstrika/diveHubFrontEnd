@@ -167,3 +167,22 @@
         window.gtag('event', 'dh_tab_tap', { tab: tab.getAttribute('data-dh-tab') });
     }, true);
 })();
+
+/* ------------------------------------------------------------------ */
+/* Copy the calendar subscription link (dashboard card). The calendar   */
+/* page has its own older copy of this; both read #calendarFeedUrl.     */
+/* ------------------------------------------------------------------ */
+window.copyCalendarFeedUrl = window.copyCalendarFeedUrl || function (btn) {
+    var input = document.getElementById('calendarFeedUrl');
+    if (!input) return;
+    input.select(); input.setSelectionRange(0, 99999);
+    var done = function () {
+        if (!btn) return;
+        var label = btn.querySelector('span:last-child') || btn;
+        var was = label.textContent; label.textContent = 'Copied';
+        setTimeout(function () { label.textContent = was; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(input.value).then(done, function () { document.execCommand('copy'); done(); });
+    } else { document.execCommand('copy'); done(); }
+};

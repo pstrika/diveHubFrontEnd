@@ -223,9 +223,19 @@ slow to load. Nothing to do on the view side.
 2. Dive reports (the content we want most, and the thing notifications ask for).
 3. Notifications by email, then SMS reminders, aligned with Pablo's push work.
 4. Group media to site pages.
-5. Dashboard, next pass: a proper "next dive" card with a countdown, conditions
-   where the diver dives, and a groups feed with unread counts. The reorder
-   Pablo asked for shipped in release 10.
+5. Dashboard, next pass. Shipped in release 10: the reorder, the dive rows with
+   a booked pill and a labelled options sheet, my calendar with the subscribe
+   link, and a small my groups card. Still to do, in this order:
+   - **Next dive card** at the top: the soonest saved dive with a countdown,
+     departure time, and the marine forecast for that day and that operator's
+     water. `weatherday` is keyed by date and location, so the forecast is a
+     lookup, not a new source. When nothing is saved, the weekend picks move up.
+   - **Group feed in the my groups card**: latest posts, who is going to the
+     next dive, unread counts. Needs read tracking on group chat (a last read
+     per member), so it is a schema change and waits for the next release.
+   - **Wishlist alerts**: the wishlist is on the page; the promise that we tell
+     you when a boat is going to a saved site is still made by hand in the
+     digest email. Worth a badge on the card when a wished site has a trip.
 6. rEvo dive companion, offline first (Zach and Pablo use it every dive).
 7. Blog, then the community feed.
 8. Operator coordinates and one search whenever convenient.
