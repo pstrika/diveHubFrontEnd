@@ -289,10 +289,10 @@ class UserController extends Controller
         }
 
 
-        $user->save();
+        // Consent timestamps for the channels that changed, before the save.
+        \App\Support\NotificationConsent::stamp($user, $commsBefore);
 
-        // Audit trail for Twilio A2P 10DLC: one row per channel that changed.
-        \App\Support\NotificationConsent::sync($user, $commsBefore, 'profile');
+        $user->save();
 
         return redirect()->back();
     }

@@ -132,14 +132,13 @@ class OnboardingController extends Controller
             case 'comms':
                 // The consent screen. Absent means unticked, same as the profile page.
                 $before = \App\Support\NotificationConsent::state($user);
-                foreach (\App\Support\NotificationConsent::CHANNELS as $column) {
+                foreach (\App\Support\NotificationConsent::switches() as $column) {
                     $user->{$column} = $request->boolean($column) ? 1 : 0;
                 }
                 if ($request->filled('phone')) {
                     $user->phone = $request->input('phone');
                 }
-                $user->save();
-                \App\Support\NotificationConsent::sync($user, $before, 'welcome');
+                \App\Support\NotificationConsent::stamp($user, $before);
                 break;
         }
         $user->save();

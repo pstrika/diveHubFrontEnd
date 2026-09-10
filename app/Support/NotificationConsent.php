@@ -3,95 +3,75 @@
 namespace App\Support;
 
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 /**
- * Records communication consent so it can be produced on request.
+ * Communication consent: which channels a diver agreed to, and when.
  *
- * Twilio's A2P 10DLC registration means we may have to show where a specific
- * person agreed to be messaged. The user row holds the current state; this
- * class appends an immutable row to notification_consents every time a channel
- * changes, together with the exact wording that was on screen.
+ * Everything lives on the users table with the rest of their config (Pablo,
+ * 2026-09-10): three switches and three timestamps. Turning a channel on stamps
+ * the time; turning it off clears it, so a timestamp that is set always means
+ * "consent is current, given on this date".
  *
- * Call it after saving the user, from any screen that offers the switches:
+ * Twilio's A2P 10DLC registration can ask us to show when and where someone
+ * agreed to be messaged. The timestamp answers when. The wording they saw is
+ * the consent screen, resources/views/components/comms-preferences.blade.php,
+ * and git history gives the exact wording as of that timestamp. Text lives in
+ * one component used by every screen that offers the switches, so what is on
+ * screen and what we would produce in an audit cannot drift apart.
  *
- *     NotificationConsent::sync($user, $before, 'profile');
+ * Usage, from any screen that offers the switches:
  *
- * where $before is the channel state read before the save. Nothing is written
- * when nothing changed, so the table reads as a history of decisions.
+ *     $before = NotificationConsent::state($user);
+ *     ... set $user->email_notifications etc from the request ...
+ *     NotificationConsent::stamp($user, $before);   // before saving
+ *     $user->save();
  */
 final class NotificationConsent
 {
-    /** Channel key => the user column that stores it. */
+    /** Channel key => [switch column, consent timestamp column]. */
     public const CHANNELS = [
-        'email'    => 'email_notifications',
-        'sms'      => 'sms_notifications',
-        'whatsapp' => 'whatsapp_notifications',
+        'email'    => ['email_notifications', 'email_consent_at'],
+        'sms'      => ['sms_notifications', 'sms_consent_at'],
+        'whatsapp' => ['whatsapp_notifications', 'whatsapp_consent_at'],
     ];
 
-    /** The consent wording shown on screen, kept here so the record and the page cannot drift apart. */
-    public static function text(string $channel): string
+    /** Just the switch columns, for looping over a request. */
+    public static function switches(): array
     {
-        switch ($channel) {
-            case 'sms':
-                return "Yes, I'd like to receive SMS trip reminders from Divers Hub about upcoming dives for the groups I belong to. "
-                    . 'Message frequency varies (typically a few messages per month, depending on how many groups you are in). '
-                    . 'Message and data rates may apply. Reply HELP for help or STOP to cancel at any time.';
-            case 'whatsapp':
-                return "Yes, I'd like Divers Hub to message me on WhatsApp about upcoming dives, trip reminders and my groups. "
-                    . 'Message frequency varies (typically a few messages per month, depending on how many groups you are in). '
-                    . 'Reply STOP in the chat to cancel at any time.';
-            default:
-                return 'Yes, email me about upcoming dives, trip reminders and news from my groups. '
-                    . 'Every email has an unsubscribe link.';
-        }
+        return array_map(fn ($pair) => $pair[0], self::CHANNELS);
     }
 
-    /** Channel state for a user, as ['email' => bool, 'sms' => bool, 'whatsapp' => bool]. */
+    /** Current on/off per channel: ['email' => bool, 'sms' => bool, 'whatsapp' => bool]. */
     public static function state($user): array
     {
         $out = [];
-        foreach (self::CHANNELS as $channel => $column) {
-            $out[$channel] = (bool) ($user->{$column} ?? false);
+        foreach (self::CHANNELS as $channel => [$switch, $stamp]) {
+            $out[$channel] = (bool) ($user->{$switch} ?? false);
         }
         return $out;
     }
 
     /**
-     * Append a row for every channel whose value changed.
+     * Set or clear the consent timestamp for every channel whose switch changed.
+     * Call it after reading the request onto the user and before saving.
      *
-     * @param array $before state() taken before the user was saved
+     * @param array $before state() taken before the request was applied
      */
-    public static function sync(User $user, array $before, string $source): void
+    public static function stamp(User $user, array $before): void
     {
-        $after = self::state($user);
-        foreach ($after as $channel => $granted) {
-            if (($before[$channel] ?? false) === $granted) {
+        foreach (self::CHANNELS as $channel => [$switch, $stampColumn]) {
+            $now = (bool) $user->{$switch};
+            if (($before[$channel] ?? false) === $now) {
                 continue;
             }
-            self::record($user, $channel, $granted, $source);
+            $user->{$stampColumn} = $now ? now() : null;
         }
     }
 
-    /** Append one row. Never throws: a missing audit row must not lose the diver's setting. */
-    public static function record(User $user, string $channel, bool $granted, string $source): void
+    /** When they consented to a channel, or null if they have not. For the profile page and any audit answer. */
+    public static function consentedAt($user, string $channel)
     {
-        try {
-            DB::table('notification_consents')->insert([
-                'userId'     => $user->id,
-                'channel'    => $channel,
-                'granted'    => $granted,
-                'phone'      => in_array($channel, ['sms', 'whatsapp'], true) ? $user->phone : null,
-                'text'       => self::text($channel),
-                'source'     => $source,
-                'ip'         => request()->ip(),
-                'user_agent' => substr((string) request()->userAgent(), 0, 255),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        } catch (\Throwable $e) {
-            Log::warning("NotificationConsent: could not record $channel for user {$user->id}: " . $e->getMessage());
-        }
+        $stampColumn = self::CHANNELS[$channel][1] ?? null;
+        return $stampColumn ? ($user->{$stampColumn} ?? null) : null;
     }
 }

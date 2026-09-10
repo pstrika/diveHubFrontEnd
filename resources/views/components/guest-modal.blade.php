@@ -36,7 +36,14 @@
                 <div class="py-3 text-center">
                     <i class="material-icons-round h1 text-primary" aria-hidden="true">lock</i>
                     <h4 class="text-gradient text-info text-md mt-4">Create a free account to save trips, plan dives and see the forecast. No credit card, ever.</h4>
-                    <a class="btn bg-gradient-info mt-3" href="{{ route('create-account') }}">Create an account</a>
+                    {{-- Two ways out, because plenty of the people who hit this already
+                         have an account (Zach, 2026-09-10). Both routes log the shared
+                         guest user out first, otherwise sign in bounces: the guest is
+                         technically logged in. --}}
+                    <div class="dh-guest-actions">
+                        <a class="btn bg-gradient-info mb-0" href="{{ route('create-account') }}">Create an account</a>
+                        <a class="btn btn-outline-dark mb-0" href="{{ route('sign-in-fresh') }}">I already have one, sign in</a>
+                    </div>
                     <p class="text-sm text-secondary mt-3 mb-0">Or keep browsing. Press anywhere outside this box to continue.</p>
                 </div>
             </div>

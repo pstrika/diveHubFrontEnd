@@ -259,6 +259,8 @@ Route::post('sign-out', [SessionsController::class, 'destroy'])->middleware('gue
 // this logs them out first, then redirects to the register page. Every
 // "Create account" link should point here rather than at sign-out.
 Route::get('create-account', [SessionsController::class, 'createAccount'])->name('create-account');
+// "I already have an account" from the guest prompt: drops the shared guest session, then sign in.
+Route::get('sign-in-fresh', [SessionsController::class, 'signInFresh'])->name('sign-in-fresh');
 Route::get('sign-out', [SessionsController::class, 'create'])->middleware('guest');
 
 Route::post('verify', [SessionsController::class, 'show'])->middleware('guest');

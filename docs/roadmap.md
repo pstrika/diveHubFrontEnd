@@ -117,8 +117,16 @@ site, approved) or the `photos` table needs user, source and approval columns.
   schema; needs ranking rules.
 - **Recreational month calendar** renders every recreational trip in the month
   (about 2,600 cards). Paginate by week or point the menu at the trip board.
-- **Originals folder**: once every photo has copies, decide whether the camera
-  originals stay in the web root.
+- **Remove the camera originals from the repo. Agreed, and deliberately held
+  until after release 10** (Zach and Pablo, 2026-09-10). Pablo has every photo and
+  the server copies stay, so the repo does not need them: about 466 MB under
+  `public/assets/img/sites` plus 229 MB of `illustrations/originals`. Two reasons
+  it waits. First, Azure's zip deploy removes files that are not in the package,
+  so deleting them from the repo also deletes them from the server, and any photo
+  without a WebP copy would break. Second, the day of a release is the wrong day
+  to find that out. **Before doing it:** confirm every `photos.file` row has a
+  copy under `img/sites/web`, take a copy of the originals off the server first,
+  then delete and deploy to the beta slot and check a dozen site pages there.
 - **Offline app** (manifest, icons, an install only service worker and the add to home
   screen bar already ship): caching service worker, cached
   trip board and saved sites, queued actions. Its own epic; the rEvo companion
@@ -215,10 +223,9 @@ slow to load. Nothing to do on the view side.
 2. Dive reports (the content we want most, and the thing notifications ask for).
 3. Notifications by email, then SMS reminders, aligned with Pablo's push work.
 4. Group media to site pages.
-5. Dashboard rebuild, in Pablo's priority order: my upcoming dives, then
-   recommended for this weekend, then the wishlist with a way to add sites, with
-   the favourite operator calendars kept but collapsed or moved down the page.
-   A groups feed comes after.
+5. Dashboard, next pass: a proper "next dive" card with a countdown, conditions
+   where the diver dives, and a groups feed with unread counts. The reorder
+   Pablo asked for shipped in release 10.
 6. rEvo dive companion, offline first (Zach and Pablo use it every dive).
 7. Blog, then the community feed.
 8. Operator coordinates and one search whenever convenient.

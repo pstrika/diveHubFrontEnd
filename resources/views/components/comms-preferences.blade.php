@@ -4,11 +4,11 @@
 
     This is the consent screen. It is a single component used by both the profile
     page and the welcome wizard so the wording a diver agreed to is the same
-    wherever they agreed to it, and it matches the text recorded in
-    notification_consents (App\Support\NotificationConsent::text).
+    wherever they agreed to it, and the same wording we would produce if asked.
 
     Twilio A2P 10DLC: if we are ever asked to show where someone consented, the
-    answer is this screen plus the row it wrote. So the labels stay explicit
+    answer is this screen plus the timestamp it stamped on the user. So the
+    labels stay explicit
     ("Yes, I'd like..."), the frequency and rates language stays, the way to stop
     stays, and Terms and Privacy are linked.
 
@@ -55,6 +55,11 @@
                 </span>
             </label>
             <p class="dh-comms-note">{{ $c['note'] }}</p>
+            @php $agreedAt = \App\Support\NotificationConsent::consentedAt($user, $key); @endphp
+            @if($agreedAt)
+                {{-- Shown so a diver can see it and so a screenshot answers "when did they agree". --}}
+                <p class="dh-comms-note dh-comms-since">Agreed {{ \Carbon\Carbon::parse($agreedAt)->format('j M Y') }}</p>
+            @endif
         </div>
     @endforeach
 

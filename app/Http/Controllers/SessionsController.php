@@ -143,4 +143,22 @@ class SessionsController extends Controller
         return redirect()->route('register');
     }
 
+    /**
+     * "I already have an account" from the guest prompt.
+     *
+     * Anonymous visitors are logged in as the shared guest user, so a plain link
+     * to sign in bounces straight back: they are already authenticated. Log the
+     * guest out first, then show the sign in form. Same shape as createAccount().
+     */
+    public function signInFresh()
+    {
+        $user = auth()->user();
+        if ($user && !$user->isNotGuest()) {
+            auth()->logout();
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
+        }
+        return redirect()->route('login');
+    }
+
 }

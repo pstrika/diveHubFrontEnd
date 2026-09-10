@@ -622,3 +622,18 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-comms-warn { display: flex; align-items: flex-start; gap: 6px; margin-left: 0; color: var(--dh-avg); background: var(--dh-avg-bg); border-radius: var(--dh-radius); padding: 8px 10px; }
 .dh-comms-warn .material-icons-round { font-size: 16px; }
 .dh-comms-legal { font-size: .78rem; color: var(--dh-muted); margin: 0; }
+.dh-comms-since { color: var(--dh-good); font-weight: 700; margin-top: 2px; }
+
+/* Guest prompt: create an account or sign in, side by side and stacking on phones. */
+.dh-guest-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: var(--dh-space-3); }
+
+/* ------------------------------------------------------------------ */
+/* Dashboard: the collapsed month calendar at the foot of the page.     */
+/* ------------------------------------------------------------------ */
+.dh-dash-collapse { margin: var(--dh-space-3) 8px var(--dh-space-6); }
+.dh-dash-collapse > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 14px; padding: 14px 16px; font-weight: 700; color: var(--dh-ink); }
+.dh-dash-collapse > summary::-webkit-details-marker { display: none; }
+.dh-dash-collapse > summary:hover { border-color: var(--dh-sea); color: var(--dh-deep); }
+.dh-dash-collapse > summary .material-icons-round { color: var(--dh-sea); }
+.dh-dash-collapse-hint { margin-left: auto; font-weight: 400; font-size: .8rem; color: var(--dh-muted); }
+.dh-dash-headlink { float: right; margin-top: 6px; color: #fff; font-size: .8rem; font-weight: 700; text-decoration: underline; }

@@ -81,69 +81,20 @@
         </div>
 
 
-            <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/dashboard1.jpeg');">
-                <span class="mask  bg-gradient-info  opacity-4"></span>
-            </div>
+            {{--
+                Dashboard order, 2026-09-10 (Pablo's priorities, UX first).
 
-            <div class="card p-0 position-relative mt-n5 mx-1 z-index-2 mb-4">
-                
-                    <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
-                        <div style="float: left;">
-                            <h1 class="card-title text-info mx-3 mt-0 text-xl">My Dashboard</h1>
-                        </div>
+                The banner photo and the "My Dashboard" title card that used to be
+                here are gone: on a phone they filled the entire first screen and
+                said nothing the header does not already say.
 
-                    </div>
-                </div>
-            </div>
-
-            @if( !empty($favOperators) )
-            <div class="row mx-1 mt-n1">
-                <div class="col-md-12">             
-                    <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">My favorites dive calendars</h2>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body p-3">
-                            <table>
-                                <tr></td>
-                                    {{-- flex-wrap and min-width so a long operator name plus the logo cannot push past the card on phones --}}
-                                    <div class="d-flex flex-wrap align-items-center gap-3 dh-fav-operator">
-                                        <!-- Dropdown -->
-                                        <div class="dropdown flex-grow-1" style="min-width: 0;">
-                                            <select class="btn bg-info dropdown-toggle text-white" id="filterOperators" data-bs-toggle="dropdown" aria-expanded="false">
-                                                @foreach($favOperators as $favOperator)
-                                                    <option value="{{ $favOperator->id }}">{{ $favOperator->operatorName }}</option>
-                                                @endforeach
-                                            </select>
-                                            <p class="text-xs font-weight-bold mb-2 mt-n3">dive operator</p>
-                                        </div>
-                                        
-
-                                        <!-- Logo -->
-                                        <div class="text-left mx-n2 mt-n3">
-                                            <img id="operatorLogo" src="{{ asset('assets') }}/img/logos/logo_circle.png" height="45" alt="Operator Logo">
-                                            
-                                        </div>
-                                    </div>
-                                </td></tr>
-                                <tr><td class="text-start text-sm w-1"> 
-                                    <span class="badge badge-md bg-gradient-secondary text-white mx-0">Recreational</span>
-                                    <span class="badge badge-md bg-gradient-success text-white">Technical</span>
-                                </td></tr>
-                                <tr><td><p class="text-xs font-weight-bold mb-0 mt-0 mx-0">reference</p></td></tr>
-                            </table>
-
-                            <div class="calendar" data-bs-toggle="calendar" id="calendar"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endif
-            
-            <div class="row mx-1">
+                Order is what a diver needs first: the dives they are on, then what
+                to book next, then their wishlist, and the month grid of their
+                favourite operators last and collapsed. That calendar stays,
+                because some divers use nothing else, but it is a poor first
+                impression and a bad use of the top of the page.
+            --}}
+<div class="row mx-1">
                 {{---Card My Upcoming trips--}}
                 <div class="col-md-4 mb-4">
                     <div class="card mt-3">
@@ -310,14 +261,22 @@
                     <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4"><i class="material-icons justify-content-middle align-middle" style="font-size: 40px;">favorite</i>My wishlist</h2>
+                                <h2 class="card-title text-white mx-4"><i class="material-icons justify-content-middle align-middle" style="font-size: 40px;">favorite</i>My wishlist
+                                    {{-- A way in from the card itself, not only from the empty state. --}}
+                                    <a class="dh-dash-headlink" href="{{ route('DiveSites') }}">Add sites</a></h2>
                             </div>
                         </div>
 
                         <div class="card-body">
                             
                             @if(!count($wished))
-                                <p>You have no sites in your wishlist. You can go to Dive Sites and add them to your wishlist</p>
+                                {{-- Pablo, 2026-09-10: the wishlist only earns its place if divers fill
+                                     it, so the empty state sends them somewhere to do that. Saving a site
+                                     means we tell them when a boat is scheduled to go there. --}}
+                                <p class="text-sm mb-3">Save the sites you want to dive and we will tell you when a boat is going there.</p>
+                                <a class="dh-btn dh-btn-primary" href="{{ route('DiveSites') }}">
+                                    <span class="material-icons-round">travel_explore</span>Find sites to add
+                                </a>
                             @else
                                 <div class="table-responsive">
                                     <div class="table-responsive">
@@ -379,6 +338,63 @@
                     </div>
                 </div>
             </div>
+
+            @if( !empty($favOperators) )
+            {{-- Last on the page and closed by default. A diver opens this when they
+                 already know what they are looking for, which is not on arrival. --}}
+            <details class="dh-dash-collapse">
+                <summary>
+                    <span class="material-icons-round" aria-hidden="true">calendar_month</span>
+                    <span>Browse my favorite operators' calendars</span>
+                    <span class="dh-dash-collapse-hint">month view</span>
+                </summary>
+
+            <div class="row mx-1 mt-n1">
+                <div class="col-md-12">             
+                    <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h2 class="card-title text-white mx-4">My favorites dive calendars</h2>
+                                <div class="table-responsive"></div>
+                            </div>
+                        </div>
+                        <div class="card-body p-3">
+                            <table>
+                                <tr></td>
+                                    {{-- flex-wrap and min-width so a long operator name plus the logo cannot push past the card on phones --}}
+                                    <div class="d-flex flex-wrap align-items-center gap-3 dh-fav-operator">
+                                        <!-- Dropdown -->
+                                        <div class="dropdown flex-grow-1" style="min-width: 0;">
+                                            <select class="btn bg-info dropdown-toggle text-white" id="filterOperators" data-bs-toggle="dropdown" aria-expanded="false">
+                                                @foreach($favOperators as $favOperator)
+                                                    <option value="{{ $favOperator->id }}">{{ $favOperator->operatorName }}</option>
+                                                @endforeach
+                                            </select>
+                                            <p class="text-xs font-weight-bold mb-2 mt-n3">dive operator</p>
+                                        </div>
+                                        
+
+                                        <!-- Logo -->
+                                        <div class="text-left mx-n2 mt-n3">
+                                            <img id="operatorLogo" src="{{ asset('assets') }}/img/logos/logo_circle.png" height="45" alt="Operator Logo">
+                                            
+                                        </div>
+                                    </div>
+                                </td></tr>
+                                <tr><td class="text-start text-sm w-1"> 
+                                    <span class="badge badge-md bg-gradient-secondary text-white mx-0">Recreational</span>
+                                    <span class="badge badge-md bg-gradient-success text-white">Technical</span>
+                                </td></tr>
+                                <tr><td><p class="text-xs font-weight-bold mb-0 mt-0 mx-0">reference</p></td></tr>
+                            </table>
+
+                            <div class="calendar" data-bs-toggle="calendar" id="calendar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </details>
+            @endif
 
             
             

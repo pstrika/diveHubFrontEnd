@@ -13,7 +13,7 @@ Everything below is live at https://divehub-redesign.azurewebsites.net.
 | Commits on the branch | 55, of which 43 landed after the first beta walkthrough |
 | Beta deploys | 21. Four failed early on package size and overlapping deploys, both fixed. The last ten are green |
 | Main merged in | three times, latest at 9.24.3. Merging to main is a fast forward |
-| Migrations from the redesign | one approved set, for communication consent only |
+| Migrations from the redesign | one, four columns on `users` for communication consent. Run by hand after deploy |
 
 ## What you and Pablo already walked (the first four chunks)
 
@@ -202,13 +202,14 @@ Several of these were broken on the live site too, not just on the branch.
   checkbox with the consent wording beside it, under a "Communication
   preferences" heading on the profile page and as a step in the welcome wizard.
   One shared component, so the wording is the same in both places and the same
-  as the text stored with the consent. Every change appends a row to a new
-  `notification_consents` table recording the channel, whether they opted in or
-  out, the exact wording shown, the phone number at that moment, which screen it
-  came from, the IP and the user agent. This is the one approved migration set:
-  `users.whatsapp_notifications` plus that table. It exists so that if Twilio
-  ever audits the A2P 10DLC registration, "where did this person consent" is a
-  query and a screenshot rather than a guess.
+  wording we would produce if asked. Opting in stamps the date on the user,
+  opting out clears it, and the profile page shows "Agreed 10 Sep 2026" beside
+  each channel. If Twilio ever audits the A2P 10DLC registration, the answer is
+  that screen plus the timestamp, and git history gives the exact wording as of
+  that date.
+- **It all lives on the users table**, four columns, no new table: Pablo's call,
+  because every other preference a diver has is already there. My first pass used
+  a separate audit table; that was over built for three switches.
 - **Add to home screen shows more than once.** It was a one time bar: dismissing
   it hid it forever on that device. Now the decision is made on every page load
   from whether the app is actually installed, so it keeps offering until they
@@ -223,6 +224,17 @@ Several of these were broken on the live site too, not just on the branch.
   now has its own controller, and the shared layout gives it none of the redesign
   chrome. Verified line by line against production: identical apart from live
   trip data.
+- **Dashboard reordered.** The banner photo and the "My Dashboard" title card
+  are gone; on a phone they filled the whole first screen and said nothing. Order
+  is now my upcoming dives, recommended for the weekend, my wishlist, and the
+  month grid of favourite operator calendars last and collapsed behind one line.
+  That calendar stays because some divers use nothing else. The wishlist gained
+  two ways in, since it only earns its place if people fill it.
+- **The guest prompt offers sign in as well as sign up.** Tapping Groups as a
+  guest used to offer only "Create an account", which is no use to somebody who
+  already has one. It now offers both, and the sign in route drops the shared
+  guest session first, otherwise sign in bounces because the guest is technically
+  logged in.
 - **Version is 10.0.0.**
 - Operator coordinates were reviewed and deliberately left for later, because
   the pins land in the right place today.
@@ -262,6 +274,8 @@ Sign out first, then work through as a guest, then sign in.
 | Profile, Communication preferences | Three checkboxes with consent wording, and a note if you have no phone number |
 | Tick WhatsApp, Save, then untick and Save | Both decisions are recorded; ask me and I can show you the audit rows |
 | Welcome wizard, last step before done | "How should we reach you?" with the same three checkboxes |
+| Dashboard | Upcoming dives first, no banner photo, the operator calendars collapsed at the bottom |
+| Groups tab while signed out | Both "Create an account" and "I already have one, sign in" |
 | Me drawer, Enable Notifications | Pablo's toggle, unchanged |
 | Save a site, add a trip to your calendar | Both work, My Calendar shows the trip |
 

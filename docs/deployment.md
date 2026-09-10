@@ -8,8 +8,8 @@ also running on the `divehub-redesign` slot.
 
 | Area | Change | Action needed |
 |---|---|---|
-| Database schema | **One approved migration set**, for communication consent only (Zach, 2026-09-10): `users.whatsapp_notifications` and a new `notification_consents` audit table, both on the users database. Plus Pablo's own two from main 9.17.0 and 9.19.0. | `php artisan migrate --force` after deploy |
-| Communication consent | Email, SMS and WhatsApp each have their own checkbox with the consent wording next to it, on the profile page under "Communication preferences" and as a step in the welcome wizard. Every change appends a row to `notification_consents` with the exact wording shown, the phone number at that moment, the source screen, IP and user agent. That is the answer if Twilio ever asks where a person consented. | Nothing |
+| Database schema | **One approved migration, four columns on `users`** (Zach and Pablo, 2026-09-10): `whatsapp_notifications`, `email_consent_at`, `sms_consent_at`, `whatsapp_consent_at`. File `2026_09_10_210000_add_communication_consent_to_users_table.php`, users database. It also stamps anyone already opted in to email or SMS as consenting now, so nobody reads as never having consented. Plus Pablo's own two from main 9.17.0 and 9.19.0. | Run it by hand after deploy, see section 4 |
+| Communication consent | Email, SMS and WhatsApp each have their own checkbox with the consent wording next to it, on the profile page under "Communication preferences" and as a step in the welcome wizard. Opting in stamps the date on the user, opting out clears it, and the profile page shows "Agreed 10 Sep 2026" beside each channel. If Twilio ever asks where a person consented, the answer is that screen plus the timestamp. | Nothing |
 | Frozen client pages | `/CalendarHydrotherapy` renders in an iframe on the client's own site and is frozen to its pre redesign output. Its controller and view live apart (`HydrotherapyCalendarController`, `pages/CalendarHydrotherapy.blade.php`) and the shared layout gives it none of the redesign chrome. Verified against production: identical apart from live trip data. Do not edit either file, and check `App\Support\EmbeddedPage` before changing anything shared. | Nothing |
 | Composer / npm | **Nothing from the redesign.** Pablo added `minishlink/web-push` on main (9.17.0); the workflow's composer install picks it up. No new PHP extensions beyond GD (already loaded). | Nothing |
 | `.env` | **Nothing from the redesign.** Pablo's push notifications read `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (main 9.17.0). Without them the notification toggle stays hidden and everything else works. | Set if not already set |
@@ -61,7 +61,19 @@ picker. That deploys the branch straight to production.
 
 ## 4. Right after deploy
 
-1. **Photo copies.** Kudu console for the production app, folder `site/wwwroot`:
+1. **Run the migration.** The deploy workflow does not run migrations, so this is
+   a manual step. Kudu console for the production app, folder `site/wwwroot`:
+
+   ```bash
+   php artisan migrate --force
+   ```
+
+   Expected: the communication consent migration runs, plus Pablo's push
+   subscriptions and messages ones if they have not already. Until it runs, the
+   profile page and the welcome wizard will error on the missing columns, so do
+   this before telling anybody the new site is live.
+
+2. **Photo copies.** Kudu console for the production app, folder `site/wwwroot`:
 
    ```bash
    php artisan photos:web-copies
@@ -74,7 +86,7 @@ picker. That deploys the branch straight to production.
    GD lacks WebP support, the site still works (pages fall back to the original
    photo); tell Zach and we will look at the PHP image on the host.
 
-2. **Profile pictures.** The crop and upload flow on the profile page was broken
+3. **Profile pictures.** The crop and upload flow on the profile page was broken
    on the live site too: it loaded Cropper.js from a CDN without a version, the
    CDN moved to Cropper.js 2, and the Confirm button called a method that no
    longer exists. The library is now vendored at 1.6.2. Avatars upload to
@@ -82,12 +94,12 @@ picker. That deploys the branch straight to production.
    from there. Like the site photos, avatars uploaded on the server are not in
    the repo, so they show on production but not on the beta slot. No action.
 
-3. **Config cache.** If you ever run `php artisan config:cache` on the server,
+4. **Config cache.** If you ever run `php artisan config:cache` on the server,
    note the workflow now deletes that cache on every deploy so the version in
    `config/divehub.php` is always read. Running `config:cache` again after a deploy
    is fine; running it and then editing config without a deploy is not.
 
-4. **Smoke test on production** (each should return 200, footer shows the new version):
+5. **Smoke test on production** (each should return 200, footer shows the new version):
 
    - `/` and `/Landing`
    - `/Trips`, `/Trips/<next Saturday>`, `/Trips?range=weekend`, `/CalendarShark` (renders the finder)
@@ -99,7 +111,7 @@ picker. That deploys the branch straight to production.
    - `/MyDashboard` while signed in
    - `/sitemap.xml` (406 URLs, unchanged set)
 
-5. **Redirects** (each should answer 301 to the target):
+6. **Redirects** (each should answer 301 to the target):
 
    - `/DiveSitesMap` to `/DiveSites?view=map`
    - `/DiveSitesSearch` to `/DiveSites`
