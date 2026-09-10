@@ -73,6 +73,12 @@ picker. That deploys the branch straight to production.
    profile page and the welcome wizard will error on the missing columns, so do
    this before telling anybody the new site is live.
 
+   **Beta slot first.** If the redesign slot points at the same users database
+   as production, the migration has to run before anyone tests the profile page
+   or the welcome wizard on the slot, and running it there is the production
+   schema change. The columns are additive with defaults, so main keeps working
+   with or without them. Confirm which database the slot uses before running.
+
 2. **Photo copies.** Kudu console for the production app, folder `site/wwwroot`:
 
    ```bash

@@ -104,6 +104,11 @@ The single biggest change and the one to test first.
   a guest has no dashboard yet. The rows a member used to reach from the pop out
   (calendar, visited sites, messages, operators, tools, profile, settings, log
   out) sit at the foot of the dashboard.
+- **Weather opens on your water.** With no location in the URL a member lands on
+  the first of their favourite places (the same list the dashboard and the trip
+  finder use), everyone else on Fort Lauderdale. An unknown location in the URL,
+  a typo or an old link, used to be a 500 on production too; it now falls back
+  to the default.
 - **Every tab tap is a GA event** (`dh_tab_tap`, with the tab name), so the
   Weather over Operators call can be checked against real use in a month
   rather than argued.
@@ -272,7 +277,8 @@ Sign out first, then work through as a guest, then sign in.
 | Operators row: Choose operators, tick two, Apply | The count drops, the chip says 2 selected |
 | Swipe the Region and Level chip rows | They scroll sideways, arrows appear on the edges |
 | Sites tab, then a site | Popular order, trip counts on the cards, photo led detail page |
-| Weather tab | The marine forecast, the Weather tab lit |
+| Weather tab | The Fort Lauderdale forecast, the Weather tab lit |
+| `/Weather/nowhere` | The Fort Lauderdale forecast, not an error |
 | Menu (top right), Dive operators | Cards with logos, coast and feature chips, map view |
 | Me tab | The menu slides in with Create a free account and Sign in |
 | Me drawer, Deco planner and Best gases | Both open, no lock |
@@ -294,6 +300,7 @@ Sign out first, then work through as a guest, then sign in.
 | Welcome wizard, last step before done | "How should we reach you?" with the same three checkboxes |
 | Dashboard | Upcoming dives first, no banner photo, the operator calendars collapsed at the bottom, menu rows under them |
 | Me tab, signed in | Your avatar as the icon; it opens the dashboard, no pop out |
+| Weather tab, signed in | Opens on the first of your favourite places |
 | Groups tab with an unread message | A red count on the icon |
 | Groups tab while signed out | Both "Create an account" and "I already have one, sign in" |
 | Me drawer, Enable Notifications | Pablo's toggle, unchanged |
@@ -302,14 +309,15 @@ Sign out first, then work through as a guest, then sign in.
 ### Desktop spot checks
 
 Home, the trip finder in both modes, a site page, an operator page, a trip page,
-My Groups, and the footer version reading 9.24.3.
+My Groups, and the footer version reading 10.0.0.
 
 ## What did not change
 
 Worth saying to Pablo explicitly, because it is the part that protects his work.
 
-- **No schema change from the redesign.** No new tables, no new columns, nothing
-  renamed. The two migrations on the branch are his own.
+- **One schema change from the redesign**, the approved one: four columns on
+  `users` for communication consent (section 9). No new tables, nothing renamed.
+  The other two migrations on the branch are his own.
 - **No new dependencies from the redesign.** The one package added is his Twilio
   and web push work.
 - **Public URLs are unchanged**, except three tool pages that were never indexed
@@ -322,11 +330,14 @@ Worth saying to Pablo explicitly, because it is the part that protects his work.
 
 ## Still open
 
-1. Version number for the release. The branch says 9.24.3 to match main. A
-   redesign probably deserves 10.0.0. One line in `config/divehub.php`.
-2. Whether the camera originals stay in the web root now that every photo has
-   web copies.
-3. Latitude and longitude on operators, so the operators map stops geocoding in
-   the browser. Two columns, so it waits for the next release.
-4. The dashboard rebuild in `docs/ux-review.md`. It is the page everyone lands on
-   and it is still three template tables under a banner photo.
+1. Latitude and longitude on operators, so the operators map stops geocoding in
+   the browser. Two columns, so it waits for the next release (Pablo, 2026-09-10).
+2. Removing the camera originals from the repo, agreed and held until after the
+   release. The reasons and the checks are in `docs/roadmap.md`.
+3. Whether the redesign slot and production share the users database. If they
+   do, running the consent migration for beta testing is the production schema
+   change; the columns are additive with defaults, so main keeps working either
+   way, but it should be a decision rather than a side effect.
+
+Settled since the first draft of this list: the version is 10.0.0; the dashboard
+is reordered; the tab bar is Dives, Sites, Weather, Groups, Me.

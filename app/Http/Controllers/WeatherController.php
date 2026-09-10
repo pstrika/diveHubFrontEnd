@@ -12,23 +12,37 @@ class WeatherController extends Controller
 {
     public function show($location = null)
     {
-        // if we didn't receive $date, we just put today's
-        if (!$location)
+        // No location in the URL: a member lands on the first of their favourite
+        // places (users.favLocations is a list of weatherlocations ids, the same
+        // list the dashboard and the trip finder use), everyone else on Fort
+        // Lauderdale. Weather is a bottom tab now, so this is the page a diver
+        // opens the night before a trip; it should open on their water.
+        if (!$location) {
             $location = "fort lauderdale";
-        
-        
-        $date = Carbon::today()->toDateString();
-
-        $weathers = Weatherday::where('location', $location)->get();
-
-        foreach($weathers as $weather){
-            Log::debug($weather->tides);
+            $user = auth()->user();
+            if ($user && $user->isNotGuest()) {
+                $firstFav = (int) current(explode(',', (string) $user->favLocations));
+                $fav = $firstFav ? WeatherLocation::find($firstFav) : null;
+                if ($fav && $fav->country === 'US') {
+                    $location = $fav->location;
+                }
+            }
         }
+
+        $date = Carbon::today()->toDateString();
 
         //$allLocations = WeatherLocation::all();
         $allLocations = WeatherLocation::where('country', 'US')->get();
         $currentLocation = WeatherLocation::where('location', $location)->first();
-        Log::debug('current location: ' . $currentLocation);
+
+        // An unknown location in the URL (a typo, an old link) used to be a 500
+        // because the view reads the location's buoy. Fall back to the default.
+        if (!$currentLocation) {
+            $location = "fort lauderdale";
+            $currentLocation = WeatherLocation::where('location', $location)->first();
+        }
+
+        $weathers = Weatherday::where('location', $location)->get();
 
         /*Provide SEO metadata */
         $SEO = array(
