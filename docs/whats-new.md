@@ -13,7 +13,7 @@ Everything below is live at https://divehub-redesign.azurewebsites.net.
 | Commits on the branch | 55, of which 43 landed after the first beta walkthrough |
 | Beta deploys | 21. Four failed early on package size and overlapping deploys, both fixed. The last ten are green |
 | Main merged in | three times, latest at 9.24.3. Merging to main is a fast forward |
-| Migrations from the redesign | one, four columns on `users` for communication consent. Run by hand after deploy |
+| Migrations from the redesign | one, four columns on `users` for communication consent. Run by hand after deploy, named with `--path` so nothing else can run |
 
 ## What you and Pablo already walked (the first four chunks)
 

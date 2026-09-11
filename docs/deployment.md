@@ -8,7 +8,7 @@ also running on the `divehub-redesign` slot.
 
 | Area | Change | Action needed |
 |---|---|---|
-| Database schema | **One approved migration, four columns on `users`** (Zach and Pablo, 2026-09-10): `whatsapp_notifications`, `email_consent_at`, `sms_consent_at`, `whatsapp_consent_at`. File `2026_09_10_210000_add_communication_consent_to_users_table.php`, users database. It also stamps anyone already opted in to email or SMS as consenting now, so nobody reads as never having consented. Plus Pablo's own two from main 9.17.0 and 9.19.0. | Run it by hand after deploy, see section 4 |
+| Database schema | **One approved migration, four columns on `users`** (Zach and Pablo, 2026-09-10): `whatsapp_notifications`, `email_consent_at`, `sms_consent_at`, `whatsapp_consent_at`. File `2026_09_10_210000_add_communication_consent_to_users_table.php`, users database. It also stamps anyone already opted in to email or SMS as consenting now, so nobody reads as never having consented. Plus Pablo's own two from main 9.17.0 and 9.19.0. | By hand after deploy, named with `--path`, never bare `migrate`. Section 4 |
 | Communication consent | Email, SMS and WhatsApp each have their own checkbox with the consent wording next to it, on the profile page under "Communication preferences" and as a step in the welcome wizard. Opting in stamps the date on the user, opting out clears it, and the profile page shows "Agreed 10 Sep 2026" beside each channel. If Twilio ever asks where a person consented, the answer is that screen plus the timestamp. | Nothing |
 | Frozen client pages | `/CalendarHydrotherapy` renders in an iframe on the client's own site and is frozen to its pre redesign output. Its controller and view live apart (`HydrotherapyCalendarController`, `pages/CalendarHydrotherapy.blade.php`) and the shared layout gives it none of the redesign chrome. Verified against production: identical apart from live trip data. Do not edit either file, and check `App\Support\EmbeddedPage` before changing anything shared. | Nothing |
 | Composer / npm | **Nothing from the redesign.** Pablo added `minishlink/web-push` on main (9.17.0); the workflow's composer install picks it up. No new PHP extensions beyond GD (already loaded). | Nothing |
@@ -61,23 +61,77 @@ picker. That deploys the branch straight to production.
 
 ## 4. Right after deploy
 
-1. **Run the migration.** The deploy workflow does not run migrations, so this is
-   a manual step. Kudu console for the production app, folder `site/wwwroot`:
+1. **Run the one migration, by name. Never run bare `migrate`.**
+
+   The deploy workflow does not run migrations, so this is a manual step. There
+   are 25 migration files on the branch and exactly one of them is ours. Laravel
+   decides what to run by comparing the files against the `migrations` table, so
+   any file whose row is missing counts as pending, **including changes that were
+   applied to the database by hand**. Bare `php artisan migrate --force` would
+   try to run every one of those, fail partway on a duplicate column, and leave
+   the database half changed. (On the local development box 13 of the 25 read as
+   pending for exactly that reason.)
+
+   So name the file. Kudu console, folder `site/wwwroot`:
 
    ```bash
-   php artisan migrate --force
+   php artisan migrate:status
    ```
 
-   Expected: the communication consent migration runs, plus Pablo's push
-   subscriptions and messages ones if they have not already. Until it runs, the
-   profile page and the welcome wizard will error on the missing columns, so do
-   this before telling anybody the new site is live.
+   Read the list before doing anything. Every one of Pablo's 24 files should say
+   Ran; ours, `2026_09_10_210000_add_communication_consent_to_users_table`, should
+   say Pending. If any of his also say Pending, that is a sign the column was
+   added by hand and the row was never recorded, and it is a conversation to have
+   before touching anything, not a reason to run them.
+
+   ```bash
+   php artisan migrate --path=database/migrations/2026_09_10_210000_add_communication_consent_to_users_table.php --pretend
+   ```
+
+   A dry run: it prints the SQL and changes nothing. Expect the four column
+   checks and one `alter table users add whatsapp_notifications ... email_consent_at
+   ... sms_consent_at ... whatsapp_consent_at`. If it prints anything about
+   another table, stop.
+
+   ```bash
+   php artisan migrate --path=database/migrations/2026_09_10_210000_add_communication_consent_to_users_table.php --force
+   ```
+
+   `--path` limits the run to that one file. Nothing else can execute, whatever
+   the rest of the folder says.
+
+   Expected: one line, `... DONE`. Run it twice and the second says "Nothing to
+   migrate". The migration checks `Schema::hasColumn` before each of the four
+   columns, so if one of them already exists (added by hand at some point) it
+   skips that one and adds the rest instead of failing. Verified against a
+   half-changed table.
+
+   Until it runs, the profile page and the welcome wizard error on the missing
+   columns, so do this before telling anybody the new site is live.
 
    **Beta slot first.** If the redesign slot points at the same users database
    as production, the migration has to run before anyone tests the profile page
    or the welcome wizard on the slot, and running it there is the production
    schema change. The columns are additive with defaults, so main keeps working
    with or without them. Confirm which database the slot uses before running.
+
+   **Who can run it.** Whoever opens the Kudu console for the App Service. The
+   command uses the credentials the app already has, from the App Service's
+   configuration (Azure app settings, and/or the `.env` that lives on the server;
+   the deploy zip is built with `zip ./* -r`, which excludes dotfiles, so the
+   deploy does not overwrite it). Nobody needs the MySQL username and password
+   in hand to run this. Note the other side of that: anyone with Kudu access can
+   read those credentials off the server, so Kudu access and database access are
+   the same thing.
+
+   **Rolling it back**, if it ever comes to that, is the same shape:
+
+   ```bash
+   php artisan migrate:rollback --path=database/migrations/2026_09_10_210000_add_communication_consent_to_users_table.php --force
+   ```
+
+   That drops the four columns and the consent timestamps in them. The release
+   reads those columns, so roll the code back first.
 
 2. **Photo copies.** Kudu console for the production app, folder `site/wwwroot`:
 
