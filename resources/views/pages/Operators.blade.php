@@ -2,7 +2,7 @@
     <x-shell.nav active="operators" />
 
     <main class="main-content position-relative h-100 border-radius-lg">
-        <x-shell.header title="Dive Operators" />
+        <x-shell.header title="Dive operators in South Florida" />
 
         <div class="container-fluid py-0 dh-board">
             {{--
@@ -17,8 +17,9 @@
             --}}
 
             <header class="dh-explorer-head">
+                {{-- Title now comes from <x-shell.header> above (same style, sticky
+                     on scroll) - this used to duplicate it in its own h1. --}}
                 <div>
-                    <h1 class="dh-explorer-title">Dive operators in South Florida</h1>
                     <p class="dh-explorer-intro">Every charter and dive center from Stuart to Key West, with prices, boats, gas fills and who runs technical trips.</p>
                 </div>
                 <form class="dh-omnibox" method="GET" action="{{ url()->current() }}" role="search">

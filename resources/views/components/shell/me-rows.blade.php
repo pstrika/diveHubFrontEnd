@@ -3,9 +3,10 @@
 
     The Me tab opens the dashboard rather than a pop out (2026-09-10), so the
     things a diver used to reach from that pop out need a home on the page:
-    their calendar, visited sites, messages, profile and settings, plus the
-    tools and the operator list that left the tab bar. Same destinations as the
-    drawer behind the avatar button, kept to the rows a member actually uses.
+    their calendar, visited sites, messages and profile, plus the tools and
+    the operator list that left the tab bar. Same destinations as the drawer
+    behind the avatar button, kept to the rows a member actually uses.
+    Settings was dropped (2026-09-11) - unused page.
 
     Members only; the dashboard itself requires an account.
 --}}
@@ -16,11 +17,10 @@
         ['My calendar',      route('MyCalendar'),     'event'],
         ['Visited sites',    route('MyVisitedSites'), 'check_circle'],
         ['Messages',         route('Messages'),       'notifications', $unread],
-        ['Dive operators',   route('Operators'),      'storefront'],
+        ['Dive operators',   route('Operators'),      'directions_boat'],
         ['Deco planner',     route('DecoPlanner'),    'timer'],
         ['Best gases',       route('gasplanning'),    'science'],
         ['My profile',       route('overview'),       'person'],
-        ['Settings',         route('settings'),       'settings'],
     ];
 @endphp
 

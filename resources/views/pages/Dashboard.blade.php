@@ -71,17 +71,12 @@
                 because some divers use nothing else, but it is a poor first
                 impression and a bad use of the top of the page.
             --}}
-<div class="row mx-1 dh-dash-cards">
+<div class="row dh-dash-cards">
                 {{---Card My Upcoming trips--}}
                 <div class="col-md-5 mb-4">
-                    <div class="card mt-3">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">My upcoming dives</h2>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body p-3" style="display: block; max-height: 350px; overflow-y: scroll">
+                    <section class="dh-card">
+                        <h2 class="dh-card-head">My upcoming dives</h2>
+                        <div class="dh-card-body" style="display: block; max-height: 350px; overflow-y: scroll">
                             @if(count($trips) == 0)
                                 <p class="text-sm mb-2">Nothing saved yet. Find a dive and add it to your calendar; it shows up here and in the calendar below.</p>
                                 <a class="dh-btn dh-btn-primary" href="{{ route('Trips') }}"><span class="material-icons-round">sailing</span>Find a dive</a>
@@ -134,7 +129,7 @@
                                 </ul>
                             @endif
                         </div>
-                    </div>
+                    </section>
                 </div>
 
                 {{--
@@ -145,14 +140,10 @@
                     should never miss.
                 --}}
                 <div class="col-md-7">
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4"><i class="material-icons justify-content-middle align-middle" style="font-size: 40px;">groups</i>My groups
-                                    <a class="dh-dash-headlink" href="{{ route('MyGroups') }}">All groups</a></h2>
-                            </div>
-                        </div>
-                        <div class="card-body p-3">
+                    <section class="dh-card">
+                        <h2 class="dh-card-head">My groups
+                            <a class="dh-dash-headlink" href="{{ route('MyGroups') }}">All groups</a></h2>
+                        <div class="dh-card-body">
                             @if(($groupInvites ?? 0) > 0)
                                 <a class="dh-group-invite" href="{{ route('MyGroups') }}">
                                     <span class="material-icons-round" aria-hidden="true">mail</span>
@@ -194,11 +185,11 @@
                                 </ul>
                             @endif
                         </div>
-                    </div>
+                    </section>
                 </div>
             </div>
 
-            <div class="row mx-1">
+            <div class="row">
                 {{---Card recommended for this weekend --}}
                 {{--
                     Rows, not a seven column table (Zach, 2026-09-10: "too wide, you
@@ -208,15 +199,11 @@
                     weekend preset, which is the same list in full.
                 --}}
                 <div class="col-md-12">
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                @php $ws = \Carbon\Carbon::parse($weekendStart ?? now()); $weekendLabel = $ws->isCurrentWeek() ? 'this weekend' : 'the weekend of ' . $ws->format('M j'); @endphp
-                                <h2 class="card-title text-white mx-4">Recommended for {{ $weekendLabel }}
-                                    <a class="dh-dash-headlink" href="{{ route('Trips') }}?range=weekend">See all</a></h2>
-                            </div>
-                        </div>
-                        <div class="card-body p-3">
+                    <section class="dh-card">
+                        @php $ws = \Carbon\Carbon::parse($weekendStart ?? now()); $weekendLabel = $ws->isCurrentWeek() ? 'this weekend' : 'the weekend of ' . $ws->format('M j'); @endphp
+                        <h2 class="dh-card-head">Recommended for {{ $weekendLabel }}
+                            <a class="dh-dash-headlink" href="{{ route('Trips') }}?range=weekend">See all</a></h2>
+                        <div class="dh-card-body">
                             @php $recommended = collect($favTrips)->filter(fn ($t) => !empty($t->fav))->values(); @endphp
                             @if($recommended->isEmpty())
                                 <p class="text-sm mb-2">No picks for {{ $weekendLabel }} yet. Recommendations come from the places, boats and level on your profile.</p>
@@ -256,7 +243,7 @@
                                 @endif
                             @endif
                         </div>
-                    </div>
+                    </section>
                 </div>
 
                 {{---Card My wishlist --}}
@@ -268,15 +255,11 @@
                     the moment that changes.
                 --}}
                 <div class="col-md-12">
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4"><i class="material-icons justify-content-middle align-middle" style="font-size: 40px;">favorite</i>My wishlist
-                                    {{-- A way in from the card itself, not only from the empty state. --}}
-                                    <a class="dh-dash-headlink" href="{{ route('DiveSites') }}">Add sites</a></h2>
-                            </div>
-                        </div>
-                        <div class="card-body p-3">
+                    <section class="dh-card">
+                        <h2 class="dh-card-head">My wishlist
+                            {{-- A way in from the card itself, not only from the empty state. --}}
+                            <a class="dh-dash-headlink" href="{{ route('DiveSites') }}">Add sites</a></h2>
+                        <div class="dh-card-body">
                             @if(!count($wished))
                                 {{-- Pablo, 2026-09-10: the wishlist only earns its place if divers fill
                                      it, so the empty state sends them somewhere to do that. Saving a site
@@ -333,7 +316,7 @@
                                 @endif
                             @endif
                         </div>
-                    </div>
+                    </section>
                 </div>
             </div>
 
@@ -345,16 +328,12 @@
                 the operators' calendar one switch away for the divers who plan from
                 it. Both grids read the same data the page already had.
             --}}
-            <div class="row mx-1 dh-cal-row">
+            <div class="row dh-cal-row">
                 <div class="col-md-12">
-                    <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4"><i class="material-icons justify-content-middle align-middle" style="font-size: 40px;">calendar_month</i>My calendar
-                                    <a class="dh-dash-headlink" href="{{ route('MyCalendar') }}">Open full calendar</a></h2>
-                            </div>
-                        </div>
-                        <div class="card-body p-3">
+                    <section class="dh-card">
+                        <h2 class="dh-card-head">My Calendars
+                            <a class="dh-dash-headlink" href="{{ route('MyCalendar') }}">Open full calendar</a></h2>
+                        <div class="dh-card-body">
                             <div class="dh-seg" role="tablist" aria-label="Which calendar">
                                 <button type="button" class="dh-seg-btn is-active" role="tab" aria-selected="true" data-dh-cal="mine">My dives</button>
                                 @if( !empty($favOperators) )
@@ -405,16 +384,11 @@
                             </div>
                             @endif
                         </div>
-                    </div>
+                    </section>
                 </div>
             </div>
 
-            {{-- The Me tab lands here instead of opening a pop out, so the menu rows live on the page. --}}
-            <x-shell.me-rows />
-
-            
-            
-                
+            {{-- The Me tab's rows now render on every page via page-template.blade.php. --}}
 
 
                 
@@ -559,9 +533,11 @@
 
     <script>
         const todayDate = new Date().toISOString().split('T')[0];
-    </script>
-    @if( !empty($favOperators) )
-    <script>
+
+        // Shared by both calendars on this page (my dives and, when present,
+        // favourite operators): 3 day view on phones, week on tablets, month
+        // on desktop. Defined unconditionally so "my dives" still gets it
+        // even for a diver with no favourite operators.
         function getResponsiveView() {
             const width = window.innerWidth;
             if (width >= 1200) return 'dayGridMonth';     // Large screens
@@ -569,6 +545,22 @@
             return 'dayGridThreeDay';                    // Small screens
         }
 
+        // FullCalendar's day-count custom view is per instance, not global -
+        // both calendars need this in their own `views` option.
+        const dhResponsiveViews = {
+            dayGridThreeDay: {
+                type: 'dayGrid',
+                duration: { days: 3 },
+                buttonText: '3 day',
+                titleFormat: { month: "long", year: "numeric", day: "numeric" }
+            },
+            month: { titleFormat: { month: "long", year: "numeric" } },
+            agendaWeek: { titleFormat: { month: "long", year: "numeric", day: "numeric" } },
+            agendaDay: { titleFormat: { month: "short", year: "numeric", day: "numeric" } }
+        };
+    </script>
+    @if( !empty($favOperators) )
+    <script>
         var calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
         dateClick: function(info) {
             var link = '/Trips/' + info.dateStr;
@@ -617,38 +609,7 @@
             
 
         ],
-        views: {
-            dayGridThreeDay: {
-                type: 'dayGrid',
-                duration: { days: 3 },
-                buttonText: '3 day',
-                titleFormat: {
-                    month: "long",
-                    year: "numeric",
-                    day: "numeric"
-                }
-            },
-            month: {
-            titleFormat: {
-                month: "long",
-                year: "numeric"
-            }
-            },
-            agendaWeek: {
-            titleFormat: {
-                month: "long",
-                year: "numeric",
-                day: "numeric"
-            }
-            },
-            agendaDay: {
-            titleFormat: {
-                month: "short",
-                year: "numeric",
-                day: "numeric"
-            }
-            }
-        },
+        views: dhResponsiveViews,
         });
 
     </script>
@@ -672,7 +633,8 @@
                 info.jsEvent.preventDefault();
                 clickOnMyTrips(info.event.extendedProps.eventId);
             },
-            initialView: 'dayGridMonth',
+            initialView: getResponsiveView(),
+            windowResize: function() { myCalendar.changeView(getResponsiveView()); },
             firstDay: {{ (int) (auth()->user()->firstDayOfWeek ?? 0) }},
             contentHeight: 'auto',
             headerToolbar: { start: '', center: 'title', end: 'prev,next today' },
@@ -690,7 +652,8 @@
                         echo "className: '" . ($trip->booked ? 'dh-fc-booked' : 'dh-fc-open') . "' },";
                     }
                 @endphp
-            ]
+            ],
+            views: dhResponsiveViews,
         });
         myCalendar.render();
 

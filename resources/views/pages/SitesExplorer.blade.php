@@ -18,8 +18,12 @@
             --}}
 
             <header class="dh-explorer-head">
+                {{-- Title now comes from <x-shell.header> above (same style, sticky
+                     on scroll) - this used to duplicate it in its own h1. Keeping
+                     this div even when intro is empty, since .dh-explorer-head is
+                     a two-child space-between flex row and the search form would
+                     jump to the left edge as the sole child otherwise. --}}
                 <div>
-                    <h1 class="dh-explorer-title">{{ $explorer['heading'] }}</h1>
                     @if(!empty($explorer['intro']))<p class="dh-explorer-intro">{{ $explorer['intro'] }}</p>@endif
                 </div>
                 <form class="dh-omnibox" method="GET" action="{{ url()->current() }}" role="search">
@@ -46,7 +50,10 @@
             </div>
 
             <p class="dh-board-count">
-                {{ $sites->count() }} {{ Str::plural('site', $sites->count()) }}
+                {{ $totalMatching }} {{ Str::plural('site', $totalMatching) }}
+                @if($filters['view'] !== 'map' && $totalMatching > $sites->count())
+                    &middot; showing {{ $sites->count() }}
+                @endif
                 @if($filters['q'] !== '' || $filters['level'] !== null || $filters['type'])
                     <a href="{{ url()->current() }}">clear filters</a>
                 @endif
@@ -70,6 +77,19 @@
                             <x-site-card :site="$site" />
                         @endforeach
                     </div>
+                    @if($totalMatching > $sites->count())
+                        {{-- A plain link to a bigger ?show=, not an AJAX append - keeps
+                             this a shareable, no-JS-required URL like the rest of the
+                             board, and the query itself only fetches $show rows (see
+                             SiteController::explorer), so this is the actual point of
+                             the change: a smaller page loads faster, not just a
+                             visually-capped one. --}}
+                        <div class="text-center my-4">
+                            <a class="dh-btn dh-btn-ghost-dark" href="{{ url()->current() }}?{{ http_build_query(array_merge(request()->except('show'), ['show' => $show + 50])) }}">
+                                Load 50 more ({{ $totalMatching - $sites->count() }} remaining)
+                            </a>
+                        </div>
+                    @endif
                     <p class="dh-board-count mt-3">
                         <span class="material-icons-round dh-inline-icon" aria-hidden="true">favorite_border</span> saves a site to your wishlist, we tell you when a boat goes there &nbsp;&middot;&nbsp;
                         <span class="material-icons-round dh-inline-icon" aria-hidden="true">radio_button_unchecked</span> marks it as dived

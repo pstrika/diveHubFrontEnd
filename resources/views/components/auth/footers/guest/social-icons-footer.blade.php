@@ -1,4 +1,6 @@
-<footer class="footer py-5">
+{{-- Mobile has the bottom tab bar for navigation already, so this footer
+     is desktop-only. --}}
+<footer class="footer py-5 d-none d-lg-block">
     <div class="container">
       <div class="row">
         <div class="col-lg-8 mb-4 mx-auto text-center">

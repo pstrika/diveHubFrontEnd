@@ -15,8 +15,23 @@
    */
   function enhanceChipRows() {
     document.querySelectorAll('.dive-filter-chips').forEach(function (row) {
-      if (row.parentElement.classList.contains('dh-chip-scroll')) return;
-      if (row.scrollWidth <= row.clientWidth + 4) return;
+      var alreadyWrapped = row.parentElement.classList.contains('dh-chip-scroll');
+      var overflowing = row.scrollWidth > row.clientWidth + 4;
+
+      // Widening the window (resize fires enhanceChipRows again) can leave a
+      // row that no longer overflows still wrapped with stale arrows - both
+      // just get hidden, and the scroll position resets so nothing looks
+      // scrolled-away when the arrows do come back at a narrower width.
+      if (alreadyWrapped) {
+        if (!overflowing) {
+          row.parentElement.querySelectorAll('.dh-chip-more').forEach(function (btn) { btn.hidden = true; });
+          row.scrollLeft = 0;
+        } else if (row._dhChipUpdate) {
+          row._dhChipUpdate();
+        }
+        return;
+      }
+      if (!overflowing) return;
 
       var wrap = document.createElement('div');
       wrap.className = 'dh-chip-scroll';
@@ -43,6 +58,7 @@
         back.hidden = row.scrollLeft <= 4;
         more.hidden = row.scrollLeft + row.clientWidth >= row.scrollWidth - 4;
       };
+      row._dhChipUpdate = update;
       row.addEventListener('scroll', update, { passive: true });
       update();
     });

@@ -9,7 +9,7 @@
                 <span class="mask bg-gradient-info opacity-4"></span>
             </div>
 
-            <div class="row mx-1">
+            <div class="row">
                 <div class="col-md-8 mx-auto">
                     <div class="card p-0 position-relative mt-n5 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">

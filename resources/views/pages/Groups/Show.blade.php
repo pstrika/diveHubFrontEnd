@@ -441,7 +441,7 @@
                 $hasFbFeed = $group->isFacebookConnected() && !empty($fbFeed);
             @endphp
 
-            <div class="row mx-1">
+            <div class="row">
                 {{-- Members --}}
                 <div class="col-md-6">
                     <div class="card mt-3 mb-4">
@@ -515,7 +515,7 @@
                 </div>
             </div>
 
-            <div class="row mx-1">
+            <div class="row">
                 @if($hasFbFeed)
                     <div class="col-md-6">
                         @include('pages.Groups.partials.ChatCard')
@@ -531,7 +531,7 @@
             </div>
 
             {{-- Full Calendar --}}
-            <div class="row mx-1">
+            <div class="row">
                 <div class="col-md-12">
                     <div class="card mt-3 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">

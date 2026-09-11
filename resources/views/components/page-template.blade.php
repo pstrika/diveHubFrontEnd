@@ -112,6 +112,28 @@
 <x-guest-modal />
 {{-- Add to home screen bar (shown by divershub.js on phones, every visit until installed). --}}
 <x-install-prompt />
+{{-- The Me tab's menu rows, on every page now (not just the dashboard) so a
+     diver can always reach their calendar/profile/etc without navigating
+     home first. Members only - a guest has no account to manage. --}}
+@auth
+    @if(auth()->user()->isNotGuest())
+        <x-shell.me-rows />
+    @endif
+@endauth
+{{-- Every page builds its own <footer class="footer"> inside its own
+     content, so it lands wherever that page put it - usually right after
+     the cards, ahead of the Me rows above. Moving it here in the DOM (not
+     just visually) puts it after the Me rows, which is where "the very
+     bottom of the page" actually means once those rows exist. --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var footer = document.querySelector('footer.footer');
+        var meRows = document.querySelector('.dh-me-rows');
+        if (footer && meRows) {
+            meRows.insertAdjacentElement('afterend', footer);
+        }
+    });
+</script>
 @endunless
 {{-- Pablo's mobile bottom nav hook (main 9.22.0); the old sidebar pushes into it, the shell has its own tab bar. --}}
 @stack('bottom-nav')

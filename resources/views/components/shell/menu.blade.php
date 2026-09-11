@@ -78,7 +78,7 @@
     <h6>Operators and shore</h6>
     {{-- Operators left the tab bar for Weather (2026-09-10); this row, trip cards,
          site pages and the finder's operator filter are the ways in. --}}
-    {!! $link('Dive operators', route('Operators'), 'storefront') !!}
+    {!! $link('Dive operators', route('Operators'), 'directions_boat') !!}
     {!! $link('Marine forecast', route('Weather'), 'waves') !!}
     {!! $link('Beach diving', route('BeachDiving'), 'beach_access') !!}
     {!! $link('Online waivers', route('Waivers'), 'assignment') !!}
@@ -113,7 +113,6 @@
         {!! $link('About Divers Hub', route('AboutUs'), 'info') !!}
     @else
         {!! $link('My profile', route('overview'), 'person') !!}
-        {!! $link('Settings', route('settings'), 'settings') !!}
         {!! $link('About Divers Hub', route('AboutUs'), 'info') !!}
         <a class="dh-menu-link" href="{{ route('logout') }}" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
             <span class="material-icons-round" aria-hidden="true">logout</span><span>Log out</span>

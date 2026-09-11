@@ -25,7 +25,7 @@
             <x-flash-toast />
 
             @if($invites->isNotEmpty())
-            <div class="row mx-1">
+            <div class="row">
                 <div class="col-md-12">
                     <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
@@ -59,7 +59,7 @@
             </div>
             @endif
 
-            <div class="row mx-1">
+            <div class="row">
                 <div class="col-md-12">
                     <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">

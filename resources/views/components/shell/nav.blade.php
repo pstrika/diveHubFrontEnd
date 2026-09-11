@@ -37,9 +37,9 @@
     // Four linked destinations plus Me. "Dives" is the trip finder (day board plus
     // date ranges). "Groups" is personal, so for guests it opens the account prompt.
     $tabs = [
-        'today'   => ['label' => 'Dives',      'short' => 'Dives',   'icon' => 'sailing',      'href' => route('Trips')],
-        'sites'   => ['label' => 'Dive Sites', 'short' => 'Sites',   'icon' => 'scuba_diving', 'href' => route('DiveSites')],
-        'weather' => ['label' => 'Weather',    'short' => 'Weather', 'icon' => 'waves',        'href' => route('Weather')],
+        'today'   => ['label' => 'Dives',      'short' => 'Dives',   'icon' => 'scuba_diving', 'href' => route('Trips')],
+        'sites'   => ['label' => 'Dive Sites', 'short' => 'Sites',   'icon' => 'pin_drop',     'href' => route('DiveSites')],
+        'weather' => ['label' => 'Weather',    'short' => 'Weather', 'icon' => 'cloud',        'href' => route('Weather')],
         'groups'  => ['label' => 'Groups',     'short' => 'Groups',  'icon' => 'groups',       'href' => $isGuest ? '#' : route('MyGroups'), 'gated' => $isGuest],
     ];
 

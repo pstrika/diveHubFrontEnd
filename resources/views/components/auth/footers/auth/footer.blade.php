@@ -1,4 +1,7 @@
-<footer class="footer py-4  ">
+{{-- Mobile has the bottom tab bar and the Me tab's menu rows for
+     navigation already, so this footer (nav links + copyright) is
+     desktop-only. --}}
+<footer class="footer py-4 d-none d-lg-block">
     <div class="container-fluid">
       <div class="row align-items-center justify-content-lg-between">
         <div class="col-lg-6 mb-lg-0 mb-4">

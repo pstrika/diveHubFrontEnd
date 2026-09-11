@@ -547,12 +547,32 @@ class SiteController extends Controller
             case 'popular':  $query->orderBy('name'); break; // ordered below by SiteRank
             default:         $query->orderByRaw('rate IS NULL, rate DESC')->orderBy('votes', 'desc')->orderBy('name');
         }
-        $sites = $query->get();
-        // Trip counts are attached for every sort so cards can show "N trips this
-        // year"; "Popular" orders by the blend of trips and ratings (App\Support\SiteRank).
-        $ranked = \App\Support\SiteRank::apply($sites);
-        if ($sort === 'popular') {
-            $sites = $ranked;
+
+        // "Load more" (Zach/Pablo, 2026-09-11): the board used to fetch and render
+        // every matching site at once. $show caps the list view at a page size
+        // that grows via the ?show= link instead. Two cases can't take the
+        // shortcut of stopping the query early: Popular needs every candidate in
+        // the window before SiteRank can say which ones truly rank highest (a
+        // plain "first 50 by name, then re-sort those" would silently miss
+        // sites that are more popular but later alphabetically), and the map
+        // needs every matching pin regardless of how long the list would be.
+        $totalMatching = (clone $query)->count();
+        $show = max(50, (int) $request->query('show', 50));
+
+        if ($sort === 'popular' || $view === 'map') {
+            $sites = $query->get();
+            $ranked = \App\Support\SiteRank::apply($sites);
+            if ($sort === 'popular') {
+                $sites = $ranked;
+            }
+            if ($view !== 'map') {
+                $sites = $sites->take($show)->values();
+            }
+        } else {
+            $sites = $query->take($show)->get();
+            // Trip counts are attached for every sort so cards can show "N trips
+            // this year" - only the reorder above needs the full candidate set.
+            \App\Support\SiteRank::apply($sites);
         }
 
         // First photo per site for the cards, one query for the whole page.
@@ -596,9 +616,11 @@ class SiteController extends Controller
         }
 
         return view('pages.SitesExplorer', [
-            'explorer'    => $explorer,
-            'SEO'         => $SEO,
-            'sites'       => $sites,
+            'explorer'      => $explorer,
+            'SEO'           => $SEO,
+            'sites'         => $sites,
+            'totalMatching' => $totalMatching,
+            'show'          => $show,
             'isMember'    => $isMember,
             'filters'     => ['q' => $q, 'type' => $type, 'level' => $level, 'sort' => $sort, 'view' => $view],
             'typeOptions' => self::EXPLORER_TYPES,

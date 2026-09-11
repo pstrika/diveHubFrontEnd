@@ -39,7 +39,18 @@
   --dh-space-3:    12px;
   --dh-space-4:    16px;
   --dh-space-6:    24px;
+
+  /* Left/right inset every page's content actually lands at: just
+     .container-fluid's own padding (10px phones via the phones-only
+     override below, 24px from md up) - the gap Sites already used,
+     since it has no .row wrapping its cards to add anything on top.
+     Dashboard's rows had their own .row.mx-1 adding extra padding on
+     top of this; removed there so its cards land here too. Anything
+     outside the container (the page title, the Me-tab rows) uses this
+     variable instead of guessing its own number. */
+  --dh-content-x: 10px;
 }
+@media (min-width: 768px) { :root { --dh-content-x: 24px; } }
 
 /* ------------------------------------------------------------------ */
 /* Filter chips. Plain anchors so they work without JavaScript.        */
@@ -94,7 +105,7 @@
 /* Material Dashboard reserved space for the sidenav. The shell has none. */
 body.dh-shell { background: var(--dh-sand); font-family: var(--dh-font); }
 body.dh-shell .main-content { margin-left: 0 !important; max-height: none !important; }
-body.dh-shell .main-content > .container-fluid { padding-top: var(--dh-space-2); }
+body.dh-shell .main-content > .container-fluid { padding-top: var(--dh-space-2); padding-left: var(--dh-content-x); padding-right: var(--dh-content-x); }
 body.dh-shell .sidenav, body.dh-shell #sidenav-main { display: none !important; }
 
 .dh-topbar {
@@ -150,6 +161,11 @@ body.dh-shell .sidenav, body.dh-shell #sidenav-main { display: none !important; 
 .dh-tab .material-icons-round { font-size: 24px; }
 .dh-tab.is-active { color: var(--dh-sea); }
 body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe-area-inset-bottom) + 12px); }
+/* .dh-me-rows (page-template.blade.php, every signed-in non-guest page) now
+   reserves this same tab-bar clearance itself, right before the tab bar -
+   so main-content's own copy is just dead space in the middle of the page
+   wherever both exist. Guests have no me-rows, so they still need this. */
+body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 
 @media (min-width: 992px) {
   .dh-topnav { display: flex; }
@@ -174,9 +190,27 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-menu-lock { margin-left: auto; font-size: 18px !important; }
 .dh-menu-version { text-align: center; margin-top: var(--dh-space-4); }
 
-/* Page heading row. */
-.dh-pagehead { display: flex; flex-wrap: wrap; align-items: center; gap: var(--dh-space-3); padding: var(--dh-space-3) var(--dh-space-2) 0; }
-.dh-pagehead-title { margin: 0; font-weight: 700; color: var(--dh-muted); font-size: .85rem; letter-spacing: .04em; text-transform: uppercase; }
+/* Page heading row. Sticky just under the top bar (its own height, so it
+   docks flush against it) with a translucent, blurred background - the
+   title stays put while the page scrolls under it, same idea as the top
+   bar itself. Falls back to a solid background on browsers with no
+   backdrop-filter support, so it's never see-through text over text. */
+.dh-pagehead {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--dh-space-3);
+  padding: var(--dh-space-3) var(--dh-content-x);
+  position: sticky; top: var(--dh-topbar-h); z-index: 1020;
+  background: var(--dh-sand);
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .dh-pagehead { background: rgba(251, 251, 249, .82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+}
+/* Same look and size on every page now (the style Dive Sites already had,
+   dh-explorer-title, since folded into this one to drop the duplicate
+   h1 that page and Operators both rendered separately). Was a small grey
+   uppercase label anchored to its own fixed padding rather than the
+   cards' left edge; now uses --dh-content-x like the cards and the
+   Me-tab rows below them. */
+.dh-pagehead-title { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--dh-ink); }
 .dh-pagehead-guest { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--dh-sea); text-decoration: none; }
 .dh-pagehead-guest .material-icons-round { font-size: 18px; }
 .dh-pagehead-guest:hover { text-decoration: underline; color: var(--dh-deep); }
@@ -344,7 +378,6 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 /* Sites explorer (W4) and site detail (W3).                           */
 /* ------------------------------------------------------------------ */
 .dh-explorer-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--dh-space-3); margin: var(--dh-space-3) 0 var(--dh-space-3); }
-.dh-explorer-title { font-size: 1.5rem; font-weight: 800; color: var(--dh-ink); margin: 0; }
 .dh-explorer-intro { color: var(--dh-muted); margin: 4px 0 0; font-size: .9rem; max-width: 60ch; }
 .dh-omnibox { position: relative; display: flex; align-items: center; gap: 8px; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill); padding: 8px 14px; min-width: min(360px, 100%); flex: 1 1 320px; max-width: 480px; }
 .dh-omnibox:focus-within { border-color: var(--dh-sea); box-shadow: 0 0 0 3px var(--dh-foam); }
@@ -630,9 +663,17 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-guest-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: var(--dh-space-3); }
 
 /* ------------------------------------------------------------------ */
+/* Generic card: same flat paper/border/heading Weather already uses     */
+/* (.dh-wx-card/.dh-wx-ch), named without the "wx" so any page's cards   */
+/* can share it instead of each page inventing its own header style.    */
+/* ------------------------------------------------------------------ */
+.dh-card { background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 16px; margin-top: 12px; }
+.dh-card-head { font-size: .95rem; font-weight: 800; padding: 13px 15px; margin: 0; border-bottom: 1px solid var(--dh-line); display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--dh-ink); }
+.dh-card-body { padding: 15px; }
+
+/* ------------------------------------------------------------------ */
 /* Dashboard: the collapsed month calendar at the foot of the page.     */
 /* ------------------------------------------------------------------ */
-/* Room for the lifted card headers (mt-n4) under the page heading. */
 .dh-dash-cards { margin-top: 2rem; }
 .dh-dash-collapse { margin: var(--dh-space-3) 8px var(--dh-space-6); }
 .dh-dash-collapse > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 14px; padding: 14px 16px; font-weight: 700; color: var(--dh-ink); }
@@ -640,7 +681,8 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-dash-collapse > summary:hover { border-color: var(--dh-sea); color: var(--dh-deep); }
 .dh-dash-collapse > summary .material-icons-round { color: var(--dh-sea); }
 .dh-dash-collapse-hint { margin-left: auto; font-weight: 400; font-size: .8rem; color: var(--dh-muted); }
-.dh-dash-headlink { float: right; margin-top: 6px; color: #fff; font-size: .8rem; font-weight: 700; text-decoration: underline; }
+.dh-dash-headlink { font-size: .78rem; font-weight: 700; color: var(--dh-sea); text-decoration: none; }
+.dh-dash-headlink:hover { text-decoration: underline; }
 
 /* ------------------------------------------------------------------ */
 /* Tab bar: the diver's avatar as the Me icon, unread badge on Groups.  */
@@ -652,13 +694,17 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-topnav-link .dh-tab-badge { position: static; display: inline-block; margin-left: 6px; vertical-align: 2px; }
 
 /* ------------------------------------------------------------------ */
-/* Dashboard: menu rows at the foot of the page (the Me tab lands here). */
+/* Me rows: on every page now (page-template.blade.php), not just the   */
+/* dashboard, so they sit after </main> rather than inside the          */
+/* .main-content that already clears the fixed tab bar - they need      */
+/* their own clearance or the fixed bar covers the last row.            */
 /* ------------------------------------------------------------------ */
-.dh-me-rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: var(--dh-space-3) 8px var(--dh-space-6); }
+.dh-me-rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: var(--dh-space-2) var(--dh-content-x) var(--dh-space-6); padding-bottom: calc(var(--dh-tabbar-h) + env(safe-area-inset-bottom) + 12px); }
 .dh-me-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 14px; color: var(--dh-ink); font-weight: 600; font-size: .9rem; text-decoration: none; }
 .dh-me-row:hover { border-color: var(--dh-sea); color: var(--dh-deep); }
 .dh-me-row .material-icons-round { font-size: 22px; color: var(--dh-sea); }
 @media (min-width: 768px) { .dh-me-rows { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 992px) { .dh-me-rows { padding-bottom: 0; } }
 
 /* ------------------------------------------------------------------ */
 /* Dashboard: upcoming dives list, groups card, my calendar card.       */
