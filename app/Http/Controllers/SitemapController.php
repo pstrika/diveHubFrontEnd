@@ -60,7 +60,8 @@ class SitemapController extends Controller
                 ->orderBy('location')
                 ->chunk(200, function ($locations) use ($sitemap) {
                     foreach ($locations as $weatherLocation) {
-                        $routeName = $weatherLocation->country === 'AR' ? 'WeatherAR' : 'Weather';
+                        // One forecast page for every location since release 10.
+                        $routeName = 'Weather';
                         $sitemap->add(
                             Url::create(route($routeName) . '/' . rawurlencode($weatherLocation->location))
                                 ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY)

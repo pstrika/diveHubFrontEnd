@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\Weatherday;
+use App\Models\Trip;
 use App\Models\WeatherLocation;
 use Illuminate\Support\Facades\Log;
 
@@ -31,8 +32,9 @@ class WeatherController extends Controller
 
         $date = Carbon::today()->toDateString();
 
-        //$allLocations = WeatherLocation::all();
-        $allLocations = WeatherLocation::where('country', 'US')->get();
+        // Every location, Argentina included: this page replaced the separate
+        // Argentina forecast in release 10.
+        $allLocations = WeatherLocation::orderBy('country')->orderBy('id')->get();
         $currentLocation = WeatherLocation::where('location', $location)->first();
 
         // An unknown location in the URL (a typo, an old link) used to be a 500
@@ -44,6 +46,53 @@ class WeatherController extends Controller
 
         $weathers = Weatherday::where('location', $location)->get();
 
+        // ------------------------------------------------------------------
+        // What the page leads with (2026-09-10). Pablo's crawler already scores
+        // every half day from Poor to Perfect; the old page showed those four
+        // words in one small table two screens down and never showed the swell
+        // period or the wind direction at all, which are the two numbers that
+        // decide whether a day is a nice roll or unpleasant chop.
+        // ------------------------------------------------------------------
+        // Today forward only. The table keeps a few days of history and nobody
+        // plans a dive for last Sunday.
+        $days = $weathers->filter(fn ($d) => $d->date >= Carbon::today()->toDateString())
+            ->sortBy('date')->values();
+        if ($days->isEmpty()) {
+            $days = $weathers->sortBy('date')->values();
+        }
+        $today = $days->first();
+
+        // Every US location for today, so "where is it good" is one glance
+        // instead of thirteen page loads. One query, ordered north to south.
+        $coastOrder = ['port st lucie', 'stuart', 'jupiter', 'west palm beach', 'boynton beach',
+                       'deerfield beach', 'pompano beach', 'fort lauderdale', 'miami beach',
+                       'key largo', 'islamorada', 'marathon', 'key west'];
+        $coastToday = collect();
+        if ($today) {
+            $rows = Weatherday::where('date', $today->date)
+                ->whereIn('location', $coastOrder)->get()->keyBy('location');
+            foreach ($coastOrder as $name) {
+                if ($rows->has($name)) {
+                    $coastToday->push($rows->get($name));
+                }
+            }
+        }
+
+        // Boats leaving from this stretch of coast, per day. operators.location
+        // holds the weather location's short code (FLL, POM, ...), so the two
+        // data sets join on that. Conditions plus boats on one screen is the
+        // thing only we can show; a weather app cannot.
+        $boatsByDate = [];
+        if ($currentLocation && $days->isNotEmpty()) {
+            $operatorIds = \App\Models\Operator::where('location', $currentLocation->short)->pluck('id');
+            if ($operatorIds->isNotEmpty()) {
+                $boatsByDate = Trip::whereIn('operatorId', $operatorIds)
+                    ->whereBetween('date', [$days->first()->date, $days->last()->date])
+                    ->selectRaw('date, COUNT(*) as c')->groupBy('date')
+                    ->pluck('c', 'date')->all();
+            }
+        }
+
         /*Provide SEO metadata */
         $SEO = array(
             "title" => "Marine forecast for " . $location,
@@ -52,110 +101,11 @@ class WeatherController extends Controller
             "canonical" => route("Weather") . "/" . rawurlencode($location),
         );
 
-        return view('pages.Weather', compact('weathers', 'date', 'location', 'allLocations', 'currentLocation', 'SEO'));
+        return view('pages.Weather', compact('weathers', 'date', 'location', 'allLocations', 'currentLocation', 'SEO', 'days', 'today', 'coastToday', 'boatsByDate'));
 
     }
 
-    public function showAR($location = null)
-    {
-        $deco_unit = auth()->check() ? auth()->user()->deco_unit : 0;
 
-        // if we didn't receive $date, we just put today's
-        if (!$location)
-            $location = "mar del plata";
-        
-        
-        $date = Carbon::today()->toDateString();
 
-        $weathers = Weatherday::where('location', $location)->get();
-
-        foreach($weathers as $weather){
-            Log::debug($weather->tides);
-        }
-
-        //$allLocations = WeatherLocation::all();
-        $allLocations = WeatherLocation::where('country', 'AR')->get();
-        $currentLocation = WeatherLocation::where('location', $location)->first();
-        Log::debug('current location: ' . $currentLocation);
-
-        /*Provide SEO metadata */
-        $SEO = array(
-            "title" => "Marine forecast for " . $location . " - divers-hub.com",
-            "desc" => "7-day marine forecast for " . $location . ". Ocean conditions, tides and more",
-            "keywords" => "marine weather " . $location . ",dive,diving,scuba,argentina diving,tides,argentina scuba,buceo,buceo argentina,buceo mar del plata,buceo las grutas,buceo ushuaia,buceo puerto madryn",
-            "canonical" => route("WeatherAR") . "/" . rawurlencode($location),
-        );
-
-        return view('pages.WeatherAR', compact('weathers', 'date', 'location', 'allLocations', 'currentLocation', 'SEO', 'deco_unit'));
-
-    }
-
-    public function showARImperial($location = null)
-    {
-        $deco_unit = 0;
-
-        // if we didn't receive $date, we just put today's
-        if (!$location)
-            $location = "mar del plata";
-        
-        
-        $date = Carbon::today()->toDateString();
-
-        $weathers = Weatherday::where('location', $location)->get();
-
-        foreach($weathers as $weather){
-            Log::debug($weather->tides);
-        }
-
-        //$allLocations = WeatherLocation::all();
-        $allLocations = WeatherLocation::where('country', 'AR')->get();
-        $currentLocation = WeatherLocation::where('location', $location)->first();
-        Log::debug('current location: ' . $currentLocation);
-
-        /*Provide SEO metadata */
-        $SEO = array(
-            "title" => "Marine forecast for " . $location . " - divers-hub.com",
-            "desc" => "7-day marine forecast for " . $location . ". Ocean conditions, tides and more",
-            "keywords" => "marine weather " . $location . ",dive,diving,scuba,florida diving,tides,florida scuba",
-            "canonical" => route("WeatherAR") . "/" . rawurlencode($location),
-        );
-
-        return view('pages.WeatherAR', compact('weathers', 'date', 'location', 'allLocations', 'currentLocation', 'SEO', 'deco_unit'));
-
-    }
-
-    public function showARMetric($location = null)
-    {
-        $deco_unit = 1;
-
-        // if we didn't receive $date, we just put today's
-        if (!$location)
-            $location = "mar del plata";
-        
-        
-        $date = Carbon::today()->toDateString();
-
-        $weathers = Weatherday::where('location', $location)->get();
-
-        foreach($weathers as $weather){
-            Log::debug($weather->tides);
-        }
-
-        //$allLocations = WeatherLocation::all();
-        $allLocations = WeatherLocation::where('country', 'AR')->get();
-        $currentLocation = WeatherLocation::where('location', $location)->first();
-        Log::debug('current location: ' . $currentLocation);
-
-        /*Provide SEO metadata */
-        $SEO = array(
-            "title" => "Marine forecast for " . $location . " - divers-hub.com",
-            "desc" => "7-day marine forecast for " . $location . ". Ocean conditions, tides and more",
-            "keywords" => "marine weather " . $location . ",dive,diving,scuba,florida diving,tides,florida scuba",
-            "canonical" => route("WeatherAR") . "/" . rawurlencode($location),
-        );
-
-        return view('pages.WeatherAR', compact('weathers', 'date', 'location', 'allLocations', 'currentLocation', 'SEO', 'deco_unit'));
-
-    }
 
 }

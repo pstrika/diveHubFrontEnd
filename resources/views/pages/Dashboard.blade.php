@@ -286,11 +286,16 @@
                                     <span class="material-icons-round">travel_explore</span>Find sites to add
                                 </a>
                             @else
+                                {{-- Capped like the weekend picks (Zach, 2026-09-10: fifteen saved
+                                     sites made the card longer than the rest of the page). The
+                                     remainder is in the page, just hidden, so "show all" costs
+                                     nothing and keeps the wishlist on the dashboard. --}}
+                                @php $wishShown = 5; @endphp
                                 <ul class="dh-trip-list">
-                                    @foreach($wished as $wish)
+                                    @foreach($wished as $i => $wish)
                                         @if(!$wish->site) @continue @endif
                                         @php $ws = $wish->site; $hasBoat = !empty($wish->tripId); $seats = (int) ($wish->tripFreeSpots ?? 0); @endphp
-                                        <li class="dh-wish-row">
+                                        <li class="dh-wish-row {{ $i >= $wishShown ? 'dh-wish-extra' : '' }}" {{ $i >= $wishShown ? 'hidden' : '' }}>
                                             <a class="dh-wish-site" href="{{ route('SiteDetails') }}/{{ $ws->slug ?? $ws->id }}">
                                                 <img src="{{ asset('assets') }}/img/icons/{{ $ws->type }}_icon.png" alt="{{ ucfirst($ws->type) }}" onerror="this.remove()">
                                                 <span class="dh-trip-main">
@@ -321,6 +326,11 @@
                                         </li>
                                     @endforeach
                                 </ul>
+                                @if(count($wished) > $wishShown)
+                                    <p class="dh-card-foot">
+                                        <button type="button" class="dh-linkbtn" data-dh-showall="dh-wish-extra">Show all {{ count($wished) }} sites</button>
+                                    </p>
+                                @endif
                             @endif
                         </div>
                     </div>

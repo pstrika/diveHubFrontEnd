@@ -311,6 +311,39 @@ Several of these were broken on the live site too, not just on the branch.
 - **The install bar stopped covering the sign up link.** On the account pages
   it sits at the bottom of the window (there is no tab bar there to clear) and
   the card leaves room for it.
+- **The marine forecast rebuilt.** Weather is a bottom tab now, so it is the
+  page a diver opens the night before a trip, and it had one job it was not
+  doing. It opened on a stock photo of a breaking wave and a map, which is a
+  screen and a half before any information about the ocean, and it ran to nine
+  phone screens. It is under three now, and it leads with the answer.
+
+  The big finding: Pablo's crawler already scores every half day from Poor to
+  Perfect, and the page was showing those four words in one small table two
+  screens down. Two things it computes were never shown at all. **Swell period**
+  is the difference between a slow roll and wind chop at the same wave height.
+  **Wind direction** is the South Florida variable: west is offshore and flat,
+  east is onshore and blown out. Both are on the page now.
+
+  Today's real data makes the case. Key Largo has less swell than Fort
+  Lauderdale, 1.7 ft against 2.1 ft, and scores worse, Average against Good,
+  because its period is 2 seconds against 7.8. The old page would have told a
+  diver Key Largo was the calmer water. It is the worse dive.
+
+  Order now: the verdict for today in plain words with one sentence saying why,
+  morning and afternoon, the four numbers that drive it, and the boats going out
+  from that stretch of coast. Then seven days as a column you scan for "which
+  day". Then every location on one list, so "where is it good today" is a glance
+  instead of thirteen page loads. Then tides, webcams, charts and the full table
+  behind a tap. Nothing was deleted. The webcams are lazy now, so twenty iframes
+  no longer load on arrival.
+- **One forecast page, Argentina included.** The separate Argentina page and its
+  metric and imperial variants are retired; `/Weather/{location}` serves every
+  location in the table. The three old URLs 301 to it, because they are indexed
+  and were in the drawer for a year. One "Marine forecast" row in the drawer
+  instead of two.
+- **The wishlist caps at five** with "Show all N sites", same as the weekend
+  picks. Fifteen saved sites made that one card longer than the rest of the page.
+  The rest of the rows are already in the page, so the button costs no request.
 - **Version is 10.0.0.**
 - Operator coordinates were reviewed and deliberately left for later, because
   the pins land in the right place today.
@@ -332,8 +365,13 @@ Sign out first, then work through as a guest, then sign in.
 | Operators row: Choose operators, tick two, Apply | The count drops, the chip says 2 selected |
 | Swipe the Region and Level chip rows | They scroll sideways, arrows appear on the edges |
 | Sites tab, then a site | Popular order, trip counts on the cards, photo led detail page |
-| Weather tab | The Fort Lauderdale forecast, the Weather tab lit |
+| Weather tab | "Good diving today" above the fold, then 7 days, then the coast |
+| Weather, tap a day | The trip finder for that day |
+| Weather, Key Largo | Average, and the reason says short period |
+| Weather, All locations, Ushuaia | The same page, Argentina data |
+| `/WeatherAR/ushuaia` | 301 to `/Weather/ushuaia` |
 | `/Weather/nowhere` | The Fort Lauderdale forecast, not an error |
+| Dashboard wishlist with more than 5 sites | Five rows and "Show all N sites" |
 | Menu (top right), Dive operators | Cards with logos, coast and feature chips, map view |
 | Me tab | The menu slides in with Create a free account and Sign in |
 | Me drawer, Deco planner and Best gases | Both open, no lock |

@@ -173,7 +173,7 @@
 
                             <li class="nav-item {{ $activeItem == 'WeatherAR' ? ' active ' : '' }}  " style="padding-left: 1rem;">
                                 <a class="nav-link text-white {{ $activeItem == 'WeatherAR' ? ' active' : '' }}  "
-                                    href="{{ route('WeatherAR') }}">
+                                    href="{{ route('Weather') }}">
                                     <span><img style="height:15px;" src="{{ asset('assets') }}/img/icons/flags/AR.png"></span>
                                     <span class="sidenav-normal  ms-2  ps-1"> Argentina </span>
                                 </a>

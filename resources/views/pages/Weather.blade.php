@@ -61,207 +61,200 @@
             </div>
         </div>
 
-        <div class="page-header min-height-250 max-height-300 border-radius-xl mt-0 mx-n2" style="background-image: url('/assets/img/illustrations/weather.webp');">
-                <span class="mask  bg-gradient-info  opacity-4"></span>
-            </div>
+        {{--
+            The forecast, 2026-09-10. Weather is a bottom tab now, so this is the
+            page a diver opens the night before a trip and it has one job: should
+            I dive tomorrow, and where.
 
-            <div class="card p-0 position-relative mt-n7 mx-2 z-index-2 mb-4">
-                <div class="p-0 mt-n4 mx-2 ">
-                    <div class="border-radius-lg py-3 pe-1" style="float: left;">
-                        <h2 class="card-title text-info mx-3 mt-4">{{ ucwords($location) }}</h2>
-                        <h4 class="card-category text-info mx-3">Weather Forecast</h4>
+            It used to open on a stock photo of a breaking wave, the location name
+            and a map, which is a screen and a half before any information about
+            the ocean, and it ran to nine phone screens. The verdict Pablo's
+            crawler already computes (conditionsAM_score / conditionsPM_score,
+            bucketed Poor, Average, Good, Perfect) was four cells in a table
+            halfway down, and swell_period and wind_dir were never shown at all
+            even though they are what separates a nice roll from chop.
+
+            Order now: the verdict for today with the four numbers behind it and
+            the boats going out, then seven days, then the whole coast, then
+            everything else behind a tap. Webcams, charts and the full table are
+            all still here, they just do not load on arrival.
+        --}}
+        @php
+            // Shared by the cards below. Conditions text drives the colour
+            // everywhere on the site (see components/conditions-pill).
+            $tone = function ($text) {
+                $t = strtolower(trim((string) $text));
+                if (in_array($t, ['perfect', 'good'])) return 'good';
+                if ($t === 'average') return 'avg';
+                if ($t === '') return 'none';
+                return 'poor';
+            };
+            $ft = fn ($v) => $v === null || $v === '' ? null : round((float) $v, 1);
+            // One honest sentence about why today reads the way it does. Period is
+            // the difference between a roll and chop; direction is offshore or on.
+            $why = null;
+            if ($today) {
+                $h = $ft($today->swell_height_AM); $pr = $ft($today->swell_period_AM);
+                $w = $ft($today->wind_speed_AM); $d = $today->wind_dir_AM;
+                $shape = $pr === null ? null : ($pr >= 7 ? 'Long period, so it rolls rather than chops.'
+                        : ($pr >= 5 ? 'A medium period, some chop on the surface.'
+                        : 'Short period, so it is chop rather than swell.'));
+                $why = trim(($h !== null ? $h . ' ft of swell' : 'Swell') .
+                       ($pr !== null ? ' on a ' . $pr . ' second period' : '') .
+                       ($w !== null ? ', ' . round($w) . ' mph' . ($d ? ' out of the ' . $d : '') : '') . '. ' . $shape);
+            }
+        @endphp
+
+        <div class="container-fluid py-0 dh-wx">
+
+            {{-- 1. The verdict. --}}
+            @if($today)
+            <section class="dh-wx-verdict">
+                <div class="dh-wx-head">
+                    <div>
+                        <h1 class="dh-wx-place">{{ ucwords($location) }}</h1>
+                        <p class="dh-wx-date">{{ \Carbon\Carbon::parse($today->date)->format('l j F') }}</p>
                     </div>
-                    {{-----------------NAV to next day}} --}}
-                    <div class="mt-5 mx-5" style="float: right;">
-                            
-                        <a  href="" >                         
-                            <div class="dropdown">
-                                <select class="btn bg-info dropdown-toggle w-100 text-white" type="button" id="filterLocation" data-bs-toggle="dropdown" aria-expanded="false">
-                                <option value="" selected disabled>Select...</option>
-                                    @foreach($allLocations as $thisLocation)
-                                        <option value="{{ $thisLocation->location }}">{{ ucwords($thisLocation->location) }}</option>
-                                    @endforeach
-                                </select>   
-                            </div>
-                        </a>
-                        <p class="text-xs font-weight-bold mb-0 mt-n3">Change location</p>
-                        </div>
-                        <div style="clear: both;"></div>
+                    <a class="dh-wx-swap" href="#dh-wx-coast">
+                        <span class="material-icons-round" aria-hidden="true">place</span>Change
+                    </a>
                 </div>
-            </div>    
-            
-            <div class="row">
 
-                {{-- Card location --}}
-                <div class="col-md-3">
-                        <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
-                            <div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info min-height-100 shadow-info border-radius-xl py-3 pe-1"> 
-                                    <img src="{{ asset('assets') }}/img/Florida1.png" height="200px" alt="img-blur-shadow" class=" border-radius-lg min-heigth-10 mt-n3 position-relative">
-                                    {{--  <img src="{{ asset('assets') }}/img/Argentina1.png" height="200px" alt="img-blur-shadow" class=" border-radius-lg min-heigth-10 mt-n3 position-relative">--}}
-                                    {{--<div class="page-header min-height-250 max-height-250 border-radius-xl mt-0 mx-0" --}}
-                                    <a href="/Weather/key west/" class="position-absolute text-sm material-icons text-black {{ ($location == "key west" ? "animate-icon" : "") }}" style="top:160px; left:100px;">circle</a>
-                                    <a href="/Weather/islamorada/"class="position-absolute text-sm material-icons text-black {{ ($location == "islamorada" ? "animate-icon" : "") }}" style="top:152px; left:135px;">circle</a>
-                                    <a href="/Weather/key largo/"class="position-absolute text-sm material-icons text-black {{ ($location == "key largo" ? "animate-icon" : "") }}" style="top:128px; left:162px;">circle</a>
-                                    <a href="/Weather/miami beach/"class="position-absolute text-sm material-icons text-black {{ ($location == "miami beach" ? "animate-icon" : "") }}" style="top:83px; left:175px;">circle</a>
-                                    <a href="/Weather/fort lauderdale/"class="position-absolute text-sm material-icons text-black {{ ($location == "fort lauderdale" ? "animate-icon" : "") }}" style="top:70px; left:177px;">circle</a>
-                                    <a href="/Weather/pompano beach/"class="position-absolute text-sm material-icons text-black {{ ($location == "pompano beach" ? "animate-icon" : "") }}" style="top:57px; left:177px;">circle</a>
-                                    <a href="/Weather/boynton beach/"class="position-absolute text-sm material-icons text-black {{ ($location == "boynton beach" ? "animate-icon" : "") }}" style="top:42px; left:179px;">circle</a>
-                                    <a href="/Weather/west palm beach/"class="position-absolute text-sm material-icons text-black {{ ($location == "west palm beach" ? "animate-icon" : "") }}" style="top:28px; left:182px;">circle</a>
-                                    <a href="/Weather/jupiter/"class="position-absolute text-sm material-icons text-black {{ ($location == "jupiter" ? "animate-icon" : "") }}" style="top:10px; left:179px;">circle</a>
-                                    <a href="/Weather/stuart/"class="position-absolute text-sm material-icons text-black {{ ($location == "stuart" ? "animate-icon" : "") }}" style="top:-5px; left:175px;">circle</a>
-                                    <a href="/Weather/port st lucie/"class="position-absolute text-sm material-icons text-black {{ ($location == "port st lucie" ? "animate-icon" : "") }}" style="top:-20px; left:168px;">circle</a>
-                                        
-                                    
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <h6 class="mb-0 "> Change location (click on map)</h6>
-                            
-                            </div>
-                                    
-                        </div>
-                    </div>
-                {{-----------------------------}}
-
-                {{-- Marine Current NOW --}}
-                @if( $currentLocation->buoy != null)
-                <div class="col-md-3">             
-                    <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4" style="font-size: clamp(2rem, 3vw, 2rem);">Marine Current</h2>
-                                <p class="text-white text-xs mt-n2 mx-4"><b>Live data</b></p>
-                                
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive" style="overflow: hidden;">
-                                <table class="table align-items-center mb-0">
-                                    <tbody>
-                                        <tr>
-                                            <td class="text-center">
-                                                <div class="image-container" style="position: relative;">
-                                                    <img src="{{ asset('assets') }}/img/icons/icons_compass_bg.png" height="200px" alt="img-blur-shadow" class=" border-radius-lg min-heigth-10 mt-0" style="width: 100%; height: auto;">
-                                                    <img src="{{ asset('assets') }}/img/icons/icons_compass_needle.png" height="200px" alt="img-blur-shadow" class=" border-radius-lg min-heigth-10 mt-0" style="position: absolute; top: 0; left: 0; width: 100%; height: auto; transform: rotate({{ $currentLocation->dir }}deg);">
-                                                </div>
-                                            </td>
-                                            <td style="width: 20%;">
-                                                <div class="table-responsive">
-                                                    <table class="table align-items-center mb-0">
-                                                        <tbody>
-                                                            <tr>
-                                                                <td><div class="col-xxs text-left">Direction: <b>{{ $currentLocation->dir}}º</b></div></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td><div class="text-left">Speed: <b>{{ $currentLocation->speed}} knots</b></div></td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </td>
-                    
-                                        </tr>
-                                    </tbody>   
-                                   
-                                </table>
-                                <table>
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex ">
-                                                <i class="material-icons text-sm my-auto me-1">schedule</i>
-                                                <p class="mb-0 text-sm">Last update: {{ $currentLocation->updatetime }} </p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                            
-                        </div> 
-                    </div>
+                @php $dayTone = $tone($today->conditionsAM_text); @endphp
+                <div class="dh-wx-callout is-{{ $dayTone }}">
+                    <p class="dh-wx-word">{{ ucfirst(strtolower($today->conditionsAM_text ?: 'No forecast')) }} diving today</p>
+                    @if($why)<p class="dh-wx-why">{{ $why }}</p>@endif
                 </div>
-                @endif
-                {{--------------------------}}
 
-                {{-- Card Dive Conditions --}}
-                <div class="col-md-{{ $currentLocation->buoy != null ? 6 : 9}}">             
-                    <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Ocean Conditions</h2>
-                                <a href="#" onclick="showModal();"><p class="text-white text-xs mt-n2 mx-4 text-decoration-underline"><b>What is this?</b></p></a>
-                                <div class="table-responsive"></div>
-                            </div>
+                <div class="dh-wx-halves">
+                    @foreach([['Morning', $today->conditionsAM_text, $today->swell_height_AM, $today->wind_speed_AM, $today->wind_dir_AM],
+                              ['Afternoon', $today->conditionsPM_text, $today->swell_height_PM, $today->wind_speed_PM, $today->wind_dir_PM]] as $half)
+                        <div class="dh-wx-half is-{{ $tone($half[1]) }}">
+                            <span class="dh-wx-lab">{{ $half[0] }}</span>
+                            <span class="dh-wx-val">{{ $half[1] ?: 'No forecast' }}</span>
+                            <span class="dh-wx-sub">{{ $ft($half[2]) }} ft &middot; {{ round((float) $half[3]) }} mph {{ $half[4] }}</span>
                         </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table align-items-center mb-0">
-                                    
-                                    <tbody>
-                                        <tr> {{--Day name--}}
-                                            <td class="text-uppercase text-secondary text-md font-weight-bolder opacity-7 text-center" style="border: none;">  </td>
-                                            @foreach($weathers as $weather)
-                                                @php
-                                                    $date = new DateTime($weather->date);
-                                                    $dateDayName = $date->format('l-d');
-                                                @endphp
-                                                <td class="align-middle text-center text-md"><b>{{ $dateDayName }}</b></td>     
-                                            @endforeach
-                                        </tr>
-
-                                        <tr>
-                                            <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">Morning</td>
-                                            @foreach($weathers as $weather)
-                                                @if($weather->conditionsAM_text == "Poor")
-                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-lg badge-warning">  Poor  </span> </td>
-                                                @elseif($weather->conditionsAM_text == "No Dive")
-                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-lg badge-danger"> No dive </span> </td>
-                                                @elseif($weather->conditionsAM_text == "Average")
-                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-lg badge-secondary"> Average </span> </td>
-                                                @elseif($weather->conditionsAM_text == "Perfect")
-                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-lg badge-success"> Perfect </span> </td>
-                                                @else
-                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-lg badge-info">  Good  </span> </td>
-                                                @endif    
-                                            @endforeach
-                                        </tr>
-
-                                        <tr>
-                                            <td class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left" style="border: none;">Afternoon</td>
-                                            @foreach($weathers as $weather)
-                                                @if($weather->conditionsPM_text == "Poor")
-                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-lg badge-warning">  Poor  </span> </td>
-                                                @elseif($weather->conditionsPM_text == "No Dive")
-                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-lg badge-danger"> No dive </span> </td>
-                                                @elseif($weather->conditionsPM_text == "Average")
-                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-lg badge-secondary"> Average </span> </td>
-                                                @elseif($weather->conditionsPM_text == "Perfect")
-                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-lg badge-success"> Perfect </span> </td>
-                                                @else
-                                                    <td class="align-middle text-center text-sm"> <span class="badge badge-lg badge-info">  Good  </span> </td>
-                                                @endif    
-                                            @endforeach
-                                        </tr>
-                                            
-
-                                    </tbody>
-                                </table>
-                            </div>
-                            
-                        </div> 
-                    </div>
+                    @endforeach
                 </div>
-                {{--------------------------}}
 
-                
+                {{-- The four numbers that actually move the decision. --}}
+                <div class="dh-wx-facts">
+                    @foreach([['waves', $ft($today->swell_height_AM), 'ft', 'Swell'],
+                              ['timer', $ft($today->swell_period_AM), 's', 'Period'],
+                              ['air', round((float) $today->wind_speed_AM), $today->wind_dir_AM, 'Wind'],
+                              ['thermostat', round((float) $today->water_temp_AM) . '&deg;', '', 'Water']] as $f)
+                        <div class="dh-wx-fact">
+                            <span class="material-icons-round" aria-hidden="true">{{ $f[0] }}</span>
+                            <span class="dh-wx-n">{!! $f[1] !!}<small>{{ $f[2] }}</small></span>
+                            <span class="dh-wx-u">{{ $f[3] }}</span>
+                        </div>
+                    @endforeach
+                </div>
+
+                @php $boatsToday = $boatsByDate[$today->date] ?? 0; @endphp
+                <a class="dh-wx-boats" href="{{ route('Trips') }}/{{ $today->date }}">
+                    <span class="material-icons-round" aria-hidden="true">sailing</span>
+                    @if($boatsToday > 0)
+                        {{ $boatsToday }} {{ Str::plural('boat', $boatsToday) }} going out from {{ ucwords($location) }} today
+                    @else
+                        See every boat going out today
+                    @endif
+                    <span class="material-icons-round dh-wx-arrow" aria-hidden="true">chevron_right</span>
+                </a>
+
+                <p class="dh-wx-explain">
+                    <a href="#" onclick="event.preventDefault();showModal();">How we score conditions</a>
+                </p>
+            </section>
+            @endif
+
+            {{-- 2. Seven days: the column a diver scans for "which day". --}}
+            @if($days->isNotEmpty())
+            <section class="dh-wx-card">
+                <h2 class="dh-wx-ch">Next {{ $days->count() }} days <span>morning / afternoon</span></h2>
+                @foreach($days as $d)
+                    @php
+                        $dc = \Carbon\Carbon::parse($d->date);
+                        $isToday = $dc->isToday();
+                        $boats = $boatsByDate[$d->date] ?? 0;
+                    @endphp
+                    <a class="dh-wx-day {{ $isToday ? 'is-today' : '' }}" href="{{ route('Trips') }}/{{ $d->date }}">
+                        <span class="dh-wx-dday">
+                            <b>{{ $isToday ? 'Today' : $dc->format('D') }}</b>
+                            <span>{{ $dc->format('M j') }}</span>
+                        </span>
+                        <span class="dh-wx-bars">
+                            <span class="dh-wx-bar is-{{ $tone($d->conditionsAM_text) }}">{{ $d->conditionsAM_text ?: '?' }}<small>AM</small></span>
+                            <span class="dh-wx-bar is-{{ $tone($d->conditionsPM_text) }}">{{ $d->conditionsPM_text ?: '?' }}<small>PM</small></span>
+                        </span>
+                        <span class="dh-wx-dsea">
+                            <b>{{ $ft($d->swell_height_AM) }} ft</b> {{ $ft($d->swell_period_AM) }}s<br>
+                            {{ round((float) $d->wind_speed_AM) }} {{ $d->wind_dir_AM }}
+                            @if($boats > 0)<br><span class="dh-wx-dboats">{{ $boats }} {{ Str::plural('boat', $boats) }}</span>@endif
+                        </span>
+                    </a>
+                @endforeach
+            </section>
+            @endif
+
+            {{-- 3. The whole coast today. This replaces the map as the picker and
+                 answers the better question: not "show me Boynton" but "where is
+                 it good". --}}
+            @if($coastToday->isNotEmpty())
+            <section class="dh-wx-card" id="dh-wx-coast">
+                <h2 class="dh-wx-ch">Along the coast today <span>tap to switch</span></h2>
+                @foreach($coastToday as $c)
+                    <a class="dh-wx-crow {{ $c->location === $location ? 'is-here' : '' }}" href="{{ route('Weather') }}/{{ rawurlencode($c->location) }}">
+                        <span class="dh-wx-cname">{{ ucwords($c->location) }}</span>
+                        <span class="dh-pill dh-pill-{{ $tone($c->conditionsAM_text) }}">{{ $c->conditionsAM_text }}</span>
+                        <span class="dh-wx-cnum"><b>{{ $ft($c->swell_height_AM) }}</b> ft {{ $ft($c->swell_period_AM) }}s</span>
+                    </a>
+                @endforeach
+            </section>
+            @endif
+
+            {{-- 4. Everything else, one tap away. Argentina and any location not
+                 on the coast list still reach their forecast from here. --}}
+            <details class="dh-wx-more">
+                <summary><span class="material-icons-round" aria-hidden="true">public</span>All locations<span class="dh-wx-hint">Florida and Argentina</span></summary>
+                <div class="dh-wx-more-body">
+                    <select class="form-select" onchange="if(this.value) window.location.href=this.value;" aria-label="Choose a location">
+                        <option value="">Select...</option>
+                        @foreach($allLocations as $thisLocation)
+                            <option value="{{ route('Weather') }}/{{ rawurlencode($thisLocation->location) }}" {{ $thisLocation->location === $location ? 'selected' : '' }}>{{ ucwords($thisLocation->location) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </details>
+
+            @if($today && $today->tides)
+            <details class="dh-wx-more">
+                <summary><span class="material-icons-round" aria-hidden="true">waterfall_chart</span>Tides and daylight<span class="dh-wx-hint">{{ ucwords($location) }}</span></summary>
+                <div class="dh-wx-more-body">
+                    @php $tides = json_decode($today->tides, true) ?: []; @endphp
+                    <ul class="dh-wx-tides">
+                        @foreach($tides as $t)
+                            <li><span>{{ ucfirst(strtolower($t['tide_type'] ?? '')) }}</span>
+                                <b>{{ isset($t['tide_time']) ? \Carbon\Carbon::parse($t['tide_time'])->format('H:i') : '' }}</b></li>
+                        @endforeach
+                        <li><span>Sunrise and sunset</span><b>{{ $today->sunrise }} &middot; {{ $today->sunset }}</b></li>
+                    </ul>
+                </div>
+            </details>
+            @endif
+
+            <details class="dh-wx-more" id="dh-wx-cams">
+                <summary><span class="material-icons-round" aria-hidden="true">videocam</span>Live webcams<span class="dh-wx-hint">loads when you open it</span></summary>
+                <div class="dh-wx-more-body">
+                <div class="row mx-0">
 
                 {{-- Card live cam --}}
                 @if($location == "fort lauderdale")                    
                     <div class="col-md-4">
                         <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
-                                <!-- <iframe class="img-fluid border-radius-lg" allow-same-origin="" allow-scripts="" allowfullscreen="" alt="EarthCam Video Player Embed" autoplay="" frameborder="0" height="450" id="iframe" marginheight="0" marginwidth="0" scrolling="no" src="https://www.youtube.com/embed/pXx3YQVSUGg?si=rZOs45AdFVYTL4JQ" style="top:0;left:0;width:10px;min-width:100%;*width:100%;height:200px;" width="800"></iframe> -->
-                                <iframe width="100%" height="300"
+                                <!-- <iframe loading="lazy" class="img-fluid border-radius-lg" allow-same-origin="" allow-scripts="" allowfullscreen="" alt="EarthCam Video Player Embed" autoplay="" frameborder="0" height="450" id="iframe" marginheight="0" marginwidth="0" scrolling="no" src="https://www.youtube.com/embed/pXx3YQVSUGg?si=rZOs45AdFVYTL4JQ" style="top:0;left:0;width:10px;min-width:100%;*width:100%;height:200px;" width="800"></iframe> -->
+                                <iframe loading="lazy" width="100%" height="300"
                                     src="https://www.youtube.com/embed/pXx3YQVSUGg?autoplay=1&mute=1"
                                     title="YouTube video player"
                                     frameborder="0"
@@ -284,8 +277,8 @@
                     <div class="col-md-4">
                         <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
-                                <!-- <iframe class="img-fluid shadow border-radius-lg" src="https://player.brownrice.com/embed/copbfl1" height="100%" width="100%" autoplay="" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe> -->
-                                    <!-- <iframe class="img-fluid shadow border-radius-lg"
+                                <!-- <iframe loading="lazy" class="img-fluid shadow border-radius-lg" src="https://player.brownrice.com/embed/copbfl1" height="100%" width="100%" autoplay="" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe> -->
+                                    <!-- <iframe loading="lazy" class="img-fluid shadow border-radius-lg"
                                         src="https://player.brownrice.com/embed/copbfl1?autoplay=1&muted=1"
                                         height="100%" width="100%"
                                         allow="autoplay; fullscreen"
@@ -293,8 +286,8 @@
                                         style="top:0;left:0;height:200px;"
                                         scrolling="no">
                                     </iframe> -->
-                                <!-- <iframe width="560" height="315" src="https://www.youtube.com/embed/zclpD3QKEK4?si=nRFppTudYpqk4wq3" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe> -->
-                                <iframe width="100%" height="300"
+                                <!-- <iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/zclpD3QKEK4?si=nRFppTudYpqk4wq3" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe> -->
+                                <iframe loading="lazy" width="100%" height="300"
                                     src="https://www.youtube.com/embed/zclpD3QKEK4?autoplay=1&mute=1"
                                     title="YouTube video player"
                                     frameborder="0"
@@ -320,7 +313,7 @@
                     <div class="col-md-4">
                         <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
-                                <iframe class="img-fluid shadow border-radius-lg" id="main_content" name="main_content" src="https://video-monitoring.com/beachcams/palmbeachmarriott/stream.htm" width="960" height="540" allowfullscreen="" autoplay="true" style="top:0;left:0;width:10px;min-width:100%;*width:100%;height:200px;"></iframe>
+                                <iframe loading="lazy" class="img-fluid shadow border-radius-lg" id="main_content" name="main_content" src="https://video-monitoring.com/beachcams/palmbeachmarriott/stream.htm" width="960" height="540" allowfullscreen="" autoplay="true" style="top:0;left:0;width:10px;min-width:100%;*width:100%;height:200px;"></iframe>
                             </div>
                             <div class="card-body">
                                     <h6 class="mb-0 "> live web cam</h6>
@@ -336,9 +329,9 @@
                     <div class="col-md-4">
                         <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
-                                <!-- <iframe class="img-fluid shadow border-radius-lg" id="main_content" name="main_content" src="https://video-monitoring.com/beachcams/palmbeachmarriott/stream.htm" width="960" height="540" allowfullscreen="" autoplay="true" style="top:0;left:0;width:10px;min-width:100%;*width:100%;height:200px;"></iframe> -->
+                                <!-- <iframe loading="lazy" class="img-fluid shadow border-radius-lg" id="main_content" name="main_content" src="https://video-monitoring.com/beachcams/palmbeachmarriott/stream.htm" width="960" height="540" allowfullscreen="" autoplay="true" style="top:0;left:0;width:10px;min-width:100%;*width:100%;height:200px;"></iframe> -->
                                 <!-- <video data-html5-video="" preload="metadata" src="blob:https://video-monitoring.com/33efa922-17ad-4d2e-bf95-7f0d172dec3c"><style class="clappr-style">[data-html5-video]{position:absolute;height:100%;width:100%;display:block}</style></video> -->
-                            <iframe width="100%" height="300"
+                            <iframe loading="lazy" width="100%" height="300"
                                 src="https://www.youtube.com/embed/4y7kDbwBuh0?autoplay=1&mute=1"
                                 title="YouTube video player"
                                 frameborder="0"
@@ -363,8 +356,8 @@
                         <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                             {{--<iframe loading="lazy" src="https://iframe.dacast.com/live/b5a8e966-0b7f-13a8-9ad4-5637cfb90a9f/8e2f7f51-4653-43e0-7e8e-7e213959bb2b" width="100%" height="100%" allowfullscreen="" style="position:absolute;top:0;left:0;"></iframe>--}}
-                                <!-- <iframe class="img-fluid shadow border-radius-lg" src="https://relay.ozolio.com/pub.api?cmd=embed&oid=EMB_ZUKF00000B65" height="100%" width="100%" autoplay="" allow="autoplay;" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe>  -->
-                            <iframe width="100%" height="300"
+                                <!-- <iframe loading="lazy" class="img-fluid shadow border-radius-lg" src="https://relay.ozolio.com/pub.api?cmd=embed&oid=EMB_ZUKF00000B65" height="100%" width="100%" autoplay="" allow="autoplay;" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe>  -->
+                            <iframe loading="lazy" width="100%" height="300"
                                 src="https://www.youtube.com/embed/bi7B4EmyHHs?autoplay=1&mute=1"
                                 title="YouTube video player"
                                 frameborder="0"
@@ -392,8 +385,8 @@
                         <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
                             <div class="card-header p-0 mt-n4 mx-3">
                             
-                                <!-- <iframe class="img-fluid shadow border-radius-lg" src="https://relay.ozolio.com/pub.api?cmd=embed&amp;oid=EMB_RKNO000004F8" height="100%" width="100%" autoplay="" allow="autoplay;" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe> -->
-                                <iframe width="100%" height="300"
+                                <!-- <iframe loading="lazy" class="img-fluid shadow border-radius-lg" src="https://relay.ozolio.com/pub.api?cmd=embed&amp;oid=EMB_RKNO000004F8" height="100%" width="100%" autoplay="" allow="autoplay;" allowfullscreen mozallowfullscreen style="top:0;left:0;height:200px;" scrolling="no"></iframe> -->
+                                <iframe loading="lazy" width="100%" height="300"
                                     src="https://www.youtube.com/embed/sDXwrYQPeOQ?autoplay=1&mute=1"
                                     title="YouTube video player"
                                     frameborder="0"
@@ -419,6 +412,14 @@
                 {{-------------------------------}}
 
 
+                                </div>
+                </div>
+            </details>
+
+            <details class="dh-wx-more">
+                <summary><span class="material-icons-round" aria-hidden="true">show_chart</span>Charts and the full table<span class="dh-wx-hint">waves, wind, air, humidity, rain</span></summary>
+                <div class="dh-wx-more-body">
+                <div class="row mx-0">
                 {{-- Card waves --}}
                 @if($location == "fort lauderdale" or $location == "pompano beach" or $location == "west palm beach" or $location == "miami beach" or $location == "key west")
                     <div class="col-md-4">
@@ -719,6 +720,12 @@
                     </div>
                 </div>
             </div>
+
+                            </div>
+                </div>
+            </details>
+
+        </div>
 
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>

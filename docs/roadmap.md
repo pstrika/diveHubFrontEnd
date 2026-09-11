@@ -239,6 +239,15 @@ slow to load. Nothing to do on the view side.
      column is a comma separated list, so a two site trip that includes a
      saved site never counts. The explorer's "boats this month" chip explodes
      the list (SiteRank::tripsSoon); the wishlist should use the same approach.
-6. rEvo dive companion, offline first (Zach and Pablo use it every dive).
-7. Blog, then the community feed.
+6. **Metric units.** Retiring the Argentina page took its metric and imperial
+   variants with it, so Argentine divers now read feet, miles per hour and
+   Fahrenheit. The forecast page should offer a units toggle stored on the user
+   (or inferred from the location's country) rather than a second copy of the
+   page. Small, and worth doing before we push the app in Argentina.
+7. **Buoy data.** `weatherlocations.buoy` is filled for two locations only,
+   Miami and Fort Lauderdale. If there is a live feed behind it, "right now"
+   beside "forecast" is worth a lot on the forecast page, because a forecast
+   written at midnight is stale by evening. Question for Pablo.
+8. rEvo dive companion, offline first (Zach and Pablo use it every dive).
+9. Blog, then the community feed.
 8. Operator coordinates and one search whenever convenient.

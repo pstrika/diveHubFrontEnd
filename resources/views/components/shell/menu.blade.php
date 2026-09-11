@@ -79,8 +79,7 @@
     {{-- Operators left the tab bar for Weather (2026-09-10); this row, trip cards,
          site pages and the finder's operator filter are the ways in. --}}
     {!! $link('Dive operators', route('Operators'), 'storefront') !!}
-    {!! $link('Weather, South Florida', route('Weather'), 'waves') !!}
-    {!! $link('Weather, Argentina', route('WeatherAR'), 'waves') !!}
+    {!! $link('Marine forecast', route('Weather'), 'waves') !!}
     {!! $link('Beach diving', route('BeachDiving'), 'beach_access') !!}
     {!! $link('Online waivers', route('Waivers'), 'assignment') !!}
 </div>

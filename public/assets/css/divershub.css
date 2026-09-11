@@ -767,6 +767,8 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-wish-next .material-icons-round { font-size: 16px; color: var(--dh-sea); }
 .dh-card-foot { margin-top: 10px; text-align: right; font-size: .85rem; }
 .dh-card-foot a { color: var(--dh-sea); font-weight: 700; text-decoration: none; }
+.dh-linkbtn { border: 0; background: none; padding: 0; color: var(--dh-sea); font-weight: 700; font-size: .85rem; cursor: pointer; }
+.dh-linkbtn:hover { text-decoration: underline; }
 
 /* ------------------------------------------------------------------ */
 /* Account pages: sign in, create account, forgot and reset password.  */
@@ -832,3 +834,99 @@ body.dh-auth-body { background: var(--dh-ink); }
    (Zach's screenshot: it was covering the "Sign up" link). */
 body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
 @media (max-width: 991px) { .dh-auth-main { padding-bottom: calc(118px + env(safe-area-inset-bottom)); } }
+
+/* ------------------------------------------------------------------ */
+/* Marine forecast. Weather became a bottom tab, so the page leads with */
+/* the verdict Pablo's crawler already computes instead of a photo.     */
+/* ------------------------------------------------------------------ */
+.dh-wx { padding: 0 4px; }
+.dh-wx-verdict, .dh-wx-card { background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 16px; margin-top: 12px; }
+.dh-wx-verdict { padding: 16px; }
+.dh-wx-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.dh-wx-place { font-size: 1.2rem; font-weight: 700; margin: 0; color: var(--dh-ink); }
+.dh-wx-date { font-size: .76rem; color: var(--dh-muted); margin: 2px 0 0; }
+.dh-wx-swap { flex: 0 0 auto; border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill); padding: 6px 12px; font-size: .78rem; font-weight: 700; color: var(--dh-sea); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.dh-wx-swap .material-icons-round { font-size: 16px; }
+.dh-wx-swap:hover { border-color: var(--dh-sea); color: var(--dh-deep); }
+
+.dh-wx-callout { margin-top: 14px; border-radius: 14px; padding: 14px; border: 1px solid; }
+.dh-wx-callout.is-good { background: var(--dh-good-bg); border-color: #a9dcbb; }
+.dh-wx-callout.is-avg  { background: var(--dh-avg-bg);  border-color: #e6d79a; }
+.dh-wx-callout.is-poor { background: var(--dh-poor-bg); border-color: #f2b9b4; }
+.dh-wx-callout.is-none { background: var(--dh-foam); border-color: var(--dh-line); }
+.dh-wx-word { font-size: 1.55rem; font-weight: 900; line-height: 1.1; margin: 0; }
+.dh-wx-callout.is-good .dh-wx-word { color: var(--dh-good); }
+.dh-wx-callout.is-avg  .dh-wx-word { color: var(--dh-avg); }
+.dh-wx-callout.is-poor .dh-wx-word { color: var(--dh-poor); }
+.dh-wx-callout.is-none .dh-wx-word { color: var(--dh-muted); }
+.dh-wx-why { font-size: .85rem; margin: 6px 0 0; line-height: 1.45; opacity: .9; }
+
+.dh-wx-halves { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.dh-wx-half { border: 1px solid var(--dh-line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; }
+.dh-wx-lab { font-size: .67rem; text-transform: uppercase; letter-spacing: .05em; color: var(--dh-muted); font-weight: 700; }
+.dh-wx-val { font-size: 1rem; font-weight: 800; margin-top: 2px; }
+.dh-wx-half.is-good .dh-wx-val { color: var(--dh-good); }
+.dh-wx-half.is-avg  .dh-wx-val { color: var(--dh-avg); }
+.dh-wx-half.is-poor .dh-wx-val { color: var(--dh-poor); }
+.dh-wx-half.is-none .dh-wx-val { color: var(--dh-muted); font-size: .85rem; }
+.dh-wx-sub { font-size: .72rem; color: var(--dh-muted); margin-top: 3px; }
+
+.dh-wx-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 12px; }
+.dh-wx-fact { background: var(--dh-foam); border-radius: 11px; padding: 9px 4px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.dh-wx-fact .material-icons-round { font-size: 15px; color: var(--dh-sea); }
+.dh-wx-n { font-size: .98rem; font-weight: 800; color: var(--dh-deep); line-height: 1.15; margin-top: 2px; }
+.dh-wx-n small { font-size: .62rem; font-weight: 700; margin-left: 1px; }
+.dh-wx-u { font-size: .61rem; color: var(--dh-muted); text-transform: uppercase; letter-spacing: .03em; margin-top: 3px; font-weight: 700; }
+
+.dh-wx-boats { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 11px 13px; border-radius: 12px; background: var(--dh-ink); color: #fff; text-decoration: none; font-size: .85rem; font-weight: 700; }
+.dh-wx-boats:hover { background: var(--dh-deep); color: #fff; }
+.dh-wx-boats .material-icons-round { font-size: 19px; }
+.dh-wx-arrow { margin-left: auto; }
+.dh-wx-explain { margin: 10px 0 0; text-align: center; font-size: .76rem; }
+.dh-wx-explain a { color: var(--dh-sea); font-weight: 700; text-decoration: none; }
+
+.dh-wx-ch { font-size: .95rem; font-weight: 800; padding: 13px 15px; margin: 0; border-bottom: 1px solid var(--dh-line); display: flex; align-items: center; justify-content: space-between; }
+.dh-wx-ch span { font-size: .72rem; font-weight: 400; color: var(--dh-muted); }
+
+.dh-wx-day { display: flex; align-items: center; gap: 9px; padding: 11px 15px; border-bottom: 1px solid #eef1f3; color: var(--dh-ink); text-decoration: none; }
+.dh-wx-day:last-child { border-bottom: 0; }
+.dh-wx-day:hover { background: var(--dh-sand); color: var(--dh-ink); }
+.dh-wx-day.is-today { background: #f7fbfc; }
+.dh-wx-dday { flex: 0 0 46px; }
+.dh-wx-dday b { display: block; font-size: .85rem; font-weight: 800; }
+.dh-wx-dday span { display: block; font-size: .67rem; color: var(--dh-muted); }
+.dh-wx-bars { flex: 1 1 auto; display: flex; gap: 4px; min-width: 0; }
+.dh-wx-bar { flex: 1; border-radius: 7px; padding: 5px 4px; text-align: center; font-size: .67rem; font-weight: 800; line-height: 1.2; }
+.dh-wx-bar small { display: block; font-weight: 600; opacity: .75; font-size: .6rem; }
+.dh-wx-bar.is-good { background: var(--dh-good-bg); color: var(--dh-good); }
+.dh-wx-bar.is-avg  { background: var(--dh-avg-bg);  color: var(--dh-avg); }
+.dh-wx-bar.is-poor { background: var(--dh-poor-bg); color: var(--dh-poor); }
+.dh-wx-bar.is-none { background: var(--dh-foam); color: var(--dh-muted); }
+.dh-wx-dsea { flex: 0 0 78px; text-align: right; font-size: .69rem; color: var(--dh-muted); line-height: 1.35; }
+.dh-wx-dsea b { color: var(--dh-ink); font-weight: 700; }
+.dh-wx-dboats { color: var(--dh-sea); font-weight: 700; }
+
+.dh-wx-crow { display: flex; align-items: center; gap: 10px; padding: 9px 15px; border-bottom: 1px solid #eef1f3; text-decoration: none; color: var(--dh-ink); }
+.dh-wx-crow:last-child { border-bottom: 0; }
+.dh-wx-crow:hover { background: var(--dh-sand); color: var(--dh-ink); }
+.dh-wx-crow.is-here { background: #f7fbfc; }
+.dh-wx-crow.is-here .dh-wx-cname { font-weight: 800; }
+.dh-wx-cname { flex: 1 1 auto; font-size: .86rem; font-weight: 600; }
+.dh-wx-cnum { flex: 0 0 70px; text-align: right; font-size: .7rem; color: var(--dh-muted); }
+.dh-wx-cnum b { color: var(--dh-ink); }
+
+.dh-wx-more { background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 16px; margin-top: 12px; }
+.dh-wx-more > summary { padding: 13px 15px; font-weight: 700; font-size: .9rem; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 9px; color: var(--dh-ink); }
+.dh-wx-more > summary::-webkit-details-marker { display: none; }
+.dh-wx-more > summary:hover { color: var(--dh-deep); }
+.dh-wx-more > summary .material-icons-round { color: var(--dh-sea); font-size: 20px; }
+.dh-wx-hint { margin-left: auto; font-weight: 400; font-size: .72rem; color: var(--dh-muted); }
+.dh-wx-more-body { padding: 0 15px 15px; }
+.dh-wx-tides { list-style: none; margin: 0; padding: 0; font-size: .84rem; }
+.dh-wx-tides li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eef1f3; color: var(--dh-muted); }
+.dh-wx-tides li:last-child { border-bottom: 0; }
+.dh-wx-tides b { color: var(--dh-ink); }
+/* The old cards inside the collapsed sections keep their own look but must not
+   push the page sideways on a phone. */
+.dh-wx-more-body .table-responsive { overflow-x: auto; }
+.dh-wx-more-body iframe, .dh-wx-more-body img, .dh-wx-more-body canvas { max-width: 100%; }

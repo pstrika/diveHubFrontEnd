@@ -176,6 +176,10 @@ picker. That deploys the branch straight to production.
    - `/DiveSitesMap` to `/DiveSites?view=map`
    - `/DiveSitesSearch` to `/DiveSites`
    - `/DiveSitesAll` to `/DiveSites?sort=name`
+   - `/WeatherAR`, `/WeatherARMetric` and `/WeatherARImperial` (with or without
+     a location) 301 to `/Weather/{location}`. The separate Argentina forecast
+     is retired; one page serves every location now. These were indexed, so the
+     redirects matter for search.
 
 ## 5. What to watch in the first two weeks
 

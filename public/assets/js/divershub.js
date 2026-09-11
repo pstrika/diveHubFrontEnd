@@ -211,3 +211,16 @@
            .then(function () { btn.disabled = false; });
     });
 })();
+
+/* ------------------------------------------------------------------ */
+/* "Show all" on a capped list. The rest of the rows are already in the */
+/* page with hidden on them, so this is one click and no request.       */
+/* ------------------------------------------------------------------ */
+document.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-dh-showall]');
+    if (!btn) return;
+    document.querySelectorAll('.' + btn.getAttribute('data-dh-showall')).forEach(function (row) {
+        row.hidden = false;
+    });
+    btn.remove();
+});

@@ -136,12 +136,15 @@ Route::get('DecoPlannerMetric', 'App\Http\Controllers\NDLController@showMetric')
 
 Route::get('Weather/{location}', 'App\Http\Controllers\WeatherController@show')->middleware('guest')->name('Weather');
 Route::get('Weather/', 'App\Http\Controllers\WeatherController@show')->middleware('guest')->name('Weather');
-Route::get('WeatherAR/{location}', 'App\Http\Controllers\WeatherController@showAR')->middleware('guest')->name('WeatherAR');
-Route::get('WeatherAR/', 'App\Http\Controllers\WeatherController@showAR')->middleware('guest')->name('WeatherAR');
-Route::get('WeatherARImperial/{location}', 'App\Http\Controllers\WeatherController@showARImperial')->middleware('guest')->name('WeatherARImperial');
-Route::get('WeatherARImperial/', 'App\Http\Controllers\WeatherController@showARImperial')->middleware('guest')->name('WeatherARImperial');
-Route::get('WeatherARMetric/{location}', 'App\Http\Controllers\WeatherController@showARMetric')->middleware('guest')->name('WeatherARMetric');
-Route::get('WeatherARMetric/', 'App\Http\Controllers\WeatherController@showARMetric')->middleware('guest')->name('WeatherARMetric');
+// The separate Argentina forecast retired in release 10: /Weather now serves
+// every location in weatherlocations, Argentina included, and it is the better
+// page. These URLs are indexed and were linked from the drawer for a year, so
+// they redirect rather than 404. The metric and imperial variants fold into the
+// same place; units are a setting to add back, see docs/roadmap.md.
+$weatherRedirect = fn ($location = 'mar del plata') => redirect(route('Weather') . '/' . rawurlencode($location), 301);
+Route::get('WeatherAR/{location?}', $weatherRedirect)->name('WeatherAR');
+Route::get('WeatherARImperial/{location?}', $weatherRedirect)->name('WeatherARImperial');
+Route::get('WeatherARMetric/{location?}', $weatherRedirect)->name('WeatherARMetric');
 
 // Themed calendars render the trip finder with a type preset; open to guests like the board itself.
 Route::get('CalendarT/{tripType}/{date}', 'App\Http\Controllers\CalendarTController@show')->middleware('guest')->name('CalendarT');
