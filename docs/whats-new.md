@@ -1,6 +1,7 @@
 # What changed on the redesign branch
 
-Written 2026-09-10 for testing the beta and walking Pablo through it.
+Written 2026-09-10 for testing the beta and walking Pablo through it. For
+everything shipped after this walkthrough, see `docs/redesign-release-notes.md`.
 
 Everything below is live at https://divehub-redesign.azurewebsites.net.
 
