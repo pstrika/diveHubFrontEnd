@@ -405,26 +405,31 @@
         selectable: true,
         editable: false,
         initialDate: '{{ $currentDate }}',
-        events: [
-            @php
-                foreach($trips as $trip) {
-                    // fix the ' problem
-                    $tripName = str_replace("'", "\\'", $trip->tripName);
-                    echo "{";
-                    echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) ."',";
-                    echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
-                    //echo "url: '/TripDetails/" . str($trip->id) . "',";
-                    echo "extendedProps: {myId: '" . str($trip->id) . "', operator: '" . $trip->operatorName . "', eventId: '" . $trip->eventId ."', booked: '" . $trip->booked . "', waiverSigned: '" . $trip->waiverSigned . "', linkToBook: '" . $trip->linkToBook . "', waiver: '" . $trip->waiver . "'},";
-                    if($trip->booked)
-                        echo "className: 'bg-gradient-success text-white opId=$trip->operatorId isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
-                    else
-                        echo "className: 'bg-gradient-danger text-white opId=$trip->operatorId isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
-                    
-                }
-            @endphp
-            
+        // Built via json_encode rather than raw string concatenation - any
+        // field here (trip name, operator name, etc.) can contain an
+        // apostrophe or other JS-string-breaking character (e.g. "Captain's
+        // Hook"), and a hand-built '...' JS string literal has no safe way
+        // to embed that. JSON encoding handles all of it correctly at once.
+        events: {!! json_encode(collect($trips)->map(function ($trip) {
+            $tripName = strstr($trip->tripName, '(', true) ?: $trip->tripName;
 
-        ],
+            return [
+                'title' => $tripName,
+                'start' => $trip->date . ' ' . $trip->departureTime,
+                'extendedProps' => [
+                    'myId' => (string) $trip->id,
+                    'operator' => $trip->operatorName,
+                    'eventId' => (string) $trip->eventId,
+                    'booked' => (string) $trip->booked,
+                    'waiverSigned' => (string) $trip->waiverSigned,
+                    'linkToBook' => $trip->linkToBook,
+                    'waiver' => $trip->waiver,
+                ],
+                'className' => ($trip->booked ? 'bg-gradient-success' : 'bg-gradient-danger')
+                    . ' text-white opId=' . $trip->operatorId
+                    . ' isAvail=' . ($trip->tripFreeSpots > 0 ? 'Y' : 'N'),
+            ];
+        })->values()->all(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!},
         views: {
             month: {
             titleFormat: {
