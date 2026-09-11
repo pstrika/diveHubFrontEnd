@@ -544,8 +544,16 @@ class SiteController extends Controller
         // select([]) clears $base's own column list first - selectRaw() adds
         // to it rather than replacing it, which would otherwise put every
         // unaggregated column from $base into this GROUP BY query too.
-        $levelCounts = $applyType((clone $base), $type)
+        //
+        // Cached for the plain (no search text) case, 2026-09-11: every
+        // explorer load was paying a full remote round trip for this even
+        // though it only actually changes when a site is added or hidden.
+        // Skipped for an active search since counts should stay live then.
+        $levelCountsQuery = fn () => $applyType((clone $base), $type)
             ->select([])->selectRaw('level, COUNT(*) c')->groupBy('level')->pluck('c', 'level')->all();
+        $levelCounts = $q === ''
+            ? \Illuminate\Support\Facades\Cache::remember('sites.levelCounts.' . ($type ?? 'all'), 300, $levelCountsQuery)
+            : $levelCountsQuery();
         $levelCounts = array_replace(array_fill_keys(array_keys(DiveLevel::all()), 0), array_intersect_key($levelCounts, DiveLevel::all()));
 
         $query = $applyType($base, $type);
@@ -567,7 +575,13 @@ class SiteController extends Controller
         // plain "first 50 by name, then re-sort those" would silently miss
         // sites that are more popular but later alphabetically), and the map
         // needs every matching pin regardless of how long the list would be.
-        $totalMatching = (clone $query)->count();
+        // Cached only for the plain "no filters at all" case (the default
+        // Top Rated view): that count barely changes and is one more remote
+        // round trip otherwise paid on every single load (2026-09-11).
+        // Anything filtered (type, level or a search) counts live.
+        $totalMatching = ($type === null && $level === null && $q === '')
+            ? \Illuminate\Support\Facades\Cache::remember('sites.totalCount', 300, fn () => (clone $query)->count())
+            : (clone $query)->count();
         $show = max(50, (int) $request->query('show', 50));
 
         if ($sort === 'popular' || $view === 'map') {
@@ -588,7 +602,12 @@ class SiteController extends Controller
 
         // First photo per site for the cards, one query for the whole page.
         $firstPhotos = Photo::whereIn('siteId', $sites->pluck('id'))->orderBy('id')->get()->groupBy('siteId');
-        $locationNames = WeatherLocation::all()->pluck('location', 'short')->map(fn ($n) => ucwords($n));
+        // Thirteen rows that change maybe once a year - cached like
+        // SiteRank::tripCounts() rather than paying a remote round trip for
+        // it on every single card-grid page load (2026-09-11).
+        $locationNames = \Illuminate\Support\Facades\Cache::remember('sites.locationNames', 3600, function () {
+            return WeatherLocation::all()->pluck('location', 'short')->map(fn ($n) => ucwords($n));
+        });
 
         // Card actions (Zach, 2026-09-10): save to the wishlist and mark as dived
         // from the card, so nobody opens 379 pages to do it. Two id lists for a
@@ -666,7 +685,7 @@ class SiteController extends Controller
             "canonical" => route("DiveSites")
         );
         return $this->explorer($request, [
-            'heading'     => 'Top rated sites - drop in Florida',
+            'heading'     => 'Top rated sites',
             'intro'       => 'Every reef, wreck and shore entry from Stuart to Key West, ordered by how often the boats go there and what divers rate them.',
             'fixedType'   => null,
             'defaultSort' => 'popular',
