@@ -90,18 +90,57 @@
                 return 'poor';
             };
             $ft = fn ($v) => $v === null || $v === '' ? null : round((float) $v, 1);
-            // One honest sentence about why today reads the way it does. Period is
-            // the difference between a roll and chop; direction is offshore or on.
+            // One sentence under the verdict: the numbers, then at most one
+            // clause of interpretation.
+            //
+            // That clause is gated on Pablo's score, deliberately. A first pass
+            // branched on swell period alone and contradicted the headline in
+            // about one row in six of real data: "Poor diving today" followed by
+            // "long period, so it rolls rather than chops" (true, but it was 8 ft
+            // and 28 mph), and "Perfect diving today" followed by "short period,
+            // so it is chop" (it was 0.4 ft, which is glass, not chop). Period
+            // only means chop when there is height and wind behind it.
+            //
+            // So the verdict decides which clause is even available, and the
+            // sentence can never argue with the word above it. When it is bad we
+            // name what is wrong rather than describing the sea shape.
             $why = null;
             if ($today) {
-                $h = $ft($today->swell_height_AM); $pr = $ft($today->swell_period_AM);
-                $w = $ft($today->wind_speed_AM); $d = $today->wind_dir_AM;
-                $shape = $pr === null ? null : ($pr >= 7 ? 'Long period, so it rolls rather than chops.'
-                        : ($pr >= 5 ? 'A medium period, some chop on the surface.'
-                        : 'Short period, so it is chop rather than swell.'));
-                $why = trim(($h !== null ? $h . ' ft of swell' : 'Swell') .
-                       ($pr !== null ? ' on a ' . $pr . ' second period' : '') .
-                       ($w !== null ? ', ' . round($w) . ' mph' . ($d ? ' out of the ' . $d : '') : '') . '. ' . $shape);
+                $h = $ft($today->swell_height_AM);
+                $pr = $ft($today->swell_period_AM);
+                $w = $ft($today->wind_speed_AM);
+                $d = $today->wind_dir_AM;
+                $t = $tone($today->conditionsAM_text);
+
+                $clause = null;
+                if ($t === 'good') {
+                    if ($h !== null && $h <= 1.0) {
+                        $clause = 'Small and clean.';
+                    } elseif ($pr !== null && $pr >= 7) {
+                        $clause = 'Long period, so it rolls rather than chops.';
+                    }
+                } elseif ($t === 'avg') {
+                    if ($w !== null && $w >= 15) {
+                        $clause = 'The wind is what is holding it back.';
+                    } elseif ($pr !== null && $pr < 5 && $h !== null && $h >= 1.5) {
+                        $clause = 'Short period for that height, so expect chop.';
+                    }
+                } elseif ($t === 'poor') {
+                    if ($h !== null && $h >= 3) {
+                        $clause = 'Too much swell.';
+                    } elseif ($w !== null && $w >= 20) {
+                        $clause = 'Too much wind.';
+                    } else {
+                        $clause = 'Not a day for it.';
+                    }
+                }
+
+                $parts = [];
+                if ($h !== null) { $parts[] = $h . ' ft of swell'; }
+                if ($pr !== null) { $parts[] = 'a ' . $pr . ' second period'; }
+                if ($w !== null) { $parts[] = round($w) . ' mph' . ($d ? ' out of the ' . $d : ''); }
+                $why = $parts ? implode(', ', $parts) . '.' : null;
+                if ($why && $clause) { $why .= ' ' . $clause; }
             }
         @endphp
 

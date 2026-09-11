@@ -244,10 +244,18 @@ slow to load. Nothing to do on the view side.
    Fahrenheit. The forecast page should offer a units toggle stored on the user
    (or inferred from the location's country) rather than a second copy of the
    page. Small, and worth doing before we push the app in Argentina.
-7. **Buoy data.** `weatherlocations.buoy` is filled for two locations only,
+7. **Stop seeding a fake location preference at sign up.** Registration writes
+   `favLocations = '3, 5, 8'` for every new account (RegisterController and
+   GoogleController), and 3 is Key Largo, so "your first favourite place" was
+   Key Largo for everyone who never edited their profile. The forecast page now
+   recognises that exact seed and ignores it, but the seed is the actual
+   problem: it also makes the welcome wizard's "no places yet" test never fire,
+   because the column is never empty. Removing it means checking every read of
+   favLocations (dashboard, trip finder, site pages) copes with null.
+8. **Buoy data.** `weatherlocations.buoy` is filled for two locations only,
    Miami and Fort Lauderdale. If there is a live feed behind it, "right now"
    beside "forecast" is worth a lot on the forecast page, because a forecast
    written at midnight is stale by evening. Question for Pablo.
-8. rEvo dive companion, offline first (Zach and Pablo use it every dive).
-9. Blog, then the community feed.
+9. rEvo dive companion, offline first (Zach and Pablo use it every dive).
+10. Blog, then the community feed.
 8. Operator coordinates and one search whenever convenient.

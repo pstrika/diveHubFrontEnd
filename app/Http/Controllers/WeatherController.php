@@ -11,6 +11,28 @@ use Illuminate\Support\Facades\Log;
 
 class WeatherController extends Controller
 {
+    /**
+     * Registration seeds favLocations with '3, 5, 8' for everybody
+     * (RegisterController and GoogleController), and 3 is key largo. So "the
+     * first of your favourite places" opened the forecast on Key Largo for
+     * every member who had never touched their profile, which is not a
+     * preference, it is a default nobody chose.
+     *
+     * Treat that exact seed as "no preference" and fall back to Fort
+     * Lauderdale. The real fix is to stop writing a fake preference at sign up;
+     * that touches the welcome wizard's "needs setup" test too, so it is a
+     * roadmap item rather than a change on release day.
+     */
+    private static function pickedTheirOwnPlaces($user): bool
+    {
+        $ids = array_filter(array_map('trim', explode(',', (string) $user->favLocations)), 'strlen');
+        if (!$ids) {
+            return false;
+        }
+        sort($ids);
+        return $ids !== ['3', '5', '8'];
+    }
+
     public function show($location = null)
     {
         // No location in the URL: a member lands on the first of their favourite
@@ -21,10 +43,10 @@ class WeatherController extends Controller
         if (!$location) {
             $location = "fort lauderdale";
             $user = auth()->user();
-            if ($user && $user->isNotGuest()) {
+            if ($user && $user->isNotGuest() && self::pickedTheirOwnPlaces($user)) {
                 $firstFav = (int) current(explode(',', (string) $user->favLocations));
                 $fav = $firstFav ? WeatherLocation::find($firstFav) : null;
-                if ($fav && $fav->country === 'US') {
+                if ($fav) {
                     $location = $fav->location;
                 }
             }

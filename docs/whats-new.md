@@ -336,6 +336,12 @@ Several of these were broken on the live site too, not just on the branch.
   instead of thirteen page loads. Then tides, webcams, charts and the full table
   behind a tap. Nothing was deleted. The webcams are lazy now, so twenty iframes
   no longer load on arrival.
+- **The forecast opens on the right place.** Registration seeds every new
+  account with the same three favourite locations and the first of them is Key
+  Largo, so "your first favourite place" was opening the forecast on Key Largo
+  for everyone who had never edited their profile. That is a default nobody
+  chose. The page recognises the seed and falls back to Fort Lauderdale; a diver
+  who actually picked their places still lands on theirs.
 - **One forecast page, Argentina included.** The separate Argentina page and its
   metric and imperial variants are retired; `/Weather/{location}` serves every
   location in the table. The three old URLs 301 to it, because they are indexed
@@ -368,6 +374,8 @@ Sign out first, then work through as a guest, then sign in.
 | Weather tab | "Good diving today" above the fold, then 7 days, then the coast |
 | Weather, tap a day | The trip finder for that day |
 | Weather, Key Largo | Average, and the reason says short period |
+| Weather with a fresh account | Fort Lauderdale, not Key Largo |
+| Weather after picking places in the wizard | Your first place |
 | Weather, All locations, Ushuaia | The same page, Argentina data |
 | `/WeatherAR/ushuaia` | 301 to `/Weather/ushuaia` |
 | `/Weather/nowhere` | The Fort Lauderdale forecast, not an error |
