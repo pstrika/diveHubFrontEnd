@@ -1,282 +1,140 @@
 <x-page-template bodyClass='dh-shell bg-gray-200'>
     <x-shell.nav active="me" />
-    
-    
-    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-        <!-- Navbar -->
+
+    <main class="main-content position-relative h-100 border-radius-lg">
         <x-shell.header title="Platform Health" />
-        <!-- End Navbar -->
-        <div class="container-fluid py-0">
 
-        
-
-            <div class="d-none" data-color="info" id="sidebarColorDiv"></div>
-
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/platformHealth.webp');">
-                <span class="mask  bg-gradient-info  opacity-4"></span>
-            </div>
-
-            <div class="card p-0 position-relative mt-n5 mx-1 z-index-2 mb-4">
-                
-                    <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
-                        <div style="float: left;">
-                            <h1 class="card-title text-info mx-3 mt-0">Platform Health</h1>
-                        </div>
-
-                    </div>
+        <div class="container-fluid py-0 dh-board">
+            {{--
+                Retheme (2026-09-11) onto the same flat .dh-card table style as
+                the rest of the redesign, plus the crawler team's new operator
+                status contract: _status is a signed integer code now (see
+                App\Support\OperatorHealth), _runsRemaining tracks Fareharbor
+                pagination, and _cron is the operator's Azure Function timer,
+                rendered as a sentence. All parsing lives in OperatorHealth so
+                this view stays a straight read of it - see that class's
+                docblock for the rollout caveat on _status.
+            --}}
+            <section class="dh-card">
+                <h2 class="dh-card-head">Operators scraping <span class="dh-region-count">{{ count($operators) }}</span></h2>
+                <div class="dh-card-body dh-health-table-wrap">
+                    <table class="dh-health-table">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th></th>
+                                <th>Operator</th>
+                                <th>Last run</th>
+                                <th>Timestamp (ET)</th>
+                                <th class="text-center">Trips added</th>
+                                <th>Schedule (UTC)</th>
+                                <th class="text-center">Runs remaining</th>
+                                <th class="text-center">Version</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($operators as $operator)
+                                @php
+                                    $utc = new \DateTime((string) $operator->_lastUpdate, new \DateTimeZone('UTC'));
+                                    $et = (clone $utc)->setTimezone(new \DateTimeZone('America/New_York'));
+                                    $interval = (new \DateTime())->diff($et);
+                                    $ago = trim(
+                                        ((int) $interval->format('%d') ? $interval->format('%d days ') : '')
+                                        . ((int) $interval->format('%h') ? $interval->format('%h hrs ') : '')
+                                        . ((int) $interval->format('%i') ? $interval->format('%i min') : '')
+                                    );
+                                    $status = \App\Support\OperatorHealth::status($operator->_status);
+                                    $runsRemaining = \App\Support\OperatorHealth::runsRemainingLabel($operator->_runsRemaining, $operator->queryMaxDaySpan);
+                                    $schedule = \App\Support\OperatorHealth::cronLabel($operator->_cron);
+                                @endphp
+                                <tr>
+                                    <td>
+                                        <span class="dh-health-pill is-{{ $status['tone'] }}" title="_status = {{ $operator->_status }}">
+                                            <span class="material-icons-round" aria-hidden="true">{{ $status['icon'] }}</span>{{ $status['label'] }}
+                                        </span>
+                                    </td>
+                                    <td>@if($operator->logoUrl)<img src="{{ asset('assets') }}{{ $operator->logoUrl }}" alt="" class="dh-health-logo">@endif</td>
+                                    <td class="dh-health-name">{{ $operator->operatorName }}</td>
+                                    <td>{{ $ago !== '' ? $ago . ' ago' : 'just now' }}</td>
+                                    <td>{{ $et->format('Y-m-d H:i:s') }}</td>
+                                    <td class="text-center">{{ $operator->_updatedCount }}</td>
+                                    <td>{{ $schedule ?? '—' }}</td>
+                                    <td class="text-center">{{ $runsRemaining ?? '—' }}</td>
+                                    <td class="text-center">{{ $operator->_ver }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
-            </div>
+            </section>
 
-            <div class="row">
-                
-                
-                {{-- Scrapping card --}}
-                <div class="col-md-12">             
-                    <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h3 class="card-title text-white mx-4"> Operators Scrapping</h3>
-                                <h5 class="card-title text-white mx-4"> Total: {{ count($operators) }}</h5>
-                            </div>
-                        </div>
-
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table>
-
-                                <thead class="text-info">
-                                    <th class="align-top">
-                                        Status
-                                    </th>
-                                    <th class="align-top">
-                                        
-                                    </th>
-                                    <th class="align-top">
-                                        Operator
-                                    </th>
-                                    <th class="align-top">
-                                        Last Execution
-                                    </th>
-                                    <th class="align-top">
-                                        Time Stamp (UTC-5)
-                                    </th>
-                                    <th class="text-center align-top">
-                                        Trips Added
-                                    </th>
-                                    <th class="text-center align-top">
-                                        Error Code
-                                    </th>
-                                    <th class="text-center align-top">
-                                        Version
-                                    </th>
-                                </thead>
-
-                                    <tbody>
-                                        @foreach($operators as $operator)
-                                            @php
-                                                //$dateTime = DateTime::createFromFormat('Y-m-d H:i:s', $operator->_lastUpdate);
-                                                
-                                                // Assuming you have a datetime variable in UTC
-                                                $utc_datetime_str = $operator->_lastUpdate;
-                                                $utc_datetime = new DateTime($utc_datetime_str, new DateTimeZone('UTC'));
-
-                                                // Convert to EST (Eastern Standard Time)
-                                                $est_timezone = new DateTimeZone('America/New_York'); // UTC-5
-                                                $dateTime = $utc_datetime->setTimezone($est_timezone);
-                                                
-                                                $now = new DateTime();
-                                                
-                                                $interval = $now->diff($dateTime);
-                                                //$interval = $dateTime->diff($now);
-
-                                                if($operator->_status == "1" and $interval->format('%d') == "0") {
-                                                    $statusIcon = "check_circle";
-                                                    $colorIcon = "#008000";
-                                                }
-                                                elseif ($operator->_status == "0") {
-                                                    $statusIcon = "schedule";
-                                                    $colorIcon = "#03a9f4";
-                                                }
-                                                else {
-                                                    $statusIcon = "error";
-                                                    $colorIcon = "#ff0000";
-                                                }
-                                                
-
-                                            @endphp
-                                            <tr style="border-bottom: 1px solid #D3D3D3;">
-                                                <td class="px-0 py-2 text-sm text-center custom-text-color" style="color: {{ $colorIcon }};"><i class="material-icons position-relative ms-auto text-lg me-1 my-auto" >{{ $statusIcon}}</i></td>
-                                                <td class="w-10"><img src="{{ asset('assets') }}{{ $operator->logoUrl}}" alt="img-blur-shadow" class="img-fluid align-items-center border-radius-lg"></td>
-                                                <td class="w-40">{{ $operator->operatorName }}</td>
-                                                <td class="w-15">{{ ($interval->format('%d') != 0) ? ($interval->format('%d days')) : "" }} {{ ($interval->format('%h') != 0) ? ($interval->format('%h hrs')) : "" }} {{ ($interval->format('%i') != 0) ? ($interval->format('%i min')) : "" }} ago</td>
-                                                <td class="w-15">{{ $dateTime->format('Y-m-d H:i:s') }}</td>
-                                                <td class="text-center">{{ $operator->_updatedCount }}</td>
-                                                <td class="text-center">{{ $operator->_status }}</td>
-                                                <td class="text-center">{{ $operator->_ver }}</td>
-                                            </tr>
-
-                                        @endforeach
-                                    </tbody>
-                                    
-                                </table>
-                            </div>    
-                        </div>
-                    </div>
+            <section class="dh-card">
+                <h2 class="dh-card-head">Operators not scraping <span class="dh-region-count">{{ count($notScrapping) }}</span></h2>
+                <div class="dh-card-body dh-health-table-wrap">
+                    <table class="dh-health-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Operator</th>
+                                <th>Location</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($notScrapping as $operator)
+                                <tr>
+                                    <td>@if($operator->logoUrl)<img src="{{ asset('assets') }}{{ $operator->logoUrl }}" alt="" class="dh-health-logo">@endif</td>
+                                    <td class="dh-health-name">{{ $operator->operatorName }}</td>
+                                    <td>{{ $operator->location }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
-                {{-----------------------------}}
+            </section>
 
-                {{-- Scrapping card --}}
-                <div class="col-md-12">             
-                    <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h3 class="card-title text-white mx-4"> Operators Not-Scrapping</h3>
-                                <h5 class="card-title text-white mx-4"> Total: {{ count($notScrapping) }}</h5>
-                            </div>
-                        </div>
-
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table>
-
-                                <thead class="text-info">
-                                    <th class="align-top text-center">
-                                    </th>
-                                    <th class="align-top">
-                                        Operator
-                                    </th>
-                                    <th class="align-top">
-                                        Location
-                                    </th>
-
-                                </thead>
-
-                                    <tbody>
-                                        @foreach($notScrapping as $operator)
-                                            
-                                            <tr style="border-bottom: 1px solid #D3D3D3;">
-                                                <td class="w-10"><img src="{{ asset('assets') }}{{ $operator->logoUrl}}" alt="img-blur-shadow" class="img-fluid align-items-center border-radius-lg"></td>
-                                                <td class="w-70">{{ $operator->operatorName }}</td>
-                                                <td class="text-left">{{ $operator->location }}</td>
-                                            </tr>
-
-                                        @endforeach
-                                    </tbody>
-                                    
-                                </table>
-                            </div>    
-                        </div>
-                    </div>
+            <section class="dh-card">
+                <h2 class="dh-card-head">Weather API <span class="dh-region-count">{{ count($weatherLocations) }}</span></h2>
+                <div class="dh-card-body dh-health-table-wrap">
+                    <table class="dh-health-table">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Location</th>
+                                <th>Last run</th>
+                                <th>Timestamp (ET)</th>
+                                <th class="text-center">Status code</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($weatherLocations as $weatherLocation)
+                                @php
+                                    $utc = new \DateTime((string) $weatherLocation->_lastUpdated, new \DateTimeZone('UTC'));
+                                    $et = (clone $utc)->setTimezone(new \DateTimeZone('America/New_York'));
+                                    $interval = (new \DateTime())->diff($et);
+                                    $ago = trim(
+                                        ((int) $interval->format('%d') ? $interval->format('%d days ') : '')
+                                        . ((int) $interval->format('%h') ? $interval->format('%h hrs ') : '')
+                                        . ((int) $interval->format('%i') ? $interval->format('%i min') : '')
+                                    );
+                                    // The weather crawler is still on the old 0/1 contract - not
+                                    // part of the operators status rollout above.
+                                    $wxTone = $weatherLocation->_status == '1' ? 'good' : ($weatherLocation->_status == '0' ? 'wait' : 'poor');
+                                    $wxIcon = $weatherLocation->_status == '1' ? 'check_circle' : ($weatherLocation->_status == '0' ? 'schedule' : 'error');
+                                @endphp
+                                <tr>
+                                    <td><span class="dh-health-pill is-{{ $wxTone }}"><span class="material-icons-round" aria-hidden="true">{{ $wxIcon }}</span></span></td>
+                                    <td class="dh-health-name">{{ ucwords($weatherLocation->location) }}</td>
+                                    <td>{{ $ago !== '' ? $ago . ' ago' : 'just now' }}</td>
+                                    <td>{{ $et->format('Y-m-d H:i:s') }}</td>
+                                    <td class="text-center">{{ $weatherLocation->_status }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
-                {{-----------------------------}}
+            </section>
 
-                {{-- Weather API card --}}
-                <div class="col-md-12">             
-                    <div class="card p-0 position-relative mt-3 mx-3 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h3 class="card-title text-white mx-4"> Weather API</h3>
-                                <h5 class="card-title text-white mx-4"> Total: {{ count($weatherLocations) }}</h5>
-                            </div>
-                        </div>
-
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table>
-
-                                <thead class="text-info">
-                                    <th class="align-top text-center">
-                                        Status
-                                    </th>
-                                    <th class="align-top">
-                                        Location
-                                    </th>
-                                    <th class="align-top">
-                                        Last Execution
-                                    </th>
-                                    <th class="align-top">
-                                        Time Stamp (UTC-5)
-                                    </th>
-                                    <th class="text-center align-top">
-                                        Error Code
-                                    </th>
-                                    
-                                </thead>
-
-                                    <tbody>
-                                        @foreach($weatherLocations as $weatherLocation)
-                                            @php
-                                                //$dateTime = DateTime::createFromFormat('Y-m-d H:i:s', $operator->_lastUpdate);
-                                                
-                                                // Assuming you have a datetime variable in UTC
-                                                $utc_datetime_str = $weatherLocation->_lastUpdated;
-                                                $utc_datetime = new DateTime($utc_datetime_str, new DateTimeZone('UTC'));
-
-                                                // Convert to EST (Eastern Standard Time)
-                                                $est_timezone = new DateTimeZone('America/New_York'); // UTC-5
-                                                $dateTime = $utc_datetime->setTimezone($est_timezone);
-                                                
-                                                $now = new DateTime();
-                                                
-                                                $interval = $now->diff($dateTime);
-                                                //$interval = $dateTime->diff($now);
-
-                                                if($weatherLocation->_status == "1" and $interval->format('%h') == "0") {
-                                                    $statusIcon = "check_circle";
-                                                    $colorIcon = "#008000";
-                                                }
-                                                elseif ($weatherLocation->_status == "0") {
-                                                    $statusIcon = "schedule";
-                                                    $colorIcon = "#03a9f4";
-                                                }
-                                                else {
-                                                    $statusIcon = "error";
-                                                    $colorIcon = "#ff0000";
-                                                }
-                                                
-
-                                            @endphp
-                                            <tr style="border-bottom: 1px solid #D3D3D3;">
-                                                <td class="px-0 py-2 text-sm text-center custom-text-color" style="color: {{ $colorIcon }};"><i class="material-icons position-relative ms-auto text-lg me-1 my-auto" >{{ $statusIcon}}</i></td>
-                                                <td class="w-40">{{ $weatherLocation->location }}</td>
-                                                <td class="w-15">{{ ($interval->format('%d') != 0) ? ($interval->format('%d days')) : "" }} {{ ($interval->format('%h') != 0) ? ($interval->format('%h hrs')) : "" }} {{ ($interval->format('%i') != 0) ? ($interval->format('%i min')) : "" }} ago</td>
-                                                <td class="w-15">{{ $dateTime->format('Y-m-d H:i:s') }}</td>
-                                                <td class="text-center">{{ $weatherLocation->_status }}</td>
-                                                
-                                            </tr>
-
-                                        @endforeach
-                                    </tbody>
-                                    
-                                </table>
-                            </div>    
-                        </div>
-                    </div>
-                </div>
-                {{-----------------------------}}
-                
-                    
-                </div>
-            
-                
-
-
-                
-            
-            
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>
     </main>
-    
-    
-    {{--<x-plugins></x-plugins>--}}
-    
-    @push('js')
-    <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
-    
-    <script>
-
-    </script>
-
-    @endpush
 </x-page-template>

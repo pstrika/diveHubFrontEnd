@@ -520,7 +520,15 @@ class SiteController extends Controller
         $sort  = array_key_exists((string) $sort, self::EXPLORER_SORTS) ? $sort : $explorer['defaultSort'];
         $view  = $request->query('view') === 'map' ? 'map' : 'list';
 
-        $base = Site::where('_hidden', '<>', 1);
+        // Explicit column list (2026-09-11, MAJOR perf fix): `sites` carries
+        // several big JSON/rich-text columns (desc, history, wreckData,
+        // videos, pics) that a plain `SELECT *` was pulling for all ~380
+        // rows on every explorer load even though the cards never touch
+        // them - that alone was most of this page's load time, and with
+        // sort=popular fetching every row (see below) it was paid in full
+        // on every "Top Rated" visit, not just once per page of results.
+        $base = Site::select(['id', 'slug', 'name', 'type', 'level', 'location', 'maxDepth', 'rate', 'votes', 'access', 'gpsLat', 'gpsLon'])
+            ->where('_hidden', '<>', 1);
         if ($q !== '') {
             $base->where(fn ($w) => $w->where('name', 'LIKE', "%$q%")->orWhere('aka', 'LIKE', "%$q%"));
         }
@@ -533,8 +541,11 @@ class SiteController extends Controller
 
         // Counts for the level chips are computed with the level filter off, so
         // each chip reads "how many if I picked this" (same idea as the board).
+        // select([]) clears $base's own column list first - selectRaw() adds
+        // to it rather than replacing it, which would otherwise put every
+        // unaggregated column from $base into this GROUP BY query too.
         $levelCounts = $applyType((clone $base), $type)
-            ->selectRaw('level, COUNT(*) c')->groupBy('level')->pluck('c', 'level')->all();
+            ->select([])->selectRaw('level, COUNT(*) c')->groupBy('level')->pluck('c', 'level')->all();
         $levelCounts = array_replace(array_fill_keys(array_keys(DiveLevel::all()), 0), array_intersect_key($levelCounts, DiveLevel::all()));
 
         $query = $applyType($base, $type);
@@ -655,7 +666,7 @@ class SiteController extends Controller
             "canonical" => route("DiveSites")
         );
         return $this->explorer($request, [
-            'heading'     => 'Top rated dive sites in Florida',
+            'heading'     => 'Top rated sites - drop in Florida',
             'intro'       => 'Every reef, wreck and shore entry from Stuart to Key West, ordered by how often the boats go there and what divers rate them.',
             'fixedType'   => null,
             'defaultSort' => 'popular',
@@ -678,148 +689,98 @@ class SiteController extends Controller
         ], $SEO);
     }
 
-    public function searchSites(Request $request) {
+    /**
+     * Site-wide search (2026-09-11 restore): the redesign had narrowed this
+     * to a name-only filter on the Dive Sites explorer, but the old search
+     * reached much further - site name/aka, wreck type/vessel data, the
+     * description and history write-ups, and operator names - so bring
+     * that back rather than reinvent it. When every matching category
+     * agrees on a single site (and no operator also matched), that's
+     * unambiguous enough to skip the results page and go straight there.
+     */
+    public function searchSites(Request $request)
+    {
+        $searchString = trim((string) $request->input('searchString', ''));
 
-        Log::info('Request data:', $request->all());
-
-        $locations = WeatherLocation::all();
-
-        if ($request->has('searchString')) {
-            Log::debug("Got searchString in request");
-            $searchString = $request->searchString;
-            $results = Site::select('id', 'name', 'type', 'level', 'location')
-                ->where('name', 'LIKE', "%$searchString%")
-                ->orWhere('aka', 'LIKE', "%$searchString%")
-                //->orWhere('wreckData', 'LIKE', "%$searchString%")
-                ->take(10)
-                ->get();
-            Log::info("Got " . str(count($results)) . " matches in the search");
-
-            $resultsWreckType = Site::select('id', 'name', 'type', 'level', 'location')
-                ->where('wreckData', 'LIKE', "%$searchString%")
-                ->where('type', '=', 'wreck')
-                ->take(10)
-                ->get();
-            Log::info("Got " . str(count($resultsWreckType)) . " matches in the search for wreck type");
-
-            $resultsOperator = Operator::select('id', 'operatorName', 'cityAddress', 'stateAddress', 'logoUrl')
-                ->where('operatorName', 'LIKE', "%$searchString%")
-                ->take(10)
-                ->get();
-
-            $resultsDesc = Site::select('id', 'name', 'type', 'level', 'location', 'desc')
-                ->where('desc', 'LIKE', "%$searchString%")
-                ->take(10)
-                ->get();
-            Log::info("Got " . str(count($resultsDesc)) . " matches in the search for desc");
-
-            $resultsDescription = [];
-            $contextWords = 5; // Number of words before and after the match
-            foreach($resultsDesc as $resultDesc) {
-                //get the plain text from the quill json
-                $delta = json_decode($resultDesc->desc);
-                $desc = '';
-
-                foreach ($delta->ops as $op) {
-                    if (isset($op->insert) && is_string($op->insert)) {
-                        $desc .= $op->insert;
-                    }
-                }
-
-                // see where the search token is
-                $position = stripos($desc, $searchString);
-                Log::debug('position is: ' . $position);
-
-                // get pre a pos words
-                $preString = substr($desc, 0, $position);
-                $posString = substr($desc, $position + strlen($searchString));
-
-                $preWords = explode(' ', $preString);
-                $posWords = explode(' ', $posString);
-                //Log::debug('Pre words: ' . implode(' ', $preWords));
-                //Log::debug('Pos words: ' . implode(' ', $posWords));
-
-                $afterWords = array_slice($posWords, 0, $contextWords); // Get the first $contextWords elements
-                $beforeWords = array_slice($preWords, -$contextWords, $contextWords, true);
-                //Log::debug("Before words: " . implode(' ', $beforeWords));
-                //Log::debug("After words: " . implode(' ', $afterWords));
-
-                $beforeString = implode(' ', $beforeWords);
-                $afterString = implode(' ', $afterWords);
-
-                Log::debug($beforeString . $searchString . $afterString);
-                $temp = array(
-                    'beforeString' => $beforeString,
-                    'searchString' => $searchString,
-                    'afterString' => $afterString,
-                    'siteId' => $resultDesc->id,
-                    'siteName' => $resultDesc->name,
-                    'siteType' => $resultDesc->type,
-                );
-                
-                $resultsDescription[] = $temp;
-            }
-
-            $resultsHistory = Site::select('id', 'name', 'type', 'level', 'location', 'history')
-                ->where('history', 'LIKE', "%$searchString%")
-                ->take(10)
-                ->get();
-            Log::info("Got " . str(count($resultsHistory)) . " matches in the search for history");
-
-            //check on history
-            $resultsHistoryA = [];
-            $contextWords = 5; // Number of words before and after the match
-            foreach($resultsHistory as $resultHistory) {
-                //get the plain text from the quill json
-                $delta = json_decode($resultHistory->history);
-                $history = '';
-
-                foreach ($delta->ops as $op) {
-                    if (isset($op->insert) && is_string($op->insert)) {
-                        $history .= $op->insert;
-                    }
-                }
-
-                // see where the search token is (stripos makes it case insensitive)
-                $position = stripos($history, $searchString);
-                Log::debug('position is: ' . $position);
-
-                // get pre a pos words
-                $preString = substr($history, 0, $position);
-                $posString = substr($history, $position + strlen($searchString));
-
-                $preWords = explode(' ', $preString);
-                $posWords = explode(' ', $posString);
-
-                $afterWords = array_slice($posWords, 0, $contextWords); // Get the first $contextWords elements
-                $beforeWords = array_slice($preWords, -$contextWords, $contextWords, true);
-
-                $beforeString = implode(' ', $beforeWords);
-                $afterString = implode(' ', $afterWords);
-
-                Log::debug($beforeString . $searchString . $afterString);
-                $temp = array(
-                    'beforeString' => $beforeString,
-                    'searchString' => $searchString,
-                    'afterString' => $afterString,
-                    'siteId' => $resultHistory->id,
-                    'siteName' => $resultHistory->name,
-                    'siteType' => $resultHistory->type,
-                );
-                
-                $resultsHistoryA[] = $temp;
-                
-            }
-            Log::debug("Count history: " . count($resultsHistoryA));
-            
-
-            if(count($results) or count($resultsDescription) or count($resultsHistoryA) or count($resultsWreckType))
-                return view('pages.DiveSitesSearch', compact('searchString', 'results', 'locations', 'resultsDescription', 'resultsHistoryA', 'resultsWreckType', 'resultsOperator'))->withStatus("match");
-            else
-                return view('pages.DiveSitesSearch', compact('searchString', 'results'))->withStatus("no match");
+        if ($searchString === '') {
+            return redirect()->route('DiveSites');
         }
-        else
-            return view('pages.DiveSitesSearch');
+
+        $results = Site::select('id', 'slug', 'name', 'type', 'level', 'location')
+            ->where(fn ($w) => $w->where('name', 'LIKE', "%$searchString%")->orWhere('aka', 'LIKE', "%$searchString%"))
+            ->take(10)->get();
+
+        $resultsWreckType = Site::select('id', 'slug', 'name', 'type', 'level', 'location')
+            ->where('wreckData', 'LIKE', "%$searchString%")
+            ->where('type', 'wreck')
+            ->take(10)->get();
+
+        $resultsOperator = Operator::select('id', 'slug', 'operatorName', 'cityAddress', 'stateAddress', 'logoUrl')
+            ->where('operatorName', 'LIKE', "%$searchString%")
+            ->take(10)->get();
+
+        $resultsDesc = Site::select('id', 'slug', 'name', 'type', 'level', 'location', 'desc')
+            ->where('desc', 'LIKE', "%$searchString%")
+            ->take(10)->get();
+        $resultsDescription = $this->searchSnippets($resultsDesc, 'desc', $searchString);
+
+        $resultsHistory = Site::select('id', 'slug', 'name', 'type', 'level', 'location', 'history')
+            ->where('history', 'LIKE', "%$searchString%")
+            ->take(10)->get();
+        $resultsHistoryA = $this->searchSnippets($resultsHistory, 'history', $searchString);
+
+        $matchedSiteIds = collect([$results, $resultsWreckType, $resultsDesc, $resultsHistory])
+            ->flatten()->pluck('id')->unique();
+
+        if ($matchedSiteIds->count() === 1 && $resultsOperator->isEmpty()) {
+            $site = Site::find($matchedSiteIds->first());
+            return redirect(route('SiteDetails') . '/' . ($site->slug ?? $site->id));
+        }
+
+        $SEO = [
+            'title' => 'Search results for "' . $searchString . '" | Divers Hub',
+            'robots' => 'noindex, nofollow',
+        ];
+
+        return view('pages.DiveSitesSearch', compact(
+            'searchString', 'results', 'resultsDescription', 'resultsHistoryA', 'resultsWreckType', 'resultsOperator', 'SEO'
+        ));
+    }
+
+    /**
+     * Pull a short "...before [match] after..." snippet out of a Quill delta
+     * (JSON) rich-text field for each row where $field matched the search.
+     */
+    private function searchSnippets($rows, string $field, string $searchString): array
+    {
+        $contextWords = 5;
+        $snippets = [];
+
+        foreach ($rows as $row) {
+            $delta = json_decode($row->$field);
+            $plain = '';
+            foreach ($delta->ops ?? [] as $op) {
+                if (isset($op->insert) && is_string($op->insert)) {
+                    $plain .= $op->insert;
+                }
+            }
+
+            $position = stripos($plain, $searchString);
+            $preWords = explode(' ', substr($plain, 0, $position));
+            $posWords = explode(' ', substr($plain, $position + strlen($searchString)));
+
+            $snippets[] = [
+                'beforeString' => implode(' ', array_slice($preWords, -$contextWords)),
+                'searchString' => $searchString,
+                'afterString'  => implode(' ', array_slice($posWords, 0, $contextWords)),
+                'siteId'       => $row->id,
+                'siteSlug'     => $row->slug ?? $row->id,
+                'siteName'     => $row->name,
+                'siteType'     => $row->type,
+            ];
+        }
+
+        return $snippets;
     }
     public function showAllAdmin() {
         $this->authorize('manage-items', User::class);

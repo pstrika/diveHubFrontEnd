@@ -77,14 +77,26 @@
         </nav>
 
         <div class="dh-topbar-actions">
+            {{-- Full bar from md up; a plain icon opening the same form in a
+                 modal on phones, where there's no room for it inline but
+                 search is too important to hide entirely (2026-09-11). --}}
             <form class="dh-search d-none d-md-flex" action="{{ route('DiveSitesSearch') }}" method="POST" role="search">
                 @csrf
                 <span class="material-icons-round" aria-hidden="true">search</span>
                 <input type="search" name="searchString" placeholder="Search sites" aria-label="Search dive sites">
             </form>
+            <button type="button" class="dh-search-btn d-md-none" data-bs-toggle="modal" data-bs-target="#dh-search-modal" aria-label="Search dive sites">
+                <span class="material-icons-round" aria-hidden="true">search</span>
+            </button>
 
             @if($isGuest)
                 <a href="{{ route('login') }}" class="dh-btn-ghost d-none d-lg-inline-flex">Sign in</a>
+            @else
+                {{-- Notification centre, just left of the avatar - where people expect it (2026-09-11). --}}
+                <a href="{{ route('Messages') }}" class="dh-bell-btn" aria-label="Messages{{ $unread > 0 ? ', ' . $unread . ' unread' : '' }}">
+                    <span class="material-icons-round" aria-hidden="true">notifications</span>
+                    @if($unread > 0)<span class="dh-bell-badge">{{ $unread > 99 ? '99+' : $unread }}</span>@endif
+                </a>
             @endif
 
             <button type="button" class="dh-avatar-btn {{ $active === 'me' ? 'is-active' : '' }}" data-bs-toggle="offcanvas" data-bs-target="#dh-me" aria-controls="dh-me" aria-label="Open your menu">
@@ -97,6 +109,25 @@
         </div>
     </div>
 </header>
+
+{{-- Mobile search modal: same form and endpoint as the desktop search bar. --}}
+<div class="modal fade dh-search-modal" id="dh-search-modal" tabindex="-1" aria-labelledby="dh-search-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dh-search-modal-title">Search dive sites</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form class="dh-search" action="{{ route('DiveSitesSearch') }}" method="POST" role="search">
+                    @csrf
+                    <span class="material-icons-round" aria-hidden="true">search</span>
+                    <input type="search" name="searchString" placeholder="Search sites" aria-label="Search dive sites" autofocus>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 {{-- Bottom tab bar, phones only (hidden from lg up in CSS). --}}
 <nav class="dh-tabbar" aria-label="Main, mobile">

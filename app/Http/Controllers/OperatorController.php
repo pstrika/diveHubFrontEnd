@@ -19,6 +19,8 @@ use Symfony\Component\Console\Input\Input;
 
 class OperatorController extends Controller
 {
+    // Public (pk.) Mapbox token - safe client-side, shared with WeatherController's map.
+    public const MAPBOX_TOKEN = 'pk.eyJ1IjoicHN0cmlrYSIsImEiOiJjbHZsc2p2bXcyY240MmtuMDcydHJzd2UxIn0.KBf79cvk47WseBc9rNu6gQ';
     //
     /**
      * /Operators (no id) renders the operators explorer; /OperatorDetails/{id}

@@ -216,9 +216,11 @@ Route::post('AddSiteReview/{siteId}', 'App\Http\Controllers\SiteController@addRe
 Route::get('DiveSites', 'App\Http\Controllers\SiteController@showTopRated')->middleware('guest')->name('DiveSites');
 // Redesign W4: Search and Map became views of the Dive Sites explorer. Both
 // pages were noindex, so the 301s cost nothing. Listed in docs/seo/redirect-map.md.
-// The POST kept the old navbar search form working; it forwards the term.
+// The POST is the navbar search form; SiteController::searchSites searches
+// name/aka, wreck data, description, history and operator names, and skips
+// straight to the site when only one could possibly be meant (2026-09-11).
 Route::get('DiveSitesSearch', fn () => redirect()->route('DiveSites', request()->query(), 301))->name('DiveSitesSearch');
-Route::post('DiveSitesSearch', fn () => redirect()->route('DiveSites', array_filter(['q' => request()->input('searchString')])))->middleware('guest');
+Route::post('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites')->middleware('guest')->name('DiveSitesSearch.post');
 Route::get('DiveSitesMap', fn () => redirect()->route('DiveSites', ['view' => 'map'] + request()->query(), 301))->name('DiveSitesMap');
 // "Show me all sites" was a plain table of the catalog; the explorer sorted A to Z is that list. Noindex before, so a 301 costs nothing.
 Route::get('DiveSitesAll', fn () => redirect()->route('DiveSites', ['sort' => 'name'] + request()->query(), 301))->name('DiveSitesAll');

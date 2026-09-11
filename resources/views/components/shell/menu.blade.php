@@ -15,12 +15,24 @@
 
     // Renders one drawer link. Locked items keep their label visible but
     // open the guest prompt instead of navigating.
-    // $icon is a Material icon name, or "img:<file>" for one of Pablo's own icons
-    // in public/assets/img/icons (the calendar icons are white line art drawn for
-    // the old dark sidebar, so they sit on a dark round badge here).
+    // $icon is a Material icon name, "img:<file>" for one of Pablo's own PNG
+    // icons in public/assets/img/icons (white line art on a dark round badge,
+    // drawn for the old dark sidebar), or "svg:<file>" for his newer Illustrator
+    // SVG exports, inlined and recolored to match the plain Material icons here.
     $iconHtml = function (string $icon) {
         if (str_starts_with($icon, 'img:')) {
             return '<span class="dh-menu-icon-img" aria-hidden="true"><img src="' . asset('assets') . '/img/icons/' . e(substr($icon, 4)) . '" alt=""></span>';
+        }
+        if (str_starts_with($icon, 'svg:')) {
+            $path = public_path('assets/img/icons/' . substr($icon, 4));
+            $svg = is_file($path) ? file_get_contents($path) : '';
+            // Illustrator exports a <style> block hardcoding fill:#fff via a
+            // .cls-1 class - strip that and drive the color from CSS instead
+            // (currentColor), same as the Material icons next to these.
+            $svg = preg_replace('/<defs>.*?<\/defs>/s', '', $svg);
+            $svg = str_replace(' class="cls-1"', '', $svg);
+            $svg = preg_replace('/<svg /', '<svg fill="currentColor" ', $svg, 1);
+            return '<span class="dh-menu-icon-svg" aria-hidden="true">' . $svg . '</span>';
         }
         return '<span class="material-icons-round" aria-hidden="true">' . $icon . '</span>';
     };
@@ -67,11 +79,11 @@
 {{-- Rule (Zach): tools and calendars are open to everyone; only personal data (dashboard, groups, saving) needs an account. --}}
 <div class="dh-menu-group">
     <h6>Calendars</h6>
-    {!! $link('Recreational', route('CalendarT') . '/rec', 'img:icons_rec.png') !!}
-    {!! $link('Technical', route('CalendarT') . '/tec', 'img:icons_tec.png') !!}
-    {!! $link('Wreck diving', route('CalendarWreck'), 'img:wreck_icon_white.png') !!}
-    {!! $link('Shark diving', route('CalendarShark'), 'img:icons_shark.png') !!}
-    {!! $link('Lobster diving', route('CalendarLobster'), 'img:icons_lobster.png') !!}
+    {!! $link('Recreational', route('CalendarT') . '/rec', 'svg:icons_calendar_rec.svg') !!}
+    {!! $link('Technical', route('CalendarT') . '/tec', 'svg:icons_calendar_tec.svg') !!}
+    {!! $link('Wreck diving', route('CalendarWreck'), 'svg:icons_calendar_wreck.svg') !!}
+    {!! $link('Shark diving', route('CalendarShark'), 'svg:icons_calendar_shark.svg') !!}
+    {!! $link('Lobster diving', route('CalendarLobster'), 'svg:icons_calendar_lobster.svg') !!}
 </div>
 
 <div class="dh-menu-group">

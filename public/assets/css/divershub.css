@@ -105,7 +105,17 @@
 /* Material Dashboard reserved space for the sidenav. The shell has none. */
 body.dh-shell { background: var(--dh-sand); font-family: var(--dh-font); }
 body.dh-shell .main-content { margin-left: 0 !important; max-height: none !important; }
-body.dh-shell .main-content > .container-fluid { padding-top: var(--dh-space-2); padding-left: var(--dh-content-x); padding-right: var(--dh-content-x); }
+/* The one universal content cap: every page's outer container stops
+   growing at 1100px, same box model (border-box, same padding) as
+   .dh-me-rows below it - so the "cards" and the "buttons at the bottom"
+   always cap out at exactly the same width, on every page, not just the
+   pages that happened to add their own .dh-board/.dh-wx/.dh-home class
+   (2026-09-11: this used to be per-page opt-in, which is why SiteDetails
+   and the Weather cards drifted out of step with .dh-me-rows). */
+body.dh-shell .main-content > .container-fluid {
+  max-width: 1100px; margin-left: auto; margin-right: auto; box-sizing: border-box;
+  padding-top: var(--dh-space-2); padding-left: var(--dh-content-x); padding-right: var(--dh-content-x);
+}
 body.dh-shell .sidenav, body.dh-shell #sidenav-main { display: none !important; }
 
 .dh-topbar {
@@ -115,23 +125,30 @@ body.dh-shell .sidenav, body.dh-shell #sidenav-main { display: none !important; 
   box-shadow: 0 1px 0 rgba(255,255,255,.06), 0 2px 10px rgba(0,0,0,.15);
 }
 .dh-topbar-inner {
-  max-width: 1280px; margin: 0 auto; height: 100%;
-  display: flex; align-items: center; gap: var(--dh-space-4);
+  /* Full width, no max-width/centering: the brand and the search/avatar
+     actions must stay pinned to the true left/right edges of the window at
+     every size, not just within a centered content column (2026-09-11). */
+  height: 100%;
+  display: flex; align-items: center; gap: var(--dh-space-4); flex-wrap: nowrap;
   padding: 0 var(--dh-space-4);
 }
-.dh-brand { display: inline-flex; align-items: center; gap: 10px; color: #fff; font-weight: 700; font-size: 1.05rem; text-decoration: none; white-space: nowrap; }
+/* Brand pinned left, actions pinned right, topnav takes the middle and
+   scrolls itself if it ever runs out of room - so neither end can get
+   squeezed off its edge at any width. */
+.dh-brand { display: inline-flex; align-items: center; gap: 10px; color: #fff; font-weight: 700; font-size: 1.05rem; text-decoration: none; white-space: nowrap; flex: 0 0 auto; }
 .dh-brand img { border-radius: 50%; background: #fff; }
 .dh-brand:hover { color: #fff; }
 
-.dh-topnav { display: none; gap: var(--dh-space-1); margin-left: var(--dh-space-4); }
+.dh-topnav { display: none; gap: var(--dh-space-1); margin-left: var(--dh-space-4); flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.dh-topnav::-webkit-scrollbar { display: none; }
 .dh-topnav-link {
   color: rgba(255,255,255,.82); text-decoration: none; font-weight: 600; font-size: .95rem;
-  padding: 8px 14px; border-radius: var(--dh-radius-pill);
+  padding: 8px 14px; border-radius: var(--dh-radius-pill); flex: 0 0 auto; white-space: nowrap;
 }
 .dh-topnav-link:hover { color: #fff; background: rgba(255,255,255,.08); }
 .dh-topnav-link.is-active { color: var(--dh-ink); background: #fff; }
 
-.dh-topbar-actions { margin-left: auto; display: flex; align-items: center; gap: var(--dh-space-2); }
+.dh-topbar-actions { margin-left: auto; display: flex; align-items: center; gap: var(--dh-space-2); flex: 0 0 auto; }
 .dh-search { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.12); border-radius: var(--dh-radius-pill); padding: 4px 12px; }
 .dh-search input { background: transparent; border: 0; color: #fff; width: 160px; font-size: .9rem; outline: none; }
 .dh-search input::placeholder { color: rgba(255,255,255,.6); }
@@ -144,6 +161,31 @@ body.dh-shell .sidenav, body.dh-shell #sidenav-main { display: none !important; 
 }
 .dh-avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
 .dh-avatar-btn.is-active, .dh-avatar-btn:hover { background: #fff; color: var(--dh-ink); }
+
+/* Messages bell, just left of the avatar - where people expect a notification centre. */
+.dh-bell-btn {
+  position: relative; width: 38px; height: 38px; border-radius: 50%; border: 0; padding: 0;
+  background: rgba(255,255,255,.12); color: #fff; display: inline-flex; align-items: center; justify-content: center; text-decoration: none;
+}
+.dh-bell-btn:hover { background: #fff; color: var(--dh-ink); }
+.dh-bell-badge {
+  position: absolute; top: -2px; right: -2px; min-width: 16px; height: 16px; padding: 0 3px;
+  border-radius: 999px; background: var(--dh-poor, #c0392b); color: #fff; font-size: .62rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; line-height: 1; border: 2px solid var(--dh-ink);
+}
+
+/* Mobile search: a plain icon that opens the same search form in a modal,
+   since .dh-search itself only appears from md up (see .dh-search rule). */
+.dh-search-btn {
+  width: 38px; height: 38px; border-radius: 50%; border: 0; padding: 0;
+  background: rgba(255,255,255,.12); color: #fff; display: inline-flex; align-items: center; justify-content: center;
+}
+.dh-search-btn:hover { background: #fff; color: var(--dh-ink); }
+.dh-search-modal .modal-content { border-radius: 16px; }
+.dh-search-modal .dh-search { background: var(--dh-foam); }
+.dh-search-modal .dh-search input { color: var(--dh-ink); width: 100%; }
+.dh-search-modal .dh-search input::placeholder { color: var(--dh-muted); }
+.dh-search-modal .dh-search .material-icons-round { color: var(--dh-muted); }
 
 /* Bottom tabs: phones and small tablets. */
 .dh-tabbar {
@@ -185,8 +227,11 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 }
 .dh-menu-link:hover { background: var(--dh-foam); color: var(--dh-deep); }
 .dh-menu-link .material-icons-round { font-size: 22px; color: var(--dh-sea); }
+.dh-menu-icon-svg { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; color: var(--dh-sea); flex: 0 0 auto; }
+.dh-menu-icon-svg svg { width: 22px; height: 22px; }
 .dh-menu-link.is-locked { color: var(--dh-muted); }
 .dh-menu-link.is-locked .material-icons-round { color: var(--dh-muted); }
+.dh-menu-link.is-locked .dh-menu-icon-svg { color: var(--dh-muted); }
 .dh-menu-lock { margin-left: auto; font-size: 18px !important; }
 .dh-menu-version { text-align: center; margin-top: var(--dh-space-4); }
 
@@ -390,6 +435,25 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-map { width: 100%; height: 70vh; min-height: 420px; border-radius: var(--dh-radius); border: 1px solid var(--dh-line); background: var(--dh-foam); }
 .dh-map-small { height: 280px; min-height: 0; }
 
+/* Weather "All locations": Pablo's original Florida1.png with hand-placed
+   pins (2026-09-11), restored in place of the Mapbox pin map. Pins are
+   positioned in JS-free inline styles (top/left in px) matching the
+   original coordinates 1:1, offset down 24px so the ones placed above the
+   image's own top edge (Stuart, Port St Lucie) aren't clipped. */
+.dh-wx-florida {
+  position: relative; width: fit-content; max-width: 100%; margin: 0 auto;
+  padding: 24px 16px 10px; border-radius: var(--dh-radius);
+  background: var(--dh-deep);
+}
+.dh-wx-florida-img { display: block; height: 200px; width: auto; max-width: 100%; }
+.dh-wx-florida-pin {
+  position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px;
+  border-radius: 50%; background: #fff; border: 2px solid var(--dh-sea);
+  box-shadow: 0 1px 3px rgba(0,0,0,.45); transition: transform .15s ease, border-color .15s ease;
+}
+.dh-wx-florida-pin:hover { border-color: var(--dh-sand); transform: scale(1.2); }
+.dh-wx-florida-pin.is-here { border-color: var(--dh-ink); border-width: 3px; width: 18px; height: 18px; margin: -9px 0 0 -9px; }
+
 /* Site detail. */
 .dh-site-hero { display: grid; grid-template-columns: 2fr 1fr; gap: var(--dh-space-2); margin-top: var(--dh-space-3); height: 340px; }
 .dh-site-hero-main, .dh-site-hero-side a { display: block; border-radius: 14px; background-size: cover; background-position: center; background-color: var(--dh-foam); }
@@ -399,6 +463,45 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-site-facts-main { flex: 1 1 360px; min-width: 0; }
 .dh-site-title { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; color: var(--dh-ink); margin: 0 0 4px; letter-spacing: -.01em; }
 .dh-site-sub { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; color: var(--dh-deep); font-weight: 600; margin: 0 0 10px; }
+.dh-site-type-icon { display: inline-flex; width: 26px; height: 26px; color: var(--dh-sea); flex: 0 0 auto; }
+.dh-site-type-icon svg { width: 100%; height: 100%; }
+.dh-site-gps { font-size: .76rem; font-weight: 600; color: var(--dh-muted); margin: -6px 0 10px; }
+.dh-site-gps-map { margin: 8px 0 0; }
+.dh-aka-toggle { border: 0; background: none; padding: 0; color: var(--dh-sea); font-weight: 700; font-size: .85rem; text-decoration: underline; cursor: pointer; }
+
+/* Wreck Details card. */
+.dh-wreck-sunk { font-size: .78rem; font-weight: 600; color: var(--dh-muted); white-space: nowrap; }
+.dh-wreck-type { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; font-size: 1rem; color: var(--dh-ink); padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--dh-line); }
+.dh-wreck-type-icon { display: inline-flex; width: 120px; height: 120px; color: var(--dh-sea); flex: 0 0 auto; }
+.dh-wreck-type-icon svg { width: 100%; height: 100%; }
+.dh-wreck-dims { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center; }
+.dh-wreck-dims div { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.dh-wreck-dims b { font-size: 1rem; color: var(--dh-ink); }
+.dh-wreck-dims span { font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; color: var(--dh-muted); font-weight: 700; }
+.dh-wreck-dim-icon { display: inline-flex; width: 34px; height: 34px; color: var(--dh-sea); }
+.dh-wreck-dim-icon svg { width: 100%; height: 100%; }
+
+/* Full-size photo modal, replacing the old open-in-a-new-tab gallery links. */
+.dh-photo-modal .modal-content { background: transparent; border: 0; box-shadow: none; }
+.dh-photo-modal img { width: 100%; height: auto; max-height: 85vh; object-fit: contain; border-radius: var(--dh-radius); }
+.dh-photo-modal-close { position: absolute; top: -12px; right: -12px; background: #fff; border-radius: 50%; opacity: 1; padding: 8px; z-index: 1; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+
+/* Platform Health (admin). */
+.dh-health-table-wrap { overflow-x: auto; padding: 0; }
+.dh-health-table { width: 100%; border-collapse: collapse; font-size: .85rem; white-space: nowrap; }
+.dh-health-table th { text-align: left; padding: 10px 15px; font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--dh-muted); border-bottom: 1px solid var(--dh-line); }
+.dh-health-table td { padding: 8px 15px; border-bottom: 1px solid #eef1f3; color: var(--dh-ink); vertical-align: middle; }
+.dh-health-table tbody tr:last-child td { border-bottom: 0; }
+.dh-health-table tbody tr:hover { background: var(--dh-foam); }
+.dh-health-name { font-weight: 700; white-space: normal; }
+.dh-health-logo { width: 34px; height: 34px; object-fit: contain; border-radius: 8px; background: #fff; border: 1px solid var(--dh-line); }
+.dh-health-pill { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; font-size: .78rem; padding: 4px 10px; border-radius: var(--dh-radius-pill); white-space: nowrap; }
+.dh-health-pill .material-icons-round { font-size: 16px; }
+.dh-health-pill.is-good { background: var(--dh-good-bg); color: var(--dh-good); }
+.dh-health-pill.is-wait { background: var(--dh-avg-bg); color: var(--dh-avg); }
+.dh-health-pill.is-run  { background: var(--dh-foam); color: var(--dh-sea); }
+.dh-health-pill.is-poor { background: var(--dh-poor-bg); color: var(--dh-poor); }
+.dh-health-pill.is-none { background: var(--dh-line); color: var(--dh-muted); }
 .dh-site-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .dh-site-chips .chip img { vertical-align: -3px; margin-right: 2px; }
 .dh-site-facts-side { display: flex; flex-direction: column; align-items: flex-end; gap: var(--dh-space-3); }
@@ -411,6 +514,16 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-site-columns { margin-bottom: var(--dh-space-3); }
 .dh-panel { background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 14px; padding: var(--dh-space-4); margin-bottom: var(--dh-space-3); }
 .dh-panel-title { font-size: 1rem; font-weight: 800; color: var(--dh-ink); margin: 0 0 var(--dh-space-3); }
+/* A panel whose title shares its row with a control (e.g. Best Gas's "show
+   details" switch), and a two-up layout for panels merging two subsections
+   (e.g. Route + Typical conditions) that stacks on phones. */
+.dh-panel-head-row { display: flex; align-items: center; justify-content: space-between; gap: var(--dh-space-3); flex-wrap: wrap; margin-bottom: var(--dh-space-3); }
+.dh-panel-head-row .dh-panel-title { margin-bottom: 0; }
+.dh-panel-toggle { display: flex; align-items: center; gap: 6px; }
+.dh-panel-toggle .form-check-label { color: var(--dh-muted); font-size: .85rem; font-weight: 600; }
+.dh-panel-cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--dh-space-4); }
+.dh-panel-subtitle { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--dh-muted); margin: 0 0 8px; }
+@media (max-width: 767.98px) { .dh-panel-cols { grid-template-columns: 1fr; } }
 .dh-site-details { display: grid; grid-template-columns: 200px 1fr; gap: var(--dh-space-4); align-items: center; }
 .dh-facts-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--dh-space-3); margin: 0; }
 .dh-facts-list dt { font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--dh-muted); font-weight: 700; }
@@ -423,6 +536,20 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-operator-list a { display: flex; align-items: center; gap: 10px; color: var(--dh-ink); text-decoration: none; font-weight: 600; font-size: .9rem; padding: 6px 8px; border-radius: var(--dh-radius); }
 .dh-operator-list a:hover { background: var(--dh-foam); color: var(--dh-deep); }
 .dh-operator-list img { width: 36px; height: 36px; object-fit: contain; border-radius: 8px; background: #fff; border: 1px solid var(--dh-line); }
+
+/* Search results (restored 2026-09-11): plain link rows per category, plus
+   a snippet variant for description/history matches. */
+.dh-search-list { list-style: none; padding: 0; margin: 0; }
+.dh-search-list li { border-bottom: 1px solid #eef1f3; }
+.dh-search-list li:last-child { border-bottom: 0; }
+.dh-search-list a { display: flex; align-items: center; gap: 10px; padding: 10px 4px; color: var(--dh-ink); text-decoration: none; }
+.dh-search-list a:hover { background: var(--dh-foam); color: var(--dh-deep); }
+.dh-search-type { flex: 0 0 auto; font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: var(--dh-sea); background: var(--dh-foam); border-radius: var(--dh-radius-pill); padding: 3px 9px; }
+.dh-search-name { font-weight: 700; }
+.dh-search-loc { margin-left: auto; font-size: .8rem; color: var(--dh-muted); }
+.dh-search-list-snippet a { flex-direction: column; align-items: flex-start; gap: 3px; }
+.dh-search-snippet { font-size: .85rem; color: var(--dh-muted); line-height: 1.4; }
+.dh-search-snippet mark { background: var(--dh-avg-bg); color: var(--dh-ink); font-weight: 700; padding: 0 2px; border-radius: 3px; }
 
 @media (max-width: 767.98px) {
   .dh-site-hero { grid-template-columns: 1fr; height: auto; }
@@ -699,7 +826,14 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 /* .main-content that already clears the fixed tab bar - they need      */
 /* their own clearance or the fixed bar covers the last row.            */
 /* ------------------------------------------------------------------ */
-.dh-me-rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: var(--dh-space-2) var(--dh-content-x) var(--dh-space-6); padding-bottom: calc(var(--dh-tabbar-h) + env(safe-area-inset-bottom) + 12px); }
+.dh-me-rows {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
+  /* Same 1100px cap as .dh-board/.dh-home (the card grids above this on most
+     pages) - without it these buttons keep stretching past where the cards
+     stop, since there's nothing else here to grow into extra columns. */
+  max-width: 1100px; margin: var(--dh-space-2) auto var(--dh-space-6); box-sizing: border-box;
+  padding: 0 var(--dh-content-x) calc(var(--dh-tabbar-h) + env(safe-area-inset-bottom) + 12px);
+}
 .dh-me-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 14px; color: var(--dh-ink); font-weight: 600; font-size: .9rem; text-decoration: none; }
 .dh-me-row:hover { border-color: var(--dh-sea); color: var(--dh-deep); }
 .dh-me-row .material-icons-round { font-size: 22px; color: var(--dh-sea); }
@@ -885,9 +1019,33 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 /* Marine forecast. Weather became a bottom tab, so the page leads with */
 /* the verdict Pablo's crawler already computes instead of a photo.     */
 /* ------------------------------------------------------------------ */
+/* No cap of its own: it's nested inside .main-content > .container-fluid,
+   which now carries the universal 1100px cap (see above) - adding another
+   one here would just add a second, smaller inset on top of that. */
 .dh-wx { padding: 0 4px; }
 .dh-wx-verdict, .dh-wx-card { background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 16px; margin-top: 12px; }
 .dh-wx-verdict { padding: 16px; }
+/* Live current reading (Miami/Fort Lauderdale only, weatherlocations.buoy):
+   shares a row with the "Good diving today" callout, 10/2, at every width -
+   the callout's own text just wraps to more lines on narrow phones rather
+   than the two stacking (2026-09-11). */
+.dh-wx-callout-row.has-current { display: grid; grid-template-columns: 10fr 2fr; align-items: stretch; gap: 8px; margin-top: 14px; }
+.dh-wx-callout-row.has-current .dh-wx-callout { margin-top: 0; min-width: 0; }
+.dh-wx-current { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 8px 4px; border-radius: 14px; background: var(--dh-foam); text-align: center; min-width: 0; }
+.dh-wx-current-label { font-size: .58rem; font-weight: 800; text-transform: uppercase; letter-spacing: .02em; color: var(--dh-muted); }
+/* Modern compass (2026-09-11): plain SVG replacing Pablo's old raster
+   bg/needle PNGs. Face is fixed (N marked at top); the needle rotates to
+   the buoy's reported bearing, sea-blue tip / muted tail like a real dial. */
+.dh-wx-compass { position: relative; width: 52px; height: 52px; max-width: 100%; aspect-ratio: 1 / 1; }
+@media (max-width: 374.98px) { .dh-wx-compass { width: 40px; } .dh-wx-compass-n { font-size: 13px; } }
+.dh-wx-compass-face, .dh-wx-compass-needle { position: absolute; inset: 0; width: 100%; height: 100%; }
+.dh-wx-compass-face circle { fill: var(--dh-paper); stroke: var(--dh-line); stroke-width: 3; }
+.dh-wx-compass-n { fill: var(--dh-muted); font-size: 15px; font-weight: 800; text-anchor: middle; font-family: var(--dh-font); }
+.dh-wx-compass-needle { transition: transform .3s ease; }
+.dh-wx-compass-tip { fill: var(--dh-sea); }
+.dh-wx-compass-tail { fill: var(--dh-line); }
+.dh-wx-compass-hub { fill: var(--dh-deep); }
+.dh-wx-current-speed { font-size: .8rem; font-weight: 800; color: var(--dh-deep); }
 .dh-wx-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .dh-wx-place { font-size: 1.2rem; font-weight: 700; margin: 0; color: var(--dh-ink); }
 .dh-wx-date { font-size: .76rem; color: var(--dh-muted); margin: 2px 0 0; }
@@ -932,7 +1090,12 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-wx-explain a { color: var(--dh-sea); font-weight: 700; text-decoration: none; }
 
 .dh-wx-ch { font-size: .95rem; font-weight: 800; padding: 13px 15px; margin: 0; border-bottom: 1px solid var(--dh-line); display: flex; align-items: center; justify-content: space-between; }
-.dh-wx-ch span { font-size: .72rem; font-weight: 400; color: var(--dh-muted); }
+/* Was a blanket "span" selector, which also caught the outer title span
+   wrapping "Along the coast today" + its hint (needed so both sit on the
+   left of the sort button) and shrank the title itself along with the
+   hint. Scoped to .dh-wx-hint specifically instead (2026-09-11). */
+.dh-wx-ch .dh-wx-hint { font-size: .72rem; font-weight: 400; color: var(--dh-muted); }
+.dh-wx-ch-title { font-size: inherit; font-weight: inherit; color: inherit; }
 
 .dh-wx-day { display: flex; align-items: center; gap: 9px; padding: 11px 15px; border-bottom: 1px solid #eef1f3; color: var(--dh-ink); text-decoration: none; }
 .dh-wx-day:last-child { border-bottom: 0; }
@@ -958,8 +1121,18 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-wx-crow.is-here { background: #f7fbfc; }
 .dh-wx-crow.is-here .dh-wx-cname { font-weight: 800; }
 .dh-wx-cname { flex: 1 1 auto; font-size: .86rem; font-weight: 600; }
+.dh-wx-clabel { margin: 10px 15px 4px; font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--dh-muted); }
 .dh-wx-cnum { flex: 0 0 70px; text-align: right; font-size: .7rem; color: var(--dh-muted); }
 .dh-wx-cnum b { color: var(--dh-ink); }
+
+/* South/north toggle sitting in the "Along the coast" card header. */
+.dh-wx-sort {
+  display: inline-flex; align-items: center; gap: 3px; margin-left: 8px; padding: 3px 9px;
+  border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill); color: var(--dh-sea);
+  font-size: .68rem; font-weight: 700; text-decoration: none;
+}
+.dh-wx-sort:hover { border-color: var(--dh-sea); color: var(--dh-deep); }
+.dh-wx-sort .material-icons-round { font-size: 14px; }
 
 .dh-wx-more { background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 16px; margin-top: 12px; }
 .dh-wx-more > summary { padding: 13px 15px; font-weight: 700; font-size: .9rem; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 9px; color: var(--dh-ink); }
@@ -976,3 +1149,29 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    push the page sideways on a phone. */
 .dh-wx-more-body .table-responsive { overflow-x: auto; }
 .dh-wx-more-body iframe, .dh-wx-more-body img, .dh-wx-more-body canvas { max-width: 100%; }
+
+/* Quick webcam, right under the verdict card - a single collapsed row until
+   tapped, so it never competes with the diving verdict for attention. */
+.dh-wx-cam-body iframe { width: 100%; height: 260px; border: 0; border-radius: 10px; display: block; }
+
+/* Charts and the full table, restyled onto the flat .dh-card look instead of
+   the old dark-gradient Material-Dashboard cards. */
+.dh-wx-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+.dh-wx-chart-card { margin-top: 0; }
+.dh-wx-chart-card canvas { max-height: 160px; }
+.dh-wx-update { display: flex; align-items: center; gap: 5px; margin: 10px 0 0; font-size: .74rem; color: var(--dh-muted); }
+.dh-wx-update .material-icons-round { font-size: 15px; }
+.dh-wx-table-card { margin-top: 12px; }
+.dh-wx-table-wrap { overflow-x: auto; }
+/* Real <table> (2026-09-11): a genuine AM/PM sub-header for the Marine rows
+   instead of cramming both values into one cell - each day is two real
+   columns, so the header can label them instead of the reader guessing. */
+.dh-wx-table { width: 100%; min-width: 620px; border-collapse: collapse; font-size: .82rem; }
+.dh-wx-table th, .dh-wx-table td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--dh-line); }
+.dh-wx-table thead tr:first-child th { font-size: .78rem; font-weight: 800; color: var(--dh-ink); }
+.dh-wx-table .dh-wx-subhead th { font-size: .64rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--dh-muted); padding-top: 0; }
+.dh-wx-table td.dh-wx-tlabel { text-align: left; font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .02em; color: var(--dh-muted); white-space: nowrap; }
+.dh-wx-table tbody td { color: var(--dh-ink); }
+.dh-wx-table .dh-wx-tsection-row td { background: var(--dh-foam); color: var(--dh-deep); font-weight: 800; text-transform: uppercase; font-size: .7rem; letter-spacing: .04em; border-radius: 6px; border-bottom: 0; }
+.dh-wx-table tbody tr:last-child td { border-bottom: 0; }
+.dh-wx-table .material-icons-round.rotate-icon { font-size: 15px; color: var(--dh-sea); vertical-align: middle; }

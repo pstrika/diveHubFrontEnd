@@ -37,7 +37,7 @@
     <a class="dh-site-link" href="{{ route('SiteDetails') }}/{{ $site->slug ?? $site->id }}">
         {{-- A real <img> so the browser can lazy load it: the explorer renders hundreds of cards. --}}
         <span class="dh-site-img">
-            <img src="{{ $img }}" alt="" loading="lazy" decoding="async">
+            <img src="{{ $img }}" alt="" loading="lazy" decoding="async" fetchpriority="low">
             <span class="chip chip-static dh-site-type">{{ ucfirst($site->type) }}</span>
             @if(($site->access ?? '') === 'Beach Access')<span class="chip chip-static dh-site-shore">Shore entry</span>@endif
             @if($soon > 0)

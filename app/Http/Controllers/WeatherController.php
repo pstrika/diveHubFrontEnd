@@ -33,7 +33,7 @@ class WeatherController extends Controller
         return $ids !== ['3', '5', '8'];
     }
 
-    public function show($location = null)
+    public function show(Request $request, $location = null)
     {
         // No location in the URL: a member lands on the first of their favourite
         // places (users.favLocations is a list of weatherlocations ids, the same
@@ -54,13 +54,15 @@ class WeatherController extends Controller
 
         $date = Carbon::today()->toDateString();
 
-        // Every location, Argentina included: this page replaced the separate
-        // Argentina forecast in release 10.
-        $allLocations = WeatherLocation::orderBy('country')->orderBy('id')->get();
-        $currentLocation = WeatherLocation::where('location', $location)->first();
+        // Florida only (2026-09-11): the separate Argentina forecast was
+        // retired in release 10, but its locations stayed queryable through
+        // this page. They're gone from here now too - filtered at the
+        // source rather than deleted, so the crawler data isn't touched.
+        $currentLocation = WeatherLocation::where('location', $location)->where('country', 'US')->first();
 
-        // An unknown location in the URL (a typo, an old link) used to be a 500
-        // because the view reads the location's buoy. Fall back to the default.
+        // An unknown (or now-removed, e.g. Argentina) location in the URL
+        // used to be a 500 because the view reads the location's buoy.
+        // Fall back to the default.
         if (!$currentLocation) {
             $location = "fort lauderdale";
             $currentLocation = WeatherLocation::where('location', $location)->first();
@@ -85,15 +87,39 @@ class WeatherController extends Controller
         $today = $days->first();
 
         // Every US location for today, so "where is it good" is one glance
-        // instead of thirteen page loads. One query, ordered north to south.
-        $coastOrder = ['port st lucie', 'stuart', 'jupiter', 'west palm beach', 'boynton beach',
-                       'deerfield beach', 'pompano beach', 'fort lauderdale', 'miami beach',
-                       'key largo', 'islamorada', 'marathon', 'key west'];
+        // instead of thirteen page loads. Ordered by the location's real
+        // latitude (weatherlocations.centerLat) rather than a hand-kept
+        // list, south to north by default (Key West -> Port St Lucie) with
+        // a toggle (?coastSort=ntos) for the other direction.
+        $coastSort = $request->query('coastSort') === 'ntos' ? 'ntos' : 'ston';
+        $coastLocations = WeatherLocation::where('country', 'US')
+            ->orderBy('centerLat', $coastSort === 'ntos' ? 'desc' : 'asc')
+            ->get(['id', 'location']);
+
+        // Favorites first, then everything else - each half keeping the same
+        // N/S order as the whole list, just split in two (2026-09-11).
+        //
+        // Deliberately NOT gated on pickedTheirOwnPlaces() the way the
+        // default-location pick above is: that rule exists because silently
+        // landing someone on a location they never chose (Key Largo, from
+        // the registration seed) is actively misleading. Grouping is the
+        // opposite - it is a visible, reversible "here is what's marked" list
+        // that is still correct even for a member who never touched the
+        // setting and is still sitting on the seed.
+        $viewer = auth()->user();
+        $favLocationIds = ($viewer && $viewer->isNotGuest())
+            ? array_map('intval', array_filter(array_map('trim', explode(',', (string) $viewer->favLocations)), 'strlen'))
+            : [];
+        $favCoastNames = $coastLocations->whereIn('id', $favLocationIds)->pluck('location');
+        $otherCoastNames = $coastLocations->whereNotIn('id', $favLocationIds)->pluck('location');
+        $coastNamesOrdered = $favCoastNames->concat($otherCoastNames);
+        $coastFavCount = $favCoastNames->count();
+
         $coastToday = collect();
         if ($today) {
             $rows = Weatherday::where('date', $today->date)
-                ->whereIn('location', $coastOrder)->get()->keyBy('location');
-            foreach ($coastOrder as $name) {
+                ->whereIn('location', $coastNamesOrdered)->get()->keyBy('location');
+            foreach ($coastNamesOrdered as $name) {
                 if ($rows->has($name)) {
                     $coastToday->push($rows->get($name));
                 }
@@ -123,7 +149,7 @@ class WeatherController extends Controller
             "canonical" => route("Weather") . "/" . rawurlencode($location),
         );
 
-        return view('pages.Weather', compact('weathers', 'date', 'location', 'allLocations', 'currentLocation', 'SEO', 'days', 'today', 'coastToday', 'boatsByDate'));
+        return view('pages.Weather', compact('weathers', 'date', 'location', 'currentLocation', 'SEO', 'days', 'today', 'coastToday', 'coastFavCount', 'boatsByDate', 'coastSort'));
 
     }
 

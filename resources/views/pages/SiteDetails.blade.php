@@ -11,7 +11,7 @@
             /* ------ Default Style ---------- */
             .gauge-container {
             width: 150px;
-            height: 70px;
+            height: 65px;
             display: block;
             float: center;
             padding: 10px;
@@ -239,6 +239,9 @@
                 $levelInfo = \App\Support\DiveLevel::get($site->level);
                 $hour = (int) now()->format('G');
                 $forecastText = $forecast ? ($hour < 12 ? $forecast->conditionsAM_text : $forecast->conditionsPM_text) : null;
+                // New SVG site-type icons (2026-09-11), recolored to the theme
+                // colour instead of Pablo's old fixed-colour PNGs.
+                $typeIconSvg = \App\Support\IconSvg::themed('assets/img/icons/' . $site->type . '_icon.svg');
             @endphp
 
             {{-- Gallery header (W3 note 1). Main photo plus two thumbnails; all link to the full gallery below. --}}
@@ -259,10 +262,18 @@
                 <div class="dh-site-facts-main">
                     <h1 class="dh-site-title">{{ $site->name }}</h1>
                     <p class="dh-site-sub">
-                        <img src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="" height="22">
+                        @if($typeIconSvg)
+                            <span class="dh-site-type-icon" aria-hidden="true">{!! $typeIconSvg !!}</span>
+                        @else
+                            <img src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="" height="26">
+                        @endif
                         {{ ucfirst($site->type) }} · {{ ucwords($location->location ?? '') }}
-                        @if($site->aka)<span class="text-muted"> · also known as {{ $site->aka }}</span>@endif
+                        @if($site->aka)
+                            <button type="button" class="dh-aka-toggle" onclick="var s=this.nextElementSibling; s.hidden=!s.hidden; this.textContent = s.hidden ? 'Also known as...' : 'Hide also known as';">Also known as...</button>
+                            <span class="text-muted" hidden> also known as {{ $site->aka }}</span>
+                        @endif
                     </p>
+                    @if($site->gpsLat)<p class="dh-site-gps">{{ $site->gpsLat }} {{ $site->gpsLon }}</p>@endif
                     <div class="dh-site-chips">
                         @if($levelInfo)<span class="chip chip-static" title="Minimum recommended certification"><x-dive-level.icon :level="$site->level" height="16" /> {{ $levelInfo['name'] }}</span>@endif
                         @if($site->maxDepth)<span class="chip chip-static">Max {{ $site->maxDepth }} ft</span>@endif
@@ -317,7 +328,7 @@
                         <h2 class="dh-panel-title">Details</h2>
                         <div class="dh-site-details">
                             <div class="dh-site-gauge">
-                                <div class="gauge-wrapper" style="position: relative; height: 150px;">
+                                <div class="gauge-wrapper" style="position: relative; height: 78px;">
                                     <div id="gauge2" class="gauge-container five" style="position:absolute; bottom:0; left:50%; transform:translateX(-50%);"></div>
                                 </div>
                                 <div class="text-center fw-bold">{{ $levelInfo['name'] ?? 'Level not set' }}</div>
@@ -328,7 +339,6 @@
                                 @if($site->avgDepth)<div><dt>Average depth</dt><dd>{{ $site->avgDepth }} ft</dd></div>@endif
                                 @if($site->access)<div><dt>Access</dt><dd>{{ $site->access }}@if($site->access === 'Beach Access' && $site->distance_from_shore) ({{ $site->distance_from_shore }} ft from shore)@endif</dd></div>@endif
                                 @if($site->relief)<div><dt>Relief</dt><dd>{{ $site->relief }}</dd></div>@endif
-                                @if($site->gpsLat)<div><dt>GPS</dt><dd>{{ $site->gpsLat }}<br>{{ $site->gpsLon }}</dd></div>@endif
                                 @if($forecast)<div><dt>Sea state today</dt><dd class="d-flex gap-1"><x-conditions-pill :text="$forecast->conditionsAM_text" label="AM" /><x-conditions-pill :text="$forecast->conditionsPM_text" label="PM" /></dd></div>@endif
                             </dl>
                         </div>
@@ -344,13 +354,17 @@
                     @endif
 
                     @if($gallery->count())
-                    {{-- Pictures: web sized copies, each opening the full size copy. --}}
+                    {{-- Pictures: web sized copies, each opening the full size copy in a
+                         dismissable modal rather than a new tab - a PWA has no back
+                         button to return from a real new-tab navigation (2026-09-11). --}}
                     <section class="dh-panel" id="pictures">
                         <h2 class="dh-panel-title">Pictures <span class="dh-region-count">{{ $gallery->count() }}</span></h2>
                         <div class="dh-gallery">
                             @foreach($gallery as $p)
                                 <figure class="dh-gallery-item">
-                                    <a href="{{ \App\Support\SitePhoto::web($p->file) }}" target="_blank" rel="noopener">
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#dh-photo-modal"
+                                       data-photo-src="{{ \App\Support\SitePhoto::web($p->file) }}"
+                                       data-photo-alt="{{ $site->name }}{{ $p->desc ? ' - ' . $p->desc : ' dive site photo' }}">
                                         <img src="{{ \App\Support\SitePhoto::thumb($p->file) }}" alt="{{ $site->name }}{{ $p->desc ? ' - ' . $p->desc : ' dive site photo' }}" loading="lazy">
                                     </a>
                                     @if($p->desc || $p->credit)
@@ -360,6 +374,22 @@
                             @endforeach
                         </div>
                     </section>
+
+                    <div class="modal fade dh-photo-modal" id="dh-photo-modal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                            <div class="modal-content">
+                                <button type="button" class="btn-close dh-photo-modal-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                <img id="dh-photo-modal-img" src="" alt="">
+                            </div>
+                        </div>
+                    </div>
+                    <script>
+                        document.getElementById('dh-photo-modal')?.addEventListener('show.bs.modal', function (e) {
+                            var img = document.getElementById('dh-photo-modal-img');
+                            img.src = e.relatedTarget.getAttribute('data-photo-src');
+                            img.alt = e.relatedTarget.getAttribute('data-photo-alt') || '';
+                        });
+                    </script>
                     @endif
                 </div>
 
@@ -367,6 +397,7 @@
                     <section class="dh-panel">
                         <h2 class="dh-panel-title">Where it is</h2>
                         <div id="map" class="dh-map dh-map-small"></div>
+                        @if($site->gpsLat)<p class="dh-site-gps dh-site-gps-map">{{ $site->gpsLat }} {{ $site->gpsLon }}</p>@endif
                     </section>
 
                     {{-- The cross sell loop (W3 note 4): next boats going to this site. --}}
@@ -397,11 +428,11 @@
                 </div>
             </div>
 
-            <div class="row mx-2">
+            <div class="row mx-0">
 
                 {{--Card 3D model--}}
                 @if($site->dModel != null)
-                <div class="col-md-12">             
+                <div class="col-md-12 px-0">             
                     <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
@@ -452,26 +483,15 @@
 
             {{-- Card Gases --}}
             
-            <div class="row mx-2">
-                
-                <div class="col-md-12">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <div class="d-flex align-items-center mx-4">
-                                    <h2 class="card-title text-white mb-0 me-3" id="bestGasTitle">Best Gas</h2>
-                                    <div class="form-check form-switch ps-0 mb-0 mx-5">
-                                        <input name="showGasDetails" class="form-check-input" type="checkbox" id="showGasDetails" value="1">
-                                        <label class="form-check-label ms-2 text-white mt-n1" for="showGasDetails">show details</label>
-                                    </div>
-                                </div>
+            <div class="row mx-0">
 
-                                <div class="table-responsive mt-3"></div>
-                            </div>
-
-
+                <div class="col-md-12 px-0">
+                    <section class="dh-panel">
+                        <div class="dh-panel-head-row">
+                            <h2 class="dh-panel-title" id="bestGasTitle">Best Gas</h2>
+                            <button type="button" id="showGasDetailsBtn" class="dh-btn dh-btn-ghost-dark">Show details</button>
                         </div>
-                        <div class="card-body" id="gasesCardBody">
+                        <div id="gasesCardBody">
 
                             <div class="row">
                                 <div class="col-12">
@@ -951,183 +971,124 @@
                             </div>
 
                         </div>
-                    </div>
+                    </section>
                 </div>
 
             </div>
-            
-            <div class="row mx-2">
+
+            <div class="row mx-0">
                     {{-- Card Wreck  --}}
                     @if($site->type == "wreck")
-                        <?php
-                            
-                            $wreck = json_decode($site->wreckData, true);
-                            
-                            
-                        ?>
-                        <div class="col-md-4">             
-                            <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                                <div class="card-header p-0 mt-n4 mx-3">
-                                    <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                        <h2 class="card-title text-white mx-4">Wreck Details</h2>
-                                        <div class="table-responsive"></div>
+                        @php
+                            $wreck = json_decode($site->wreckData, true) ?: [];
+                            // Every boat type actually in wreckData.type, mapped to its SVG
+                            // (2026-09-11). Anything not in this list (Drydock, Cargo Ship,
+                            // Cable Ship, Cruiser, Vessel - no dedicated icon exists yet)
+                            // falls back to the generic "other" site-type icon.
+                            $wreckTypeIcons = [
+                                'dredge' => 'dredge', 'tanker' => 'tanker', 'cutter' => 'cutter',
+                                'landing dock ship' => 'landing_dock_ship', 'freighter' => 'freighter',
+                                'barge' => 'barge', 'tugboat' => 'tugboat', 'schooner' => 'schooner',
+                                'workboat' => 'workboat', 'steamer' => 'steamer', 'buoy tender' => 'buoy_tender',
+                                'yatch' => 'yatch', 'ferry' => 'ferry', 'trawler' => 'trawler',
+                                'sailboat' => 'sailboat', 'destroyer' => 'destroyer', 'missile tracker' => 'missile_tracker',
+                            ];
+                            $wreckIconFile = $wreckTypeIcons[strtolower(trim($wreck['type'] ?? ''))] ?? null;
+                            $wreckTypeSvg = \App\Support\IconSvg::themed('assets/img/icons/boats/' . ($wreckIconFile ?? '') . '.svg')
+                                ?? \App\Support\IconSvg::themed('assets/img/icons/other_icon.svg');
+                            $shipLengthSvg = \App\Support\IconSvg::themed('assets/img/icons/boats/ship_length.svg');
+                            $shipBeamSvg = \App\Support\IconSvg::themed('assets/img/icons/boats/ship_beam.svg');
+                        @endphp
+                        <div class="col-md-4 px-0 pe-md-2">
+                            <section class="dh-panel">
+                                <div class="dh-panel-head-row">
+                                    <h2 class="dh-panel-title mb-0">Wreck Details</h2>
+                                    @if(!empty($wreck['sunkDate']))<span class="dh-wreck-sunk">Sunk {{ $wreck['sunkDate'] }}</span>@endif
+                                </div>
+                                <div class="dh-wreck-type">
+                                    @if($wreckTypeSvg)<span class="dh-wreck-type-icon" aria-hidden="true">{!! $wreckTypeSvg !!}</span>@endif
+                                    <b>{{ $wreck['type'] ?? 'Unknown' }}</b>
+                                </div>
+                                <div class="dh-wreck-dims">
+                                    <div>
+                                        @if($shipLengthSvg)<span class="dh-wreck-dim-icon" aria-hidden="true">{!! $shipLengthSvg !!}</span>@endif
+                                        <b>{{ $wreck['length'] ?? '?' }} ft</b><span>Length</span>
+                                    </div>
+                                    <div>
+                                        @if($shipBeamSvg)<span class="dh-wreck-dim-icon" aria-hidden="true">{!! $shipBeamSvg !!}</span>@endif
+                                        <b>{{ $wreck['beam'] ?? '?' }} ft</b><span>Beam</span>
                                     </div>
                                 </div>
-                                <div class="card-body mt-n4">
-                                    <div class="table-responsive">
-                                        <table class="table align-items-center mb-0"> 
-                                            <tbody>
-                                                <tr><td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_{{ strtolower($wreck["type"]) }}.png" alt="img-blur-shadow" class="img-fluid"></td></tr> 
-                                                <tr style="border-bottom: 1px solid #D3D3D3;"><td class="text-md text-center"> <b>{{ $wreck["type"]}}</b></td> </tr>
-                                            </tbody>
-                                        </table>
-
-                                        <table class="table align-items-center mb-0"> 
-                                            <tbody>
-                                                <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">Sunk date</td>
-                                                <td class="align-middle text-left text-md w-50"><b>{{ $wreck["sunkDate"] }}</b></td> </tr> 
-
-                                                
-                                                
-                                            </tbody>
-                                        </table>
-
-                                        <table class="table align-items-center mb-0"> 
-                                            <tbody>
-                                                <tr><td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_ship_length.png" alt="img-blur-shadow" class="img-fluid"></td>
-                                                <td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_ship_beam.png" alt="img-blur-shadow" class="img-fluid"></td></tr>  
-
-                                                <tr>
-                                                    <td class="text-md text-center" style="border: none;"><b>{{ $wreck["length"] }} ft</b></td>
-                                                    <td class="text-md text-center" style="border: none;"> <b>{{ $wreck["beam"] }} ft</b></td>
-                                                </tr>
-
-                                                <tr class="mt-n2">
-                                                    <td class="text-xxs text-center" style="border: none;">Length</td>
-                                                    <td class="text-xxs text-center" style="border: none;">Beam</td>
-                                                </tr>
-                                                
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    
-                                </div>
-                            </div>
+                            </section>
                         </div>
                     @endif
                     {{--- Card Site decription --}}
-                    <div class="col-md-{{ $site->type == "wreck" ? 8 : 12 }}">             
-                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                            <div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Site Description</h4>
-                                    <div class="table-responsive"></div>
-                                </div>
-                            </div>
-                            <div class="card-body mt-4">
-                                <div id="desc" style="max-height: 424px; overflow-y: auto;">
-                                </div>
-                            
-                                
-                            </div>
-                        </div>
+                    <div class="col-md-{{ $site->type == "wreck" ? 8 : 12 }} px-0 @if($site->type == 'wreck') ps-md-2 @endif">
+                        <section class="dh-panel">
+                            <h2 class="dh-panel-title">Site description</h2>
+                            <div id="desc" style="max-height: 424px; overflow-y: auto;"></div>
+                        </section>
                     </div>
             </div>
 
-            <div class="row mx-2">
-
-                {{--- Card Route --}}
-                <div class="col-md-6">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Route</h4>
-                                <div class="table-responsive"></div>
+            {{--- Card Route + Typical Conditions, merged into one panel. --}}
+            <div class="row mx-0">
+                <div class="col-md-12 px-0">
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Route &amp; typical conditions</h2>
+                        <div class="dh-panel-cols">
+                            <div>
+                                <h3 class="dh-panel-subtitle">Route</h3>
+                                <div id="route" style="max-height: 300px; overflow-y: auto;"></div>
+                            </div>
+                            <div>
+                                <h3 class="dh-panel-subtitle">Typical conditions</h3>
+                                <div id="typicalConditions" style="max-height: 300px; overflow-y: auto;"></div>
                             </div>
                         </div>
-                        <div class="card-body mt-4">
-                            <div id="route" style="max-height: 424px; overflow-y: auto;">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{--- Card Typical Conditions --}}
-                <div class="col-md-6">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Typical Conditions</h4>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body mt-4">
-                                <div id="typicalConditions" style="max-height: 424px; overflow-y: auto;">
-                            </div>
-                        </div>
-                    </div>
+                    </section>
                 </div>
             </div>
 
-            <div class="row mx-2">
+            <div class="row mx-0">
                 {{--- Card Wreck History --}}
                 @if($site->type == "wreck")
                 
-                <div class="col-md-12">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Wreck History</h2>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body mt-4">
-                            <div class="row">
-                                @if(!empty($site->historicImg))
-                                    <div class="col-md-4">
-                                        <div class="d-flex align-items-center justify-content-center mt-3">
-                                            <img src="{{ asset('assets') }}/img/sites/{{ $site->historicImg }}" class="img-fluid border-radius-xl shadow">
-                                        </div>
+                <div class="col-md-12 px-0">
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Wreck history</h2>
+                        <div class="row">
+                            @if(!empty($site->historicImg))
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <img src="{{ asset('assets') }}/img/sites/{{ $site->historicImg }}" class="img-fluid border-radius-xl shadow">
                                     </div>
-                                    <div class="col-md-8">
-                                @else
-                                    <div class="col-md-12">
-                                @endif
-                                    <div id="history" style="flex-grow: 1; max-height: 424px; overflow-y: auto;" class="mt-2"></div>
-                                </div>                            
+                                </div>
+                                <div class="col-md-8">
+                            @else
+                                <div class="col-md-12">
+                            @endif
+                                <div id="history" style="flex-grow: 1; max-height: 424px; overflow-y: auto;"></div>
                             </div>
                         </div>
-                    </div>
+                    </section>
                 </div>
                 @endif
             </div>
 
-            <div class="row mx-2">
-                <div class="col-md-6">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-secondary shadow-secondary border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Divers' Uploaded Pictures</h4>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body mt-4">
-                            Coming soon!
-                        </div>
-                    </div>
+            <div class="row mx-0">
+                <div class="col-md-6 px-0 pe-md-2">
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Divers' uploaded pictures</h2>
+                        Coming soon!
+                    </section>
                 </div>
 
-                <div class="col-md-6">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Divers' Reviews</h4>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body mt-n3">
+                <div class="col-md-6 px-0 ps-md-2">
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Divers' reviews</h2>
                             @if (auth()->user()->isNotGuest())
-                                <div class="mt-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Add a comment">                                      
+                                <div class="mt-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Add a comment">
                                     <button id="addReviewButton" class="btn btn-icon btn-3 btn-info" type="button" onclick="showReviewForm()">
                                         <span class="btn-inner--text"> Add review</span>
                                     </button>
@@ -1210,12 +1171,10 @@
                                         @endif
                                     </tbody>
                                 </table>
-                            </div>  
-                        </div>
-                    </div>
+                            </div>
+                    </section>
                 </div>
 
-                
             </div>
             
                 
@@ -1233,13 +1192,18 @@
     
     @push('js')
     
-    <script src="{{ asset('assets') }}/js/plugins/flatpickr.min.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/gauge.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/quill.min.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.js"></script>
+    {{-- model-viewer is a heavy 3D-rendering library; only the handful of
+         sites with a 3D model need it, so it no longer loads on every one
+         of the (many more) sites without one (2026-09-11). flatpickr was
+         removed outright: included on this page but never actually called. --}}
+    @if($site->dModel != null)
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+    @endif
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
     <script src="{{ asset('assets') }}/js/plugins/nouislider.js"></script>
@@ -2842,7 +2806,10 @@
             style: 'mapbox://styles/pstrika/clwqz4fds03gv01qo9d4w3g21', // Choose a map style
             //center: [-80.07488399442913, 26.137643513173536], // Set the initial center coordinates
             center: [ {{ $longitude_dd }}, {{ $latitude_dd }}],
-            zoom: 12, // Set the initial zoom level
+            // Was 12, then 10 - still too tight to show real coastline
+            // context for an offshore site. Pulled back further; the user
+            // can still zoom in from here (2026-09-11).
+            zoom: 8,
             projection: 'albers'
         });
 
@@ -3010,14 +2977,17 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const checkbox = document.getElementById("showGasDetails");
+            // A plain show/hide button, not a toggle switch - no other card
+            // on this page uses a switch input, so Best Gas shouldn't either
+            // (2026-09-11). Collapsed by default, same as before.
+            const btn = document.getElementById("showGasDetailsBtn");
             const gasesCardBody = document.getElementById("gasesCardBody");
+            gasesCardBody.style.display = "none";
 
-            // Initial state (optional): hide or show based on checkbox
-            gasesCardBody.style.display = checkbox.checked ? "block" : "none";
-
-            checkbox.addEventListener("change", function () {
-            gasesCardBody.style.display = this.checked ? "block" : "none";
+            btn.addEventListener("click", function () {
+                const showing = gasesCardBody.style.display !== "none";
+                gasesCardBody.style.display = showing ? "none" : "block";
+                btn.textContent = showing ? "Show details" : "Hide details";
             });
         });
     </script>

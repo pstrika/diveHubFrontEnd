@@ -8,15 +8,17 @@
     behind the avatar button, kept to the rows a member actually uses.
     Settings was dropped (2026-09-11) - unused page.
 
+    Messages moved to a bell icon in the top bar and Log out to the avatar
+    drawer's Account group, both by the avatar on the right (2026-09-11) -
+    a notification centre belongs up there, not buried in a row down here,
+    and there's no need for logout in two places on the same page.
+
     Members only; the dashboard itself requires an account.
 --}}
 @php
-    $user = auth()->user();
-    $unread = $user ? (int) $user->unreadNotifications() : 0;
     $rows = [
         ['My calendar',      route('MyCalendar'),     'event'],
         ['Visited sites',    route('MyVisitedSites'), 'check_circle'],
-        ['Messages',         route('Messages'),       'notifications', $unread],
         ['Dive operators',   route('Operators'),      'directions_boat'],
         ['Deco planner',     route('DecoPlanner'),    'timer'],
         ['Best gases',       route('gasplanning'),    'science'],
@@ -29,11 +31,6 @@
         <a class="dh-me-row" href="{{ $row[1] }}">
             <span class="material-icons-round" aria-hidden="true">{{ $row[2] }}</span>
             <span>{{ $row[0] }}</span>
-            @if(!empty($row[3]))<span class="dh-menu-badge" aria-label="{{ $row[3] }} unread">{{ $row[3] }}</span>@endif
         </a>
     @endforeach
-    <a class="dh-me-row" href="{{ route('logout') }}" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-        <span class="material-icons-round" aria-hidden="true">logout</span>
-        <span>Log out</span>
-    </a>
 </section>
