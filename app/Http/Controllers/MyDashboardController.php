@@ -43,14 +43,6 @@ class MyDashboardController extends Controller
             ->where('userId', auth()->user()->id)
             ->orderBy('date')->orderBy('time')->take(40)->get();
 
-        // Subscribe link for the "My calendar" card, same as the calendar page.
-        // Never for the shared guest user; the dashboard is members only anyway.
-        $calendarFeedUrl = null;
-        if ($user->isNotGuest()) {
-            $user->ensureCalendarToken();
-            $calendarFeedUrl = route('MyCalendar.feed', ['token' => $user->calendar_token]);
-        }
-
         // Groups the diver is in, each with its next planned dive. This card is the
         // slot the group feed will grow into; for now it answers "what is my group
         // doing next" and shows pending invites.
@@ -287,6 +279,6 @@ class MyDashboardController extends Controller
             //Log::debug($favCalendars);
 
 
-        return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers', 'wished', 'favOperators', 'favCalendars', 'weekendStart', 'calendarFeedUrl', 'myGroups', 'groupInvites'));
+        return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers', 'wished', 'favOperators', 'favCalendars', 'weekendStart', 'myGroups', 'groupInvites'));
     }
 }

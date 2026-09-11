@@ -56,6 +56,37 @@ final class SiteRank
         });
     }
 
+    /**
+     * Confirmed boat trips per site in the next 30 days, siteId => count.
+     *
+     * Same shape and cache as tripCounts(): one pass over a few hundred rows
+     * once an hour for everybody, nothing per card. "Confirmed" is the same
+     * siteIdStatus filter the dashboard wishlist uses, so the two agree.
+     *
+     * @return array<int,int>
+     */
+    public static function tripsSoon(): array
+    {
+        return Cache::remember('siterank.tripssoon.v1', self::CACHE_SECONDS, function () {
+            $counts = [];
+            Trip::select('siteId')
+                ->whereNotNull('siteId')->where('siteId', '<>', '')
+                ->where('siteIdStatus', 'confirmed')
+                ->whereBetween('date', [now()->toDateString(), now()->addDays(30)->toDateString()])
+                ->chunk(2000, function ($trips) use (&$counts) {
+                    foreach ($trips as $trip) {
+                        foreach (explode(',', $trip->siteId) as $id) {
+                            $id = (int) trim($id);
+                            if ($id > 0) {
+                                $counts[$id] = ($counts[$id] ?? 0) + 1;
+                            }
+                        }
+                    }
+                });
+            return $counts;
+        });
+    }
+
     /** Damped rating used everywhere a rating orders things (home, explorer, dashboard). */
     public static function dampedRating($rate, $votes): float
     {

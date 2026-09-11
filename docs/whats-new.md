@@ -262,14 +262,35 @@ Several of these were broken on the live site too, not just on the branch.
   buttons with hover tooltips, and phones do not hover.
 - **My calendar is on the dashboard.** The month grid at the foot of the page is
   the diver's own calendar first, booked in green and not booked in red, with
-  the Subscribe to my dive calendar link and a Copy button right under it, and
-  "Open full calendar" for the big version. The favourite operators' calendar is
-  one switch away on the same card for the divers who plan from it, rather than
-  sitting there pretending to be your calendar.
-- **My groups card**, small on purpose. Each group with its member count and its
+  "Open full calendar" in the header; subscribing lives on the full calendar
+  page, one tap away, rather than a second copy of the link on the dashboard.
+  The favourite operators' calendar is one switch away on the same card for the
+  divers who plan from it, rather than sitting there pretending to be your
+  calendar.
+- **My groups card**, small on purpose, and it sits right under upcoming dives
+  (Zach: above the weekend picks). Each group with its member count and its
   next planned dive, pending invites called out at the top, and "Create or join
   a group" when there are none. This is the slot the group feed grows into once
   group chat has read tracking; today it answers "what is my group doing next".
+- **Recommended and wishlist are rows, not tables.** Both were seven and nine
+  column tables that scrolled sideways and looked nothing like the rest of the
+  page. Recommended is now a date block, the trip as the link, the operator as
+  plain text, level and depth as small facts, and the seats as the one action,
+  capped at six with "See all" into the finder's weekend preset. The wishlist is
+  one row per saved site with its next boat on the second line, or "No boat
+  scheduled yet" when nothing is confirmed.
+- **Save and dived from the site cards.** Every card in the explorer has a heart
+  and a check over the photo: heart saves the site to your wishlist, check marks
+  it as dived. Both toggle in place over fetch, no page reload on a 379 card
+  page. Guests see the buttons and get the account prompt. The site page keeps
+  its own buttons, unchanged. This is the fastest way to fill a wishlist or to
+  mark the sites you have dived; Visited sites keeps the bulk tick list.
+- **"N boats this month" on the site cards.** A chip on any site with confirmed
+  boat trips in the next 30 days, so a diver browsing can see where boats are
+  actually going. One cached pass over the trips an hour for everybody, no per
+  card cost: the explorer measured 1.9 to 2.4 seconds before and 1.9 to 2.2
+  after on the local box. The shared guest user can no longer write to the
+  wishlist or visited list even if a request reaches those routes.
 - **The guest prompt offers sign in as well as sign up.** Tapping Groups as a
   guest used to offer only "Create an account", which is no use to somebody who
   already has one. It now offers both, and the sign in route drops the shared
@@ -317,11 +338,16 @@ Sign out first, then work through as a guest, then sign in.
 | Profile, Communication preferences | Three checkboxes with consent wording, and a note if you have no phone number |
 | Tick WhatsApp, Save, then untick and Save | Both decisions are recorded; ask me and I can show you the audit rows |
 | Welcome wizard, last step before done | "How should we reach you?" with the same three checkboxes |
-| Dashboard | Upcoming dives first, no banner photo, then the weekend picks, wishlist, my groups, my calendar, menu rows |
+| Dashboard | Upcoming dives, my groups, weekend picks, wishlist, my calendar, menu rows; nothing scrolls sideways |
 | Dashboard, an upcoming dive | Tap the title: the trip page. Tap the pill: the options sheet with five labelled rows |
 | Dashboard, "I am booked" in the sheet | The pill turns green, the dive on the month grid turns green |
-| Dashboard, My calendar, Copy link | The button says Copied; the link pastes into Google Calendar as a URL calendar |
 | Dashboard, Favorite operators switch | The operators' month grid, same as before, full width |
+| Dashboard, Recommended | Rows with a date block, trip title, operator, seats pill; "See all" opens the weekend finder |
+| Dashboard, My wishlist | One row per site; "Next boat" with a date and seats, or "No boat scheduled yet" |
+| Sites tab, heart on a card | Fills red without a reload; the site appears on the dashboard wishlist |
+| Sites tab, check on a card | Turns green; the site appears under Visited sites |
+| Sites tab, signed out, heart | The account prompt, nothing saved |
+| Sites tab | "N boats this month" chip on sites with confirmed trips in the next 30 days |
 | Me tab, signed in | Your avatar as the icon; it opens the dashboard, no pop out |
 | Weather tab, signed in | Opens on the first of your favourite places |
 | Groups tab with an unread message | A red count on the icon |

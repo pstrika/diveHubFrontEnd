@@ -194,24 +194,41 @@ class SiteController extends Controller
     public function updateVisited(Request $request) {
         Log::debug($request);
 
+        // The shared guest user is "authenticated" by the guest middleware; it
+        // must never collect anybody's dived sites.
+        if (!auth()->user()->isNotGuest()) {
+            return $request->wantsJson() ? response()->json(['error' => 'account required'], 403) : redirect()->route('login');
+        }
+
         if(VisitedSite::where('siteId', $request->site)->where('userId', auth()->id())->exists()) {
             VisitedSite::where('siteId', $request->site)->where('userId', auth()->id())->delete();
+            $visited = false;
         } else {
             VisitedSite::create([
                 'siteId' => $request->site,
                 'userId' => auth()->id(),
                 // Add other relevant fields as needed
             ]);
+            $visited = true;
         }
 
+        // The explorer cards toggle over fetch and only need the new state.
+        if ($request->wantsJson()) {
+            return response()->json(['visited' => $visited]);
+        }
         return redirect()->back();
 
     }
-    public function updateWished($siteId) {
+    public function updateWished(Request $request, $siteId) {
         Log::debug($siteId);
+
+        if (!auth()->user()->isNotGuest()) {
+            return $request->wantsJson() ? response()->json(['error' => 'account required'], 403) : redirect()->route('login');
+        }
 
         if(WishedSite::where('siteId', $siteId)->where('userId', auth()->id())->exists()) {
             WishedSite::where('siteId', $siteId)->where('userId', auth()->id())->delete();
+            $wished = false;
         } else {
             WishedSite::create([
                 'siteId' => $siteId,
@@ -220,8 +237,12 @@ class SiteController extends Controller
                 'notified_sms' => 0,
                 // Add other relevant fields as needed
             ]);
+            $wished = true;
         }
 
+        if ($request->wantsJson()) {
+            return response()->json(['wished' => $wished]);
+        }
         return redirect()->back();
 
     }
@@ -537,9 +558,24 @@ class SiteController extends Controller
         // First photo per site for the cards, one query for the whole page.
         $firstPhotos = Photo::whereIn('siteId', $sites->pluck('id'))->orderBy('id')->get()->groupBy('siteId');
         $locationNames = WeatherLocation::all()->pluck('location', 'short')->map(fn ($n) => ucwords($n));
+
+        // Card actions (Zach, 2026-09-10): save to the wishlist and mark as dived
+        // from the card, so nobody opens 379 pages to do it. Two id lists for a
+        // member, nothing for the shared guest user (its wishlist is nobody's).
+        // Guests still see the buttons; the click asks for an account.
+        $viewer = auth()->user();
+        $isMember = $viewer && $viewer->isNotGuest();
+        $wishedIds  = $isMember ? WishedSite::where('userId', $viewer->id)->pluck('siteId')->flip()->all() : [];
+        $visitedIds = $isMember ? VisitedSite::where('userId', $viewer->id)->pluck('siteId')->flip()->all() : [];
+        // "Boat going this month": one cached pass, no per card cost.
+        $soon = \App\Support\SiteRank::tripsSoon();
+
         foreach ($sites as $site) {
             $site->photoFile = $firstPhotos->get($site->id)?->first()?->file;
             $site->locationName = $locationNames[$site->location] ?? null;
+            $site->wished = isset($wishedIds[$site->id]);
+            $site->visited = isset($visitedIds[$site->id]);
+            $site->tripsSoon = $soon[$site->id] ?? 0;
         }
 
         // Map features: sites store GPS as DMS text ("26° 22.838' N"); convert here so the page ships plain numbers.
@@ -563,6 +599,7 @@ class SiteController extends Controller
             'explorer'    => $explorer,
             'SEO'         => $SEO,
             'sites'       => $sites,
+            'isMember'    => $isMember,
             'filters'     => ['q' => $q, 'type' => $type, 'level' => $level, 'sort' => $sort, 'view' => $view],
             'typeOptions' => self::EXPLORER_TYPES,
             'sortOptions' => self::EXPLORER_SORTS,

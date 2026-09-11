@@ -308,7 +308,9 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-coast-boats { font-size: .85rem; color: var(--dh-deep); }
 
 .dh-site-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--dh-space-3); }
-.dh-site-card { display: flex; flex-direction: column; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: var(--dh-radius); overflow: hidden; text-decoration: none; color: var(--dh-ink); }
+.dh-site-card { position: relative; display: flex; flex-direction: column; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: var(--dh-radius); overflow: hidden; text-decoration: none; color: var(--dh-ink); }
+.dh-site-link { display: flex; flex-direction: column; flex: 1 1 auto; color: inherit; text-decoration: none; }
+.dh-site-link:hover { color: inherit; }
 .dh-site-card:hover { border-color: var(--dh-sea); color: var(--dh-ink); box-shadow: 0 4px 14px rgba(14,124,158,.12); }
 .dh-site-img { position: relative; display: block; aspect-ratio: 16 / 9; background-size: cover; background-position: center; background-color: var(--dh-foam); overflow: hidden; }
 .dh-site-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -351,7 +353,7 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-omnibox-clear { color: var(--dh-muted); text-decoration: none; font-size: 1.2rem; line-height: 1; }
 .dh-site-grid-wide { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
 .dh-site-loc { font-size: .8rem; color: var(--dh-muted); }
-.dh-site-shore { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,.92); }
+.dh-site-shore { position: absolute; bottom: 8px; left: 8px; background: rgba(255,255,255,.92); }
 .dh-map { width: 100%; height: 70vh; min-height: 420px; border-radius: var(--dh-radius); border: 1px solid var(--dh-line); background: var(--dh-foam); }
 .dh-map-small { height: 280px; min-height: 0; }
 
@@ -719,3 +721,49 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-sheet-action strong { font-size: .92rem; }
 .dh-sheet-action small { font-size: .75rem; color: var(--dh-muted); }
 .dh-sheet-action.is-danger, .dh-sheet-action.is-danger .material-icons-round { color: #b0322b; }
+
+/* ------------------------------------------------------------------ */
+/* Site cards: save and dived buttons over the photo, boats soon chip.  */
+/* ------------------------------------------------------------------ */
+.dh-site-actions { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; z-index: 2; }
+.dh-site-act { width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(255,255,255,.94); color: var(--dh-deep); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.18); padding: 0; }
+.dh-site-act .material-icons-round { font-size: 20px; }
+.dh-site-act:hover { background: #fff; color: var(--dh-sea); }
+.dh-site-act.is-on[data-act="wish"] { color: #d6336c; }
+.dh-site-act.is-on[data-act="dived"] { color: #0f7b3f; }
+.dh-site-act[disabled] { opacity: .7; }
+.dh-site-soon { position: absolute; bottom: 8px; right: 8px; display: inline-flex; align-items: center; gap: 4px; background: var(--dh-deep); color: #fff; }
+.dh-site-soon .material-icons-round { font-size: 14px; }
+.dh-inline-icon { font-size: 16px; vertical-align: -3px; color: var(--dh-sea); }
+
+/* ------------------------------------------------------------------ */
+/* Dashboard: recommended and wishlist as rows, not wide tables.        */
+/* ------------------------------------------------------------------ */
+.dh-trip-list { list-style: none; margin: 0; padding: 0; }
+.dh-trip-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--dh-line); }
+.dh-trip-row:last-child { border-bottom: 0; }
+.dh-trip-date { flex: 0 0 52px; text-align: center; background: var(--dh-foam); border-radius: 12px; padding: 6px 0; line-height: 1.1; }
+.dh-trip-date b { display: block; font-size: 1.05rem; color: var(--dh-deep); }
+.dh-trip-date span { display: block; font-size: .7rem; text-transform: uppercase; color: var(--dh-muted); letter-spacing: .04em; }
+.dh-trip-main { flex: 1 1 auto; min-width: 0; color: var(--dh-ink); text-decoration: none; display: flex; flex-direction: column; }
+.dh-trip-main:hover .dh-trip-title { color: var(--dh-sea); text-decoration: underline; }
+.dh-trip-title { font-weight: 700; font-size: .92rem; line-height: 1.25; }
+.dh-trip-meta { font-size: .78rem; color: var(--dh-muted); margin-top: 2px; }
+.dh-trip-meta b { color: var(--dh-ink); }
+.dh-trip-facts { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: .75rem; color: var(--dh-muted); }
+.dh-trip-facts img { height: 18px; }
+.dh-seats { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: var(--dh-radius-pill); font-size: .78rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.dh-seats.is-open { background: #eaf7ee; color: #0f7b3f; border: 1px solid #a9dcbb; }
+.dh-seats.is-full { background: var(--dh-foam); color: var(--dh-muted); border: 1px solid var(--dh-line); }
+.dh-seats .material-icons-round { font-size: 16px; }
+.dh-wish-row { display: flex; flex-direction: column; gap: 6px; padding: 12px 0; border-bottom: 1px solid var(--dh-line); }
+.dh-wish-row:last-child { border-bottom: 0; }
+.dh-wish-site { display: flex; align-items: center; gap: 10px; color: var(--dh-ink); text-decoration: none; }
+.dh-wish-site img { height: 28px; width: 28px; }
+.dh-wish-site:hover .dh-trip-title { color: var(--dh-sea); text-decoration: underline; }
+.dh-wish-next { display: flex; align-items: center; gap: 8px; margin-left: 38px; font-size: .8rem; color: var(--dh-muted); flex-wrap: wrap; }
+.dh-wish-next a { color: var(--dh-sea); font-weight: 700; text-decoration: none; }
+.dh-wish-next a:hover { text-decoration: underline; }
+.dh-wish-next .material-icons-round { font-size: 16px; color: var(--dh-sea); }
+.dh-card-foot { margin-top: 10px; text-align: right; font-size: .85rem; }
+.dh-card-foot a { color: var(--dh-sea); font-weight: 700; text-decoration: none; }

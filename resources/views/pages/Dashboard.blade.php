@@ -73,7 +73,7 @@
             --}}
 <div class="row mx-1 dh-dash-cards">
                 {{---Card My Upcoming trips--}}
-                <div class="col-md-4 mb-4">
+                <div class="col-md-5 mb-4">
                     <div class="card mt-3">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
@@ -137,187 +137,6 @@
                     </div>
                 </div>
 
-                {{---Card recommended for this weekend --}}
-                <div class="col-md-8">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                @php $ws = \Carbon\Carbon::parse($weekendStart ?? now()); $weekendLabel = $ws->isCurrentWeek() ? 'this weekend' : 'the weekend of ' . $ws->format('M j'); @endphp
-                                <h2 class="card-title text-white mx-4">Recommended for {{ $weekendLabel }}</h2>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <?php
-                                $hasFavorite = false;
-
-                                foreach ($favTrips as $trip) {
-                                    if (isset($trip['fav']) && $trip['fav'] === 1) {
-                                        $hasFavorite = true;
-                                        break;
-                                    }
-                                }
-                            ?>
-                            @if(!$hasFavorite)
-                                <p>There is no recommendation for {{ $weekendLabel }} at the moment. Go to <a href=" {{ route('overview') }}"><b class="text-info">"My Profile"</b></a> on the menu to set your favorite preferences.</p>
-                            @else
-                                <div class="table-responsive">
-                                    <div class="table-responsive">
-                                        <table id="tableTrips" style="display: block; max-height: 300px; overflow-y: scroll">
-                                            <thead class="text-info">
-                                                <th class="px-4 align-top">
-                                                    Date
-                                                </th>
-                                                <th class="align-top">
-                                                    Operator
-                                                </th>
-                                                <th class="px-4 align-top">
-                                                    Time
-                                                </th>
-                                                    <th class="py-0 align-top">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
-                                                </th>
-                                                <th class="px-4 align-top">
-                                                    Site / Trip Name
-                                                </th>
-                                                <th class="px-4 align-top">
-                                                    Level<a href="#" onclick="showModal();"><p class="text-xs text-info text-center mt-0 px-1">(?)</p></a>
-                                                </th>
-                                                <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
-                                                    Depth
-                                                </th>
-                                            </thead>
-                                            <tbody >
-                                                @foreach($favTrips as $trip)
-                                                    
-                                                    @php
-                                                        //because we get all the dives, we check if it's a fav
-                                                        if(!$trip->fav)
-                                                            continue;
-                                                        // do this to avoid printing on the table trips that are not within the current month, but wanted to show them on calendar (check controller)
-                                                        $tripDate = new DateTime($trip->date);
-                                                        $tripMonth = $tripDate->format('F');
-                                                    @endphp
-                                                    
-                                                    <tr style="border-bottom: 1px solid #D3D3D3;" data-tag="{{ $trip->tags }}">
-                                                    <td class="px-4">{{ $tripDate->format('D') }} {{ $tripDate->format('M-d') }}</td>
-                                                        <td class="px-0 py-2 text-sm text-wrap"><a href="{{ route('OperatorDetails', ['id' => $trip->operatorId] )}}">{{ $trip->operatorName }}</a></td>
-                                                        <td class="px-4">{{ $trip->departureTime }}</td>
-                                                        @if($trip->tripFreeSpots == 0)
-                                                            <td class="text-center">-</td>
-                                                        @else
-                                                            <td class="text-center"> <a href="{{ $trip->linkToBook }}" target="_blank">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</a></td>
-                                                        @endif
-                                                        
-                                                        
-
-                                                        <td class="do-not-translate px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}</a></td>
-
-                                                        @if(!empty($trip->site[0]))
-                                                            {{--<td class="px-4 text-sm text-center">{{ $trip->site[0]->level }}</td>--}}
-                                                            <td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $trip->site[0]->level }}.png" height="25"></td>
-                                                        @else
-                                                            <td class="px-4 text-sm text-center"> </td>
-                                                        @endif
-
-                                                        @if(!empty($trip->site[0]))
-                                                            <td class="px-4 text-sm text-center">{{ $trip->site[0]->maxDepth }}</td>
-                                                        @else
-                                                            <td class="px-4 text-sm text-center"> </td>
-                                                        @endif
-                                                        
-                                                    </tr>
-                                                    
-                                                @endforeach          
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>    
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
-                {{---Card My wishlist --}}
-                <div class="col-md-12">
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4"><i class="material-icons justify-content-middle align-middle" style="font-size: 40px;">favorite</i>My wishlist
-                                    {{-- A way in from the card itself, not only from the empty state. --}}
-                                    <a class="dh-dash-headlink" href="{{ route('DiveSites') }}">Add sites</a></h2>
-                            </div>
-                        </div>
-
-                        <div class="card-body">
-                            
-                            @if(!count($wished))
-                                {{-- Pablo, 2026-09-10: the wishlist only earns its place if divers fill
-                                     it, so the empty state sends them somewhere to do that. Saving a site
-                                     means we tell them when a boat is scheduled to go there. --}}
-                                <p class="text-sm mb-3">Save the sites you want to dive and we will tell you when a boat is going there.</p>
-                                <a class="dh-btn dh-btn-primary" href="{{ route('DiveSites') }}">
-                                    <span class="material-icons-round">travel_explore</span>Find sites to add
-                                </a>
-                            @else
-                                <div class="table-responsive">
-                                    <div class="table-responsive">
-                                        <table id="tableTrips" style="display: block; max-height: 300px; overflow-y: scroll">
-                                            <thead class="text-info">
-                                            <th class="align-top">
-                                                    Type
-                                                </th>
-                                                <th class="px-4 align-top">
-                                                    Site
-                                                </th>
-                                                <th class="px-4 align-top">
-                                                    Level<a href="#" onclick="showModal();"><p class="text-xs text-info text-center mt-0 px-1">(?)</p></a>
-                                                </th>
-                                                <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
-                                                    Depth
-                                                </th>
-                                                <th class="align-top">
-                                                    Operator
-                                                </th>
-                                                <th class="px-4 align-top">
-                                                    Date
-                                                </th>
-                                                <th class="px-4 align-top">
-                                                    Time
-                                                </th>
-                                                    <th class="py-0 align-top">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
-                                                </th>
-                                                <th class="px-4 align-top">
-                                                    Trip Name
-                                                </th>
-                                                
-                                            </thead>
-                                            <tbody >
-                                                @foreach($wished as $wish)
-                                                    
-                                                    
-                                                    <tr style="border-bottom: 1px solid #D3D3D3;">
-                                                        <td class="w-5 text-center align-middle"><img src="{{ asset('assets') }}/img/icons/{{ $wish->site->type }}_icon.png" height="35"></td>
-                                                        <td class="do-not-translate px-4 text-sm text-left"> <a href="SiteDetails/{{$wish->site->id}}">{{ $wish->site->name}}</a></td>
-                                                        <td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $wish->site->level }}.png" height="25"></td>
-                                                        <td class="px-4 text-sm text-center">{{ $wish->site->maxDepth }}</td>
-                                                        {{--<td class="px-4 text-sm text-left"> <a href=" {{ route('OperatorDetails', ['id' => $wish->operatorId])}}">{{ $wish->operator}}</a></td>--}}
-                                                        <td class="px-4 text-sm text-left"> <a href="OperatorDetails/{{$wish->operatorId}}">{{ $wish->operator}}</a></td>
-                                                        <td class="px-4 text-sm text-left"> {{ $wish->date}}</td>
-                                                        <td class="px-4 text-sm text-left"> {{ $wish->time}}</td>
-                                                        <td class="px-4 text-sm text-left"> <a href="{{ $wish->linkToBook }}">{{ $wish->tripFreeSpots == 1000 ? "Y" : $wish->tripFreeSpots }}</a></td>
-                                                        <td class="do-not-translate px-4 text-sm text-left"> <a href="TripDetails/{{ $wish->tripId}}">{{ $wish->tripName}}</a></td>
-
-                                                    </tr>
-                                                    
-                                                @endforeach          
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>    
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
                 {{--
                     My groups. Small on purpose: this is the slot the group feed will
                     grow into (what people posted, who is going, unread), once group
@@ -325,7 +144,7 @@
                     next" and surfaces invites, which is the one group action a diver
                     should never miss.
                 --}}
-                <div class="col-md-12">
+                <div class="col-md-7">
                     <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
@@ -379,6 +198,135 @@
                 </div>
             </div>
 
+            <div class="row mx-1">
+                {{---Card recommended for this weekend --}}
+                {{--
+                    Rows, not a seven column table (Zach, 2026-09-10: "too wide, you
+                    can scroll, but they look bad"). Date block, the trip as the link,
+                    operator as plain text, seats as the one action, level and depth
+                    as small facts. Capped at six; "See all" opens the finder on the
+                    weekend preset, which is the same list in full.
+                --}}
+                <div class="col-md-12">
+                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                @php $ws = \Carbon\Carbon::parse($weekendStart ?? now()); $weekendLabel = $ws->isCurrentWeek() ? 'this weekend' : 'the weekend of ' . $ws->format('M j'); @endphp
+                                <h2 class="card-title text-white mx-4">Recommended for {{ $weekendLabel }}
+                                    <a class="dh-dash-headlink" href="{{ route('Trips') }}?range=weekend">See all</a></h2>
+                            </div>
+                        </div>
+                        <div class="card-body p-3">
+                            @php $recommended = collect($favTrips)->filter(fn ($t) => !empty($t->fav))->values(); @endphp
+                            @if($recommended->isEmpty())
+                                <p class="text-sm mb-2">No picks for {{ $weekendLabel }} yet. Recommendations come from the places, boats and level on your profile.</p>
+                                <a class="dh-btn dh-btn-primary" href="{{ route('overview') }}"><span class="material-icons-round">tune</span>Update my profile</a>
+                            @else
+                                <ul class="dh-trip-list">
+                                    @foreach($recommended->take(6) as $trip)
+                                        @php
+                                            $d = new DateTime($trip->date);
+                                            $site = !empty($trip->site[0]) ? $trip->site[0] : null;
+                                            $seats = (int) $trip->tripFreeSpots;
+                                        @endphp
+                                        <li class="dh-trip-row">
+                                            <span class="dh-trip-date"><b>{{ $d->format('j') }}</b><span>{{ $d->format('D') }}</span></span>
+                                            <a class="dh-trip-main" href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">
+                                                <span class="dh-trip-title do-not-translate">{{ $trip->tripName }}</span>
+                                                <span class="dh-trip-meta"><b>{{ $trip->departureTime }}</b> &middot; <span class="do-not-translate">{{ $trip->operatorName }}</span></span>
+                                                @if($site)
+                                                    <span class="dh-trip-facts">
+                                                        <img src="{{ asset('assets') }}/img/icons/icons_level_{{ $site->level }}.png" alt="Level {{ $site->level }}">
+                                                        @if($site->maxDepth)<span>{{ $site->maxDepth }} ft</span>@endif
+                                                    </span>
+                                                @endif
+                                            </a>
+                                            @if($seats <= 0)
+                                                <span class="dh-seats is-full">Full</span>
+                                            @elseif($trip->linkToBook)
+                                                <a class="dh-seats is-open" href="{{ $trip->linkToBook }}" target="_blank" rel="noopener"><span class="material-icons-round" aria-hidden="true">event_seat</span>{{ $seats >= 1000 ? 'Book' : $seats . ' ' . Str::plural('seat', $seats) }}</a>
+                                            @else
+                                                <span class="dh-seats is-open"><span class="material-icons-round" aria-hidden="true">event_seat</span>{{ $seats >= 1000 ? 'Open' : $seats . ' ' . Str::plural('seat', $seats) }}</span>
+                                            @endif
+                                        </li>
+                                    @endforeach
+                                </ul>
+                                @if($recommended->count() > 6)
+                                    <p class="dh-card-foot"><a href="{{ route('Trips') }}?range=weekend">See all {{ $recommended->count() }} picks</a></p>
+                                @endif
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                {{---Card My wishlist --}}
+                {{--
+                    One row per saved site with its next boat, instead of a nine column
+                    table. The site is the link; the next boat is the second line, with
+                    the seats as the action. "No boat scheduled yet" is the honest state
+                    for a site with nothing confirmed; the wishlist alert email covers
+                    the moment that changes.
+                --}}
+                <div class="col-md-12">
+                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
+                        <div class="card-header p-0 mt-n4 mx-3">
+                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                <h2 class="card-title text-white mx-4"><i class="material-icons justify-content-middle align-middle" style="font-size: 40px;">favorite</i>My wishlist
+                                    {{-- A way in from the card itself, not only from the empty state. --}}
+                                    <a class="dh-dash-headlink" href="{{ route('DiveSites') }}">Add sites</a></h2>
+                            </div>
+                        </div>
+                        <div class="card-body p-3">
+                            @if(!count($wished))
+                                {{-- Pablo, 2026-09-10: the wishlist only earns its place if divers fill
+                                     it, so the empty state sends them somewhere to do that. Saving a site
+                                     means we tell them when a boat is scheduled to go there. --}}
+                                <p class="text-sm mb-3">Save the sites you want to dive and we will tell you when a boat is going there. Tap the heart on any site card.</p>
+                                <a class="dh-btn dh-btn-primary" href="{{ route('DiveSites') }}">
+                                    <span class="material-icons-round">travel_explore</span>Find sites to add
+                                </a>
+                            @else
+                                <ul class="dh-trip-list">
+                                    @foreach($wished as $wish)
+                                        @if(!$wish->site) @continue @endif
+                                        @php $ws = $wish->site; $hasBoat = !empty($wish->tripId); $seats = (int) ($wish->tripFreeSpots ?? 0); @endphp
+                                        <li class="dh-wish-row">
+                                            <a class="dh-wish-site" href="{{ route('SiteDetails') }}/{{ $ws->slug ?? $ws->id }}">
+                                                <img src="{{ asset('assets') }}/img/icons/{{ $ws->type }}_icon.png" alt="{{ ucfirst($ws->type) }}" onerror="this.remove()">
+                                                <span class="dh-trip-main">
+                                                    <span class="dh-trip-title do-not-translate">{{ $ws->name }}</span>
+                                                    <span class="dh-trip-facts">
+                                                        <img src="{{ asset('assets') }}/img/icons/icons_level_{{ $ws->level }}.png" alt="Level {{ $ws->level }}">
+                                                        @if($ws->maxDepth)<span>{{ $ws->maxDepth }} ft</span>@endif
+                                                        <span>{{ ucfirst($ws->type) }}</span>
+                                                    </span>
+                                                </span>
+                                                <span class="material-icons-round dh-dive-chevron" aria-hidden="true">chevron_right</span>
+                                            </a>
+                                            <span class="dh-wish-next">
+                                                <span class="material-icons-round" aria-hidden="true">{{ $hasBoat ? 'sailing' : 'schedule' }}</span>
+                                                @if($hasBoat)
+                                                    @php $wd = \Carbon\Carbon::parse($wish->date); @endphp
+                                                    <span>Next boat</span>
+                                                    <a href="{{ route('TripDetails', ['tripId' => $wish->tripId]) }}">{{ $wd->format('D, M j') }} {{ $wish->time }} &middot; <span class="do-not-translate">{{ $wish->operator }}</span></a>
+                                                    @if($seats <= 0)
+                                                        <span class="dh-seats is-full">Full</span>
+                                                    @elseif($wish->linkToBook)
+                                                        <a class="dh-seats is-open" href="{{ $wish->linkToBook }}" target="_blank" rel="noopener">{{ $seats >= 1000 ? 'Book' : $seats . ' ' . Str::plural('seat', $seats) }}</a>
+                                                    @endif
+                                                @else
+                                                    <span>No boat scheduled yet. We will tell you when one is.</span>
+                                                @endif
+                                            </span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{--
                 My calendar (Zach, 2026-09-10). The month grid at the foot of the page
                 used to be the favourite operators' calendar, which is not what a
@@ -408,18 +356,6 @@
                                 <p class="text-xs text-secondary mb-2"><span class="dh-cal-key is-booked"></span> booked &nbsp; <span class="dh-cal-key is-open"></span> not booked yet &nbsp;&middot;&nbsp; tap a dive for options, tap a day to find a dive</p>
                                 <div class="calendar" id="my-calendar"></div>
 
-                                @if($calendarFeedUrl ?? null)
-                                <div class="dh-subscribe">
-                                    <div class="dh-subscribe-text">
-                                        <strong><span class="material-icons-round" aria-hidden="true">event_available</span> Subscribe to my dive calendar</strong>
-                                        <span>Paste this link into Google Calendar, Apple Calendar or Outlook as a calendar from URL and your dives stay in sync. Anyone with the link can see your upcoming dives.</span>
-                                    </div>
-                                    <div class="dh-subscribe-row">
-                                        <input type="text" id="calendarFeedUrl" class="form-control" value="{{ $calendarFeedUrl }}" readonly onclick="this.select();" aria-label="Calendar subscription link">
-                                        <button type="button" class="dh-btn dh-btn-primary" onclick="copyCalendarFeedUrl(this)"><span class="material-icons-round">content_copy</span>Copy link</button>
-                                    </div>
-                                </div>
-                                @endif
                             </div>
 
                             @if( !empty($favOperators) )

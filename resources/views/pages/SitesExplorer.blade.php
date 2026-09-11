@@ -64,11 +64,16 @@
                         <a class="dh-btn dh-btn-primary" href="{{ url()->current() }}">Show all</a>
                     </div>
                 @else
-                    <div class="dh-site-grid dh-site-grid-wide">
+                    {{-- data-member and data-csrf feed the card buttons (divershub.js): guests get the account prompt, members toggle over fetch. --}}
+                    <div class="dh-site-grid dh-site-grid-wide" id="dh-site-grid" data-member="{{ $isMember ? 1 : 0 }}" data-csrf="{{ csrf_token() }}" data-wish-url="{{ url('UpdateWished') }}" data-dived-url="{{ route('UpdateVisited') }}">
                         @foreach($sites as $site)
                             <x-site-card :site="$site" />
                         @endforeach
                     </div>
+                    <p class="dh-board-count mt-3">
+                        <span class="material-icons-round dh-inline-icon" aria-hidden="true">favorite_border</span> saves a site to your wishlist, we tell you when a boat goes there &nbsp;&middot;&nbsp;
+                        <span class="material-icons-round dh-inline-icon" aria-hidden="true">radio_button_unchecked</span> marks it as dived
+                    </p>
                 @endif
                 <x-dive-level.legend class="mt-4" />
             @endif

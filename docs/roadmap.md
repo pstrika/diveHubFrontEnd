@@ -233,9 +233,12 @@ slow to load. Nothing to do on the view side.
    - **Group feed in the my groups card**: latest posts, who is going to the
      next dive, unread counts. Needs read tracking on group chat (a last read
      per member), so it is a schema change and waits for the next release.
-   - **Wishlist alerts**: the wishlist is on the page; the promise that we tell
-     you when a boat is going to a saved site is still made by hand in the
-     digest email. Worth a badge on the card when a wished site has a trip.
+   - **Wishlist matching on multi site trips.** The alert email already fires
+     when a boat is scheduled for a saved site (Pablo). But the dashboard's
+     "next boat" and the alert both match `trips.siteId` exactly, and that
+     column is a comma separated list, so a two site trip that includes a
+     saved site never counts. The explorer's "boats this month" chip explodes
+     the list (SiteRank::tripsSoon); the wishlist should use the same approach.
 6. rEvo dive companion, offline first (Zach and Pablo use it every dive).
 7. Blog, then the community feed.
 8. Operator coordinates and one search whenever convenient.

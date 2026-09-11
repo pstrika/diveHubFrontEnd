@@ -169,20 +169,45 @@
 })();
 
 /* ------------------------------------------------------------------ */
-/* Copy the calendar subscription link (dashboard card). The calendar   */
-/* page has its own older copy of this; both read #calendarFeedUrl.     */
+/* Site cards: save to wishlist and mark as dived without leaving the   */
+/* explorer. One delegated handler; optimistic flip, undone on failure. */
+/* Guests (data-member="0") get the account prompt instead.             */
 /* ------------------------------------------------------------------ */
-window.copyCalendarFeedUrl = window.copyCalendarFeedUrl || function (btn) {
-    var input = document.getElementById('calendarFeedUrl');
-    if (!input) return;
-    input.select(); input.setSelectionRange(0, 99999);
-    var done = function () {
-        if (!btn) return;
-        var label = btn.querySelector('span:last-child') || btn;
-        var was = label.textContent; label.textContent = 'Copied';
-        setTimeout(function () { label.textContent = was; }, 1600);
+(function () {
+    var grid = document.getElementById('dh-site-grid');
+    if (!grid) return;
+    var isMember = grid.getAttribute('data-member') === '1';
+    var csrf = grid.getAttribute('data-csrf');
+    var icons = {
+        wish:  { on: 'favorite',     off: 'favorite_border' },
+        dived: { on: 'check_circle', off: 'radio_button_unchecked' }
     };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(input.value).then(done, function () { document.execCommand('copy'); done(); });
-    } else { document.execCommand('copy'); done(); }
-};
+    function paint(btn, act, on) {
+        btn.classList.toggle('is-on', on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        btn.querySelector('.material-icons-round').textContent = icons[act][on ? 'on' : 'off'];
+        btn.title = act === 'wish' ? (on ? 'On your wishlist' : 'Add to my wishlist')
+                                   : (on ? 'You have dived this site' : 'Mark as dived');
+    }
+    grid.addEventListener('click', function (e) {
+        var btn = e.target.closest('.dh-site-act');
+        if (!btn) return;
+        e.preventDefault();
+        if (!isMember) { if (typeof showModalGuest === 'function') showModalGuest(); return; }
+        if (btn.disabled) return;
+        var act = btn.getAttribute('data-act');
+        var siteId = btn.closest('.dh-site-card').getAttribute('data-site-id');
+        var was = btn.classList.contains('is-on');
+        paint(btn, act, !was);
+        btn.disabled = true;
+        var req = act === 'wish'
+            ? fetch(grid.getAttribute('data-wish-url') + '/' + siteId, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+            : fetch(grid.getAttribute('data-dived-url'), { method: 'POST', credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: '_token=' + encodeURIComponent(csrf) + '&site=' + encodeURIComponent(siteId) });
+        req.then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+           .then(function (data) { paint(btn, act, !!(act === 'wish' ? data.wished : data.visited)); })
+           .catch(function () { paint(btn, act, was); })
+           .then(function () { btn.disabled = false; });
+    });
+})();
