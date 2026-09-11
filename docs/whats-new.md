@@ -296,6 +296,21 @@ Several of these were broken on the live site too, not just on the branch.
   already has one. It now offers both, and the sign in route drops the shared
   guest session first, otherwise sign in bounces because the guest is technically
   logged in.
+- **The account pages match the rest of the site.** Sign in, create account,
+  forgot password and set a new password were the last four still wearing the
+  Material Dashboard template: different blues, a floating gradient banner, the
+  old card. They now share one shell built from the redesign tokens, same dive
+  photo with the brand wash over it, one white card, the round logo, plain
+  labelled fields and the normal buttons. The forms inside are untouched: same
+  field names, same validation messages, same Google button, same captcha, same
+  guest shortcut and its spinner.
+- **One version number.** The guest navbar had `v9.24.3 (09/09/2026)` typed
+  into it by hand, so any page using it showed a different release than the
+  footer. It reads the config now, which fixes it on Terms, Privacy, Data
+  deletion, pricing and all seven error pages too.
+- **The install bar stopped covering the sign up link.** On the account pages
+  it sits at the bottom of the window (there is no tab bar there to clear) and
+  the card leaves room for it.
 - **Version is 10.0.0.**
 - Operator coordinates were reviewed and deliberately left for later, because
   the pins land in the right place today.
@@ -352,6 +367,11 @@ Sign out first, then work through as a guest, then sign in.
 | Weather tab, signed in | Opens on the first of your favourite places |
 | Groups tab with an unread message | A red count on the icon |
 | Groups tab while signed out | Both "Create an account" and "I already have one, sign in" |
+| Sign in page | Redesign colours, the fields work, wrong password shows the error under the field |
+| Sign in, Continue as a guest | Still signs in as the guest and lands on the board |
+| Create account page | Redesign colours, the captcha image and its refresh button both work |
+| Forgot password, then the emailed link | Both pages redesigned, the reset still works |
+| Any account page, top and bottom | The same version number, 10.0.0 |
 | Me drawer, Enable Notifications | Pablo's toggle, unchanged |
 | Save a site, add a trip to your calendar | Both work, My Calendar shows the trip |
 

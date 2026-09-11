@@ -767,3 +767,68 @@ body.dh-shell .main-content { padding-bottom: calc(var(--dh-tabbar-h) + env(safe
 .dh-wish-next .material-icons-round { font-size: 16px; color: var(--dh-sea); }
 .dh-card-foot { margin-top: 10px; text-align: right; font-size: .85rem; }
 .dh-card-foot a { color: var(--dh-sea); font-weight: 700; text-decoration: none; }
+
+/* ------------------------------------------------------------------ */
+/* Account pages: sign in, create account, forgot and reset password.  */
+/* The last pages still on the old template (Zach, 2026-09-10).        */
+/* ------------------------------------------------------------------ */
+body.dh-auth-body { background: var(--dh-ink); }
+.dh-auth { position: relative; min-height: 100vh; display: flex; flex-direction: column; }
+.dh-auth-bg { position: fixed; inset: 0; z-index: 0; background: url('/assets/img/diveHub-login.jpg') center/cover no-repeat; }
+/* The dive photo with the brand wash over it, instead of the template's grey gradient. */
+.dh-auth-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,42,58,.78) 0%, rgba(14,77,104,.82) 100%); }
+.dh-auth-brand { position: relative; z-index: 1; display: block; padding: 22px 20px 0; text-align: center; }
+.dh-auth-brand img { height: 44px; width: auto; }
+.dh-auth-main { position: relative; z-index: 1; flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 16px calc(40px + env(safe-area-inset-bottom)); }
+.dh-auth-card { width: 100%; max-width: 420px; background: var(--dh-paper); border-radius: 18px; padding: 28px 24px 24px; box-shadow: 0 18px 50px rgba(5,25,35,.35); text-align: center; }
+.dh-auth-logo { display: block; margin: 0 auto 14px; }
+.dh-auth-title { font-size: 1.45rem; font-weight: 700; color: var(--dh-ink); margin: 0; line-height: 1.2; }
+.dh-auth-sub { font-size: .87rem; color: var(--dh-muted); margin: 8px 0 0; line-height: 1.45; }
+
+.dh-form { text-align: left; margin-top: 22px; }
+.dh-field { margin-bottom: 14px; }
+.dh-field label { display: block; font-size: .78rem; font-weight: 700; color: var(--dh-muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; }
+.dh-field input { width: 100%; padding: 12px 14px; font-size: 1rem; color: var(--dh-ink); background: #fff; border: 1px solid var(--dh-line); border-radius: 12px; }
+.dh-field input:focus { outline: none; border-color: var(--dh-sea); box-shadow: 0 0 0 3px rgba(14,124,158,.15); }
+.dh-field-error { margin: -8px 0 12px; font-size: .8rem; color: #b0322b; }
+.dh-note { padding: 10px 14px; border-radius: 12px; font-size: .85rem; margin-bottom: 14px; }
+.dh-note.is-good { background: #eaf5ee; color: #2e7d4f; }
+.dh-note.is-bad { background: #f8e9e2; color: #b0532a; }
+
+.dh-btn-block { width: 100%; justify-content: center; padding: 13px 16px; font-size: .95rem; }
+.dh-btn-google { background: #fff; color: var(--dh-ink); border: 1px solid var(--dh-line); gap: 10px; margin-top: 10px; }
+.dh-btn-google:hover { border-color: var(--dh-sea); color: var(--dh-ink); background: var(--dh-sand); }
+
+.dh-auth-remember { display: flex; align-items: center; gap: 8px; margin: 4px 0 18px; padding-left: 0; }
+.dh-auth-remember .form-check-input { margin: 0; flex: 0 0 auto; }
+.dh-auth-remember .form-check-label { font-size: .85rem; color: var(--dh-muted); margin: 0; }
+.dh-auth-terms { display: flex; align-items: flex-start; gap: 8px; margin: 4px 0 18px; padding-left: 0; }
+.dh-auth-terms .form-check-input { margin: 2px 0 0; flex: 0 0 auto; }
+.dh-auth-terms .form-check-label { font-size: .82rem; color: var(--dh-muted); margin: 0; line-height: 1.45; }
+.dh-auth-terms a { color: var(--dh-sea); font-weight: 700; }
+/* The template paints a checked box magenta; these are ours, so they are ours. */
+.dh-auth-terms .form-check-input:checked,
+.dh-auth-remember .form-check-input:checked { background-color: var(--dh-sea) !important; border-color: var(--dh-sea) !important; }
+.dh-auth-terms .form-check-input:checked:after,
+.dh-auth-remember .form-check-input:checked:after { border-color: #fff !important; }
+
+.dh-captcha-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.dh-captcha-row img { border: 1px solid var(--dh-line); border-radius: 10px; height: 46px; }
+.dh-captcha-refresh { border: 1px solid var(--dh-line); background: #fff; border-radius: 10px; width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--dh-sea); }
+.dh-captcha-refresh:hover { border-color: var(--dh-sea); }
+
+.dh-auth-links { margin-top: 20px; text-align: center; }
+.dh-auth-links p { font-size: .85rem; color: var(--dh-muted); margin: 0 0 8px; }
+.dh-auth-links a { color: var(--dh-sea); font-weight: 700; text-decoration: none; }
+.dh-auth-links a:hover { text-decoration: underline; }
+.dh-auth-guest { padding-top: 10px; border-top: 1px solid var(--dh-line); margin-top: 14px !important; }
+
+.dh-auth-foot { position: relative; z-index: 1; margin: 18px 0 0; font-size: .78rem; color: rgba(255,255,255,.75); text-align: center; }
+.dh-auth-foot a { color: rgba(255,255,255,.92); margin-left: 12px; text-decoration: none; }
+.dh-auth-foot a:hover { text-decoration: underline; }
+.dh-auth-version { display: block; margin-top: 4px; opacity: .7; }
+/* The add to home screen bar sits above the tab bar everywhere else; there is
+   no tab bar here, so it drops to the real bottom and the card clears it
+   (Zach's screenshot: it was covering the "Sign up" link). */
+body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+@media (max-width: 991px) { .dh-auth-main { padding-bottom: calc(118px + env(safe-area-inset-bottom)); } }
