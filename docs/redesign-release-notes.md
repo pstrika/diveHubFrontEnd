@@ -10,6 +10,107 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.3.0 — 2026-09-12
+
+Deployed: commits `95a08dd`, `278138f`, `f0be2cd`, `cedc850`, `22451e1`.
+
+### Calendars and Trips
+- The five type calendars (recreational, technical, wreck, shark, lobster)
+  had quietly become a redirect into the Trips finder earlier in the
+  redesign - real month/week/3-day views are back, rebuilt against the old
+  pre-redesign implementation as a baseline: today-anchored by default,
+  prev/next paging that steps by the active view (3 days / week / month)
+  and won't go before today, a trip list below that always covers the
+  visible range (up to 20 dives, "Show more" to page further), a day's
+  events collapsing into FullCalendar's native "+N more" past five, and
+  responsive by breakpoint (3-day on phone, week on tablet, month on
+  desktop) via one shared script (`divershub-calendar.js`) all five use.
+  Each calendar's title now carries its themed icon, matching its sidebar
+  entry ("Wreck Diving Calendar", etc.).
+- My Calendar (the personal one) got the same today-anchored logic and
+  trip-card rendering, fixing a long-standing bug where a dive's site data
+  never made it onto its own card.
+- Trips finder: region chips reordered (Fort Lauderdale, Miami, Florida
+  Keys, Palm Beach, Treasure Coast), the seats chip is labelled
+  "Availability:", and the finder now remembers a diver's last filter
+  picks for the session instead of resetting on every visit.
+
+### Beach Diving
+- Full redesign, in the style of the Weather page: Fort Lauderdale and West
+  Palm Beach verdict cards share the top row (today's sky conditions, next
+  high tide countdown, three-state go/no-go - good, poor, or a yellow "not
+  a great day" when AM and PM disagree), one combined 5-day dive/no-dive
+  table for both locations, the old underwater webcam back in a
+  collapsible panel, and each location's map/site list collapsing
+  independently.
+- Fixed a real discrepancy where the verdict headline and the days table
+  could disagree on borderline days - both now read the same score
+  threshold, and per standing instruction for this page, beach diving's
+  go/no-go always comes from this page's own 5-day data, never from
+  Weather's marine-forecast text for the location.
+
+### Icons, avatars and page chrome
+- New `<x-site-type-icon>` component put Pablo's new wreck/reef/other SVGs
+  (themed to the site's color, not a fixed color baked into the file)
+  everywhere the old flat icons were still showing - Site Details, Trip
+  Details, Operator Details, Operators, Dive Sites admin, Group upcoming
+  dives, My Wishlist.
+- Sidebar: Wreck Diving gets its new icon; Marine Forecast switches to the
+  same cloud used on the Weather page.
+- Drawer header now shows a signed-in member's uploaded avatar (blue theme
+  ring) next to their name, nothing if none is set, and an initials circle
+  if the file is missing on disk - centralized in `App\Support\UserAvatar`,
+  also now used for group member and dive-RSVP avatars (fixing a broken
+  fallback to a nonexistent default-avatar image in one of them).
+- Page-title icons added to Dive Operators, Marine Forecast, Online
+  Waivers, Deco Planner, Best Gases, My Groups, My Calendar, My Dashboard
+  and Beach Diving, each matching its sidebar entry.
+- One consistent top padding under the page header everywhere - Weather
+  had a leftover duplicate wrapper giving it extra space others didn't
+  have.
+
+### Retheme pass
+- Messages (notifications): off DataTables onto a plain themed list; fixed
+  a duplicate element-id bug that broke per-row read/delete actions.
+- My Visited Sites: **fixed the kanban board not rendering at all.** A
+  site-type icon's raw multi-line SVG was landing straight inside a JS
+  single-quoted string for each card's title, so any wreck/reef card broke
+  the string and silently killed the whole script before the board ever
+  built. Retheme also included.
+- Groups (My Groups, Show, Create, Facebook page picker, chat/message
+  partials) onto the shared card and button system.
+- Online Waivers: fixed a stale "Dive Operators" header left over from a
+  copy-paste, tiles reskinned.
+- Best Gases and Deco Planner: outer shell only - hero banner removed,
+  wrapped in a themed card. Left the internal calculators (markup, JS,
+  color-coded state classes) untouched on purpose: both are
+  safety-relevant tools whose color logic is tightly interconnected, and a
+  full retheme risked a silent calculation bug for a low-value visual
+  change.
+- About Us, Terms of Use, Privacy Policy and Data Deletion moved off the
+  old guest-landing shell onto the standard signed-in-style shell; content
+  unchanged.
+- Platform Health: Deco Divers (a dead operator) and Argentina weather
+  locations no longer show up or raise alarms - out of scope for this
+  dashboard.
+
+### PWA
+- **Fixed the install prompt never coming back after a dismissal.**
+  Re-showing it lived entirely inside the browser's `beforeinstallprompt`
+  event handler, which doesn't reliably refire on every page load - so
+  even once the 10-page re-eligibility rule correctly flipped back to
+  true, nothing actually triggered the bar on Android. Showing the bar is
+  now decoupled from that event and runs whenever the page-view count says
+  it's eligible; iOS's separate instructions path was unaffected.
+  Dismissing now re-shows after 10 more page views instead of never again,
+  via a durable view counter, phone/tablet only.
+- New "Install as App" entry at the very top of the drawer (above My
+  Diving), hidden automatically once already running installed - which
+  also permanently silences the auto-popup on that device.
+- A cold launch of the installed app showed a blank black screen for a few
+  seconds while the page loaded; a pure-CSS boot splash (app icon, small
+  pulse) now covers that gap, invisible in a normal browser tab.
+
 ## 10.2.0 — 2026-09-11
 
 Deployed: commit `d70d84f`, followed by a same-day, same-version fix in
