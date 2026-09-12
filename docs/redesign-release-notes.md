@@ -10,6 +10,30 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.5.2 — 2026-09-14
+
+Deployed: commits `45d8e1e`, `a0ad785`.
+
+- Fixed the `trip_reminder_3` Twilio template's category (MARKETING, not
+  UTILITY - the wrong one meant a slower/wrong Meta review queue). Twilio
+  won't let you change category on an already-submitted approval, so this
+  is a fresh Content resource (`HXc96f0ea171f85fca8b3ecaa3a00fb9a4`); the
+  UTILITY one is dead and unreferenced.
+- New short link, `/w/{operator}`, that redirects to that operator's
+  actual waiver page (or the Waivers list if none is on file) - exists so
+  a WhatsApp button can point somewhere fixed-domain, since operator
+  waivers live on their own separate sites and WhatsApp's dynamic URL
+  buttons only allow a fixed base with a variable suffix.
+- A second WhatsApp Content template, `trip_reminder_3_with_waiver`
+  (`HX3c63aba80c351d4a492df18b407b16cc`, MARKETING, submitted for
+  review), same as `trip_reminder_3` but with both buttons - "Trip
+  Details" and "Sign Waiver" via the new redirect. The dive reminder's
+  WhatsApp send now points at this one. Verified live: Twilio accepted
+  and queued a real test send (confirms the template shape and both
+  button URLs are valid), then came back "failed" with error 63021 once
+  it tried to actually push to WhatsApp - the expected "not approved yet"
+  failure, not a malformed template.
+
 ## 10.5.1 — 2026-09-14
 
 Deployed: commit `cc04925`. Also ran both of 10.5.0's migrations against
