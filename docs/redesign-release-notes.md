@@ -10,6 +10,24 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.5.1 — 2026-09-14
+
+Deployed: commit `cc04925`. Also ran both of 10.5.0's migrations against
+the shared database tonight (`add_group_id_to_messages_table`,
+`add_digest_fields_to_groups_table`) - local dev and the redesign slot
+point at the same Azure MySQL server, so this was one step, not two.
+
+- The richer `trip_reminder_3` WhatsApp template Pablo built directly in
+  Meta Business Manager doesn't sync into Twilio's Content API on its
+  own - recreated as its own Twilio Content resource (header image, the
+  same 5-variable body, a "Trip Details" button) and submitted for
+  approval; status was "pending" as of tonight, not auto-approved just
+  because the wording already exists in Meta. The dive reminder now
+  points at it; sends will log-fail until Meta approves it. Dropped the
+  Meta original's second "Sign Waiver" button - WhatsApp's dynamic URL
+  buttons only support a fixed base domain, and operator waiver links
+  live on the operators' own separate domains.
+
 ## 10.5.0 — 2026-09-14
 
 Deployed: commits `abacec3`, `4d4dc85`, `6c064b3`, `a5b836c`.
