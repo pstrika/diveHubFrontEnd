@@ -55,4 +55,17 @@ return [
         'from' => env('TWILIO_FROM_NUMBER'),
     ],
 
+    // WhatsApp Business Cloud API (Meta), see App\Services\WhatsAppService.
+    // access_token/phone_number_id come from the Meta app once approved;
+    // dive_reminder_template is a separate approval (a specific message
+    // template reviewed in Meta Business Manager) that can land later than
+    // the credentials themselves, so it's gated independently - the service
+    // and its callers no-op until each piece they need is actually set.
+    'whatsapp' => [
+        'access_token' => env('WHATSAPP_ACCESS_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'graph_version' => env('WHATSAPP_GRAPH_VERSION', 'v21.0'),
+        'dive_reminder_template' => env('WHATSAPP_DIVE_REMINDER_TEMPLATE'),
+    ],
+
 ];

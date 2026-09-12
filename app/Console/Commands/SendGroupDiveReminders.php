@@ -8,6 +8,7 @@ use App\Models\Operator;
 use App\Models\Trip;
 use App\Services\NotificationService;
 use App\Services\SmsService;
+use App\Services\WhatsAppService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -51,6 +52,7 @@ class SendGroupDiveReminders extends Command
             $this->sendReminderEmail($dive, $daysAhead);
             $this->notifyReminderInApp($dive, $daysAhead);
             $this->sendReminderSms($dive, $daysAhead);
+            $this->sendReminderWhatsApp($dive, $daysAhead);
 
             DB::connection('mysql_trips')->table('group_dive_reminders_sent')->insert([
                 'group_dive_id' => $dive->id,
@@ -167,6 +169,54 @@ class SendGroupDiveReminders extends Command
             }
 
             SmsService::send($member->user->phone, $body);
+        }
+    }
+
+    /**
+     * WhatsApp reminder via Meta's Cloud API, only for members who opted in
+     * (`whatsapp_notifications`) and only once a dive-reminder template has
+     * actually been approved and configured (WHATSAPP_DIVE_REMINDER_TEMPLATE)
+     * - WhatsAppService itself also no-ops without API credentials, so this
+     * is safe to call unconditionally once that day comes.
+     *
+     * Unlike SMS, WhatsApp will not send free-form business-initiated text -
+     * only this exact approved template, with its exact variable count and
+     * order. {$dive->tripName}, "in N day(s)", the date, the time and the
+     * group's URL are what the SMS body above says in prose; adjust this
+     * parameter list (and add/remove entries) to match whatever the
+     * template actually asks for once it's approved - Meta will reject the
+     * send (logged by WhatsAppService, not thrown) if they don't line up.
+     */
+    private function sendReminderWhatsApp(GroupDive $dive, int $daysAhead)
+    {
+        $template = config('services.whatsapp.dive_reminder_template');
+        if (!$template) {
+            return;
+        }
+
+        $group = $dive->group;
+        $members = $group->activeMembers;
+
+        if ($members->isEmpty()) {
+            return;
+        }
+
+        $dateFormatted = Carbon::parse($dive->date)->format('D, M j');
+        $timeFormatted = $dive->time ? Carbon::parse($dive->time)->format('g:i A') : 'TBD';
+        $url = route('Groups.show', ['group' => $group->slug]);
+        $daysPhrase = $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '');
+
+        foreach ($members as $member) {
+            if (!$member->user || !$member->user->phone || !$member->user->whatsapp_notifications) {
+                continue;
+            }
+
+            WhatsAppService::sendTemplate($member->user->phone, $template, 'en_US', [
+                $dive->tripName,
+                $daysPhrase,
+                $dateFormatted . ' at ' . $timeFormatted,
+                $url,
+            ]);
         }
     }
 }
