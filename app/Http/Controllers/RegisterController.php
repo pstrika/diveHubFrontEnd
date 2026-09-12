@@ -54,7 +54,8 @@ class RegisterController extends Controller
                     'You\'ve been invited to join "' . $invite->group->name . '"',
                     route('MyGroups'),
                     null,
-                    $invite->invited_by
+                    $invite->invited_by,
+                    $invite->group->id
                 );
             }
         }

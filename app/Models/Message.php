@@ -15,6 +15,7 @@ class Message extends Model
     protected $fillable = [
         'userId',
         'from_user_id',
+        'group_id',
         'subject',
         'body',
         'read',
@@ -33,5 +34,11 @@ class Message extends Model
     public function fromUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'from_user_id');
+    }
+
+    /** Which group this is about, if any - null puts it in the Inbox instead of the Groups folder. */
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class, 'group_id');
     }
 }

@@ -13,17 +13,31 @@ class MessageController extends Controller
 
         Log::debug("Got to Messages.show");
         $user = User::findorFail(auth()->user()->id);
-        $columns = ['id', 'from_user_id', 'read', 'subject', 'body', 'created_at'];
+        $columns = ['id', 'from_user_id', 'group_id', 'read', 'subject', 'body', 'created_at'];
 
+        // Inbox: system/account notifications - anything not about a specific
+        // group. Groups: everything that is (invites, chat, dive reminders,
+        // new dives) - Pablo, 2026-09-14, wanted the two kept apart since the
+        // Inbox was getting drowned out by group chatter.
         $messages = Message::where('userid', $user->id)
                    ->where('deleted', false)
+                   ->whereNull('group_id')
+                   ->with('fromUser:id,name,picture')
+                   ->latest()
+                   ->take(200)
+                   ->get($columns);
+
+        $groupMessages = Message::where('userid', $user->id)
+                   ->where('deleted', false)
+                   ->whereNotNull('group_id')
                    ->with('fromUser:id,name,picture')
                    ->latest()
                    ->take(200)
                    ->get($columns);
 
         // The Bin: same soft-delete flag the trash icon already sets, now with
-        // a place to see and undo it rather than it just vanishing.
+        // a place to see and undo it rather than it just vanishing. Holds
+        // both folders' deleted messages together, same as Gmail's Trash.
         $trashed = Message::where('userid', $user->id)
                    ->where('deleted', true)
                    ->with('fromUser:id,name,picture')
@@ -33,7 +47,7 @@ class MessageController extends Controller
 
         Log::debug("Count of messages:" . count($messages));
 
-        return view('pages.Messages', compact('messages', 'trashed'));
+        return view('pages.Messages', compact('messages', 'groupMessages', 'trashed'));
     }
 
     public function markAsRead(Request $request) {

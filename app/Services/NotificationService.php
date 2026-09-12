@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Log;
  */
 class NotificationService
 {
-    public static function notify(iterable $userIds, string $subject, string $body, ?string $url = null, ?int $excludeUserId = null, ?int $fromUserId = null): void
+    public static function notify(iterable $userIds, string $subject, string $body, ?string $url = null, ?int $excludeUserId = null, ?int $fromUserId = null, ?int $groupId = null): void
     {
         $userIds = collect($userIds)->filter(fn ($id) => $id != $excludeUserId)->unique()->values();
         if ($userIds->isEmpty()) {
@@ -32,6 +32,7 @@ class NotificationService
                 Message::create([
                     'userId' => $userId,
                     'from_user_id' => $fromUserId,
+                    'group_id' => $groupId,
                     'subject' => $subject,
                     'body' => $body,
                     'read' => 0,

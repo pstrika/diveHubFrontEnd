@@ -7,18 +7,26 @@
 
         <div class="container-fluid py-0 dh-board">
             <section class="dh-panel">
-                @php $unreadCount = $messages->where('read', false)->count(); @endphp
+                @php
+                    $unreadInbox = $messages->where('read', false)->count();
+                    $unreadGroups = $groupMessages->where('read', false)->count();
+                @endphp
                 <div class="dh-msg-toolbar">
                     <div class="dh-msg-tabs">
                         <button type="button" class="dh-msg-tab is-active" id="dh-msg-tab-inbox" onclick="dhSwitchFolder('inbox')">
                             <span class="material-icons-round" style="font-size:16px" aria-hidden="true">inbox</span>
                             Inbox
-                            @if($unreadCount)<span class="dh-msg-tab-count">{{ $unreadCount }}</span>@endif
+                            <span class="dh-msg-tab-count" @if(!$unreadInbox) hidden @endif>{{ $unreadInbox }}</span>
+                        </button>
+                        <button type="button" class="dh-msg-tab" id="dh-msg-tab-groups" onclick="dhSwitchFolder('groups')">
+                            <span class="material-icons-round" style="font-size:16px" aria-hidden="true">groups</span>
+                            Groups
+                            <span class="dh-msg-tab-count" @if(!$unreadGroups) hidden @endif>{{ $unreadGroups }}</span>
                         </button>
                         <button type="button" class="dh-msg-tab" id="dh-msg-tab-bin" onclick="dhSwitchFolder('bin')">
                             <span class="material-icons-round" style="font-size:16px" aria-hidden="true">delete_outline</span>
                             Bin
-                            @if($trashed->count())<span class="dh-msg-tab-count">{{ $trashed->count() }}</span>@endif
+                            <span class="dh-msg-tab-count" @if(!$trashed->count()) hidden @endif>{{ $trashed->count() }}</span>
                         </button>
                     </div>
                     <div class="dh-msg-toolbar-actions">
@@ -45,6 +53,16 @@
                                 <div class="dh-empty">
                                     <span class="material-icons-round" aria-hidden="true">notifications_none</span>
                                     <p>No notifications yet.</p>
+                                </div>
+                            @endforelse
+                        </div>
+                        <div class="dh-msg-list" id="dh-msg-list-groups" data-folder="groups" hidden>
+                            @forelse($groupMessages as $message)
+                                @include('pages.messages._row')
+                            @empty
+                                <div class="dh-empty">
+                                    <span class="material-icons-round" aria-hidden="true">groups</span>
+                                    <p>No group notifications yet.</p>
                                 </div>
                             @endforelse
                         </div>
@@ -89,40 +107,35 @@
 
     @push('js')
     <script>
-        // One lookup, keyed by id, seeded from both folders - the reading pane and
-        // every bulk/single action work off this instead of re-parsing the DOM.
+        // One lookup, keyed by id, seeded from all three lists - the reading pane
+        // and every bulk/single action work off this instead of re-parsing the DOM.
+        // `category` (inbox/groups) is fixed - it's what group_id says server side
+        // and never changes; `inBin` is the only thing an action toggles, and
+        // restoring always returns a message to its own category, not always Inbox.
         var dhMessages = {};
-        @foreach($messages as $message)
-            dhMessages[{{ $message->id }}] = {
-                id: {{ $message->id }},
-                subject: @json($message->subject),
-                body: @json($message->body),
-                read: {{ $message->read ? 'true' : 'false' }},
-                fromName: @json($message->fromUser->name ?? 'Divers Hub'),
-                fromAvatar: @json(($message->fromUser->picture ?? null) && \App\Support\UserAvatar::exists($message->fromUser->picture) ? \App\Support\UserAvatar::url($message->fromUser->picture) : null),
-                isSystem: {{ $message->from_user_id ? 'false' : 'true' }},
-                createdAt: @json($message->created_at->toIso8601String()),
-                folder: 'inbox'
-            };
-        @endforeach
-        @foreach($trashed as $message)
-            dhMessages[{{ $message->id }}] = {
-                id: {{ $message->id }},
-                subject: @json($message->subject),
-                body: @json($message->body),
-                read: {{ $message->read ? 'true' : 'false' }},
-                fromName: @json($message->fromUser->name ?? 'Divers Hub'),
-                fromAvatar: @json(($message->fromUser->picture ?? null) && \App\Support\UserAvatar::exists($message->fromUser->picture) ? \App\Support\UserAvatar::url($message->fromUser->picture) : null),
-                isSystem: {{ $message->from_user_id ? 'false' : 'true' }},
-                createdAt: @json($message->created_at->toIso8601String()),
-                folder: 'bin'
-            };
+        @foreach(['inbox' => $messages, 'groups' => $groupMessages, 'bin' => $trashed] as $__cat => $__list)
+            @foreach($__list as $message)
+                dhMessages[{{ $message->id }}] = {
+                    id: {{ $message->id }},
+                    subject: @json($message->subject),
+                    body: @json($message->body),
+                    read: {{ $message->read ? 'true' : 'false' }},
+                    fromName: @json($message->fromUser->name ?? 'Divers Hub'),
+                    fromAvatar: @json(($message->fromUser->picture ?? null) && \App\Support\UserAvatar::exists($message->fromUser->picture) ? \App\Support\UserAvatar::url($message->fromUser->picture) : null),
+                    isSystem: {{ $message->from_user_id ? 'false' : 'true' }},
+                    createdAt: @json($message->created_at->toIso8601String()),
+                    category: '{{ $message->group_id ? "groups" : "inbox" }}',
+                    inBin: {{ $__cat === 'bin' ? 'true' : 'false' }}
+                };
+            @endforeach
         @endforeach
 
         var dhSystemAvatar = '{{ asset('assets') }}/img/pwa/icon-192.png';
         var dhCsrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         var dhFolder = 'inbox';
         var dhOpenId = null;
+        var dhListEl = { inbox: 'dh-msg-list-inbox', groups: 'dh-msg-list-groups', bin: 'dh-msg-list-bin' };
+        var dhTabEl = { inbox: 'dh-msg-tab-inbox', groups: 'dh-msg-tab-groups', bin: 'dh-msg-tab-bin' };
 
         function dhPost(url, ids) {
             return fetch(url, {
@@ -139,17 +152,15 @@
 
         function dhSwitchFolder(folder) {
             dhFolder = folder;
-            document.getElementById('dh-msg-tab-inbox').classList.toggle('is-active', folder === 'inbox');
-            document.getElementById('dh-msg-tab-bin').classList.toggle('is-active', folder === 'bin');
-            document.getElementById('dh-msg-list-inbox').hidden = folder !== 'inbox';
-            document.getElementById('dh-msg-list-bin').hidden = folder !== 'bin';
+            Object.keys(dhTabEl).forEach(function (f) { document.getElementById(dhTabEl[f]).classList.toggle('is-active', f === folder); });
+            Object.keys(dhListEl).forEach(function (f) { document.getElementById(dhListEl[f]).hidden = f !== folder; });
             document.getElementById('dh-msg-select-all').checked = false;
             dhCloseReading();
             dhOnCheckToggle();
         }
 
         function dhCurrentList() {
-            return document.getElementById(dhFolder === 'inbox' ? 'dh-msg-list-inbox' : 'dh-msg-list-bin');
+            return document.getElementById(dhListEl[dhFolder]);
         }
 
         function dhCheckedIds() {
@@ -167,9 +178,32 @@
             var count = ids.length;
             document.getElementById('dh-msg-bulk-count').hidden = count === 0;
             document.getElementById('dh-msg-bulk-count').textContent = count + ' selected';
-            document.getElementById('dh-msg-bulk-delete').hidden = !(count > 0 && dhFolder === 'inbox');
+            document.getElementById('dh-msg-bulk-delete').hidden = !(count > 0 && dhFolder !== 'bin');
             document.getElementById('dh-msg-bulk-restore').hidden = !(count > 0 && dhFolder === 'bin');
             document.getElementById('dh-msg-bulk-destroy').hidden = !(count > 0 && dhFolder === 'bin');
+        }
+
+        // Re-derives every tab's badge from the DOM (unread count for Inbox/
+        // Groups, total items for the Bin) after any action that could have
+        // changed one, rather than nudging a running number per code path -
+        // the bug report ("counters don't update, I need to refresh") was
+        // exactly that: several of those code paths never touched the badge
+        // at all. Re-deriving from what's actually on screen can't drift.
+        function dhRefreshTabCounts() {
+            ['inbox', 'groups'].forEach(function (folder) {
+                var n = document.getElementById(dhListEl[folder]).querySelectorAll('.dh-msg-row.is-unread').length;
+                dhSetTabCount(folder, n);
+            });
+            var binTotal = document.getElementById(dhListEl.bin).querySelectorAll('.dh-msg-row').length;
+            dhSetTabCount('bin', binTotal);
+        }
+
+        function dhSetTabCount(folder, n) {
+            var tab = document.getElementById(dhTabEl[folder]);
+            var countEl = tab.querySelector('.dh-msg-tab-count');
+            if (!countEl) return;
+            countEl.textContent = n;
+            countEl.hidden = n === 0;
         }
 
         function dhBulkAction(action) {
@@ -182,26 +216,35 @@
                      : '{{ route("messages.destroy") }}';
 
             dhPost(url, ids).then(function (r) { return r.ok ? r.json() : Promise.reject(); }).then(function () {
-                ids.forEach(function (id) {
-                    var row = document.getElementById('message-row-' + id);
-                    if (row) row.remove();
-                    if (action === 'delete') {
-                        dhMessages[id].folder = 'bin';
-                        dhAppendRow(document.getElementById('dh-msg-list-bin'), id);
-                    } else if (action === 'restore') {
-                        dhMessages[id].folder = 'inbox';
-                        dhAppendRow(document.getElementById('dh-msg-list-inbox'), id);
-                    } else {
-                        delete dhMessages[id];
-                    }
-                    if (dhOpenId == id) dhCloseReading();
-                });
+                ids.forEach(function (id) { dhMoveRow(id, action); });
                 document.getElementById('dh-msg-select-all').checked = false;
                 dhOnCheckToggle();
+                dhRefreshTabCounts();
             }).catch(function () { alert('Something went wrong - please try again.'); });
         }
 
-        // Used after a bulk move so the row shows up in its new folder without a
+        // Removes a message's row from wherever it's currently shown and, for
+        // delete/restore, re-adds it to the list its new state belongs in -
+        // Bin for delete, the message's own category (not always Inbox) for
+        // restore. destroy just removes it for good.
+        function dhMoveRow(id, action) {
+            var row = document.getElementById('message-row-' + id);
+            if (row) row.remove();
+            var m = dhMessages[id];
+            if (!m) return;
+            if (action === 'delete') {
+                m.inBin = true;
+                dhAppendRow(document.getElementById(dhListEl.bin), id);
+            } else if (action === 'restore') {
+                m.inBin = false;
+                dhAppendRow(document.getElementById(dhListEl[m.category]), id);
+            } else {
+                delete dhMessages[id];
+            }
+            if (dhOpenId == id) dhCloseReading();
+        }
+
+        // Used after a move so the row shows up in its new folder without a
         // full page reload - built from the same data the reading pane already
         // has, so it stays a plain row, not a full re-render of the list.
         function dhAppendRow(list, id) {
@@ -250,7 +293,7 @@
                     var dot = document.getElementById('dot-' + id);
                     if (dot) dot.remove();
                 }
-                dhBumpUnreadTab(-1);
+                dhRefreshTabCounts();
             }
 
             var avatarEl = document.getElementById('dh-msg-reading-avatar');
@@ -262,10 +305,10 @@
 
             var actions = document.getElementById('dh-msg-reading-actions');
             actions.innerHTML = '';
-            actions.appendChild(dhActionButton(m.folder === 'inbox' ? 'delete' : 'restore_from_trash',
-                m.folder === 'inbox' ? 'Delete' : 'Restore',
-                function () { dhSingleAction(id, m.folder === 'inbox' ? 'delete' : 'restore'); }));
-            if (m.folder === 'bin') {
+            actions.appendChild(dhActionButton(m.inBin ? 'restore_from_trash' : 'delete',
+                m.inBin ? 'Restore' : 'Delete',
+                function () { dhSingleAction(id, m.inBin ? 'restore' : 'delete'); }));
+            if (m.inBin) {
                 actions.appendChild(dhActionButton('delete_forever', 'Delete forever', function () { dhSingleAction(id, 'destroy'); }, true));
             }
 
@@ -289,29 +332,10 @@
                      : action === 'restore' ? '{{ route("messages.restore") }}'
                      : '{{ route("messages.destroy") }}';
             dhPost(url, [id]).then(function (r) { return r.ok ? r.json() : Promise.reject(); }).then(function () {
-                var row = document.getElementById('message-row-' + id);
-                if (row) row.remove();
-                if (action === 'delete') { dhMessages[id].folder = 'bin'; dhAppendRow(document.getElementById('dh-msg-list-bin'), id); }
-                else if (action === 'restore') { dhMessages[id].folder = 'inbox'; dhAppendRow(document.getElementById('dh-msg-list-inbox'), id); }
-                else { delete dhMessages[id]; }
+                dhMoveRow(id, action);
                 dhCloseReading();
+                dhRefreshTabCounts();
             }).catch(function () { alert('Something went wrong - please try again.'); });
-        }
-
-        function dhBumpUnreadTab(delta) {
-            var tab = document.getElementById('dh-msg-tab-inbox');
-            var countEl = tab.querySelector('.dh-msg-tab-count');
-            var n = (countEl ? parseInt(countEl.textContent, 10) : 0) + delta;
-            if (n > 0) {
-                if (!countEl) {
-                    countEl = document.createElement('span');
-                    countEl.className = 'dh-msg-tab-count';
-                    tab.appendChild(countEl);
-                }
-                countEl.textContent = n;
-            } else if (countEl) {
-                countEl.remove();
-            }
         }
 
         function dhCloseReading() {

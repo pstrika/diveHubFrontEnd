@@ -132,7 +132,8 @@ class SendGroupDiveReminders extends Command
             $group->activeMembers()->pluck('user_id'),
             $group->name,
             'Reminder: ' . $dive->tripName . ' in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '') . ' - ' . $dateFormatted . ' at ' . $timeFormatted,
-            route('Groups.show', ['group' => $group->slug])
+            route('Groups.show', ['group' => $group->slug]),
+            groupId: $group->id
         );
     }
 

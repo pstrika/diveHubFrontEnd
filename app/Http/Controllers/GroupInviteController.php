@@ -174,7 +174,8 @@ class GroupInviteController extends Controller
             auth()->user()->name . ' invited you to join "' . $group->name . '"',
             route('MyGroups'),
             null,
-            auth()->user()->id
+            auth()->user()->id,
+            $group->id
         );
     }
 
