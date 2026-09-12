@@ -10,6 +10,16 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.8.4 — 2026-09-14
+
+Deployed: commit `f2fea39`.
+
+### Admin console
+- "Send registration invite" is no longer a single button that silently
+  guessed SMS for any non-email contact - it's now one chip per channel
+  that can actually reach the contact (SMS + WhatsApp for a phone, Email
+  for an address), and the admin picks which one to send on.
+
 ## 10.8.3 — 2026-09-14
 
 Deployed: commit `e92f188`.
