@@ -10,6 +10,20 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.8.2 — 2026-09-14
+
+Deployed: commit `c96e2ff`.
+
+### Admin console
+- New Message and reply-form channel chips now turn the same color as
+  the messages when picked - SMS blue, WhatsApp green, email amber -
+  instead of flat black for all three.
+- Opening a thread pre-selects the reply channel to match whichever
+  channel the most recent message in it used, instead of always
+  defaulting to SMS - a phone contact can have both SMS and WhatsApp
+  history. Only happens on a fresh open, never overrides a channel the
+  admin already picked mid-reply.
+
 ## 10.8.1 — 2026-09-14
 
 Deployed: commit `4d8c91a`.
