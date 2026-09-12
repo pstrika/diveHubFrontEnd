@@ -10,6 +10,21 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.8.1 — 2026-09-14
+
+Deployed: commit `4d8c91a`.
+
+### Admin console
+- The generic Material "chat" icon is gone - the real WhatsApp glyph
+  (`public/assets/img/icons/whatsapp.svg`) is used everywhere a channel
+  is shown: the channel picker chips (New Message and reply), the
+  conversation list's avatar fallback, and each thread bubble.
+- Thread bubbles show a small channel icon instead of the word "sms" /
+  "whatsapp" / "email" in the meta line - Pablo: "more intuitive."
+- Messages are now colored by channel, not just sent/received: WhatsApp
+  green, SMS the existing theme blue, email amber - reusing the app's
+  existing good/sea/avg tokens rather than new colors.
+
 ## 10.8.0 — 2026-09-14
 
 Deployed: commit `0e4eb0c`. Two live infrastructure changes made tonight,
