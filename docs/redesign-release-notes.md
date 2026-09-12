@@ -10,6 +10,25 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.6.0 — 2026-09-14
+
+Deployed: commit `81374d4`. **New migration - run by hand on the redesign
+slot's database (users table, default connection):**
+`2026_09_14_030000_add_phone_verification_to_users_table.php`.
+
+- Profile Overview rebrand: outer chrome onto the shared dh-panel/
+  dh-profile-card system; the page's existing edit-toggle/slider/Choices/
+  Dropzone-cropper behavior is unchanged underneath it.
+- Phone numbers: accepts 10 or 11-digit US input (any punctuation) or a
+  general international number, always stored as E.164, displayed as
+  "+1 (954) 292-2846" for US numbers (including numbers saved before this
+  existed). A US number needs a one-time SMS code before it's trusted, at
+  signup and on every change (unlimited changes for now); an
+  international number is WhatsApp-only and saves immediately with SMS
+  forced off, since there's no SMS channel to verify it on in the first
+  place. Verified live: real SMS code sent, correctly rejected once
+  expired past 15 minutes, then a fresh one verified and committed.
+
 ## 10.5.2 — 2026-09-14
 
 Deployed: commits `45d8e1e`, `a0ad785`.
