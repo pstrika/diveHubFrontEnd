@@ -1,3 +1,23 @@
+@php
+    // The one place this SVG is read from disk - both this Blade render and
+    // the page's own JS (as DH_WHATSAPP_SVG, for rows/bubbles built client
+    // side by polling) use this exact same markup, so there's only one
+    // copy of the actual path data to keep in sync.
+    $whatsappSvg = file_get_contents(public_path('assets/img/icons/whatsapp.svg'));
+
+    // sms/whatsapp/email, small and colored, everywhere a channel needs to
+    // read at a glance instead of as a word ("SMS"/"WhatsApp"/"Email") -
+    // the conversation list's avatar fallback, the channel picker chips,
+    // and (built in JS, see dhChannelIconHtml) each thread bubble's meta line.
+    $channelIcon = function (string $channel) use ($whatsappSvg) {
+        if ($channel === 'whatsapp') {
+            return '<span class="dh-ch-icon is-whatsapp">' . $whatsappSvg . '</span>';
+        }
+        $icon = $channel === 'email' ? 'mail' : 'sms';
+        $class = $channel === 'email' ? 'is-email' : 'is-sms';
+        return '<span class="dh-ch-icon ' . $class . ' material-icons-round" aria-hidden="true">' . $icon . '</span>';
+    };
+@endphp
 <x-page-template bodyClass='dh-shell bg-gray-200'>
     <x-shell.nav active="me" />
 
@@ -31,7 +51,7 @@
                                         @if($c->user && \App\Support\UserAvatar::exists($c->user->picture))
                                             <img src="{{ \App\Support\UserAvatar::url($c->user->picture) }}" alt="">
                                         @else
-                                            <span class="material-icons-round" aria-hidden="true">{{ ['sms' => 'sms', 'whatsapp' => 'chat', 'email' => 'mail'][$c->channel] }}</span>
+                                            {!! $channelIcon($c->channel) !!}
                                         @endif
                                     </span>
                                     <span class="dh-msg-main">
@@ -74,7 +94,7 @@
                             <form id="dh-admin-reply-form" class="dh-thread-reply" onsubmit="dhSendReply(event)">
                                 <div class="dh-channel-picker mb-2" data-picker="reply">
                                     <button type="button" class="dh-channel-chip is-active" data-value="sms" onclick="dhPickChannel('reply','sms')"><span class="material-icons-round" aria-hidden="true">sms</span> SMS</button>
-                                    <button type="button" class="dh-channel-chip" data-value="whatsapp" onclick="dhPickChannel('reply','whatsapp')"><span class="material-icons-round" aria-hidden="true">chat</span> WhatsApp</button>
+                                    <button type="button" class="dh-channel-chip" data-value="whatsapp" onclick="dhPickChannel('reply','whatsapp')">{!! $whatsappSvg !!} WhatsApp</button>
                                     <button type="button" class="dh-channel-chip" data-value="email" onclick="dhPickChannel('reply','email')"><span class="material-icons-round" aria-hidden="true">mail</span> Email</button>
                                 </div>
                                 <input type="hidden" id="dh-admin-reply-channel" value="sms">
@@ -104,7 +124,7 @@
                     <form id="dh-new-message-form" onsubmit="dhSendNew(event)">
                         <div class="dh-channel-picker mb-2" data-picker="new">
                             <button type="button" class="dh-channel-chip is-active" data-value="sms" onclick="dhPickChannel('new','sms')"><span class="material-icons-round" aria-hidden="true">sms</span> SMS</button>
-                            <button type="button" class="dh-channel-chip" data-value="whatsapp" onclick="dhPickChannel('new','whatsapp')"><span class="material-icons-round" aria-hidden="true">chat</span> WhatsApp</button>
+                            <button type="button" class="dh-channel-chip" data-value="whatsapp" onclick="dhPickChannel('new','whatsapp')">{!! $whatsappSvg !!} WhatsApp</button>
                             <button type="button" class="dh-channel-chip" data-value="email" onclick="dhPickChannel('new','email')"><span class="material-icons-round" aria-hidden="true">mail</span> Email</button>
                         </div>
                         <input type="hidden" id="dh-new-channel" value="sms">
@@ -128,6 +148,9 @@
         var dhCurrentContact = null;
         var dhKnownThreadCount = 0;
         var dhPollTimer = null;
+        // Same on-disk file the Blade side reads for the list's initial
+        // render and the channel picker chips - one source of path data.
+        var DH_WHATSAPP_SVG = @json($whatsappSvg);
 
         function dhPostJson(url, data) {
             return fetch(url, {
@@ -142,8 +165,17 @@
             return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
         }
 
-        function dhChannelIcon(channel) {
-            return channel === 'sms' ? 'sms' : (channel === 'whatsapp' ? 'chat' : 'mail');
+        // Small colored icon for a channel - used wherever the console
+        // reads a channel at a glance instead of as a word: the list's
+        // avatar fallback (built here and by the Blade $channelIcon closure
+        // for the initial render) and each thread bubble's meta line.
+        function dhChannelIconHtml(channel) {
+            if (channel === 'whatsapp') {
+                return '<span class="dh-ch-icon is-whatsapp">' + DH_WHATSAPP_SVG + '</span>';
+            }
+            var icon = channel === 'email' ? 'mail' : 'sms';
+            var cls = channel === 'email' ? 'is-email' : 'is-sms';
+            return '<span class="dh-ch-icon ' + cls + ' material-icons-round" aria-hidden="true">' + icon + '</span>';
         }
 
         // Icon-chip channel pickers (New message modal + the reply form) -
@@ -169,7 +201,7 @@
                 return;
             }
             list.innerHTML = conversations.map(function (c) {
-                var avatar = c.avatarUrl ? '<img src="' + c.avatarUrl + '" alt="">' : '<span class="material-icons-round" aria-hidden="true">' + dhChannelIcon(c.channel) + '</span>';
+                var avatar = c.avatarUrl ? '<img src="' + c.avatarUrl + '" alt="">' : dhChannelIconHtml(c.channel);
                 var snippet = (c.direction === 'outbound' ? 'You: ' : '') + (c.body || '').replace(/<[^>]*>/g, '').slice(0, 90);
                 var isOpen = dhCurrentContact === c.contact ? ' is-open' : '';
                 return '<div class="dh-msg-row' + (c.unread ? ' is-unread' : '') + isOpen + '" data-contact="' + c.contact + '" onclick="dhOpenThread(\'' + encodeURIComponent(c.contact) + '\', this)">' +
@@ -237,8 +269,13 @@
             body.innerHTML = '';
             data.messages.forEach(function (m) {
                 var bubble = document.createElement('div');
-                bubble.className = 'dh-thread-bubble is-' + m.direction;
-                var meta = (m.direction === 'outbound' ? (m.adminName || 'Divers Hub') : (data.userName || data.contact)) + ' · ' + m.channel + ' · ' + dhFormatDate(m.createdAt);
+                // channel-{sms|whatsapp|email} colors the bubble itself
+                // (Pablo, 2026-09-14: "differentiate colors on the messages")
+                // - is-inbound/is-outbound (unchanged) still decides which
+                // side it sits on and light-tint vs solid-fill.
+                bubble.className = 'dh-thread-bubble is-' + m.direction + ' channel-' + m.channel;
+                var who = m.direction === 'outbound' ? (m.adminName || 'Divers Hub') : (data.userName || data.contact);
+                var meta = who + ' ' + dhChannelIconHtml(m.channel) + ' ' + dhFormatDate(m.createdAt);
                 bubble.innerHTML = '<div class="dh-thread-bubble-meta">' + meta + '</div><div class="dh-thread-bubble-body"></div>';
                 bubble.querySelector('.dh-thread-bubble-body').textContent = m.subject ? (m.subject + ': ' + m.body) : m.body;
                 body.appendChild(bubble);

@@ -1487,11 +1487,35 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 /* Admin Message Management console (2026-09-14). */
 .dh-thread-scroll { max-height: 400px; overflow-y: auto; padding: 4px; display: flex; flex-direction: column; gap: 10px; }
 .dh-thread-bubble { max-width: 78%; padding: 10px 12px; border-radius: 12px; background: var(--dh-foam); }
-.dh-thread-bubble.is-outbound { align-self: flex-end; background: var(--dh-sea); color: #fff; }
+.dh-thread-bubble.is-outbound { align-self: flex-end; color: #fff; }
 .dh-thread-bubble.is-outbound .dh-thread-bubble-meta { color: rgba(255,255,255,.75); }
-.dh-thread-bubble-meta { font-size: .68rem; color: var(--dh-muted); margin-bottom: 3px; }
+/* Colored by channel, not just sent/received (Pablo, 2026-09-14) - a
+   light tint received, the same hue solid-filled sent, so a diver's
+   WhatsApp/SMS/email thread reads apart at a glance. */
+.dh-thread-bubble.is-inbound.channel-sms { background: var(--dh-foam); }
+.dh-thread-bubble.is-outbound.channel-sms { background: var(--dh-sea); }
+.dh-thread-bubble.is-inbound.channel-whatsapp { background: var(--dh-good-bg); }
+.dh-thread-bubble.is-outbound.channel-whatsapp { background: var(--dh-good); }
+.dh-thread-bubble.is-inbound.channel-email { background: var(--dh-avg-bg); }
+.dh-thread-bubble.is-outbound.channel-email { background: var(--dh-avg); }
+.dh-thread-bubble-meta { display: flex; align-items: center; gap: 4px; font-size: .68rem; color: var(--dh-muted); margin-bottom: 3px; }
 .dh-thread-bubble-body { font-size: .88rem; white-space: pre-wrap; word-break: break-word; }
 .dh-thread-reply { margin-top: 14px; border-top: 1px solid var(--dh-line); padding-top: 14px; }
+
+/* Small channel icon - the list's avatar fallback and each bubble's meta
+   line, in place of the word "SMS"/"WhatsApp"/"Email" (Pablo, 2026-09-14). */
+.dh-ch-icon { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; flex: 0 0 auto; }
+.dh-ch-icon svg { width: 100%; height: 100%; }
+.dh-ch-icon.is-sms { color: var(--dh-sea); font-size: 15px; }
+.dh-ch-icon.is-whatsapp { color: var(--dh-good); }
+.dh-ch-icon.is-email { color: var(--dh-avg); font-size: 15px; }
+/* Inside a filled (outbound/solid) bubble the channel color would vanish
+   into a same-hue background - fall back to the bubble's own white text. */
+.dh-thread-bubble.is-outbound .dh-ch-icon { color: #fff; }
+/* The list row's avatar circle sizes its own icon differently than the
+   14px meta-line usage above. */
+.dh-msg-avatar .dh-ch-icon { width: 20px; height: 20px; }
+.dh-msg-avatar .dh-ch-icon.is-sms, .dh-msg-avatar .dh-ch-icon.is-email { font-size: 20px; }
 
 /* "Chat with us" floating button (2026-09-14). Sits well above the mobile
    tab bar (60px) and the install-prompt bar's own band above that, so the
@@ -1514,5 +1538,6 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
   background: var(--dh-paper); color: var(--dh-muted); font-weight: 700; font-size: .82rem; cursor: pointer;
 }
 .dh-channel-chip .material-icons-round { font-size: 17px; }
+.dh-channel-chip svg { width: 17px; height: 17px; flex: 0 0 auto; }
 .dh-channel-chip.is-active { background: var(--dh-ink); border-color: var(--dh-ink); color: #fff; }
 .dh-channel-chip:hover:not(.is-active) { border-color: var(--dh-sea); color: var(--dh-sea); }
