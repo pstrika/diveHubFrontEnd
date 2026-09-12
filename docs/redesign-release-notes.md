@@ -10,6 +10,17 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.8.3 — 2026-09-14
+
+Deployed: commit `e92f188`.
+
+### Chat with us
+- SMS/WhatsApp is now the same icon pill buttons and colors as the admin
+  Message Management console, replacing the plain `<select>`.
+- Phone field prefills from the user's own profile number when they're
+  logged in and have one on file, formatted the same way the profile
+  page shows it - still editable for a different number.
+
 ## 10.8.2 — 2026-09-14
 
 Deployed: commit `c96e2ff`.
