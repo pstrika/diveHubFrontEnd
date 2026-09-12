@@ -11,7 +11,17 @@
     message on file yet. Their message is still logged and answered from
     the console either way; only the instant text-back may not arrive
     until a general-purpose "we got your message" template exists.
+
+    Channel picker mirrors the admin Message Management console exactly
+    (Pablo, 2026-09-14: "use the same colors and icons") - same SVG file,
+    same .dh-channel-picker/.dh-channel-chip is-sms/is-whatsapp CSS, so a
+    diver sees the same visual language the admin replies through.
 --}}
+@php
+    $dhChatWhatsappSvg = file_get_contents(public_path('assets/img/icons/whatsapp.svg'));
+    $dhChatUser = auth()->user();
+    $dhChatPhone = ($dhChatUser && $dhChatUser->isNotGuest()) ? \App\Support\PhoneNumber::display($dhChatUser->phone) : '';
+@endphp
 <button type="button" class="dh-chat-fab" id="dh-chat-fab" aria-label="Chat with us">
     <span class="material-icons-round" aria-hidden="true">chat</span>
 </button>
@@ -27,14 +37,13 @@
                 <div id="dh-chat-form-wrap">
                     <p class="text-secondary text-sm">Send us a text and we'll reply right in your messages.</p>
                     <form id="dh-chat-form">
-                        <div class="mb-2">
-                            <select id="dh-chat-channel" class="form-control">
-                                <option value="sms">SMS (US numbers)</option>
-                                <option value="whatsapp">WhatsApp</option>
-                            </select>
+                        <div class="dh-channel-picker mb-2" data-picker="chat">
+                            <button type="button" class="dh-channel-chip is-sms is-active" data-value="sms" onclick="dhChatPickChannel('sms')"><span class="material-icons-round" aria-hidden="true">sms</span> SMS</button>
+                            <button type="button" class="dh-channel-chip is-whatsapp" data-value="whatsapp" onclick="dhChatPickChannel('whatsapp')">{!! $dhChatWhatsappSvg !!} WhatsApp</button>
                         </div>
+                        <input type="hidden" id="dh-chat-channel" value="sms">
                         <div class="mb-2">
-                            <input type="text" id="dh-chat-phone" class="form-control" placeholder="Your phone number" required>
+                            <input type="text" id="dh-chat-phone" class="form-control" placeholder="Your phone number" value="{{ $dhChatPhone }}" required>
                         </div>
                         <div class="mb-2">
                             <textarea id="dh-chat-body" class="form-control" rows="3" placeholder="What's up?" required></textarea>
@@ -58,6 +67,13 @@
         var fab = document.getElementById('dh-chat-fab');
         var form = document.getElementById('dh-chat-form');
         if (!fab || !form) return;
+
+        window.dhChatPickChannel = function (value) {
+            document.querySelectorAll('[data-picker="chat"] .dh-channel-chip').forEach(function (chip) {
+                chip.classList.toggle('is-active', chip.getAttribute('data-value') === value);
+            });
+            document.getElementById('dh-chat-channel').value = value;
+        };
 
         fab.addEventListener('click', function () {
             new bootstrap.Modal(document.getElementById('dh-chat-modal')).show();
