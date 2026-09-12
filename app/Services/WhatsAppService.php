@@ -6,59 +6,57 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * WhatsApp Business Cloud API (Meta), mirroring SmsService's shape and
- * safety rules: silently no-ops if not configured, never throws, and phone
- * numbers go through the same US/NANP normalization SmsService uses (kept
- * as its own copy here rather than a shared dependency, so either service
- * stays independently removable).
+ * WhatsApp via Twilio, not Meta's Graph API directly (corrected 2026-09-14 -
+ * Pablo's WhatsApp Business number is provisioned through Twilio, the same
+ * account SmsService already sends SMS from). Twilio wraps Meta's WhatsApp
+ * Business Platform behind its own regular Messages API: the same
+ * Account SID / API Key used for SMS, the same /Messages.json endpoint,
+ * just a "whatsapp:" prefix on To/From, and an approved template is a
+ * Twilio "Content" resource (a ContentSid like HX..., created and reviewed
+ * via content.twilio.com / the Twilio Console's Content Template Builder -
+ * Meta still approves the content, Twilio just fronts it) rather than
+ * Meta's raw template name/language/components shape.
  *
- * Meta's Cloud API only allows two kinds of outbound message, and they are
- * not interchangeable:
- *   - sendTemplate(): a pre-approved TEMPLATE message - required for
- *     anything the business starts, like a dive reminder. The template
- *     name, language and variable count/order must match one already
- *     reviewed and approved in Meta Business Manager; there is no way to
- *     send free-form business-initiated text, unlike SMS.
+ * Same safety rules as SmsService: silently no-ops if not configured,
+ * never throws, same US/NANP phone normalization (kept as its own copy
+ * rather than a shared dependency, so either service stays independently
+ * removable).
+ *
+ * Only two kinds of outbound message are allowed, and they are not
+ * interchangeable:
+ *   - sendTemplate(): a pre-approved Content template - required for
+ *     anything the business starts, like a dive reminder or a chat
+ *     mention. The ContentSid's variable count/order must match what that
+ *     template actually asks for; there is no way to send free-form
+ *     business-initiated text, unlike SMS.
  *   - sendText(): free-form text, only deliverable within 24 hours of the
  *     customer's last message TO the business. Useless for a proactive
  *     reminder; kept here for a future two-way chat feature.
- *
- * The account and API credentials are one approval; a specific template
- * (e.g. a dive-reminder template) is a separate one that can land later -
- * see the `dive_reminder_template` config note.
  */
 class WhatsAppService
 {
     /** A business-initiated notification - the only kind allowed outside a live chat. */
-    public static function sendTemplate(?string $rawPhone, string $template, string $languageCode = 'en_US', array $bodyParams = []): void
+    public static function sendTemplate(?string $rawPhone, string $contentSid, array $variables = []): void
     {
         $config = self::config();
-        if (!$config) return;
+        if (!$config || !$contentSid) return;
 
         $to = self::toE164($rawPhone);
         if (!$to) return;
 
-        $components = [];
-        if (!empty($bodyParams)) {
-            $components[] = [
-                'type' => 'body',
-                'parameters' => array_map(fn ($p) => ['type' => 'text', 'text' => (string) $p], $bodyParams),
-            ];
+        $payload = [
+            'To' => 'whatsapp:' . $to,
+            'From' => 'whatsapp:' . $config['from'],
+            'ContentSid' => $contentSid,
+        ];
+        if (!empty($variables)) {
+            $payload['ContentVariables'] = json_encode($variables);
         }
 
-        self::post($config, [
-            'messaging_product' => 'whatsapp',
-            'to' => ltrim($to, '+'),
-            'type' => 'template',
-            'template' => [
-                'name' => $template,
-                'language' => ['code' => $languageCode],
-                'components' => $components,
-            ],
-        ]);
+        self::post($config, $payload);
     }
 
-    /** Free-form text - only within Meta's 24h customer-service window (e.g. replying to an inbound message). */
+    /** Free-form text - only within Twilio/Meta's 24h customer-service window (e.g. replying to an inbound chat). */
     public static function sendText(?string $rawPhone, string $body): void
     {
         $config = self::config();
@@ -68,40 +66,38 @@ class WhatsAppService
         if (!$to) return;
 
         self::post($config, [
-            'messaging_product' => 'whatsapp',
-            'to' => ltrim($to, '+'),
-            'type' => 'text',
-            'text' => ['body' => $body],
+            'To' => 'whatsapp:' . $to,
+            'From' => 'whatsapp:' . $config['from'],
+            'Body' => $body,
         ]);
     }
 
     private static function config(): ?array
     {
-        $token = config('services.whatsapp.access_token');
-        $phoneId = config('services.whatsapp.phone_number_id');
+        $accountSid = config('services.twilio.account_sid');
+        $authUser = config('services.twilio.api_key_sid') ?: $accountSid;
+        $authPass = config('services.twilio.api_key_secret');
+        $from = config('services.twilio.from');
 
-        if (!$token || !$phoneId) {
+        if (!$accountSid || !$authUser || !$authPass || !$from) {
             return null;
         }
 
-        return [
-            'token' => $token,
-            'phoneId' => $phoneId,
-            'version' => config('services.whatsapp.graph_version', 'v21.0'),
-        ];
+        return compact('accountSid', 'authUser', 'authPass', 'from');
     }
 
     private static function post(array $config, array $payload): void
     {
         try {
-            $response = Http::withToken($config['token'])
-                ->post("https://graph.facebook.com/{$config['version']}/{$config['phoneId']}/messages", $payload);
+            $response = Http::asForm()
+                ->withBasicAuth($config['authUser'], $config['authPass'])
+                ->post("https://api.twilio.com/2010-04-01/Accounts/{$config['accountSid']}/Messages.json", $payload);
 
             if (!$response->successful()) {
-                Log::error('WhatsApp send failed (' . $response->status() . '): ' . $response->body());
+                Log::error('WhatsApp (Twilio) send failed (' . $response->status() . '): ' . $response->body());
             }
         } catch (\Throwable $e) {
-            Log::error('WhatsApp send exception: ' . $e->getMessage());
+            Log::error('WhatsApp (Twilio) send exception: ' . $e->getMessage());
         }
     }
 

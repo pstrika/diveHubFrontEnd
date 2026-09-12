@@ -111,15 +111,17 @@ class GroupMessageController extends Controller
      * Inbox/Groups folder) - this only adds the "ping them right now"
      * layer for whoever was actually named: an immediate WhatsApp message,
      * gated on their own opt-in, a phone number on file, and a mention
-     * template actually being approved and configured (Meta requires a
-     * pre-reviewed template for anything business-initiated, same
-     * constraint as the dive reminder - see WhatsAppService). No separate
-     * email or extra in-app row; the one from notifyNewMessage covers it.
+     * Content template actually existing and being approved (Twilio
+     * Content API/content.twilio.com - no mention template has been
+     * created there yet, only the trip-reminder one, so this no-ops until
+     * TWILIO_WHATSAPP_MENTION_SID is set - see WhatsAppService and
+     * config/services.php). No separate email or extra in-app row; the
+     * one from notifyNewMessage covers it.
      */
     private function notifyMentions(Group $group, string $body)
     {
-        $template = config('services.whatsapp.mention_template');
-        if (!$template || trim($body) === '') {
+        $contentSid = config('services.whatsapp.mention_content_sid');
+        if (!$contentSid || trim($body) === '') {
             return;
         }
 
@@ -143,11 +145,14 @@ class GroupMessageController extends Controller
                 continue;
             }
 
-            WhatsAppService::sendTemplate($user->phone, $template, 'en_US', [
-                auth()->user()->name,
-                $group->name,
-                $snippet,
-                $url,
+            // Placeholder variable keys/order - line these up with whatever
+            // the mention template actually asks for once it's created and
+            // approved (see the docblock above).
+            WhatsAppService::sendTemplate($user->phone, $contentSid, [
+                '1' => auth()->user()->name,
+                '2' => $group->name,
+                '3' => $snippet,
+                '4' => $url,
             ]);
         }
     }

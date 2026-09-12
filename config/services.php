@@ -55,21 +55,24 @@ return [
         'from' => env('TWILIO_FROM_NUMBER'),
     ],
 
-    // WhatsApp Business Cloud API (Meta), see App\Services\WhatsAppService.
-    // access_token/phone_number_id come from the Meta app once approved;
-    // dive_reminder_template is a separate approval (a specific message
-    // template reviewed in Meta Business Manager) that can land later than
-    // the credentials themselves, so it's gated independently - the service
-    // and its callers no-op until each piece they need is actually set.
+    // WhatsApp goes through the same Twilio account as SMS above, not
+    // Meta's Graph API directly (2026-09-14: Pablo's WhatsApp Business
+    // number is provisioned through Twilio, which wraps Meta's WhatsApp
+    // Business Platform) - see App\Services\WhatsAppService. No separate
+    // access token/phone number id to configure; just which of the
+    // account's approved Content templates (content.twilio.com, confirmed
+    // live via its Content API) to use for each kind of message. Content
+    // SIDs aren't secret - they're just names - but stay env-overridable
+    // in case a template is ever recreated.
     'whatsapp' => [
-        'access_token' => env('WHATSAPP_ACCESS_TOKEN'),
-        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
-        'graph_version' => env('WHATSAPP_GRAPH_VERSION', 'v21.0'),
-        'dive_reminder_template' => env('WHATSAPP_DIVE_REMINDER_TEMPLATE'),
+        // "trip_reminder_2" (plain text, 5 vars: name, site, operator,
+        // date, time) - approved and live.
+        'trip_reminder_content_sid' => env('TWILIO_WHATSAPP_TRIP_REMINDER_SID', 'HXe8039180c734c549ecc59fe2e0c343c1'),
         // @mention in a group chat -> an immediate WhatsApp ping to the
-        // person mentioned. Same separate-approval gating as the reminder
-        // template above.
-        'mention_template' => env('WHATSAPP_MENTION_TEMPLATE'),
+        // person mentioned. No template exists for this yet - null until
+        // one is created and approved, which is its own review separate
+        // from the credentials/trip-reminder template above.
+        'mention_content_sid' => env('TWILIO_WHATSAPP_MENTION_SID'),
     ],
 
 ];

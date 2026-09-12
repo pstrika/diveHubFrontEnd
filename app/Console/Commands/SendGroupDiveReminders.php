@@ -174,24 +174,22 @@ class SendGroupDiveReminders extends Command
     }
 
     /**
-     * WhatsApp reminder via Meta's Cloud API, only for members who opted in
-     * (`whatsapp_notifications`) and only once a dive-reminder template has
-     * actually been approved and configured (WHATSAPP_DIVE_REMINDER_TEMPLATE)
-     * - WhatsAppService itself also no-ops without API credentials, so this
-     * is safe to call unconditionally once that day comes.
+     * WhatsApp reminder via Twilio's "trip_reminder_2" Content template
+     * (content.twilio.com, confirmed live and approved 2026-09-14), only
+     * for members who opted in (`whatsapp_notifications`) and have a phone
+     * on file - WhatsAppService itself also no-ops without Twilio
+     * credentials configured.
      *
-     * Unlike SMS, WhatsApp will not send free-form business-initiated text -
-     * only this exact approved template, with its exact variable count and
-     * order. {$dive->tripName}, "in N day(s)", the date, the time and the
-     * group's URL are what the SMS body above says in prose; adjust this
-     * parameter list (and add/remove entries) to match whatever the
-     * template actually asks for once it's approved - Meta will reject the
-     * send (logged by WhatsAppService, not thrown) if they don't line up.
+     * The template's 5 variables are fixed by what was actually approved:
+     * {{1}} diver's name, {{2}} site, {{3}} operator, {{4}} date, {{5}}
+     * time - not the days-ahead/group-URL phrasing the SMS body above
+     * uses, since WhatsApp cannot send free-form business-initiated text,
+     * only this exact template with this exact shape.
      */
     private function sendReminderWhatsApp(GroupDive $dive, int $daysAhead)
     {
-        $template = config('services.whatsapp.dive_reminder_template');
-        if (!$template) {
+        $contentSid = config('services.whatsapp.trip_reminder_content_sid');
+        if (!$contentSid) {
             return;
         }
 
@@ -202,21 +200,22 @@ class SendGroupDiveReminders extends Command
             return;
         }
 
-        $dateFormatted = Carbon::parse($dive->date)->format('D, M j');
+        $site = $dive->site->name ?? $dive->tripName;
+        $operatorName = $dive->operator->operatorName ?? 'Divers Hub';
+        $dateFormatted = Carbon::parse($dive->date)->format('l, F j');
         $timeFormatted = $dive->time ? Carbon::parse($dive->time)->format('g:i A') : 'TBD';
-        $url = route('Groups.show', ['group' => $group->slug]);
-        $daysPhrase = $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '');
 
         foreach ($members as $member) {
             if (!$member->user || !$member->user->phone || !$member->user->whatsapp_notifications) {
                 continue;
             }
 
-            WhatsAppService::sendTemplate($member->user->phone, $template, 'en_US', [
-                $dive->tripName,
-                $daysPhrase,
-                $dateFormatted . ' at ' . $timeFormatted,
-                $url,
+            WhatsAppService::sendTemplate($member->user->phone, $contentSid, [
+                '1' => $member->user->name,
+                '2' => $site,
+                '3' => $operatorName,
+                '4' => $dateFormatted,
+                '5' => $timeFormatted,
             ]);
         }
     }
