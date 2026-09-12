@@ -117,7 +117,13 @@
   function installDismissedAtCount() {
     try {
       var v = window.localStorage.getItem(INSTALL_DISMISSED_AT_KEY);
-      return v === null ? null : parseInt(v, 10);
+      if (v === null) return null;
+      var n = parseInt(v, 10);
+      // A corrupted/non-numeric stored value must not permanently break the
+      // "(currentViewCount - dismissedAt) >= 10" comparison below into
+      // comparing against NaN forever, which is never >= anything - treat
+      // it the same as "never dismissed" instead of getting stuck hidden.
+      return isNaN(n) ? null : n;
     } catch (e) {
       return null;
     }
@@ -161,9 +167,15 @@
   }
 
   function installSetup() {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(function () { /* install bar simply will not show */ });
-    }
+    try {
+      // A synchronous throw here (some locked-down in-app browsers refuse
+      // this API entirely, e.g. a webview opened from a social app) used to
+      // abort installSetup() before anything below it ran - not just no
+      // service worker, but no install bar, no drawer link, nothing.
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(function () { /* install bar simply will not show */ });
+      }
+    } catch (e) { /* keep going - the rest of this doesn't need the service worker */ }
 
     var bar = document.getElementById('dh-install');
     var menuLink = document.getElementById('dh-install-menu-link');
@@ -175,6 +187,15 @@
       return;
     }
 
+    // iOS has no install API at all - beforeinstallprompt never fires, and
+    // there is nothing a button could call to trigger the Home Screen add
+    // programmatically. It gets the walkthrough modal (<x-ios-install-modal
+    // />) instead of this bar on every path below.
+    var showIosModal = function () {
+      if (document.querySelector('.modal.show') || typeof window.dhShowIosInstallModal !== 'function') return;
+      window.dhShowIosInstallModal();
+    };
+
     var deferred = null;
     // manual=true marks a bar shown from the drawer's "Install as App" link
     // (any device, including desktop) rather than the automatic phone/tablet
@@ -182,9 +203,8 @@
     // (see divershub.css), which used to swallow this fallback silently on
     // desktop whenever the browser hadn't already handed us a deferred
     // prompt to call directly.
-    var show = function (kind, manual) {
+    var show = function (manual) {
       if (!bar || document.querySelector('.modal.show')) return; // never on top of the guest prompt
-      bar.querySelectorAll('[data-install]').forEach(function (el) { el.hidden = el.getAttribute('data-install') !== kind; });
       bar.classList.toggle('is-manual', !!manual);
       bar.hidden = false;
     };
@@ -197,9 +217,9 @@
           deferred.prompt();
           deferred.userChoice.then(function () { deferred = null; clearInstallDismissal(); });
         } else if (isIosSafari()) {
-          show('ios', true);
+          showIosModal();
         } else {
-          show('android', true);
+          show(true);
         }
       });
     }
@@ -244,7 +264,16 @@
     });
 
     if (autoShowEligible) {
-      show(isIosSafari() ? 'ios' : 'android');
+      if (isIosSafari()) {
+        showIosModal();
+        // The modal has its own close button but nothing that tells us it
+        // was dismissed the way the bar's close button does - treat showing
+        // it at all as the dismissal event, so the same 10-page rule paces
+        // how often it interrupts an iOS diver too.
+        if (currentViewCount !== null) rememberInstallDismissal(currentViewCount);
+      } else {
+        show(false);
+      }
     }
   }
 

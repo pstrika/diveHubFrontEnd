@@ -855,8 +855,13 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 /* ------------------------------------------------------------------ */
 /* Add to home screen bar. Sits above the bottom tab bar on phones.     */
 /* ------------------------------------------------------------------ */
-.dh-install { position: fixed; left: 8px; right: 8px; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); z-index: 1040; display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 14px; box-shadow: 0 6px 24px rgba(11,42,58,.22); }
+.dh-install { position: fixed; left: 8px; right: 8px; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); z-index: 1040; display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 14px; box-shadow: 0 6px 24px rgba(11,42,58,.22); animation: dhInstallSlideUp .35s ease-out; }
 .dh-install[hidden] { display: none; }
+/* Removing the [hidden] attribute is what makes this element start
+   rendering at all, so the animation above replays from the start every
+   time JS shows it - not just the first time on a page. */
+@keyframes dhInstallSlideUp { from { transform: translateY(120%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .dh-install { animation: none; } }
 .dh-install img { width: 40px; height: 40px; border-radius: 9px; flex: 0 0 auto; }
 .dh-install-text { flex: 1 1 auto; min-width: 0; font-size: .82rem; line-height: 1.3; color: var(--dh-muted); }
 .dh-install-text strong { display: block; color: var(--dh-ink); font-size: .9rem; }
@@ -1431,3 +1436,12 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    has its own drag handle - keep the field plain. */
 .dh-slider-num::-webkit-outer-spin-button, .dh-slider-num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .dh-slider-num[type=number] { -moz-appearance: textfield; }
+
+/* iOS install walkthrough modal (2026-09-14). */
+.dh-ios-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.dh-ios-steps li { display: flex; align-items: center; gap: 12px; font-size: .92rem; color: var(--dh-ink); }
+.dh-ios-step-icon {
+  flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%; background: var(--dh-foam); color: var(--dh-sea);
+  display: flex; align-items: center; justify-content: center;
+}
+.dh-ios-step-icon .material-icons-round { font-size: 20px; }

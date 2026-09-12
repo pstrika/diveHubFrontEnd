@@ -128,8 +128,11 @@
 @unless($dhFrozen)
 {{-- Guest account prompt, once per page, only when the visitor is the shared guest user. --}}
 <x-guest-modal />
-{{-- Add to home screen bar (shown by divershub.js on phones, every visit until installed). --}}
+{{-- Add to home screen bar (Android/desktop) and its iOS equivalent, a proper
+     modal since iOS has no install API to trigger from a bar's button. Both
+     shown by divershub.js. --}}
 <x-install-prompt />
+<x-ios-install-modal />
 {{-- The Me tab's menu rows, on every page now (not just the dashboard) so a
      diver can always reach their calendar/profile/etc without navigating
      home first. Members only - a guest has no account to manage. --}}
