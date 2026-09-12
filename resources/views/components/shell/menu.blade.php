@@ -119,6 +119,7 @@
         <h6>Admin</h6>
         {!! $link('Platform health', route('PlatformHealth'), 'monitor_heart') !!}
         {!! $link('User management', route('users'), 'manage_accounts') !!}
+        {!! $link('Message management', route('admin.messages.index'), 'forum') !!}
     </div>
     @endcan
     @can('manage-items', App\Models\User::class)

@@ -46,6 +46,13 @@ Route::get('sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'inde
 Route::get('cron/send-group-reminders', [\App\Http\Controllers\CronController::class, 'sendGroupReminders']);
 Route::get('cron/send-group-activity-digest', [\App\Http\Controllers\CronController::class, 'sendGroupActivityDigest']);
 
+// Twilio's own webhook - configured against the Twilio number in the
+// Twilio Console (Messaging configuration), not something a diver visits.
+// No auth (Twilio isn't a logged-in user) and CSRF-exempt (see
+// VerifyCsrfToken) - Twilio signs its requests instead, which this doesn't
+// verify yet (a hardening step for later, not required for this to work).
+Route::post('webhooks/twilio/inbound', [\App\Http\Controllers\TwilioWebhookController::class, 'inbound'])->name('webhooks.twilio.inbound');
+
 /* Privacy Policy */
 Route::get('PrivacyPolicy', function () {
     $SEO = [
@@ -124,7 +131,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
 	Route::get('DeletePic/{id}', 'App\Http\Controllers\SiteController@deletePic')->middleware('auth')->name('DeletePic');
 	Route::get('DeletePic', 'App\Http\Controllers\SiteController@deletePic')->middleware('auth')->name('DeletePic');
 
-	
+	Route::get('admin/messages', [\App\Http\Controllers\AdminMessagesController::class, 'index'])->name('admin.messages.index');
+	Route::get('admin/messages/thread/{contact}', [\App\Http\Controllers\AdminMessagesController::class, 'thread'])->name('admin.messages.thread')->where('contact', '.*');
+	Route::post('admin/messages/send', [\App\Http\Controllers\AdminMessagesController::class, 'send'])->name('admin.messages.send');
+
 });
 
 // Deco planner and My Calendar render for guests (show, then gate); saving actions below stay on 'auth'.
@@ -177,6 +187,7 @@ Route::get('RemoveFromCalendar/{tripId}', 'App\Http\Controllers\EventController@
 Route::get('Operators/', 'App\Http\Controllers\OperatorController@show')->middleware('guest')->name('Operators');
 Route::get('Waivers', 'App\Http\Controllers\OperatorController@getWaivers')->middleware('guest')->name('Waivers');
 Route::get('w/{operator}', 'App\Http\Controllers\OperatorController@redirectToWaiver')->name('waiver.redirect');
+Route::post('chat/send', 'App\Http\Controllers\ChatWidgetController@send')->name('chat.send');
 Route::get('ToggleFav/{id}', 'App\Http\Controllers\OperatorController@toggleFav')->middleware('auth')->name('ToggleFav');
 
 Route::get('OperatorDetails/{id}', 'App\Http\Controllers\OperatorController@show')->middleware('guest')->name('OperatorDetails');

@@ -35,14 +35,19 @@ use Illuminate\Support\Facades\Log;
  */
 class WhatsAppService
 {
-    /** A business-initiated notification - the only kind allowed outside a live chat. */
-    public static function sendTemplate(?string $rawPhone, string $contentSid, array $variables = []): void
+    /**
+     * A business-initiated notification - the only kind allowed outside a
+     * live chat. Returns whether Twilio actually accepted it, for callers
+     * that need to know (the admin Message Management console) -
+     * background callers just ignore the return value, unchanged from before.
+     */
+    public static function sendTemplate(?string $rawPhone, string $contentSid, array $variables = []): bool
     {
         $config = self::config();
-        if (!$config || !$contentSid) return;
+        if (!$config || !$contentSid) return false;
 
         $to = self::toE164($rawPhone);
-        if (!$to) return;
+        if (!$to) return false;
 
         $payload = [
             'To' => 'whatsapp:' . $to,
@@ -53,19 +58,24 @@ class WhatsAppService
             $payload['ContentVariables'] = json_encode($variables);
         }
 
-        self::post($config, $payload);
+        return self::post($config, $payload);
     }
 
-    /** Free-form text - only within Twilio/Meta's 24h customer-service window (e.g. replying to an inbound chat). */
-    public static function sendText(?string $rawPhone, string $body): void
+    /**
+     * Free-form text - only within Twilio/Meta's 24h customer-service
+     * window (e.g. replying to an inbound chat). A send outside that
+     * window comes back false (Twilio rejects it, logged by post()) - the
+     * admin console's cue to use a template instead.
+     */
+    public static function sendText(?string $rawPhone, string $body): bool
     {
         $config = self::config();
-        if (!$config) return;
+        if (!$config) return false;
 
         $to = self::toE164($rawPhone);
-        if (!$to) return;
+        if (!$to) return false;
 
-        self::post($config, [
+        return self::post($config, [
             'To' => 'whatsapp:' . $to,
             'From' => 'whatsapp:' . $config['from'],
             'Body' => $body,
@@ -86,7 +96,7 @@ class WhatsAppService
         return compact('accountSid', 'authUser', 'authPass', 'from');
     }
 
-    private static function post(array $config, array $payload): void
+    private static function post(array $config, array $payload): bool
     {
         try {
             $response = Http::asForm()
@@ -95,9 +105,13 @@ class WhatsAppService
 
             if (!$response->successful()) {
                 Log::error('WhatsApp (Twilio) send failed (' . $response->status() . '): ' . $response->body());
+                return false;
             }
+
+            return true;
         } catch (\Throwable $e) {
             Log::error('WhatsApp (Twilio) send exception: ' . $e->getMessage());
+            return false;
         }
     }
 

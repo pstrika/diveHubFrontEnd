@@ -12,6 +12,8 @@ class VerifyCsrfToken extends Middleware
      * @var array
      */
     protected $except = [
-        //
+        // Twilio's own webhook POST - it has no CSRF token to send, and
+        // isn't the browser session this protection is for.
+        'webhooks/twilio/inbound',
     ];
 }

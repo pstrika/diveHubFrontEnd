@@ -20,19 +20,30 @@ use Illuminate\Support\Facades\Log;
  */
 class NotificationService
 {
-    public static function notify(iterable $userIds, string $subject, string $body, ?string $url = null, ?int $excludeUserId = null, ?int $fromUserId = null, ?int $groupId = null): void
+    /**
+     * @param iterable $mentionedUserIds Recipients who were personally
+     *   @-mentioned in the message this notification is about (Pablo,
+     *   2026-09-14: "general group [notifications] go to Groups... a
+     *   message sent to a user using @name... put it in the inbox").
+     *   Their own copy of this notification gets group_id = null (Inbox)
+     *   even though $groupId is set for everyone else's copy - a direct
+     *   ping reads as personal, not general group chatter.
+     */
+    public static function notify(iterable $userIds, string $subject, string $body, ?string $url = null, ?int $excludeUserId = null, ?int $fromUserId = null, ?int $groupId = null, iterable $mentionedUserIds = []): void
     {
         $userIds = collect($userIds)->filter(fn ($id) => $id != $excludeUserId)->unique()->values();
         if ($userIds->isEmpty()) {
             return;
         }
 
+        $mentioned = collect($mentionedUserIds)->map(fn ($id) => (int) $id)->all();
+
         foreach ($userIds as $userId) {
             try {
                 Message::create([
                     'userId' => $userId,
                     'from_user_id' => $fromUserId,
-                    'group_id' => $groupId,
+                    'group_id' => in_array((int) $userId, $mentioned, true) ? null : $groupId,
                     'subject' => $subject,
                     'body' => $body,
                     'read' => 0,

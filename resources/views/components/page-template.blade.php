@@ -133,6 +133,8 @@
      shown by divershub.js. --}}
 <x-install-prompt />
 <x-ios-install-modal />
+{{-- Floating "Chat with us" button + modal - starts a real SMS/WhatsApp thread with support. --}}
+<x-chat-with-us />
 {{-- The Me tab's menu rows, on every page now (not just the dashboard) so a
      diver can always reach their calendar/profile/etc without navigating
      home first. Members only - a guest has no account to manage. --}}

@@ -1483,3 +1483,25 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 
 /* Verify-phone modal. */
 .dh-verify-code-input { text-align: center; font-size: 1.4rem; font-weight: 800; letter-spacing: .3em; }
+
+/* Admin Message Management console (2026-09-14). */
+.dh-thread-scroll { max-height: 400px; overflow-y: auto; padding: 4px; display: flex; flex-direction: column; gap: 10px; }
+.dh-thread-bubble { max-width: 78%; padding: 10px 12px; border-radius: 12px; background: var(--dh-foam); }
+.dh-thread-bubble.is-outbound { align-self: flex-end; background: var(--dh-sea); color: #fff; }
+.dh-thread-bubble.is-outbound .dh-thread-bubble-meta { color: rgba(255,255,255,.75); }
+.dh-thread-bubble-meta { font-size: .68rem; color: var(--dh-muted); margin-bottom: 3px; }
+.dh-thread-bubble-body { font-size: .88rem; white-space: pre-wrap; word-break: break-word; }
+.dh-thread-reply { margin-top: 14px; border-top: 1px solid var(--dh-line); padding-top: 14px; }
+
+/* "Chat with us" floating button (2026-09-14). Sits well above the mobile
+   tab bar (60px) and the install-prompt bar's own band above that, so the
+   three never stack on top of each other; desktop has neither, so it can
+   sit lower. */
+.dh-chat-fab {
+  position: fixed; right: 16px; bottom: calc(140px + env(safe-area-inset-bottom, 0px)); z-index: 1035;
+  width: 52px; height: 52px; border-radius: 50%; border: 0; background: var(--dh-sea); color: #fff;
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(11,42,58,.28); cursor: pointer;
+}
+.dh-chat-fab:hover { background: var(--dh-deep); }
+.dh-chat-fab .material-icons-round { font-size: 26px; }
+@media (min-width: 992px) { .dh-chat-fab { bottom: 24px; } }

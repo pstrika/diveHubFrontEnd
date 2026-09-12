@@ -55,8 +55,9 @@ class GroupMessageController extends Controller
             ]);
         }
 
-        $this->notifyNewMessage($group, $message);
-        $this->notifyMentions($group, $request->body ?? '');
+        $mentionedIds = $this->resolveMentionedUserIds($group, $request->body ?? '');
+        $this->notifyNewMessage($group, $message, $mentionedIds);
+        $this->notifyMentions($group, $request->body ?? '', $mentionedIds);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['success' => true]);
@@ -86,11 +87,36 @@ class GroupMessageController extends Controller
     }
 
     /**
+     * Every active member's copy of this notification (see
+     * MentionParser), minus whoever sent the message - shared by
+     * notifyNewMessage() (decides Inbox vs Groups) and notifyMentions()
+     * (decides who gets an immediate WhatsApp ping), so the two can't
+     * disagree about who was actually named.
+     */
+    private function resolveMentionedUserIds(Group $group, string $body)
+    {
+        if (trim($body) === '') {
+            return collect();
+        }
+
+        $members = $group->activeMembers()->with('user')->get()
+            ->filter(fn ($m) => $m->user)
+            ->map(fn ($m) => ['id' => $m->user->id, 'name' => $m->user->name]);
+
+        return MentionParser::detect($body, $members)
+            ->reject(fn ($id) => $id == auth()->user()->id)
+            ->values();
+    }
+
+    /**
      * Notifies every other active member of the group - both the in-app
      * notification center and a browser push. Best-effort -
-     * NotificationService swallows its own failures.
+     * NotificationService swallows its own failures. Whoever was
+     * @-mentioned gets their own copy in the Inbox instead of the Groups
+     * folder (Pablo, 2026-09-14: a direct ping reads as personal, not
+     * general group chatter) - everyone else's copy still goes to Groups.
      */
-    private function notifyNewMessage(Group $group, GroupMessage $message)
+    private function notifyNewMessage(Group $group, GroupMessage $message, $mentionedIds)
     {
         $body = $message->body ? Str::limit($message->body, 100) : 'Sent a photo';
 
@@ -101,38 +127,28 @@ class GroupMessageController extends Controller
             route('Groups.show', ['group' => $group->slug]),
             auth()->user()->id,
             auth()->user()->id,
-            $group->id
+            $group->id,
+            $mentionedIds
         );
     }
 
     /**
      * @Name in a chat message still goes to the whole group as a normal
      * message (notifyNewMessage above already put it in every member's
-     * Inbox/Groups folder) - this only adds the "ping them right now"
-     * layer for whoever was actually named: an immediate WhatsApp message,
-     * gated on their own opt-in, a phone number on file, and a mention
-     * Content template actually existing and being approved (Twilio
-     * Content API/content.twilio.com - no mention template has been
-     * created there yet, only the trip-reminder one, so this no-ops until
+     * Inbox/Groups folder, and for the mentioned person specifically, the
+     * Inbox) - this only adds the "ping them right now" layer for whoever
+     * was actually named: an immediate WhatsApp message, gated on their
+     * own opt-in, a phone number on file, and a mention Content template
+     * actually existing and being approved (Twilio Content API/
+     * content.twilio.com - no mention template has been created there
+     * yet, only the trip-reminder one, so this no-ops until
      * TWILIO_WHATSAPP_MENTION_SID is set - see WhatsAppService and
-     * config/services.php). No separate email or extra in-app row; the
-     * one from notifyNewMessage covers it.
+     * config/services.php). No separate email.
      */
-    private function notifyMentions(Group $group, string $body)
+    private function notifyMentions(Group $group, string $body, $mentionedIds)
     {
         $contentSid = config('services.whatsapp.mention_content_sid');
-        if (!$contentSid || trim($body) === '') {
-            return;
-        }
-
-        $members = $group->activeMembers()->with('user')->get()
-            ->filter(fn ($m) => $m->user)
-            ->map(fn ($m) => ['id' => $m->user->id, 'name' => $m->user->name]);
-
-        $mentionedIds = MentionParser::detect($body, $members)
-            ->reject(fn ($id) => $id == auth()->user()->id);
-
-        if ($mentionedIds->isEmpty()) {
+        if (!$contentSid || $mentionedIds->isEmpty()) {
             return;
         }
 
