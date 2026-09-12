@@ -1,474 +1,226 @@
 <x-page-template bodyClass='dh-shell bg-gray-200'>
     <x-shell.nav active="me" />
-    
-    
-    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-        <!-- Navbar -->
-        <x-shell.header title="My Calendar {{ $currentMonthS}}-{{ $year }}" />
-        <!-- End Navbar -->
-            <div class="container-fluid py-4">
-                <div class="page-header min-height-250 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/calendar.jpg');">
-                    <span class="mask  bg-gradient-info  opacity-4"></span>
+
+    {{-- Edit event: eventClick on the grid opens this with book/waiver/remove actions for that trip. --}}
+    <div class="modal fade" id="modal-calendar" tabindex="-1" role="dialog" aria-labelledby="modal-title-notification-calendar" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-normal" id="modal-title-notification-calendar">Trip details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+                <div class="modal-body">
+                    <p class="mb-2">
+                        <span id="span-booked" class="chip chip-static chip-yes" hidden>Booked</span>
+                        <span id="span-not-booked" class="chip chip-static" hidden>Not booked yet</span>
+                        <span id="span-waiver-signed" class="chip chip-static chip-yes" hidden>Waiver signed</span>
+                    </p>
+                </div>
+                <div class="modal-footer flex-wrap gap-2 justify-content-start">
+                    <a id="button-go" href="" class="dh-btn dh-btn-ghost-dark"><span class="material-icons-round">visibility</span>View trip</a>
+                    <a id="button-link" href="" target="_blank" class="dh-btn dh-btn-ghost-dark"><span class="material-icons-round">link</span>Booking page</a>
+                    <a id="button-waiver" href="" target="_blank" class="dh-btn dh-btn-ghost-dark"><span class="material-icons-round">description</span>Sign waiver</a>
+                    <a id="button-waiver-signed" href="" class="dh-btn dh-btn-ghost-dark"><span class="material-icons-round">assignment_turned_in</span>Mark waiver signed</a>
+                    <a id="button-book" href="" class="dh-btn dh-btn-primary"><span class="material-icons-round">check</span>I'm booked</a>
+                    <a id="button-remove" href="" class="dh-btn dh-btn-danger"><span class="material-icons-round">delete</span>Remove from calendar</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                <div class="d-none" data-color="info" id="sidebarColorDiv"></div>
-
-                {{--modal code--}}
-                <div class="modal fade" id="modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
-                    <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header text-center">
-                                <h6 class="modal-title font-weight-normal" id="modal-title-notification">Site levels</h6>
-                                {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
-                                <span aria-hidden="true">×</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="py-3 text-center">
-                                    <h4 class="text-gradient text-info text-md mt-4"></h4>
-                                    <div class="table-responsive">
-                                        <table class="table align-items-left mb-0"> 
-                                            <tbody>
-                                                
-                                                <tr><td class="w-20 text-secondary text-end text-lg font-weight-bolder opacity-7"> </td>
-                                                <td class="w-60 align-middle text-start text-sm"><b>Level</b></td>
-                                                <td class="w-20 align-middle text-start text-sm"><b>Max Depth (ft)</b></td> </tr>
-                                                
-                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_0.png" alt="OW" height="25"></td>
-                                                <td class="align-middle text-info text-start text-sm"><b>Open Water</b></td> 
-                                                <td class="align-middle text-info text-center text-sm"><b>60</b></td> </tr>
-
-                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_1.png" alt="AOW" height="25"></td>
-                                                <td class="align-middle text-info text-start text-sm"><b>Advanced Open Water</b></td>
-                                                <td class="align-middle text-info text-center text-sm"><b>130</b></td> </tr>
-
-                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder opacity-7"><img src="{{ asset('assets') }}/img/icons/icons_level_2.png" alt="Ta" height="25"></td>
-                                                <td class="align-middle text-info text-start text-sm"><b>Technical Air</b></td>
-                                                <td class="align-middle text-info text-center text-sm"><b>150</b></td> </tr>
-
-                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_3.png" alt="Tn" height="25"></td>
-                                                <td class="align-middle text-info text-start text-sm"><b>Technical Normoxic Trimix</b></td>
-                                                <td class="align-middle text-info text-center text-sm"><b>200</b></td> </tr>
-
-                                                <tr><td class="text-secondary text-end text-lg font-weight-bolder"><img src="{{ asset('assets') }}/img/icons/icons_level_4.png" alt="Th" height="25"></td>
-                                                <td class="align-middle text-info text-start text-sm"><b>Technical Hypoxic Trimix</b></td>
-                                                <td class="align-middle text-info text-center text-sm"><b>330+</b></td> </tr>
-
-                                            </tbody>
-                                        </table>
-                                    </div>   
-                                    <p>Press anywhere outside this dialog to continue</p>
-                                </div>
-                            </div>
-                        </div>
+    {{-- Subscribe to .ics feed --}}
+    @if($calendarFeedUrl)
+    <div class="modal fade" id="modalSubscribeIcs" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-normal"><span class="material-icons-round align-middle">event_available</span> Subscribe to my dive calendar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    @if (session('calendarTokenRegenerated'))
+                        <div class="dh-form-error mb-2">Your calendar link was regenerated. The old link no longer works — re-share the new one below.</div>
+                    @endif
+                    <p class="text-sm text-secondary mb-2">
+                        Paste this link into Google Calendar, Apple Calendar or Outlook (as a
+                        subscribed/"from URL" calendar) to keep your dives in sync automatically.
+                        Anyone you give this link to can see your upcoming dives, so only share it with people you trust.
+                    </p>
+                    <div class="d-flex align-items-center flex-wrap gap-2">
+                        <input type="text" id="calendarFeedUrl" class="form-control border w-auto flex-grow-1"
+                               value="{{ $calendarFeedUrl }}" readonly onclick="this.select();" style="min-width: 200px;">
+                        <button type="button" class="dh-btn dh-btn-primary" onclick="copyCalendarFeedUrl()">
+                            <span class="material-icons-round align-middle">content_copy</span> Copy
+                        </button>
+                    </div>
+                    <div class="mt-3 text-end">
+                        <form action="{{ route('MyCalendar.regenerateToken') }}" method="POST" class="d-inline"
+                              onsubmit="return confirm('Regenerate your calendar link? Anyone using the current link will lose access.');">
+                            @csrf
+                            <button type="submit" class="dh-link-danger">Regenerate link</button>
+                        </form>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
-                {{--modal edit calendar--}}
-                <div class="modal fade" id="modal-calendar" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
-                    <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
-                        <div class="modal-content">
-                            <span id="span-booked" class="badge badge-md bg-gradient-success text-white">Booked</span>
-                            <span id="span-not-booked" class="badge badge-md bg-gradient-danger text-white">Not Booked</span>
-                            <span id="span-waiver-signed" class="badge badge-md bg-gradient-success text-white" hidden>Waiver Signed</span>
-                            <div class="modal-header text-center">
-                                
-                                <h6 class="modal-title font-weight-normal text-start" id="modal-title-notification-calendar">Edit calendar</h6>
-                                {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
-                                {{--<span aria-hidden="true">×</span>--}}
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="py-3 text-center">
-                                    <h4 class="text-gradient text-info text-md mt-4"></h4>
-                                    <div class="table-responsive">
-                                        <table class="table align-items-left mb-0"> 
-                                            <tbody>
-                                                
-                                                <tr>
-                                                    <td class="align-middle text-center text-sm">    
-                                                        <a id="button-go" href=""><button class="btn btn-icon btn-3 btn-info" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="See details for this trip">
-                                                            <span class="btn-inner--icon"><i class="material-icons">visibility</i></span>
-                                                            {{--<span class="btn-inner--text">Go to trip</span>--}}
-                                                        </button></a>
-                                                    </td>
-                                                
-                                                    <td id="div-button-link" class="align-middle text-center text-sm">    
-                                                        <a id="button-link" href="" target="_blank"><button class="btn btn-icon btn-3 btn-info" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Open booking page">
-                                                            <span class="btn-inner--icon"><i class="material-icons">link</i></span>
-                                                            {{--<span class="btn-inner--text">Click to book</span>--}}
-                                                        </button></a>
-                                                    </td>
+    <main class="main-content position-relative h-100 border-radius-lg">
+        <x-shell.header title="My Calendar" icon="event" />
 
-                                                    <td id="div-button-waiver" class="align-middle text-center text-sm">
-                                                        <a id="button-waiver" href="" target="_blank"><button class="btn btn-icon btn-3 btn-info" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Open online waiver">
-                                                            <span class="btn-inner--icon"><i class="material-icons">description</i></span>
-                                                            {{--<span class="btn-inner--text">Click to book</span>--}}
-                                                        </button></a>
-                                                    </td>
-
-                                                    <td id="div-button-waiver-signed" class="align-middle text-center text-sm" hidden>
-                                                        <a id="button-waiver-signed" href=""><button class="btn btn-icon btn-3 btn-success" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="I've signed the waiver!">
-                                                            <span class="btn-inner--icon"><i class="material-icons">assignment_turned_in</i></span>
-                                                        </button></a>
-                                                    </td>
-
-
-                                                    <td id="div-button-book" class="align-middle text-center text-sm">
-                                                        <a id="button-book" href=""><button class="btn btn-icon btn-3 btn-success" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="I'm already booked for this trip!">
-                                                            <span class="btn-inner--icon"><i class="material-icons">check</i></span>
-                                                            {{--<span class="btn-inner--text">I'm booked already!</span>--}}
-                                                        </button></a>
-                                                    </td>
-                                                
-                                                
-                                                
-                                                    <td class="align-middle text-center text-sm">    
-                                                        <a id="button-remove" href=""><button class="btn btn-icon btn-3 btn-danger" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Remove trip from My Calendar">
-                                                            <span class="btn-inner--icon"><i class="material-icons">delete</i></span>
-                                                            {{--<span class="btn-inner--text">Remove from calendar</span>--}}
-                                                        </button></a>
-                                                    </td>
-                                                </tr>
-                                                
-
-                                            </tbody>
-                                        </table>
-                                    </div>   
-                                    <p>Press anywhere outside this dialog to continue</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <div class="container-fluid py-0 dh-board">
+            {{--
+                Retheme (2026-09-12) onto the same criteria as every other
+                calendar in the app: anchor day defaults to today (not the
+                1st of the month), prev/next step by whichever of 3 day/week/
+                month is active (App\Support divershub-calendar.js), and the
+                trip list below always covers the whole month the anchor
+                falls in, built from App\Support\TripBoard::card() like the
+                trip finder and the themed calendars so a trip looks the same
+                everywhere. No operator legend here (booked/not booked is the
+                only color this calendar needs) and no list pagination (a
+                personal saved-trips list is small by nature).
+            --}}
+            @if($calendarFeedUrl)
+                <div class="d-flex justify-content-end mb-2">
+                    <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-toggle="modal" data-bs-target="#modalSubscribeIcs">
+                        <span class="material-icons-round" aria-hidden="true">event</span>Subscribe
+                    </button>
                 </div>
+            @endif
 
-                <div class="card p-0 position-relative mt-n7 mx-2 z-index-2">
-            
-                    <div class="p-0 mt-n4 mx-2 border-radius-lg py-3 pe-1">
-                        <div style="float: left;">
-                            <h1 class="card-category text-info mx-4 mt-3 text-xl">My Calendar</h1>
-                            <h2 class="card-title text-info mx-4 text-xl mt-n2">{{ $currentMonthS }}-{{ $year }}</h2>
-                        </div>
-
-                        {{-----------------NAV to next day}} --}}
-                        <div class="mt-5" style="float: right;">
-                            <a type="button" href="/MyCalendar/{{ $prevMonthS }}/" class="btn btn-info tex-end">
-                                <span class="material-icons" style="font-size :24pt;">keyboard_arrow_left</span>
-                            </a>
-                            
-                            <a type="button" href="/MyCalendar/{{ $nextMonthS }}/" class="btn btn-info tex-end">
-                                <span class="material-icons" style="font-size :24pt;">keyboard_arrow_right</span>
-                            </a>
-                        </div>
-                        <div style="clear: both;"></div>
-
-                    </div>
-                </div>
-
-                {{-- Subscribe / share calendar feed (hidden for guest sessions) --}}
-                @if($calendarFeedUrl)
-                <div class="col-md-12">
-                    <div class="card p-0 position-relative mt-4 mx-0 z-index-2 mb-0">
-                        <div class="card-body">
-                            @if (session('calendarTokenRegenerated'))
-                                <div class="alert alert-success text-white" role="alert">
-                                    Your calendar link was regenerated. The old link no longer works — re-share the new one below.
-                                </div>
-                            @endif
-
-                            <h5 class="text-info mb-1"><i class="material-icons align-middle">event_available</i> Subscribe to my dive calendar</h5>
-                            <p class="text-sm text-secondary mb-2">
-                                Paste this link into Google Calendar, Apple Calendar or Outlook (as a
-                                subscribed/“from URL” calendar) to keep your dives in sync automatically.
-                                Anyone you give this link to can see your upcoming dives, so only share it with people you trust.
-                            </p>
-
-                            <div class="d-flex align-items-center flex-wrap gap-2">
-                                <input type="text" id="calendarFeedUrl" class="form-control w-auto flex-grow-1"
-                                       value="{{ $calendarFeedUrl }}" readonly onclick="this.select();"
-                                       style="min-width: 260px;">
-
-                                <button type="button" class="btn btn-info mb-0" onclick="copyCalendarFeedUrl()">
-                                    <i class="material-icons align-middle">content_copy</i> Copy
-                                </button>
-
-                                <form action="{{ route('MyCalendar.regenerateToken') }}" method="POST" class="mb-0"
-                                      onsubmit="return confirm('Regenerate your calendar link? Anyone using the current link will lose access.');">
-                                    @csrf
-                                    <button type="submit" class="btn btn-outline-danger mb-0">
-                                        <i class="material-icons align-middle">autorenew</i> Regenerate link
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                @endif
-
-                @if(!auth()->user()->isNotGuest())
+            @if(!auth()->user()->isNotGuest())
                 {{-- Guest empty state (show, then gate). The calendar below still renders, just empty. --}}
-                <div class="col-md-12">
-                    <div class="dh-panel mt-4 dh-guest-note">
-                        <span class="material-icons-round" aria-hidden="true">event_available</span>
-                        <div>
-                            <h2 class="dh-panel-title mb-1">This is your dive calendar</h2>
-                            <p class="mb-2">Save any trip from <a href="{{ route('Trips') }}">Dive Today</a> and it shows up here, with a link you can subscribe to from Google or Apple Calendar.</p>
-                            <a class="dh-btn dh-btn-primary" href="{{ route('create-account') }}">Create a free account</a>
-                            <a class="dh-btn dh-btn-ghost-dark" href="{{ route('login') }}">Sign in</a>
-                        </div>
+                <div class="dh-panel dh-guest-note">
+                    <span class="material-icons-round" aria-hidden="true">event_available</span>
+                    <div>
+                        <h2 class="dh-panel-title mb-1">This is your dive calendar</h2>
+                        <p class="mb-2">Save any trip from <a href="{{ route('Trips') }}">Dive Today</a> and it shows up here, with a link you can subscribe to from Google or Apple Calendar.</p>
+                        <a class="dh-btn dh-btn-primary" href="{{ route('create-account') }}">Create a free account</a>
+                        <a class="dh-btn dh-btn-ghost-dark" href="{{ route('login') }}">Sign in</a>
                     </div>
                 </div>
-                @endif
+            @endif
 
-                <div class="col-md-12">
-                    <div class="card card-calendar p-0 position-relative mt-4 mx-0 z-index-2 mb-0">
-                        
-                        
-                        {{--Calendar--}}
-                        <div class="card-body p-3">
-                            <div class="calendar" data-bs-toggle="calendar" id="calendar"></div>
-                        </div>
-                        {{--------------------------}}
-                    </div>
-                    
+            <div class="dh-datebar">
+                <button type="button" class="dh-btn dh-btn-ghost-dark dh-datebtn" id="dhCalPrev" aria-label="Previous" @if($prevDisabled) aria-disabled="true" style="visibility:hidden" @endif>
+                    <span class="material-icons-round">chevron_left</span>
+                </button>
+                <div class="dh-datebar-center">
+                    <h1 class="dh-date-title">{{ $monthLabel }}</h1>
                 </div>
+                <button type="button" class="dh-btn dh-btn-ghost-dark dh-datebtn" id="dhCalNext" aria-label="Next">
+                    <span class="material-icons-round">chevron_right</span>
+                </button>
+            </div>
 
-                <div class="col-md-12">             
-                    <div class="card p-0 position-relative mt-5 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">My Dives {{ $currentMonthS }}-{{ $year }}</h2>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                
-                                <div class="table-responsive">
-                                    <table id="tableTripsAM">
-                                        <thead class="text-info">
-                                            <th class="px-4 align-top text-wrap">
-                                                booked?
-                                            </th>
-                                            <th class="px-4 align-top">
-                                                Date
-                                            </th>
-                                            <th class="align-top">
-                                                Operator
-                                            </th>
-                                            <th class="px-4 align-top">
-                                                Time
-                                            </th>
-                                                <th class="py-0 align-top">Availability<p class="text-xs mt-0 px-1">click-to-book</p>
-                                            </th>
-                                            
-                                            <th class="px-4 align-top">
-                                                Site / Trip Name
-                                            </th>
-                                            <th class="px-4 align-top">
-                                                Level<a href="#" onclick="showModal();"><p class="text-xs text-info text-center mt-0 px-1">(?)</p></a>
-                                            </th>
-                                            <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="site max depth" data-container="body" data-animation="true">
-                                                Depth
-                                            </th>
-                                        </thead>
-                                        <tbody >
-                                            @foreach($trips as $trip)
-                                                
-                                                @php
-                                                    // do this to avoid printing on the table trips that are not within the current month, but wanted to show them on calendar (check controller)
-                                                    $tripDate = new DateTime($trip->date);
-                                                    $tripMonth = $tripDate->format('F');
-                                                @endphp
-                                                @if( $tripMonth == $currentMonthS)
-                                                <tr style="border-bottom: 1px solid #D3D3D3;" data-tag="{{ $trip->tags }}">
-                                                @if($trip->booked)
-                                                    <td class="w-10 text-center text-info" style="border: none;"><i class="material-icons">check</i></td>
-                                                @else
-                                                    <td class="w-10 text-center text-danger" style="border: none;"><i class="material-icons">close</i></td>
-                                                @endif
-                                                <td class="px-4">{{ $trip->date }}</td>
-                                                    <td class="px-0 py-2 text-sm text-wrap">{{ $trip->operatorName }}</td>
-                                                    <td class="px-4">{{ $trip->departureTime }}</td>
-                                                    @if($trip->tripFreeSpots == 0)
-                                                        <td class="text-center">-</td>
-                                                    @else
-                                                        <td class="text-center"> <a href="{{ $trip->linkToBook }}" target="_blank">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</a></td>
-                                                    @endif
-                                                    
-                                                    
+            <section class="dh-panel dh-calendar-panel">
+                <div class="calendar" id="myCalendar"></div>
+                <p class="text-xs text-secondary mb-0 mt-2"><span class="dh-cal-key is-booked"></span> booked &nbsp; <span class="dh-cal-key is-open"></span> not booked yet</p>
+            </section>
 
-                                                    <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}</a></td>
-
-                                                    @if(!empty($trip->site[0]))
-                                                        {{--<td class="px-4 text-sm text-center">{{ $trip->site[0]->level }}</td>--}}
-                                                        <td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_level_{{ $trip->site[0]->level }}.png" height="25"></td>
-                                                    @else
-                                                        <td class="px-4 text-sm text-center"> </td>
-                                                    @endif
-
-                                                    @if(!empty($trip->site[0]))
-                                                        <td class="px-4 text-sm text-center">{{ $trip->site[0]->maxDepth }}</td>
-                                                    @else
-                                                        <td class="px-4 text-sm text-center"> </td>
-                                                    @endif
-                                                    
-                                                </tr>
-                                                @endif
-                                            @endforeach          
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>    
-                        </div>
-                    </div>
+            @if($totalTrips === 0)
+                <div class="dh-empty">
+                    <span class="material-icons-round" aria-hidden="true">sailing</span>
+                    <p>No saved trips this month.</p>
                 </div>
-            </div>      
+            @else
+                @foreach($byDate as $date => $dayCards)
+                    <section class="dh-day" id="day-{{ $date }}">
+                        <h2 class="dh-day-title">
+                            {{ \Carbon\Carbon::parse($date)->format('l, F j') }}
+                            <span class="dh-region-count">{{ count($dayCards) }} {{ Str::plural('trip', count($dayCards)) }}</span>
+                        </h2>
+                        @foreach($dayCards as $card)
+                            <x-trip-card :trip="$card" />
+                        @endforeach
+                    </section>
+                @endforeach
+            @endif
+
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>
     </main>
-    
-    
-    {{--<x-plugins></x-plugins>--}}
-    
+
     @push('js')
-    
-    <script src="/assets/js/plugins/fullcalendar.min.js"></script>
-    <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
-
-
+    <script src="{{ asset('assets') }}/js/plugins/fullcalendar.min.js"></script>
+    <script src="{{ asset('assets') }}/js/divershub-calendar.js"></script>
     <script>
-        function showModal() {
-            $('#modal').modal('show'); // Show the modal
-        };
-    </script>
-    
-    
-    <script>
-        var calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
-        dateClick: function(info) {
-            var link = '/Trips/' + info.dateStr;
-            window.location.href = link;
-        },
-        eventClick: function(info) {
-            //mandar modal aca
-            const parsedDate = new Date(info.event.start);
+        (function () {
+            var calendarUrl = '{{ url(route('MyCalendar')) }}';
+            var anchor = '{{ $anchorDate }}';
+            var today = '{{ $today }}';
 
-            // Get the components you need
-            const day = parsedDate.getDate();
-            const month = parsedDate.toLocaleString('default', { month: 'short' });
-            const year = parsedDate.getFullYear();
-            const hours = parsedDate.getHours();
-            const minutes = parsedDate.getMinutes();
+            var calendar = new FullCalendar.Calendar(document.getElementById('myCalendar'), {
+                initialView: getResponsiveView(),
+                windowResize: function () { calendar.changeView(getResponsiveView()); },
+                initialDate: anchor,
+                firstDay: {{ $firstDayOfWeek }},
+                contentHeight: 'auto',
+                headerToolbar: { start: '', center: '', end: '' },
+                dayMaxEvents: 5,
+                selectable: false,
+                editable: false,
+                dateClick: function (info) {
+                    window.location.href = '{{ route('Trips') }}/' + info.dateStr;
+                },
+                eventClick: function (info) {
+                    var p = info.event.extendedProps;
+                    document.getElementById('modal-title-notification-calendar').innerHTML =
+                        info.event.title + '<br><span class="text-sm text-secondary">' + p.operator + '</span>';
 
-            // Create the desired string
-            const formattedString = `${day} ${month} ${year} ${hours}:${String(minutes).padStart(2, '0')}`;
-            var modal = document.getElementById('modal-title-notification-calendar');
-            modal.innerHTML = "Edit event in calendar: <br>" + formattedString + "<br> <b>" + info.event.title + "</b> <br> <p class='text-info text-sm text-bold'>" + info.event.extendedProps.operator + "<p>";
-            $('#modal-calendar').modal('show');
+                    document.getElementById('button-go').href = '{{ url('TripDetails') }}/' + p.myId;
+                    document.getElementById('button-book').href = '{{ url('SetEventBook') }}/' + p.eventId;
+                    document.getElementById('button-remove').href = '{{ url('RemoveFromCalendar') }}/' + p.eventId;
+                    document.getElementById('button-link').href = p.linkToBook;
+                    document.getElementById('button-waiver').href = p.waiver;
+                    document.getElementById('button-waiver-signed').href = '{{ url('SetEventWaiverSigned') }}/' + p.eventId;
 
-            document.getElementById("button-go").href = '/TripDetails/' + info.event.extendedProps.myId;
-            document.getElementById("button-book").href = '/SetEventBook/' + info.event.extendedProps.eventId;
-            document.getElementById("button-remove").href = '/RemoveFromCalendar/' + info.event.extendedProps.eventId;
-            document.getElementById("button-link").href = info.event.extendedProps.linkToBook;
-            document.getElementById("button-waiver").href = info.event.extendedProps.waiver;
-            document.getElementById("button-waiver-signed").href = '/SetEventWaiverSigned/' + info.event.extendedProps.eventId;
+                    var isBooked = p.booked == '1';
+                    var isWaiverSigned = p.waiverSigned == '1';
 
-            var isBooked = info.event.extendedProps.booked == '1';
-            var isWaiverSigned = info.event.extendedProps.waiverSigned == '1';
+                    document.getElementById('button-book').hidden = isBooked;
+                    document.getElementById('button-link').hidden = isBooked;
+                    document.getElementById('span-booked').hidden = !isBooked;
+                    document.getElementById('span-not-booked').hidden = isBooked;
 
-            if(isBooked) {
-                document.getElementById("div-button-book").hidden = true;
-                document.getElementById("div-button-link").hidden = true;
-                document.getElementById("span-booked").hidden = false;
-                document.getElementById("span-not-booked").hidden = true;
-            } else {
-                document.getElementById("div-button-book").hidden = false;
-                document.getElementById("div-button-link").hidden = false;
-                document.getElementById("span-booked").hidden = true;
-                document.getElementById("span-not-booked").hidden = false;
-            }
+                    document.getElementById('button-waiver').hidden = !p.waiver;
 
-            // check if we have a waiver link. If not we hide the button
-            if(info.event.extendedProps.waiver)
-                document.getElementById("div-button-waiver").hidden = false;
-            else
-                document.getElementById("div-button-waiver").hidden = true;
+                    // "Mark waiver signed" only makes sense once booked and only while
+                    // there's actually a waiver to sign; once signed, show a chip instead.
+                    document.getElementById('button-waiver-signed').hidden = !(isBooked && p.waiver && !isWaiverSigned);
+                    document.getElementById('span-waiver-signed').hidden = !(isBooked && p.waiver && isWaiverSigned);
 
-            // "Mark waiver signed" only makes sense once booked and only
-            // while there's actually a waiver to sign; once signed, show a
-            // badge instead of the button.
-            if (isBooked && info.event.extendedProps.waiver && !isWaiverSigned) {
-                document.getElementById("div-button-waiver-signed").hidden = false;
-            } else {
-                document.getElementById("div-button-waiver-signed").hidden = true;
-            }
-            document.getElementById("span-waiver-signed").hidden = !(isBooked && info.event.extendedProps.waiver && isWaiverSigned);
+                    new bootstrap.Modal(document.getElementById('modal-calendar')).show();
+                },
+                events: [
+                    @foreach($events as $card)
+                    {
+                        title: {!! json_encode($card['title']) !!},
+                        start: {!! json_encode($card['date'] . ' ' . $card['time24']) !!},
+                        color: '{{ $card['booked'] ? '#0f7b3f' : '#c0392b' }}',
+                        extendedProps: {
+                            myId: {!! json_encode($card['id']) !!},
+                            operator: {!! json_encode($card['operatorName']) !!},
+                            eventId: {!! json_encode($card['eventId']) !!},
+                            booked: {!! json_encode($card['booked'] ? '1' : '0') !!},
+                            waiverSigned: {!! json_encode($card['waiverSigned'] ? '1' : '0') !!},
+                            linkToBook: {!! json_encode($card['bookUrl']) !!},
+                            waiver: {!! json_encode($card['waiver']) !!}
+                        }
+                    },
+                    @endforeach
+                ],
+                views: dhResponsiveViews
+            });
+            calendar.render();
 
-
-            
-
-
-        },
-        initialView: "dayGridMonth",
-        firstDay: {{ (int) (auth()->user()->firstDayOfWeek ?? 0) }}, // guest user has no preference; 0 = Sunday
-        contentHeight: 'auto',
-        headerToolbar: {
-            start: '', //'title', // will normally be on the left. if RTL, will be on the right
-            center: '',
-            end: ''//'today prev,next' // will normally be on the right. if RTL, will be on the left
-        },
-        selectable: true,
-        editable: false,
-        initialDate: '{{ $currentDate }}',
-        events: [
-            @php
-                foreach($trips as $trip) {
-                    // fix the ' problem
-                    $tripName = str_replace("'", "\\'", $trip->tripName);
-                    echo "{";
-                    echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) ."',";
-                    echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
-                    //echo "url: '/TripDetails/" . str($trip->id) . "',";
-                    echo "extendedProps: {myId: '" . str($trip->id) . "', operator: '" . $trip->operatorName . "', eventId: '" . $trip->eventId ."', booked: '" . $trip->booked . "', waiverSigned: '" . $trip->waiverSigned . "', linkToBook: '" . $trip->linkToBook . "', waiver: '" . $trip->waiver . "'},";
-                    if($trip->booked)
-                        echo "className: 'bg-gradient-success text-white opId=$trip->operatorId isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
-                    else
-                        echo "className: 'bg-gradient-danger text-white opId=$trip->operatorId isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
-                    
-                }
-            @endphp
-            
-
-        ],
-        views: {
-            month: {
-            titleFormat: {
-                month: "long",
-                year: "numeric"
-            }
-            },
-            agendaWeek: {
-            titleFormat: {
-                month: "long",
-                year: "numeric",
-                day: "numeric"
-            }
-            },
-            agendaDay: {
-            titleFormat: {
-                month: "short",
-                year: "numeric",
-                day: "numeric"
-            }
-            }
-        },
-        });
-
-        calendar.render();
-
-
+            dhWireCalendarNav('dhCalPrev', 'dhCalNext', calendarUrl, anchor, today);
+        })();
     </script>
 
+    @if($calendarFeedUrl)
     <script>
         function copyCalendarFeedUrl() {
             var input = document.getElementById('calendarFeedUrl');
@@ -481,70 +233,6 @@
             }
         }
     </script>
-
-
-
-
-
-
-
-    {{--Handler for tripAM table: filter by location--}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('filterLocAM').addEventListener('change', function() {
-                var selectedOption = this.value;
-                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
-                
-                rows.forEach(function(row) {
-                var tags = row.getAttribute('data-tag');
-                if (tags.includes(selectedOption) || selectedOption === 'all') {
-                    row.style.display = ''; // Show the row
-                } else {
-                    row.style.display = 'none'; // Hide the row
-                }
-                });
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('filterAvAM').addEventListener('change', function() {
-                var selectedOption = this.value;
-                var rows = document.querySelectorAll('#tableTripsAM tr[data-tag]');
-                
-                rows.forEach(function(row) {
-                var tags = row.getAttribute('data-tag');
-                if (tags.includes(selectedOption) || selectedOption === 'all') {
-                    row.style.display = ''; // Show the row
-                } else {
-                    row.style.display = 'none'; // Hide the row
-                }
-                });
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('filterCalendarOp').addEventListener('change', function() {
-                var selectedOption = this.value;
-                var rows = document.querySelectorAll('#calendar a[class]');
-                
-                rows.forEach(function(row) {
-                var tags = row.getAttribute('class');
-                if (tags.includes('opId=')) {
-                    if (tags.includes(selectedOption) || selectedOption === 'all') {
-                        row.style.display = ''; // Show the row
-                    } else {
-                        row.style.display = 'none'; // Hide the row
-                    }
-                }});
-            });
-        });
-
-    
-    
-    </script>
-
-    <script>
-
-    </script>
+    @endif
     @endpush
 </x-page-template>

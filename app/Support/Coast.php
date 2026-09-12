@@ -62,14 +62,15 @@ final class Coast
         return 'other';
     }
 
+    /** Region chip order requested for the finder: not the board's north-to-south order. */
+    private const CHIP_ORDER = ['broward', 'miami', 'keys', 'palm', 'treasure'];
+
     /** Options for the region chips: key => label, only coasts that can have trips. */
     public static function chipOptions(): array
     {
         $out = [];
-        foreach (self::COASTS as $key => $coast) {
-            if ($key !== 'other' && $key !== 'argentina') {
-                $out[$key] = $coast['label'];
-            }
+        foreach (self::CHIP_ORDER as $key) {
+            $out[$key] = self::COASTS[$key]['label'];
         }
         return $out;
     }

@@ -30,7 +30,7 @@
                 @if(count($board['typeOptions']) > 1 || $board['filters']['type'])
                     <x-query-chips param="type" :options="$board['typeOptions']" :selected="$board['filters']['type']" all="All trips" label="Type" />
                 @endif
-                <x-query-chips param="seats" :options="['1' => 'Seats available only']" :selected="$board['filters']['seats'] ? '1' : null" all="" label="" toggle />
+                <x-query-chips param="seats" :options="['1' => 'Seats available only']" :selected="$board['filters']['seats'] ? '1' : null" all="" label="Availability:" toggle />
                 @include('pages.trips._operators')
             </div>
 
@@ -105,4 +105,40 @@
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>
     </main>
+
+    @push('js')
+    <script>
+        (function () {
+            // Remember the finder's filter chips (region/level/type/seats/op) for
+            // the session, so landing here fresh (e.g. from the bottom nav) reapplies
+            // the diver's last picks. Any URL that already carries a filter is a
+            // deliberate/shared link and is left alone; it just becomes the new memory.
+            var KEY = 'dh-trips-filters';
+            var FIELDS = ['region', 'level', 'type', 'seats', 'op'];
+            var params = new URLSearchParams(window.location.search);
+            var hasAny = FIELDS.some(function (f) { return params.has(f); });
+
+            if (!hasAny) {
+                var saved = null;
+                try { saved = sessionStorage.getItem(KEY); } catch (e) {}
+                if (saved) {
+                    var restored = false;
+                    new URLSearchParams(saved).forEach(function (v, k) {
+                        if (FIELDS.indexOf(k) !== -1) { params.set(k, v); restored = true; }
+                    });
+                    if (restored) {
+                        window.location.replace(window.location.pathname + '?' + params.toString());
+                        return;
+                    }
+                }
+            }
+
+            var current = new URLSearchParams();
+            FIELDS.forEach(function (f) {
+                if (params.has(f)) current.set(f, params.get(f));
+            });
+            try { sessionStorage.setItem(KEY, current.toString()); } catch (e) {}
+        })();
+    </script>
+    @endpush
 </x-page-template>

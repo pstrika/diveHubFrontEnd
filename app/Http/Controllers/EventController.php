@@ -8,6 +8,7 @@ use App\Models\Trip;
 use App\Models\Operator;
 use App\Models\User;
 use App\Models\Site;
+use App\Support\TripBoard;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -33,7 +34,14 @@ class EventController extends Controller
     }
 
 
-public function show($date = null) {
+    /**
+     * The personal "My Calendar" - same grid/anchor/pagination criteria as the
+     * themed calendars (App\Http\Controllers\CalendarTController), just
+     * scoped to this diver's own saved trips instead of a type filter, and
+     * with no operator legend or month-list cap (a personal saved list is
+     * small by nature, unlike a month of every Recreational trip).
+     */
+    public function show($date = null) {
         $user = User::findorFail(auth()->user()->id);
         // Make sure this user has a calendar-feed token so the subscribe URL
         // can be shown on the page (generated once, on first visit).
@@ -44,93 +52,62 @@ public function show($date = null) {
             $user->ensureCalendarToken();
             $calendarFeedUrl = route('MyCalendar.feed', ['token' => $user->calendar_token]);
         }
-        // if we didn't receive $date, we just put today's
-        if (!$date) {
-            $date = Carbon::today()->toDateString();
+
+        $today = Carbon::today();
+        $target = $date ? Carbon::parse($date) : $today->copy();
+        if ($target->lt($today)) {
+            $target = $today->copy();
         }
- 
-        $month = date('m', strtotime($date)); // Extract the month from the 'date' variable
-        $year = date('Y', strtotime($date)); // Extract the year from the 'date' variable
-       
-        $dateFrom = Carbon::parse($date)->format('Y-m-d');
-        $dateTo = Carbon::parse($date)->addWeek(6)->format('Y-m-d');
+        $monthStart = $target->copy()->startOfMonth();
+        $monthEnd = $target->copy()->endOfMonth();
+        $gridFrom = $monthStart->copy()->startOfWeek(Carbon::SUNDAY);
+        $gridTo = $monthEnd->copy()->endOfWeek(Carbon::SUNDAY);
+
         // Show, then gate (proposal F-04): guests see the calendar page with an
         // empty state instead of a login wall. The shared guest user must never
         // list events, even if some end up on user 5 by accident.
-        if ($user->isNotGuest()) {
-            $events = Event::whereBetween('date', [$dateFrom, $dateTo])
-                ->where('userId', auth()->user()->id)
-                ->whereDate('date', '>=', Carbon::today())
-                ->get()->sortBy("date");
-        } else {
-            $events = collect();
-        }
+        $events = $user->isNotGuest()
+            ? Event::whereBetween('date', [$gridFrom->toDateString(), $gridTo->toDateString()])
+                ->where('userId', $user->id)
+                ->whereDate('date', '>=', $today->toDateString())
+                ->get()->sortBy('date')
+            : collect();
 
-        Log::debug("Got " . str(count($events)) . " event for user " . $user->name);
-        $trips = [];
-        foreach($events as $event) {
+        $sites = Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get()->keyBy('id');
+        $operators = Operator::select('id', 'location', 'phone')->get()->keyBy('id')->all();
+        $now = Carbon::now();
+
+        $cards = [];
+        foreach ($events as $event) {
             $trip = Trip::tripInEvent($event);
-            if($trip) {
-                $trip->booked = $event->booked;
-                $trip->waiverSigned = $event->waiver_signed;
-                $trip->eventId = $event->id;
-                $trip->waiver = $trip->operator->waiverLink;
-                //Log::debug("waiver: " . $trip->waiver);
-                $trips[] = $trip;
+            if (!$trip) {
+                continue; // re-scraped daily; an old saved trip can age out of today's data
             }
+            $siteIds = $trip->siteId ? explode(',', $trip->siteId) : [];
+            $trip->site = array_values(array_filter(array_map(fn ($id) => $sites->get((int) trim($id)), $siteIds)));
+            $card = TripBoard::card($trip, $now, $operators);
+            $card['booked'] = (bool) $event->booked;
+            $card['eventId'] = $event->id;
+            $card['waiverSigned'] = (bool) $event->waiver_signed;
+            $card['waiver'] = $trip->operator->waiverLink ?? null;
+            $cards[] = $card;
         }
- 
-        $sites = collect(Site::select('id', 'maxDepth', 'level')->get());
-       
-        Log::debug("size of sites: " . count($sites));
-        Log::debug("Size of trips: " . count($trips));
-        /* why did I put this codde in here???!?!?!?!?!?!?
-        foreach($trips as $i => $trip) {
-            Log::debug("content of siteId: " . $trip->siteId);
-            if($trip->siteId != null) {
-                $siteIds = explode(',', $trip->siteId);
-                $relatedSites = $sites->whereIn('id', $siteIds)->all();
-                Log::debug("relatedSites: " . count($relatedSites));
-               
-                //$j=0;
-                foreach($relatedSites as $relatedSite) {
-                    Log::debug("index i,j: " . $i . ", " . $j);
-                    //$trips[$i]->site[$j]->id = $relatedSite->id;
-                    //$trips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
-                    //$trips[$i]->site[$j]->level = $relatedSite->level;
-                    //$j++;
- 
-                    $tempSite = [];
-                    $tempSite['id'] = $relatedSite->id;
-                    $tempSite['maxDepth'] = $relatedSite->maxDepth;
-                    $tempSite['level'] = $relatedSite->level;
-                   
-                   
-                }
-           
-            }
-        }
-            */
-        $dateF = Carbon::parse($date);
-       
-        // Get the next month....
-        $nextMonthS = $dateF->addMonth()->startOfMonth()->toDateString(); // Add a month
-        $thisMonth = Carbon::today()->startOfMonth();
-        $prevMonth = $dateF->sub(new \DateInterval('P2M'));
- 
-        $controlNav = "";
-        if($prevMonth < $thisMonth) {
-            $prevMonth = $thisMonth;
-            $controlNav = "disabled";
-        }
-        $prevMonthS = $prevMonth->toDateString();
- 
-        $currentMonthS = Carbon::parse($date)->format('F');
-        $year = Carbon::parse($date)->format('Y');
-        $currentDate = Carbon::parse($date)->startOfMonth()->toDateString();
- 
-       
-        return view('pages.MyCalendar', compact('trips', 'currentDate', 'currentMonthS', 'year', 'prevMonthS', 'nextMonthS', 'controlNav', 'calendarFeedUrl'));
+        usort($cards, fn ($a, $b) => [$a['date'], $a['sortKey']] <=> [$b['date'], $b['sortKey']]);
+
+        $monthCards = array_values(array_filter($cards, fn ($c) => $c['date'] >= $monthStart->toDateString() && $c['date'] <= $monthEnd->toDateString()));
+        $byDate = collect($monthCards)->groupBy('date');
+
+        return view('pages.MyCalendar', [
+            'monthLabel'   => $monthStart->format('F Y'),
+            'anchorDate'   => $target->toDateString(),
+            'today'        => $today->toDateString(),
+            'firstDayOfWeek' => (int) ($user->firstDayOfWeek ?? 0),
+            'prevDisabled' => $target->toDateString() === $today->toDateString(),
+            'byDate'       => $byDate,
+            'events'       => $cards,
+            'totalTrips'   => count($monthCards),
+            'calendarFeedUrl' => $calendarFeedUrl,
+        ]);
  
     }
 
