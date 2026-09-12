@@ -41,15 +41,27 @@ final class OperatorHealth
         3  => ['label' => 'Error',             'icon' => 'bug_report',      'tone' => 'poor'],
     ];
 
-    /** @return array{code:int|null,label:string,icon:string,tone:string} */
-    public static function status($raw): array
+    /**
+     * @param int|string|null $updatedCount operators._updatedCount for this run, when known.
+     *   A run that reports OK but added zero dives usually means the operator's site
+     *   changed shape under the scraper, not that there really were no trips - worth a
+     *   distinct warning rather than blending into the same green "OK" as every other run.
+     * @return array{code:int|null,label:string,icon:string,tone:string}
+     */
+    public static function status($raw, $updatedCount = null): array
     {
         $code = self::asInt($raw);
         if ($code !== null && isset(self::STATUSES[$code])) {
+            if ($code === 0 && $updatedCount !== null && (int) $updatedCount === 0) {
+                return ['code' => 0, 'label' => 'Warning: no dives were found', 'icon' => 'warning', 'tone' => 'wait'];
+            }
             return ['code' => $code] + self::STATUSES[$code];
         }
         return ['code' => null, 'label' => 'Unknown', 'icon' => 'help', 'tone' => 'none'];
     }
+
+    /** Each run covers 10 days, so the window takes queryMaxDaySpan/10 runs to fully cover. */
+    private const DAYS_PER_RUN = 10;
 
     /** NULL (not applicable) unless this operator paginates a multi-day window. */
     public static function runsRemainingLabel($runsRemaining, $queryMaxDaySpan): ?string
@@ -57,9 +69,12 @@ final class OperatorHealth
         if ($queryMaxDaySpan === null || $queryMaxDaySpan === '') {
             return null;
         }
-        return $runsRemaining === null || $runsRemaining === ''
-            ? 'pending'
-            : (string) ((int) $runsRemaining) . ' of ' . (string) ((int) $queryMaxDaySpan);
+        if ($runsRemaining === null || $runsRemaining === '') {
+            return 'pending';
+        }
+        $totalRuns = (int) $queryMaxDaySpan / self::DAYS_PER_RUN;
+        $totalRunsDisplay = $totalRuns == (int) $totalRuns ? (string) (int) $totalRuns : (string) round($totalRuns, 1);
+        return ((int) $runsRemaining) . ' of ' . $totalRunsDisplay;
     }
 
     /** Human sentence for a 6-field NCRONTAB expression, all times UTC. Falls back to the raw string. */

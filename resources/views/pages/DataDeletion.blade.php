@@ -1,21 +1,12 @@
-<x-page-template bodyClass='' :SEO="$SEO ?? []">
-    <!-- Navbar -->
-    <nav
-        class="navbar navbar-expand-lg position-absolute top-0 z-index-3 w-100 shadow-none my-3 navbar-transparent mt-4">
-        <x-auth.navbars.navs.guest p='' btn='btn-success' textColor='text-white' svgColor='white'>
-        </x-auth.navbars.navs.guest>
-    </nav>
-    <!-- End Navbar -->
-    <main class="main-content  mt-0">
-        <div class="page-header align-items-start min-vh-100"
-            style="background-image: url('/assets/img/diveHub-login.jpg');">
-            <span class="mask bg-gradient-dark opacity-6"></span>
-            <div class="container my-5">
-                <div class="row signin-margin">
-                    <div class="col-lg-8 col-md-12 col-12 mx-auto">
-                        <div class="card z-index-0">
-                            <div class="card-body">
-                                <h1>Data Deletion Instructions</h1>
+<x-page-template bodyClass='dh-shell bg-gray-200' :SEO="$SEO ?? []">
+    <x-shell.nav active="" />
+
+    <main class="main-content position-relative h-100 border-radius-lg">
+        <x-shell.header title="Data Deletion" />
+
+        <div class="container-fluid py-0 dh-board">
+            <section class="dh-panel dh-legal">
+                <h1>Data Deletion Instructions</h1>
                                 <p><strong>Effective Date:</strong> 09/06/2026</p>
                                 <p>This page explains how to have your data deleted from Divers Hub, including any data obtained through Facebook Login.</p>
 
@@ -36,12 +27,9 @@
 
                                 <h2>4. Questions</h2>
                                 <p>See our <a href="{{ route('PrivacyPolicy') }}">Privacy Policy</a> for more on what data we collect and why. If you have questions about this process, contact us at <a href="mailto:info@divers-hub.com">info@divers-hub.com</a>.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <x-auth.footers.guest.basic-footer textColor='text-white'></x-auth.footers.guest.basic-footer>
+            </section>
+
+            <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>
     </main>
 </x-page-template>

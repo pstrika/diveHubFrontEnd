@@ -1,125 +1,97 @@
 <x-page-template bodyClass='dh-shell bg-gray-200'>
     <x-shell.nav active="me" />
-    
-    
-    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-        <!-- Navbar -->
+
+    <main class="main-content position-relative h-100 border-radius-lg">
         <x-shell.header title="My Visited Sites" />
-        <!-- End Navbar -->
-        <div class="container-fluid py-0">
 
-            <style>
-                .modal {
-                z-index: 10050; /* Adjust this value to be higher than the sidebar's z-index */
-                }
-            </style>
-            <style>
-                #myKanban {
-                    display: flex;
-                    flex-wrap: wrap; /* Ensure boards don't wrap to the next line */
-                    width: 100%;
-                    max-height: 500px; /* Set the maximum height */
-                    overflow-y: auto; /* Enable vertical scrolling */
-                }
-               
-                .board-visited {
-                    background-color: #4caf50; /* Theme info*/
-                    border-radius: 10px;
-                    max-height: 500px; /* Set the maximum height */
-                    overflow-y: auto; /* Enable vertical scrolling */
-                    
-                }
-                .board-notvisited {
-                    background-color: #2F88EC; /* Theme info*/
-                    border-radius: 10px;
-                    max-height: 500px; /* Set the maximum height */
-                    overflow-y: auto; /* Enable vertical scrolling */
-                    
-                }
-             
-                .item-visited {
-                    background-color: #FFFFFF; /* Theme info*/
-                    border-radius: 10px;
-                    border: 2px solid #4caf50;
-                    padding: 0;
-                    
-                }
-                .item-notvisited {
-                    background-color: #FFFFFF; /* Theme info*/
-                    border-radius: 10px;
-                    border: 2px solid #2F88EC;
-                    padding: 0;
-                    
-                }
-            </style>
-           
+        <div class="container-fluid py-0 dh-board">
+            {{--
+                Retheme (2026-09-12): same dh- shell as the rest of the redesign.
+                The board itself is unchanged - jKanban + dragula, two lanes,
+                drag (or click) a site card to flip it, Submit sends the whole
+                "visited" lane's site ids to UpdateAllVisited, which replaces
+                the user's VisitedSite rows outright. Recolored to the theme's
+                good/sea tokens instead of Pablo's hardcoded green/blue, and
+                the old table-per-item markup became a flex row.
+            --}}
+            <section class="dh-panel">
+                <h2 class="dh-panel-title">Visited or not?</h2>
+                <p class="dh-note">Click or drag-and-drop a site to move it between lanes, then submit your changes.</p>
+                <form method="POST" action="{{ route('UpdateAllVisited') }}" id="boardForm">
+                    @csrf
+                    <input type="hidden" name="boardContent" id="boardContent">
+                    <button id="submitButton" class="dh-btn dh-btn-primary mb-3" type="submit" disabled>
+                        <span class="material-icons-round" aria-hidden="true">send</span>Submit changes
+                    </button>
+                </form>
 
+                <div id="myKanban"></div>
+            </section>
 
-
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/myvisitedsites.jpg');">
-                <span class="mask  bg-gradient-info  opacity-4"></span>
-            </div>
-
-            <div class="card p-0 position-relative mt-n5 mx-1 z-index-2 mb-4">
-                
-                    <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1">
-                        <div style="float: left;">
-                            <h1 class="card-title text-info mx-3 mt-0">My Visited Sites</h1>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-            <div class="row m-auto">
-                <div class="col-12">             
-                    <div class="card p-0 position-relative mt-0 mx-0 z-index-2 mb-4">
-                        
-                        <div class="card-body mt-4">
-                            <form method="POST" action="/UpdateAllVisited" id="boardForm">
-                                @csrf
-                                <input type="hidden" name="boardContent" id="boardContent">
-                                <button id="submitButton" class="btn btn-icon btn-3 btn-info mx-3" type="submit" disabled>
-                                    <span class="btn-inner--icon"><i class="material-icons">send</i></span>
-                                    <span class="btn-inner--text">Submit changes</span>
-                                </button>
-                                <p class="text-info text-sm mx-3 mt-n2"><strong>Click or drag-and-drop to move sites. When finished submit changes</strong></p>
-                            </form>
-
-                            <div id="myKanban"></div> 
-
-                        </div>
-                    </div>
-                </div>    
-            </div>
-             
-  
-            
-            
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>
     </main>
-    
-    
-    {{--<x-plugins></x-plugins>--}}
-    
+
     @push('js')
-    
+    <style>
+        #myKanban { display: flex; flex-wrap: wrap; width: 100%; max-height: 600px; overflow-y: auto; }
+        .board-visited { background: var(--dh-good-bg); color: var(--dh-good); border-radius: 10px 10px 0 0; }
+        .board-notvisited { background: var(--dh-foam); color: var(--dh-sea); border-radius: 10px 10px 0 0; }
+        .kanban-board { background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 10px; max-height: 600px; overflow-y: auto; }
+        .kanban-board-header { font-weight: 700; padding: 10px 14px; }
+        .item-visited, .item-notvisited { background: var(--dh-paper); border-radius: var(--dh-radius); border: 1.5px solid; padding: 0; margin-bottom: 8px; cursor: pointer; }
+        .item-visited { border-color: var(--dh-good); }
+        .item-notvisited { border-color: var(--dh-sea); }
+        .dh-visited-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; }
+        .dh-visited-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+        .dh-visited-main strong { font-size: .88rem; color: var(--dh-ink); }
+        .dh-visited-main small { font-size: .75rem; color: var(--dh-muted); }
+        .dh-visited-level { width: 22px; height: 22px; flex: 0 0 auto; }
+    </style>
+
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     <!-- Kanban scripts -->
     <script src="{{ asset('assets') }}/js/plugins/dragula/dragula.min.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/jkanban/jkanban.js"></script>
-    
+
     <script>
         <?php
             $sitesArray = $sites->toArray();
             $visitedCount = count(array_filter($sitesArray, function($site) {
                 return $site['visited'] == 1;
             }));
-            
+
             $notVisitedCount = count(array_filter($sitesArray, function($site) {
                 return $site['visited'] == 0;
             }));
+
+            // New SVG site-type icons (2026-09-11), recolored to the theme color
+            // instead of the old fixed-color PNGs; one lookup per type, not per site.
+            $typeIconHtml = function ($type) {
+                static $cache = [];
+                if (!isset($cache[$type])) {
+                    $svg = \App\Support\IconSvg::themed('assets/img/icons/' . $type . '_icon.svg');
+                    if ($svg) {
+                        // This HTML ends up inside a JS single-quoted string (jKanban's
+                        // item title), so a raw newline from the SVG file breaks the
+                        // whole script - collapse it to one line first.
+                        $svg = preg_replace('/<\?xml.*?\?>/s', '', $svg);
+                        $svg = preg_replace('/\s+/', ' ', trim($svg));
+                    }
+                    $cache[$type] = $svg
+                        ? '<span class="dh-site-type-icon" style="width:26px;height:26px">' . $svg . '</span>'
+                        : '<img class="img-fluid" src="' . asset('assets') . '/img/icons/' . $type . '_icon.png" width="26" height="26">';
+                }
+                return $cache[$type];
+            };
+
+            $siteRowHtml = function ($site) use ($typeIconHtml) {
+                return '<div class="dh-visited-item">'
+                    . $typeIconHtml($site->type)
+                    . '<span class="dh-visited-main"><strong>' . addslashes($site->name) . '</strong><small>' . ucwords($site->locationLong->location) . '</small></span>'
+                    . '<img class="dh-visited-level" src="' . asset('assets') . '/img/icons/icons_level_' . $site->level . '.png">'
+                    . '</div>';
+            };
         ?>
 
         var KanbanTest = new jKanban({
@@ -131,32 +103,27 @@
             boards: [
                 {
                     id: '_visited',
-                    title: '<span class="text-white">Visited already <label id="visitedLabel" class="text-white">({{ $visitedCount }})</label></span>',
+                    title: 'Visited already <label id="visitedLabel">({{ $visitedCount }})</label>',
                     class: 'board-visited',
                     item: [
-                        
                         <?php
                         foreach($sites as $site)
                             if($site->visited) {
                                 echo "{";
                                 echo "id: '" . $site->id . "',";
-                                //echo "title: '<span class=\"text-secondary\">" . addslashes($site->name) . "</span>',";
-                                //echo "title: '<span class=\"text-info\">" . addslashes($site->name) . "<img class=\"img-fluid float-right\" src=\"" . asset('assets') . "/img/icons/icons_level_" . $site->level . ".png\"" . "</span>',";
-                                echo "title: '<table class=\"table table-responsive mb-0\"><tbody><tr><td class=\"w-15 align-middle\"><img class=\"img-fluid\" src=\"" . asset('assets') . "/img/icons/" . $site->type . "_icon.png\"></td><td class=\"align-middle text-center\"><p class=\"mb-0 text-success text-center text-wrap\"><strong>" . addslashes($site->name) . "</strong><br><small>" . ucwords($site->locationLong->location) . "</small></p></td><td class=\"w-15 align-middle\"><img class=\"img-fluid\" src=\"" . asset('assets') . "/img/icons/icons_level_" . $site->level .".png\" style=\"width: 60%; height: auto;\"></td></tr></tbody></table>',";
+                                echo "title: '" . $siteRowHtml($site) . "',";
                                 echo "class: ['item-visited'],";
                                 echo "click: function(el) {
-                                    console.log(el.className);
                                     moveItem(el, '_notvisited');
                                 }";
                                 echo "},";
-                                
                             }
                         ?>
                     ]
                 },
                 {
                     id: '_notvisited',
-                    title: '<span class="text-white">Not visited yet <label id="notVisitedLabel" class="text-white">({{ $notVisitedCount }})</label></span>',
+                    title: 'Not visited yet <label id="notVisitedLabel">({{ $notVisitedCount }})</label>',
                     class: 'board-notvisited',
                     item: [
                         <?php
@@ -164,17 +131,12 @@
                             if(!$site->visited) {
                                 echo "{";
                                 echo "id: '" . $site->id . "',";
-                                //echo "title: '<span class=\"text-secondary\">" . addslashes($site->name) . "</span>',";
-                                //echo "title: '<span class=\"text-info\">" . addslashes($site->name) . "<img class=\"img-fluid float-right\" src=\"" . asset('assets') . "/img/icons/icons_level_" . $site->level . ".png\"" . "</span>',";
-                                //echo "title: '<table class=\"table table-responsive mb-0\"><tbody><tr><td class=\"w-15 align-middle\"><img class=\"img-fluid\" src=\"" . asset('assets') . "/img/icons/" . $site->type . "_icon.png\"></td><td class=\"align-middle text-center\"><p class=\"mb-0 text-info text-center text-wrap\"><strong>" . addslashes($site->name) . "</strong></p></td><td class=\"w-15 align-middle\"><img class=\"img-fluid\" src=\"" . asset('assets') . "/img/icons/icons_level_" . $site->level .".png\" style=\"width: 60%; height: auto;\"></td></tr></tbody></table>',";
-                                echo "title: '<table class=\"table table-responsive mb-0\"><tbody><tr><td class=\"w-15 align-middle\"><img class=\"img-fluid\" src=\"" . asset('assets') . "/img/icons/" . $site->type . "_icon.png\"></td><td class=\"align-middle text-center\"><p class=\"mb-0 text-info text-center text-wrap\"><strong>" . addslashes($site->name) . "</strong><br><small>" . ucwords($site->locationLong->location) . "</small></p></td><td class=\"w-15 align-middle\"><img class=\"img-fluid\" src=\"" . asset('assets') . "/img/icons/icons_level_" . $site->level .".png\" style=\"width: 60%; height: auto;\"></td></tr></tbody></table>',";
+                                echo "title: '" . $siteRowHtml($site) . "',";
                                 echo "class: ['item-notvisited'],";
                                 echo "click: function(el) {
-                                    console.log(el.className);
                                     moveItem(el, '_visited');
                                 }";
                                 echo "},";
-                                
                             }
                         ?>
                     ]
@@ -191,19 +153,17 @@
 
         function moveItem(el, targetBoardId) {
             var currentBoardId = el.parentElement.parentElement.dataset.id;
-            var targetBoard = KanbanTest.findBoard(targetBoardId);
             var itemClass = Array.from(el.classList);
             var itemId = el.dataset.eid;
             document.getElementById('submitButton').removeAttribute('disabled');
             KanbanTest.removeElement(el.dataset.eid);
-            KanbanTest.addElement(targetBoardId, { 
+            KanbanTest.addElement(targetBoardId, {
                 id: itemId,
-                title: el.innerHTML, 
+                title: el.innerHTML,
                 class: itemClass,
-                click: function(el) { 
-                    console.log(el.className);
-                    moveItem(el, currentBoardId); 
-                } 
+                click: function(el) {
+                    moveItem(el, currentBoardId);
+                }
             });
             updateCounts();
         }
@@ -212,63 +172,36 @@
             var visitedItems = document.querySelectorAll('#myKanban .kanban-board[data-id="_visited"] .kanban-item.item-visited').length + document.querySelectorAll('#myKanban .kanban-board[data-id="_visited"] .kanban-item.item-notvisited').length;
             var notVisitedItems = document.querySelectorAll('#myKanban .kanban-board[data-id="_notvisited"] .kanban-item.item-notvisited').length + document.querySelectorAll('#myKanban .kanban-board[data-id="_notvisited"] .kanban-item.item-visited').length;
 
-            console.log('Visited Items:', visitedItems);
-            console.log('Not Visited Items:', notVisitedItems);
-
             document.getElementById('visitedLabel').innerText = "(" + visitedItems + ")";
             document.getElementById('notVisitedLabel').innerText = "(" + notVisitedItems + ")";
         }
-
     </script>
 
-<script>
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM fully loaded and parsed'); // Debugging step
-
             function gatherBoardContent() {
                 var board = document.querySelector('.kanban-board .board-visited');
                 if (!board) {
-                    console.error('No board with class "board-visited" found'); // Debugging step
                     return [];
                 }
-
-                console.log('Found board:', board); // Debugging step
-
-                // Select the kanban-drag element within the board
                 var dragArea = board.closest('.kanban-board').querySelector('.kanban-drag');
                 if (!dragArea) {
-                    console.error('No drag area found within the board'); // Debugging step
                     return [];
                 }
-
-                // Select items within the drag area
                 var items = dragArea.querySelectorAll('.kanban-item');
-                console.log('Found items:', items); // Debugging step
-
                 var itemIds = [];
                 items.forEach(function(item) {
                     itemIds.push(item.dataset.eid);
                 });
-
                 return itemIds;
             }
 
-            // Set the board content before submitting the form
             document.getElementById('boardForm').addEventListener('submit', function(event) {
-                event.preventDefault(); // Prevent the default form submission
-                console.log('Form submission prevented'); // Debugging step
-                var boardContent = gatherBoardContent();
-                console.log('Board content:', boardContent); // Debugging step
-                document.getElementById('boardContent').value = JSON.stringify(boardContent);
-                console.log('Hidden input value set'); // Debugging step
-
-                // Now manually submit the form
+                event.preventDefault();
+                document.getElementById('boardContent').value = JSON.stringify(gatherBoardContent());
                 this.submit();
             });
-
-            console.log('Event listener added to form'); // Debugging step
         });
     </script>
-    
     @endpush
 </x-page-template>

@@ -170,9 +170,61 @@ class OperatorController extends Controller
         }
 
     public function showHealth() {
-        $operators = Operator::whereNotNull('_ver')->get()->sortBy('operatorName');
-        $notScrapping = Operator::whereNull('_ver')->get()->sortBy('operatorName');
-        $weatherLocations = WeatherLocation::all();
-        return view('pages.PlatformHealth', compact('operators', 'weatherLocations', 'notScrapping'));
+        // Deco Divers is a dead operator - excluded from the health page (table and
+        // summary alarms both) rather than left showing permanent, meaningless errors.
+        $operators = Operator::whereNotNull('_ver')->where('operatorName', '!=', 'Deco Divers')->get()->sortBy('operatorName');
+        $notScrapping = Operator::whereNull('_ver')->where('operatorName', '!=', 'Deco Divers')->get()->sortBy('operatorName');
+        // Argentina locations are out of scope for this platform for now.
+        $weatherLocations = WeatherLocation::whereNotIn('short', \App\Support\Coast::all()['argentina']['codes'])->get();
+
+        // Top-of-page summary (2026-09-11): a glance at the whole crawler fleet
+        // before scrolling into the per-operator tables below.
+        $now = Carbon::now('UTC');
+        $running = 0; $waiting = 0; $okRecent = 0; $errored = 0;
+        $erroredOperators = [];
+        foreach ($operators as $operator) {
+            $status = \App\Support\OperatorHealth::status($operator->_status, $operator->_updatedCount);
+            switch ($status['code']) {
+                case -1:
+                    $running++;
+                    break;
+                case -2:
+                    $waiting++;
+                    break;
+                case 0:
+                    if (Carbon::parse((string) $operator->_lastUpdate, 'UTC')->gte($now->copy()->subDay())) {
+                        $okRecent++;
+                    }
+                    break;
+                case 1:
+                case 2:
+                case 3:
+                    $errored++;
+                    $erroredOperators[] = $operator->operatorName;
+                    break;
+            }
+        }
+
+        $wxTotal = $weatherLocations->count();
+        $wxOkRecent = $weatherLocations->filter(function ($loc) use ($now) {
+            if ((string) $loc->_status !== '1') {
+                return false;
+            }
+            return Carbon::parse((string) $loc->_lastUpdated, 'UTC')->gte($now->copy()->subHour());
+        })->count();
+
+        $summary = [
+            'running'          => $running,
+            'waiting'          => $waiting,
+            'okRecent'         => $okRecent,
+            'errored'          => $errored,
+            'erroredOperators' => $erroredOperators,
+            'notScrapping'     => $notScrapping->count(),
+            'wxOkRecent'       => $wxOkRecent,
+            'wxTotal'          => $wxTotal,
+            'wxPercent'        => $wxTotal > 0 ? round($wxOkRecent / $wxTotal * 100) : 0,
+        ];
+
+        return view('pages.PlatformHealth', compact('operators', 'weatherLocations', 'notScrapping', 'summary'));
     }
 }

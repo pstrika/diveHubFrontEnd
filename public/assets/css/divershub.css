@@ -255,7 +255,10 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
    uppercase label anchored to its own fixed padding rather than the
    cards' left edge; now uses --dh-content-x like the cards and the
    Me-tab rows below them. */
-.dh-pagehead-title { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--dh-ink); }
+.dh-pagehead-title { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--dh-ink); display: flex; align-items: center; gap: 10px; }
+.dh-pagehead-icon { display: inline-flex; width: 26px; height: 26px; color: var(--dh-sea); flex: 0 0 auto; }
+.dh-pagehead-icon svg { width: 100%; height: 100%; }
+.dh-pagehead-icon.is-font { width: auto; height: auto; font-size: 24px; }
 .dh-pagehead-guest { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--dh-sea); text-decoration: none; }
 .dh-pagehead-guest .material-icons-round { font-size: 18px; }
 .dh-pagehead-guest:hover { text-decoration: underline; color: var(--dh-deep); }
@@ -272,10 +275,10 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
   /* "More" arrow added by divershub.js when a row overflows. The wrapper is
      position: relative so the arrow sits on the row's right edge. */
   .dh-chip-scroll { position: relative; min-width: 0; }
-  .dh-chip-scroll .dive-filter-chips { padding-right: 40px; }
-  .dh-chip-more { position: absolute; top: 0; bottom: 2px; width: 40px; border: 0; padding: 0; display: flex; align-items: center; color: var(--dh-deep); cursor: pointer; }
-  .dh-chip-more-right { right: 0; justify-content: flex-end; background: linear-gradient(to right, rgba(243,244,246,0), var(--dh-sand) 45%); }
-  .dh-chip-more-left { left: 0; justify-content: flex-start; background: linear-gradient(to left, rgba(243,244,246,0), var(--dh-sand) 45%); }
+  .dh-chip-scroll .dive-filter-chips { padding-right: 48px; }
+  .dh-chip-more { position: absolute; top: 0; bottom: 2px; width: 48px; border: 0; padding: 0; display: flex; align-items: center; color: var(--dh-deep); cursor: pointer; }
+  .dh-chip-more-right { right: 0; justify-content: flex-end; background: linear-gradient(to right, rgba(243,244,246,0), var(--dh-sand) 22%); }
+  .dh-chip-more-left { left: 0; justify-content: flex-start; background: linear-gradient(to left, rgba(243,244,246,0), var(--dh-sand) 22%); }
   .dh-chip-more .material-icons-round { font-size: 22px; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 50%; box-shadow: 0 1px 3px rgba(11,42,58,.15); }
   .dh-chip-more[hidden] { display: none; }
   .dive-filter-chips::-webkit-scrollbar { display: none; }
@@ -305,6 +308,24 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-btn-primary:hover { background: var(--dh-deep); border-color: var(--dh-deep); color: #fff; }
 .dh-btn-ghost-dark { background: #fff; color: var(--dh-ink); border-color: var(--dh-line); }
 .dh-btn-ghost-dark:hover { border-color: var(--dh-ink); color: var(--dh-ink); }
+.dh-btn-danger { background: var(--dh-poor); color: #fff; border-color: var(--dh-poor); }
+.dh-btn-danger:hover { background: var(--dh-poor); border-color: var(--dh-poor); filter: brightness(.92); color: #fff; }
+.dh-btn[disabled] { opacity: .5; pointer-events: none; cursor: default; }
+.dh-link-danger { border: 0; background: none; padding: 0; color: var(--dh-poor); font-weight: 600; font-size: .85rem; text-decoration: underline; cursor: pointer; }
+.dh-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border: 0; background: none; padding: 0; color: var(--dh-muted); cursor: pointer; vertical-align: middle; }
+.dh-icon-btn:hover { color: var(--dh-ink); }
+.dh-icon-btn .material-icons-round { font-size: 18px; }
+
+/* Notifications inbox. */
+.dh-msg-list { display: flex; flex-direction: column; }
+.dh-msg-row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--dh-line); }
+.dh-msg-row:last-child { border-bottom: 0; }
+.dh-msg-icon { color: var(--dh-muted); flex: 0 0 auto; }
+.dh-msg-row.is-unread .dh-msg-icon { color: var(--dh-sea); }
+.dh-msg-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; color: inherit; text-decoration: none; }
+.dh-msg-subject { font-size: .9rem; color: var(--dh-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dh-msg-row.is-unread .dh-msg-subject { font-weight: 700; }
+.dh-msg-meta { font-size: .75rem; color: var(--dh-muted); margin-top: 2px; }
 
 /* Region group. */
 .dh-region { margin-bottom: var(--dh-space-6); }
@@ -357,6 +378,63 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 
 .dh-empty { text-align: center; padding: var(--dh-space-6); color: var(--dh-muted); }
 .dh-empty .material-icons-round { font-size: 40px; color: var(--dh-shallow); }
+
+/* Groups (MyGroups, retheme 2026-09-11). */
+.dh-groups-toolbar { display: flex; justify-content: flex-end; margin: var(--dh-space-3) 0; }
+.dh-invite-list { list-style: none; margin: 0; padding: 0; }
+.dh-invite-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--dh-line); flex-wrap: wrap; }
+.dh-invite-row:last-child { border-bottom: 0; }
+.dh-invite-actions { display: flex; gap: 8px; }
+.dh-group-list { list-style: none; margin: 0; padding: 0; }
+.dh-group-row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid #eef1f3; text-decoration: none; color: var(--dh-ink); }
+.dh-group-list li:last-child .dh-group-row { border-bottom: 0; }
+.dh-group-row:hover { background: var(--dh-foam); color: var(--dh-ink); }
+.dh-group-avatar { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; flex: 0 0 auto; background: var(--dh-sea); color: #fff; display: flex; align-items: center; justify-content: center; }
+.dh-group-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dh-group-info { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.dh-group-name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dh-group-meta { font-size: .8rem; color: var(--dh-muted); }
+.dh-group-avatars { flex: 0 0 auto; }
+.dh-group-arrow { color: var(--dh-muted); flex: 0 0 auto; }
+@media (max-width: 480px) { .dh-group-avatars { display: none; } }
+.dh-group-hero { position: relative; height: 180px; border-radius: var(--dh-radius); background-size: cover; background-position: center; background-color: var(--dh-foam); margin-top: var(--dh-space-3); }
+.dh-group-hero-btn { position: absolute; top: 12px; right: 12px; }
+.dh-group-facts { display: flex; flex-wrap: wrap; gap: var(--dh-space-4); justify-content: space-between; align-items: center; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 14px; padding: var(--dh-space-4) var(--dh-space-6); margin: var(--dh-space-3) 0; }
+.dh-group-facts-main { display: flex; align-items: center; gap: var(--dh-space-3); flex: 1 1 320px; min-width: 0; }
+.dh-group-facts-avatar { flex: 0 0 auto; width: 64px; height: 64px; border-radius: 50%; overflow: hidden; display: block; border: 3px solid var(--dh-sea); }
+.dh-group-facts-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.dh-group-facts-title { font-size: 1.3rem; font-weight: 800; color: var(--dh-ink); margin: 0; }
+.dh-group-facts-meta { color: var(--dh-muted); margin: 2px 0 0; font-size: .88rem; }
+.dh-group-facts-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.dh-group-facts-actions .dh-btn { box-sizing: border-box; }
+
+/* Group chat, WhatsApp style (2026-09-11): own messages right-aligned in the
+   theme's sea blue, everyone else's left-aligned in a neutral bubble. */
+.dh-chat-row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 12px; }
+.dh-chat-row.is-mine { flex-direction: row-reverse; }
+.dh-chat-avatar { flex: 0 0 auto; }
+.dh-chat-bubble-wrap { display: flex; flex-direction: column; max-width: 75%; min-width: 0; }
+.dh-chat-row.is-mine .dh-chat-bubble-wrap { align-items: flex-end; }
+.dh-chat-meta { font-size: .7rem; color: var(--dh-muted); }
+.dh-chat-bubble { background: var(--dh-foam); border-radius: 14px 14px 14px 4px; padding: 8px 12px; margin-top: 2px; }
+.dh-chat-row.is-mine .dh-chat-bubble { background: var(--dh-sea); color: #fff; border-radius: 14px 14px 4px 14px; }
+.dh-chat-text { font-size: .88rem; overflow-wrap: break-word; }
+.dh-chat-time { margin-top: 2px; }
+.dh-form-error { background: var(--dh-poor-bg); color: var(--dh-poor); border-radius: var(--dh-radius); padding: 12px 16px; margin-bottom: var(--dh-space-3); font-size: .88rem; }
+.dh-form-error ul { padding-left: 18px; }
+.dh-fb-page-list { display: flex; flex-direction: column; gap: 8px; }
+.dh-fb-page-option { display: flex; align-items: center; gap: 10px; border: 1px solid var(--dh-line); border-radius: var(--dh-radius); padding: 10px 14px; cursor: pointer; transition: background-color .15s ease, color .15s ease, border-color .15s ease; }
+.dh-fb-page-option:hover { border-color: var(--dh-sea); }
+.dh-fb-page-option.is-selected { background: var(--dh-sea); color: #fff; border-color: var(--dh-sea); }
+.dh-fb-page-radio { accent-color: var(--dh-sea); width: 18px; height: 18px; flex: 0 0 auto; }
+.dh-panel-divider { border: 0; border-top: 1px solid var(--dh-line); margin: var(--dh-space-3) 0; }
+.dh-fb-post { display: flex; gap: 10px; padding-bottom: var(--dh-space-3); margin-bottom: var(--dh-space-3); border-bottom: 1px solid var(--dh-line); }
+.dh-fb-post:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
+.dh-fb-post-img { width: 70px; height: 70px; object-fit: cover; border-radius: var(--dh-radius); flex: 0 0 auto; }
+.dh-fb-post-body { min-width: 0; }
+.dh-fb-post-text { font-size: .88rem; margin: 0 0 4px; overflow-wrap: break-word; }
+.dh-fb-post-time { font-size: .76rem; color: var(--dh-muted); margin: 0 0 4px; }
+.dh-fb-post-link { font-size: .76rem; color: var(--dh-sea); font-weight: 700; text-decoration: none; }
 
 @media (max-width: 575.98px) {
   .dh-trip { grid-template-columns: 52px minmax(0, 1fr); }
@@ -502,12 +580,36 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-health-pill.is-run  { background: var(--dh-foam); color: var(--dh-sea); }
 .dh-health-pill.is-poor { background: var(--dh-poor-bg); color: var(--dh-poor); }
 .dh-health-pill.is-none { background: var(--dh-line); color: var(--dh-muted); }
+
+/* Operators scraping / not scraping / Weather API are <details> now, collapsed by
+   default under the summary dashboard above them. */
+details.dh-card > summary.dh-card-head { cursor: pointer; list-style: none; justify-content: flex-start; }
+details.dh-card > summary.dh-card-head::-webkit-details-marker { display: none; }
+details.dh-card > summary.dh-card-head::after { content: 'expand_more'; font-family: 'Material Icons Round'; font-size: 20px; color: var(--dh-muted); margin-left: auto; }
+details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
+
+/* Platform Health "at a glance" summary. */
+.dh-health-stats { display: flex; flex-wrap: wrap; gap: 10px; }
+.dh-health-stat { flex: 1 1 120px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 10px; border-radius: var(--dh-radius); background: var(--dh-sand); }
+.dh-health-stat .material-icons-round { font-size: 22px; }
+.dh-health-stat-n { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+.dh-health-stat-label { font-size: .75rem; color: var(--dh-muted); text-align: center; }
+.dh-health-stat.is-run { color: var(--dh-sea); }
+.dh-health-stat.is-good { color: var(--dh-good); }
+.dh-health-stat.is-wait { color: var(--dh-avg); }
+.dh-health-stat.is-poor { color: var(--dh-poor); }
+.dh-health-stat.is-none { color: var(--dh-muted); }
+.dh-health-stat .dh-health-stat-n { color: var(--dh-ink); }
+.dh-health-errored { display: flex; align-items: flex-start; gap: 6px; margin: 14px 0 0; padding: 10px 12px; background: var(--dh-poor-bg); color: var(--dh-poor); border-radius: var(--dh-radius); font-size: .85rem; }
+.dh-health-errored .material-icons-round { font-size: 18px; flex: 0 0 auto; margin-top: 1px; }
+.dh-health-wx-summary { display: flex; align-items: flex-start; gap: 6px; margin: 10px 0 0; font-size: .85rem; color: var(--dh-muted); }
+.dh-health-wx-summary .material-icons-round { font-size: 18px; flex: 0 0 auto; margin-top: 1px; color: var(--dh-sea); }
 .dh-site-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .dh-site-chips .chip img { vertical-align: -3px; margin-right: 2px; }
 .dh-site-facts-side { display: flex; flex-direction: column; align-items: flex-end; gap: var(--dh-space-3); }
 .dh-site-rating { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-.dh-site-actions { display: flex; gap: var(--dh-space-2); flex-wrap: wrap; }
-.dh-site-actions .material-icons-round { font-size: 18px; }
+.dh-page-actions { display: flex; gap: var(--dh-space-2); flex-wrap: wrap; }
+.dh-page-actions .material-icons-round { font-size: 18px; }
 .dh-dived-toggle input[type="checkbox"] { position: absolute; opacity: 0; pointer-events: none; }
 .dh-dived-toggle label { cursor: pointer; }
 .dh-dived-toggle .is-on { background: var(--dh-good-bg); border-color: var(--dh-good); color: var(--dh-good); }
@@ -577,12 +679,31 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-operator-logo { width: 56px; height: 56px; object-fit: contain; border-radius: 10px; border: 1px solid var(--dh-line); background: #fff; }
 .dh-operator-name { font-weight: 800; color: var(--dh-ink); text-decoration: none; font-size: 1.05rem; }
 .dh-operator-name:hover { color: var(--dh-sea); }
+
+/* Online waivers grid. */
+.dh-waiver-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--dh-space-3); }
+.dh-waiver-card { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: var(--dh-space-3); border: 1px solid var(--dh-line); border-radius: var(--dh-radius); text-decoration: none; text-align: center; }
+.dh-waiver-card:hover { border-color: var(--dh-sea); background: var(--dh-foam); }
+.dh-waiver-logo { width: 64px; height: 64px; object-fit: contain; border-radius: 10px; background: #fff; }
+.dh-waiver-name { font-size: .85rem; font-weight: 700; color: var(--dh-ink); }
+
+/* Legal pages: Terms of Use, Privacy Policy, Data Deletion. */
+.dh-legal h1 { font-size: 1.4rem; font-weight: 800; color: var(--dh-ink); margin: 0 0 var(--dh-space-2); }
+.dh-legal h2 { font-size: 1.05rem; font-weight: 700; color: var(--dh-ink); margin: var(--dh-space-4) 0 var(--dh-space-2); }
+.dh-legal p, .dh-legal ul { font-size: .9rem; color: var(--dh-ink); line-height: 1.6; margin: 0 0 var(--dh-space-2); }
+.dh-legal a { color: var(--dh-sea); }
+
+/* "Me" drawer header: avatar next to the diver's name, when they have one. */
+.dh-drawer-user { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.dh-drawer-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--dh-sea); flex: 0 0 auto; }
+.dh-drawer-avatar-initials { display: inline-flex; align-items: center; justify-content: center; background: var(--dh-sea); color: #fff; font-weight: 700; font-size: .8rem; }
 .dh-panel-subtitle { font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--dh-muted); font-weight: 700; margin: var(--dh-space-3) 0 6px; }
 .dh-fills { display: flex; flex-wrap: wrap; gap: 6px; }
 .dh-fills .chip { display: inline-flex; align-items: center; gap: 2px; }
 .dh-fills .material-icons-round { font-size: 14px; }
 .chip-yes { color: var(--dh-good); border-color: var(--dh-good); background: var(--dh-good-bg); }
 .chip-no { color: var(--dh-muted); opacity: .7; }
+.chip-poor { color: var(--dh-poor); border-color: var(--dh-poor); background: var(--dh-poor-bg); }
 @media (max-width: 575.98px) { .dh-boat { grid-template-columns: 1fr; } }
 
 /* ------------------------------------------------------------------ */
@@ -719,6 +840,31 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-day-title .dh-region-count { font-weight: 600; color: var(--dh-muted); font-size: .85rem; }
 .dh-day-title .dh-why { margin-left: auto; }
 .dh-more-link { display: inline-block; margin: 4px 0 0; font-size: .85rem; font-weight: 700; color: var(--dh-sea); text-decoration: none; }
+
+/* Themed calendars (Recreational/Technical/Wreck/Shark/Lobster): a real month grid above the day-by-day trip list. */
+.dh-calendar-panel { padding: var(--dh-space-3); }
+.dh-calendar-panel .fc { font-family: var(--dh-font); }
+.dh-calendar-panel .fc-daygrid-day-number, .dh-calendar-panel .fc-col-header-cell-cushion { color: var(--dh-ink); }
+.dh-calendar-panel .fc-day-today { background: var(--dh-foam) !important; }
+.dh-calendar-panel .fc-event { border: 0; font-size: .72rem; padding: 1px 4px; cursor: pointer; }
+/* Pills are colored per operator (inline, set in the events array); departed trips just dim, availability stays a trip-card detail below. */
+.fc .dh-tripfc-departed { opacity: .45; }
+.dh-calendar-panel .fc-daygrid-more-link { color: var(--dh-sea); font-weight: 700; }
+.dh-calendar-panel .fc-popover { border-radius: var(--dh-radius); border-color: var(--dh-line); overflow: hidden; }
+.dh-calendar-panel .fc-popover-header { background: var(--dh-sand); }
+
+.dh-cal-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 4px 2px; border-top: 1px solid var(--dh-line); margin-top: 12px; }
+.dh-cal-legend-label { font-size: .8rem; font-weight: 700; color: var(--dh-muted); }
+.dh-cal-legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--dh-ink); }
+.dh-cal-legend-swatch { width: 11px; height: 11px; border-radius: 3px; flex: 0 0 auto; }
+
+/* Shark/Lobster "About" card: a collapsible intro carried over from the old front end. */
+.dh-about-card { margin-bottom: var(--dh-space-3); }
+.dh-about-body { display: flex; flex-wrap: wrap; gap: var(--dh-space-3); padding: var(--dh-space-3) 4px 4px; }
+.dh-about-img { width: 220px; max-width: 100%; height: auto; border-radius: var(--dh-radius); object-fit: cover; flex: 0 0 auto; }
+.dh-about-text { flex: 1 1 260px; min-width: 0; font-size: .88rem; color: var(--dh-ink); line-height: 1.5; }
+.dh-about-text p { margin: 0 0 10px; }
+.dh-about-text p:last-child { margin-bottom: 0; }
 
 /* Trip finder: operator picker (a details element, works without JavaScript). */
 .dh-ops { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
@@ -875,8 +1021,8 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-seg-btn { border: 0; background: transparent; padding: 7px 14px; border-radius: var(--dh-radius-pill); font-weight: 700; font-size: .85rem; color: var(--dh-deep); cursor: pointer; }
 .dh-seg-btn.is-active { background: #fff; color: var(--dh-sea); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 .dh-cal-key { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: middle; margin-right: 4px; }
-.dh-cal-key.is-booked, .fc .dh-fc-booked { background: #0f7b3f; border-color: #0f7b3f; color: #fff; }
-.dh-cal-key.is-open, .fc .dh-fc-open { background: #c0392b; border-color: #c0392b; color: #fff; }
+.dh-cal-key.is-booked { background: #0f7b3f; }
+.dh-cal-key.is-open { background: #c0392b; }
 .dh-subscribe { margin-top: 16px; padding: 14px; border-radius: 14px; background: var(--dh-foam); }
 .dh-subscribe-text { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; font-size: .85rem; color: var(--dh-deep); }
 .dh-subscribe-text strong { display: inline-flex; align-items: center; gap: 6px; font-size: .95rem; }
@@ -1088,6 +1234,22 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-wx-arrow { margin-left: auto; }
 .dh-wx-explain { margin: 10px 0 0; text-align: center; font-size: .76rem; }
 .dh-wx-explain a { color: var(--dh-sea); font-weight: 700; text-decoration: none; }
+
+.dh-beach-sky { display: flex; align-items: center; gap: 4px; font-size: .8rem; color: var(--dh-muted); margin: 2px 0 0; }
+.dh-beach-sky img { flex: 0 0 auto; }
+.dh-beach-below-top { margin-top: var(--dh-space-6); }
+
+/* Beach Diving: tide strip (shore diving is usually best around high tide, so this is
+   promoted out of the "Tides and daylight" details panel the forecast page tucks it in). */
+.dh-beach-tides { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--dh-line); }
+.dh-beach-next-tide { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--dh-ink); margin: 0 0 8px; font-size: .92rem; }
+.dh-beach-next-tide .material-icons-round { color: var(--dh-sea); font-size: 20px; }
+.dh-beach-tide-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.dh-beach-tide { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: var(--dh-radius-pill); font-size: .8rem; background: var(--dh-foam); color: var(--dh-muted); }
+.dh-beach-tide.is-high { background: var(--dh-good-bg); color: var(--dh-good); }
+.dh-beach-tide.is-next { outline: 2px solid var(--dh-sea); outline-offset: 1px; font-weight: 700; }
+
+.dh-beach-map { width: 100%; height: 420px; border-radius: var(--dh-radius); background: var(--dh-sand); overflow: hidden; }
 
 .dh-wx-ch { font-size: .95rem; font-weight: 800; padding: 13px 15px; margin: 0; border-bottom: 1px solid var(--dh-line); display: flex; align-items: center; justify-content: space-between; }
 /* Was a blanket "span" selector, which also caught the outer title span

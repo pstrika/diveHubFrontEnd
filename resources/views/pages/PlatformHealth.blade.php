@@ -15,8 +15,53 @@
                 this view stays a straight read of it - see that class's
                 docblock for the rollout caveat on _status.
             --}}
-            <section class="dh-card">
-                <h2 class="dh-card-head">Operators scraping <span class="dh-region-count">{{ count($operators) }}</span></h2>
+            <section class="dh-card dh-health-summary">
+                <h2 class="dh-card-head">At a glance</h2>
+                <div class="dh-card-body">
+                    <div class="dh-health-stats">
+                        <div class="dh-health-stat is-run">
+                            <span class="material-icons-round" aria-hidden="true">autorenew</span>
+                            <span class="dh-health-stat-n">{{ $summary['running'] }}</span>
+                            <span class="dh-health-stat-label">Running now</span>
+                        </div>
+                        <div class="dh-health-stat is-good">
+                            <span class="material-icons-round" aria-hidden="true">check_circle</span>
+                            <span class="dh-health-stat-n">{{ $summary['okRecent'] }}</span>
+                            <span class="dh-health-stat-label">Ran OK, last 24h</span>
+                        </div>
+                        <div class="dh-health-stat is-wait">
+                            <span class="material-icons-round" aria-hidden="true">pause_circle</span>
+                            <span class="dh-health-stat-n">{{ $summary['waiting'] }}</span>
+                            <span class="dh-health-stat-label">Waiting</span>
+                        </div>
+                        <div class="dh-health-stat is-poor">
+                            <span class="material-icons-round" aria-hidden="true">bug_report</span>
+                            <span class="dh-health-stat-n">{{ $summary['errored'] }}</span>
+                            <span class="dh-health-stat-label">Errors</span>
+                        </div>
+                        <div class="dh-health-stat is-none">
+                            <span class="material-icons-round" aria-hidden="true">cloud_off</span>
+                            <span class="dh-health-stat-n">{{ $summary['notScrapping'] }}</span>
+                            <span class="dh-health-stat-label">Not scraping</span>
+                        </div>
+                    </div>
+
+                    @if(count($summary['erroredOperators']))
+                        <p class="dh-health-errored">
+                            <span class="material-icons-round" aria-hidden="true">error</span>
+                            Errors: {{ implode(', ', $summary['erroredOperators']) }}
+                        </p>
+                    @endif
+
+                    <p class="dh-health-wx-summary">
+                        <span class="material-icons-round" aria-hidden="true">cloud</span>
+                        Weather API: {{ $summary['wxPercent'] }}% of locations ({{ $summary['wxOkRecent'] }} of {{ $summary['wxTotal'] }}) updated OK in the last hour.
+                    </p>
+                </div>
+            </section>
+
+            <details class="dh-card">
+                <summary class="dh-card-head">Operators scraping <span class="dh-region-count">{{ count($operators) }}</span></summary>
                 <div class="dh-card-body dh-health-table-wrap">
                     <table class="dh-health-table">
                         <thead>
@@ -43,7 +88,7 @@
                                         . ((int) $interval->format('%h') ? $interval->format('%h hrs ') : '')
                                         . ((int) $interval->format('%i') ? $interval->format('%i min') : '')
                                     );
-                                    $status = \App\Support\OperatorHealth::status($operator->_status);
+                                    $status = \App\Support\OperatorHealth::status($operator->_status, $operator->_updatedCount);
                                     $runsRemaining = \App\Support\OperatorHealth::runsRemainingLabel($operator->_runsRemaining, $operator->queryMaxDaySpan);
                                     $schedule = \App\Support\OperatorHealth::cronLabel($operator->_cron);
                                 @endphp
@@ -66,10 +111,10 @@
                         </tbody>
                     </table>
                 </div>
-            </section>
+            </details>
 
-            <section class="dh-card">
-                <h2 class="dh-card-head">Operators not scraping <span class="dh-region-count">{{ count($notScrapping) }}</span></h2>
+            <details class="dh-card">
+                <summary class="dh-card-head">Operators not scraping <span class="dh-region-count">{{ count($notScrapping) }}</span></summary>
                 <div class="dh-card-body dh-health-table-wrap">
                     <table class="dh-health-table">
                         <thead>
@@ -90,10 +135,10 @@
                         </tbody>
                     </table>
                 </div>
-            </section>
+            </details>
 
-            <section class="dh-card">
-                <h2 class="dh-card-head">Weather API <span class="dh-region-count">{{ count($weatherLocations) }}</span></h2>
+            <details class="dh-card">
+                <summary class="dh-card-head">Weather API <span class="dh-region-count">{{ count($weatherLocations) }}</span></summary>
                 <div class="dh-card-body dh-health-table-wrap">
                     <table class="dh-health-table">
                         <thead>
@@ -132,7 +177,7 @@
                         </tbody>
                     </table>
                 </div>
-            </section>
+            </details>
 
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>

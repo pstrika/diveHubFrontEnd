@@ -1,47 +1,29 @@
 <x-page-template bodyClass='dh-shell bg-gray-200' :SEO="['robots' => 'noindex, nofollow']">
     <x-shell.nav active="groups" />
 
-    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+    <main class="main-content position-relative h-100 border-radius-lg">
         <x-shell.header title="Connect a Facebook Page" />
-        <div class="container-fluid py-0">
+        <div class="container-fluid py-0 dh-board">
 
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('{{ asset('assets') }}/img/illustrations/beach_diving.webp');">
-                <span class="mask bg-gradient-info opacity-4"></span>
-            </div>
-
-            <div class="row">
-                <div class="col-md-8 mx-auto">
-                    <div class="card p-0 position-relative mt-n5 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info py-3 pe-1 border-radius-xl">
-                                <h2 class="card-title text-white mx-4">Which Facebook Page?</h2>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <p class="text-secondary">You manage more than one Facebook Page - pick the one to connect to <b>{{ $group->name }}</b>.</p>
-                            <form method="POST" action="{{ route('Groups.facebook.pickPage', ['group' => $group->slug]) }}">
-                                @csrf
-                                <div class="list-group mb-3">
-                                    @foreach($pages as $page)
-                                        <label class="list-group-item d-flex align-items-center fb-page-option {{ $loop->first ? 'fb-page-option-selected' : '' }}">
-                                            <input class="form-check-input me-2 fb-page-radio" type="radio" name="page_id" value="{{ $page['id'] }}" {{ $loop->first ? 'checked' : '' }} onchange="document.querySelectorAll('.fb-page-option').forEach(function(el){el.classList.remove('fb-page-option-selected');}); this.closest('.fb-page-option').classList.add('fb-page-option-selected');">
-                                            {{ $page['name'] }}
-                                        </label>
-                                    @endforeach
-                                </div>
-                                <button type="submit" class="btn bg-gradient-info">Connect this Page</button>
-                                <a href="{{ route('Groups.show', ['group' => $group->slug]) }}" class="btn bg-gradient-secondary">Cancel</a>
-                            </form>
-
-                            <style>
-                                .fb-page-radio { accent-color: #1a73e8; }
-                                .fb-page-option { cursor: pointer; border-color: #dee2e6; transition: background-color .15s ease, color .15s ease; }
-                                .fb-page-option-selected { background-color: #1a73e8; color: #fff; border-color: #1a73e8; }
-                            </style>
-                        </div>
+            <section class="dh-panel">
+                <h2 class="dh-panel-title">Which Facebook Page?</h2>
+                <p class="text-muted">You manage more than one Facebook Page - pick the one to connect to <b>{{ $group->name }}</b>.</p>
+                <form method="POST" action="{{ route('Groups.facebook.pickPage', ['group' => $group->slug]) }}">
+                    @csrf
+                    <div class="dh-fb-page-list mb-3">
+                        @foreach($pages as $page)
+                            <label class="dh-fb-page-option {{ $loop->first ? 'is-selected' : '' }}">
+                                <input class="dh-fb-page-radio" type="radio" name="page_id" value="{{ $page['id'] }}" {{ $loop->first ? 'checked' : '' }} onchange="document.querySelectorAll('.dh-fb-page-option').forEach(function(el){el.classList.remove('is-selected');}); this.closest('.dh-fb-page-option').classList.add('is-selected');">
+                                {{ $page['name'] }}
+                            </label>
+                        @endforeach
                     </div>
-                </div>
-            </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="dh-btn dh-btn-primary">Connect this Page</button>
+                        <a href="{{ route('Groups.show', ['group' => $group->slug]) }}" class="dh-btn dh-btn-ghost-dark">Cancel</a>
+                    </div>
+                </form>
+            </section>
 
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>

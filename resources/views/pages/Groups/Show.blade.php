@@ -19,7 +19,7 @@
                         @csrf
                         <input type="hidden" name="email" id="inviteByEmailInput">
                         <p class="text-xs text-secondary mb-2">No Divers Hub account found for <b id="inviteByEmailAddress"></b>.</p>
-                        <button type="submit" class="btn btn-sm bg-gradient-info mb-0">Invite by email</button>
+                        <button type="submit" class="dh-btn dh-btn-primary">Invite by email</button>
                     </form>
                 </div>
             </div>
@@ -62,7 +62,7 @@
                     <p class="text-xs text-secondary mb-0">Tip: dragging directly from the macOS Photos app doesn't always work — drag from Finder instead, or click the box above to browse.</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn bg-gradient-info" id="customizeSaveBtn">Save</button>
+                    <button type="button" class="dh-btn dh-btn-primary" id="customizeSaveBtn">Save</button>
                 </div>
             </div>
         </div>
@@ -105,7 +105,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn bg-gradient-info">Save Settings</button>
+                        <button type="submit" class="dh-btn dh-btn-primary">Save Settings</button>
                     </div>
                 </form>
 
@@ -113,7 +113,7 @@
                     <label class="form-label mb-0">Facebook</label>
                     @if($group->isFacebookConnected())
                         <p class="text-sm mb-2">
-                            <i class="material-icons text-success text-sm align-middle">check_circle</i>
+                            <i class="material-icons-round text-success text-sm align-middle">check_circle</i>
                             Connected to <b>{{ $group->fb_page_name }}</b>.
                         </p>
                         <form method="POST" action="{{ route('Groups.facebook.toggleAutoPost', ['group' => $group->slug]) }}" class="form-check form-switch mb-2">
@@ -123,7 +123,7 @@
                         </form>
                         <form method="POST" action="{{ route('Groups.facebook.disconnect', ['group' => $group->slug]) }}" onsubmit="return confirm('Disconnect this Facebook Page? New dives will stop posting there.');">
                             @csrf
-                            <button type="submit" class="btn btn-sm bg-gradient-secondary mb-0">Disconnect</button>
+                            <button type="submit" class="dh-btn dh-btn-ghost-dark">Disconnect</button>
                         </form>
                     @else
                         <p class="text-xs text-secondary mt-n1">Use the "Connect FB Page" button at the top of this page to link a Facebook Page.</p>
@@ -149,21 +149,21 @@
                             <form method="GET" action="{{ route('Groups.show', ['group' => $group->slug]) }}">
                                 <label class="form-label">Pick a date</label>
                                 <input type="date" name="add_dive_date" id="addDiveDateInput" class="form-control border" value="{{ $addDiveDate }}" min="{{ now()->toDateString() }}">
-                                <button type="submit" class="btn btn-sm bg-gradient-info mt-2">Search by date</button>
+                                <button type="submit" class="dh-btn dh-btn-primary mt-2">Search by date</button>
                             </form>
                         </div>
                         <div class="col-6">
                             <form method="GET" action="{{ route('Groups.show', ['group' => $group->slug]) }}">
                                 <label class="form-label">Search by dive site</label>
                                 <input type="text" name="add_dive_site" class="form-control border" placeholder="e.g. Vandenberg" value="{{ $addDiveSite }}">
-                                <button type="submit" class="btn btn-sm bg-gradient-info mt-2">Search by site</button>
+                                <button type="submit" class="dh-btn dh-btn-primary mt-2">Search by site</button>
                             </form>
                         </div>
                     </div>
 
                     <div class="d-flex justify-content-end my-2">
-                        <button type="button" class="btn btn-sm bg-gradient-secondary mb-0" id="openCustomDiveBtn">
-                            <i class="material-icons text-sm align-middle">add</i> Add a Custom Dive
+                        <button type="button" class="dh-btn dh-btn-ghost-dark" id="openCustomDiveBtn">
+                            <i class="material-icons-round text-sm align-middle">add</i> Add a Custom Dive
                         </button>
                     </div>
 
@@ -182,12 +182,12 @@
                                             </td>
                                             <td class="align-middle text-end">
                                                 @if($trip->alreadyInThisGroup)
-                                                    <span class="badge bg-secondary">Already added</span>
+                                                    <span class="chip chip-static">Already added</span>
                                                 @else
                                                     <form method="POST" action="{{ route('Groups.dives.store', ['group' => $group->slug]) }}">
                                                         @csrf
                                                         <input type="hidden" name="tripId" value="{{ $trip->id }}">
-                                                        <button type="submit" class="btn btn-sm bg-gradient-info">Add</button>
+                                                        <button type="submit" class="dh-btn dh-btn-primary">Add</button>
                                                     </form>
                                                 @endif
                                             </td>
@@ -250,7 +250,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn bg-gradient-info">Add Custom Dive</button>
+                        <button type="submit" class="dh-btn dh-btn-primary">Add Custom Dive</button>
                     </div>
                 </form>
             </div>
@@ -262,7 +262,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title font-weight-normal"><i class="material-icons align-middle">event_available</i> Subscribe to this group's calendar</h5>
+                    <h5 class="modal-title font-weight-normal"><i class="material-icons-round align-middle">event_available</i> Subscribe to this group's calendar</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -274,8 +274,8 @@
                     <div class="d-flex align-items-center flex-wrap gap-2">
                         <input type="text" id="calendarFeedUrl" class="form-control border w-auto flex-grow-1"
                                value="{{ $calendarFeedUrl }}" readonly onclick="this.select();" style="min-width: 200px;">
-                        <button type="button" class="btn btn-info mb-0" onclick="copyCalendarFeedUrl()">
-                            <i class="material-icons align-middle">content_copy</i> Copy
+                        <button type="button" class="dh-btn dh-btn-primary" onclick="copyCalendarFeedUrl()">
+                            <i class="material-icons-round align-middle">content_copy</i> Copy
                         </button>
                     </div>
                 </div>
@@ -296,7 +296,7 @@
                     <p class="text-xs text-secondary mb-0 mt-2">Tip: dragging directly from the macOS Photos app doesn't always work — drag from Finder instead, or click the box above to browse.</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn bg-gradient-info" data-bs-dismiss="modal">Done</button>
+                    <button type="button" class="dh-btn dh-btn-primary" data-bs-dismiss="modal">Done</button>
                 </div>
             </div>
         </div>
@@ -332,66 +332,65 @@
     </div>
 
         <x-shell.header title="{{ $group->name }}" />
-        <div class="container-fluid py-0">
+        <div class="container-fluid py-0 dh-board">
 
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('{{ $group->banner ? asset('assets/' . $group->banner) : asset('assets') . '/img/illustrations/beach_diving.webp' }}');">
-                <span class="mask bg-gradient-info opacity-4"></span>
+            <div class="dh-group-hero" style="background-image: url('{{ $group->banner ? asset('assets/' . $group->banner) : asset('assets') . '/img/illustrations/beach_diving.webp' }}');">
                 @if($isAdmin)
-                    <button type="button" class="btn btn-sm bg-white text-info position-absolute" style="top: 12px; right: 12px;" data-bs-toggle="modal" data-bs-target="#modalCustomize">
-                        <i class="material-icons text-sm align-middle">photo_camera</i> Customize
+                    <button type="button" class="dh-btn dh-btn-ghost-dark dh-group-hero-btn" data-bs-toggle="modal" data-bs-target="#modalCustomize">
+                        <span class="material-icons-round" aria-hidden="true">photo_camera</span>Customize
                     </button>
                 @endif
             </div>
 
-            <div class="card p-0 position-relative mt-n5 mx-3 z-index-2 mb-4">
-                <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1 clearfix">
-                    <div style="float: left;" class="d-flex align-items-center">
-                        @if($group->avatar)
-                            <a href="javascript:;" data-bs-toggle="modal" data-bs-target="#modalCallingCardFull">
-                                <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}" class="avatar avatar-xl rounded-circle shadow border-info mx-3" style="object-fit: cover; border-width: 3px; border-style: solid; cursor: pointer;">
-                            </a>
-                        @endif
-                        <div>
-                            <h1 class="card-title text-info mx-3 mt-0 mb-0">
-                                {{ $group->name }}
-                                @if($isAdmin)
-                                    <i class="material-icons text-sm text-secondary ms-1" style="cursor: pointer; vertical-align: middle;" data-bs-toggle="modal" data-bs-target="#modalEditGroupInfo" title="Edit name/description">edit</i>
-                                @endif
-                            </h1>
-                            <p class="text-secondary mx-3 mt-n2">{{ $members->count() }} members @if($group->description) — {{ $group->description }} @endif</p>
-                        </div>
-                    </div>
-                    <div style="float: right;" class="mx-3">
-                        @if(auth()->user()->isAdmin())
-                            @if($group->isFacebookConnected())
-                                <span class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalGroupSettings">
-                                    <i class="fa-brands fa-facebook align-middle me-1"></i> Connected: {{ $group->fb_page_name }}
-                                </span>
-                            @else
-                                <a href="{{ route('Groups.facebook.connect', ['group' => $group->slug]) }}" class="btn bg-gradient-info">
-                                    <i class="fa-brands fa-facebook align-middle me-1"></i> Connect FB Page
-                                </a>
+            <section class="dh-group-facts">
+                <div class="dh-group-facts-main">
+                    @if($group->avatar)
+                        <a href="javascript:;" data-bs-toggle="modal" data-bs-target="#modalCallingCardFull" class="dh-group-facts-avatar">
+                            <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}">
+                        </a>
+                    @endif
+                    <div>
+                        <h1 class="dh-group-facts-title">
+                            {{ $group->name }}
+                            @if($isAdmin)
+                                <button type="button" class="dh-icon-btn" data-bs-toggle="modal" data-bs-target="#modalEditGroupInfo" title="Edit name/description">
+                                    <span class="material-icons-round" aria-hidden="true">edit</span>
+                                </button>
                             @endif
-                        @else
-                            <span class="btn btn-secondary" style="opacity: 0.6; cursor: not-allowed;" data-bs-toggle="tooltip" title="Coming soon">
-                                <i class="fa-brands fa-facebook align-middle me-1"></i> Connect FB Page
-                            </span>
-                        @endif
-                        @if($isAdmin)
-                        <button type="button" class="btn bg-gradient-secondary" data-bs-toggle="modal" data-bs-target="#modalGroupSettings">
-                            <i class="material-icons text-sm align-middle me-1">settings</i> Settings
-                        </button>
-                        <form method="POST" action="{{ route('Groups.destroy', ['group' => $group->slug]) }}" class="d-inline"
-                            onsubmit="return confirm('Delete &quot;{{ $group->name }}&quot; permanently? This removes all dives, RSVPs and chat history for every member. This cannot be undone.');">
-                            @csrf
-                            <button type="submit" class="btn bg-gradient-danger">
-                                <i class="material-icons text-sm align-middle me-1">delete</i> Delete Group
-                            </button>
-                        </form>
-                        @endif
+                        </h1>
+                        <p class="dh-group-facts-meta">{{ $members->count() }} members @if($group->description) &middot; {{ $group->description }} @endif</p>
                     </div>
                 </div>
-            </div>
+                <div class="dh-group-facts-actions">
+                    @if(auth()->user()->isAdmin())
+                        @if($group->isFacebookConnected())
+                            <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-toggle="modal" data-bs-target="#modalGroupSettings">
+                                <i class="fa-brands fa-facebook" aria-hidden="true"></i>Connected: {{ $group->fb_page_name }}
+                            </button>
+                        @else
+                            <a href="{{ route('Groups.facebook.connect', ['group' => $group->slug]) }}" class="dh-btn dh-btn-primary">
+                                <i class="fa-brands fa-facebook" aria-hidden="true"></i>Connect FB Page
+                            </a>
+                        @endif
+                    @else
+                        <span class="dh-btn dh-btn-ghost-dark" style="opacity: 0.6; cursor: not-allowed;" data-bs-toggle="tooltip" title="Coming soon">
+                            <i class="fa-brands fa-facebook" aria-hidden="true"></i>Connect FB Page
+                        </span>
+                    @endif
+                    @if($isAdmin)
+                    <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-toggle="modal" data-bs-target="#modalGroupSettings">
+                        <span class="material-icons-round" aria-hidden="true">settings</span>Settings
+                    </button>
+                    <form method="POST" action="{{ route('Groups.destroy', ['group' => $group->slug]) }}" class="d-inline"
+                        onsubmit="return confirm('Delete &quot;{{ $group->name }}&quot; permanently? This removes all dives, RSVPs and chat history for every member. This cannot be undone.');">
+                        @csrf
+                        <button type="submit" class="dh-btn dh-btn-danger">
+                            <span class="material-icons-round" aria-hidden="true">delete</span>Delete group
+                        </button>
+                    </form>
+                    @endif
+                </div>
+            </section>
 
             {{--full-size calling card modal--}}
             @if($group->avatar)
@@ -427,7 +426,7 @@
                                 </div>
                             </div>
                             <div class="modal-footer">
-                                <button type="submit" class="btn bg-gradient-info">Save</button>
+                                <button type="submit" class="dh-btn dh-btn-primary">Save</button>
                             </div>
                         </form>
                     </div>
@@ -444,40 +443,34 @@
             <div class="row">
                 {{-- Members --}}
                 <div class="col-md-6">
-                    <div class="card mt-3 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1 d-flex justify-content-between align-items-center">
-                                <h2 class="card-title text-white mx-4 mb-0">Members</h2>
-                                @if($isAdmin)
-                                    <button type="button" class="btn btn-sm bg-white text-info me-3 mb-0" data-bs-toggle="modal" data-bs-target="#modalInvite">
-                                        <i class="material-icons text-sm align-middle">person_add</i> Invite
-                                    </button>
-                                @endif
-                            </div>
+                    <section class="dh-panel">
+                        <div class="dh-panel-head-row">
+                            <h2 class="dh-panel-title mb-0">Members</h2>
+                            @if($isAdmin)
+                                <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-toggle="modal" data-bs-target="#modalInvite">
+                                    <span class="material-icons-round" aria-hidden="true">person_add</span>Invite
+                                </button>
+                            @endif
                         </div>
-                        <div class="card-body p-3" style="max-height: 350px; overflow-y: scroll">
+                        <div style="max-height: 350px; overflow-y: auto;">
                             <ul class="list-group">
                                 @foreach($members as $member)
                                     <li class="list-group-item border-0 d-flex justify-content-between align-items-center px-0">
                                         <span class="d-flex align-items-center">
                                             <div class="avatar avatar-sm me-2 position-relative">
-                                                @if($member->user->picture)
-                                                    <img src="{{ asset('assets') }}/img/users/{{ $member->user->picture }}" alt="profile_image" class="w-100 rounded-circle shadow-sm">
-                                                @else
-                                                    <img src="{{ asset('assets') }}/img/default-avatar.png" alt="profile_image" class="w-100 rounded-circle shadow-sm" style="background: black;">
-                                                @endif
+                                                <img src="{{ \App\Support\UserAvatar::url($member->user->picture) }}" alt="profile_image" class="w-100 rounded-circle shadow-sm">
                                                 <span class="position-absolute border border-white rounded-circle {{ $member->user->isOnline() ? 'bg-success' : 'bg-secondary' }}" style="width: 10px; height: 10px; bottom: 0; right: 0;" data-bs-toggle="tooltip" title="{{ $member->user->isOnline() ? 'Online' : 'Offline' }}"></span>
                                             </div>
                                             {{ $member->user->name }}
                                             @if($member->user->certLevel !== null)
                                                 <img src="{{ asset('assets') }}/img/icons/icons_level_{{ $member->user->certLevel }}.png" height="18" class="ms-1" data-bs-toggle="tooltip" title="Certification level {{ $member->user->certLevel }}">
                                             @endif
-                                            @if($member->role == 'admin') <span class="badge badge-sm bg-gradient-info ms-1">admin</span> @endif
+                                            @if($member->role == 'admin') <span class="chip chip-static ms-1">admin</span> @endif
                                         </span>
                                         @if($isAdmin && $member->user_id != auth()->user()->id)
                                             <form method="POST" action="{{ route('Groups.removeMember', ['group' => $group->slug, 'member' => $member->id]) }}" onsubmit="return confirm('Remove this member?');">
                                                 @csrf
-                                                <button type="submit" class="btn btn-link text-danger p-0 text-sm">remove</button>
+                                                <button type="submit" class="dh-link-danger">remove</button>
                                             </form>
                                         @endif
                                     </li>
@@ -486,24 +479,20 @@
                                     <li class="list-group-item border-0 d-flex justify-content-between align-items-center px-0">
                                         <span class="d-flex align-items-center">
                                             <div class="avatar avatar-sm me-2">
-                                                @if($member->user && $member->user->picture)
-                                                    <img src="{{ asset('assets') }}/img/users/{{ $member->user->picture }}" alt="profile_image" class="w-100 rounded-circle shadow-sm">
-                                                @else
-                                                    <img src="{{ asset('assets') }}/img/default-avatar.png" alt="profile_image" class="w-100 rounded-circle shadow-sm" style="background: black;">
-                                                @endif
+                                                <img src="{{ \App\Support\UserAvatar::url($member->user->picture ?? null) }}" alt="profile_image" class="w-100 rounded-circle shadow-sm">
                                             </div>
                                             <span class="text-secondary">{{ $member->user->name ?? $member->invited_email }}</span>
-                                            <span class="badge badge-sm bg-gradient-secondary ms-1">{{ $member->user ? 'waiting RSVP' : 'invited by email' }}</span>
+                                            <span class="chip chip-static ms-1">{{ $member->user ? 'waiting RSVP' : 'invited by email' }}</span>
                                         </span>
                                         <form method="POST" action="{{ route('Groups.removeMember', ['group' => $group->slug, 'member' => $member->id]) }}" onsubmit="return confirm('Cancel this invitation?');">
                                             @csrf
-                                            <button type="submit" class="btn btn-link text-danger p-0 text-sm">cancel invite</button>
+                                            <button type="submit" class="dh-link-danger">cancel invite</button>
                                         </form>
                                     </li>
                                 @endforeach
                             </ul>
                         </div>
-                    </div>
+                    </section>
                 </div>
 
                 <div class="col-md-6">
@@ -533,19 +522,16 @@
             {{-- Full Calendar --}}
             <div class="row">
                 <div class="col-md-12">
-                    <div class="card mt-3 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1 d-flex justify-content-between align-items-center">
-                                <h2 class="card-title text-white mx-4 mb-0">Full Calendar</h2>
-                                <button type="button" class="btn btn-sm bg-white text-info me-3 mb-0" data-bs-toggle="modal" data-bs-target="#modalSubscribeIcs">
-                                    <i class="material-icons text-sm align-middle">event</i> Subscribe
-                                </button>
-                            </div>
+                    <section class="dh-panel">
+                        <div class="dh-panel-head-row">
+                            <h2 class="dh-panel-title mb-0">Full calendar</h2>
+                            <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-toggle="modal" data-bs-target="#modalSubscribeIcs">
+                                <span class="material-icons-round" aria-hidden="true">event</span>Subscribe
+                            </button>
                         </div>
-                        <div class="card-body p-3">
-                            <div class="calendar" id="groupFullCalendar"></div>
-                        </div>
-                    </div>
+                        <p class="text-xs text-secondary mb-2"><span class="dh-cal-key is-booked"></span> you're going &nbsp; <span class="dh-cal-key is-open"></span> not going yet</p>
+                        <div class="calendar" id="groupFullCalendar"></div>
+                    </section>
                 </div>
             </div>
 
@@ -580,10 +566,10 @@
                                 '{{ csrf_field() }}' +
                                 '<input type="hidden" name="user_id" value="' + u.id + '">' +
                                 '<span class="d-flex align-items-center">' +
-                                    '<div class="avatar avatar-sm me-2"><img src="' + avatarSrc + '" alt="profile_image" class="w-100 rounded-circle shadow-sm"></div>' +
+                                    '<div class="avatar avatar-sm me-2"><img src="' + avatarSrc + '" alt="profile_image" class="w-100 rounded-circle shadow-sm" onerror="this.onerror=null;this.src=\'{{ asset('assets') }}/img/default-avatar.png\';"></div>' +
                                     u.name + ' <span class="text-secondary text-xs ms-1">' + u.email + '</span>' +
                                 '</span>' +
-                                '<button type="submit" class="btn btn-sm bg-gradient-info mb-0">Invite</button>' +
+                                '<button type="submit" class="dh-btn dh-btn-primary">Invite</button>' +
                                 '</form>';
                         }).join('') || '<p class="text-secondary mb-0 mt-2">No matching users found.</p>';
 
@@ -601,6 +587,7 @@
     @endif
 
     <script src="{{ asset('assets') }}/js/plugins/fullcalendar.min.js"></script>
+    <script src="{{ asset('assets') }}/js/divershub-calendar.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     <script src="{{ asset('assets') }}/js/plugins/dropzone.min.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/heic2any.min.js"></script>
@@ -884,9 +871,7 @@
                     @foreach($dive->rsvps as $rsvp)
                     {
                         name: {!! json_encode($rsvp->user->name) !!},
-                        picture: {!! json_encode($rsvp->user->picture
-                            ? asset('assets') . '/img/users/' . $rsvp->user->picture
-                            : asset('assets') . '/img/default-avatar.png') !!}
+                        picture: {!! json_encode(\App\Support\UserAvatar::url($rsvp->user->picture)) !!}
                     },
                     @endforeach
                 ]
@@ -918,15 +903,15 @@
 
             var footerEl = document.getElementById('diveDetailsFooter');
             var csrf = '{{ csrf_token() }}';
-            var viewTripBtn = dive.tripUrl ? '<a href="' + dive.tripUrl + '" class="btn bg-gradient-secondary mb-0">View trip</a>' : '';
+            var viewTripBtn = dive.tripUrl ? '<a href="' + dive.tripUrl + '" class="dh-btn dh-btn-ghost-dark">View trip</a>' : '';
             var rsvpBtn = dive.isGoing
-                ? '<form method="POST" action="' + dive.leaveUrl + '"><input type="hidden" name="_token" value="' + csrf + '"><button type="submit" class="btn bg-gradient-secondary mb-0">Leave</button></form>'
-                : '<form method="POST" action="' + dive.joinUrl + '"><input type="hidden" name="_token" value="' + csrf + '"><button type="submit" class="btn bg-gradient-success mb-0">I\'m going</button></form>';
+                ? '<form method="POST" action="' + dive.leaveUrl + '"><input type="hidden" name="_token" value="' + csrf + '"><button type="submit" class="dh-btn dh-btn-ghost-dark">Leave</button></form>'
+                : '<form method="POST" action="' + dive.joinUrl + '"><input type="hidden" name="_token" value="' + csrf + '"><button type="submit" class="dh-btn dh-btn-primary">I\'m going</button></form>';
             @if($isAdmin)
             var deleteBtn = dive.attendees.length === 0
                 ? '<form method="POST" action="' + dive.deleteUrl + '" onsubmit="return confirm(\'Remove this dive from the group calendar entirely?\');">' +
                     '<input type="hidden" name="_token" value="' + csrf + '"><input type="hidden" name="_method" value="DELETE">' +
-                    '<button type="submit" class="btn btn-outline-danger mb-0">Remove dive</button></form>'
+                    '<button type="submit" class="dh-btn dh-btn-danger">Remove dive</button></form>'
                 : '<span class="text-xs text-secondary align-self-center me-2" data-bs-toggle="tooltip" title="Can\'t remove while people are going - ask them to leave first">Remove dive (unavailable)</span>';
             @else
             var deleteBtn = '';
@@ -936,10 +921,9 @@
             new bootstrap.Modal(document.getElementById('modalDiveDetails')).show();
         }
 
-        var groupCalendarIsMobile = window.innerWidth < 768;
-
         var groupFullCalendar = new FullCalendar.Calendar(document.getElementById('groupFullCalendar'), {
-            initialView: groupCalendarIsMobile ? 'listMonth' : 'dayGridMonth',
+            initialView: getResponsiveView(),
+            windowResize: function () { groupFullCalendar.changeView(getResponsiveView()); },
             firstDay: {{ (int) (auth()->user()->firstDayOfWeek ?? 0) }}, // guests and new accounts have no preference; a bare value broke the script
             contentHeight: 'auto',
             headerToolbar: {
@@ -963,22 +947,13 @@
                     title: {!! json_encode($dive->tripName) !!},
                     start: {!! json_encode(\Carbon\Carbon::parse($dive->date)->format('Y-m-d') . ' ' . ($dive->time ?: '00:00')) !!},
                     extendedProps: { diveId: {{ $dive->id }} },
-                    className: '{{ $dive->isGoing(auth()->user()->id) ? "bg-gradient-success" : "bg-gradient-danger" }} text-white'
+                    color: '{{ $dive->isGoing(auth()->user()->id) ? "#0f7b3f" : "#c0392b" }}'
                 },
                 @endforeach
-            ]
+            ],
+            views: dhResponsiveViews
         });
         groupFullCalendar.render();
-
-        window.addEventListener('resize', function () {
-            var isMobile = window.innerWidth < 768;
-            if (isMobile && groupFullCalendar.view.type !== 'listMonth') {
-                groupFullCalendar.changeView('listMonth');
-            }
-            if (!isMobile && groupFullCalendar.view.type !== 'dayGridMonth') {
-                groupFullCalendar.changeView('dayGridMonth');
-            }
-        });
 
         @if($addDiveDate || $addDiveSite)
         document.addEventListener('DOMContentLoaded', function () {
