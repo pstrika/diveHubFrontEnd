@@ -269,12 +269,33 @@
             var actions = document.getElementById('dh-admin-thread-actions');
             actions.innerHTML = '';
             if (!data.hasAccount) {
-                var inviteBtn = document.createElement('button');
-                inviteBtn.type = 'button';
-                inviteBtn.className = 'dh-btn dh-btn-ghost-dark';
-                inviteBtn.innerHTML = '<span class="material-icons-round" aria-hidden="true">person_add</span> Send registration invite';
-                inviteBtn.addEventListener('click', function () { dhSendInvite(data.contact); });
-                actions.appendChild(inviteBtn);
+                // A contact is either a phone number or an email address,
+                // never both, so the invite can only go out on channels
+                // that actually reach it - SMS/WhatsApp for a phone, email
+                // for an address (Pablo, 2026-09-14: "give the option to
+                // choose through SMS/WhatsApp or mail").
+                var isEmailContact = data.contact.indexOf('@') !== -1;
+                var inviteChannels = isEmailContact ? ['email'] : ['sms', 'whatsapp'];
+                var inviteLabels = { sms: 'SMS', whatsapp: 'WhatsApp', email: 'Email' };
+
+                var wrap = document.createElement('div');
+                wrap.className = 'dh-thread-invite';
+                var label = document.createElement('span');
+                label.className = 'dh-thread-invite-label';
+                label.textContent = 'Send registration invite:';
+                wrap.appendChild(label);
+
+                inviteChannels.forEach(function (ch) {
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'dh-channel-chip is-active is-' + ch;
+                    var icon = ch === 'whatsapp' ? DH_WHATSAPP_SVG : '<span class="material-icons-round" aria-hidden="true">' + (ch === 'email' ? 'mail' : 'sms') + '</span>';
+                    btn.innerHTML = icon + ' ' + inviteLabels[ch];
+                    btn.addEventListener('click', function () { dhSendInvite(data.contact, ch); });
+                    wrap.appendChild(btn);
+                });
+
+                actions.appendChild(wrap);
             }
 
             var body = document.getElementById('dh-admin-thread-body');
@@ -351,8 +372,7 @@
             }
         });
 
-        function dhSendInvite(contact) {
-            var channel = contact.indexOf('@') !== -1 ? 'email' : 'sms';
+        function dhSendInvite(contact, channel) {
             dhPostJson('{{ route("admin.messages.invite") }}', { channel: channel, contact: contact })
                 .then(function (res) {
                     if (res.json.success) {
