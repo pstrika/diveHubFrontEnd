@@ -10,6 +10,45 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.7.0 — 2026-09-14
+
+Deployed: commit `1a3d40f`. **New migration - already run tonight against
+the shared database (same server local dev and the redesign slot both
+point at), but run by hand again if this ever targets a different
+database:** `2026_09_14_040000_create_conversation_messages_table.php`.
+
+### Admin Message Management
+- New console (Admin menu -> Message management): every SMS/WhatsApp/
+  email exchanged with a diver, one thread per contact, reply through the
+  same channel or start a brand new conversation. Email is outbound-only -
+  there's no inbound email webhook (a Mailgun DNS/routing project of its
+  own).
+- The inbound SMS/WhatsApp webhook is built and route-ready
+  (`/webhooks/twilio/inbound`) but **not yet connected** - the Twilio
+  number's current SMS webhook already points at an existing Twilio
+  Studio/Function handler that may be doing STOP/HELP opt-out compliance
+  or something else important, so it wasn't safe to just point it
+  elsewhere without checking first. Needs a decision on how the two
+  should coexist before real inbound messages reach this console.
+- "Chat with us": a small floating button on every page opens a
+  dismissible modal that starts a real SMS/WhatsApp thread - it logs the
+  message and texts back a confirmation, which is what actually opens a
+  two-way conversation (a reply from there is just a normal text). A
+  WhatsApp confirmation can fail silently for a brand-new contact - Meta's
+  free-form 24h window is based on their last message to us, which
+  doesn't exist yet for a first-ever web contact.
+
+### Notifications: mention-aware Inbox routing
+- General group notifications (invites, chat, new dives, dive reminders)
+  go to the Groups folder; whoever is personally @-mentioned in a chat
+  message gets that specific notification in their Inbox instead - a
+  direct ping reads as personal, not general group chatter. Applied going
+  forward and backfilled tonight for everyone's history: 172 historical
+  notifications across 4 groups correctly re-sorted into Groups (matched
+  by subject = the group's exact name); 0 qualified for the mention
+  exception, since @mentions weren't a feature before tonight, so no
+  existing chat text uses that syntax.
+
 ## 10.6.0 — 2026-09-14
 
 Deployed: commit `81374d4`. **New migration - run by hand on the redesign
