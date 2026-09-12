@@ -10,6 +10,84 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.4.0 — 2026-09-13
+
+Deployed: commits `1bc52e3`, `eb780b7`, `103e931`, `b255846`, `aaca8ee`.
+
+### Small fixes
+- Contact email switched from info@ to support@divers-hub.com everywhere
+  it's shown to a diver (Terms of Use, Privacy Policy, Data Deletion,
+  About Us, the liveaboard inquiry cc).
+- Footer's "Contact" link removed - it pointed at About Us anyway, not a
+  real Contact page, and nothing else in the app links there.
+- **Found the actual cause of "some pages start with more padding than
+  others."** The page container's own padding-top is every page's whole
+  top gap, but several first-on-the-page components (the Weather/Beach
+  Diving verdict card, the Dive Sites/Operators explorer header, Trip
+  Details' summary strip, Platform Health's summary card, each calendar's
+  "about" panel, the welcome wizard) also carry their own margin-top,
+  meant to space repeated instances of themselves apart from whatever
+  came before - correct everywhere except when one of them is the very
+  first thing on the page, where it just doubled the gap. Zeroed the
+  redundant margin generically for whatever ends up first on a page,
+  rather than patching each component by name.
+- "Install as App" (the drawer link) did nothing on desktop Chrome
+  whenever the browser hadn't yet handed the page a native install
+  prompt to trigger directly - its fallback bar was being swallowed by
+  the same "never on desktop" rule that (correctly, by design) keeps the
+  *automatic* popup phone/tablet only. The manual drawer action now gets
+  through as a small bottom-right toast on desktop instead.
+
+### Deco Planner
+- The input card gets a real header, titled "Inputs" (it never had
+  one), collapsible by tapping it.
+- Hitting "Calculate Decompression Profile" now collapses it once real
+  results are on screen; changing any input re-opens it automatically
+  instead of leaving a stale, collapsed form next to an invalidated
+  result.
+- Every slider on the page (26 of them - depth, times, gradient factors,
+  ascent/descent rate, bottom gas and up to four deco gases' O2/He/switch
+  depth) now has a plain number field next to it for divers who find
+  dragging fiddly. It drives the slider through noUiSlider's own public
+  API, the same calls the page's own scripts already use to chain
+  sliders together, so every existing calculation and validation path
+  fires exactly as if the slider itself had been dragged - no calculator
+  markup, math or event wiring was touched. The same numeric fields also
+  showed up on Best Gases for free, since the enhancement is generic to
+  any slider on any page. A deeper visual redesign of Best Gases (it has
+  several interleaved input/output calculators sharing one card, not the
+  single input-card/result-card shape Deco Planner has) needs a live
+  design pass rather than an overnight, unverified restructure of a
+  safety-relevant tool - flagged for next time.
+
+### Notifications
+- Full redesign: a two-pane, Gmail-style list and reading pane on
+  desktop (the reading pane takes over the screen on phones, with a Back
+  button), each row showing the sender's avatar, subject, a snippet, and
+  the date - not just a subject line.
+- Checkboxes, "select all," and bulk Delete/Restore/Delete forever.
+- A real Bin. The soft-delete flag the trash icon already set was going
+  nowhere before - deleted just meant gone. It now lands in the Bin,
+  where it can be restored or permanently removed (both genuinely new on
+  the backend, not just new buttons over old behavior).
+
+### WhatsApp
+- SMS (Twilio) was already fully wired end to end from an earlier
+  session - consent UI, consent timestamps, sending, the group dive
+  reminder cron. WhatsApp had the same consent UI and database columns
+  in place, but nothing that actually sent a message. Added
+  `App\Services\WhatsAppService` (Meta Cloud API, same no-op-until-
+  configured safety rules as the SMS service) and wired it into the
+  group dive reminder job, gated on each member's opt-in and on a
+  dive-reminder message template actually being configured - Meta
+  requires a pre-approved template for any business-initiated message,
+  and that approval can land after the account/API credentials do.
+  Nothing sends yet on this branch; no credentials are configured. Once
+  the Twilio and Meta values are added as Azure App Settings, both
+  channels start working with no further code changes - the WhatsApp
+  template's exact parameter order will need a one-line tweak to match
+  whatever Meta actually approved.
+
 ## 10.3.0 — 2026-09-12
 
 Deployed: commits `95a08dd`, `278138f`, `f0be2cd`, `cedc850`, `22451e1`.
