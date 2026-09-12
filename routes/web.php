@@ -176,6 +176,7 @@ Route::get('RemoveFromCalendar/{tripId}', 'App\Http\Controllers\EventController@
 
 Route::get('Operators/', 'App\Http\Controllers\OperatorController@show')->middleware('guest')->name('Operators');
 Route::get('Waivers', 'App\Http\Controllers\OperatorController@getWaivers')->middleware('guest')->name('Waivers');
+Route::get('w/{operator}', 'App\Http\Controllers\OperatorController@redirectToWaiver')->name('waiver.redirect');
 Route::get('ToggleFav/{id}', 'App\Http\Controllers\OperatorController@toggleFav')->middleware('auth')->name('ToggleFav');
 
 Route::get('OperatorDetails/{id}', 'App\Http\Controllers\OperatorController@show')->middleware('guest')->name('OperatorDetails');

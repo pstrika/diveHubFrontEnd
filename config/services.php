@@ -65,24 +65,28 @@ return [
     // SIDs aren't secret - they're just names - but stay env-overridable
     // in case a template is ever recreated.
     'whatsapp' => [
-        // "trip_reminder_3" (whatsapp/card: header image, body with 5 vars -
-        // name/site/operator/date/time - footer, and a "Trip Details" button
-        // linking to the group with a 6th var for the slug). Originally
-        // created straight in Meta Business Manager (as category MARKETING),
-        // which does NOT sync into Twilio's Content API on its own -
-        // recreated here as its own Twilio Content resource and submitted
-        // 2026-09-14, category MARKETING to match the Meta original (a
-        // first attempt submitted as UTILITY - wrong category, slower/wrong
-        // review queue - was abandoned; that dead SID is
-        // HXdb6d8053b6017f001e74d9787321dbdb, left unreferenced rather than
-        // deleted). This submission needs its own Meta review even though
-        // the wording was already approved directly in Meta; status was
-        // "received" (pending) as of submission. Falls back to nothing (no
-        // send, just a logged failure) until it comes back approved -
-        // "trip_reminder_2" (HXe8039180c734c549ecc59fe2e0c343c1, plain
-        // text, no image/button, category UTILITY, confirmed already
-        // approved) is there to roll back to if this one stalls.
-        'trip_reminder_content_sid' => env('TWILIO_WHATSAPP_TRIP_REMINDER_SID', 'HXc96f0ea171f85fca8b3ecaa3a00fb9a4'),
+        // "trip_reminder_3_with_waiver" (whatsapp/card: header image, body
+        // with 5 vars - name/site/operator/date/time - footer, "Trip
+        // Details" (var 6, group slug) and "Sign Waiver" (var 7, operator
+        // id -> the fixed-domain redirect at route('waiver.redirect'),
+        // since WhatsApp's dynamic URL buttons only allow a fixed base
+        // domain and operator waiver links live on the operators' own
+        // separate domains). Submitted 2026-09-14, category MARKETING to
+        // match the template Pablo built directly in Meta Business
+        // Manager - that direct-in-Meta original doesn't sync into
+        // Twilio's Content API on its own, so this is its own resource and
+        // needs its own Meta review, "received" (pending) as of
+        // submission. Falls back to nothing (no send, just a logged
+        // failure) until approved. Fallbacks if this one stalls, in order
+        // of how close a match they are:
+        //   - HXc96f0ea171f85fca8b3ecaa3a00fb9a4 "trip_reminder_3" - same
+        //     but without the Sign Waiver button (also pending approval).
+        //   - HXe8039180c734c549ecc59fe2e0c343c1 "trip_reminder_2" - plain
+        //     text, no image/buttons at all, category UTILITY, but the one
+        //     confirmed already approved and live-tested.
+        //   - HXdb6d8053b6017f001e74d9787321dbdb - dead, first
+        //     trip_reminder_3 attempt, submitted as UTILITY by mistake.
+        'trip_reminder_content_sid' => env('TWILIO_WHATSAPP_TRIP_REMINDER_SID', 'HX3c63aba80c351d4a492df18b407b16cc'),
         // @mention in a group chat -> an immediate WhatsApp ping to the
         // person mentioned. No template exists for this yet - null until
         // one is created and approved, which is its own review separate

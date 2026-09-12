@@ -166,8 +166,30 @@ class OperatorController extends Controller
         );
 
         return view('pages.Waivers', compact('operators', 'SEO'));
-    
+
         }
+
+    /**
+     * A short, fixed-domain redirect to an operator's own waiver link
+     * (route('waiver.redirect', $operator->id) -> /w/{id}). Exists so a
+     * WhatsApp template's "Sign Waiver" button can point somewhere -
+     * WhatsApp's dynamic URL buttons only allow a fixed base domain with a
+     * variable suffix, and operator waiver links live on the operators'
+     * own separate domains (see SendGroupDiveReminders' WhatsApp reminder
+     * and its "trip_reminder_3_with_waiver" Content template), so the
+     * button can't link straight to the operator's site. Also just a
+     * clean short link in its own right.
+     */
+    public function redirectToWaiver($operatorId)
+    {
+        $operator = Operator::find($operatorId);
+
+        if (!$operator || !$operator->waiverLink) {
+            return redirect()->route('Waivers');
+        }
+
+        return redirect()->away($operator->waiverLink);
+    }
 
     public function showHealth() {
         // Deco Divers is a dead operator - excluded from the health page (table and

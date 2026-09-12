@@ -174,18 +174,23 @@ class SendGroupDiveReminders extends Command
     }
 
     /**
-     * WhatsApp reminder via Twilio's "trip_reminder_3" Content template
-     * (whatsapp/card: header image, body, footer, a "Trip Details" button -
-     * content.twilio.com, submitted for Meta review 2026-09-14, so sends
-     * will fail/log until it comes back approved), only for members who
-     * opted in (`whatsapp_notifications`) and have a phone on file -
-     * WhatsAppService itself also no-ops without Twilio credentials
-     * configured.
+     * WhatsApp reminder via Twilio's "trip_reminder_3_with_waiver" Content
+     * template (whatsapp/card: header image, body, footer, "Trip Details"
+     * and "Sign Waiver" buttons - content.twilio.com, submitted for Meta
+     * review 2026-09-14, so sends will fail/log until it comes back
+     * approved), only for members who opted in (`whatsapp_notifications`)
+     * and have a phone on file - WhatsAppService itself also no-ops
+     * without Twilio credentials configured.
      *
      * The template's variables are fixed by what was actually submitted:
      * {{1}} diver's name, {{2}} site, {{3}} operator, {{4}} date, {{5}}
      * time, {{6}} the group's slug (the "Trip Details" button's URL is
-     * https://divers-hub.com/Groups/{{6}}) - not the days-ahead/group-URL
+     * https://divers-hub.com/Groups/{{6}}), {{7}} the operator's id (the
+     * "Sign Waiver" button is https://divers-hub.com/w/{{7}}, a fixed-
+     * domain redirect to that operator's actual waiver link -
+     * OperatorController::redirectToWaiver - since WhatsApp's dynamic URL
+     * buttons only allow a fixed base domain and every operator's waiver
+     * lives on its own separate site). Not the days-ahead/group-URL
      * phrasing the SMS body above uses, since WhatsApp cannot send
      * free-form business-initiated text, only this exact template shape.
      */
@@ -207,6 +212,10 @@ class SendGroupDiveReminders extends Command
         $operatorName = $dive->operator->operatorName ?? 'Divers Hub';
         $dateFormatted = Carbon::parse($dive->date)->format('l, F j');
         $timeFormatted = $dive->time ? Carbon::parse($dive->time)->format('g:i A') : 'TBD';
+        // No waiver on file for this operator: the button still renders (the
+        // template's shape is fixed) but falls through to the Waivers page
+        // instead of a dead link - see redirectToWaiver's own fallback.
+        $operatorId = $dive->operatorId ?: 0;
 
         foreach ($members as $member) {
             if (!$member->user || !$member->user->phone || !$member->user->whatsapp_notifications) {
@@ -220,6 +229,7 @@ class SendGroupDiveReminders extends Command
                 '4' => $dateFormatted,
                 '5' => $timeFormatted,
                 '6' => $group->slug,
+                '7' => (string) $operatorId,
             ]);
         }
     }
