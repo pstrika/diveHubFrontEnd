@@ -197,9 +197,42 @@ class UserController extends Controller
             $user->name = $request->name;
         }
 
+        $phoneVerificationStarted = false;
         if($request->has('phone')) {
-            Log::info("Got phone. Updating to: " . str($request->phone));
-            $user->phone = $request->phone;
+            $rawPhone = trim((string) $request->phone);
+
+            if ($rawPhone === '') {
+                // Explicitly cleared: no number on file means no SMS/WhatsApp to send to.
+                Log::info('Phone cleared for user ' . $user->id);
+                $user->phone = null;
+                $user->phone_verified_at = null;
+                \App\Services\PhoneVerificationService::clearPending($user);
+                $user->sms_notifications = false;
+            } else {
+                $e164 = \App\Support\PhoneNumber::toE164($rawPhone);
+
+                if ($e164 === null) {
+                    session()->flash('phoneError', 'That doesn\'t look like a valid phone number.');
+                } elseif ($e164 !== $user->phone) {
+                    if (\App\Support\PhoneNumber::isUs($e164)) {
+                        // Held as pending until the SMS code comes back verified -
+                        // the number already on file (if any) keeps working until then.
+                        Log::info('Starting phone verification for user ' . $user->id . ' -> ' . $e164);
+                        $phoneVerificationStarted = \App\Services\PhoneVerificationService::start($user, $e164);
+                        if (!$phoneVerificationStarted) {
+                            session()->flash('phoneError', 'A code was already sent recently - check your messages, or wait a bit before requesting another.');
+                        }
+                    } else {
+                        // International: nothing to verify (we have no SMS channel to
+                        // verify it with) and no SMS from us either - WhatsApp only.
+                        Log::info('Saving international phone for user ' . $user->id . ' -> ' . $e164);
+                        $user->phone = $e164;
+                        $user->phone_verified_at = null;
+                        \App\Services\PhoneVerificationService::clearPending($user);
+                        $user->sms_notifications = false;
+                    }
+                }
+            }
         }
 
         if($request->has('levelLow') and $request->has('levelHigh')) {
@@ -293,6 +326,42 @@ class UserController extends Controller
         \App\Support\NotificationConsent::stamp($user, $commsBefore);
 
         $user->save();
+
+        if ($phoneVerificationStarted) {
+            session()->flash('phoneVerificationStarted', true);
+        }
+
+        return redirect()->back();
+    }
+
+    /** Code entry from the profile page's verify-phone modal. */
+    public function verifyPhone(Request $request)
+    {
+        $user = User::findOrFail(auth()->user()->id);
+
+        $request->validate(['code' => 'required|string']);
+
+        if (\App\Services\PhoneVerificationService::verify($user, $request->code)) {
+            session()->flash('phoneVerified', true);
+        } else {
+            session()->flash('phoneError', 'That code is incorrect or has expired.');
+            session()->flash('phoneVerificationStarted', true); // keep the modal open
+        }
+
+        return redirect()->back();
+    }
+
+    /** "Resend code" from the same modal. */
+    public function resendPhoneCode(Request $request)
+    {
+        $user = User::findOrFail(auth()->user()->id);
+
+        if (\App\Services\PhoneVerificationService::resend($user)) {
+            session()->flash('phoneVerificationStarted', true);
+        } else {
+            session()->flash('phoneError', 'Please wait a bit before requesting another code.');
+            session()->flash('phoneVerificationStarted', true);
+        }
 
         return redirect()->back();
     }

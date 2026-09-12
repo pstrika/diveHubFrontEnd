@@ -239,6 +239,8 @@ Route::get('WreckSites', 'App\Http\Controllers\SiteController@showWrecks')->midd
 Route::get('overview', 'App\Http\Controllers\UserController@getProfile')->middleware('auth')->name('overview');
 Route::post('overview', 'App\Http\Controllers\UserController@updateProfile')->middleware('auth')->name('overview');
 Route::post('upload-profile-pic', 'App\Http\Controllers\UserController@updateProfilePic')->middleware('auth')->name('upload-profile-pic');
+Route::post('profile/verify-phone', 'App\Http\Controllers\UserController@verifyPhone')->middleware('auth')->name('profile.verifyPhone');
+Route::post('profile/resend-phone-code', 'App\Http\Controllers\UserController@resendPhoneCode')->middleware('auth')->name('profile.resendPhoneCode');
 
 //Route::get('dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
 Route::get('dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');

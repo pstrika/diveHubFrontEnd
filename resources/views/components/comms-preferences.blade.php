@@ -39,24 +39,37 @@
         ],
     ];
     $needsPhone = trim((string) ($user->phone ?? '')) === '';
+    // SMS can only ever reach a US/NANP number - see App\Support\PhoneNumber
+    // and the same rule in SmsService. A diver with an international number
+    // keeps WhatsApp; the SMS checkbox is locked off rather than left
+    // clickable and then silently ignored server side.
+    $isNonUsPhone = !$needsPhone && !\App\Support\PhoneNumber::isUs($user->phone);
 @endphp
 
 <div class="dh-comms">
     @foreach($channels as $key => $c)
+        @php $smsLockedOff = $key === 'sms' && $isNonUsPhone; @endphp
         <div class="dh-comms-row">
             <label class="dh-comms-label">
                 <input class="form-check-input" type="checkbox"
                        @if($ids) id="{{ $c['column'] }}" @endif
                        name="{{ $c['column'] }}" value="1"
-                       {{ $user->{$c['column']} ? 'checked' : '' }}>
+                       {{ ($user->{$c['column']} && !$smsLockedOff) ? 'checked' : '' }}
+                       {{ $smsLockedOff ? 'disabled' : '' }}>
                 <span>
                     <strong>{{ ['email' => 'Email', 'sms' => 'SMS', 'whatsapp' => 'WhatsApp'][$key] }}</strong>
                     {{ $c['label'] }}
                 </span>
             </label>
             <p class="dh-comms-note">{{ $c['note'] }}</p>
+            @if($smsLockedOff)
+                <p class="dh-comms-note dh-comms-warn">
+                    <span class="material-icons-round" aria-hidden="true">info</span>
+                    SMS only works with a US mobile number - yours is international, so this is off. WhatsApp still works.
+                </p>
+            @endif
             @php $agreedAt = \App\Support\NotificationConsent::consentedAt($user, $key); @endphp
-            @if($agreedAt)
+            @if($agreedAt && !$smsLockedOff)
                 {{-- Shown so a diver can see it and so a screenshot answers "when did they agree". --}}
                 <p class="dh-comms-note dh-comms-since">Agreed {{ \Carbon\Carbon::parse($agreedAt)->format('j M Y') }}</p>
             @endif
