@@ -1445,3 +1445,15 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
   display: flex; align-items: center; justify-content: center;
 }
 .dh-ios-step-icon .material-icons-round { font-size: 20px; }
+
+/* Group chat @mention picker (2026-09-14). */
+.dh-mention-menu {
+  position: absolute; left: 0; right: 0; bottom: 100%; margin-bottom: 4px; z-index: 20;
+  background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(11,42,58,.18); max-height: 220px; overflow-y: auto;
+}
+.dh-mention-item {
+  display: block; width: 100%; text-align: left; border: 0; background: none; padding: 9px 12px;
+  font-size: .88rem; font-weight: 600; color: var(--dh-ink); cursor: pointer;
+}
+.dh-mention-item:hover, .dh-mention-item:first-child { background: var(--dh-foam); }

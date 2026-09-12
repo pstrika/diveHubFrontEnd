@@ -66,6 +66,10 @@ return [
         'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
         'graph_version' => env('WHATSAPP_GRAPH_VERSION', 'v21.0'),
         'dive_reminder_template' => env('WHATSAPP_DIVE_REMINDER_TEMPLATE'),
+        // @mention in a group chat -> an immediate WhatsApp ping to the
+        // person mentioned. Same separate-approval gating as the reminder
+        // template above.
+        'mention_template' => env('WHATSAPP_MENTION_TEMPLATE'),
     ],
 
 ];

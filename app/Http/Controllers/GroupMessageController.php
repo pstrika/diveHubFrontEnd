@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Group;
 use App\Models\GroupMessage;
 use App\Models\GroupMessagePhoto;
+use App\Models\User;
 use App\Services\NotificationService;
+use App\Services\WhatsAppService;
+use App\Support\MentionParser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -53,6 +56,7 @@ class GroupMessageController extends Controller
         }
 
         $this->notifyNewMessage($group, $message);
+        $this->notifyMentions($group, $request->body ?? '');
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['success' => true]);
@@ -99,5 +103,52 @@ class GroupMessageController extends Controller
             auth()->user()->id,
             $group->id
         );
+    }
+
+    /**
+     * @Name in a chat message still goes to the whole group as a normal
+     * message (notifyNewMessage above already put it in every member's
+     * Inbox/Groups folder) - this only adds the "ping them right now"
+     * layer for whoever was actually named: an immediate WhatsApp message,
+     * gated on their own opt-in, a phone number on file, and a mention
+     * template actually being approved and configured (Meta requires a
+     * pre-reviewed template for anything business-initiated, same
+     * constraint as the dive reminder - see WhatsAppService). No separate
+     * email or extra in-app row; the one from notifyNewMessage covers it.
+     */
+    private function notifyMentions(Group $group, string $body)
+    {
+        $template = config('services.whatsapp.mention_template');
+        if (!$template || trim($body) === '') {
+            return;
+        }
+
+        $members = $group->activeMembers()->with('user')->get()
+            ->filter(fn ($m) => $m->user)
+            ->map(fn ($m) => ['id' => $m->user->id, 'name' => $m->user->name]);
+
+        $mentionedIds = MentionParser::detect($body, $members)
+            ->reject(fn ($id) => $id == auth()->user()->id);
+
+        if ($mentionedIds->isEmpty()) {
+            return;
+        }
+
+        $snippet = Str::limit($body, 100);
+        $url = route('Groups.show', ['group' => $group->slug]);
+
+        foreach ($mentionedIds as $userId) {
+            $user = User::find($userId);
+            if (!$user || !$user->phone || !$user->whatsapp_notifications) {
+                continue;
+            }
+
+            WhatsAppService::sendTemplate($user->phone, $template, 'en_US', [
+                auth()->user()->name,
+                $group->name,
+                $snippet,
+                $url,
+            ]);
+        }
     }
 }
