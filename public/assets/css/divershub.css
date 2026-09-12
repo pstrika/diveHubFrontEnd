@@ -1357,3 +1357,33 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-wx-table .dh-wx-tsection-row td { background: var(--dh-foam); color: var(--dh-deep); font-weight: 800; text-transform: uppercase; font-size: .7rem; letter-spacing: .04em; border-radius: 6px; border-bottom: 0; }
 .dh-wx-table tbody tr:last-child td { border-bottom: 0; }
 .dh-wx-table .material-icons-round.rotate-icon { font-size: 15px; color: var(--dh-sea); vertical-align: middle; }
+
+/* ------------------------------------------------------------------ */
+/* Deco Planner / Best Gases (2026-09-13): collapsible "Inputs" card    */
+/* header, and the plain-number twin for every noUiSlider (see the      */
+/* mirror() enhancement in divershub.js). Everything the sliders,       */
+/* charts and tables themselves already draw is untouched - this only   */
+/* dresses the outer chrome and adds the numeric fallback.              */
+/* ------------------------------------------------------------------ */
+.dh-calc-inputs-head {
+  display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;
+  padding: 16px 20px; background: var(--dh-ink); color: #fff; border-radius: 14px 14px 0 0;
+}
+.dh-calc-inputs-head .material-icons-round { color: #fff; opacity: .85; }
+/* h3 grows to fill the row, so the hint + chevron after it stay pinned to
+   the right edge whether or not the (optional, hidden-when-open) hint is
+   present. */
+.dh-calc-inputs-head h3 { flex: 1 1 auto; margin: 0; font-size: 1.05rem; font-weight: 800; color: #fff; }
+.dh-calc-inputs-hint { font-size: .78rem; font-weight: 600; color: rgba(255,255,255,.7); }
+.dh-calc-inputs-head:hover { background: var(--dh-deep); }
+
+.dh-slider-num {
+  display: block; width: 88px; margin: 8px auto 0; padding: 5px 8px; text-align: center;
+  border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill);
+  font-size: .85rem; font-weight: 700; color: var(--dh-ink); background: var(--dh-paper);
+}
+.dh-slider-num:focus { outline: none; border-color: var(--dh-sea); box-shadow: 0 0 0 2px rgba(43,140,158,.18); }
+/* Number input spinner arrows read as noise next to a slider that already
+   has its own drag handle - keep the field plain. */
+.dh-slider-num::-webkit-outer-spin-button, .dh-slider-num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.dh-slider-num[type=number] { -moz-appearance: textfield; }

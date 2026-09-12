@@ -323,3 +323,74 @@ document.addEventListener('click', function (e) {
     });
     btn.remove();
 });
+
+/* ------------------------------------------------------------------ */
+/* Deco Planner / Best Gases: a plain number input next to every         */
+/* noUiSlider, for divers who find dragging fiddly (2026-09-13). Purely  */
+/* additive - it drives the existing slider through its own public       */
+/* get()/set()/on('update') API, the same calls the pages' own inline    */
+/* scripts already use to chain sliders together, so every existing      */
+/* calculation/validation path fires exactly as if the slider itself had */
+/* been dragged. No calculator markup or logic is touched. A no-op on    */
+/* any page without .slider-styled elements.                             */
+/* ------------------------------------------------------------------ */
+(function () {
+    function mirror(el) {
+        if (!el || !el.noUiSlider || el.dataset.dhNumMirror) return;
+        el.dataset.dhNumMirror = '1';
+        var api = el.noUiSlider;
+
+        var input = document.createElement('input');
+        input.type = 'number';
+        input.className = 'dh-slider-num';
+        input.setAttribute('inputmode', 'decimal');
+        input.setAttribute('aria-label', (el.getAttribute('id') || 'value') + ' (numeric entry)');
+        try {
+            var opts = api.options || {};
+            if (opts.step) input.step = opts.step;
+            if (opts.range) {
+                if (typeof opts.range.min !== 'undefined') input.min = opts.range.min;
+                if (typeof opts.range.max !== 'undefined') input.max = opts.range.max;
+            }
+        } catch (e) { /* attributes are a convenience only */ }
+
+        function toNumber(raw) {
+            var v = Array.isArray(raw) ? raw[0] : raw;
+            return Math.round(parseFloat(v) * 100) / 100;
+        }
+
+        // Reflect the slider's current value; skipped while this field has
+        // focus so a diver's own typing is never overwritten mid-edit.
+        api.on('update', function (values) {
+            if (document.activeElement === input) return;
+            var v = toNumber(values);
+            if (!isNaN(v)) input.value = v;
+        });
+        var initial = toNumber(api.get());
+        if (!isNaN(initial)) input.value = initial;
+
+        input.addEventListener('change', function () {
+            var v = parseFloat(input.value);
+            if (isNaN(v)) { input.value = toNumber(api.get()); return; }
+            api.set(v); // fires the slider's own 'update', same as a drag would
+            input.value = toNumber(api.get()); // reflect any range clamping
+        });
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') input.blur();
+        });
+
+        el.insertAdjacentElement('afterend', input);
+    }
+
+    function mirrorAll() {
+        document.querySelectorAll('.slider-styled').forEach(mirror);
+    }
+
+    // Every slider on these pages is created by its own small inline
+    // <script> the moment that markup is parsed, so by "load" they all exist.
+    if (document.readyState === 'complete') {
+        mirrorAll();
+    } else {
+        window.addEventListener('load', mirrorAll);
+    }
+})();

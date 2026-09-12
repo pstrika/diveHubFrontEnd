@@ -236,15 +236,16 @@
             </div>
 
             <div class="row">
-                <div class="col-md-12 m-auto">             
-                    <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
-                        <!--<div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h3 class="card-title text-white mx-4">Plan your dive here...</h3>
-                            </div>
-                        </div> -->
+                <div class="col-md-12 m-auto">
+                    <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4" id="dh-deco-inputs-card">
+                        <div class="dh-calc-inputs-head" id="dh-deco-inputs-toggle" role="button" tabindex="0" aria-expanded="true" aria-controls="dh-deco-inputs-body">
+                            <span class="material-icons-round" aria-hidden="true">tune</span>
+                            <h3>Inputs</h3>
+                            <span class="dh-calc-inputs-hint" id="dh-deco-inputs-hint" hidden>Tap to edit</span>
+                            <span class="material-icons-round dh-calc-inputs-chevron" id="dh-deco-inputs-chevron" aria-hidden="true">expand_less</span>
+                        </div>
 
-                        <div class="card-body">
+                        <div class="card-body" id="dh-deco-inputs-body">
                             <div row>
                                 <div class="nav-wrapper position-relative end-0">
                                     <ul class="nav nav-pills nav-fill p-1" role="tablist" id="nav-tabs">
@@ -1017,6 +1018,35 @@
                     
                 </div>
             </div>
+
+            <script>
+                (function () {
+                    var card = document.getElementById('dh-deco-inputs-card');
+                    var body = document.getElementById('dh-deco-inputs-body');
+                    var toggle = document.getElementById('dh-deco-inputs-toggle');
+                    var chevron = document.getElementById('dh-deco-inputs-chevron');
+                    var hint = document.getElementById('dh-deco-inputs-hint');
+                    if (!card || !body || !toggle) return;
+
+                    function setOpen(open) {
+                        body.hidden = !open;
+                        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                        if (chevron) chevron.textContent = open ? 'expand_less' : 'expand_more';
+                        if (hint) hint.hidden = open;
+                    }
+
+                    // Exposed globally: the calculate button's success handler collapses
+                    // this once real results are on screen, and resetCalculationArea()
+                    // (fired by every slider/toggle in the form) re-opens it, since a
+                    // stale, collapsed input panel next to a stale result is confusing.
+                    window.dhDecoInputsSetOpen = setOpen;
+
+                    toggle.addEventListener('click', function () { setOpen(body.hidden); });
+                    toggle.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(body.hidden); }
+                    });
+                })();
+            </script>
 
             <div class="row" id="profileChartAndTable" style="display: none;">
                 <div class="col-12">
@@ -1984,6 +2014,9 @@
             document.getElementById("labelWhatIfRunTimeDiff").innerText="()";
             document.getElementById("labelWhatIfDecoTime").innerText="-";
             document.getElementById("labelWhatIfDecoTimeDiff").innerText="()";
+            // Any input change invalidates whatever's on screen (already hidden
+            // above) - bring the inputs panel back if Calculate had collapsed it.
+            if (typeof window.dhDecoInputsSetOpen === 'function') window.dhDecoInputsSetOpen(true);
         }
     </script>
 
@@ -3590,6 +3623,8 @@
             var ctx = document.getElementById('profileChart').getContext('2d');
             var chartRow = document.getElementById("profileChartAndTable");
             chartRow.style.display = "block";
+            // Real results are up - collapse the inputs panel out of the way.
+            if (typeof window.dhDecoInputsSetOpen === 'function') window.dhDecoInputsSetOpen(false);
 
             // Destroy previous chart instance if it exists
             if (profileChartInstance) {
