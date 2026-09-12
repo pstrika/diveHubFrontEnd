@@ -185,7 +185,9 @@ Route::get('BeachDiving', 'App\Http\Controllers\SiteController@showBeach')->midd
 
 Route::get('Messages', 'App\Http\Controllers\MessageController@show')->middleware('auth')->name('Messages');
 Route::post('mark-as-read', 'App\Http\Controllers\MessageController@markAsRead')->middleware('auth')->name('mark-as-read');;
-Route::post('delete-message', 'App\Http\Controllers\MessageController@delete')->middleware('auth')->name('delete-message');;
+Route::post('messages/bulk-delete', 'App\Http\Controllers\MessageController@bulkDelete')->middleware('auth')->name('messages.bulkDelete');
+Route::post('messages/restore', 'App\Http\Controllers\MessageController@restore')->middleware('auth')->name('messages.restore');
+Route::post('messages/destroy', 'App\Http\Controllers\MessageController@destroyMessages')->middleware('auth')->name('messages.destroy');
 
 Route::get('new-site/', 'App\Http\Controllers\SiteController@create')->middleware('auth')->name('new-site');
 Route::post('new-site', 'App\Http\Controllers\SiteController@store')->middleware('auth')->name('new-site-store');

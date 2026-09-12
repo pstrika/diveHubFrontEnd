@@ -331,16 +331,60 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-icon-btn:hover { color: var(--dh-ink); }
 .dh-icon-btn .material-icons-round { font-size: 18px; }
 
-/* Notifications inbox. */
-.dh-msg-list { display: flex; flex-direction: column; }
-.dh-msg-row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--dh-line); }
+/* Notifications inbox (2026-09-13: Gmail-style list + reading pane,
+   replacing the plain list + modal). .dh-msg-shell is a two-column grid on
+   desktop (list | reading pane); on phones only one column shows at a time,
+   toggled by .is-reading on the shell rather than by removing either pane
+   from the DOM, so the reading pane's content only has to be filled in once
+   per open, not rebuilt per breakpoint. */
+.dh-msg-shell { display: grid; grid-template-columns: minmax(260px, 380px) 1fr; gap: var(--dh-space-4); align-items: start; }
+.dh-msg-toolbar { display: flex; align-items: center; gap: 10px; padding: 10px 4px; border-bottom: 1px solid var(--dh-line); margin-bottom: 4px; flex-wrap: wrap; }
+.dh-msg-tabs { display: flex; gap: 4px; }
+.dh-msg-tab { border: 0; background: none; padding: 7px 14px; border-radius: var(--dh-radius-pill); font-weight: 700; font-size: .85rem; color: var(--dh-muted); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.dh-msg-tab:hover { background: var(--dh-foam); color: var(--dh-ink); }
+.dh-msg-tab.is-active { background: var(--dh-ink); color: #fff; }
+.dh-msg-tab-count { font-size: .72rem; opacity: .8; }
+.dh-msg-toolbar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.dh-msg-select-all { width: 17px; height: 17px; accent-color: var(--dh-sea); cursor: pointer; }
+.dh-msg-bulk-count { font-size: .8rem; color: var(--dh-muted); }
+
+.dh-msg-list { display: flex; flex-direction: column; max-height: 70vh; overflow-y: auto; }
+.dh-msg-row { display: flex; align-items: flex-start; gap: 10px; padding: 12px 8px; border-bottom: 1px solid var(--dh-line); cursor: pointer; border-radius: 10px; }
 .dh-msg-row:last-child { border-bottom: 0; }
-.dh-msg-icon { color: var(--dh-muted); flex: 0 0 auto; }
-.dh-msg-row.is-unread .dh-msg-icon { color: var(--dh-sea); }
+.dh-msg-row:hover { background: var(--dh-foam); }
+.dh-msg-row.is-open { background: var(--dh-foam); }
+.dh-msg-check { width: 16px; height: 16px; margin-top: 4px; accent-color: var(--dh-sea); cursor: pointer; flex: 0 0 auto; }
+.dh-msg-avatar { width: 34px; height: 34px; border-radius: 50%; flex: 0 0 auto; object-fit: cover; background: var(--dh-foam); color: var(--dh-sea); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .8rem; }
+.dh-msg-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 .dh-msg-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; color: inherit; text-decoration: none; }
-.dh-msg-subject { font-size: .9rem; color: var(--dh-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dh-msg-row-top { display: flex; align-items: baseline; gap: 8px; }
+.dh-msg-sender { font-size: .82rem; color: var(--dh-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dh-msg-row.is-unread .dh-msg-sender { color: var(--dh-ink); font-weight: 700; }
+.dh-msg-date { margin-left: auto; font-size: .72rem; color: var(--dh-muted); flex: 0 0 auto; }
+.dh-msg-subject { font-size: .87rem; color: var(--dh-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dh-msg-row.is-unread .dh-msg-subject { font-weight: 700; }
-.dh-msg-meta { font-size: .75rem; color: var(--dh-muted); margin-top: 2px; }
+.dh-msg-snippet { font-size: .78rem; color: var(--dh-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dh-msg-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dh-sea); flex: 0 0 auto; margin-top: 6px; }
+
+/* Reading pane. */
+.dh-msg-reading { background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 14px; padding: var(--dh-space-4); min-height: 320px; }
+.dh-msg-reading-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; height: 100%; min-height: 300px; color: var(--dh-muted); text-align: center; }
+.dh-msg-reading-empty .material-icons-round { font-size: 40px; opacity: .5; }
+.dh-msg-reading-back { display: none; border: 0; background: none; color: var(--dh-sea); font-weight: 700; padding: 0 0 12px; align-items: center; gap: 4px; cursor: pointer; }
+.dh-msg-reading-head { display: flex; align-items: flex-start; gap: 12px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--dh-line); }
+.dh-msg-reading-head .dh-msg-avatar { width: 42px; height: 42px; font-size: .9rem; }
+.dh-msg-reading-title { font-size: 1.05rem; font-weight: 800; color: var(--dh-ink); margin: 0 0 2px; }
+.dh-msg-reading-from { font-size: .82rem; color: var(--dh-muted); }
+.dh-msg-reading-actions { margin-left: auto; display: flex; gap: 6px; flex: 0 0 auto; }
+.dh-msg-reading-body { font-size: .92rem; line-height: 1.6; color: var(--dh-ink); white-space: pre-wrap; }
+
+@media (max-width: 899.98px) {
+  .dh-msg-shell { display: block; }
+  .dh-msg-reading { display: none; margin-top: var(--dh-space-3); }
+  .dh-msg-shell.is-reading .dh-msg-list-pane { display: none; }
+  .dh-msg-shell.is-reading .dh-msg-reading { display: block; }
+  .dh-msg-reading-back { display: inline-flex; }
+}
 
 /* Region group. */
 .dh-region { margin-bottom: var(--dh-space-6); }
