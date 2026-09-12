@@ -244,8 +244,21 @@
         // ---- Thread ----
 
         function dhRenderThread(data) {
+            // Captured before we touch dataset.fresh below: '1' means this
+            // thread was already open and we're just re-rendering off a
+            // poll tick, not a fresh dhOpenThread() - only a fresh open
+            // should jump the reply channel to match the last message.
+            var isFreshOpen = document.getElementById('dh-admin-thread-body').dataset.fresh !== '1';
+
             dhCurrentContact = data.contact;
             dhKnownThreadCount = data.messages.length;
+
+            if (isFreshOpen && data.messages.length) {
+                // Suggest replying on whatever channel this contact was
+                // last reached on (Pablo, 2026-09-14) - a phone contact
+                // can have both SMS and WhatsApp history.
+                dhPickChannel('reply', data.messages[data.messages.length - 1].channel);
+            }
 
             document.getElementById('dh-admin-thread-title').textContent = data.userName || data.contact;
             document.getElementById('dh-admin-thread-contact').textContent = data.userName ? data.contact : '';
