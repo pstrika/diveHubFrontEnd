@@ -78,31 +78,57 @@
    * (manifest plus the service worker registered below). We keep that event and
    * show the bar with an Add button; the button calls prompt(), which opens the
    * native install sheet. iOS Safari has no such API, so there we show the
-   * Share, then Add to Home Screen hint.
+   * Share, then Add to Home Screen hint. That split stays exactly as is - only
+   * the re-show rule and the drawer entry are new (2026-09-13).
    *
-   * Whether it shows is decided on every page load from whether the app is
-   * actually installed, so it keeps offering until they install and it comes
-   * back if they uninstall. It never shows on desktop, inside an iframe, or
-   * again in the same browser session once dismissed.
+   * The automatic bar only shows on phones and tablets, driven by whether the
+   * app is actually installed (never once running standalone), never inside an
+   * iframe. Dismissing it used to hide it for the rest of the browser session
+   * (sessionStorage); Pablo's rule now is that it comes back after 10 more page
+   * views in the same browser instead, so localStorage (a page-view count,
+   * plus the count at the moment of the last dismissal) replaces that. Being
+   * per-browser/localStorage, signing in on another device naturally starts
+   * this over - there is nothing server side to carry across.
+   *
+   * The "Install as App" drawer link (shell/menu.blade.php) is independent of
+   * all of that: it is available on every device (hidden only once installed)
+   * and always tries to install right now when tapped, whatever the page-view
+   * count says.
    */
-  // Dismissing hides the bar for the rest of this browser session only. Zach's
-  // rule (2026-09-10): the bar is driven by whether the app is installed, not by a
-  // one time flag, so it comes back on the next visit and it comes back if they
-  // uninstall. sessionStorage clears itself, which is exactly that behaviour.
-  var INSTALL_DISMISSED = 'dh.install.dismissed';
+  var INSTALL_VIEW_COUNT_KEY = 'dh.install.viewCount';
+  var INSTALL_DISMISSED_AT_KEY = 'dh.install.dismissedAtCount';
+  var INSTALL_REPROMPT_AFTER = 10;
 
-  function dismissedThisSession() {
+  function installViewCount() {
     try {
-      return window.sessionStorage.getItem(INSTALL_DISMISSED) === '1';
+      var n = parseInt(window.localStorage.getItem(INSTALL_VIEW_COUNT_KEY) || '0', 10);
+      return isNaN(n) ? 0 : n;
     } catch (e) {
-      return false; // blocked storage: show the bar, it is only a bar
+      return 0;
     }
   }
 
-  function rememberDismissal() {
+  function bumpInstallViewCount() {
+    var n = installViewCount() + 1;
+    try { window.localStorage.setItem(INSTALL_VIEW_COUNT_KEY, String(n)); } catch (e) { /* nothing to do */ }
+    return n;
+  }
+
+  function installDismissedAtCount() {
     try {
-      window.sessionStorage.setItem(INSTALL_DISMISSED, '1');
-    } catch (e) { /* nothing to do */ }
+      var v = window.localStorage.getItem(INSTALL_DISMISSED_AT_KEY);
+      return v === null ? null : parseInt(v, 10);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function rememberInstallDismissal(atCount) {
+    try { window.localStorage.setItem(INSTALL_DISMISSED_AT_KEY, String(atCount)); } catch (e) { /* nothing to do */ }
+  }
+
+  function clearInstallDismissal() {
+    try { window.localStorage.removeItem(INSTALL_DISMISSED_AT_KEY); } catch (e) { /* nothing to do */ }
   }
 
   function isStandalone() {
@@ -126,42 +152,92 @@
     return ios && safari;
   }
 
+  // Phones and tablets only - includes iPadOS, which reports as a MacIntel
+  // desktop but is touch only, same trick isIosSafari() already uses.
+  function isMobileOrTablet() {
+    var ua = window.navigator.userAgent;
+    if (/iPhone|iPad|iPod|Android/i.test(ua)) return true;
+    return navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  }
+
   function installSetup() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(function () { /* install bar simply will not show */ });
     }
 
     var bar = document.getElementById('dh-install');
-    // Checked on every page load: installed apps and embedded frames never see it.
-    if (!bar || isStandalone() || isEmbedded() || dismissedThisSession()) return;
+    var menuLink = document.getElementById('dh-install-menu-link');
+
+    if (isStandalone()) {
+      // Already installed: the drawer entry has nothing to do, and the bar
+      // never shows again until/unless this becomes a fresh browser profile.
+      if (menuLink) menuLink.hidden = true;
+      return;
+    }
 
     var deferred = null;
     var show = function (kind) {
-      if (document.querySelector('.modal.show')) return; // never on top of the guest prompt
+      if (!bar || document.querySelector('.modal.show')) return; // never on top of the guest prompt
       bar.querySelectorAll('[data-install]').forEach(function (el) { el.hidden = el.getAttribute('data-install') !== kind; });
       bar.hidden = false;
     };
-    var dismiss = function () {
-      bar.hidden = true;
-      rememberDismissal();
-    };
 
-    bar.querySelector('.dh-install-close').addEventListener('click', dismiss);
+    // The drawer link works on any device, any time, regardless of the
+    // automatic bar's own eligibility rules below - tapping it is explicit intent.
+    if (menuLink) {
+      menuLink.addEventListener('click', function () {
+        if (deferred) {
+          deferred.prompt();
+          deferred.userChoice.then(function () { deferred = null; clearInstallDismissal(); });
+        } else if (isIosSafari()) {
+          show('ios');
+        } else {
+          show('android');
+        }
+      });
+    }
+
+    if (!bar || isEmbedded()) return;
+
+    var currentViewCount = null;
+    var autoShowEligible = false;
+    if (isMobileOrTablet()) {
+      currentViewCount = bumpInstallViewCount();
+      var dismissedAt = installDismissedAtCount();
+      autoShowEligible = dismissedAt === null || (currentViewCount - dismissedAt) >= INSTALL_REPROMPT_AFTER;
+    }
+
+    bar.querySelector('.dh-install-close').addEventListener('click', function () {
+      bar.hidden = true;
+      if (currentViewCount !== null) rememberInstallDismissal(currentViewCount);
+    });
     bar.querySelector('button[data-install="android"]').addEventListener('click', function () {
       if (!deferred) return;
       deferred.prompt();
-      deferred.userChoice.then(function () { bar.hidden = true; deferred = null; });
+      deferred.userChoice.then(function () { bar.hidden = true; deferred = null; clearInstallDismissal(); });
     });
 
+    // Captured whenever it fires, but showing the bar never waits on it: Chrome
+    // does not reliably refire beforeinstallprompt on every page load once it
+    // has already fired once for this browser (engagement heuristics, a
+    // cooldown after repeated dismissals), so gating the Android bar's
+    // visibility on catching a fresh event here was the bug that kept the
+    // 10-page re-show from ever actually appearing. Eligibility alone decides
+    // whether the bar shows now; the Add button just checks for `deferred` at
+    // the moment it's tapped, so it still works if the event arrives later,
+    // after the bar is already up.
     window.addEventListener('beforeinstallprompt', function (e) {
       e.preventDefault(); // we show our own bar instead of the browser's mini bar
       deferred = e;
-      show('android');
     });
-    window.addEventListener('appinstalled', function () { bar.hidden = true; });
+    window.addEventListener('appinstalled', function () {
+      bar.hidden = true;
+      clearInstallDismissal();
+      if (menuLink) menuLink.hidden = true;
+    });
 
-    if (isIosSafari()) {
-      show('ios');
+    if (autoShowEligible) {
+      show(isIosSafari() ? 'ios' : 'android');
     }
   }
 

@@ -44,6 +44,20 @@
   <meta name="msapplication-TileColor" content="{{ $dhFrozen ? \App\Support\EmbeddedPage::LEGACY_THEME_COLOR : '#0b2a3a' }}">
   <meta name="msapplication-TileImage" content="{{ asset('assets') }}/img/pwa/icon-192.png">
 
+  @unless($dhFrozen)
+  {{-- Boot splash CSS, inline so it applies before the external stylesheet
+       loads. display-mode:standalone is what keeps it off in a normal
+       browser tab - no JS involved in that decision. --}}
+  <style>
+    #dh-splash { display: none; position: fixed; inset: 0; z-index: 99999; align-items: center; justify-content: center; background: #0b2a3a; transition: opacity .25s ease; }
+    #dh-splash img { width: 88px; height: 88px; border-radius: 22px; animation: dhSplashPulse 1.1s ease-in-out infinite; }
+    #dh-splash.dh-splash-hide { opacity: 0; pointer-events: none; }
+    @keyframes dhSplashPulse { 0%, 100% { transform: scale(1); opacity: .82; } 50% { transform: scale(1.08); opacity: 1; } }
+    @media (display-mode: standalone) {
+      #dh-splash { display: flex; }
+    }
+  </style>
+  @endunless
 
   <title>{{ $SEO["title"] ?? "Divers Hub - your one stop for diving in FL!" }}</title>
  
@@ -104,6 +118,10 @@
   @endunless
 </head>
 <body class="{{ $bodyClass }}">
+
+@unless($dhFrozen)
+<x-pwa-splash />
+@endunless
 
 {{ $slot }}
 
