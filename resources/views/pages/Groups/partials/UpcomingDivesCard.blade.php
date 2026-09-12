@@ -1,23 +1,21 @@
-<div class="card mt-3 mb-4">
-    <div class="card-header p-0 mt-n4 mx-3">
-        <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1 d-flex justify-content-between align-items-center">
-            <h2 class="card-title text-white mx-4 mb-0">Upcoming Dives</h2>
-            <button type="button" class="btn btn-sm bg-white text-info me-3 mb-0" data-bs-toggle="modal" data-bs-target="#modalSubscribeIcs">
-                <i class="material-icons text-sm align-middle">event</i> Subscribe
-            </button>
-        </div>
+<section class="dh-panel">
+    <div class="dh-panel-head-row">
+        <h2 class="dh-panel-title mb-0">Upcoming dives</h2>
+        <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-toggle="modal" data-bs-target="#modalSubscribeIcs">
+            <span class="material-icons-round" aria-hidden="true">event</span>Subscribe
+        </button>
     </div>
-    <div class="card-body p-3" style="display: block; max-height: 350px; overflow-y: scroll">
+    <div style="max-height: 350px; overflow-y: auto;">
         @if($group->canAddDives(auth()->user()->id))
         <div class="d-flex justify-content-end mb-2">
-            <button type="button" class="btn btn-sm bg-gradient-info mb-0" data-bs-toggle="modal" data-bs-target="#modalAddDive">
-                <i class="material-icons text-sm align-middle">add</i> Add a dive
+            <button type="button" class="dh-btn dh-btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddDive">
+                <span class="material-icons-round" aria-hidden="true">add</span>Add a dive
             </button>
         </div>
         @endif
 
         @if($dives->isEmpty())
-            <p class="text-secondary mb-0">No upcoming dives yet. Be the first to add one!</p>
+            <p class="text-muted mb-0">No upcoming dives yet. Be the first to add one.</p>
         @else
             <div class="timeline timeline-one-side" data-timeline-axis-style="dotted">
                 @foreach($dives as $dive)
@@ -59,7 +57,7 @@
                                     </a>
                                 @else
                                     <h6 class="text-dark text-sm font-weight-bold mb-0 cursor-pointer" style="cursor: pointer;" onclick="showDiveDetails({{ $dive->id }})">
-                                        {{ $dive->tripName }} @if($dive->is_custom) <span class="badge badge-sm bg-secondary">custom</span> @endif
+                                        {{ $dive->tripName }} @if($dive->is_custom) <span class="chip chip-static">custom</span> @endif
                                     </h6>
                                 @endif
                             </div>
@@ -86,11 +84,7 @@
                                     <span class="avatar-group">
                                         @foreach($dive->rsvps->take(5) as $rsvp)
                                             <div class="avatar avatar-xs rounded-circle" style="margin-left: -8px;">
-                                                @if($rsvp->user->picture)
-                                                    <img src="{{ asset('assets') }}/img/users/{{ $rsvp->user->picture }}" alt="profile_image" class="w-100 rounded-circle border border-white">
-                                                @else
-                                                    <img src="{{ asset('assets') }}/img/default-avatar.png" alt="profile_image" class="w-100 rounded-circle border border-white">
-                                                @endif
+                                                <img src="{{ \App\Support\UserAvatar::url($rsvp->user->picture) }}" alt="profile_image" class="w-100 rounded-circle border border-white">
                                             </div>
                                         @endforeach
                                     </span>
@@ -99,12 +93,12 @@
                                 @if($dive->isGoing(auth()->user()->id))
                                     <form method="POST" action="{{ route('Groups.dives.leave', ['dive' => $dive->id]) }}">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm bg-gradient-secondary mb-0">Leave</button>
+                                        <button type="submit" class="dh-btn dh-btn-ghost-dark">Leave</button>
                                     </form>
                                 @else
                                     <form method="POST" action="{{ route('Groups.dives.join', ['dive' => $dive->id]) }}">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm bg-gradient-success mb-0">I'm going</button>
+                                        <button type="submit" class="dh-btn dh-btn-primary">I'm going</button>
                                     </form>
                                 @endif
                             </div>
@@ -114,4 +108,4 @@
             </div>
         @endif
     </div>
-</div>
+</section>

@@ -4,7 +4,7 @@
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <!-- Navbar -->
-        <x-shell.header title="My Dashboard" />
+        <x-shell.header title="My Dashboard" icon="dashboard" />
         <!-- End Navbar -->
         <div class="container-fluid py-0">
 
@@ -280,7 +280,7 @@
                                         @php $ws = $wish->site; $hasBoat = !empty($wish->tripId); $seats = (int) ($wish->tripFreeSpots ?? 0); @endphp
                                         <li class="dh-wish-row {{ $i >= $wishShown ? 'dh-wish-extra' : '' }}" {{ $i >= $wishShown ? 'hidden' : '' }}>
                                             <a class="dh-wish-site" href="{{ route('SiteDetails') }}/{{ $ws->slug ?? $ws->id }}">
-                                                <img src="{{ asset('assets') }}/img/icons/{{ $ws->type }}_icon.png" alt="{{ ucfirst($ws->type) }}" onerror="this.remove()">
+                                                <x-site-type-icon :type="$ws->type" size="28" />
                                                 <span class="dh-trip-main">
                                                     <span class="dh-trip-title do-not-translate">{{ $ws->name }}</span>
                                                     <span class="dh-trip-facts">
@@ -404,6 +404,7 @@
     @push('js')
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     <script src="/assets/js/plugins/fullcalendar.min.js"></script>
+    <script src="{{ asset('assets') }}/js/divershub-calendar.js"></script>
     <link href="{{ asset("assets") }}/css/calendar-buttons.css" rel="stylesheet" />
 
     <!-- Google tag (gtag.js) event -->
@@ -533,31 +534,6 @@
 
     <script>
         const todayDate = new Date().toISOString().split('T')[0];
-
-        // Shared by both calendars on this page (my dives and, when present,
-        // favourite operators): 3 day view on phones, week on tablets, month
-        // on desktop. Defined unconditionally so "my dives" still gets it
-        // even for a diver with no favourite operators.
-        function getResponsiveView() {
-            const width = window.innerWidth;
-            if (width >= 1200) return 'dayGridMonth';     // Large screens
-            if (width >= 768) return 'dayGridWeek';       // Medium screens
-            return 'dayGridThreeDay';                    // Small screens
-        }
-
-        // FullCalendar's day-count custom view is per instance, not global -
-        // both calendars need this in their own `views` option.
-        const dhResponsiveViews = {
-            dayGridThreeDay: {
-                type: 'dayGrid',
-                duration: { days: 3 },
-                buttonText: '3 day',
-                titleFormat: { month: "long", year: "numeric", day: "numeric" }
-            },
-            month: { titleFormat: { month: "long", year: "numeric" } },
-            agendaWeek: { titleFormat: { month: "long", year: "numeric", day: "numeric" } },
-            agendaDay: { titleFormat: { month: "short", year: "numeric", day: "numeric" } }
-        };
     </script>
     @if( !empty($favOperators) )
     <script>
@@ -600,10 +576,7 @@
                     echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
                     echo "url: '/TripDetails/" . str($trip->id) . "',";
                     echo "extendedProps: { op: '" . (int) $trip->operatorId . "' },";
-                    if($trip->tripType == "Technical")
-                        echo "className: 'bg-gradient-success text-white' },";
-                    else
-                        echo "className: 'bg-gradient-secondary text-white' },";
+                    echo "color: '" . ($trip->tripType == "Technical" ? "#2e7d4f" : "#5a6b78") . "' },";
                 }
             @endphp
             
@@ -649,7 +622,7 @@
                         echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) . "',";
                         echo "start: '" . $trip->date . " " . $trip->departureTime . "',";
                         echo "extendedProps: { eventId: " . (int) $trip->eventId . " },";
-                        echo "className: '" . ($trip->booked ? 'dh-fc-booked' : 'dh-fc-open') . "' },";
+                        echo "color: '" . ($trip->booked ? '#0f7b3f' : '#c0392b') . "' },";
                     }
                 @endphp
             ],

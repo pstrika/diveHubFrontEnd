@@ -5,13 +5,10 @@
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
 
         <!-- Navbar -->
-        <x-shell.header title="Marine forecast" />
+        <x-shell.header title="Marine forecast" icon="cloud" />
         <!-- End Navbar -->
-        <div class="container-fluid py-4">
 
-            <div class="d-none" data-color="info" id="sidebarColorDiv"></div>
-        
-        {{--modal code--}}
+            {{--modal code--}}
         <div class="modal fade" id="modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
             <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
                 <div class="modal-content">
@@ -512,8 +509,6 @@
 
                 </div>
             </details>
-
-        </div>
 
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>

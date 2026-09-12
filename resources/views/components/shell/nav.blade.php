@@ -164,9 +164,35 @@
 {{-- The "Me" drawer. Shared by the avatar button and the Me tab. --}}
 <div class="offcanvas offcanvas-end dh-drawer" tabindex="-1" id="dh-me" aria-labelledby="dh-me-title">
     <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="dh-me-title">
-            @if($isGuest) Menu @else {{ $user->name }} @endif
-        </h5>
+        @if($isGuest)
+            <h5 class="offcanvas-title" id="dh-me-title">Menu</h5>
+        @else
+            {{--
+                Avatar next to the name: only when a picture was actually
+                uploaded (users.picture set). If it resolves (UserAvatar::exists
+                - a real file or a remote URL), show it with the theme-blue
+                ring; if the value is set but the file isn't there (dev/test
+                clone without the upload volume), fall back to initials rather
+                than a broken image. No picture at all shows just the name,
+                same as before.
+            --}}
+            <div class="dh-drawer-user">
+                @if($user->picture)
+                    @if(\App\Support\UserAvatar::exists($user->picture))
+                        <img src="{{ \App\Support\UserAvatar::url($user->picture) }}" alt="" class="dh-drawer-avatar">
+                    @else
+                        @php
+                            $nameParts = preg_split('/\s+/', trim((string) $user->name)) ?: [];
+                            $initials = count($nameParts) > 1
+                                ? strtoupper(substr($nameParts[0], 0, 1) . substr(end($nameParts), 0, 1))
+                                : strtoupper(substr($nameParts[0] ?? '', 0, 1));
+                        @endphp
+                        <span class="dh-drawer-avatar dh-drawer-avatar-initials">{{ $initials }}</span>
+                    @endif
+                @endif
+                <h5 class="offcanvas-title mb-0" id="dh-me-title">{{ $user->name }}</h5>
+            </div>
+        @endif
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">

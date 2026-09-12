@@ -239,9 +239,6 @@
                 $levelInfo = \App\Support\DiveLevel::get($site->level);
                 $hour = (int) now()->format('G');
                 $forecastText = $forecast ? ($hour < 12 ? $forecast->conditionsAM_text : $forecast->conditionsPM_text) : null;
-                // New SVG site-type icons (2026-09-11), recolored to the theme
-                // colour instead of Pablo's old fixed-colour PNGs.
-                $typeIconSvg = \App\Support\IconSvg::themed('assets/img/icons/' . $site->type . '_icon.svg');
             @endphp
 
             {{-- Gallery header (W3 note 1). Main photo plus two thumbnails; all link to the full gallery below. --}}
@@ -262,11 +259,7 @@
                 <div class="dh-site-facts-main">
                     <h1 class="dh-site-title">{{ $site->name }}</h1>
                     <p class="dh-site-sub">
-                        @if($typeIconSvg)
-                            <span class="dh-site-type-icon" aria-hidden="true">{!! $typeIconSvg !!}</span>
-                        @else
-                            <img src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="" height="26">
-                        @endif
+                        <x-site-type-icon :type="$site->type" />
                         {{ ucfirst($site->type) }} · {{ ucwords($location->location ?? '') }}
                         @if($site->aka)
                             <button type="button" class="dh-aka-toggle" onclick="var s=this.nextElementSibling; s.hidden=!s.hidden; this.textContent = s.hidden ? 'Also known as...' : 'Hide also known as';">Also known as...</button>
@@ -298,7 +291,7 @@
                             <a href="#" class="text-sm" onclick="event.preventDefault();showModalGuest();">Sign in to rate</a>
                         @endif
                     </div>
-                    <div class="dh-site-actions">
+                    <div class="dh-page-actions">
                         @if($isMember)
                             <a class="dh-btn dh-btn-ghost-dark" href="{{ route('UpdateWished', ['siteId' => $site->id]) }}">
                                 <span class="material-icons-round">{{ $wished ? 'favorite' : 'favorite_border' }}</span>{{ $wished ? 'Saved' : 'Save' }}

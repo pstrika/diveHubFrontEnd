@@ -5,7 +5,7 @@
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <!-- Navbar -->
-        <x-shell.header title="Dive Planner" />
+        <x-shell.header title="Dive Planner" icon="timer" />
         <!-- End Navbar -->
         <div class="container-fluid py-0">
 
@@ -222,43 +222,18 @@
 
 
 
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-n2" style="background-image: url('/assets/img/illustrations/decompressionPlanner.webp');">
-                <span class="mask  bg-gradient-info  opacity-4"></span>
+            <div class="dh-panel-head-row mb-3">
+                <h2 class="dh-panel-title mb-0">Decompression Dive Planner</h2>
+                @if(!is_null($currentSite) && $deco_unit)
+                    <a class="dh-btn dh-btn-ghost-dark" id="switchUnits" href="{{ route('DecoPlannerImperial') }}/{{ $currentSite->id }}">Switch to Imperial</a>
+                @elseif(is_null($currentSite) && $deco_unit)
+                    <a class="dh-btn dh-btn-ghost-dark" id="switchUnits" href="{{ route('DecoPlannerImperial') }}">Switch to Imperial</a>
+                @elseif(!is_null($currentSite) && !$deco_unit)
+                    <a class="dh-btn dh-btn-ghost-dark" id="switchUnits" href="{{ route('DecoPlannerMetric') }}/{{ $currentSite->id }}">Switch to Metric</a>
+                @else
+                    <a class="dh-btn dh-btn-ghost-dark" id="switchUnits" href="{{ route('DecoPlannerMetric') }}">Switch to Metric</a>
+                @endif
             </div>
-
-            <div class="card p-0 position-relative mt-n5 mx-1 z-index-2 mb-4">
-                
-                <div class="p-0 mt-0 mx-2 border-radius-lg py-3 pe-1 dive-planner-header">
-                    <h1 class="card-title text-info mx-3 mt-0 text-xl">Decompression Dive Planner</h1>
-                    
-                    <!--
-                    <div class="UnitDropdown">
-                        <button class="btn bg-gradient-info dropdown-toggle w-100" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                            Select units...
-                        </button>
-                        <ul class="dropdown-menu" id="UnitDropdownMenu">
-                            <li><a class="dropdown-item" href="#">Imperial</a></li>
-                            <li><a class="dropdown-item" href="#">Metric</a></li>
-                        </ul>
-                    </div> -->
-
-                    <div class="text-center" style="border: none;"> <!-- Added text-center here -->
-                        @if(!is_null($currentSite) && $deco_unit)
-                            <a type="button" class="btn btn-info mt-0" id="switchUnits" href="{{ route('DecoPlannerImperial') }}/{{ $currentSite->id }}">Switch to IMPERIAL</a>
-                        @elseif(is_null($currentSite) && $deco_unit)
-                            <a type="button" class="btn btn-info mt-0" id="switchUnits" href="{{ route('DecoPlannerImperial') }}">Switch to IMPERIAL</a>
-                        @elseif(!is_null($currentSite) && !$deco_unit)
-                            <a type="button" class="btn btn-info mt-0" id="switchUnits" href="{{ route('DecoPlannerMetric') }}/{{ $currentSite->id }}">Switch to Metric</a>
-                        @else
-                            <a type="button" class="btn btn-info mt-0" id="switchUnits" href="{{ route('DecoPlannerMetric') }}">Switch to Metric</a>
-                        @endif
-                        
-                    </div>
-                </div>
-
-            </div>
-
-           
 
             <div class="row">
                 <div class="col-md-12 m-auto">             

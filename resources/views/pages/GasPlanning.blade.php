@@ -166,56 +166,37 @@
         </style>
 
         <!-- Navbar -->
-        <x-shell.header title="Best Gases" />
+        <x-shell.header title="Best Gases" icon="science" />
         <!-- End Navbar -->
         <div class="container-fluid py-0">
 
             <div class="d-none" data-color="info" id="sidebarColorDiv"></div>
 
 
-            <!--modal success rating-->
+            {{--modal success rating--}}
             @if(session('msg'))
-            <div class="modal fade" id="modal-notification" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
-                <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+            <div class="modal fade" id="modal-notification" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
                     <div class="modal-content">
-                        <div class="modal-header text-center">
-                            <h6 class="modal-title font-weight-normal" id="modal-title-notification">Notification</h6>
-                            
+                        <div class="modal-header">
+                            <h5 class="modal-title font-weight-normal">Notification</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="modal-body">
-                            <div class="py-3 text-center">
-                            <i class="material-icons h1 text-secondary">
-                                task_alt
-                            </i>
-                            <h4 class="text-gradient text-info mt-4">{{ session('msg') }}</h4>
-                            <p>Press anywhere outside this dialog to continue</p>
-                            </div>
+                        <div class="modal-body text-center">
+                            <span class="material-icons-round" style="font-size: 40px; color: var(--dh-good);" aria-hidden="true">task_alt</span>
+                            <p class="mb-0 mt-2">{{ session('msg') }}</p>
                         </div>
                     </div>
                 </div>
             </div>
             @endif
 
-   
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('/assets/img/illustrations/best_gases.jpg');">
-                <span class="mask  bg-gradient-secondary  opacity-4"></span>
-            </div>
-
-            <div class="card p-0 position-relative mt-n5 mx-3 z-index-2 mb-4" style="background-color: rgba(255, 255, 255, 1.0);">
-                <div class="p-0 mt-0 mx-2  border-radius-lg py-3 pe-1">
-                    <div style="float: left;">
-                        <h1 class="card-category text-info mx-4 mt-3 text-xl">Best Gas Calculator</h1>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Card Gases --}}        
-            <div class="row mx-2">
-                
-                <div class="col-md-12">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        
-                        <div class="card-body" id="gasesCardBody">
+            {{-- Card Gases --}}
+            <div class="row">
+                <div class="col-md-12">
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Best Gas Calculator</h2>
+                        <div id="gasesCardBody">
                             <div class="row mb-3">
                                 <div class="col-12">
                                     <div class="label-container">
@@ -679,11 +660,11 @@
                             
 
                         </div>
-                    </div>
+                    </section>
                 </div>
 
             </div>
-            
+
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>
     </main>

@@ -2,7 +2,7 @@
     <x-shell.nav active="operators" />
 
     <main class="main-content position-relative h-100 border-radius-lg">
-        <x-shell.header title="Dive operators in South Florida" />
+        <x-shell.header title="Dive operators in South Florida" icon="directions_boat" />
 
         <div class="container-fluid py-0 dh-board">
             {{--

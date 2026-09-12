@@ -195,7 +195,7 @@
                             <a href="#" class="text-xs" onclick="event.preventDefault();showModalGuest();">Rate this operator</a>
                         @endif
                     </div>
-                    <div class="dh-site-actions">
+                    <div class="dh-page-actions">
                         @if($phoneHref)<a class="dh-btn dh-btn-primary" href="{{ $phoneHref }}"><span class="material-icons-round">call</span>Call</a>@endif
                         @if($operator->webSite)<a class="dh-btn dh-btn-ghost-dark" href="{{ $operator->webSite }}" target="_blank" rel="noopener"><span class="material-icons-round">open_in_new</span>Website</a>@endif
                         @if($isMember)
@@ -326,6 +326,7 @@
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
     <script src="/assets/js/plugins/fullcalendar.min.js"></script>
+    <script src="{{ asset('assets') }}/js/divershub-calendar.js"></script>
     <link href="{{ asset("assets") }}/css/calendar-buttons.css" rel="stylesheet" />
 
     <script>
@@ -363,13 +364,6 @@
 
 
     <script>
-        function getResponsiveView() {
-            const width = window.innerWidth;
-            if (width >= 1200) return 'dayGridMonth';     // Large screens
-            if (width >= 768) return 'dayGridWeek';       // Medium screens
-            return 'dayGridThreeDay';                    // Small screens
-        }
-
         const todayDate = new Date().toISOString().split('T')[0];
         var calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
         dateClick: function(info) {
@@ -400,47 +394,14 @@
                     echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) ."',";
                     echo "start: '" . $trip->date . " " . $trip->departureTime ."',";
                     echo "url: '/TripDetails/" . str($trip->id) . "',";
-                    if($trip->tripType == "Technical")
-                        echo "className: 'bg-gradient-success text-white tripType=1 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
-                    else
-                        echo "className: 'bg-gradient-secondary text-white tripType=0 isAvail=" . (($trip->tripFreeSpots > 0) ? "Y" : "N")  . "' },";
+                    $tripColor = $trip->tripType == "Technical" ? "#2e7d4f" : "#5a6b78";
+                    echo "color: '" . $tripColor . "' },";
                 }
             @endphp
             
 
         ],
-        views: {
-            dayGridThreeDay: {
-                type: 'dayGrid',
-                duration: { days: 3 },
-                buttonText: '3 day',
-                titleFormat: {
-                    month: "long",
-                    year: "numeric",
-                    day: "numeric"
-                }
-            },
-            month: {
-            titleFormat: {
-                month: "long",
-                year: "numeric"
-            }
-            },
-            agendaWeek: {
-            titleFormat: {
-                month: "long",
-                year: "numeric",
-                day: "numeric"
-            }
-            },
-            agendaDay: {
-            titleFormat: {
-                month: "short",
-                year: "numeric",
-                day: "numeric"
-            }
-            }
-        },
+        views: dhResponsiveViews,
         });
 
         calendar.render();

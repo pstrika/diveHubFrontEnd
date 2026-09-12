@@ -49,6 +49,17 @@
     };
 @endphp
 
+{{-- Install as App: hidden by divershub.js once already running standalone
+     (installed), shown for everyone else - guest or member, any device -
+     since tapping it just opens whatever install path the browser offers.
+     Comes before every other group, including "My diving". --}}
+<div class="dh-menu-group">
+    <a class="dh-menu-link" href="#" id="dh-install-menu-link" onclick="event.preventDefault();">
+        <span class="material-icons-round" aria-hidden="true">get_app</span>
+        <span>Install as App</span>
+    </a>
+</div>
+
 @if($isGuest)
     <div class="dh-menu-cta">
         <p class="mb-2">Save trips, plan dives and see the full forecast with a free account.</p>
@@ -81,7 +92,7 @@
     <h6>Calendars</h6>
     {!! $link('Recreational', route('CalendarT') . '/rec', 'svg:icons_calendar_rec.svg') !!}
     {!! $link('Technical', route('CalendarT') . '/tec', 'svg:icons_calendar_tec.svg') !!}
-    {!! $link('Wreck diving', route('CalendarWreck'), 'svg:icons_calendar_wreck.svg') !!}
+    {!! $link('Wreck diving', route('CalendarWreck'), 'svg:wreck_icon.svg') !!}
     {!! $link('Shark diving', route('CalendarShark'), 'svg:icons_calendar_shark.svg') !!}
     {!! $link('Lobster diving', route('CalendarLobster'), 'svg:icons_calendar_lobster.svg') !!}
 </div>
@@ -91,7 +102,7 @@
     {{-- Operators left the tab bar for Weather (2026-09-10); this row, trip cards,
          site pages and the finder's operator filter are the ways in. --}}
     {!! $link('Dive operators', route('Operators'), 'directions_boat') !!}
-    {!! $link('Marine forecast', route('Weather'), 'waves') !!}
+    {!! $link('Marine forecast', route('Weather'), 'cloud') !!}
     {!! $link('Beach diving', route('BeachDiving'), 'beach_access') !!}
     {!! $link('Online waivers', route('Waivers'), 'assignment') !!}
 </div>

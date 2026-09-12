@@ -140,7 +140,7 @@
         </style>
         
         <!-- Navbar -->
-        <x-shell.header title="Dive Today" />
+        <x-shell.header title="Dive Trip Details" />
 
         <div class="container-fluid py-0 dh-board">
             {{--
@@ -175,7 +175,7 @@
                     </div>
                 </div>
                 <div class="dh-site-facts-side">
-                    <div class="dh-site-actions">
+                    <div class="dh-page-actions">
                         @if($card['bookUrl'] && $a['state'] !== 'full')
                             <a class="dh-btn dh-btn-primary" href="{{ $card['bookUrl'] }}" target="_blank" rel="noopener">Book this trip</a>
                         @elseif($operator->phone)

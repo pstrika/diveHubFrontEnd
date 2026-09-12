@@ -90,7 +90,7 @@
                                     <tbody>
                                         @foreach($sites as $site)    
                                             <tr style="border-bottom: 1px solid #D3D3D3;">
-                                                <td class="w-5 img-fluid"><img style="height:50px;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
+                                                <td class="w-5 img-fluid"><x-site-type-icon :type="$site->type" size="50" /></td>
                                                 <td class="w-35 align-middle text-left text-md"><b><a href="/SiteDetails/{{ $site->id }}"> {{ $site->name }}</a></b></td> 
                                                 @foreach($locations as $location)
                                                     @if($location->short == $site->location)
