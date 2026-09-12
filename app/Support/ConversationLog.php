@@ -4,13 +4,18 @@ namespace App\Support;
 
 use App\Models\ConversationMessage;
 use App\Models\User;
+use App\Services\NotificationService;
+use Illuminate\Support\Str;
 
 /**
  * Single write path for every row in the admin Message Management
  * console's inbox (conversation_messages) - both directions, all three
  * channels. Centralizing this means the inbound webhook, the "Chat with
  * us" widget, and the admin's own replies can't drift into writing
- * slightly different shapes of row.
+ * slightly different shapes of row - and, since every inbound message
+ * comes through here, this is also the one place that needs to notify
+ * admins a new message arrived (Pablo, 2026-09-14: "admins... need to get
+ * a notification if a message is incoming").
  */
 final class ConversationLog
 {
@@ -18,7 +23,7 @@ final class ConversationLog
     {
         $contact = self::normalize($channel, $contact);
 
-        return ConversationMessage::create(array_merge([
+        $message = ConversationMessage::create(array_merge([
             'channel' => $channel,
             'direction' => $direction,
             'contact' => $contact,
@@ -26,6 +31,28 @@ final class ConversationLog
             'user_id' => self::findUserId($channel, $contact),
             'created_at' => now(),
         ], $extra));
+
+        if ($direction === 'inbound') {
+            self::notifyAdmins($channel, $contact, $body);
+        }
+
+        return $message;
+    }
+
+    /** In-app notification (+ push, via NotificationService) to every admin - the console itself has no other "someone just texted us" alert. */
+    private static function notifyAdmins(string $channel, string $contact, ?string $body): void
+    {
+        $adminIds = User::where('role_id', 1)->pluck('id');
+        if ($adminIds->isEmpty()) {
+            return;
+        }
+
+        NotificationService::notify(
+            $adminIds,
+            'New ' . $channel . ' message',
+            $contact . ': ' . Str::limit((string) $body, 100),
+            route('admin.messages.index')
+        );
     }
 
     /** Same shape every time a contact is stored, so grouping a console thread by it actually groups correctly. */

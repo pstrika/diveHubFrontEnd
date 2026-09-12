@@ -132,8 +132,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
 	Route::get('DeletePic', 'App\Http\Controllers\SiteController@deletePic')->middleware('auth')->name('DeletePic');
 
 	Route::get('admin/messages', [\App\Http\Controllers\AdminMessagesController::class, 'index'])->name('admin.messages.index');
+	Route::get('admin/messages/poll', [\App\Http\Controllers\AdminMessagesController::class, 'poll'])->name('admin.messages.poll');
 	Route::get('admin/messages/thread/{contact}', [\App\Http\Controllers\AdminMessagesController::class, 'thread'])->name('admin.messages.thread')->where('contact', '.*');
+	Route::get('admin/messages/users/search', [\App\Http\Controllers\AdminMessagesController::class, 'searchUsers'])->name('admin.messages.searchUsers');
 	Route::post('admin/messages/send', [\App\Http\Controllers\AdminMessagesController::class, 'send'])->name('admin.messages.send');
+	Route::post('admin/messages/invite', [\App\Http\Controllers\AdminMessagesController::class, 'sendInvite'])->name('admin.messages.invite');
 
 });
 

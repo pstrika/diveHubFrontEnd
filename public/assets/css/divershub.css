@@ -1505,3 +1505,14 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-chat-fab:hover { background: var(--dh-deep); }
 .dh-chat-fab .material-icons-round { font-size: 26px; }
 @media (min-width: 992px) { .dh-chat-fab { bottom: 24px; } }
+
+/* Admin console: icon-chip channel picker (2026-09-14), New message modal + reply form. */
+.dh-channel-picker { display: flex; gap: 8px; }
+.dh-channel-chip {
+  flex: 1 1 0; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 10px; border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill);
+  background: var(--dh-paper); color: var(--dh-muted); font-weight: 700; font-size: .82rem; cursor: pointer;
+}
+.dh-channel-chip .material-icons-round { font-size: 17px; }
+.dh-channel-chip.is-active { background: var(--dh-ink); border-color: var(--dh-ink); color: #fff; }
+.dh-channel-chip:hover:not(.is-active) { border-color: var(--dh-sea); color: var(--dh-sea); }
