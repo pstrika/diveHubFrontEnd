@@ -41,7 +41,7 @@
                                 <h2>12. Changes to Terms</h2>
                                 <p>We reserve the right to modify these terms at any time. We will notify you of any changes by posting the new terms on this page.</p>
                                 <h2>13. Contact Us</h2>
-                <p>If you have any questions about these Terms of Use, please contact us at info@divers-hub.com</p>
+                <p>If you have any questions about these Terms of Use, please contact us at support@divers-hub.com</p>
             </section>
 
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>

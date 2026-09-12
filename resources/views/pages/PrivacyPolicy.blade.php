@@ -28,11 +28,11 @@
                                 <h2>5. Data Security</h2>
                                 <p>We use administrative, technical, and physical security measures to help protect your personal information.</p>
                                 <h2>6. Your Rights</h2>
-                                <p>You have the right to access, correct, or delete your personal data. You can also object to the processing of your data in certain circumstances. A group admin can immediately delete all stored Facebook Page data at any time using the "Disconnect" option in that group's settings. You can stop SMS trip reminders at any time by unchecking the SMS notifications preference on your account page or by replying STOP to any message. You may also email us at info@divers-hub.com to request deletion of any data we hold about you, including data obtained via Facebook Login.</p>
+                                <p>You have the right to access, correct, or delete your personal data. You can also object to the processing of your data in certain circumstances. A group admin can immediately delete all stored Facebook Page data at any time using the "Disconnect" option in that group's settings. You can stop SMS trip reminders at any time by unchecking the SMS notifications preference on your account page or by replying STOP to any message. You may also email us at support@divers-hub.com to request deletion of any data we hold about you, including data obtained via Facebook Login.</p>
                                 <h2>7. Changes to This Privacy Policy</h2>
                                 <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page.</p>
                                 <h2>8. Contact Us</h2>
-                                <p>If you have any questions about this Privacy Policy, please contact us at info@divers-hub.com</p>
+                                <p>If you have any questions about this Privacy Policy, please contact us at support@divers-hub.com</p>
             </section>
 
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>

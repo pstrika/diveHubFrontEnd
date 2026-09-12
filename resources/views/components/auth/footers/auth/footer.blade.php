@@ -20,9 +20,6 @@
               <a href="/AboutUs" class="nav-link text-muted">About us</a>
             </li>
             <li class="nav-item">
-              <a href="/AboutUs" class="nav-link text-muted">Contact</a>
-            </li>
-            <li class="nav-item">
               <a href="/TermsOfUse" class="nav-link text-muted">Terms of use</a>
             </li>
             <li class="nav-item">

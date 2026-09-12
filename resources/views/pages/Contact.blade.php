@@ -16,7 +16,7 @@
 
             <section class="dh-panel">
                 <h2 class="dh-panel-title">Contact</h2>
-                <p class="mb-0">If you want to get in touch with us, email us to: <a href="mailto:info@divers-hub.com">info@divers-hub.com</a></p>
+                <p class="mb-0">If you want to get in touch with us, email us to: <a href="mailto:support@divers-hub.com">support@divers-hub.com</a></p>
             </section>
 
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>

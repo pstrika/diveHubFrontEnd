@@ -116,6 +116,21 @@ body.dh-shell .main-content > .container-fluid {
   max-width: 1100px; margin-left: auto; margin-right: auto; box-sizing: border-box;
   padding-top: var(--dh-space-2); padding-left: var(--dh-content-x); padding-right: var(--dh-content-x);
 }
+/* That padding-top is every page's whole top gap under the sticky header.
+   Several first-on-the-page components (.dh-wx-verdict, .dh-explorer-head,
+   .dh-site-facts, .dh-card, .dh-dash-collapse, .dh-wizard...) also carry
+   their own margin-top, meant to space repeated instances of themselves
+   away from whatever card came before - correct everywhere except when
+   one of them happens to BE the first thing on the page, where it just
+   doubled the gap (2026-09-13: this, not the container padding itself,
+   is why some pages read as having more top padding than others). Zero
+   the redundant one out, one level of .row > column deep too since Beach
+   Diving's verdict cards live inside a column, not directly in the
+   container. */
+body.dh-shell .main-content > .container-fluid > *:first-child,
+body.dh-shell .main-content > .container-fluid > .row:first-child > [class*="col"]:first-child > *:first-child {
+  margin-top: 0 !important;
+}
 body.dh-shell .sidenav, body.dh-shell #sidenav-main { display: none !important; }
 
 .dh-topbar {

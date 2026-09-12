@@ -20,13 +20,13 @@
                                 <p>This takes effect immediately - the data is deleted from our database right away, and new dives stop posting to that Page.</p>
 
                                 <h2>2. Deleting Your Account and Other Data</h2>
-                                <p>Divers Hub does not yet have a self-service "delete my account" button. To request deletion of your account or any other personal data we hold about you, email us at <a href="mailto:info@divers-hub.com">info@divers-hub.com</a> from the email address on your account, with the subject line "Data Deletion Request". We will confirm your identity and delete your data within 30 days, except where we're required to keep certain records by law.</p>
+                                <p>Divers Hub does not yet have a self-service "delete my account" button. To request deletion of your account or any other personal data we hold about you, email us at <a href="mailto:support@divers-hub.com">support@divers-hub.com</a> from the email address on your account, with the subject line "Data Deletion Request". We will confirm your identity and delete your data within 30 days, except where we're required to keep certain records by law.</p>
 
                                 <h2>3. What Gets Deleted</h2>
                                 <p>A full account deletion removes your profile, personal dive calendar, group memberships, and any Facebook Page connection data tied to groups you administer. Content you posted in shared spaces you don't own (for example, messages in a Diving Group chat you didn't create) may be retained for other members' continuity, with your personal identifying information removed where feasible.</p>
 
                                 <h2>4. Questions</h2>
-                                <p>See our <a href="{{ route('PrivacyPolicy') }}">Privacy Policy</a> for more on what data we collect and why. If you have questions about this process, contact us at <a href="mailto:info@divers-hub.com">info@divers-hub.com</a>.</p>
+                                <p>See our <a href="{{ route('PrivacyPolicy') }}">Privacy Policy</a> for more on what data we collect and why. If you have questions about this process, contact us at <a href="mailto:support@divers-hub.com">support@divers-hub.com</a>.</p>
             </section>
 
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>

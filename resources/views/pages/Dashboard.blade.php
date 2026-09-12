@@ -422,7 +422,7 @@
     <script>
         function sendEmail() {
             var link = 'mailto:seatheskyadventures@gmail.com'
-                + '?cc=info@divers-hub.com'
+                + '?cc=support@divers-hub.com'
                 + '&subject=' + encodeURIComponent("Inquiry: Majestic liveaboard on Oct-19th to Oct-26th 2024")
                 + '&body=' + encodeURIComponent("I've read in divers-hub about a trip to Egypt. I want to know more!")
         ;
