@@ -10,6 +10,69 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.5.0 — 2026-09-14
+
+Deployed: commits `abacec3`, `4d4dc85`, `6c064b3`, `a5b836c`.
+
+**Two new migrations - run by hand on the redesign slot's database after
+this deploy, same rule as always (named with `--path`, never bare
+`migrate`):** `2026_09_14_010000_add_group_id_to_messages_table.php` and
+`2026_09_14_020000_add_digest_fields_to_groups_table.php`.
+
+### Notifications
+- A third tab, Groups, alongside Inbox and Bin - group invites, chat
+  messages, new-dive announcements and dive reminders all land there now
+  instead of drowning out the Inbox's system notifications. New
+  `messages.group_id` column; existing messages predate it and stay in
+  the Inbox (no reliable way to tell which were group-related after the
+  fact).
+- Fixed "the counters for Inbox and Bin don't update, I need to refresh" -
+  delete/restore/destroy never touched the tab badges before, only
+  marking a message read did. Badges now re-derive from what's actually
+  in the DOM after any action that could change one, so they can't drift.
+
+### Group chat
+- Typing "@" opens a picker of the group's other active members; Enter/
+  Tab picks the top match while it's open. A new `MentionParser` finds
+  every mention in the message (longest name first, so "@John Smith"
+  can't double-count a separate "John" in the same group).
+- Whoever is specifically @mentioned gets an immediate WhatsApp ping (once
+  a mention template exists and is approved - none does yet). Everyone
+  still gets the normal chat notification in Inbox/Groups either way; no
+  extra email.
+
+### Groups: activity digest email
+- New Wed/Fri/Sun email per group: new members, a taste of the chat
+  (count + up to 3 recent snippets, noting photos), dives that happened,
+  and a look-ahead at what's coming up. Its own toggle in the group's
+  Settings modal (`digest_enabled`, on by default), separate from the
+  existing trip-reminder toggle. Skips groups with nothing to report;
+  respects each member's email-notifications opt-in (this reads as "news
+  from my groups", not a transactional reminder). Triggered the same way
+  as the existing dive-reminder cron - a GitHub Actions schedule hitting
+  a secret-protected route.
+
+### SMS and WhatsApp - tested live tonight
+- Twilio credentials are in the local `.env` (not yet in Azure App
+  Settings for any environment) and verified end to end: a real SMS via
+  `SmsService`, and a real WhatsApp message via `WhatsAppService`.
+- **WhatsApp was rebuilt.** It turned out Pablo's WhatsApp Business number
+  is provisioned through Twilio (same account as SMS), not a standalone
+  Meta Cloud API app the way `WhatsAppService` was first built against.
+  Rewrote it to go through Twilio's own Messages API - same Account SID/
+  API Key, same endpoint, a `whatsapp:` prefix on To/From, and an approved
+  template is a Twilio Content resource (a ContentSid) rather than Meta's
+  raw template shape. Queried Twilio's Content API directly and found two
+  already-approved trip-reminder templates; wired the dive-reminder
+  WhatsApp send to the real one's real 5-variable shape (name, site,
+  operator, date, time), replacing the placeholder guess from before
+  anyone had seen the actual template. No mention template exists yet,
+  so that path stays a no-op until one is created and its ContentSid is
+  configured.
+- Nothing sends on the deployed site yet - the credentials are local
+  only. Ready to add to Azure App Settings whenever the SMS/WhatsApp
+  features are ready to go live.
+
 ## 10.4.1 — 2026-09-14
 
 Deployed: commit `39fc024`.
