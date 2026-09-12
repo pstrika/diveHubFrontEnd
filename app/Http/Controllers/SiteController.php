@@ -39,43 +39,108 @@ class SiteController extends Controller
         return redirect()->back();
 
     }
+    /**
+     * The score cutoff for a shore-diving go/no-go, carried over from the
+     * pre-redesign "next 5 days" table. Kept as one constant and used
+     * everywhere on this page (the verdict headline, the AM/PM halves, and
+     * the days table) so they can never disagree the way the first redesign
+     * pass did - that version used the marine-forecast page's Good/Poor/etc
+     * text bucket for the headline while the days table used this score
+     * cutoff, and the two don't always agree on the same conditionsAM_score.
+     */
+    private const BEACH_GO_SCORE = 3.8;
+
+    /**
+     * Redesign (2026-09-12), modeled on the marine forecast page: a verdict
+     * card per beach (Fort Lauderdale, West Palm Beach) with today's
+     * conditions and, prominently, the next high tide - shore diving is
+     * usually best around high tide, so that's not something to bury in a
+     * details panel the way the main forecast page does. Same collapsible
+     * webcam, same site map and list, both now foldable.
+     */
     public function showBeach() {
-        $sitesFLL = Site::where('access', 'Beach Access')->where('location', 'FLL')->get();
-        //$sitesWPB = Site::where('access', 'Beach Access')->where('location', 'WPB')->get();
-        $sitesWPB = Site::where(function ($query) {
-            $query->where('location', 'BOY')
-                  ->orWhere('location', 'WPB');
-        })
-        ->where('access', 'Beach Access')
-        ->get();
-        $locations = WeatherLocation::all();
-        $weathersFLL = Weatherday::whereIn('location', ['fort lauderdale'])->orderBy('date')->take(5)->get();
-        $weathersWPB = Weatherday::whereIn('location', ['west palm beach'])->orderBy('date')->take(5)->get();
+        $beachConfigs = [
+            ['key' => 'fort lauderdale', 'label' => 'Fort Lauderdale', 'siteLocations' => ['FLL']],
+            ['key' => 'west palm beach', 'label' => 'West Palm Beach', 'siteLocations' => ['BOY', 'WPB']],
+        ];
 
-        $weathers[0] = $weathersFLL;
-        $weathers[1] = $weathersWPB;
+        $now = Carbon::now();
+        $today = Carbon::today()->toDateString();
+        $beaches = [];
 
-        $i=0;
-        if($sitesFLL->isNotEmpty()) {
-            Log::debug("Site found for FLL " . str(count($sitesFLL)));
-            $sites[$i] = $sitesFLL;
-            $i++;
-        }
-        if($sitesWPB->isNotEmpty()) {
-            Log::debug("Site found for WPB " . str(count($sitesWPB)));
-            $sites[$i] = $sitesWPB;
-            $i++;
+        foreach ($beachConfigs as $cfg) {
+            $location = WeatherLocation::where('location', $cfg['key'])->first();
+            $days = Weatherday::where('location', $cfg['key'])
+                ->where('date', '>=', $today)
+                ->orderBy('date')
+                ->take(5)
+                ->get();
+            $todayWeather = $days->first();
+
+            // Today's tides, oldest first - the row of pills always shows all of
+            // today's, regardless of whether any are still ahead of us.
+            $tides = collect();
+            if ($todayWeather && $todayWeather->tides) {
+                $tides = collect(json_decode($todayWeather->tides, true) ?: [])
+                    ->map(fn ($t) => [
+                        'type' => strtoupper($t['tide_type'] ?? ''),
+                        'time' => Carbon::parse($t['tide_time']),
+                    ])
+                    ->sortBy('time')
+                    ->values();
+            }
+
+            // The next HIGH tide specifically - not just the next tide of either
+            // type - searched across today and the next few days, not only
+            // today, so late at night (after today's last high has passed) this
+            // still points at tomorrow morning's high instead of showing
+            // nothing, which read as "the tides are missing" for whichever
+            // beach's last high happened to fall a few minutes earlier.
+            $allTides = collect();
+            foreach ($days as $d) {
+                if (!$d->tides) {
+                    continue;
+                }
+                foreach (json_decode($d->tides, true) ?: [] as $t) {
+                    $allTides->push(['type' => strtoupper($t['tide_type'] ?? ''), 'time' => Carbon::parse($t['tide_time'])]);
+                }
+            }
+            $nextHigh = $allTides->sortBy('time')->first(fn ($t) => $t['type'] === 'HIGH' && $t['time']->gt($now));
+            $nextHighIn = $nextHigh
+                ? $now->diffForHumans($nextHigh['time'], ['parts' => 1, 'syntax' => Carbon::DIFF_ABSOLUTE])
+                : null;
+            $nextHighIsToday = $nextHigh && $nextHigh['time']->isToday();
+            $nextTideIndex = $nextHighIsToday ? $tides->search(fn ($t) => $t['time']->eq($nextHigh['time'])) : false;
+
+            $sites = Site::where('access', 'Beach Access')
+                ->whereIn('location', $cfg['siteLocations'])
+                ->orderBy('name')
+                ->get();
+
+            $beaches[] = [
+                'key'          => $cfg['key'],
+                'label'        => $cfg['label'],
+                'location'     => $location,
+                'today'        => $todayWeather,
+                'days'         => $days,
+                'tides'        => $tides,
+                'nextTideIndex' => $nextTideIndex === false ? null : $nextTideIndex,
+                'nextHigh'     => $nextHigh,
+                'nextHighIn'   => $nextHighIn,
+                'nextHighIsToday' => $nextHighIsToday,
+                'sites'        => $sites,
+            ];
         }
 
         /*Provide SEO metadata */
         $SEO = array(
             "title" => "Beach diving in South Florida",
-            "desc" => "Find all the details for planning a successful beach diving in Fort Lauderdale or West Palm Beach",
-            "keywords" => "beach diving, fort lauderdale beach diving, palm beach beach diving, shore diving",
+            "desc" => "Shore diving conditions, tides and dive sites for Fort Lauderdale and West Palm Beach.",
+            "keywords" => "beach diving, fort lauderdale beach diving, palm beach beach diving, shore diving, tides",
             "canonical" => route("BeachDiving")
         );
 
-        return view('pages.BeachDiving', compact('sites', 'locations', 'weathers', 'SEO'));
+        return view('pages.BeachDiving', compact('beaches', 'SEO'));
     }
 
     public function show($id = null) {
