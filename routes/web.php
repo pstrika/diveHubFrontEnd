@@ -44,6 +44,7 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
 
 Route::get('sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 Route::get('cron/send-group-reminders', [\App\Http\Controllers\CronController::class, 'sendGroupReminders']);
+Route::get('cron/send-group-activity-digest', [\App\Http\Controllers\CronController::class, 'sendGroupActivityDigest']);
 
 /* Privacy Policy */
 Route::get('PrivacyPolicy', function () {

@@ -22,6 +22,8 @@ class Group extends Model
         'avatar',
         'calendar_token',
         'reminders_enabled',
+        'digest_enabled',
+        'last_digest_sent_at',
         'allow_members_add_dives',
         'fb_page_id',
         'fb_page_name',
@@ -34,6 +36,8 @@ class Group extends Model
 
     protected $casts = [
         'reminders_enabled' => 'boolean',
+        'digest_enabled' => 'boolean',
+        'last_digest_sent_at' => 'datetime',
         'allow_members_add_dives' => 'boolean',
         'fb_page_access_token' => 'encrypted',
         'fb_connected_at' => 'datetime',

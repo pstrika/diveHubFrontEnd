@@ -1,0 +1,15 @@
+name: Send group activity digest emails
+
+on:
+  schedule:
+    - cron: '0 13 * * 0,3,5' # 9am Eastern (13:00 UTC / 12:00 UTC during EST), Sun/Wed/Fri
+  workflow_dispatch: {}
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger groups:send-activity-digest
+        run: |
+          curl -sf "https://divers-hub.com/cron/send-group-activity-digest?secret=${{ secrets.CRON_SECRET }}"

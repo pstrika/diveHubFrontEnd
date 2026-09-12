@@ -429,12 +429,14 @@ class GroupController extends Controller
 
         $request->validate([
             'reminders_enabled' => 'nullable|boolean',
+            'digest_enabled' => 'nullable|boolean',
             'allow_members_add_dives' => 'nullable|boolean',
             'favorite_operators' => 'nullable|array',
             'favorite_operators.*' => 'integer|exists:mysql_trips.operators,id',
         ]);
 
         $group->reminders_enabled = $request->boolean('reminders_enabled');
+        $group->digest_enabled = $request->boolean('digest_enabled');
         $group->allow_members_add_dives = $request->boolean('allow_members_add_dives');
         $group->save();
 

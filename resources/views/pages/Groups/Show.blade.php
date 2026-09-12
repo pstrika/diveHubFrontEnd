@@ -87,6 +87,12 @@
                                 Email trip reminders (3 days and 1 day before an upcoming dive)
                             </label>
                         </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" name="digest_enabled" value="1" id="digestEnabledInput" {{ $group->digest_enabled ? 'checked' : '' }}>
+                            <label class="form-check-label" for="digestEnabledInput">
+                                Email activity digest (Wednesdays, Fridays and Sundays - new members, chat, trips)
+                            </label>
+                        </div>
                         <div class="form-check form-switch mb-4">
                             <input class="form-check-input" type="checkbox" name="allow_members_add_dives" value="1" id="allowMembersAddDivesInput" {{ $group->allow_members_add_dives ? 'checked' : '' }}>
                             <label class="form-check-label" for="allowMembersAddDivesInput">
