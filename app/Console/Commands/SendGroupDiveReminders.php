@@ -174,17 +174,20 @@ class SendGroupDiveReminders extends Command
     }
 
     /**
-     * WhatsApp reminder via Twilio's "trip_reminder_2" Content template
-     * (content.twilio.com, confirmed live and approved 2026-09-14), only
-     * for members who opted in (`whatsapp_notifications`) and have a phone
-     * on file - WhatsAppService itself also no-ops without Twilio
-     * credentials configured.
+     * WhatsApp reminder via Twilio's "trip_reminder_3" Content template
+     * (whatsapp/card: header image, body, footer, a "Trip Details" button -
+     * content.twilio.com, submitted for Meta review 2026-09-14, so sends
+     * will fail/log until it comes back approved), only for members who
+     * opted in (`whatsapp_notifications`) and have a phone on file -
+     * WhatsAppService itself also no-ops without Twilio credentials
+     * configured.
      *
-     * The template's 5 variables are fixed by what was actually approved:
+     * The template's variables are fixed by what was actually submitted:
      * {{1}} diver's name, {{2}} site, {{3}} operator, {{4}} date, {{5}}
-     * time - not the days-ahead/group-URL phrasing the SMS body above
-     * uses, since WhatsApp cannot send free-form business-initiated text,
-     * only this exact template with this exact shape.
+     * time, {{6}} the group's slug (the "Trip Details" button's URL is
+     * https://divers-hub.com/Groups/{{6}}) - not the days-ahead/group-URL
+     * phrasing the SMS body above uses, since WhatsApp cannot send
+     * free-form business-initiated text, only this exact template shape.
      */
     private function sendReminderWhatsApp(GroupDive $dive, int $daysAhead)
     {
@@ -216,6 +219,7 @@ class SendGroupDiveReminders extends Command
                 '3' => $operatorName,
                 '4' => $dateFormatted,
                 '5' => $timeFormatted,
+                '6' => $group->slug,
             ]);
         }
     }
