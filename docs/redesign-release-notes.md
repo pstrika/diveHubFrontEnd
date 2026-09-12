@@ -10,6 +10,18 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.7.1 — 2026-09-14
+
+Deployed: commit `d9d8401`. The inbound webhook now sends a short
+automatic acknowledgment, but only for a contact's first message ever or
+when nothing's been exchanged with them in over a week - not on every
+reply. Confirmed with Pablo that the number's previous TwiML Bin was just
+a blanket "not monitoring this" reply with no STOP/HELP logic of its
+own, and that Twilio's platform-level opt-out compliance for the number's
+A2P 10DLC registration doesn't depend on it - safe to replace. **Next
+step, outside this codebase**: point the Twilio number's SMS webhook at
+`https://divehub-redesign.azurewebsites.net/webhooks/twilio/inbound`.
+
 ## 10.7.0 — 2026-09-14
 
 Deployed: commit `1a3d40f`. **New migration - already run tonight against
