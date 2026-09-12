@@ -10,6 +10,39 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.8.0 — 2026-09-14
+
+Deployed: commit `0e4eb0c`. Two live infrastructure changes made tonight,
+outside of git:
+- Twilio credentials added to the redesign slot's Azure App Settings -
+  the admin console's outbound sends only ever had them locally before,
+  so live replies were silently failing (no exception, just Twilio never
+  configured - `status: failed`, no log line).
+- The WhatsApp Sender's own inbound webhook (a separate Twilio resource
+  from the phone number's SMS webhook - `messaging.twilio.com/v2/
+  Channels/Senders`, its `callback_url` was blank) now points at
+  `/webhooks/twilio/inbound` too. Verified live, both directions, both
+  channels.
+
+### Admin console
+- Auto-refreshes every 5 seconds - the conversation list and any open
+  thread - instead of needing a manual reload to see a reply.
+- SMS/WhatsApp/email are icon chips now in both the New Message modal and
+  the reply form, not a `<select>`.
+- New Message's contact field searches real accounts by name, email or
+  phone (same pattern as the group chat's @mention picker) and fills in
+  the right value for whichever channel is picked; free text still works
+  for anyone not in the system.
+- Reply box sends on Enter, Shift+Enter for a new line.
+- Avatars (a real photo when the contact matches an account with one,
+  otherwise a channel icon) in the list, the open thread, and the poll's
+  re-rendered rows. A contact with no matching account gets a "Send
+  registration invite" button instead.
+- Every admin gets notified (in-app + push) the instant an inbound
+  message lands, from any source - added once in the shared write path,
+  so nothing else needed to change for it to cover both the webhook and
+  the Chat with Us widget.
+
 ## 10.7.1 — 2026-09-14
 
 Deployed: commit `d9d8401`. The inbound webhook now sends a short
