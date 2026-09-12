@@ -820,7 +820,12 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-install .dh-btn { padding: 8px 14px; flex: 0 0 auto; }
 .dh-install-close { border: 0; background: transparent; color: var(--dh-muted); padding: 4px; margin: -4px -4px -4px 0; flex: 0 0 auto; }
 .dh-install-close .material-icons-round { font-size: 20px; }
-@media (min-width: 768px) { .dh-install { display: none !important; } } /* desktop never sees it */
+/* The automatic popup is phone/tablet only by design; a manual "Install as
+   App" tap from the drawer (any device) still needs to fall back to this
+   bar on desktop when the browser hasn't handed us a deferred prompt to
+   call directly yet - see the "manual" flag in divershub.js's show(). */
+@media (min-width: 768px) { .dh-install:not(.is-manual) { display: none !important; } }
+@media (min-width: 768px) { .dh-install.is-manual { left: auto; width: min(380px, calc(100vw - 32px)); bottom: 24px; right: 24px; } }
 
 /* ------------------------------------------------------------------ */
 /* Home: coast tiles centred, so an odd count does not leave an orphan */

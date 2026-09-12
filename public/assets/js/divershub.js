@@ -176,9 +176,16 @@
     }
 
     var deferred = null;
-    var show = function (kind) {
+    // manual=true marks a bar shown from the drawer's "Install as App" link
+    // (any device, including desktop) rather than the automatic phone/tablet
+    // popup - .dh-install is display:none!important above 768px otherwise
+    // (see divershub.css), which used to swallow this fallback silently on
+    // desktop whenever the browser hadn't already handed us a deferred
+    // prompt to call directly.
+    var show = function (kind, manual) {
       if (!bar || document.querySelector('.modal.show')) return; // never on top of the guest prompt
       bar.querySelectorAll('[data-install]').forEach(function (el) { el.hidden = el.getAttribute('data-install') !== kind; });
+      bar.classList.toggle('is-manual', !!manual);
       bar.hidden = false;
     };
 
@@ -190,9 +197,9 @@
           deferred.prompt();
           deferred.userChoice.then(function () { deferred = null; clearInstallDismissal(); });
         } else if (isIosSafari()) {
-          show('ios');
+          show('ios', true);
         } else {
-          show('android');
+          show('android', true);
         }
       });
     }

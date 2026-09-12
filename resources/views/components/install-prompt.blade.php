@@ -9,9 +9,11 @@
         (Share, then Add to Home Screen). Only on iOS Safari, only when not
         already installed.
 
-    Rules: shown on every visit until the app is installed, never when already
-    running as an installed app, never on desktop, never inside an iframe, and
-    dismissing it hides it for the rest of that browser session.
+    The automatic popup is phone/tablet only (re-shown 10 page views after a
+    dismissal), never when already installed, never inside an iframe. This
+    same markup also backs the drawer's "Install as App" link, which works
+    on any device including desktop - see divershub.js's isMobileOrTablet()
+    and the "manual" flag on show().
 --}}
 <div id="dh-install" class="dh-install" hidden role="region" aria-label="Add Divers Hub to your home screen">
     <img src="{{ asset('assets') }}/img/pwa/icon-192.png" alt="" width="40" height="40">
