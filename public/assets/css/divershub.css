@@ -1541,3 +1541,9 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-channel-chip svg { width: 17px; height: 17px; flex: 0 0 auto; }
 .dh-channel-chip.is-active { background: var(--dh-ink); border-color: var(--dh-ink); color: #fff; }
 .dh-channel-chip:hover:not(.is-active) { border-color: var(--dh-sea); color: var(--dh-sea); }
+.dh-channel-chip.is-sms.is-active { background: var(--dh-sea); border-color: var(--dh-sea); }
+.dh-channel-chip.is-whatsapp.is-active { background: var(--dh-good); border-color: var(--dh-good); }
+.dh-channel-chip.is-email.is-active { background: var(--dh-avg); border-color: var(--dh-avg); }
+.dh-channel-chip.is-sms:hover:not(.is-active) { border-color: var(--dh-sea); color: var(--dh-sea); }
+.dh-channel-chip.is-whatsapp:hover:not(.is-active) { border-color: var(--dh-good); color: var(--dh-good); }
+.dh-channel-chip.is-email:hover:not(.is-active) { border-color: var(--dh-avg); color: var(--dh-avg); }

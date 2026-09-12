@@ -93,9 +93,9 @@
                             <div class="dh-thread-scroll" id="dh-admin-thread-body"></div>
                             <form id="dh-admin-reply-form" class="dh-thread-reply" onsubmit="dhSendReply(event)">
                                 <div class="dh-channel-picker mb-2" data-picker="reply">
-                                    <button type="button" class="dh-channel-chip is-active" data-value="sms" onclick="dhPickChannel('reply','sms')"><span class="material-icons-round" aria-hidden="true">sms</span> SMS</button>
-                                    <button type="button" class="dh-channel-chip" data-value="whatsapp" onclick="dhPickChannel('reply','whatsapp')">{!! $whatsappSvg !!} WhatsApp</button>
-                                    <button type="button" class="dh-channel-chip" data-value="email" onclick="dhPickChannel('reply','email')"><span class="material-icons-round" aria-hidden="true">mail</span> Email</button>
+                                    <button type="button" class="dh-channel-chip is-sms is-active" data-value="sms" onclick="dhPickChannel('reply','sms')"><span class="material-icons-round" aria-hidden="true">sms</span> SMS</button>
+                                    <button type="button" class="dh-channel-chip is-whatsapp" data-value="whatsapp" onclick="dhPickChannel('reply','whatsapp')">{!! $whatsappSvg !!} WhatsApp</button>
+                                    <button type="button" class="dh-channel-chip is-email" data-value="email" onclick="dhPickChannel('reply','email')"><span class="material-icons-round" aria-hidden="true">mail</span> Email</button>
                                 </div>
                                 <input type="hidden" id="dh-admin-reply-channel" value="sms">
                                 <input type="text" id="dh-admin-reply-subject" class="form-control mb-2" placeholder="Subject (email only)" hidden>
@@ -123,9 +123,9 @@
                 <div class="modal-body">
                     <form id="dh-new-message-form" onsubmit="dhSendNew(event)">
                         <div class="dh-channel-picker mb-2" data-picker="new">
-                            <button type="button" class="dh-channel-chip is-active" data-value="sms" onclick="dhPickChannel('new','sms')"><span class="material-icons-round" aria-hidden="true">sms</span> SMS</button>
-                            <button type="button" class="dh-channel-chip" data-value="whatsapp" onclick="dhPickChannel('new','whatsapp')">{!! $whatsappSvg !!} WhatsApp</button>
-                            <button type="button" class="dh-channel-chip" data-value="email" onclick="dhPickChannel('new','email')"><span class="material-icons-round" aria-hidden="true">mail</span> Email</button>
+                            <button type="button" class="dh-channel-chip is-sms is-active" data-value="sms" onclick="dhPickChannel('new','sms')"><span class="material-icons-round" aria-hidden="true">sms</span> SMS</button>
+                            <button type="button" class="dh-channel-chip is-whatsapp" data-value="whatsapp" onclick="dhPickChannel('new','whatsapp')">{!! $whatsappSvg !!} WhatsApp</button>
+                            <button type="button" class="dh-channel-chip is-email" data-value="email" onclick="dhPickChannel('new','email')"><span class="material-icons-round" aria-hidden="true">mail</span> Email</button>
                         </div>
                         <input type="hidden" id="dh-new-channel" value="sms">
                         <div class="position-relative mb-2">
