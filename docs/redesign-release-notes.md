@@ -10,6 +10,26 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.4.1 — 2026-09-14
+
+Deployed: commit `39fc024`.
+
+- iOS install: a real centered modal (steps: Share, Add to Home Screen,
+  Add) instead of the small bottom bar it used to share with Android -
+  that bar's two-line text hint read as "nothing happened" on a phone,
+  since iOS has no install API to hang an actual button off of. Shown by
+  the same two triggers as before (the automatic phone/tablet popup on
+  iOS Safari, and the drawer's "Install as App" link).
+- Two changes aimed at "the 10-page re-show rule isn't working": the
+  service worker registration is now wrapped in a try/catch (a
+  synchronous throw there - some locked-down in-app browsers refuse the
+  API outright - used to silently abort the whole install feature before
+  the bar or the drawer link ever got wired up), and a corrupted/
+  non-numeric stored dismissal count is now treated as "never dismissed"
+  instead of getting permanently stuck comparing against NaN.
+- The Android/desktop bar now slides up from the bottom instead of just
+  appearing.
+
 ## 10.4.0 — 2026-09-13
 
 Deployed: commits `1bc52e3`, `eb780b7`, `103e931`, `b255846`, `aaca8ee`.
