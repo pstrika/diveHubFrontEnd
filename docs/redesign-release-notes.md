@@ -10,6 +10,20 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.8.5 — 2026-09-14
+
+Deployed: commit `9d812f8`. One live data fix made tonight, outside of
+git: ran the new `users:normalize-phones` command against the live users
+table - 56 users had a phone on file, 52 were still in whatever shape
+the diver originally typed (bare digits, dashes, parens, a stray leading
+"1"), now all rewritten into E.164. 0 were unparseable.
+
+### New
+- `users:normalize-phones {--dry-run}` - rewrites every `users.phone`
+  into E.164 via the same `PhoneNumber::toE164()` the profile page
+  already trusts, only reformatting the digits already on file. Anything
+  it can't parse is reported and left untouched, never blanked.
+
 ## 10.8.4 — 2026-09-14
 
 Deployed: commit `f2fea39`.
