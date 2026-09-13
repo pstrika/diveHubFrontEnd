@@ -62,6 +62,8 @@ class AdminMessagesController extends Controller
 
     private function listData(): array
     {
+        ConversationLog::reconcileUnresolved();
+
         $latestIds = ConversationMessage::selectRaw('MAX(id) as id')->groupBy('contact')->pluck('id');
         $conversations = ConversationMessage::whereIn('id', $latestIds)
             ->with('user')
@@ -87,6 +89,8 @@ class AdminMessagesController extends Controller
     public function thread(string $contact)
     {
         $this->authorize('manage-users', User::class);
+
+        ConversationLog::reconcileContact($contact);
 
         $messages = ConversationMessage::where('contact', $contact)->orderBy('created_at')->with('admin')->get();
 

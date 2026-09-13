@@ -43,6 +43,10 @@
 
                 <div class="dh-msg-shell" id="dh-admin-msg-shell">
                     <div class="dh-msg-list-pane">
+                        <div class="dh-msg-search">
+                            <span class="material-icons-round" aria-hidden="true">search</span>
+                            <input type="text" id="dh-msg-search" placeholder="Search conversations..." autocomplete="off">
+                        </div>
                         <div class="dh-msg-list" id="dh-admin-msg-list">
                             @forelse($conversations as $c)
                                 @php $unread = $unreadCounts[$c->contact] ?? 0; @endphp
@@ -192,15 +196,35 @@
             document.getElementById(subjectId).hidden = value !== 'email';
         }
 
-        // ---- Conversation list + polling ----
+        // ---- Conversation list, search + polling ----
+
+        // The list only ever holds one row per contact (latest message),
+        // so even with "a lot of them" (Pablo, 2026-09-14) this stays
+        // small enough to filter entirely client-side - no extra request
+        // per keystroke, no server-side search endpoint needed.
+        var dhAllConversations = [];
+        var dhConversationSearch = '';
 
         function dhRenderList(conversations) {
+            dhAllConversations = conversations;
+            dhApplyConversationFilter();
+        }
+
+        function dhApplyConversationFilter() {
+            var q = dhConversationSearch.trim().toLowerCase();
+            var filtered = !q ? dhAllConversations : dhAllConversations.filter(function (c) {
+                return (c.contact || '').toLowerCase().indexOf(q) !== -1
+                    || (c.userName || '').toLowerCase().indexOf(q) !== -1
+                    || (c.body || '').toLowerCase().indexOf(q) !== -1;
+            });
+
             var list = document.getElementById('dh-admin-msg-list');
-            if (!conversations.length) {
-                list.innerHTML = '<div class="dh-empty"><span class="material-icons-round" aria-hidden="true">forum</span><p>No conversations yet.</p></div>';
+            if (!filtered.length) {
+                var message = q ? 'No conversations match "' + q + '".' : 'No conversations yet.';
+                list.innerHTML = '<div class="dh-empty"><span class="material-icons-round" aria-hidden="true">forum</span><p>' + message + '</p></div>';
                 return;
             }
-            list.innerHTML = conversations.map(function (c) {
+            list.innerHTML = filtered.map(function (c) {
                 var avatar = c.avatarUrl ? '<img src="' + c.avatarUrl + '" alt="">' : dhChannelIconHtml(c.channel);
                 var snippet = (c.direction === 'outbound' ? 'You: ' : '') + (c.body || '').replace(/<[^>]*>/g, '').slice(0, 90);
                 var isOpen = dhCurrentContact === c.contact ? ' is-open' : '';
@@ -217,12 +241,24 @@
             }).join('');
         }
 
+        var dhSearchInput = document.getElementById('dh-msg-search');
+        if (dhSearchInput) {
+            dhSearchInput.addEventListener('input', function (e) {
+                dhConversationSearch = e.target.value;
+                dhApplyConversationFilter();
+            });
+        }
+
         function dhPollList() {
             fetch('{{ route("admin.messages.poll") }}', { headers: { 'Accept': 'application/json' } })
                 .then(function (r) { return r.json(); })
                 .then(function (data) { dhRenderList(data.conversations); })
                 .catch(function () {});
         }
+
+        // Populate dhAllConversations right away - otherwise the search
+        // box would filter an empty list until the first 5s poll tick.
+        dhPollList();
 
         function dhPollThread() {
             if (!dhCurrentContact) return;

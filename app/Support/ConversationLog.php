@@ -66,6 +66,47 @@ final class ConversationLog
     }
 
     /**
+     * A contact's user_id is snapshotted once, in log() above, at the
+     * moment each message is written - so a contact that was unknown at
+     * the time (not registered yet, or registered under a differently
+     * formatted number) stays permanently unmatched even after they
+     * later sign up or fix their number, unless something re-checks it.
+     * Called from the admin console on every list load/poll and thread
+     * open (Pablo, 2026-09-14: "refresh if they registered or included
+     * their number, to show the avatar and name in the chat") - re-runs
+     * findUserId() for a contact still unmatched and backfills every row
+     * for it in one go, so it's a one-time catch-up per contact rather
+     * than a re-check on every message forever.
+     */
+    public static function reconcileContact(string $contact): void
+    {
+        $sample = ConversationMessage::where('contact', $contact)->whereNull('user_id')->first();
+        if (!$sample) {
+            return;
+        }
+
+        $userId = self::findUserId($sample->channel, $contact);
+        if ($userId) {
+            ConversationMessage::where('contact', $contact)->whereNull('user_id')->update(['user_id' => $userId]);
+        }
+    }
+
+    /** Same idea as reconcileContact(), for every contact with any unmatched row - the admin console's list view calls this once per load/poll. */
+    public static function reconcileUnresolved(): void
+    {
+        ConversationMessage::whereNull('user_id')
+            ->select('contact', 'channel')
+            ->distinct()
+            ->get()
+            ->each(function ($row) {
+                $userId = self::findUserId($row->channel, $row->contact);
+                if ($userId) {
+                    ConversationMessage::where('contact', $row->contact)->whereNull('user_id')->update(['user_id' => $userId]);
+                }
+            });
+    }
+
+    /**
      * Matches a phone number against users.phone regardless of which
      * format it's stored in (E.164 going forward, bare digits for
      * anything saved before that - see App\Support\PhoneNumber) - compares
