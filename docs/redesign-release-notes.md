@@ -10,6 +10,27 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.11.0 — 2026-09-15
+
+Deployed: commit `7022aee`.
+
+### Install / PWA
+- Fixed "Install as App" doing nothing on iOS Chrome (and any other
+  non-Safari iOS browser) - the routing check only recognized Safari, so
+  those browsers fell through to the Android bar's Add button, which
+  calls a `beforeinstallprompt` handle iOS never provides. Now routes
+  every iOS browser to the install modal; Safari still gets the 3-step
+  Share-icon walkthrough, anything else gets a "copy this link, open
+  Safari" hand-off with a Copy button, since Chrome-iOS's own Share Sheet
+  wasn't reachable on Pablo's device and every non-Safari browser places
+  it differently anyway.
+- This was also why the automatic popup looked broken when browsing on
+  an iPad in Chrome - same wrong branch.
+
+### Me drawer
+- Dropped the "Messages" link - the top bar's own bell already shows the
+  same unread badge on every screen size, drawer included.
+
 ## 10.10.2 — 2026-09-15
 
 No code changed - one live infrastructure fix, same pattern as the
