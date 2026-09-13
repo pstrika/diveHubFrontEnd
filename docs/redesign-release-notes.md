@@ -10,6 +10,18 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.10.2 — 2026-09-15
+
+No code changed - one live infrastructure fix, same pattern as the
+Twilio credentials gap in 10.8.0: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
+and `VAPID_SUBJECT` existed only in local `.env`, never in the redesign
+slot's Azure App Settings. The "Enable Notifications" push toggle in the
+Me drawer (`x-shell.push-toggle`) hides itself by design whenever
+`config('services.webpush.public_key')` is empty - correct behavior, but
+it meant the toggle had been invisible on every live redesign deploy,
+never actually broken or removed. Added the three settings to the
+redesign slot; Azure restarts the app on an App Settings change.
+
 ## 10.10.1 — 2026-09-15
 
 Deployed: commit `dc3bb35`. Ground rules set against the notification
