@@ -30,6 +30,12 @@
   --dh-poor:       #b0532a;
   --dh-poor-bg:    #f8e9e2;
 
+  /* Safety thresholds (gas planning, 2026-09-15): a genuine orange/red
+     ladder, distinct from the good/avg/poor condition triad above - this
+     is "danger of oxygen toxicity", not "how's the surf". */
+  --dh-warn:       #c2660f;
+  --dh-danger:     #b0322b;
+
   /* Type and spacing scale. */
   --dh-font:       "Roboto", -apple-system, "Segoe UI", Arial, sans-serif;
   --dh-radius:     10px;
@@ -1565,3 +1571,252 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-thread-invite .dh-channel-chip { flex: 0 0 auto; padding: 5px 9px; font-size: .74rem; }
 .dh-thread-invite .dh-channel-chip .material-icons-round { font-size: 15px; }
 .dh-thread-invite .dh-channel-chip svg { width: 15px; height: 15px; }
+
+/* Best Gases: pill inputs + result pills, slider and input on one row,
+   input always BEFORE (to the left of) the slider (Pablo, 2026-09-15 -
+   corrected from an initial "right of the slider" pass). Trialled on
+   Open Circuit > Nitrox + the shared Max Depth control first - not yet
+   applied to the rest of the page (Trimix, CCR, Gas Mix), which still
+   use the older right-label-* classes below untouched. */
+.dh-gas-label { display: block; font-size: .8rem; font-weight: 700; color: var(--dh-muted); margin-bottom: 6px; }
+.dh-gas-row { display: flex; align-items: center; gap: 10px; }
+.dh-gas-row .slider-styled { flex: 1 1 auto; min-width: 0; }
+.dh-gas-input-wrap { display: flex; align-items: center; gap: 5px; flex: 0 0 auto; }
+.dh-gas-unit { font-size: .74rem; color: var(--dh-muted); font-weight: 600; }
+
+/* Every pill (editable input or read-only result) shares one fixed
+   height/padding/font-size so they always line up, whichever kind sits
+   next to whichever slider (Pablo: "I want all pills to be the same
+   height"). */
+.dh-gas-input, .dh-gas-result-pill {
+  height: 32px; font-family: var(--dh-font); font-weight: 700; font-size: .82rem;
+  border-radius: var(--dh-radius-pill);
+}
+
+/* Editable pill input - always a white/paper background per Pablo's
+   convention ("text inputs are with white background"); only the border
+   and text color move through the safe/warn/danger ladder. */
+.dh-gas-input {
+  width: 66px; text-align: center; background: var(--dh-paper); border: 2px solid var(--dh-line);
+  padding: 0 16px 0 6px; color: var(--dh-ink); -moz-appearance: textfield; cursor: text;
+}
+.dh-gas-input::-webkit-outer-spin-button, .dh-gas-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.dh-gas-input:focus { outline: none; box-shadow: 0 0 0 3px var(--dh-foam); }
+.dh-gas-input:hover { filter: brightness(.97); }
+
+/* Pencil icon so the pill reads as "type here", not a static badge - shown
+   at rest (works on touch, where there's no hover to rely on) and hidden
+   the moment the field actually has focus, since the caret says it now
+   (Pablo, 2026-09-15: "how can we make it evident... they can type a
+   number"). Absolutely positioned over the input's own right padding
+   rather than a flex sibling, so the existing safe/warn/danger classList
+   toggle (already targeting the input directly) didn't need to move. */
+.dh-gas-editable { position: relative; display: inline-flex; }
+.dh-gas-edit-icon {
+  position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+  font-size: 12px; color: var(--dh-muted); opacity: .65; pointer-events: none;
+}
+.dh-gas-input:focus + .dh-gas-edit-icon { opacity: 0; }
+.dh-gas-input.is-safe { border-color: var(--dh-sea); color: var(--dh-sea); }
+.dh-gas-input.is-safe:focus { border-color: var(--dh-sea); }
+.dh-gas-input.is-warn { border-color: var(--dh-warn); color: var(--dh-warn); }
+.dh-gas-input.is-warn:focus { border-color: var(--dh-warn); }
+.dh-gas-input.is-danger { border-color: var(--dh-danger); color: var(--dh-danger); }
+.dh-gas-input.is-danger:focus { border-color: var(--dh-danger); }
+
+/* Read-only result pill - the OTHER half of the convention ("labels
+   showing results of calculations are with colored background"): solid
+   fill, white text. Green when the result is the ideal value for this
+   depth, theme blue otherwise - never red/orange, since this isn't a
+   safety threshold, just "matches the calculated best mix or not". */
+.dh-gas-result-pill {
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 0 16px; color: #fff; background: var(--dh-sea);
+}
+.dh-gas-result-pill.is-ideal { background: var(--dh-good); }
+
+/* Some result pills (Gas Density) aren't "ideal vs not" - they're a real
+   safety reading, so they use the same warn/danger ladder as the
+   editable inputs, just as a fill instead of a border. */
+.dh-gas-result-pill.is-warn { background: var(--dh-warn); }
+.dh-gas-result-pill.is-danger { background: var(--dh-danger); }
+
+/* Gas symbol tag baked into the pill itself instead of a separate caption
+   underneath (Pablo, 2026-09-15: "remove the O2 % content label... add O2
+   in the Nitrox result pill") - generated content, never part of the
+   element's real textContent, so every existing calculation that reads
+   #bestNitrox/#txbestNitrox/#txbestHe via .textContent keeps working
+   completely unchanged. */
+.dh-gas-result-pill.is-o2::before { content: "O\2082"; opacity: .75; font-weight: 800; font-size: .68rem; }
+.dh-gas-result-pill.is-he::before { content: "He"; opacity: .75; font-weight: 800; font-size: .68rem; }
+
+/* Gas density: a calculation result like the others, but a supporting
+   figure rather than the headline the split pill above it is - smaller,
+   with its unit baked in the same way (Pablo, 2026-09-15: "put g/L
+   inside the pill after the number"). */
+.dh-gas-result-pill.is-compact { height: 24px; padding: 0 10px; font-size: .72rem; }
+.dh-gas-result-pill.is-density::after { content: " g/L"; opacity: .8; font-weight: 600; font-size: .66rem; }
+
+/* Gas density moved onto the same line as the split pill; its caption
+   sits directly under the density pill only, not centered across the
+   whole row (Pablo, 2026-09-15: "the gas density legend NEEDS to be
+   right under and centered with the gas density result"). */
+.dh-gas-split-pill-row { display: inline-flex; align-items: center; gap: 8px; }
+.dh-gas-density-col { display: flex; flex-direction: column; align-items: center; }
+.dh-gas-density-caption { margin-top: -3px; font-size: .68rem; font-weight: 600; color: var(--dh-muted); line-height: 1; }
+
+/* Tank card's Gas Mix legend - the actual final blend, distinct from
+   the calculators' own safe/ideal color logic, so its own dedicated tag
+   classes rather than reusing is-o2/is-he (which are already dynamic
+   elsewhere). Fixed colors matching what Oxygen/Helium/Nitrogen used to
+   be shown in before (green/blue/grey) - a 2-way split for Nitrox (no
+   Helium), 3-way for Trimix (Pablo, 2026-09-15). */
+.dh-gas-result-pill.is-mix-o2::before { content: "O\2082"; opacity: .75; font-weight: 800; font-size: .62rem; }
+.dh-gas-result-pill.is-mix-he::before { content: "He"; opacity: .75; font-weight: 800; font-size: .62rem; }
+.dh-gas-result-pill.is-mix-n2::before { content: "N\2082"; opacity: .75; font-weight: 800; font-size: .62rem; }
+.dh-gas-result-pill.is-mix-o2 { background: var(--dh-good); }
+.dh-gas-result-pill.is-mix-he { background: var(--dh-sea); }
+.dh-gas-result-pill.is-mix-n2 { background: var(--dh-muted); }
+
+/* Tank card: graphic on the left, Gas Price (now the same tap-to-open
+   <details> card the Weather page's Live Webcam uses, .dh-wx-more) and
+   the NDL result on the right (Pablo, 2026-09-15: "align the tank
+   graphs to the left... to the right of the tanks have the collapsable
+   Gas Price... use the kind of card... like Live Webcam"). The "pull up"
+   nudge (the graphic's own asset has transparent padding baked in above
+   it) is scoped to the graphic column alone, NOT the whole row - Gas
+   Price needs to start level with "PPO2 at max depth" in the calculator
+   column beside it, so it stays at this row's natural top. The image
+   itself is centered within its column via margin:auto on its own
+   wrapper (below) rather than a fixed width on .dh-gas-tank-graphic, so
+   the (usually wider) split pill underneath centers against the SAME
+   width instead of overflowing past a column sized only to the narrow
+   tank image. Extra left padding on the price/NDL side specifically -
+   the tank artwork renders at 150% of its own box (width:150% in the
+   markup), so it visually overflows past the plain column gap. */
+.dh-gas-tank-layout { display: flex; gap: var(--dh-space-4); align-items: flex-start; padding-left: var(--dh-space-4); }
+.dh-gas-tank-graphic { flex: 0 0 auto; text-align: center; margin-top: -44px; }
+.dh-gas-tank-img-wrap { margin: 0 auto; }
+.dh-gas-tank-side { flex: 1 1 auto; min-width: 0; padding-left: var(--dh-space-3); }
+.dh-gas-tank-side .dh-wx-more { margin-top: 0; }
+
+/* Gas Price table rows: Bootstrap's own .table padding reads as too
+   airy for a handful of two-column price rows (Pablo, 2026-09-15: "too
+   much interline space"). */
+.dh-gas-tank-side .dh-wx-more-body { padding-bottom: 8px; }
+.dh-gas-tank-side .dh-wx-more-body td { padding: 2px 0 !important; }
+
+/* Closest standard mix: its own block below the three price rows, not a
+   4th table row (Pablo, 2026-09-15: "separate from the Gas price table
+   ... put it below the table"), one pill carrying the whole legend via
+   generated content rather than a separate label + value. */
+.dh-gas-closemix { margin-top: 12px; }
+.dh-gas-result-pill.is-closemix::before { content: "Closest standard mix "; }
+
+/* "Calculate Best Nitrox/Trimix" shares its row with "Calculate NDL"
+   when the latter is visible (Pablo: "make it share the same line") -
+   the single NDL button is physically moved into whichever row is
+   active by dhSelectGasFuel(). Plain flexbox handles both of Pablo's
+   cases for free: two flex-fill buttons split the row evenly, and
+   since a display:none NDL button (depth > 130ft) doesn't participate
+   in flex sizing at all, the remaining button already stretches to the
+   full row width with no extra rule needed. Extra top margin so the
+   row doesn't crowd the result pill sitting right above it. */
+.dh-gas-btn-row { display: flex; gap: 8px; margin-top: 10px; }
+
+/* NDL result: same card frame as Gas Price (Pablo, 2026-09-15: "use the
+   same frame format you used for Gas price to show the NDL results") -
+   .dh-wx-more as a plain div here rather than a <details>, since it's
+   already conditionally shown/hidden by the Calculate NDL button itself
+   and doesn't need its own separate expand/collapse on top of that.
+   .dh-wx-more-body's own padding assumes a <summary> supplied the top
+   inset, so this gets its own instead. Flowing, centered text with the
+   two values as their own pills ("<x ft> and <y m> are pills with blue
+   bg color"), the minutes pill color-coded by how much no-deco time is
+   actually left (blue > 20, orange 10-20, red < 10 - same fill
+   convention as every other result pill on the page) - "Always use a
+   dive computer" now lives in the same card instead of duplicated
+   under each calculator's own button. */
+.dh-gas-ndl-body { padding: 14px 15px; }
+.dh-gas-ndl-result { font-size: .82rem; color: var(--dh-ink); line-height: 1.8; text-align: center; }
+.dh-gas-ndl-sub { text-align: center; font-size: .68rem; font-weight: 600; color: var(--dh-muted); margin-top: 6px; }
+.dh-gas-ndl-result .dh-gas-result-pill { margin: 0 2px; }
+.dh-gas-result-pill.is-ndl::after { content: " m"; }
+
+/* Trimix's O2-narcotic toggle, restyled as a compact switch instead of a
+   plain Bootstrap checkbox (Pablo, 2026-09-15: "I don't like the O2
+   narcotic? toggle... make it more sleek"). The real <input type=
+   checkbox> is visually hidden but still there for click/keyboard/
+   screen-reader behavior - JS keeps reading O2Narcotic.checked exactly
+   as before, nothing about the toggle's logic changed. */
+/* A label row that also carries a small auxiliary control (Pablo,
+   2026-09-15: "Count O2 as narcotic... is a param to that calculation" -
+   put it in line with the "END at max depth" label it feeds, not off in
+   its own row next to Gas density). */
+.dh-gas-label-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 6px; }
+
+/* Open Circuit/Closed Circuit and Nitrox/Trimix pickers - real <button>
+   chips (Pablo, 2026-09-15: clicking the chip anywhere used to miss when
+   not directly over the text - a real form control's whole box is always
+   the click target, unlike the <a>/nav-pills markup this replaced), sized
+   to their own label rather than stretched to fill the row ("the style
+   of the site is not BIG pills... they don't need to cover all the
+   width"). */
+.dh-gas-picker { justify-content: flex-start; margin-bottom: 10px; }
+.dh-gas-picker .dh-channel-chip { flex: 0 0 auto; padding: 3px 12px; font-size: .76rem; }
+.dh-gas-toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin: 0; }
+.dh-gas-toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.dh-gas-toggle-track {
+  width: 26px; height: 14px; border-radius: var(--dh-radius-pill); background: var(--dh-line);
+  position: relative; flex: 0 0 auto; transition: background .15s ease;
+}
+.dh-gas-toggle-thumb {
+  position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 2px rgba(11,42,58,.3); transition: transform .15s ease;
+}
+.dh-gas-toggle input:checked + .dh-gas-toggle-track { background: var(--dh-sea); }
+.dh-gas-toggle input:checked + .dh-gas-toggle-track .dh-gas-toggle-thumb { transform: translateX(12px); }
+.dh-gas-toggle input:focus-visible + .dh-gas-toggle-track { box-shadow: 0 0 0 2px var(--dh-foam); }
+.dh-gas-toggle-label { font-size: .72rem; font-weight: 600; color: var(--dh-ink); display: inline-flex; align-items: center; gap: 2px; }
+.dh-gas-info { font-size: 13px; color: var(--dh-muted); cursor: help; }
+
+/* "Calculate Best..." buttons: a real block on clicks once the mix already
+   shown IS the best one, not just a grey color (Pablo, 2026-09-15: "I
+   would disable the Calculate button, not just put them in grey"). Kept
+   as a class + pointer-events rather than the native `disabled` attribute
+   so the depth slider's own programmatic .click() (recalculating this tab
+   when Set Max Depth changes) still fires even while this looks solved. */
+.btn.is-solved { opacity: .55; pointer-events: none; cursor: not-allowed; }
+
+/* Trimix's O2/He result, together above "Calculate Best Trimix" instead of
+   separately under each slider (Pablo, 2026-09-15: "I would like to see
+   them right above the button... in a split pill"). Two independently-
+   colored halves of one pill shape - O2 and He are solved independently,
+   so one can be green while the other is still blue. The "O2"/"He" tag
+   and the trailing "%" are both generated content (::before/::after),
+   never part of the element's real textContent - the same two spans
+   (#txbestNitrox/#txbestHe) still get their numeric value written to
+   .textContent exactly as before, untouched, so every existing
+   calculation that reads them (updateGasMix, gas density, END) keeps
+   working with no JS changes beyond the ones already made. */
+.dh-gas-split-pill { display: inline-flex; }
+.dh-gas-split-pill .dh-gas-result-pill:first-child { border-radius: var(--dh-radius-pill) 0 0 var(--dh-radius-pill); }
+.dh-gas-split-pill .dh-gas-result-pill:last-child { border-radius: 0 var(--dh-radius-pill) var(--dh-radius-pill) 0; box-shadow: inset 1px 0 0 rgba(255,255,255,.4); }
+/* A middle segment (the He third of a 3-way split) is neither first nor
+   last, so it falls square between the two rounded ends (Pablo,
+   2026-09-15: "make it with no radius so it looks square in between") -
+   a 2-way split (Nitrox, or the Trimix O2/He result pill) has no middle
+   child at all, so this never applies there. */
+.dh-gas-split-pill .dh-gas-result-pill:not(:first-child):not(:last-child) { border-radius: 0; box-shadow: inset 1px 0 0 rgba(255,255,255,.4); }
+/* Trimix's raw .textContent has no "%" (unlike Nitrox's, which appends
+   its own) - only here does the pill need one generated for display. */
+.dh-gas-split-pill .dh-gas-result-pill.is-o2::after, .dh-gas-split-pill .dh-gas-result-pill.is-he::after { content: "%"; }
+
+/* Slider fill/handle in the theme's blue instead of Material Dashboard's
+   default purple (Pablo: "slider colors should follow theme") - applies
+   to every slider on this page, not just the ones redone above, since
+   it's a pure color swap with no layout risk. */
+.slider-styled.noUi-target { background-color: var(--dh-line); }
+.slider-styled .noUi-connect { background: var(--dh-sea); }
+.slider-styled .noUi-handle { border-color: var(--dh-sea); }
+.slider-styled .noUi-handle:hover { border-color: var(--dh-deep); }
