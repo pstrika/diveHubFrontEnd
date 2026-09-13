@@ -585,6 +585,7 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 
 	Route::get('Groups/{group}', 'App\Http\Controllers\GroupController@show')->name('Groups.show');
 	Route::post('Groups/{group}/members/{member}/remove', 'App\Http\Controllers\GroupController@removeMember')->name('Groups.removeMember');
+	Route::post('Groups/{group}/mute', 'App\Http\Controllers\GroupController@toggleMute')->name('Groups.toggleMute');
 	Route::post('Groups/{group}/delete', 'App\Http\Controllers\GroupController@destroy')->name('Groups.destroy');
 	Route::post('Groups/{group}/upload-image', 'App\Http\Controllers\GroupController@uploadImage')->name('Groups.uploadImage');
 	Route::post('Groups/{group}/calling-card', 'App\Http\Controllers\GroupController@setCallingCard')->name('Groups.callingCard');

@@ -24,6 +24,7 @@ class Group extends Model
         'reminders_enabled',
         'digest_enabled',
         'last_digest_sent_at',
+        'notifications_muted',
         'allow_members_add_dives',
         'fb_page_id',
         'fb_page_name',
@@ -38,6 +39,7 @@ class Group extends Model
         'reminders_enabled' => 'boolean',
         'digest_enabled' => 'boolean',
         'last_digest_sent_at' => 'datetime',
+        'notifications_muted' => 'boolean',
         'allow_members_add_dives' => 'boolean',
         'fb_page_access_token' => 'encrypted',
         'fb_connected_at' => 'datetime',
@@ -92,6 +94,37 @@ class Group extends Model
     public function isAdmin($userId): bool
     {
         return $this->members()->where('user_id', $userId)->where('status', 'active')->where('role', 'admin')->exists();
+    }
+
+    /**
+     * True if this member won't get a group notification right now -
+     * either an admin muted the whole group, or they muted it just for
+     * themselves via the bell toggle (Pablo, 2026-09-14: "Group Admins
+     * can mute ALL notifications for everybody... but users should be
+     * able to mute for them[selves]").
+     */
+    public function isMemberMuted(int $userId): bool
+    {
+        if ($this->notifications_muted) {
+            return true;
+        }
+
+        return (bool) $this->members()->where('user_id', $userId)->where('status', 'active')->value('notifications_muted');
+    }
+
+    /**
+     * Active members eligible for a notification right now - empty if
+     * the group itself is muted, otherwise everyone except whoever muted
+     * it individually. Used anywhere a batch of group members needs to
+     * be notified in one pass (dive reminders' email/SMS/WhatsApp loops).
+     */
+    public function unmutedActiveMembers(): \Illuminate\Support\Collection
+    {
+        if ($this->notifications_muted) {
+            return collect();
+        }
+
+        return $this->activeMembers()->with('user')->get()->reject(fn ($m) => $m->notifications_muted)->values();
     }
 
     public function ensureCalendarToken(): string

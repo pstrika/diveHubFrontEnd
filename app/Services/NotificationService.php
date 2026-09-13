@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Group;
+use App\Models\GroupMember;
 use App\Models\Message;
 use Illuminate\Support\Facades\Log;
 
@@ -32,6 +34,11 @@ class NotificationService
     public static function notify(iterable $userIds, string $subject, string $body, ?string $url = null, ?int $excludeUserId = null, ?int $fromUserId = null, ?int $groupId = null, iterable $mentionedUserIds = []): void
     {
         $userIds = collect($userIds)->filter(fn ($id) => $id != $excludeUserId)->unique()->values();
+
+        if ($groupId) {
+            $userIds = self::filterMutedGroupMembers($groupId, $userIds);
+        }
+
         if ($userIds->isEmpty()) {
             return;
         }
@@ -55,5 +62,25 @@ class NotificationService
         }
 
         PushNotificationService::notify($userIds, $subject, $body, $url);
+    }
+
+    /**
+     * A group admin's "mute all" silences every notification for every
+     * member of that group; short of that, each member can mute it just
+     * for themselves via their own bell toggle (App\Models\Group,
+     * GroupMember - Pablo, 2026-09-14). Applies to every notify() call
+     * that passes a $groupId, so no individual call site needs to
+     * remember to check this itself.
+     */
+    private static function filterMutedGroupMembers(int $groupId, $userIds)
+    {
+        $group = Group::find($groupId);
+        if (!$group || $group->notifications_muted) {
+            return collect();
+        }
+
+        $mutedIds = GroupMember::where('group_id', $groupId)->where('notifications_muted', true)->pluck('user_id');
+
+        return $userIds->reject(fn ($id) => $mutedIds->contains((int) $id))->values();
     }
 }

@@ -157,7 +157,7 @@ class GroupMessageController extends Controller
 
         foreach ($mentionedIds as $userId) {
             $user = User::find($userId);
-            if (!$user || !$user->phone || !$user->whatsapp_notifications) {
+            if (!$user || !$user->phone || !$user->whatsapp_notifications || $group->isMemberMuted($userId)) {
                 continue;
             }
 

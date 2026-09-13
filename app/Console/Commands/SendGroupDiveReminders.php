@@ -67,7 +67,7 @@ class SendGroupDiveReminders extends Command
     private function sendReminderEmail(GroupDive $dive, int $daysAhead)
     {
         $group = $dive->group;
-        $members = $group->activeMembers;
+        $members = $group->unmutedActiveMembers();
 
         if ($members->isEmpty()) {
             return;
@@ -147,7 +147,7 @@ class SendGroupDiveReminders extends Command
     private function sendReminderSms(GroupDive $dive, int $daysAhead)
     {
         $group = $dive->group;
-        $members = $group->activeMembers;
+        $members = $group->unmutedActiveMembers();
 
         if ($members->isEmpty()) {
             return;
@@ -202,7 +202,7 @@ class SendGroupDiveReminders extends Command
         }
 
         $group = $dive->group;
-        $members = $group->activeMembers;
+        $members = $group->unmutedActiveMembers();
 
         if ($members->isEmpty()) {
             return;

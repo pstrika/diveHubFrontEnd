@@ -104,6 +104,7 @@ class GroupController extends Controller
         }
 
         $isAdmin = $group->isAdmin($userId);
+        $myMembership = $group->members()->where('user_id', $userId)->where('status', 'active')->first();
 
         $members = $group->activeMembers()->with('user')->get();
 
@@ -170,7 +171,7 @@ class GroupController extends Controller
             ? app(GroupFacebookController::class)->getRecentPosts($group)
             : [];
 
-        return view('pages.Groups.Show', compact('group', 'isAdmin', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'addDiveSite', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'operators', 'favoriteOperatorIds', 'fbFeed', 'SEO'));
+        return view('pages.Groups.Show', compact('group', 'isAdmin', 'myMembership', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'addDiveSite', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'operators', 'favoriteOperatorIds', 'fbFeed', 'SEO'));
     }
 
     /**
@@ -430,6 +431,7 @@ class GroupController extends Controller
         $request->validate([
             'reminders_enabled' => 'nullable|boolean',
             'digest_enabled' => 'nullable|boolean',
+            'notifications_muted' => 'nullable|boolean',
             'allow_members_add_dives' => 'nullable|boolean',
             'favorite_operators' => 'nullable|array',
             'favorite_operators.*' => 'integer|exists:mysql_trips.operators,id',
@@ -437,6 +439,7 @@ class GroupController extends Controller
 
         $group->reminders_enabled = $request->boolean('reminders_enabled');
         $group->digest_enabled = $request->boolean('digest_enabled');
+        $group->notifications_muted = $request->boolean('notifications_muted');
         $group->allow_members_add_dives = $request->boolean('allow_members_add_dives');
         $group->save();
 
@@ -489,6 +492,29 @@ class GroupController extends Controller
         $member->delete();
 
         return redirect()->back()->with('msg', $wasInvite ? 'Invite cancelled.' : 'Member removed.');
+    }
+
+    /**
+     * A member's own bell toggle - separate from the admin-only "mute
+     * all" in updateSettings() above. Defaults off (notifications on) at
+     * invite time, per the group_members migration (Pablo, 2026-09-14).
+     */
+    public function toggleMute($groupSlug)
+    {
+        $group = Group::where('slug', $groupSlug)->firstOrFail();
+        $userId = auth()->user()->id;
+
+        $member = $group->members()->where('user_id', $userId)->where('status', 'active')->first();
+        if (!$member) {
+            abort(403);
+        }
+
+        $member->notifications_muted = !$member->notifications_muted;
+        $member->save();
+
+        return redirect()->back()->with('msg', $member->notifications_muted
+            ? 'Notifications muted for ' . $group->name . '.'
+            : 'Notifications turned back on for ' . $group->name . '.');
     }
 
     public function destroy($groupSlug)

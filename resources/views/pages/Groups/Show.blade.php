@@ -99,6 +99,12 @@
                                 Allow any member to add dives (otherwise only admins can)
                             </label>
                         </div>
+                        <div class="form-check form-switch mb-4">
+                            <input class="form-check-input" type="checkbox" name="notifications_muted" value="1" id="notificationsMutedInput" {{ $group->notifications_muted ? 'checked' : '' }}>
+                            <label class="form-check-label" for="notificationsMutedInput">
+                                Mute all notifications for every member (overrides everyone's own bell toggle)
+                            </label>
+                        </div>
                         <label class="form-label">Favorite operators</label>
                         <p class="text-xs text-secondary mt-n2">Used to keep the group updated on upcoming trips from these operators.</p>
                         <div style="max-height: 250px; overflow-y: auto;" class="border rounded p-2">
@@ -364,10 +370,17 @@
                                 </button>
                             @endif
                         </h1>
-                        <p class="dh-group-facts-meta">{{ $members->count() }} members @if($group->description) &middot; {{ $group->description }} @endif</p>
+                        <p class="dh-group-facts-meta">{{ $members->count() }} members @if($group->description) &middot; {{ $group->description }} @endif @if($group->notifications_muted) &middot; <span class="text-danger">Notifications muted for everyone by an admin</span> @endif</p>
                     </div>
                 </div>
                 <div class="dh-group-facts-actions">
+                    @php $iAmMuted = $myMembership && $myMembership->notifications_muted; @endphp
+                    <form method="POST" action="{{ route('Groups.toggleMute', ['group' => $group->slug]) }}" class="d-inline">
+                        @csrf
+                        <button type="submit" class="dh-btn dh-btn-ghost-dark" title="{{ $iAmMuted ? 'Turn notifications back on for this group' : 'Mute notifications for this group, just for you' }}">
+                            <span class="material-icons-round" aria-hidden="true">{{ $iAmMuted ? 'notifications_off' : 'notifications_active' }}</span>{{ $iAmMuted ? 'Muted' : 'Notifications on' }}
+                        </button>
+                    </form>
                     @if(auth()->user()->isAdmin())
                         @if($group->isFacebookConnected())
                             <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-toggle="modal" data-bs-target="#modalGroupSettings">
