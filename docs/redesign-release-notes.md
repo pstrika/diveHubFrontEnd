@@ -10,6 +10,40 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.12.0 — 2026-09-16
+
+Deployed: commit `5b349e5`.
+
+### Best Gases (Open Circuit)
+A full redesign pass on the Nitrox/Trimix side of the calculator, built
+over several rounds of local review with Pablo:
+- Every slider now has a paired pill text input (type a value or drag -
+  either updates the other) for Set Max Depth, PPO2 at max depth (both
+  fuels), and END at max depth. White background, border/text color on
+  a safe (blue) / warn (orange) / danger (red) ladder - two new tokens,
+  `--dh-warn` and `--dh-danger`. A pencil icon marks each one editable.
+- Read-only results (O2 Content, Gas Density, NDL) are solid colored
+  pills - green when a mix is the current depth's ideal, blue otherwise;
+  Gas Density/NDL use the safe/warn/danger ladder instead, since those
+  are safety readings, not "matches best or not".
+- Fixed a real bug: the "best mix" calculation was computed once at page
+  load and never refreshed, so the O2 Content pill stayed stuck showing
+  the answer for whatever depth was set at load time even after Set Max
+  Depth changed. Recomputed fresh everywhere it's needed now.
+- "Calculate Best Nitrox/Trimix" genuinely blocks clicks (not just turns
+  grey) once the mix shown already is the best one.
+- Nitrox/Trimix are now their own pill tabs, matching Open Circuit/
+  Closed Circuit's own pill pair (both are real `<button>` chips now -
+  the old `<a>`/nav-pills markup was silently missing clicks off the
+  actual text) - only one calculator shows at a time, beside the tank/
+  result card instead of a cramped three-column layout.
+- Tank card moved beside the calculator, shrunk to ~70% scale, Gas Mix
+  is a 2/3-way split pill instead of a table, Gas Price collapses into
+  the same tap-to-open card the Weather page's Live Webcam uses, and NDL
+  shares a row with whichever "Calculate Best X" button is active.
+
+Closed Circuit still uses the pre-redesign markup - next up.
+
 ## 10.11.0 — 2026-09-15
 
 Deployed: commit `7022aee`.
