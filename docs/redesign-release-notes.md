@@ -10,6 +10,18 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.10.0 — 2026-09-14
+
+Deployed: commit `3686400`.
+
+### Groups
+- Notification muting, two levels: a group admin can mute all
+  notifications for every member (group Settings modal), and any member
+  can mute just for themselves via a bell button on the group page -
+  defaults on (unmuted) when invited. Applies to chat messages, new
+  dives, invites, the trip-reminder in-app notification, and the trip
+  reminder's email/SMS/WhatsApp sends.
+
 ## 10.9.1 — 2026-09-14
 
 Deployed: commit `522f525`. One live data change made tonight, outside
