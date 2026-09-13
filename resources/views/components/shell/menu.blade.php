@@ -77,13 +77,6 @@
         {!! $link('My Groups', route('MyGroups'), 'groups') !!}
         <x-shell.push-toggle />
         {!! $link('My Visited Sites', route('MyVisitedSites'), 'check_circle') !!}
-        @php $unread = (int) $user->unreadNotifications(); @endphp
-        {{-- Unread count moved here from the old navbar bell. --}}
-        <a class="dh-menu-link" href="{{ route('Messages') }}">
-            <span class="material-icons-round" aria-hidden="true">notifications</span>
-            <span>Messages</span>
-            @if($unread > 0)<span class="dh-menu-badge" aria-label="{{ $unread }} unread">{{ $unread }}</span>@endif
-        </a>
     </div>
 @endif
 

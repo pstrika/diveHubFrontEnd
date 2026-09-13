@@ -1450,6 +1450,10 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
   display: flex; align-items: center; justify-content: center;
 }
 .dh-ios-step-icon .material-icons-round { font-size: 20px; }
+.dh-ios-copylink { display: flex; gap: 8px; }
+.dh-ios-copylink input { flex: 1 1 auto; min-width: 0; font-size: .85rem; }
+.dh-ios-copylink .dh-btn { flex: 0 0 auto; white-space: nowrap; }
+.dh-ios-copylink .material-icons-round { font-size: 17px; }
 
 /* Group chat @mention picker (2026-09-14). */
 .dh-mention-menu {

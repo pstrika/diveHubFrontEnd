@@ -151,11 +151,24 @@
     }
   }
 
-  function isIosSafari() {
+  // Any browser on iOS - Chrome (CriOS), Firefox (FxiOS) and Edge (EdgiOS)
+  // are all still WebKit under Apple's rules, so none of them ever fire
+  // beforeinstallprompt either. Used to route to the iOS modal at all
+  // (Pablo, 2026-09-15: "Install as App... produces nothing on iOS" -
+  // root cause was this used to be isIosSafari() only, so Chrome-iOS fell
+  // through to the Android bar instead, whose Add button calls a
+  // beforeinstallprompt handle that iOS never gives it - clicking it did
+  // nothing, exactly as reported).
+  function isIos() {
     var ua = window.navigator.userAgent;
-    var ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    var safari = /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
-    return ios && safari;
+    return /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+
+  // Safari specifically, for choosing which set of steps the iOS modal
+  // shows - only Safari has a Share icon sitting in its own toolbar.
+  function isIosSafari() {
+    var safari = /Safari/i.test(window.navigator.userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(window.navigator.userAgent);
+    return isIos() && safari;
   }
 
   // Phones and tablets only - includes iPadOS, which reports as a MacIntel
@@ -193,7 +206,7 @@
     // />) instead of this bar on every path below.
     var showIosModal = function () {
       if (document.querySelector('.modal.show') || typeof window.dhShowIosInstallModal !== 'function') return;
-      window.dhShowIosInstallModal();
+      window.dhShowIosInstallModal(isIosSafari());
     };
 
     var deferred = null;
@@ -216,7 +229,7 @@
         if (deferred) {
           deferred.prompt();
           deferred.userChoice.then(function () { deferred = null; clearInstallDismissal(); });
-        } else if (isIosSafari()) {
+        } else if (isIos()) {
           showIosModal();
         } else {
           show(true);
@@ -264,7 +277,7 @@
     });
 
     if (autoShowEligible) {
-      if (isIosSafari()) {
+      if (isIos()) {
         showIosModal();
         // The modal has its own close button but nothing that tells us it
         // was dismissed the way the bar's close button does - treat showing
