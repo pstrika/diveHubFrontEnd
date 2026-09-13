@@ -10,6 +10,22 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.9.1 — 2026-09-14
+
+Deployed: commit `522f525`. One live data change made tonight, outside
+of git: ran the new `users:opt-out-messaging` command against the live
+users table - everyone flipped to opted out of SMS and WhatsApp except
+Pablo's own account, Zach Patterson, and both existing "John Entwistle"
+accounts. 20 of 484 users had either flag on; all 20 are now off. A
+future opt-in modal will collect real consent going forward - existing
+flags predate the phone verification flow and Twilio-backed program, so
+weren't real informed consent to begin with.
+
+### New
+- `users:opt-out-messaging {--dry-run}` - sets `sms_notifications` and
+  `whatsapp_notifications` to false for every user except a fixed
+  allowlist. Phone numbers and verification state are untouched.
+
 ## 10.9.0 — 2026-09-14
 
 Deployed: commit `775ac91`.
