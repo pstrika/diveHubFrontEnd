@@ -93,8 +93,11 @@ class SendGroupDiveReminders extends Command
         try {
             $mg = Mailgun::create(env('MAILGUN_KEY'));
 
+            // email_notifications gate added 2026-09-15 (manifest entry
+            // #1) - this reminder used to go out regardless of that
+            // preference.
             foreach ($members as $member) {
-                if (!$member->user || !$member->user->email) {
+                if (!$member->user || !$member->user->email || !$member->user->email_notifications) {
                     continue;
                 }
 

@@ -179,8 +179,19 @@ class GroupInviteController extends Controller
         );
     }
 
+    /**
+     * Gated on email_notifications (Pablo, 2026-09-15, manifest entry
+     * #10) - unlike the account/no-account invite emails (#12) or the
+     * transactional ones (#14/#15/#19), this is a real existing account,
+     * so its opt-out applies. The in-app/push copy (#11) is unaffected -
+     * that rule set is unchanged.
+     */
     private function sendInviteEmail(User $invitedUser, Group $group)
     {
+        if (!$invitedUser->email_notifications) {
+            return;
+        }
+
         try {
             $mg = Mailgun::create(env('MAILGUN_KEY'));
 
