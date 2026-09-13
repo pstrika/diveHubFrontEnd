@@ -10,6 +10,18 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.10.1 — 2026-09-15
+
+Deployed: commit `dc3bb35`. Ground rules set against the notification
+manifest (entries numbered #1-#20): every email respects
+`email_notifications` except #12/#14/#15/#19; SMS and WhatsApp checked
+out already correct against their own exception lists, no code needed.
+
+### Groups
+- Trip reminder email (#1) and the group invite email to an existing
+  account (#10) now check `email_notifications` before sending - both
+  went out regardless of that preference before.
+
 ## 10.10.0 — 2026-09-14
 
 Deployed: commit `3686400`.
