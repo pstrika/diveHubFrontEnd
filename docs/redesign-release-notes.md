@@ -10,6 +10,22 @@ Every entry below deployed to the same place: **https://divehub-redesign.azurewe
 push to `redesign`). Production (`divers-hub.com`) only gets these changes
 when `redesign` is merged to `main` - see `docs/deployment.md` for that step.
 
+## 10.9.0 — 2026-09-14
+
+Deployed: commit `775ac91`.
+
+### Admin console
+- Conversation list search box - filters by contact, name and message
+  text, entirely client-side (the list only ever holds one row per
+  contact, so this stays fast even as conversation count grows).
+- A contact's account match used to be snapshotted once, at the moment
+  each message was written - a contact unknown at the time (not
+  registered yet, or registered under a differently formatted number)
+  stayed permanently unmatched even after signing up or fixing their
+  number later. Now re-checked (and backfilled) on every list load/poll
+  and on opening a thread, so a diver's name and avatar show up as soon
+  as they're resolvable, without a manual backfill.
+
 ## 10.8.5 — 2026-09-14
 
 Deployed: commit `9d812f8`. One live data fix made tonight, outside of
