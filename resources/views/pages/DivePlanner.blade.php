@@ -296,15 +296,16 @@
                                     <div class="dh-channel-picker dh-gas-picker" id="nav-tabs">
                                         <button type="button" class="dh-channel-chip is-active" data-tag="OC">Open Circuit</button>
                                         <button type="button" class="dh-channel-chip" data-tag="CC">Close Circuit CCR</button>
-                                        @if(auth()->user()->isNotGuest())
-                                            {{-- Saves GF Low/High + setpoint to the diver's profile so the
-                                                 planner remembers them next visit (Pablo, 2026-09-18). Guests
-                                                 (the shared account) never see this - there's nowhere to
-                                                 persist it for them. --}}
-                                            <button type="button" class="dh-btn-icon" id="saveDecoPrefsBtn" style="margin-left:auto;" title="Save GF Low/High and setpoint to your profile">
-                                                <span class="material-icons-round" aria-hidden="true">bookmark_border</span>
-                                            </button>
-                                        @endif
+                                        {{-- Saves GF Low/High + setpoint to the diver's profile so the
+                                             planner remembers them next visit (Pablo, 2026-09-18). Always
+                                             visible - like Export PDF - rather than hidden for guests
+                                             (Pablo, 2026-09-19: "I don't see the save button"); a guest who
+                                             clicks it gets a clear message instead of the control just not
+                                             being there (easy to miss why on a slot with its own separate
+                                             login session). --}}
+                                        <button type="button" class="dh-btn-icon" id="saveDecoPrefsBtn" style="margin-left:auto;" title="Save GF Low/High and setpoint to your profile">
+                                            <span class="material-icons-round" aria-hidden="true">bookmark_border</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -3400,7 +3401,14 @@
                         setpoint: parseFloat(labelSetpoint.value),
                     },
                     success: function () { dhFlashIconButton(saveDecoPrefsBtn, true); },
-                    error: function () { dhFlashIconButton(saveDecoPrefsBtn, false); },
+                    error: function (xhr) {
+                        dhFlashIconButton(saveDecoPrefsBtn, false);
+                        if (xhr.status === 403) {
+                            // Guest (the shared account) - explain why instead of
+                            // leaving a bare red flash with no context.
+                            alert((xhr.responseJSON && xhr.responseJSON.message) || 'Create an account to save your preferences.');
+                        }
+                    },
                 });
             });
         }
