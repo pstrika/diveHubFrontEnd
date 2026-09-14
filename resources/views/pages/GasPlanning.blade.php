@@ -343,10 +343,15 @@
                                                 <img id="unblendable_sign_CCR" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image"
                                                     style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
 
-                                                <!-- Fixed-size chart canvas -->
-                                                <div style="width: 210px; height: 210px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
+                                                <!-- Fixed-size chart canvas. Wrapper height matches the canvas's
+                                                     own height exactly (Pablo, 2026-09-18: same fix as the Deco
+                                                     Planner's tanks) - without maintainAspectRatio:false, Chart.js
+                                                     sizes the canvas to its PARENT's box, so a taller parent (this
+                                                     used to be 210px) silently overrode whatever height the canvas
+                                                     itself declared. -->
+                                                <div style="width: 210px; height: 124px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
                                                     <canvas id="stackedBarChartCCR"
-                                                            style="width: 90%; height: 124px; position: absolute; bottom: 7px; left: 0; transform: none; z-index: 1;"></canvas>
+                                                            style="width: 90%; height: 124px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
                                                 </div>
                                             </div>
 
@@ -1636,6 +1641,11 @@
             },
             options: {
                 responsive: true, // Makes the chart responsive
+                // Without this, Chart.js derives the canvas height from its
+                // parent's width and a default aspect ratio instead of the
+                // canvas's own CSS height - see the wrapper div's comment
+                // above (Pablo, 2026-09-18).
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         display: false, // Hide legend
@@ -1652,10 +1662,14 @@
                     }
                 },
                 layout: {
+                    // ccr.png's transparent window starts at y=77/300 of the
+                    // source image - scaled to this 124px canvas that's
+                    // ~7px down from the top (Pablo, 2026-09-18: measured
+                    // the same way as the Deco Planner's tank masks).
                     padding: {
                         left: 14,
                         right: 14,
-                        top: 14,
+                        top: 6,
                         bottom: 3
                     }
                 }

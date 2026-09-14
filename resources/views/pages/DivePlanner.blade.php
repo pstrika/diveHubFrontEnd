@@ -545,15 +545,23 @@
                                         @endif
                                     </div>
 
-                                    {{-- Bottom gas (OC) has no standard presets, but still gets "My Gases"
-                                         and the save icon, same as every other gas card (Pablo, 2026-09-18:
-                                         "in all gas cards, add another pill at the top...My Gases"). --}}
-                                    @if(auth()->user()->isNotGuest())
-                                        <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPresetBottomOC" data-slot="bottom">
+                                    {{-- Bottom gas (OC) standard presets (Pablo, 2026-09-18: "Air, 32%,
+                                         36%, 21/31, 18/45 and 10/55") - visible to everyone, like every
+                                         other card's presets; "My Gases" and the save icon stay behind
+                                         isNotGuest() same as elsewhere, since only a registered diver has
+                                         anywhere to save one. --}}
+                                    <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPresetBottomOC" data-slot="bottom">
+                                        <button type="button" class="dh-channel-chip" data-o2="21" data-he="0">Air</button>
+                                        <button type="button" class="dh-channel-chip" data-o2="32" data-he="0">32%</button>
+                                        <button type="button" class="dh-channel-chip" data-o2="36" data-he="0">36%</button>
+                                        <button type="button" class="dh-channel-chip" data-o2="21" data-he="31">21/31</button>
+                                        <button type="button" class="dh-channel-chip" data-o2="18" data-he="45">18/45</button>
+                                        <button type="button" class="dh-channel-chip" data-o2="10" data-he="55">10/55</button>
+                                        @if(auth()->user()->isNotGuest())
                                             <button type="button" class="dh-channel-chip dh-gas-mygases-chip" data-mygases-slot="bottom">My Gases</button>
                                             <button type="button" class="dh-btn-icon" data-save-slot="bottom" title="Save this gas to My Gases"><span class="material-icons-round" aria-hidden="true">bookmark_border</span></button>
-                                        </div>
-                                    @endif
+                                        @endif
+                                    </div>
 
                                     <div class="row">
                                         <div class="col-lg-3 col-12 text-center">
@@ -3258,10 +3266,25 @@
                 var pick = document.createElement('button');
                 pick.type = 'button';
                 pick.className = 'dh-mygases-pick';
-                var pill = document.createElement('span');
-                pill.className = 'dh-gas-result-pill is-compact';
-                pill.textContent = dhFormatGasMix(gas.o2, gas.he);
-                pick.appendChild(pill);
+                // Same green O2/blue He split pill as every gas card's own
+                // result pills, fully rounded when there's no He (Pablo,
+                // 2026-09-18: "use the same pill convention...green for O2,
+                // blue for He...if the gas only has O2, use full rounded
+                // pill") - not the plain blue compact pill this used before.
+                var isSolo = gas.he === 0;
+                var splitPill = document.createElement('span');
+                splitPill.className = 'dh-gas-split-pill' + (isSolo ? ' is-solo' : '');
+                var o2Pill = document.createElement('label');
+                o2Pill.className = 'dh-gas-result-pill is-o2';
+                o2Pill.textContent = gas.o2;
+                splitPill.appendChild(o2Pill);
+                if (!isSolo) {
+                    var hePill = document.createElement('label');
+                    hePill.className = 'dh-gas-result-pill is-he';
+                    hePill.textContent = gas.he;
+                    splitPill.appendChild(hePill);
+                }
+                pick.appendChild(splitPill);
                 pick.addEventListener('click', function () {
                     var cfg = dhGasPresetSlots[dhMyGasesTargetSlot];
                     if (cfg) {
