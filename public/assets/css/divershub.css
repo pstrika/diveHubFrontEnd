@@ -2018,3 +2018,27 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-mygases-delete { flex: 0 0 auto; background: none; border: none; color: var(--dh-muted); cursor: pointer; padding: 4px; }
 .dh-mygases-delete:hover { color: var(--dh-danger); }
 .dh-mygases-empty { text-align: center; color: var(--dh-muted); padding: 24px 8px; font-size: .88rem; }
+
+/* Shared admin list page pattern - search + sort toolbar over a plain
+   table, used by User Management and Manage Sites (Pablo, 2026-09-18:
+   "retheme...respect paddings as all other pages"). Client-side filter/
+   sort, no server round-trip - both lists are small. */
+.dh-admin-toolbar { display: flex; flex-wrap: wrap; gap: var(--dh-space-2); align-items: center; margin-bottom: var(--dh-space-3); }
+.dh-admin-search { flex: 1 1 220px; display: flex; align-items: center; gap: 8px; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill); padding: 8px 14px; }
+.dh-admin-search input { border: none; outline: none; background: none; flex: 1 1 auto; font-size: .88rem; color: var(--dh-ink); font-family: var(--dh-font); }
+.dh-admin-search .material-icons-round { color: var(--dh-muted); font-size: 18px; }
+.dh-admin-select { border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill); padding: 8px 14px; font-size: .85rem; color: var(--dh-ink); background: var(--dh-paper); font-family: var(--dh-font); }
+.dh-admin-sort-dir { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--dh-line); background: var(--dh-paper); color: var(--dh-ink); cursor: pointer; }
+.dh-admin-sort-dir .material-icons-round { transition: transform .15s; }
+.dh-admin-sort-dir.is-desc .material-icons-round { transform: rotate(180deg); }
+.dh-admin-card { background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: var(--dh-radius); overflow: hidden; }
+.dh-admin-table { width: 100%; border-collapse: collapse; }
+.dh-admin-table th { text-align: left; font-size: .7rem; text-transform: uppercase; letter-spacing: .03em; color: var(--dh-muted); padding: 10px 14px; border-bottom: 1px solid var(--dh-line); white-space: nowrap; }
+.dh-admin-table td { padding: 10px 14px; border-bottom: 1px solid var(--dh-line); font-size: .86rem; color: var(--dh-ink); vertical-align: middle; }
+.dh-admin-table tbody tr:last-child td { border-bottom: none; }
+.dh-admin-table tbody tr:hover td { background: var(--dh-sand); }
+.dh-admin-table .dh-admin-actions { display: flex; gap: 10px; align-items: center; }
+.dh-admin-table .dh-admin-actions a, .dh-admin-table .dh-admin-actions button { color: var(--dh-muted); background: none; border: none; padding: 0; cursor: pointer; display: inline-flex; }
+.dh-admin-table .dh-admin-actions a:hover { color: var(--dh-sea); }
+.dh-admin-table .dh-admin-actions .is-danger:hover { color: var(--dh-danger); }
+.dh-admin-empty-row td { text-align: center; padding: 40px; color: var(--dh-muted); }
