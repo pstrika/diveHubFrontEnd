@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\Site;
 use App\Models\UserDiveGas;
+use App\Models\DecoPlan;
 
 class NDLController extends Controller
 {
@@ -1076,5 +1077,36 @@ class NDLController extends Controller
         $gas->delete();
 
         return response()->json(['message' => 'Deleted.']);
+    }
+
+    /**
+     * "Save Plan" (Pablo, 2026-09-18): persists every input the diver
+     * entered - mode, depth, bottom time, rate, GFs, setpoint, bottom gas,
+     * every deco/bailout gas - as the same JSON object the client already
+     * builds to send to the calculation API, so a saved plan can be
+     * regenerated later by re-running those exact inputs. Guests can't -
+     * there's no profile to attach it to.
+     */
+    public function saveDecoPlan(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user->isNotGuest()) {
+            return response()->json(['message' => 'Create an account to save decompression plans.'], 403);
+        }
+
+        $validated = $request->validate([
+            'label' => 'nullable|string|max:255',
+            'mode' => 'required|in:OC,CC',
+            'inputs' => 'required|array',
+        ]);
+
+        $plan = DecoPlan::create([
+            'user_id' => $user->id,
+            'label' => $validated['label'] ?? null,
+            'mode' => $validated['mode'],
+            'inputs' => $validated['inputs'],
+        ]);
+
+        return response()->json(['id' => $plan->id]);
     }
 }

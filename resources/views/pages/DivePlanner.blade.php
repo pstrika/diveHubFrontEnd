@@ -1189,6 +1189,14 @@
                             <span class="material-icons-round" aria-hidden="true">route</span>
                             <h3>Decompression plan</h3>
                             <span class="dh-deco-section-head-meta">Model <span id="labelModel">ZL</span> &middot; GFs <span id="labelGFs">40/70</span></span>
+                            <button type="button" class="dh-deco-header-btn" id="exportDecoPlanPdfBtn" title="Export this decompression plan to PDF">
+                                <span class="material-icons-round" aria-hidden="true">picture_as_pdf</span> Export PDF
+                            </button>
+                            @if(auth()->user()->isNotGuest())
+                                <button type="button" class="dh-deco-header-btn" id="saveDecoPlanBtn" title="Save this plan's inputs so you can regenerate it later">
+                                    <span class="material-icons-round" aria-hidden="true">save</span> Save Plan
+                                </button>
+                            @endif
                         </div>
 
                         <div class="card-body">
@@ -1494,6 +1502,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    {{-- "Export to PDF" on the Decompression plan card (Pablo, 2026-09-18). --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
     
 
@@ -1693,6 +1704,12 @@
             // Convert to JSON string
             const diveJSON = JSON.stringify(diveProfile, null, 4);
             console.log(diveJSON);
+
+            // Cached for "Export PDF" (the inputs table) and "Save Plan" -
+            // this object already has every input the diver entered,
+            // gases included, so there's no need to re-scrape the DOM for
+            // either feature (Pablo, 2026-09-18).
+            window.lastDiveProfile = diveProfile;
 
 
             <?php
@@ -6528,6 +6545,287 @@
             if (isNaN(typed)) { labelSACDecoGasLiters.value = parseFloat(sliderSACDecoGas.noUiSlider.get() * 28.3168).toFixed(0); return; }
             sliderSACDecoGas.noUiSlider.set(typed / 28.3168);
         });
+    </script>
+
+    {{-- "Export to PDF" and "Save Plan" on the Decompression plan card
+         (Pablo, 2026-09-18). Both read window.lastDiveProfile - the same
+         object the calculate button already builds and sends to the
+         calculation API - rather than re-scraping every input from the
+         DOM a second time. --}}
+    <script>
+        function dhFormatDepthUnit() { return modeImpOrMetric === 'met' ? 'm' : 'ft'; }
+        function dhFormatRateUnit() { return modeImpOrMetric === 'met' ? 'm/min' : 'ft/min'; }
+
+        function dhBuildPdfInputRows(profile) {
+            var rows = [];
+            rows.push(['Mode', profile.mode === 'CC' ? 'Closed Circuit (CCR)' : 'Open Circuit']);
+            rows.push(['Max depth', profile.maxDepth + ' ' + dhFormatDepthUnit()]);
+            rows.push(['Bottom time', profile.bottomTime + ' min']);
+            rows.push(['Descent rate', profile.rate.descent + ' ' + dhFormatRateUnit()]);
+            rows.push(['Ascent rate', profile.rate.ascent + ' ' + dhFormatRateUnit()]);
+            rows.push(['GF Low / GF High', profile.gradientFactors.low + ' / ' + profile.gradientFactors.high]);
+            if (profile.mode === 'CC') {
+                rows.push(['Setpoint', profile.setpoint + ' atm']);
+                rows.push(['Diluent', dhFormatGasMix(profile.bottomGas.O2, profile.bottomGas.He)]);
+            } else {
+                rows.push(['Bottom gas', dhFormatGasMix(profile.bottomGas.O2, profile.bottomGas.He)]);
+            }
+            if (profile.surfaceTime) {
+                rows.push(['Surface interval', profile.surfaceTime + ' min']);
+            }
+            profile.decoGases.forEach(function (gas, idx) {
+                var label = (profile.mode === 'CC' && idx === 0) ? 'Bailout gas' : ('Deco gas ' + (idx + 1));
+                rows.push([label, dhFormatGasMix(gas.O2, gas.He) + ' — switch at ' + gas.switchDepth + ' ' + dhFormatDepthUnit()]);
+            });
+            return rows;
+        }
+
+        // Same-origin fetch + FileReader avoids canvas taint issues that
+        // Image+canvas can hit depending on how the asset is served.
+        function dhLoadImageAsDataUrl(url) {
+            return fetch(url)
+                .then(function (r) { return r.blob(); })
+                .then(function (blob) {
+                    return new Promise(function (resolve, reject) {
+                        var reader = new FileReader();
+                        reader.onload = function () { resolve(reader.result); };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+                });
+        }
+
+        // Renders a profile line chart on an off-screen canvas so the PDF
+        // can include the CC "Bailout to OC" chart without disturbing the
+        // visible profileChart or the diver's current what-if selection
+        // (Pablo, 2026-09-18: "add the table and the chart for the case
+        // under the name 'Bailout to OC'").
+        function dhRenderOffscreenProfileChart(data, annotations) {
+            return new Promise(function (resolve) {
+                var canvas = document.createElement('canvas');
+                canvas.width = 900;
+                canvas.height = 450;
+                canvas.style.position = 'fixed';
+                canvas.style.left = '-9999px';
+                canvas.style.top = '0';
+                document.body.appendChild(canvas);
+                var chart = new Chart(canvas.getContext('2d'), {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: 'Bailout to OC',
+                            data: data,
+                            borderColor: '#0e7c9e',
+                            backgroundColor: 'rgba(14, 124, 158, 0.35)',
+                            borderWidth: 2,
+                            showLine: true,
+                            fill: true,
+                            pointRadius: 0,
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        animation: false,
+                        plugins: {
+                            legend: { display: false },
+                            annotation: { annotations: annotations || {} },
+                        },
+                    },
+                });
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(function () {
+                        var url = canvas.toDataURL('image/png');
+                        chart.destroy();
+                        document.body.removeChild(canvas);
+                        resolve(url);
+                    });
+                });
+            });
+        }
+
+        function dhPdfEnsureSpace(doc, y, needed, marginTop) {
+            var pageHeight = doc.internal.pageSize.getHeight();
+            if (y + needed > pageHeight - 40) {
+                doc.addPage();
+                return marginTop;
+            }
+            return y;
+        }
+
+        async function dhExportDecoPlanToPDF() {
+            if (!globalResponse || !window.lastDiveProfile) {
+                alert('Calculate a decompression plan first.');
+                return;
+            }
+
+            var btn = document.getElementById('exportDecoPlanPdfBtn');
+            var originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="material-icons-round" aria-hidden="true">hourglass_top</span> Exporting…';
+            btn.disabled = true;
+
+            try {
+                var profile = window.lastDiveProfile;
+                var { jsPDF } = window.jspdf;
+                var doc = new jsPDF({ unit: 'pt', format: 'letter' });
+                var margin = 40;
+                var pageWidth = doc.internal.pageSize.getWidth();
+                var contentWidth = pageWidth - margin * 2;
+                var y = margin;
+
+                // 1. Header: logo + created-on timestamp.
+                try {
+                    var logoDataUrl = await dhLoadImageAsDataUrl('{{ asset("assets") }}/img/logos/logo_horizontal.png');
+                    doc.addImage(logoDataUrl, 'PNG', margin, y, 110, 31);
+                } catch (e) {
+                    // Logo is a nice-to-have - a failed fetch shouldn't block the export.
+                }
+                doc.setFontSize(9);
+                doc.setTextColor(90, 90, 90);
+                doc.text('Decompression plan created on ' + new Date().toLocaleString(), pageWidth - margin, y + 20, { align: 'right' });
+                y += 50;
+
+                // 2. Disclosure - condensed from the safety modal shown on every page load.
+                doc.setFillColor(250, 244, 230);
+                var disclosureText = 'Diving, especially decompression diving, is a risky activity. These calculations are based on mathematical models and do not guarantee prevention of decompression sickness or other diving hazards. Always use a reliable dive computer, follow established safety guidelines, dive within your training and experience level, and plan for contingencies. This plan is an informational aid, not a replacement for professional dive planning and real-time monitoring.';
+                var disclosureLines = doc.setFontSize(8).splitTextToSize(disclosureText, contentWidth - 20);
+                var disclosureHeight = disclosureLines.length * 10 + 14;
+                doc.rect(margin, y, contentWidth, disclosureHeight, 'F');
+                doc.setTextColor(120, 90, 20);
+                doc.text(disclosureLines, margin + 10, y + 12);
+                y += disclosureHeight + 20;
+
+                // 3. Inputs table.
+                doc.setFontSize(12);
+                doc.setTextColor(20, 20, 20);
+                doc.text('Inputs', margin, y);
+                y += 8;
+                doc.autoTable({
+                    startY: y,
+                    margin: { left: margin, right: margin },
+                    head: [['Field', 'Value']],
+                    body: dhBuildPdfInputRows(profile),
+                    theme: 'grid',
+                    headStyles: { fillColor: [20, 30, 40] },
+                    styles: { fontSize: 9 },
+                });
+                y = doc.lastAutoTable.finalY + 20;
+
+                // 4. Decompression table + chart.
+                y = dhPdfEnsureSpace(doc, y, 60, margin);
+                doc.setFontSize(12);
+                doc.text('Decompression Table', margin, y);
+                y += 8;
+                doc.autoTable({
+                    startY: y,
+                    margin: { left: margin, right: margin },
+                    html: '#decoTableContainer table',
+                    theme: 'grid',
+                    headStyles: { fillColor: [20, 30, 40] },
+                    styles: { fontSize: 8 },
+                });
+                y = doc.lastAutoTable.finalY + 20;
+
+                var profileChartCanvas = document.getElementById('profileChart');
+                var chartImgHeight = contentWidth * (profileChartCanvas.height / profileChartCanvas.width);
+                y = dhPdfEnsureSpace(doc, y, chartImgHeight + 30, margin);
+                doc.setFontSize(12);
+                doc.text('Decompression Profile', margin, y);
+                y += 8;
+                doc.addImage(profileChartCanvas.toDataURL('image/png'), 'PNG', margin, y, contentWidth, chartImgHeight);
+                y += chartImgHeight + 20;
+
+                // 5. CC only: Bailout to OC table + chart.
+                if (modeOCOrCC === 'CC') {
+                    y = dhPdfEnsureSpace(doc, y, 60, margin);
+                    doc.setFontSize(12);
+                    doc.text('Bailout to OC', margin, y);
+                    y += 8;
+                    doc.autoTable({
+                        startY: y,
+                        margin: { left: margin, right: margin },
+                        html: '#BOTableContainer table',
+                        theme: 'grid',
+                        headStyles: { fillColor: [20, 30, 40] },
+                        styles: { fontSize: 8 },
+                    });
+                    y = doc.lastAutoTable.finalY + 20;
+
+                    var unitConversionForPdf = modeImpOrMetric == 'met' ? 10 : 33;
+                    var bailoutAnnotations = buildGasSwitchAnnotations(globalResponse['bailout'], unitConversionForPdf, true);
+                    var bailoutChartUrl = await dhRenderOffscreenProfileChart(formattedData7, bailoutAnnotations);
+                    y = dhPdfEnsureSpace(doc, y, chartImgHeight + 30, margin);
+                    doc.setFontSize(12);
+                    doc.text('Bailout to OC Profile', margin, y);
+                    y += 8;
+                    doc.addImage(bailoutChartUrl, 'PNG', margin, y, contentWidth, chartImgHeight);
+                    y += chartImgHeight + 20;
+                }
+
+                // 6. OC only: gas consumption.
+                if (modeOCOrCC === 'OC') {
+                    y = dhPdfEnsureSpace(doc, y, 60, margin);
+                    doc.setFontSize(12);
+                    doc.text('Gas Consumption', margin, y);
+                    y += 8;
+                    if (document.querySelector('#bottomGasConsumptionTableContainer table')) {
+                        doc.autoTable({
+                            startY: y,
+                            margin: { left: margin, right: margin },
+                            html: '#bottomGasConsumptionTableContainer table',
+                            theme: 'grid',
+                            headStyles: { fillColor: [20, 30, 40] },
+                            styles: { fontSize: 8 },
+                        });
+                        y = doc.lastAutoTable.finalY + 14;
+                    }
+                    if (document.querySelector('#decoGasConsumptionTableContainer table')) {
+                        y = dhPdfEnsureSpace(doc, y, 60, margin);
+                        doc.autoTable({
+                            startY: y,
+                            margin: { left: margin, right: margin },
+                            html: '#decoGasConsumptionTableContainer table',
+                            theme: 'grid',
+                            headStyles: { fillColor: [20, 30, 40] },
+                            styles: { fontSize: 8 },
+                        });
+                    }
+                }
+
+                doc.save('decompression-plan-' + new Date().toISOString().slice(0, 10) + '.pdf');
+            } catch (e) {
+                console.error(e);
+                alert('Could not export this plan to PDF - please try again.');
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        }
+
+        document.getElementById('exportDecoPlanPdfBtn').addEventListener('click', dhExportDecoPlanToPDF);
+
+        var saveDecoPlanBtn = document.getElementById('saveDecoPlanBtn');
+        if (saveDecoPlanBtn) {
+            saveDecoPlanBtn.addEventListener('click', function () {
+                if (!window.lastDiveProfile) {
+                    alert('Calculate a decompression plan first.');
+                    return;
+                }
+                var label = prompt('Name this plan (optional):', '');
+                if (label === null) return; // cancelled
+
+                $.ajax({
+                    url: '{{ route("DecoPlanner.savePlan") }}',
+                    method: 'POST',
+                    data: {
+                        mode: window.lastDiveProfile.mode,
+                        inputs: window.lastDiveProfile,
+                        label: label || null,
+                    },
+                    success: function () { dhFlashIconButton(saveDecoPlanBtn, true); },
+                    error: function () { dhFlashIconButton(saveDecoPlanBtn, false); },
+                });
+            });
+        }
     </script>
 
     

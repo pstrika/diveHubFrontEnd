@@ -75,15 +75,15 @@ return [
         // match the template Pablo built directly in Meta Business
         // Manager - that direct-in-Meta original doesn't sync into
         // Twilio's Content API on its own, so this is its own resource and
-        // needs its own Meta review, "received" (pending) as of
-        // submission. Falls back to nothing (no send, just a logged
-        // failure) until approved. Fallbacks if this one stalls, in order
-        // of how close a match they are:
+        // needed its own Meta review - approved 2026-09-14 (Pablo: "all
+        // WhatsApp templates were approved"), live. Fallbacks if this one
+        // ever needs to be swapped out, in order of how close a match they
+        // are:
         //   - HXc96f0ea171f85fca8b3ecaa3a00fb9a4 "trip_reminder_3" - same
-        //     but without the Sign Waiver button (also pending approval).
+        //     but without the Sign Waiver button (also approved).
         //   - HXe8039180c734c549ecc59fe2e0c343c1 "trip_reminder_2" - plain
-        //     text, no image/buttons at all, category UTILITY, but the one
-        //     confirmed already approved and live-tested.
+        //     text, no image/buttons at all, category UTILITY, approved
+        //     and live-tested earlier.
         //   - HXdb6d8053b6017f001e74d9787321dbdb - dead, first
         //     trip_reminder_3 attempt, submitted as UTILITY by mistake.
         'trip_reminder_content_sid' => env('TWILIO_WHATSAPP_TRIP_REMINDER_SID', 'HX3c63aba80c351d4a492df18b407b16cc'),

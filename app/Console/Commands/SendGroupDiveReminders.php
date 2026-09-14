@@ -180,10 +180,10 @@ class SendGroupDiveReminders extends Command
      * WhatsApp reminder via Twilio's "trip_reminder_3_with_waiver" Content
      * template (whatsapp/card: header image, body, footer, "Trip Details"
      * and "Sign Waiver" buttons - content.twilio.com, submitted for Meta
-     * review 2026-09-14, so sends will fail/log until it comes back
-     * approved), only for members who opted in (`whatsapp_notifications`)
-     * and have a phone on file - WhatsAppService itself also no-ops
-     * without Twilio credentials configured.
+     * review 2026-09-14, approved the same day - Pablo: "all WhatsApp
+     * templates were approved"), only for members who opted in
+     * (`whatsapp_notifications`) and have a phone on file - WhatsAppService
+     * itself also no-ops without Twilio credentials configured.
      *
      * The template's variables are fixed by what was actually submitted:
      * {{1}} diver's name, {{2}} site, {{3}} operator, {{4}} date, {{5}}

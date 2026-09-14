@@ -155,6 +155,7 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
     Route::post('DecoPlanner/preferences', 'App\Http\Controllers\NDLController@saveDecoPreferences')->name('DecoPlanner.savePreferences');
     Route::post('DecoPlanner/gases', 'App\Http\Controllers\NDLController@saveDiveGas')->name('DecoPlanner.saveGas');
     Route::delete('DecoPlanner/gases/{id}', 'App\Http\Controllers\NDLController@deleteDiveGas')->name('DecoPlanner.deleteGas');
+    Route::post('DecoPlanner/plans', 'App\Http\Controllers\NDLController@saveDecoPlan')->name('DecoPlanner.savePlan');
 });
 
 Route::get('Weather/{location}', 'App\Http\Controllers\WeatherController@show')->middleware('guest')->name('Weather');
