@@ -217,202 +217,168 @@
                                     
                                     <div class="dh-channel-picker dh-gas-picker" id="nav-tabs">
                                         <button type="button" class="dh-channel-chip is-active" data-tag="OC">Open Circuit</button>
-                                        <button type="button" class="dh-channel-chip" data-tag="CC">Closed Circuit</button>
+                                        <button type="button" class="dh-channel-chip" data-tag="CC">Close Circuit CCR</button>
                                     </div>
                             
                                 </div>
                             </div>
                             <div class="row" id="CC" hidden>
 
-                                <div class="col-12 col-lg-4 col-sm-12 col-md-4" style="border-bottom: 1px solid #D3D3D3;">
-                                    <div class="row" style="display: flex; justify-content: center;">
-                                        <div class="mt-n6" style="position: relative; width: 150px; height: 300px;">
-                                            <!-- Overlaying image -->
-                                            <img id="tankCCR" src="{{ asset("assets") }}/img/ccr.png" alt="Overlay Image" 
-                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+                                <div class="col-md-6" id="cc-diluent-col">
+                                    <div class="mt-n2">
+                                        <input type="hidden" id="sliderPPO2CCR-value" name="txsliderPPO2CCR">
 
-                                            <img id="unblendable_sign_CCR" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image" 
-                                                style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
-
-                                            
-                                            <!-- Fixed-size chart canvas -->
-                                            <div style="width: 300px; heigth:300px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
-                                                <canvas id="stackedBarChartCCR" 
-                                                        style="width: 90%; height: 177px; position: absolute; bottom: 10px; left: 0; transform: none; z-index: 1;"></canvas>
+                                        <label class="dh-gas-label" for="txlabelPPO2CCR">Diluent PPO&#8322; at max depth</label>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="decimal" class="dh-gas-input is-safe" id="txlabelPPO2CCR" value="0.9">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">atm</span>
                                             </div>
-
-                                            <!-- <canvas id="stackedBarChart" 
-                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 161px; z-index: 1;"></canvas> -->
+                                            <div class="slider-styled" id="txsliderPPO2CCR" data-dh-num-mirror="1"></div>
                                         </div>
                                     </div>
-                                    <div class="row mt-3">
-                                        <div class="col-5">
-                                            <table class="table align-items-center mb-0"> 
-                                                <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Diluent mix</td> </tr>
-                                            </table>
-                                            <div class="label-container">
-                                                <label class="left-label text-success" id="mainLabel">Oxygen</label>
-                                                <label class="text-success right-label-success custom-label" id="labelMixO2CCR">21%</label>
+
+                                    <div class="mt-3">
+                                        <input type="hidden" id="sliderSetPoint-value" name="sliderSetPoint-input">
+
+                                        <label class="dh-gas-label" for="labelSetPoint">Set Point</label>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="decimal" class="dh-gas-input is-safe" id="labelSetPoint" value="1.2">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">atm</span>
                                             </div>
-                                            <div class="label-container" id="label-container-mix-He-CCR">
-                                                <label class="left-label text-info" id="mainLabel">Helium</label>
-                                                <label class="text-info right-label-normal custom-label" id="labelMixHeCCR">35%</label>
+                                            <div class="slider-styled" id="sliderSetPoint" data-dh-num-mirror="1"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <input type="hidden" id="sliderHeCCR-value" name="sliderHeCCR">
+
+                                        <div class="dh-gas-label-row">
+                                            <label class="dh-gas-label mb-0" for="labelENDCCR">END at max depth</label>
+                                            <label class="dh-gas-toggle" for="O2NarcoticCCR">
+                                                <input name="O2narcoticCCR" type="checkbox" id="O2NarcoticCCR" checked value="1">
+                                                <span class="dh-gas-toggle-track"><span class="dh-gas-toggle-thumb"></span></span>
+                                                <span class="dh-gas-toggle-label">
+                                                    Count O&#8322; as narcotic
+                                                    <span class="dh-gas-info material-icons-round" aria-hidden="true" title="When on, oxygen counts toward narcotic effect in the END calculation above.">info</span>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input is-safe" id="labelENDCCR" value="0">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">ft</span>
                                             </div>
-                                            <div class="label-container">
-                                                <label class="left-label text-secondary" id="mainLabel">Nitrogen</label>
-                                                <label class="text-secondary right-label-secondary custom-label" id="labelMixN2CCR">47%</label>
+                                            <div class="slider-styled" id="sliderHeCCR" data-dh-num-mirror="1"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <div class="dh-gas-label-row">
+                                            <label class="dh-gas-label mb-0" for="labelTempCCR">Loop temperature at depth</label>
+                                            <label class="dh-gas-toggle" for="waterVapor">
+                                                <input name="waterVapor" type="checkbox" id="waterVapor" checked value="1">
+                                                <span class="dh-gas-toggle-track"><span class="dh-gas-toggle-thumb"></span></span>
+                                                <span class="dh-gas-toggle-label">
+                                                    Consider H&#8322;O vapor?
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelTempCCR" value="37">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">&deg;C</span>
+                                            </div>
+                                            <div class="slider-styled" id="sliderTempCCR" data-dh-num-mirror="1"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <div class="text-center mb-2">
+                                            <div class="dh-gas-split-pill-row">
+                                                <div class="dh-gas-split-pill">
+                                                    <label class="dh-gas-result-pill is-o2" id="txBestO2CCR">32</label>
+                                                    <label class="dh-gas-result-pill is-he" id="txBestHeCCR">45</label>
+                                                </div>
+                                                <div class="dh-gas-density-col">
+                                                    <label class="dh-gas-result-pill is-compact is-density" id="gasDensityCCR">0.00</label>
+                                                    <div class="dh-gas-density-caption" id="denisityCCR">Gas density</div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-7">
-                                            <table class="table align-items-center mb-0"> 
-                                                <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Gas prices</td> </tr>
-                                            </table>
-                                            <table class="table"> 
-                                                <tr>
-                                                    <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Diluent tank</td>
-                                                    <td id="diluentPrice" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$35.50</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">O2 tank</td>
-                                                    <td id="O2Price" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10.00</td>
-                                                </tr>
-                                                
-                                            </table>
-                                            <table class="table mt-n2">
-                                                <tr id="closeMixRowCCR" hidden style="border-top: 1px solid #D3D3D3;">
-                                                    <td class="text-info text-xs opacity-10 text-left" style="border: none;">Closest standard mix</td>
-                                                    <td id="closeMixCCR" class="text-info font-weight-bolder text-xs opacity-10 text-right" style="border: none; text-align: end;">-</td>
-                                                </tr>
-                                            </table>
+                                        <div class="text-center align-items-center mb-2" id="txhypoxicCCR" style="display: flex; justify-content: center; align-items: center;">
+                                            <label class="text-danger text-sm font-weight-bolder" >Hypoxic at surface</label>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="dh-gas-btn-row">
+                                                <button type="button" class="btn btn-secondary flex-fill" id="buttonBestDiluent">
+                                                    Calculate Best Diluent
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="col-md-8">
-                                    <table class="table align-items-center mb-0"> 
-                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Diluent</td> </tr>
-                                    </table>
-                                    <div class="mt-n2">
-                                        <input type="hidden" id="sliderPPO2CCR-value" name="txsliderPPO2CCR">
-                                        
-                                        <!-- Flex container for label alignment -->
-                                        <div class="label-container">
-                                            <label class="left-label" id="mainLabelTx">Diluent PPO2 at max depth</label>
-                                            <label class="text-info right-label-normal custom-label" id="txlabelPPO2CCR">0.9</label>
-                                            <label class="text-info">atm</label>
-                                        </div>
-                                        
-                                        <div class="slider-styled" id="txsliderPPO2CCR"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">O2 Content Diluent</div>
-                                    </div>
+                                <div class="col-12 col-lg-6 col-sm-12 col-md-6" id="cc-tank-col">
+                                    <div class="dh-gas-tank-layout">
+                                        <div class="dh-gas-tank-graphic">
+                                            <div class="dh-gas-tank-img-wrap" style="position: relative; width: 105px; height: 210px;">
+                                                <!-- Overlaying image -->
+                                                <img id="tankCCR" src="{{ asset("assets") }}/img/ccr.png" alt="Overlay Image"
+                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
 
-                                    <div class="mt-0">
-                                        <input type="hidden" id="sliderSetPoint-value" name="sliderSetPoint-input">
-                                        
-                                        <!-- Flex container for label alignment -->
-                                        <div class="label-container">
-                                            <label class="left-label" id="mainLabelTx">Set Point</label>
-                                            <label class="text-info right-label-normal custom-label" id="labelSetPoint">1.2</label>
-                                            <label class="text-info">atm</label>
-                                        </div>
-                                        
-                                        <div class="slider-styled" id="sliderSetPoint"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Set Point</div>
-                                    </div>
+                                                <img id="unblendable_sign_CCR" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image"
+                                                    style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
 
-                                    <div class="mt-2">
-                                        <input type="hidden" id="sliderHeCCR-value" name="sliderHeCCR">
-                                        
-                                        <!-- Flex container for label alignment -->
-                                        <div class="label-container">
-                                            <label class="left-label" id="ENDLabelMax">END at max depth</label>
-                                            <label class="text-info right-label-normal custom-label" id="labelENDCCR"></label>
-                                            <label class="text-info">ft</label>
-                                        </div>
-                                        
-                                        
-                                        <div class="slider-styled" id="sliderHeCCR"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He Content Diluent</div>
-                                        <div class="form-container" style="display: flex; justify-content: space-between; align-items: center;">
-                                            <div class="form-check form-switch ps-0">
-                                                <input name="O2narcoticCCR" class="form-check-input ms-auto" type="checkbox"
-                                                    id="O2NarcoticCCR" checked value="1">
-                                                <label class="form-check-label text-body ms-3"
-                                                    for="O2NarcoticCCR">O2 narcotic?</label>
+                                                <!-- Fixed-size chart canvas -->
+                                                <div style="width: 210px; height: 210px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
+                                                    <canvas id="stackedBarChartCCR"
+                                                            style="width: 90%; height: 124px; position: absolute; bottom: 7px; left: 0; transform: none; z-index: 1;"></canvas>
+                                                </div>
                                             </div>
-                                            
-                                        </div>
-                                    </div>
 
-                                    <div class="mt-n2">
-                                        <input type="hidden" id="sliderTempCCR-value" name="sliderTempCCR">
-                                        
-                                        <!-- Flex container for label alignment -->
-                                        <div class="label-container">
-                                            <label class="left-label">Loop temperature at depth</label>
-                                            <label class="text-info right-label-normal custom-label" id="labelTempCCR"></label>
-                                            <label class="text-info">°F/°C</label>
-                                        </div>
-                                        
-                                        
-                                        <div class="slider-styled" id="sliderTempCCR"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Loop temperature</div>
-                                        <div class="form-container" style="display: flex; justify-content: space-between; align-items: center;">
-                                            <div class="form-check form-switch ps-0">
-                                                <input name="waterVapor" class="form-check-input ms-auto" type="checkbox"
-                                                    id="waterVapor" checked value="1">
-                                                <label class="form-check-label text-body ms-3"
-                                                    for="waterVapor">Consider H2O vapor?</label>
-                                            </div>
-                                            <div class="label-container" style="text-align: right;">
-                                                <label class="left-label" id="denisityCCR" style="padding-right: 10px;">Gas density</label>
-                                                <label class="text-info right-label-normal custom-label" id="gasDensityCCR"></label>
-                                                <label class="text-info">g/L</label>
+                                            <div class="text-center mt-2">
+                                                <div class="dh-gas-split-pill">
+                                                    <label class="dh-gas-result-pill is-compact is-mix-o2" id="labelMixO2CCR">21%</label>
+                                                    <label class="dh-gas-result-pill is-compact is-mix-he" id="labelMixHeCCR" hidden>35%</label>
+                                                    <label class="dh-gas-result-pill is-compact is-mix-n2" id="labelMixN2CCR">47%</label>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <div class="mt-2">
-                                        <table class="table mb-0" style="border: top; width: 100%;"> 
-                                            <tbody>
-                                                <tr class="mt-n4">
-                                                    <table style="width: 100%;">
+                                        <div class="dh-gas-tank-side">
+                                            <details class="dh-wx-more">
+                                                <summary><span class="material-icons-round" aria-hidden="true">attach_money</span>Gas prices</summary>
+                                                <div class="dh-wx-more-body">
+                                                    <table class="table mb-0">
                                                         <tr>
-                                                            
-                                                            <td class="mt-n4" style="border: none; text-align: right; width: 49%;">
-                                                                <label class="text-info text-lg font-weight-bolder" id="txBestO2CCR">32</label>
-                                                            </td>
-                                                            <td class="mt-n4" style="border: none; width: 2%; text-align: center;">
-                                                                <label class="text-info text-lg font-weight-bolder">/</label>
-                                                            </td>
-                                                            <td class="mt-n4" style="border: none; text-align: left; width: 49%;">
-                                                                <label class="text-info text-lg font-weight-bolder" id="txBestHeCCR">45</label>
-                                                            </td>
-                                                        
+                                                            <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Diluent tank</td>
+                                                            <td id="diluentPrice" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$35.50</td>
                                                         </tr>
-                                                        
+                                                        <tr>
+                                                            <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">O2 tank</td>
+                                                            <td id="O2Price" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10.00</td>
+                                                        </tr>
                                                     </table>
-                                                </tr>
-                                                <tr>
-                                                    <td style="border: none;">
-                                                    <div class="text-center align-items-center mt-n3 mb-n2" id="txhypoxicCCR" style="display: flex; justify-content: center; align-items: center;">
-                                                        <label class="text-danger text-sm font-weight-bolder" >Hypoxic at surface</label>
+                                                    <div class="text-center dh-gas-closemix" id="closeMixRowCCR" hidden>
+                                                        <label class="dh-gas-result-pill is-compact is-closemix" id="closeMixCCR">-</label>
                                                     </div>
-
-                                                    </td>
-                                                </tr>
-                                                <tr class="text-center align-items-center">
-                                                    <td class="text-center align-items-center" style="border: none;"> <!-- Added text-center here -->
-                                                        <div class="text-center align-items-center mt-0">
-                                                            <a type="button" class="btn btn-info mt-0" id="buttonBestDiluent">
-                                                                Calculate Best Diluent
-                                                            </a>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                
-                                            </tbody> 
-                                        </table>
+                                                </div>
+                                            </details>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1687,10 +1653,10 @@
                 },
                 layout: {
                     padding: {
-                        left: 20,
-                        right: 20,
-                        top: 20,
-                        bottom: 4
+                        left: 14,
+                        right: 14,
+                        top: 14,
+                        bottom: 3
                     }
                 }
             },
@@ -1704,18 +1670,18 @@
                             meta.data.forEach((bar, index) => {
                                 const data = dataset.data[index];
                                 if (data != 100 && data != 0) {
-                                    ctx.font = '12px Roboto';
+                                    ctx.font = '8px Roboto'; // scaled with the smaller tank (2026-09-16)
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x + 12, bar.y + 10); // Position label slightly above the bar
-                                    
+                                    ctx.fillText(data + '%', bar.x + 8, bar.y + 7); // Position label slightly above the bar
+
                                 } else if (data == 100) {
-                                    ctx.font = '12px Roboto';
+                                    ctx.font = '8px Roboto'; // scaled with the smaller tank (2026-09-16)
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x -10 , bar.y + 70); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x -7 , bar.y + 49); // Position label slightly above the bar - scaled with the smaller tank
                                 }
                             });
                         });
@@ -1824,19 +1790,21 @@
 
         function updateGasDensityCCR() {
             waterVapor = document.getElementById("waterVapor").checked;
-            const density = calculateLoopGasDensity(depth, parseFloat(labelSetPoint.textContent), parseFloat(txBestO2CCR.textContent)/100, parseFloat(txBestHeCCR.textContent)/100, waterVapor);
+            const density = calculateLoopGasDensity(depth, parseFloat(labelSetPoint.value), parseFloat(txBestO2CCR.textContent)/100, parseFloat(txBestHeCCR.textContent)/100, waterVapor);
             var gasDensityLabel = document.getElementById("gasDensityCCR");
             gasDensityLabel.textContent = density.toFixed(2);
 
+            // Colored-background pill, same safe/warn/danger fill as Open
+            // Circuit's Gas Density (2026-09-16) - default is-safe blue is
+            // already baked into .dh-gas-result-pill itself.
             if(density > 5 && density <= 5.6) {
-                gasDensityLabel.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
-                gasDensityLabel.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+                gasDensityLabel.classList.remove("is-danger");
+                gasDensityLabel.classList.add("is-warn");
             } else if (density > 5.6) {
-                gasDensityLabel.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
-                gasDensityLabel.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+                gasDensityLabel.classList.remove("is-warn");
+                gasDensityLabel.classList.add("is-danger");
             } else {
-                gasDensityLabel.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
-                gasDensityLabel.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+                gasDensityLabel.classList.remove("is-warn", "is-danger");
             }
         }
 
@@ -1855,22 +1823,23 @@
                 return;
             }
 
-            // Update the chart data
+            // Update the chart data - same colors as the O2/He/N2 split
+            // pill below the tank (2026-09-16, matches Open Circuit).
             stackedBarChartCCR.data.datasets = [
                 {
                     label: 'Oxygen',
                     data: [oxygen, 100],
-                    backgroundColor: 'rgb(76, 175, 80, 1.0)'
+                    backgroundColor: '#2e7d4f' // --dh-good
                 },
                 {
                     label: 'Helium',
                     data: [helium, 0],
-                    backgroundColor: 'rgb(26, 115, 232, 1.0)'
+                    backgroundColor: '#0e7c9e' // --dh-sea
                 },
                 {
                     label: 'Nitrogen',
                     data: [nitrogen, 0],
-                    backgroundColor: '#7b809a'
+                    backgroundColor: '#5a6b78' // --dh-muted
                 }
             ];
 
@@ -1886,12 +1855,9 @@
             labelMixHeCCR.textContent = helium + '%';
             labelMixN2CCR.textContent = nitrogen + '%';
 
-            var labelContainerHeCCR = document.getElementById("label-container-mix-He-CCR");
-            if(helium == 0) {
-                labelContainerHeCCR.style.display = "none";
-            } else {
-                labelContainerHeCCR.style.display = "flex";
-            }
+            // 2-way (no Helium) or 3-way split pill, same as Open Circuit's
+            // Gas Mix legend.
+            labelMixHeCCR.hidden = helium == 0;
 
             // show or hide Hypoix
             if(oxygen < 16) {
@@ -1900,21 +1866,21 @@
                 txhypoxicCCR.style.display = "none";
             }
 
-            // Update PPO2 Diluent color
-            if (parseFloat(txlabelPPO2CCR.textContent) < 0.18 || parseFloat(txlabelPPO2CCR.textContent) > 1.10) {
+            // Update PPO2 Diluent color - white background always, only
+            // the border/text color moves through the safe/warn/danger
+            // ladder (2026-09-16, same convention as Open Circuit).
+            if (parseFloat(txlabelPPO2CCR.value) < 0.18 || parseFloat(txlabelPPO2CCR.value) > 1.10) {
                 console.log("High PPO2 - Danger");
-                txlabelPPO2CCR.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
-                txlabelPPO2CCR.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
-                
-            } else if (parseFloat(txlabelPPO2CCR.textContent) < 0.5 ||  parseFloat(txlabelPPO2CCR.textContent) > 1) {
+                txlabelPPO2CCR.classList.remove("is-safe", "is-warn");
+                txlabelPPO2CCR.classList.add("is-danger");
+            } else if (parseFloat(txlabelPPO2CCR.value) < 0.5 ||  parseFloat(txlabelPPO2CCR.value) > 1) {
                 console.log("TX Medium PPO2 - Warning");
-                txlabelPPO2CCR.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
-                txlabelPPO2CCR.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
-                
+                txlabelPPO2CCR.classList.remove("is-safe", "is-danger");
+                txlabelPPO2CCR.classList.add("is-warn");
             } else {
                 console.log("TX Low PPO2 - Info");
-                txlabelPPO2CCR.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
-                txlabelPPO2CCR.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+                txlabelPPO2CCR.classList.remove("is-warn", "is-danger");
+                txlabelPPO2CCR.classList.add("is-safe");
             }
 
             
@@ -1949,7 +1915,7 @@
             start: Math.min(ambientPressure, 1.3),    // Set initial value to 0.9 PPO2 or 21 max
             connect: [true, false],
             range: {
-                'min': parseFloat(txlabelPPO2CCR.textContent),
+                'min': parseFloat(txlabelPPO2CCR.value),
                 'max': Math.min(ambientPressure, 1.5)
             },
             step: 0.05,
@@ -2036,12 +2002,17 @@
         }
 
 
-        var bestHeCCR = calculateBestHeCCR(80, depth, Math.min(Math.ceil(0.9 / ambientPressure * 100), 21)/100, parseFloat(labelSetPoint.textContent));
-
-        console.log("bestHe=" + bestHeCCR);
+        // A function, not a value computed once - same staleness bug fix
+        // as Open Circuit's Trimix (2026-09-16): depth/setpoint can both
+        // change after this script runs, so "the best He% right now" is
+        // recomputed fresh everywhere it's needed instead of read from a
+        // var frozen at page-load time.
+        function currentBestHeCCR() {
+            return calculateBestHeCCR(80, depth, Math.min(Math.ceil(0.9 / ambientPressure * 100), 21) / 100, parseFloat(labelSetPoint.value));
+        }
 
         noUiSlider.create(sliderHeCCR, {
-            start: bestHeCCR,
+            start: currentBestHeCCR(),
             connect: [true, false],
             range: {
                 'min': 0,
@@ -2071,77 +2042,56 @@
                 O2FactorCCR = 1;
             }
 
-            var ENDMaxCCR = calculateENDCCR(txmaxDepth, parseFloat(labelSetPoint.textContent), parseFloat(txBestO2CCR.textContent)/100, parseFloat(txBestHeCCR.textContent)/100, O2FactorCCR);
-            labelENDCCR.textContent = ENDMaxCCR.toFixed(0);
-
-
-
+            var ENDMaxCCR = calculateENDCCR(txmaxDepth, parseFloat(labelSetPoint.value), parseFloat(txBestO2CCR.textContent)/100, parseFloat(txBestHeCCR.textContent)/100, O2FactorCCR);
+            labelENDCCR.value = ENDMaxCCR.toFixed(0);
 
             if (ENDMaxCCR > 130) {
-                labelENDCCR.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
-                labelENDCCR.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+                labelENDCCR.classList.remove("is-safe", "is-warn");
+                labelENDCCR.classList.add("is-danger");
             } else if (ENDMaxCCR > 100) {
-                labelENDCCR.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
-                labelENDCCR.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+                labelENDCCR.classList.remove("is-safe", "is-danger");
+                labelENDCCR.classList.add("is-warn");
             } else {
-                labelENDCCR.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
-                labelENDCCR.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+                labelENDCCR.classList.remove("is-warn", "is-danger");
+                labelENDCCR.classList.add("is-safe");
             }
 
-            
-
-            if(txBestHeCCR.textContent == bestHeCCR) {
-                txBestHeCCR.classList.remove("text-info");
-                txBestHeCCR.classList.add("text-success");
-            } else {
-                txBestHeCCR.classList.add("text-info");
-                txBestHeCCR.classList.remove("text-success");
-            }
+            // He half of the split pill: green when this IS the ideal He%
+            // for the current depth/setpoint, theme blue otherwise - same
+            // rule as Open Circuit's Trimix.
+            txBestHeCCR.classList.toggle("is-ideal", txBestHeCCR.textContent == currentBestHeCCR());
+            updateDiluentButtonState();
 
             updateGasMixCCR(txBestO2CCR.textContent, txBestHeCCR.textContent);
             updateGasDensityCCR();
             updateGasPricesCCR();
-
-            // enable button
-            document.getElementById("buttonBestDiluent").classList.add("btn-info");
-            document.getElementById("buttonBestDiluent").classList.remove('btn-secondary');
-            
         });
 
-        
-
         sliderSetPoint.noUiSlider.on('update', function (values, handle) {
-            labelSetPoint.textContent = values[handle];
-            //txBestO2CCR.textContent = Math.round(values[handle]);
+            labelSetPoint.value = values[handle];
 
-            //updateGasMixCCR(txBestO2CCR.textContent, txBestHeCCR.textContent);
-            // Update SetPoint color
-            if (parseFloat(labelSetPoint.textContent) < 0.5 || parseFloat(labelSetPoint.textContent) > 1.45) {
+            // Update SetPoint color - white background always, only the
+            // border/text color moves through the safe/warn/danger ladder.
+            if (parseFloat(labelSetPoint.value) < 0.5 || parseFloat(labelSetPoint.value) > 1.45) {
                 console.log("High PPO2 - Danger");
-                labelSetPoint.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
-                labelSetPoint.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
-                
-            } else if (parseFloat(labelSetPoint.textContent) < 0.7 ||  parseFloat(labelSetPoint.textContent) > 1.3) {
+                labelSetPoint.classList.remove("is-safe", "is-warn");
+                labelSetPoint.classList.add("is-danger");
+            } else if (parseFloat(labelSetPoint.value) < 0.7 ||  parseFloat(labelSetPoint.value) > 1.3) {
                 console.log("TX Medium PPO2 - Warning");
-                labelSetPoint.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
-                labelSetPoint.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
-                
+                labelSetPoint.classList.remove("is-safe", "is-danger");
+                labelSetPoint.classList.add("is-warn");
             } else {
                 console.log("TX Low PPO2 - Info");
-                labelSetPoint.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
-                labelSetPoint.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+                labelSetPoint.classList.remove("is-warn", "is-danger");
+                labelSetPoint.classList.add("is-safe");
             }
 
             sliderHeCCR.noUiSlider.set(sliderHeCCR.noUiSlider.get());
             updateGasDensityCCR();
-
-            
-            
-            
         })
 
         txsliderPPO2CCR.noUiSlider.on('update', function (values, handle) {
-            txlabelPPO2CCR.textContent = (Math.round(values[handle]) * ambientPressure / 100).toFixed(2);
+            txlabelPPO2CCR.value = (Math.round(values[handle]) * ambientPressure / 100).toFixed(2);
             txBestO2CCR.textContent = Math.round(values[handle]);
 
             // Update range for setPoint
@@ -2154,7 +2104,7 @@
 
             sliderSetPoint.noUiSlider.updateOptions({
                 range: {
-                    'min': roundToStep(parseFloat(txlabelPPO2CCR.textContent), 0.05),
+                    'min': roundToStep(parseFloat(txlabelPPO2CCR.value), 0.05),
                     'max': roundToStep(Math.min(ambientPressure, 1.5), 0.05)
                 }
             });
@@ -2167,21 +2117,13 @@
                 }
             });
 
-            if(txBestO2CCR.textContent == Math.min(Math.ceil(0.9 / ambientPressure * 100), 21)) {
-                txBestO2CCR.classList.remove("text-info");
-                txBestO2CCR.classList.add("text-success");
-            } else {
-                txBestO2CCR.classList.add("text-info");
-                txBestO2CCR.classList.remove("text-success");
-            }
-            
+            // O2 half of the split pill: green when this IS the ideal O2%
+            // for the current depth, theme blue otherwise.
+            txBestO2CCR.classList.toggle("is-ideal", txBestO2CCR.textContent == Math.min(Math.ceil(0.9 / ambientPressure * 100), 21));
+            updateDiluentButtonState();
+
             updateGasDensityCCR();
             updateGasPricesCCR();
-
-            // enable button
-            document.getElementById("buttonBestDiluent").classList.add("btn-info");
-            document.getElementById("buttonBestDiluent").classList.remove('btn-secondary');
-            
         })
 
         // Add an event listener for the 'change' event
@@ -2224,32 +2166,86 @@
         sliderTempCCR.noUiSlider.on('update', function (values, handle) {
             tempC = Math.round(values[handle]);
             tempF = (Math.round(values[handle]) * 9 /5 ) + 32;
-            labelTempCCR.textContent =  tempF.toFixed(0) + "/" + tempC;
+            labelTempCCR.value = tempC; // pill shows the same Celsius value the slider itself uses
             tempK = Math.round(values[handle]) + 273.15;
             updateGasDensityCCR();
         });
 
+        // Typing a temperature moves the slider directly - no derived
+        // value here (matches Set Max Depth's "just a user entry" pill).
+        labelTempCCR.addEventListener('change', function () {
+            var typedTemp = parseFloat(labelTempCCR.value);
+            if (isNaN(typedTemp)) { labelTempCCR.value = Math.round(sliderTempCCR.noUiSlider.get()); return; }
+            sliderTempCCR.noUiSlider.set(typedTemp);
+        });
+
+        // Typing a Diluent PPO2 moves the O2% slider that actually drives
+        // it, same idea as Open Circuit's PPO2 fields.
+        txlabelPPO2CCR.addEventListener('change', function () {
+            var typedPpo2 = parseFloat(txlabelPPO2CCR.value);
+            if (isNaN(typedPpo2)) { txlabelPPO2CCR.value = (Math.round(txsliderPPO2CCR.noUiSlider.get()) * ambientPressure / 100).toFixed(2); return; }
+            var targetO2Percent = Math.round((typedPpo2 / ambientPressure) * 100);
+            txsliderPPO2CCR.noUiSlider.set(targetO2Percent);
+        });
+
+        // Set Point IS the slider's own unit (atm), so typing it just sets
+        // the slider directly - no derivation needed.
+        labelSetPoint.addEventListener('change', function () {
+            var typedSetpoint = parseFloat(labelSetPoint.value);
+            if (isNaN(typedSetpoint)) { labelSetPoint.value = sliderSetPoint.noUiSlider.get(); return; }
+            sliderSetPoint.noUiSlider.set(typedSetpoint);
+        });
+
+        // Typing an END moves the He% slider that actually drives it -
+        // invert calculateENDCCR's own formula, same idea as Open
+        // Circuit's Trimix END field.
+        labelENDCCR.addEventListener('change', function () {
+            var typedEnd = parseFloat(labelENDCCR.value);
+            if (isNaN(typedEnd)) { labelENDCCR.value = Math.round(sliderHeCCR.noUiSlider.get()); return; }
+            var setpoint = parseFloat(labelSetPoint.value);
+            var diluentO2 = parseFloat(txBestO2CCR.textContent) / 100;
+            var isOxygenNarcotic = O2NarcoticCCR.checked ? 1 : 0;
+            var ambientPressureDepth = depth / 33 + 1;
+            var loopO2 = setpoint / ambientPressureDepth;
+            var remainingFraction = 1 - loopO2;
+            // calculateENDCCR solves forward from He% to END; walk the
+            // He% slider until its own END lands on (or just past) what
+            // was typed, since the underlying relationship isn't a clean
+            // one-line inverse the way Nitrox/Trimix's PPO2<->O2% is.
+            var targetHePercent = sliderHeCCR.noUiSlider.get();
+            for (var he = 0; he <= 95; he++) {
+                var end = calculateENDCCR(depth, setpoint, diluentO2, he / 100, isOxygenNarcotic);
+                if (end <= typedEnd) { targetHePercent = he; break; }
+            }
+            sliderHeCCR.noUiSlider.set(targetHePercent);
+        });
+
+        // "Calculate Best Diluent" shares the same is-solved treatment as
+        // Open Circuit's Nitrox/Trimix - solved once BOTH O2 and He are
+        // independently at their ideal values.
+        function updateDiluentButtonState() {
+            var bothIdeal = txBestO2CCR.classList.contains('is-ideal') && txBestHeCCR.classList.contains('is-ideal');
+            var btn = document.getElementById("buttonBestDiluent");
+            btn.classList.toggle("is-solved", bothIdeal);
+            btn.classList.toggle("btn-secondary", bothIdeal);
+            btn.classList.toggle("btn-info", !bothIdeal);
+        }
+
+        // Both sliders' own 'update' handlers above (fired synchronously
+        // by .set() below) are what actually mark each half ideal and
+        // update the button via updateDiluentButtonState(), so this only
+        // needs to move them.
         document.getElementById("buttonBestDiluent").addEventListener("click", function () {
             O2NarcoticCCR.checked = true;
             waterVapor.checked = true;
             sliderSetPoint.noUiSlider.set(sliderSetPoint.noUiSlider.options.start);
             // update ambient pressure
             ambientPressure = depth / 33 +1;
-            bestHeCCR = calculateBestHeCCR(80, depth, Math.min(Math.ceil(0.9 / ambientPressure * 100), 21)/100, parseFloat(labelSetPoint.textContent));
-            
-            // Reset the slider to its start value
-            
-            sliderHeCCR.noUiSlider.set(bestHeCCR);
+
+            sliderHeCCR.noUiSlider.set(currentBestHeCCR());
             txsliderPPO2CCR.noUiSlider.set(Math.min(Math.ceil(0.9 / ambientPressure * 100), 21));
-            
+
             sliderTempCCR.noUiSlider.set(sliderTempCCR.noUiSlider.options.start);
-            //updateGasDensity();
-            //updateGasMix(txlabelBestNitrox.textContent, txlabelBestHe.textContent);
-            
-            // if button pressed, we disable button
-            document.getElementById("buttonBestDiluent").classList.remove("btn-info");
-            document.getElementById("buttonBestDiluent").classList.add('btn-secondary');
-            
         });
 
         function updateCCRSliders() {
@@ -2261,14 +2257,8 @@
                     'max': Math.min(Math.floor(1.2 / ambientPressure * 100),21)
                 }
             });
-            var bestO2CCRTemp = Math.min(Math.ceil(0.9 / ambientPressure * 100), 21);
-            var bestHeCCRTemp = calculateBestHeCCR(80, depth, Math.min(Math.ceil(0.9 / ambientPressure * 100), 21)/100, parseFloat(labelSetPoint.textContent));
-            sliderHeCCR.noUiSlider.set(bestHeCCRTemp);
-            txsliderPPO2CCR.noUiSlider.set(bestO2CCRTemp);
-
-            // disable button - best diluent already calculated
-            document.getElementById("buttonBestDiluent").classList.remove("btn-info");
-            document.getElementById("buttonBestDiluent").classList.add('btn-secondary');
+            sliderHeCCR.noUiSlider.set(currentBestHeCCR());
+            txsliderPPO2CCR.noUiSlider.set(Math.min(Math.ceil(0.9 / ambientPressure * 100), 21));
 
         }
 

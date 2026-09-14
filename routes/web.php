@@ -148,6 +148,15 @@ Route::get('DecoPlannerImperial', 'App\Http\Controllers\NDLController@showImperi
 Route::get('DecoPlannerMetric/{id}', 'App\Http\Controllers\NDLController@showMetric')->middleware('guest')->name('DecoPlannerMetric');
 Route::get('DecoPlannerMetric', 'App\Http\Controllers\NDLController@showMetric')->middleware('guest')->name('DecoPlannerMetric');
 
+// Saving GF Low/High + setpoint and custom gas mixes needs a real profile
+// to save them to - 'guest' alone would silently write to the shared guest
+// account (Pablo, 2026-09-18).
+Route::middleware(['auth', 'not_guest'])->group(function () {
+    Route::post('DecoPlanner/preferences', 'App\Http\Controllers\NDLController@saveDecoPreferences')->name('DecoPlanner.savePreferences');
+    Route::post('DecoPlanner/gases', 'App\Http\Controllers\NDLController@saveDiveGas')->name('DecoPlanner.saveGas');
+    Route::delete('DecoPlanner/gases/{id}', 'App\Http\Controllers\NDLController@deleteDiveGas')->name('DecoPlanner.deleteGas');
+});
+
 Route::get('Weather/{location}', 'App\Http\Controllers\WeatherController@show')->middleware('guest')->name('Weather');
 Route::get('Weather/', 'App\Http\Controllers\WeatherController@show')->middleware('guest')->name('Weather');
 // The separate Argentina forecast retired in release 10: /Weather now serves

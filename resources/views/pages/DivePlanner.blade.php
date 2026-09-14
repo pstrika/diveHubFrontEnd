@@ -220,6 +220,51 @@
                 </div>
             </div>
 
+            {{-- Confirms saving a gas card's current O2/He as a custom gas
+                 (Pablo, 2026-09-18: "add a small save icon where a modal
+                 will show up and confirm he wants to save the gas"). One
+                 shared modal for every gas card - dhSaveGasTargetSlot (set
+                 when the save icon is clicked) says which slot's O2/He to
+                 read and save. --}}
+            <div class="modal fade" id="modalSaveGas" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h6 class="modal-title font-weight-normal">Save to My Gases</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <p>Save <strong id="modalSaveGasMix">-</strong> as a custom gas?</p>
+                            <p class="text-danger" id="modalSaveGasError" hidden></p>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-info" id="modalSaveGasConfirm">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- "My Gases" picker - up to 10 custom gas mixes a registered
+                 diver saved from any gas card, reusable on any other one
+                 (Pablo, 2026-09-18). dhMyGasesTargetSlot (set when a "My
+                 Gases" pill is clicked) says which slot's sliders to drive
+                 when one is picked. --}}
+            <div class="modal fade" id="modalMyGases" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h6 class="modal-title font-weight-normal">My Gases</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="dh-mygases-empty" id="modalMyGasesEmpty" hidden>You haven't saved any custom gases yet - use the save icon on any gas card.</div>
+                            <div id="modalMyGasesList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 
 
             <div class="dh-panel-head-row mb-3">
@@ -237,7 +282,7 @@
 
             <div class="row">
                 <div class="col-md-12 m-auto">
-                    <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4" id="dh-deco-inputs-card">
+                    <div class="card p-0 position-relative mt-3 z-index-2 mb-4" id="dh-deco-inputs-card">
                         <div class="dh-calc-inputs-head" id="dh-deco-inputs-toggle" role="button" tabindex="0" aria-expanded="true" aria-controls="dh-deco-inputs-body">
                             <span class="material-icons-round" aria-hidden="true">tune</span>
                             <h3>Inputs</h3>
@@ -246,106 +291,96 @@
                         </div>
 
                         <div class="card-body" id="dh-deco-inputs-body">
-                            <div row>
-                                <div class="nav-wrapper position-relative end-0">
-                                    <ul class="nav nav-pills nav-fill p-1" role="tablist" id="nav-tabs">
-                                        <li class="nav-item">
-                                            <a class="nav-link mb-0 px-0 py-1 active" href="#">Open Circuit</a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a class="nav-link mb-0 px-0 py-1" href="#">Closed Circuit</a>
-                                        </li>
-                                    </ul>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="dh-channel-picker dh-gas-picker" id="nav-tabs">
+                                        <button type="button" class="dh-channel-chip is-active" data-tag="OC">Open Circuit</button>
+                                        <button type="button" class="dh-channel-chip" data-tag="CC">Close Circuit CCR</button>
+                                        @if(auth()->user()->isNotGuest())
+                                            {{-- Saves GF Low/High + setpoint to the diver's profile so the
+                                                 planner remembers them next visit (Pablo, 2026-09-18). Guests
+                                                 (the shared account) never see this - there's nowhere to
+                                                 persist it for them. --}}
+                                            <button type="button" class="dh-btn-icon" id="saveDecoPrefsBtn" style="margin-left:auto;" title="Save GF Low/High and setpoint to your profile">
+                                                <span class="material-icons-round" aria-hidden="true">bookmark_border</span>
+                                            </button>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                             <div class="row mt-2">
-                                <table class="table align-items-center mb-0 mt-n2"> 
-                                    <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Set dive max Depth</td> </tr>
-                                </table>
-                                @if( !is_null($currentSite))
-                                <div class="col-lg-4 col-12">
-                                    <div class="text-center" style="border: none;">
-                                        <a type="button" class="btn btn-info mt-0 w-100" id="useCurrentSiteDepthButton" onclick="useSiteDepth()">
-                                            Use {{ $currentSite->name }} depth
-                                        </a>
-                                    </div>    
-                                </div>
-
-                                @endif
-                                @if( is_null($currentSite))
-                                    <div class="col-lg-6 col-12">
-                                @else
-                                    <div class="col-lg-4 col-12">
-                                @endif
-                                    <div class="text-center" style="border: none;"> <!-- Added text-center here -->
-                                        <!--<a type="button" class="btn btn-info mt-0 w-100" id="searchSitesButton">
-                                            Search sites
-                                        </a>-->
-
-                                        <div class="dropdown">
-                                            <button class="btn bg-gradient-info dropdown-toggle w-100" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                                Search sites...
-                                            </button>
-                                            <ul class="dropdown-menu" id="dropdownMenu">
-                                                <li>
-                                                    <input type="text" class="form-control mb-2" id="dropdownSearch" placeholder="Search..." style="display: block;">
-                                                </li>
-                                                <?php foreach ($allSites as $site): ?>
-                                                    <li><a class="dropdown-item" href="#" data-depth="<?php echo htmlspecialchars($site->maxDepth / ($deco_unit ? 3.28 : 1) ); ?>">
-                                                        <?php echo htmlspecialchars($site->name) . " (" . htmlspecialchars($site->type) . ")"; ?>
-                                                    </a></li>
-                                                <?php endforeach; ?>
-                                            </ul>
-                                        </div>
-
-                                    </div>    
-                                </div>
-                                @if( is_null($currentSite))
-                                    <div class="col-lg-6 col-12">
-                                @else
-                                    <div class="col-lg-4 col-12">
-                                @endif
-                                    <input type="hidden" id="depthSlider-value" name="depthSlider-value">
-                                    <div class="slider-styled" id="depthSlider"></div>
-                                    <div id="maxDepthSliderTitle" class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Max Depth (ft)</div> 
-                                </div>
-
-                            </div>
-                            <div class="row mt-2" style="border-bottom: 1px solid #D3D3D3;">
-                                <div id="maxDepthContainerImp" class="col-12 d-flex justify-content-center align-items-center">
-                                    <div>
-                                        <label class="text-info right-label-normal custom-label text-lg" id="labelDepth">Bottom PPO2</label>
-                                        <label id="maxDepthInputLabel" class="text-info">ft</label>
+                                <div class="col-12">
+                                    <div class="dropdown d-inline-flex align-items-center" style="gap: 8px;">
+                                        <button type="button" class="dh-channel-chip" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <span class="material-icons-round" aria-hidden="true" style="font-size: 15px; vertical-align: -3px;">search</span>
+                                            Search dive sites
+                                        </button>
+                                        <label class="dh-gas-result-pill is-compact" id="selectedSitePill" hidden></label>
+                                        <ul class="dropdown-menu" id="dropdownMenu">
+                                            <li>
+                                                <input type="text" class="form-control mb-2" id="dropdownSearch" placeholder="Search..." style="display: block;">
+                                            </li>
+                                            <?php if (!is_null($currentSite)):
+                                                $currentSiteLevel = \App\Support\DiveLevel::get($currentSite->level ?? null);
+                                            ?>
+                                                <li><a class="dropdown-item" href="#" data-depth="<?php echo htmlspecialchars($currentSite->maxDepth / ($deco_unit ? 3.28 : 1)); ?>" data-site-name="<?php echo htmlspecialchars($currentSite->name); ?>" data-level-icon="<?php echo $currentSiteLevel ? asset('assets') . '/' . $currentSiteLevel['icon'] : ''; ?>" data-level-name="<?php echo $currentSiteLevel ? htmlspecialchars($currentSiteLevel['code']) : ''; ?>">
+                                                    Use <?php echo htmlspecialchars($currentSite->name); ?> depth
+                                                </a></li>
+                                            <?php endif; ?>
+                                            <?php foreach ($allSites as $site):
+                                                $siteLevel = \App\Support\DiveLevel::get($site->level ?? null);
+                                            ?>
+                                                <li><a class="dropdown-item" href="#" data-depth="<?php echo htmlspecialchars($site->maxDepth / ($deco_unit ? 3.28 : 1) ); ?>" data-site-name="<?php echo htmlspecialchars($site->name); ?>" data-level-icon="<?php echo $siteLevel ? asset('assets') . '/' . $siteLevel['icon'] : ''; ?>" data-level-name="<?php echo $siteLevel ? htmlspecialchars($siteLevel['code']) : ''; ?>">
+                                                    <?php echo htmlspecialchars($site->name) . " (" . htmlspecialchars($site->type) . ")"; ?>
+                                                </a></li>
+                                            <?php endforeach; ?>
+                                        </ul>
                                     </div>
                                 </div>
-
-                                <div id="maxDepthContainerMet" class="col-12 d-flex justify-content-center align-items-center">
-                                    <div>
-                                        <label class="text-info right-label-normal custom-label text-lg" id="labelDepthMET">Bottom PPO2</label>
-                                        <label class="text-info">m</label>
+                            </div>
+                            <div class="row mt-3 dh-deco-input-divider" style="padding-bottom: 10px;">
+                                <div class="col-12">
+                                    <label class="dh-gas-label" for="labelDepth" id="maxDepthSliderTitle">Max Depth (ft)</label>
+                                    <div class="dh-gas-row">
+                                        <div id="maxDepthContainerImp" class="dh-gas-input-wrap">
+                                            <div class="dh-gas-editable">
+                                                <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDepth" value="100">
+                                                <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                            </div>
+                                            <span class="dh-gas-unit" id="maxDepthInputLabel">ft</span>
+                                        </div>
+                                        <div id="maxDepthContainerMet" class="dh-gas-input-wrap">
+                                            <div class="dh-gas-editable">
+                                                <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDepthMET" value="30">
+                                                <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                            </div>
+                                            <span class="dh-gas-unit">m</span>
+                                        </div>
+                                        <input type="hidden" id="depthSlider-value" name="depthSlider-value">
+                                        <div class="slider-styled" id="depthSlider" data-dh-num-mirror="1"></div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="row" id="containerSetPoint" style="display: none;">
-                                <div class="col-lg-12 col-12" style="border-bottom: 1px solid #D3D3D3;">
+                                <div class="col-lg-12 col-12 dh-deco-input-divider" style="padding-bottom: 10px;">
                                     <table class="table align-items-center mb-0 mt-1"> 
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">CCR Setpoint</td> </tr>
                                     </table>
 
                                     <div class="mt-0">
                                         <input type="hidden" id="setpointSlider-value" name="setPointSlider-value">
-                                        
-                                        
-                                        
-                                        <div class="slider-styled" id="setpointSlider"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Setpoint</div>
 
-                                        <div class="label-container d-flex justify-content-center align-items-center">
-                                            
-                                                <label class="text-info right-label-normal custom-label text-lg"id="labelSetpoint">2222</label>
-                                            
-                                            
+                                        <label class="dh-gas-label" for="labelSetpoint">Setpoint</label>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="decimal" class="dh-gas-input is-safe" id="labelSetpoint" value="1.3">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">atm</span>
+                                            </div>
+                                            <div class="slider-styled" id="setpointSlider" data-dh-num-mirror="1"></div>
                                         </div>
                                     </div>
 
@@ -353,645 +388,736 @@
                             </div>
                             <!-- Row times, gradients and asc/des rates -->
                             <div class="row">
-                                <div class="col-lg-4 col-12" style="border-bottom: 1px solid #D3D3D3;">
+                                <div class="col-lg-4 col-12 dh-deco-input-divider">
                                     <table class="table align-items-center mb-0 mt-1"> 
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Set Bottom time</td> </tr>
                                     </table>
                                     <div class="mt-0">
                                         <input type="hidden" id="bottomTimeSlider-value" name="bottomTimeSlider-value">
-                                        
-                                        <div class="label-container">
-                                            
-                                            <label class="text-info right-label-normal custom-label text-lg" id="labelBottomTime">2222</label>
-                                            <label class="text-info">min</label>
+
+                                        <label class="dh-gas-label" for="labelBottomTime">Bottom time</label>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelBottomTime" value="25">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">min</span>
+                                            </div>
+                                            <div class="slider-styled" id="bottomTimeSlider" data-dh-num-mirror="1"></div>
                                         </div>
-                                        
-                                        <div class="slider-styled" id="bottomTimeSlider"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Bottom time</div>
                                     </div>
 
-                                    <div class="mt-n2 mb-2">
+                                    <div class="mt-3 mb-2">
+                                        <label class="dh-gas-label" for="labelSurfaceTime">Surface time</label>
                                         <input type="hidden" id="surfaceTimeSlider-value" name="surfaceTimeSlider-value">
-                                        
-                                        <div class="label-container">
-                                            
-                                            <label class="text-info right-label-normal custom-label text-sm" id="labelSurfaceTime">2222</label>
-                                            <label class="text-info">hrs</label>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="decimal" class="dh-gas-input" id="labelSurfaceTime" value="1">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">hrs</span>
+                                            </div>
+                                            <div class="slider-styled" id="surfaceTimeSlider" data-dh-num-mirror="1"></div>
                                         </div>
-                                        
-                                        <div class="slider-styled" id="surfaceTimeSlider"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Surface time</div>
                                     </div>
                                 </div>
 
                                 <!-- Col gradients -->                          
-                                <div class="col-lg-4 col-12" style="border-bottom: 1px solid #D3D3D3;">
+                                <div class="col-lg-4 col-12 dh-deco-input-divider">
                                     <table class="table align-items-center mb-0 mt-1"> 
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Set Gradient Factors</td> </tr>
                                     </table>
                                     <div class="mt-0">
                                         <input type="hidden" id="GFLTimeSlider-value" name="GFLSlider-value">
-                                        
-                                        <div class="label-container">
-                                            
-                                            <label class="text-info right-label-normal custom-label text-sm" id="labelGFL">50</label>
-                                            
+
+                                        <label class="dh-gas-label" for="labelGFL">GF Low</label>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelGFL" value="50">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">%</span>
+                                            </div>
+                                            <div class="slider-styled" id="GFLSlider" data-dh-num-mirror="1"></div>
                                         </div>
-                                        
-                                        <div class="slider-styled" id="GFLSlider"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">GF Low</div>
                                     </div>
 
-                                    <div class="mt-n2 mb-2">
+                                    <div class="mt-3 mb-2">
                                         <input type="hidden" id="GFHSlider-value" name="GFHSlider-value">
-                                        
-                                        <div class="label-container">
-                                            
-                                            <label class="text-info right-label-normal custom-label text-sm" id="labelGFH">75</label>
-                                            
+
+                                        <label class="dh-gas-label" for="labelGFH">GF High</label>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelGFH" value="75">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">%</span>
+                                            </div>
+                                            <div class="slider-styled" id="GFHSlider" data-dh-num-mirror="1"></div>
                                         </div>
-                                        
-                                        <div class="slider-styled" id="GFHSlider"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">GF High</div>
                                     </div>
                                 </div>
 
                                 <!-- Col ascent descent -->                          
-                                <div class="col-lg-4 col-12" style="border-bottom: 1px solid #D3D3D3;">
+                                <div class="col-lg-4 col-12 dh-deco-input-divider">
                                     <table class="table align-items-center mb-0 mt-1"> 
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Set des/asc rates</td> </tr>
                                     </table>
                                     <div class="mt-0">
                                         <input type="hidden" id="desSlider-value" name="desSlider-value">
-                                        
-                                        <div id="desRateContainerImp" class="label-container">
-                                            <label class="text-info right-label-normal custom-label text-sm" id="labelDes">100</label>
-                                            <label class="text-info">ft/min</label>
-                                        </div>
 
-                                        <div id="desRateContainerMet" class="label-container">
-                                            <label class="text-info right-label-normal custom-label text-sm" id="labelDesMET">100</label>
-                                            <label class="text-info">m/min</label>
+                                        <label class="dh-gas-label">Descend rate</label>
+                                        <div class="dh-gas-row">
+                                            <div id="desRateContainerImp" class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDes" value="60">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">ft/min</span>
+                                            </div>
+
+                                            <div id="desRateContainerMet" class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDesMET" value="18">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">m/min</span>
+                                            </div>
+
+                                            <div class="slider-styled" id="desSlider" data-dh-num-mirror="1"></div>
                                         </div>
-                                        
-                                        <div class="slider-styled" id="desSlider"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Descend Rate</div>
                                     </div>
 
-                                    <div class="mt-n2 mb-2">
+                                    <div class="mt-3 mb-2">
                                         <input type="hidden" id="ascSlider-value" name="ascSlider-value">
-                                        
-                                        <div id="ascRateContainerImp" class="label-container">
-                                            <label class="text-info right-label-normal custom-label text-sm" id="labelAsc">30</label>
-                                            <label class="text-info">ft/min</label>
-                                        </div>
 
-                                        <div id="ascRateContainerMet" class="label-container">
-                                            <label class="text-info right-label-normal custom-label text-sm" id="labelAscMET">30</label>
-                                            <label class="text-info">m/min</label>
+                                        <label class="dh-gas-label">Ascend rate</label>
+                                        <div class="dh-gas-row">
+                                            <div id="ascRateContainerImp" class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelAsc" value="30">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">ft/min</span>
+                                            </div>
+
+                                            <div id="ascRateContainerMet" class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelAscMET" value="9">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">m/min</span>
+                                            </div>
+
+                                            <div class="slider-styled" id="ascSlider" data-dh-num-mirror="1"></div>
                                         </div>
-                                        
-                                        <div class="slider-styled" id="ascSlider"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Ascend Rate</div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Row gases -->
-                            <div class="row">
-                                <div class="col-lg-3 col-12 align-items-center" style="border-bottom: 1px solid #D3D3D3;">
-                                    <div class="row">
-                                        <table class="table align-items-center mb-0 mt-1"> 
-                                            <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" id="labelBottomGasOrDiluent" style="border: none;">Bottom gas</td> </tr>
-                                        </table>
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <div class="dh-gas-accordion" id="gas-accordion">
+                                    <div class="dh-gas-accordion-item">
+                                        <button type="button" class="dh-gas-accordion-head" data-gas-tab="bottom" id="gasTabBtnBottom">
+                                            <span class="dh-gas-accordion-head-title">Bottom gas</span>
+                                            <span class="material-icons-round dh-gas-accordion-chevron" aria-hidden="true">expand_more</span>
+                                        </button>
+                                <div id="gasPanelBottom" class="dh-gas-accordion-body" hidden>
+                                    <span id="labelBottomGasOrDiluent" hidden>Bottom gas</span>
+
+                                    <!-- Diluent presets only make sense in CC - Bottom gas (OC) has none
+                                         (Pablo, 2026-09-17: "for Diluent: Air, 21/35, 18/45 and 10/55").
+                                         showOpenCircuit/showClosedCircuit toggle this row's visibility. -->
+                                    <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPresetDiluent" data-slot="bottom" hidden>
+                                        <button type="button" class="dh-channel-chip" data-o2="21" data-he="0">Air</button>
+                                        <button type="button" class="dh-channel-chip" data-o2="21" data-he="35">21/35</button>
+                                        <button type="button" class="dh-channel-chip" data-o2="18" data-he="45">18/45</button>
+                                        <button type="button" class="dh-channel-chip" data-o2="10" data-he="55">10/55</button>
+                                        @if(auth()->user()->isNotGuest())
+                                            <button type="button" class="dh-channel-chip dh-gas-mygases-chip" data-mygases-slot="bottom">My Gases</button>
+                                            <button type="button" class="dh-btn-icon" data-save-slot="bottom" title="Save this gas to My Gases"><span class="material-icons-round" aria-hidden="true">bookmark_border</span></button>
+                                        @endif
                                     </div>
 
+                                    {{-- Bottom gas (OC) has no standard presets, but still gets "My Gases"
+                                         and the save icon, same as every other gas card (Pablo, 2026-09-18:
+                                         "in all gas cards, add another pill at the top...My Gases"). --}}
+                                    @if(auth()->user()->isNotGuest())
+                                        <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPresetBottomOC" data-slot="bottom">
+                                            <button type="button" class="dh-channel-chip dh-gas-mygases-chip" data-mygases-slot="bottom">My Gases</button>
+                                            <button type="button" class="dh-btn-icon" data-save-slot="bottom" title="Save this gas to My Gases"><span class="material-icons-round" aria-hidden="true">bookmark_border</span></button>
+                                        </div>
+                                    @endif
+
                                     <div class="row">
-                                        <div class="col-12 position-relative">
-                                            <div style="
-                                                        position: absolute; /* Place it on top */
-                                                        top: 0;
-                                                        left: 1%;
-                                                        width: 98%;
-                                                        height: 101%;
-                                                        padding: 10px;
-                                                        border: 2px solid #1A73E8;
-                                                        border-radius: 4px;
-                                                        box-sizing: border-box; /* Ensure padding/border don't affect width */
-                                                        z-index: 100; /* Ensure it's above other elements */
-                                                        pointer-events: none;
-                                                    ">
+                                        <div class="col-lg-3 col-12 text-center">
+                                            <div style="position: relative; width: 105px; height: 210px; margin: 0 auto;">
+                                                <!-- Overlaying image -->
+                                                    <img id="tank_double" src="{{ asset("assets") }}/img/tank_double.png"   alt="Overlay Image"
+                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+
+                                                    <img id="tank_ccr" src="{{ asset("assets") }}/img/tank_ccr.png"   alt="Overlay Image" display="none"
+                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+
+                                                    <img id="unblendable_sign" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image"
+                                                    style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
+
+
+                                                <!-- Fixed-size chart canvas -->
+                                                <div style="width: 210px; height: 156px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
+                                                    <canvas id="bottomGasStackedBar"
+                                                            style="width: 100%; height: 156px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
                                                 </div>
-                                            <div style="padding: 5px; padding-top:10px;  border: 0px solid #1A73E8; border-radius: 4px; margin-top: 5px;">
-                                                <div class="row" style="display: flex; justify-content: center;">
-                                                    <div class="row" style="display: flex; justify-content: center;">
-                                                        <div class="mt-n6" style="position: relative; width: 150px; height: 300px;">
-                                                            <!-- Overlaying image -->
-                                                                <img id="tank_double" src="{{ asset("assets") }}/img/tank_double.png"   alt="Overlay Image" 
-                                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+                                            </div>
 
-                                                                <img id="tank_ccr" src="{{ asset("assets") }}/img/tank_ccr.png"   alt="Overlay Image" display="none" 
-                                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+                                            <div class="text-center mt-2 mb-1">
+                                                <div class="dh-gas-split-pill">
+                                                    <label class="dh-gas-result-pill is-o2" id="bottomGasSplitO2">21</label>
+                                                    <label class="dh-gas-result-pill is-he" id="bottomGasSplitHe">35</label>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                                                <img id="unblendable_sign" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image" 
-                                                                style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
-
-                                                            
-                                                            <!-- Fixed-size chart canvas -->
-                                                            <div style="width: 300px; heigth:300px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
-                                                                <canvas id="bottomGasStackedBar" 
-                                                                        style="width: 100%; height: 202px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
-                                                            </div>
-
-                                                            <!-- <canvas id="stackedBarChart" 
-                                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 161px; z-index: 1;"></canvas> -->
+                                        <div class="col-lg-9 col-12">
+                                            <div class="mt-2">
+                                                <label class="dh-gas-label do-not-translate">O&#8322;</label>
+                                                <div class="dh-gas-row">
+                                                    <div class="dh-gas-input-wrap">
+                                                        <div class="dh-gas-editable">
+                                                            <input type="text" inputmode="numeric" class="dh-gas-input" id="labelBottomGasO2" value="21">
+                                                            <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
                                                         </div>
+                                                        <span class="dh-gas-unit">%</span>
                                                     </div>
+                                                    <input type="hidden" id="bottomGasO2Slider-value" name="bottomGasO2Slider-value">
+                                                    <div class="slider-styled" id="bottomGasO2Slider" data-dh-num-mirror="1"></div>
+                                                </div>
+                                            </div>
 
-                                                    <div class="row mt-3">
-                                                        <div class="col-12 d-flex justify-content-center align-items-center">
-                                                            <div style="border: 2px solid #49a3f1; padding: 5px; font-weight: bold; border-radius: 4px;">
-                                                                <label class="text-success text-lg mb-0" style="font-weight: bold;" id="labelBottomGasO2">21</label>
-                                                                <label class="text-info text-lg mb-0" style="font-weight: bold;">/</label>
-                                                                <label class="text-info text-lg mb-0" style="font-weight: bold;" id="labelBottomGasHe">35</label>
-                                                            </div>
+                                            <div class="mt-3">
+                                                <label class="dh-gas-label do-not-translate">He</label>
+                                                <div class="dh-gas-row">
+                                                    <div class="dh-gas-input-wrap">
+                                                        <div class="dh-gas-editable">
+                                                            <input type="text" inputmode="numeric" class="dh-gas-input" id="labelBottomGasHe" value="35">
+                                                            <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
                                                         </div>
+                                                        <span class="dh-gas-unit">%</span>
                                                     </div>
+                                                    <input type="hidden" id="bottomGasHeSlider-value" name="bottomGasHeSlider-value">
+                                                    <div class="slider-styled" id="bottomGasHeSlider" data-dh-num-mirror="1"></div>
+                                                </div>
+                                            </div>
 
-                                                    <div class="row mt-4">
-                                                        <div>
-                                                            <input type="hidden" id="bottomGasO2Slider-value" name="bottomGasO2Slider-value">
-                                                            <div class="slider-styled" id="bottomGasO2Slider"></div>
-                                                            <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">O2 %</div>
-                                                        </div>
-                                                    </div>
+                                            <div class="row mt-3">
+                                                <div class="label-container">
+                                                    <label class="do-not-translate" id="labelMaxDepthPPO2Description">Max depth PPO&#8322;</label>
+                                                    <span class="d-inline-flex align-items-center" style="gap: 6px;">
+                                                        <label class="dh-gas-result-pill is-compact" id="labelBottomGasPPO2">1.4</label>
+                                                        <label class="text-info mb-0">atm</label>
+                                                    </span>
+                                                </div>
 
-                                                    <div class="row mt-3">
-                                                        <div>
-                                                            <input type="hidden" id="bottomGasHeSlider-value" name="bottomGasHeSlider-value">
-                                                            <div class="slider-styled" id="bottomGasHeSlider"></div>
-                                                            <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
-                                                        </div>
-                                                    </div>
+                                                <div class="label-container">
+                                                    <label id="labelENDDescription">Equivalent Narcotic Depth</label>
+                                                    <span class="d-inline-flex align-items-center" style="gap: 6px;">
+                                                        <label class="dh-gas-result-pill is-compact" id="labelBottomGasEND">90</label>
+                                                        <label id="labelBottomGasENDUnit" class="text-info mb-0">ft</label>
+                                                    </span>
+                                                </div>
 
-                                                    <div class="row mt-3">
-                                                        <div class="label-container">
-                                                            <label class="do-not-translate" id="labelMaxDepthPPO2Description">Max depth PPO2</label>
-                                                            <label class="text-info right-label-normal custom-label" id="labelBottomGasPPO2">1.4</label>
-                                                            <label class="text-info">atm</label>
-                                                        </div>
-
-                                                        <div class="label-container">
-                                                            <label id="labelENDDescription">Equivalent Narcotic Depth</label>
-                                                            <label class="text-info right-label-normal custom-label" id="labelBottomGasEND">90</label>
-                                                            <label id="labelBottomGasENDUnit" class="text-info">ft</label>
-                                                        </div>
-
-                                                        <div class="label-container">
-                                                            <label id="labelGasDensityDescription">Gas density</label>
-                                                            <label class="text-info right-label-normal custom-label" id="labelBottomGasDensity">90</label>
-                                                            <label class="text-info">g/l</label>
-                                                        </div>
-                                                    </div>
+                                                <div class="label-container">
+                                                    <label id="labelGasDensityDescription">Gas density</label>
+                                                    <span class="d-inline-flex align-items-center" style="gap: 6px;">
+                                                        <label class="dh-gas-result-pill is-compact" id="labelBottomGasDensity">90</label>
+                                                        <label class="text-info mb-0">g/l</label>
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-
                                 </div>
+                                    </div>
 
-                                <!-- Decompression gases -->
-                                <div class="col-lg-9 col-12" style="border-bottom: 1px solid #D3D3D3; background-color: #ffffff; padding-bottom:0px;">
-                                    <table class="table align-items-center mb-0 mt-1"> 
-                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;" id="titleDecoGases">Decompression gases</td> </tr>
-                                    </table>
+                                    <span id="titleDecoGases" hidden></span>
 
-                                    <div class="row">
-                                        <!-- Deco 1 -->
-                                        <div class="col-lg-3 col-12 position-relative" id="deco1" style="margin-right: 0px; margin-left:0px; margin-bottom: 10px; padding: 5px; border: 0px solid #1A73E8; border-radius: 4px; background-color: #ffffff;">
-                                            <div style="
-                                                    position: absolute; /* Place it on top */
-                                                    top: 0;
-                                                    left: 1%;
-                                                    width: 98%;
-                                                    height: 100%;
-                                                    padding: 10px;
-                                                    border: 2px solid #1A73E8;
-                                                    border-radius: 4px;
-                                                    box-sizing: border-box; /* Ensure padding/border don't affect width */
-                                                    z-index: 100; /* Ensure it's above other elements */
-                                                    pointer-events: none;
-                                                ">
+                                    <!-- Deco 1 -->
+                                    <div class="dh-gas-accordion-item" id="gasAccordionItemDeco1" hidden>
+                                        <button type="button" class="dh-gas-accordion-head" data-gas-tab="deco1" id="gasTabBtnDeco1">
+                                            <span class="dh-gas-accordion-head-title">Deco 1</span>
+                                            <span class="material-icons-round dh-gas-accordion-chevron" aria-hidden="true">expand_more</span>
+                                        </button>
+                                        <div class="col-12 dh-gas-accordion-body" id="deco1">
+                                            <!-- Slot 1 is Deco 1 in OC, mandatory Bailout in CC - two separate
+                                                 preset menus for the same underlying gas (Pablo, 2026-09-17: "for
+                                                 decos: 32%, 50%, 80% and Oxygen" vs "for bailout: Air, 32%,
+                                                 21/35, 18/45"). showOpenCircuit/showClosedCircuit toggle which
+                                                 one is visible; both drive decoGas1's sliders via data-slot="1". -->
+                                            <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPreset1" data-slot="1">
+                                                <button type="button" class="dh-channel-chip" data-o2="32" data-he="0">32%</button>
+                                                <button type="button" class="dh-channel-chip" data-o2="50" data-he="0">50%</button>
+                                                <button type="button" class="dh-channel-chip" data-o2="80" data-he="0">80%</button>
+                                                <button type="button" class="dh-channel-chip" data-o2="100" data-he="0">Oxygen</button>
+                                                @if(auth()->user()->isNotGuest())
+                                                    <button type="button" class="dh-channel-chip dh-gas-mygases-chip" data-mygases-slot="1">My Gases</button>
+                                                    <button type="button" class="dh-btn-icon" data-save-slot="1" title="Save this gas to My Gases"><span class="material-icons-round" aria-hidden="true">bookmark_border</span></button>
+                                                @endif
                                             </div>
-                                            <div style="padding: 10px; border: 0px solid #1A73E8; border-radius: 4px;">
-                                                
-                                                <div id="addGasIcon1" onclick="showDecoGas1()" 
-                                                    style="position: absolute; top: 10px; left: 10px; bottom: 10px; right: 8px;  background-color: #ffffff; color: #1A73E8;
-                                                        cursor: pointer; z-index: 20; display: flex; align-items: center; justify-content: center; flex-direction: column;">
-                                                    
-                                                    <span class="material-icons-round" style="font-size: 48px;">add_circle</span>
-                                                    <label class="text-info text-lg">Add Gas</label>
-                                                </div>
-                                                
-                                                
-                                                <div class="row" style="display: flex; justify-content: center;">
-                                                    <div class="mt-n6" style="position: relative; width: 150px; height: 300px;">
+                                            <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPresetBailout" data-slot="1" hidden>
+                                                <button type="button" class="dh-channel-chip" data-o2="21" data-he="0">Air</button>
+                                                <button type="button" class="dh-channel-chip" data-o2="32" data-he="0">32%</button>
+                                                <button type="button" class="dh-channel-chip" data-o2="21" data-he="35">21/35</button>
+                                                <button type="button" class="dh-channel-chip" data-o2="18" data-he="45">18/45</button>
+                                                @if(auth()->user()->isNotGuest())
+                                                    <button type="button" class="dh-channel-chip dh-gas-mygases-chip" data-mygases-slot="1">My Gases</button>
+                                                    <button type="button" class="dh-btn-icon" data-save-slot="1" title="Save this gas to My Gases"><span class="material-icons-round" aria-hidden="true">bookmark_border</span></button>
+                                                @endif
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-lg-3 col-12 text-center">
+                                                    <div style="position: relative; width: 105px; height: 210px; margin: 0 auto;">
                                                         <!-- Overlaying image -->
-                                                            <img id="tank_single_1" src="{{ asset("assets") }}/img/tank_single.png"   alt="Overlay Image" 
+                                                            <img id="tank_single_1" src="{{ asset("assets") }}/img/tank_single.png"   alt="Overlay Image"
                                                             style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
 
-                                                        <img id="unblendable_sign_1" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image" 
+                                                        <img id="unblendable_sign_1" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image"
                                                             style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
 
-                                                        
                                                         <!-- Fixed-size chart canvas -->
-                                                        <div style="width: 300px; heigth:300px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
-                                                            <canvas id="decoGas1StackedBar" 
-                                                                    style="width: 100%; height: 202px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
+                                                        <div style="width: 210px; height: 156px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
+                                                            <canvas id="decoGas1StackedBar"
+                                                                    style="width: 100%; height: 156px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
                                                         </div>
-
-                                                        <!-- <canvas id="stackedBarChart" 
-                                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 161px; z-index: 1;"></canvas> -->
                                                     </div>
-                                                </div>
 
-                                                <div class="row mt-3">
-                                                    <div class="col-12 d-flex justify-content-center align-items-center">
-                                                        <div style="border: 2px solid #49a3f1; padding: 5px; font-weight: bold; border-radius: 4px;">
-                                                            <label class="text-success text-lg mb-0" style="font-weight: bold;" id="labelDecoGas1O2">21</label>
-                                                            <label class="text-info text-lg mb-0" style="font-weight: bold;">/</label>
-                                                            <label class="text-info text-lg mb-0" style="font-weight: bold;" id="labelDecoGas1He">35</label>
+                                                    <div class="text-center mt-2 mb-1">
+                                                        <div class="dh-gas-split-pill">
+                                                            <label class="dh-gas-result-pill is-o2" id="decoGas1SplitO2">21</label>
+                                                            <label class="dh-gas-result-pill is-he" id="decoGas1SplitHe">35</label>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <div class="row mt-4">
-                                                    <div>
-                                                        <input type="hidden" id="decoGas1O2Slider-value" name="decoGas1O2Slider-value">
-                                                        <div class="slider-styled" id="decoGas1O2Slider"></div>
-                                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">O2 %</div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="row mt-3">
-                                                    <div>
-                                                        <input type="hidden" id="decoGas1HeSlider-value" name="decoGas1HeSlider-value">
-
-                                                        <div class="slider-styled" id="decoGas1HeSlider"></div>
-                                                        <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="row mt-3" id="containerDeco1OCInfo">
-                                                    <div>
-                                                        <input type="hidden" id="decoGas1SwitchSlider-value" name="decoGas1SwitchSlider-value">
-
-                                                        <div class="label-container">                                                
-                                                            <label class="text-info">PPO2</label>
-                                                            <label class="text-info left-label custom-label text-sm" id="labelDecoGas1SwitchPPO2">2222</label>
-                                                            
-                                                            <label class="text-info right-label-normal custom-label text-sm" id="labelDecoGas1Switch">2222</label>
-                                                            <label id="labelDecoGas1SwitchUNIT" class="text-info">ft</label>
+                                                <div class="col-lg-9 col-12">
+                                                    <div class="mt-2">
+                                                        <label class="dh-gas-label do-not-translate">O&#8322;</label>
+                                                        <div class="dh-gas-row">
+                                                            <div class="dh-gas-input-wrap">
+                                                                <div class="dh-gas-editable">
+                                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDecoGas1O2" value="21">
+                                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                                </div>
+                                                                <span class="dh-gas-unit">%</span>
+                                                            </div>
+                                                            <input type="hidden" id="decoGas1O2Slider-value" name="decoGas1O2Slider-value">
+                                                            <div class="slider-styled" id="decoGas1O2Slider" data-dh-num-mirror="1"></div>
                                                         </div>
-                                                        <div class="slider-styled" id="decoGas1SwitchSlider"></div>
-                                                        <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" id="switchDepthLabel1" style="border: none;">Switch depth</div>
                                                     </div>
-                                                </div>
 
-                                                <div class="row mt-3" id="containerDeco1CCInfo" style="display:none;">
-                                                    <div>
-                                                        <div class="label-container">                                                
-                                                            <label class="text-info">PPO2</label>
-                                                            <label class="text-info left-label custom-label text-sm" id="labelBailoutSwitchPPO2">2222</label>
-                                                            
+                                                    <div class="mt-3">
+                                                        <label class="dh-gas-label do-not-translate">He</label>
+                                                        <div class="dh-gas-row">
+                                                            <div class="dh-gas-input-wrap">
+                                                                <div class="dh-gas-editable">
+                                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDecoGas1He" value="35">
+                                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                                </div>
+                                                                <span class="dh-gas-unit">%</span>
+                                                            </div>
+                                                            <input type="hidden" id="decoGas1HeSlider-value" name="decoGas1HeSlider-value">
+                                                            <div class="slider-styled" id="decoGas1HeSlider" data-dh-num-mirror="1"></div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mt-3" id="containerDeco1OCInfo">
+                                                        <label class="dh-gas-label">Switch PPO&#8322;</label>
+                                                        <div class="dh-gas-row">
+                                                            <div class="dh-gas-input-wrap">
+                                                                <div class="dh-gas-editable">
+                                                                    <input type="text" inputmode="decimal" class="dh-gas-input" id="labelDecoGas1SwitchPPO2" value="1.4">
+                                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                                </div>
+                                                                <span class="dh-gas-unit">atm</span>
+                                                            </div>
+                                                            <input type="hidden" id="decoGas1SwitchSlider-value" name="decoGas1SwitchSlider-value">
+                                                            <div class="slider-styled" id="decoGas1SwitchSlider" data-dh-num-mirror="1"></div>
+                                                        </div>
+                                                        <div class="label-container mt-2">
+                                                            <label class="dh-gas-label mb-0" id="switchDepthLabel1">Switch depth</label>
+                                                            <span class="d-inline-flex align-items-center" style="gap: 6px;">
+                                                                <label class="dh-gas-result-pill is-compact" id="labelDecoGas1Switch">2222</label>
+                                                                <label class="text-info mb-0" id="labelDecoGas1SwitchUNIT">ft</label>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mt-3" id="containerDeco1CCInfo" style="display:none;">
+                                                        <div class="label-container">
+                                                            <label class="text-info">PPO&#8322;</label>
+                                                            <label class="dh-gas-result-pill is-compact" id="labelBailoutSwitchPPO2">2222</label>
+                                                        </div>
+                                                        <div class="label-container">
                                                             <label class="text-info text-right">END</label>
-                                                            <label class="text-info right-label-normal custom-label text-sm mx-1" id="labelBailoutEND">2222</label>
-                                                            <label class="text-info" id="labelBailoutENDUNIT">{{ $deco_unit ? "m" : "ft" }}</label>
+                                                            <span class="d-inline-flex align-items-center" style="gap: 6px;">
+                                                                <label class="dh-gas-result-pill is-compact" id="labelBailoutEND">2222</label>
+                                                                <label class="text-info mb-0" id="labelBailoutENDUNIT">{{ $deco_unit ? "m" : "ft" }}</label>
+                                                            </span>
                                                         </div>
-                                                        <div class="label-container align-text-right justify-text-right">                                                
+                                                        <div class="label-container align-text-right justify-text-right">
                                                             <label class="do-not-translate text-secondary align-text-right text-right" id="switchDepthLabelBO">Switch Depth</label>
-                                                            <label class="text-secondary right-label-freeze custom-label text-sm" id="labelBailoutSwitch">2222</label>
-                                                            <label class="text-secondary" id="labelBailoutSwitchUNIT">ft</label>
+                                                            <span class="d-inline-flex align-items-center" style="gap: 6px;">
+                                                                <label class="dh-gas-result-pill is-compact" id="labelBailoutSwitch">2222</label>
+                                                                <label class="text-secondary mb-0" id="labelBailoutSwitchUNIT">ft</label>
+                                                            </span>
                                                         </div>
-                                                        <div class="label-container d-flex justify-content-center align-items-center" style="margin-top:20px;">                                                                  
+                                                        <div class="label-container d-flex justify-content-center align-items-center" style="margin-top:20px;">
                                                             <label class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center">BAILOUT GAS</label>
                                                         </div>
                                                     </div>
-                                                </div>
 
-                                                <div class="row mt-3" id="containerDeco1OCButton">
-                                                    <div class="text-center" style="border: none;">
-                                                        <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="deco1DeleteButton" onclick="hideDecoGas1()">
-                                                            Delete gas
-                                                        </a>
-                                                    </div>   
+                                                    <div class="row mt-3" id="containerDeco1OCButton">
+                                                        <div class="text-center" style="border: none;">
+                                                            <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="deco1DeleteButton" onclick="hideDecoGas1()">
+                                                                Delete gas
+                                                            </a>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            
                                         </div>
+                                    </div>
 
-                                        <!-- Deco 2 -->
-                                        <div class="col-lg-3 col-12 position-relative" id="deco2" style="margin-right: 0px; margin-left:0px; margin-bottom: 10px; padding: 5px; border: 0px solid #1A73E8; border-radius: 4px; background-color: #ffffff;">
-                                            <div style="
-                                                    position: absolute; /* Place it on top */
-                                                    top: 0;
-                                                    left: 1%;
-                                                    width: 98%;
-                                                    height: 100%;
-                                                    padding: 10px;
-                                                    border: 2px solid #1A73E8;
-                                                    border-radius: 4px;
-                                                    box-sizing: border-box; /* Ensure padding/border don't affect width */
-                                                    z-index: 100; /* Ensure it's above other elements */
-                                                    pointer-events: none;
-                                                ">
+                                    <!-- Deco 2 -->
+                                    <div class="dh-gas-accordion-item" id="gasAccordionItemDeco2" hidden>
+                                        <button type="button" class="dh-gas-accordion-head" data-gas-tab="deco2" id="gasTabBtnDeco2">
+                                            <span class="dh-gas-accordion-head-title">Deco 2</span>
+                                            <span class="material-icons-round dh-gas-accordion-chevron" aria-hidden="true">expand_more</span>
+                                        </button>
+                                        <div class="col-12 dh-gas-accordion-body" id="deco2">
+                                            <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPreset2" data-slot="2">
+                                                <button type="button" class="dh-channel-chip" data-o2="32" data-he="0">32%</button>
+                                                <button type="button" class="dh-channel-chip" data-o2="50" data-he="0">50%</button>
+                                                <button type="button" class="dh-channel-chip" data-o2="80" data-he="0">80%</button>
+                                                <button type="button" class="dh-channel-chip" data-o2="100" data-he="0">Oxygen</button>
+                                                @if(auth()->user()->isNotGuest())
+                                                    <button type="button" class="dh-channel-chip dh-gas-mygases-chip" data-mygases-slot="2">My Gases</button>
+                                                    <button type="button" class="dh-btn-icon" data-save-slot="2" title="Save this gas to My Gases"><span class="material-icons-round" aria-hidden="true">bookmark_border</span></button>
+                                                @endif
                                             </div>
-                                        
-                                            <div style="padding: 10px; border: 0px solid #1A73E8; border-radius: 4px;">
-                                                
-                                                <div id="addGasIcon2" onclick="showDecoGas2()" 
-                                                    style="position: absolute; top: 10px; left: 10px; bottom: 10px; right: 8px;  background-color: #ffffff; color: #1A73E8;
-                                                        cursor: pointer; z-index: 20; display: flex; align-items: center; justify-content: center; flex-direction: column;">
-                                                    
-                                                    <span class="material-icons-round" style="font-size: 48px;">add_circle</span>
-                                                    <label class="text-info text-lg">Add Gas</label>
-                                                </div>
-                                                
-                                                <div class="row" style="display: flex; justify-content: center;">
-                                                    <div class="mt-n6" style="position: relative; width: 150px; height: 300px;">
+                                            <div class="row">
+                                                <div class="col-lg-3 col-12 text-center">
+                                                    <div style="position: relative; width: 105px; height: 210px; margin: 0 auto;">
                                                         <!-- Overlaying image -->
-                                                            <img id="tank_single_2" src="{{ asset("assets") }}/img/tank_single.png"   alt="Overlay Image" 
+                                                            <img id="tank_single_2" src="{{ asset("assets") }}/img/tank_single.png"   alt="Overlay Image"
                                                             style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
 
-                                                        <img id="unblendable_sign_2" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image" 
+                                                        <img id="unblendable_sign_2" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image"
                                                             style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
 
-                                                        
                                                         <!-- Fixed-size chart canvas -->
-                                                        <div style="width: 300px; heigth:300px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
-                                                            <canvas id="decoGas2StackedBar" 
-                                                                    style="width: 100%; height: 202px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
+                                                        <div style="width: 210px; height: 156px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
+                                                            <canvas id="decoGas2StackedBar"
+                                                                    style="width: 100%; height: 156px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
                                                         </div>
-
-                                                        <!-- <canvas id="stackedBarChart" 
-                                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 161px; z-index: 1;"></canvas> -->
                                                     </div>
-                                                </div>
 
-                                                <div class="row mt-3">
-                                                    <div class="col-12 d-flex justify-content-center align-items-center">
-                                                        <div style="border: 2px solid #49a3f1; padding: 5px; font-weight: bold; border-radius: 4px;">
-                                                            <label class="text-success text-lg mb-0" style="font-weight: bold;" id="labelDecoGas2O2">21</label>
-                                                            <label class="text-info text-lg mb-0" style="font-weight: bold;">/</label>
-                                                            <label class="text-info text-lg mb-0" style="font-weight: bold;" id="labelDecoGas2He">35</label>
+                                                    <div class="text-center mt-2 mb-1">
+                                                        <div class="dh-gas-split-pill">
+                                                            <label class="dh-gas-result-pill is-o2" id="decoGas2SplitO2">21</label>
+                                                            <label class="dh-gas-result-pill is-he" id="decoGas2SplitHe">35</label>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <div class="row mt-4">
-                                                    <div>
-                                                        <input type="hidden" id="decoGas2O2Slider-value" name="decoGas2O2Slider-value">
-                                                        <div class="slider-styled" id="decoGas2O2Slider"></div>
-                                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">O2 %</div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="row mt-3">
-                                                    <div>
-                                                        <input type="hidden" id="decoGas2HeSlider-value" name="decoGas2HeSlider-value">
-
-                                                        <div class="slider-styled" id="decoGas2HeSlider"></div>
-                                                        <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="row mt-3">
-                                                    <div>
-                                                        <input type="hidden" id="decoGas2SwitchSlider-value" name="decoGas2SwitchSlider-value">
-
-                                                        <div class="label-container">                                                
-                                                            <label class="text-info">PPO2</label>
-                                                            <label class="text-info left-label custom-label text-sm" id="labelDecoGas2SwitchPPO2">2222</label>
-                                                            
-                                                            <label class="text-info right-label-normal custom-label text-sm" id="labelDecoGas2Switch">2222</label>
-                                                            <label id="labelDecoGas2SwitchUNIT" class="text-info">ft</label>
+                                                <div class="col-lg-9 col-12">
+                                                    <div class="mt-2">
+                                                        <label class="dh-gas-label do-not-translate">O&#8322;</label>
+                                                        <div class="dh-gas-row">
+                                                            <div class="dh-gas-input-wrap">
+                                                                <div class="dh-gas-editable">
+                                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDecoGas2O2" value="21">
+                                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                                </div>
+                                                                <span class="dh-gas-unit">%</span>
+                                                            </div>
+                                                            <input type="hidden" id="decoGas2O2Slider-value" name="decoGas2O2Slider-value">
+                                                            <div class="slider-styled" id="decoGas2O2Slider" data-dh-num-mirror="1"></div>
                                                         </div>
-                                                        <div class="slider-styled" id="decoGas2SwitchSlider"></div>
-                                                        <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" id="switchDepthLabel2" style="border: none;">Switch depth</div>
                                                     </div>
-                                                </div>
 
-                                                <div class="row mt-3">
-                                                    <div class="text-center" style="border: none;">
-                                                        <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="deco2DeleteButton" onclick="hideDecoGas2()">
-                                                            Delete gas
-                                                        </a>
-                                                    </div>   
+                                                    <div class="mt-3">
+                                                        <label class="dh-gas-label do-not-translate">He</label>
+                                                        <div class="dh-gas-row">
+                                                            <div class="dh-gas-input-wrap">
+                                                                <div class="dh-gas-editable">
+                                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDecoGas2He" value="35">
+                                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                                </div>
+                                                                <span class="dh-gas-unit">%</span>
+                                                            </div>
+                                                            <input type="hidden" id="decoGas2HeSlider-value" name="decoGas2HeSlider-value">
+                                                            <div class="slider-styled" id="decoGas2HeSlider" data-dh-num-mirror="1"></div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mt-3">
+                                                        <label class="dh-gas-label">Switch PPO&#8322;</label>
+                                                        <div class="dh-gas-row">
+                                                            <div class="dh-gas-input-wrap">
+                                                                <div class="dh-gas-editable">
+                                                                    <input type="text" inputmode="decimal" class="dh-gas-input" id="labelDecoGas2SwitchPPO2" value="1.4">
+                                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                                </div>
+                                                                <span class="dh-gas-unit">atm</span>
+                                                            </div>
+                                                            <input type="hidden" id="decoGas2SwitchSlider-value" name="decoGas2SwitchSlider-value">
+                                                            <div class="slider-styled" id="decoGas2SwitchSlider" data-dh-num-mirror="1"></div>
+                                                        </div>
+                                                        <div class="label-container mt-2">
+                                                            <label class="dh-gas-label mb-0" id="switchDepthLabel2">Switch depth</label>
+                                                            <span class="d-inline-flex align-items-center" style="gap: 6px;">
+                                                                <label class="dh-gas-result-pill is-compact" id="labelDecoGas2Switch">2222</label>
+                                                                <label class="text-info mb-0" id="labelDecoGas2SwitchUNIT">ft</label>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row mt-3">
+                                                        <div class="text-center" style="border: none;">
+                                                            <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="deco2DeleteButton" onclick="hideDecoGas2()">
+                                                                Delete gas
+                                                            </a>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        <!-- Deco 3 -->
-                                        <div class="col-lg-3 col-12 position-relative" id="deco3" style="margin-right: 0px; margin-left:0px; margin-bottom: 10px; padding: 5px; border: 0px solid #1A73E8; border-radius: 4px; background-color: #ffffff;">
-                                            <div style="
-                                                    position: absolute; /* Place it on top */
-                                                    top: 0;
-                                                    left: 1%;
-                                                    width: 98%;
-                                                    height: 100%;
-                                                    padding: 10px;
-                                                    border: 2px solid #1A73E8;
-                                                    border-radius: 4px;
-                                                    box-sizing: border-box; /* Ensure padding/border don't affect width */
-                                                    z-index: 100; /* Ensure it's above other elements */
-                                                    pointer-events: none;
-                                                ">
+                                    <!-- Deco 3 -->
+                                    <div class="dh-gas-accordion-item" id="gasAccordionItemDeco3" hidden>
+                                        <button type="button" class="dh-gas-accordion-head" data-gas-tab="deco3" id="gasTabBtnDeco3">
+                                            <span class="dh-gas-accordion-head-title">Deco 3</span>
+                                            <span class="material-icons-round dh-gas-accordion-chevron" aria-hidden="true">expand_more</span>
+                                        </button>
+                                        <div class="col-12 dh-gas-accordion-body" id="deco3">
+                                            <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPreset3" data-slot="3">
+                                                <button type="button" class="dh-channel-chip" data-o2="32" data-he="0">32%</button>
+                                                <button type="button" class="dh-channel-chip" data-o2="50" data-he="0">50%</button>
+                                                <button type="button" class="dh-channel-chip" data-o2="80" data-he="0">80%</button>
+                                                <button type="button" class="dh-channel-chip" data-o2="100" data-he="0">Oxygen</button>
+                                                @if(auth()->user()->isNotGuest())
+                                                    <button type="button" class="dh-channel-chip dh-gas-mygases-chip" data-mygases-slot="3">My Gases</button>
+                                                    <button type="button" class="dh-btn-icon" data-save-slot="3" title="Save this gas to My Gases"><span class="material-icons-round" aria-hidden="true">bookmark_border</span></button>
+                                                @endif
                                             </div>
-                                        
-                                            <div style="padding: 10px; border: 0px solid #1A73E8; border-radius: 4px;">
-                                                
-                                                <div id="addGasIcon3" onclick="showDecoGas3()" 
-                                                    style="position: absolute; top: 10px; left: 10px; bottom: 10px; right: 8px;  background-color: #ffffff; color: #1A73E8;
-                                                        cursor: pointer; z-index: 20; display: flex; align-items: center; justify-content: center; flex-direction: column;">
-                                                    
-                                                    <span class="material-icons-round" style="font-size: 48px;">add_circle</span>
-                                                    <label class="text-info text-lg">Add Gas</label>
-                                                </div>
-                                            
-                                                <div class="row" style="display: flex; justify-content: center;">
-                                                    <div class="mt-n6" style="position: relative; width: 150px; height: 300px;">
+                                            <div class="row">
+                                                <div class="col-lg-3 col-12 text-center">
+                                                    <div style="position: relative; width: 105px; height: 210px; margin: 0 auto;">
                                                         <!-- Overlaying image -->
-                                                            <img id="tank_single_3" src="{{ asset("assets") }}/img/tank_single.png"   alt="Overlay Image" 
+                                                            <img id="tank_single_3" src="{{ asset("assets") }}/img/tank_single.png"   alt="Overlay Image"
                                                             style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
 
-                                                        <img id="unblendable_sign_3" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image" 
+                                                        <img id="unblendable_sign_3" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image"
                                                             style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
 
-                                                        
                                                         <!-- Fixed-size chart canvas -->
-                                                        <div style="width: 300px; heigth:300px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
-                                                            <canvas id="decoGas3StackedBar" 
-                                                                    style="width: 100%; height: 202px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
+                                                        <div style="width: 210px; height: 156px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
+                                                            <canvas id="decoGas3StackedBar"
+                                                                    style="width: 100%; height: 156px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
                                                         </div>
-
-                                                        <!-- <canvas id="stackedBarChart" 
-                                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 161px; z-index: 1;"></canvas> -->
                                                     </div>
-                                                </div>
 
-                                                <div class="row mt-3">
-                                                    <div class="col-12 d-flex justify-content-center align-items-center">
-                                                        <div style="border: 2px solid #49a3f1; padding: 5px; font-weight: bold; border-radius: 4px;">
-                                                            <label class="text-success text-lg mb-0" style="font-weight: bold;" id="labelDecoGas3O2">21</label>
-                                                            <label class="text-info text-lg mb-0" style="font-weight: bold;">/</label>
-                                                            <label class="text-info text-lg mb-0" style="font-weight: bold;" id="labelDecoGas3He">35</label>
+                                                    <div class="text-center mt-2 mb-1">
+                                                        <div class="dh-gas-split-pill">
+                                                            <label class="dh-gas-result-pill is-o2" id="decoGas3SplitO2">21</label>
+                                                            <label class="dh-gas-result-pill is-he" id="decoGas3SplitHe">35</label>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <div class="row mt-4">
-                                                    <div>
-                                                        <input type="hidden" id="decoGas3O2Slider-value" name="decoGas3O2Slider-value">
-                                                        <div class="slider-styled" id="decoGas3O2Slider"></div>
-                                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">O2 %</div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="row mt-3">
-                                                    <div>
-                                                        <input type="hidden" id="decoGas3HeSlider-value" name="decoGas3HeSlider-value">
-
-                                                        <div class="slider-styled" id="decoGas3HeSlider"></div>
-                                                        <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="row mt-3">
-                                                    <div>
-                                                        <input type="hidden" id="decoGas3SwitchSlider-value" name="decoGas3SwitchSlider-value">
-
-                                                        <div class="label-container">                                                
-                                                            <label class="text-info">PPO2</label>
-                                                            <label class="text-info left-label custom-label text-sm" id="labelDecoGas3SwitchPPO2">2222</label>
-                                                            
-                                                            <label class="text-info right-label-normal custom-label text-sm" id="labelDecoGas3Switch">2222</label>
-                                                            <label id="labelDecoGas3SwitchUNIT" class="text-info">ft</label>
+                                                <div class="col-lg-9 col-12">
+                                                    <div class="mt-2">
+                                                        <label class="dh-gas-label do-not-translate">O&#8322;</label>
+                                                        <div class="dh-gas-row">
+                                                            <div class="dh-gas-input-wrap">
+                                                                <div class="dh-gas-editable">
+                                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDecoGas3O2" value="21">
+                                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                                </div>
+                                                                <span class="dh-gas-unit">%</span>
+                                                            </div>
+                                                            <input type="hidden" id="decoGas3O2Slider-value" name="decoGas3O2Slider-value">
+                                                            <div class="slider-styled" id="decoGas3O2Slider" data-dh-num-mirror="1"></div>
                                                         </div>
-                                                        <div class="slider-styled" id="decoGas3SwitchSlider"></div>
-                                                        <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" id="switchDepthLabel3" style="border: none;">Switch depth</div>
                                                     </div>
-                                                </div>
 
-                                                <div class="row mt-3">
-                                                    <div class="text-center" style="border: none;">
-                                                        <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="deco3DeleteButton" onclick="hideDecoGas3()">
-                                                            Delete gas
-                                                        </a>
-                                                    </div>   
+                                                    <div class="mt-3">
+                                                        <label class="dh-gas-label do-not-translate">He</label>
+                                                        <div class="dh-gas-row">
+                                                            <div class="dh-gas-input-wrap">
+                                                                <div class="dh-gas-editable">
+                                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDecoGas3He" value="35">
+                                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                                </div>
+                                                                <span class="dh-gas-unit">%</span>
+                                                            </div>
+                                                            <input type="hidden" id="decoGas3HeSlider-value" name="decoGas3HeSlider-value">
+                                                            <div class="slider-styled" id="decoGas3HeSlider" data-dh-num-mirror="1"></div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mt-3">
+                                                        <label class="dh-gas-label">Switch PPO&#8322;</label>
+                                                        <div class="dh-gas-row">
+                                                            <div class="dh-gas-input-wrap">
+                                                                <div class="dh-gas-editable">
+                                                                    <input type="text" inputmode="decimal" class="dh-gas-input" id="labelDecoGas3SwitchPPO2" value="1.4">
+                                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                                </div>
+                                                                <span class="dh-gas-unit">atm</span>
+                                                            </div>
+                                                            <input type="hidden" id="decoGas3SwitchSlider-value" name="decoGas3SwitchSlider-value">
+                                                            <div class="slider-styled" id="decoGas3SwitchSlider" data-dh-num-mirror="1"></div>
+                                                        </div>
+                                                        <div class="label-container mt-2">
+                                                            <label class="dh-gas-label mb-0" id="switchDepthLabel3">Switch depth</label>
+                                                            <span class="d-inline-flex align-items-center" style="gap: 6px;">
+                                                                <label class="dh-gas-result-pill is-compact" id="labelDecoGas3Switch">2222</label>
+                                                                <label class="text-info mb-0" id="labelDecoGas3SwitchUNIT">ft</label>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row mt-3">
+                                                        <div class="text-center" style="border: none;">
+                                                            <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="deco3DeleteButton" onclick="hideDecoGas3()">
+                                                                Delete gas
+                                                            </a>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        <!-- Deco 4 -->
-                                        <div class="col-lg-3 col-12 position-relative" id="deco4" style="margin-right: 0px; margin-left:0px; margin-bottom: 10px; padding: 5px; border: 0px solid #1A73E8; border-radius: 4px; background-color: #ffffff;">
-                                            <div style="
-                                                    position: absolute; /* Place it on top */
-                                                    top: 0;
-                                                    left: 1%;
-                                                    width: 98%;
-                                                    height: 100%;
-                                                    padding: 10px;
-                                                    border: 2px solid #1A73E8;
-                                                    border-radius: 4px;
-                                                    box-sizing: border-box; /* Ensure padding/border don't affect width */
-                                                    z-index: 100; /* Ensure it's above other elements */
-                                                    pointer-events: none;
-                                                ">
+                                    <!-- Deco 4 -->
+                                    <div class="dh-gas-accordion-item" id="gasAccordionItemDeco4" hidden>
+                                        <button type="button" class="dh-gas-accordion-head" data-gas-tab="deco4" id="gasTabBtnDeco4">
+                                            <span class="dh-gas-accordion-head-title">Deco 4</span>
+                                            <span class="material-icons-round dh-gas-accordion-chevron" aria-hidden="true">expand_more</span>
+                                        </button>
+                                        <div class="col-12 dh-gas-accordion-body" id="deco4">
+                                            <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPreset4" data-slot="4">
+                                                <button type="button" class="dh-channel-chip" data-o2="32" data-he="0">32%</button>
+                                                <button type="button" class="dh-channel-chip" data-o2="50" data-he="0">50%</button>
+                                                <button type="button" class="dh-channel-chip" data-o2="80" data-he="0">80%</button>
+                                                <button type="button" class="dh-channel-chip" data-o2="100" data-he="0">Oxygen</button>
+                                                @if(auth()->user()->isNotGuest())
+                                                    <button type="button" class="dh-channel-chip dh-gas-mygases-chip" data-mygases-slot="4">My Gases</button>
+                                                    <button type="button" class="dh-btn-icon" data-save-slot="4" title="Save this gas to My Gases"><span class="material-icons-round" aria-hidden="true">bookmark_border</span></button>
+                                                @endif
                                             </div>
-                                        
-                                            <div style="padding: 10px; border: 0px solid #1A73E8; border-radius: 4px;">
-                                                
-                                                <div id="addGasIcon4" onclick="showDecoGas4()" 
-                                                    style="position: absolute; top: 10px; left: 10px; bottom: 10px; right: 8px;  background-color: #ffffff; color: #1A73E8;
-                                                        cursor: pointer; z-index: 20; display: flex; align-items: center; justify-content: center; flex-direction: column;">
-                                                    
-                                                    <span class="material-icons-round" style="font-size: 48px;">add_circle</span>
-                                                    <label class="text-info text-lg">Add Gas</label>
-                                                </div>
-                                            
-                                                <div class="row" style="display: flex; justify-content: center;">
-                                                    <div class="mt-n6" style="position: relative; width: 150px; height: 300px;">
+                                            <div class="row">
+                                                <div class="col-lg-3 col-12 text-center">
+                                                    <div style="position: relative; width: 105px; height: 210px; margin: 0 auto;">
                                                         <!-- Overlaying image -->
-                                                            <img id="tank_single_4" src="{{ asset("assets") }}/img/tank_single.png"   alt="Overlay Image" 
+                                                            <img id="tank_single_4" src="{{ asset("assets") }}/img/tank_single.png"   alt="Overlay Image"
                                                             style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
 
-                                                        <img id="unblendable_sign_4" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image" 
+                                                        <img id="unblendable_sign_4" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image"
                                                             style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
 
-                                                        
                                                         <!-- Fixed-size chart canvas -->
-                                                        <div style="width: 300px; heigth:300px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
-                                                            <canvas id="decoGas4StackedBar" 
-                                                                    style="width: 100%; height: 202px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
+                                                        <div style="width: 210px; height: 156px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
+                                                            <canvas id="decoGas4StackedBar"
+                                                                    style="width: 100%; height: 156px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
                                                         </div>
-
-                                                        <!-- <canvas id="stackedBarChart" 
-                                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 161px; z-index: 1;"></canvas> -->
                                                     </div>
-                                                </div>
 
-                                                <div class="row mt-3">
-                                                    <div class="col-12 d-flex justify-content-center align-items-center">
-                                                        <div style="border: 2px solid #49a3f1; padding: 5px; font-weight: bold; border-radius: 4px;">
-                                                            <label class="text-success text-lg mb-0" style="font-weight: bold;" id="labelDecoGas4O2">21</label>
-                                                            <label class="text-info text-lg mb-0" style="font-weight: bold;">/</label>
-                                                            <label class="text-info text-lg mb-0" style="font-weight: bold;" id="labelDecoGas4He">35</label>
+                                                    <div class="text-center mt-2 mb-1">
+                                                        <div class="dh-gas-split-pill">
+                                                            <label class="dh-gas-result-pill is-o2" id="decoGas4SplitO2">21</label>
+                                                            <label class="dh-gas-result-pill is-he" id="decoGas4SplitHe">35</label>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <div class="row mt-4">
-                                                    <div>
-                                                        <input type="hidden" id="decoGas4O2Slider-value" name="decoGas4O2Slider-value">
-                                                        <div class="slider-styled" id="decoGas4O2Slider"></div>
-                                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">O2 %</div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="row mt-3">
-                                                    <div>
-                                                        <input type="hidden" id="decoGas4HeSlider-value" name="decoGas4HeSlider-value">
-
-                                                        <div class="slider-styled" id="decoGas4HeSlider"></div>
-                                                        <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He %</div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="row mt-3">
-                                                    <div>
-                                                        <input type="hidden" id="decoGas4SwitchSlider-value" name="decoGas4SwitchSlider-value">
-
-                                                        <div class="label-container">                                                
-                                                            <label class="text-info">PPO2</label>
-                                                            <label class="text-info left-label custom-label text-sm" id="labelDecoGas4SwitchPPO2">2222</label>
-                                                            
-                                                            <label class="text-info right-label-normal custom-label text-sm" id="labelDecoGas4Switch">2222</label>
-                                                            <label id="labelDecoGas4SwitchUNIT" class="text-info">ft</label>
+                                                <div class="col-lg-9 col-12">
+                                                    <div class="mt-2">
+                                                        <label class="dh-gas-label do-not-translate">O&#8322;</label>
+                                                        <div class="dh-gas-row">
+                                                            <div class="dh-gas-input-wrap">
+                                                                <div class="dh-gas-editable">
+                                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDecoGas4O2" value="21">
+                                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                                </div>
+                                                                <span class="dh-gas-unit">%</span>
+                                                            </div>
+                                                            <input type="hidden" id="decoGas4O2Slider-value" name="decoGas4O2Slider-value">
+                                                            <div class="slider-styled" id="decoGas4O2Slider" data-dh-num-mirror="1"></div>
                                                         </div>
-                                                        <div class="slider-styled" id="decoGas4SwitchSlider"></div>
-                                                        <div class="do-not-translate text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" id="switchDepthLabel4" style="border: none;">Switch depth</div>
                                                     </div>
-                                                </div>
 
-                                                <div class="row mt-3">
-                                                    <div class="text-center" style="border: none;">
-                                                        <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="deco3DeleteButton" onclick="hideDecoGas4()">
-                                                            Delete gas
-                                                        </a>
-                                                    </div>   
+                                                    <div class="mt-3">
+                                                        <label class="dh-gas-label do-not-translate">He</label>
+                                                        <div class="dh-gas-row">
+                                                            <div class="dh-gas-input-wrap">
+                                                                <div class="dh-gas-editable">
+                                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDecoGas4He" value="35">
+                                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                                </div>
+                                                                <span class="dh-gas-unit">%</span>
+                                                            </div>
+                                                            <input type="hidden" id="decoGas4HeSlider-value" name="decoGas4HeSlider-value">
+                                                            <div class="slider-styled" id="decoGas4HeSlider" data-dh-num-mirror="1"></div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mt-3">
+                                                        <label class="dh-gas-label">Switch PPO&#8322;</label>
+                                                        <div class="dh-gas-row">
+                                                            <div class="dh-gas-input-wrap">
+                                                                <div class="dh-gas-editable">
+                                                                    <input type="text" inputmode="decimal" class="dh-gas-input" id="labelDecoGas4SwitchPPO2" value="1.4">
+                                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                                </div>
+                                                                <span class="dh-gas-unit">atm</span>
+                                                            </div>
+                                                            <input type="hidden" id="decoGas4SwitchSlider-value" name="decoGas4SwitchSlider-value">
+                                                            <div class="slider-styled" id="decoGas4SwitchSlider" data-dh-num-mirror="1"></div>
+                                                        </div>
+                                                        <div class="label-container mt-2">
+                                                            <label class="dh-gas-label mb-0" id="switchDepthLabel4">Switch depth</label>
+                                                            <span class="d-inline-flex align-items-center" style="gap: 6px;">
+                                                            <label class="dh-gas-result-pill is-compact" id="labelDecoGas4Switch">2222</label>
+                                                            <label class="text-info mb-0" id="labelDecoGas4SwitchUNIT">ft</label>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row mt-3">
+                                                        <div class="text-center" style="border: none;">
+                                                            <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="deco4DeleteButton" onclick="hideDecoGas4()">
+                                                                Delete gas
+                                                            </a>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+
+                                        <button type="button" class="dh-gas-accordion-add" id="gasTabBtnAdd">
+                                            <span class="material-icons-round" aria-hidden="true">add</span>
+                                            Add gas
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1050,167 +1176,27 @@
 
             <div class="row" id="profileChartAndTable" style="display: none;">
                 <div class="col-12">
-                    <div class="card p-0 position-relative mt-3 mx-n2 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h3 class="card-title text-white mx-4">Decompression plan</h3>
-                            </div>
+                    <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
+                        <div class="dh-deco-section-head">
+                            <span class="material-icons-round" aria-hidden="true">route</span>
+                            <h3>Decompression plan</h3>
+                            <span class="dh-deco-section-head-meta">Model <span id="labelModel">ZL</span> &middot; GFs <span id="labelGFs">40/70</span></span>
                         </div>
 
                         <div class="card-body">
                             <div>
                                 <!-- Row for summary -->
                                 <div class="row mx-0">
-                                    <!-- Summary row -->
-                                    <div class="col-lg-12 col-12 mt-0" style="border: 2px solid #1A73E8; border-radius: 10px; padding-top: 10px;">
-                                        <div class="row">
-                                            <div class="col-lg-6 col-12">
-                                                <div class="table-responsive">
-                                                    <table class="table align-items-center mb-0"> 
-                                                        <tbody>
-                                                            <tr class="align-top"><td class="text-secondary text-end text-md font-weight-bolder opacity-7">Run time</td>
-                                                            <td class="align-middle text-left text-wrap text-lg" id="labelTotalRunTime" style="text-align: left;">67</td></tr>
-
-                                                            <tr class="align-top w-10"><td class="text-secondary text-end text-md font-weight-bolder opacity-7">Deco time</td>
-                                                            <td class="align-middle text-left text-wrap text-lg" id="labelTotalDecoTime" style="text-align: left;">28</td></tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-lg-6 col-12">
-                                                <div class="table-responsive">
-                                                    <table class="table align-items-center mb-0"> 
-                                                        <tbody>
-                                                            <tr class="align-top"><td class="text-secondary text-end text-md font-weight-bolder opacity-7">Model</td>
-                                                            <td class="align-middle text-left text-wrap text-lg" id="labelModel" style="text-align: left;">ZL</td></tr>
-
-                                                            <tr class="align-top w-10"><td class="text-secondary text-end text-md font-weight-bolder opacity-7">GFs</td>
-                                                            <td class="align-middle text-left text-wrap text-lg" id="labelGFs" style="text-align: left;">40/70</td></tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- What if row -->
-                                <div class="row">
-                                    <div class="col-lg-12 col-12 mt-2">
-                                        <div class="card-header p-0 mt-0 mx-3 position-relative" style="z-index: 100;">
-                                            <div class="bg-gradient-secondary shadow-info border-radius-xl py-3 pe-1">
-                                                <h4 class="card-title text-white mx-4">What if...?</h4>
-                                            </div>
-                                        </div>
-                                        <div class="mt-n5" style="border: 2px solid #1A73E8; border-radius: 10px;">
-
-                                            <div class="row mx-0 mt-5">
-                                                <div class="col-lg-4 col-12 mx-2">
-                                                    <ul class="list-group">
-                                                        <li class="list-group-item border-0 px-0">
-                                                            <div class="form-check form-switch ps-0">
-                                                                <input class="form-check-input ms-auto" type="checkbox"
-                                                                    id="filter1">
-                                                                <label class="form-check-label text-sm ms-3 text-wrap w-80 mb-0"
-                                                                    for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="Extend the dive for 5 m, how's deco profile affected??">Extend bottom time 5 min</label>
-                                                            </div>
-                                                        </li>
-                                                    </ul>
-                                                
-                                                    <ul class="list-group">
-                                                        <li class="list-group-item border-0 px-0">
-                                                            <div class="form-check form-switch ps-0">
-                                                                <input class="form-check-input ms-auto" type="checkbox"
-                                                                    id="filter2">
-                                                                <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                                    for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="Dive 10 ft deeper, how is RT and DT changed?">Increase max depth by {{ $deco_unit ? "3 m" : "10 ft" }}</label>
-                                                            </div>
-                                                        </li>
-                                                    </ul>
-                                                
-                                                    <ul class="list-group" id="filter7Container" style="display: none;">
-                                                        <li class="list-group-item border-0 px-0">
-                                                            <div class="form-check form-switch ps-0">
-                                                                <input class="form-check-input ms-auto" type="checkbox"
-                                                                    id="filter7">
-                                                                <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                                    for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="calculate RT and deco time switching to BO">Bailout to OC</label>
-                                                            </div>
-                                                        </li>
-                                                    </ul>
-
-                                                    <ul class="list-group" id="filter3Container">
-                                                        <li class="list-group-item border-0 px-0">
-                                                            <div class="form-check form-switch ps-0">
-                                                                <input class="form-check-input ms-auto" type="checkbox"
-                                                                    id="filter3">
-                                                                <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                                    for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="calculate RT and deco time using only backgas">Lost all deco gases</label>
-                                                            </div>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-
-                                                <div class="col-lg-4 col-12 mx-2">
-                                                    <ul class="list-group">
-                                                        <li class="list-group-item border-0 px-0">
-                                                            <div class="form-check form-switch ps-0">
-                                                                <input class="form-check-input ms-auto" type="checkbox"
-                                                                    id="filter4">
-                                                                <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                                    for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="How's the RT affected if the dive is shorter?">Shorten bottom time 5 min</label>
-                                                            </div>
-                                                        </li>
-                                                    </ul>
-                                                
-                                                    <ul class="list-group">
-                                                        <li class="list-group-item border-0 px-0">
-                                                            <div class="form-check form-switch ps-0">
-                                                                <input class="form-check-input ms-auto" type="checkbox"
-                                                                    id="filter5">
-                                                                <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                                    for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="What's the impact of diving 10 ft shallower than planned?">Reduce max depth by {{ $deco_unit ? "3 m" : "10 ft" }}</label>
-                                                            </div>
-                                                        </li>
-                                                    </ul>
-
-                                                    <ul class="list-group">
-                                                        <li class="list-group-item border-0 px-0">
-                                                            <div class="form-check form-switch ps-0">
-                                                                <input class="form-check-input ms-auto" type="checkbox"
-                                                                    id="filter6">
-                                                                <label class="form-check-label text-body ms-3 text-truncate w-80 mb-0"
-                                                                    for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="Minimum deco time">Minimum deco (GFs=100%)</label>
-                                                            </div>
-                                                        </li>
-                                                    </ul>
-                                                
-                                                    
-                                                </div>
-
-                                                <div class="col-lg-3 col-12 mb-2 mt-2">
-                                                    <div class="table-responsive" id="summaryWhatIfTable" style="border: 2px solid #1A73E8; border-radius: 10px;">
-                                                        <table class="table align-items-center mb-0"> 
-                                                            <tbody>
-                                                                <tr class="align-top w-30"><td class="text-secondary text-end text-md font-weight-bolder opacity-7">New Run Time:</td>
-                                                                <td class="align-middle text-wrap text-lg" style="text-align: left;">
-                                                                    <span class="text-lg fw-bold" id="labelWhatIfRunTime">-</span>
-                                                                    <span class="text-md" id="labelWhatIfRunTimeDiff">()</span>
-                                                                </td></tr>
-
-                                                                <tr class="align-top w-30"><td class="text-secondary text-end text-md font-weight-bolder opacity-7">New Deco Time:</td>
-                                                                <td class="align-middle text-wrap text-lg" style="text-align: left;">
-                                                                    <span class="text-lg fw-bold" id="labelWhatIfDecoTime">-</span>
-                                                                    <span class="text-md" id="labelWhatIfDecoTimeDiff">()</span>
-                                                                </td></tr>
-                                                                
-                                                            </tbody>
-                                                        </table>
-                                                    </div>    
-                                                </div>
-                                            </div>
-
+                                    <div class="col-12">
+                                        <div class="dh-deco-summary">
+                                            <span class="dh-gas-result-pill dh-deco-summary-pill">
+                                                <span class="dh-deco-summary-pill-label">Run time</span>
+                                                <span id="labelTotalRunTime">67</span>
+                                            </span>
+                                            <span class="dh-gas-result-pill dh-deco-summary-pill">
+                                                <span class="dh-deco-summary-pill-label">Deco time</span>
+                                                <span id="labelTotalDecoTime">28</span>
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -1218,15 +1204,15 @@
                                 <!-- Row with deco table and profile chart -->
                                 <div class="row mt-2">
 
-                                    <div class="col-lg-3 col-12">
-                                        <div class="label-container d-flex justify-content-center align-items-center" style="margin-top:20px;">                                                                  
+                                    <div class="col-lg-6 col-12">
+                                        <div class="label-container d-flex justify-content-center align-items-center" style="margin-top:20px;">
                                             <label class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" id="decoTableTitle">Decompression Table</label>
                                         </div>
                                         <div id="decoTableContainer"></div>
                                         <div id="BOTableContainer" style="display: none;"></div>
                                     </div>
 
-                                    <div class="col-lg-9 col-12" id="profileChartContainer">
+                                    <div class="col-lg-6 col-12" id="profileChartContainer">
                                         <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1"> 
                                             <canvas id="profileChart" class="chart-canvas border-radius-lg" height="500px"></canvas>
                                         </div>
@@ -1234,36 +1220,159 @@
                                     </div>
                                 </div>
                                 
+                                <!-- What if row -->
+                                <div class="row">
+                                    <div class="col-lg-12 col-12 mt-2">
+                                        <div class="dh-deco-section-head is-toggle is-collapsed" id="dh-whatif-toggle" role="button" tabindex="0" aria-expanded="false" aria-controls="dh-whatif-body">
+                                            <span class="material-icons-round" aria-hidden="true">help_outline</span>
+                                            <h4>What if...?</h4>
+                                            <span class="material-icons-round dh-deco-section-head-chevron" id="dh-whatif-chevron" aria-hidden="true">expand_more</span>
+                                        </div>
+                                        <div class="dh-deco-section-body" id="dh-whatif-body" hidden>
+
+                                            <div class="row mx-0 g-2">
+                                                <div class="col-lg-4 col-6">
+                                                    <div class="dh-whatif-chips">
+                                                        <label class="dh-whatif-chip" for="filter1">
+                                                            <input class="form-check-input" type="checkbox" id="filter1">
+                                                            <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="Extend the dive for 5 m, how's deco profile affected??">Extend bottom time 5 min</span>
+                                                        </label>
+
+                                                        <label class="dh-whatif-chip" for="filter2">
+                                                            <input class="form-check-input" type="checkbox" id="filter2">
+                                                            <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="Dive 10 ft deeper, how is RT and DT changed?">Increase max depth by {{ $deco_unit ? "3 m" : "10 ft" }}</span>
+                                                        </label>
+
+                                                        <label class="dh-whatif-chip" for="filter7" id="filter7Container" style="display: none;">
+                                                            <input class="form-check-input" type="checkbox" id="filter7">
+                                                            <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="calculate RT and deco time switching to BO">Bailout to OC</span>
+                                                        </label>
+
+                                                        <label class="dh-whatif-chip" for="filter3" id="filter3Container">
+                                                            <input class="form-check-input" type="checkbox" id="filter3">
+                                                            <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="calculate RT and deco time using only backgas">Lost all deco gases</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-lg-4 col-6">
+                                                    <div class="dh-whatif-chips">
+                                                        <label class="dh-whatif-chip" for="filter4">
+                                                            <input class="form-check-input" type="checkbox" id="filter4">
+                                                            <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="How's the RT affected if the dive is shorter?">Shorten bottom time 5 min</span>
+                                                        </label>
+
+                                                        <label class="dh-whatif-chip" for="filter5">
+                                                            <input class="form-check-input" type="checkbox" id="filter5">
+                                                            <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="What's the impact of diving 10 ft shallower than planned?">Reduce max depth by {{ $deco_unit ? "3 m" : "10 ft" }}</span>
+                                                        </label>
+
+                                                        <label class="dh-whatif-chip" for="filter6">
+                                                            <input class="form-check-input" type="checkbox" id="filter6">
+                                                            <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="Minimum deco time">Minimum deco (GFs=100%)</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-lg-3 col-12 mb-2 mt-2">
+                                                    <div class="table-responsive" id="summaryWhatIfTable" hidden style="border: 1px solid var(--dh-line); border-radius: 10px;">
+                                                        <table class="table align-items-center mb-0">
+                                                            <tbody>
+                                                                <tr class="align-top w-30"><td class="text-secondary text-end text-md font-weight-bolder opacity-7">New Run Time:</td>
+                                                                <td class="align-middle text-wrap" style="text-align: left;">
+                                                                    <span class="dh-gas-pill-wrap">
+                                                                        <label class="dh-gas-result-pill is-compact" id="labelWhatIfRunTime">-</label>
+                                                                        <span class="dh-gas-pill-badge" id="labelWhatIfRunTimeDiff">-</span>
+                                                                    </span>
+                                                                </td></tr>
+
+                                                                <tr class="align-top w-30"><td class="text-secondary text-end text-md font-weight-bolder opacity-7">New Deco Time:</td>
+                                                                <td class="align-middle text-wrap" style="text-align: left;">
+                                                                    <span class="dh-gas-pill-wrap">
+                                                                        <label class="dh-gas-result-pill is-compact" id="labelWhatIfDecoTime">-</label>
+                                                                        <span class="dh-gas-pill-badge" id="labelWhatIfDecoTimeDiff">-</span>
+                                                                    </span>
+                                                                </td></tr>
+
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <script>
+                                    // "What if...?" starts collapsed (Pablo, 2026-09-16), same
+                                    // expand/collapse mechanics as the Inputs card. Placed here,
+                                    // right after its own markup, rather than up with the Inputs
+                                    // card's toggle script - that script tag runs before this
+                                    // section of the DOM even exists, so getElementById returned
+                                    // null and the click listener was silently never attached
+                                    // (Pablo, 2026-09-16: "the what if collapsed is not expanding
+                                    // when I click").
+                                    (function () {
+                                        var body = document.getElementById('dh-whatif-body');
+                                        var toggle = document.getElementById('dh-whatif-toggle');
+                                        var chevron = document.getElementById('dh-whatif-chevron');
+                                        if (!body || !toggle) return;
+
+                                        function setOpen(open) {
+                                            body.hidden = !open;
+                                            toggle.classList.toggle('is-collapsed', !open);
+                                            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                                            if (chevron) chevron.textContent = open ? 'expand_less' : 'expand_more';
+                                        }
+
+                                        toggle.addEventListener('click', function () { setOpen(body.hidden); });
+                                        toggle.addEventListener('keydown', function (e) {
+                                            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(body.hidden); }
+                                        });
+                                    })();
+
+                                    // The "New Run Time / New Deco Time" frame only means anything
+                                    // once a scenario pill is picked - hide it otherwise (Pablo,
+                                    // 2026-09-16: "if there is no pill selected...hide the...frame").
+                                    (function () {
+                                        var summary = document.getElementById('summaryWhatIfTable');
+                                        var checkboxes = document.querySelectorAll('.dh-whatif-chip input[type=checkbox]');
+                                        if (!summary || !checkboxes.length) return;
+
+                                        function update() {
+                                            var anyChecked = Array.prototype.some.call(checkboxes, function (cb) { return cb.checked; });
+                                            summary.hidden = !anyChecked;
+                                        }
+
+                                        checkboxes.forEach(function (cb) { cb.addEventListener('change', update); });
+                                        window.dhUpdateWhatIfVisibility = update;
+                                    })();
+                                </script>
+
                                 <!-- Nitrogen gas consumption -->
                                 <div class="row mt-2">
                                     <div class="col-12">
-                                        
-                                        <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1 mt-2">
-                                            <div class="label-container d-flex justify-content-center align-items-center" style="margin-top:0px;">                                                                  
-                                                <label class="text-uppercase text-white text-xs font-weight-bolder text-center" id="decoTableTitle">Nitrogen Tissue Compartments</label>
-                                            </div>
-                                            <div style="padding-left: 20px; padding-right: 20px;">
-                                                <canvas id="tissueChart" class="chart-canvas border-radius-lg"></canvas>
-                                            </div>
-                                            
-                                            <div class="label-container mt-2" style="padding-left:20px; padding-right:20px;">
-                                            
-                                                <label class="text-white text-align-left">Depth ({{ $deco_unit ? "m" : "ft" }})</label>
-                                                <label class="text-white left-label-white custom-label text-lg" id="labelTissueChartDepth">22</label>
-                                                
+                                        <div class="dh-deco-section-head">
+                                            <span class="material-icons-round" aria-hidden="true">bubble_chart</span>
+                                            <h4 id="decoTableTitle">Nitrogen tissue compartments</h4>
+                                        </div>
+                                        <div class="dh-deco-section-body">
+                                            <canvas id="tissueChart" class="chart-canvas border-radius-lg"></canvas>
 
-                                                <label class="text-white right-label-normal-white custom-label text-lg" id="labelTissueChartTime">22</label>
-                                                <label class="text-white">min</label>
+                                            <div class="text-center mt-3">
+                                                <span class="text-secondary text-sm font-weight-bold me-2">Depth ({{ $deco_unit ? "m" : "ft" }})</span>
+                                                <label class="dh-gas-result-pill is-compact" id="labelTissueChartDepth">22</label>
+                                                <label class="dh-gas-result-pill is-compact ms-2" id="labelTissueChartTime">22</label>
+                                                <span class="text-secondary text-sm font-weight-bold ms-1">min</span>
                                             </div>
-                                            <div style="padding-left: 20px; padding-right: 20px;">
-                                                <div class="slider-styled mt-2" id="timeLapseSlider"></div>
+                                            <div class="mt-2">
+                                                <div class="slider-styled" id="timeLapseSlider"></div>
                                             </div>
-                                            <div style="padding-left: 20px; padding-right: 20px;" class="mt-3">
-                                                <div class="text-center" style="border: none;"> <!-- Added text-center here -->
-                                                    <a type="button" class="btn btn-white mt-0 text-info" id="playTissueAnimation" onclick="toggleSliderAnimation()">
-                                                        Play
-                                                    </a>
-                                                </div>
+                                            <div class="text-center mt-3">
+                                                <button type="button" class="dh-btn dh-btn-ghost-dark" id="playTissueAnimation" onclick="toggleSliderAnimation()">
+                                                    Play
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -1271,48 +1380,69 @@
 
                                 
                                 <!-- Row for gas consumption -->
-                                <div id="gasConsumptionRow" class="row">
-                                    <div class="col-lg-12 col-12 mt-2">
-                                        <div class="card-header p-0 mt-0 mx-3 position-relative" style="z-index: 100;">
-                                            <div class="bg-gradient-secondary shadow-info border-radius-xl py-3 pe-1">
-                                                <h4 id="gasConsumptionHeader" class="card-title text-white mx-4">Gas consumption</h4>
-                                            </div>
+                                <div id="gasConsumptionRow" class="row mt-2">
+                                    <div class="col-lg-12 col-12">
+                                        <div class="dh-deco-section-head">
+                                            <span class="material-icons-round" aria-hidden="true">local_gas_station</span>
+                                            <h4 id="gasConsumptionHeader">Gas consumption</h4>
                                         </div>
-                                    
-                                        <div class="mt-n5" style="border: 2px solid #1A73E8; border-radius: 10px;">
+
+                                        <div class="dh-deco-section-body">
 
                                             <div class="row mt-6" style="padding:10px;">
                                                 <div id="gasConsumptionBottomCol" class="col-lg-6 col-12">
-                                                    <table class="table align-items-center mb-0 mt-1"> 
+                                                    <table class="table align-items-center mb-0 mt-1">
                                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Bottom gas</td> </tr>
                                                     </table>
-                                                    <div class="label-container">
-                                                        <label class="text-info right-label-normal custom-label text-sm" id="labelSACBottomGasLiters">50</label>
-                                                        <label class="text-info right-label-normal custom-label text-sm" id="labelSACBottomGas">50</label>
-                                                        <label class="text-info">{{ $deco_unit ? "liters/min" : "cuft/min" }}</label>
+                                                    <label class="dh-gas-label">SAC rate</label>
+                                                    <div class="dh-gas-row">
+                                                        <div id="labelSACBottomGasLitersWrap" class="dh-gas-input-wrap">
+                                                            <div class="dh-gas-editable">
+                                                                <input type="text" inputmode="decimal" class="dh-gas-input" id="labelSACBottomGasLiters" value="23">
+                                                                <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                            </div>
+                                                            <span class="dh-gas-unit">liters/min</span>
+                                                        </div>
+                                                        <div id="labelSACBottomGasWrap" class="dh-gas-input-wrap">
+                                                            <div class="dh-gas-editable">
+                                                                <input type="text" inputmode="decimal" class="dh-gas-input" id="labelSACBottomGas" value="0.8">
+                                                                <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                            </div>
+                                                            <span class="dh-gas-unit">cuft/min</span>
+                                                        </div>
+                                                        <div class="slider-styled" id="sliderSACBottomGas" data-dh-num-mirror="1"></div>
                                                     </div>
-                                                    <div class="slider-styled" id="sliderSACBottomGas"></div>
-                                                    <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">SAC</div>
 
-                                                    <div class="label-container d-flex justify-content-center align-items-center" style="margin-top:20px;">                                                                  
+                                                    <div class="label-container d-flex justify-content-center align-items-center" style="margin-top:20px;">
                                                         <label class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center">Gas Consumption</label>
                                                     </div>
                                                     <div id="bottomGasConsumptionTableContainer"></div>
                                                 </div>
 
                                                 <div id="gasConsumptionDecoCol" class="col-lg-6 col-12">
-                                                    <table class="table align-items-center mb-0 mt-1"> 
+                                                    <table class="table align-items-center mb-0 mt-1">
                                                         <tr><td id="gasConsumptionDecoOrBOHeader" class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Decompression gases</td> </tr>
                                                     </table>
-                                                    <div class="label-container">
-                                                        <label class="text-info right-label-normal custom-label text-sm" id="labelSACDecoGasLiters">50</label>
-                                                        <label class="text-info right-label-normal custom-label text-sm" id="labelSACDecoGas">50</label>
-                                                        <label class="text-info">{{ $deco_unit ? "liters/min" : "cuft/min" }}</label>
+                                                    <label class="dh-gas-label">SAC rate</label>
+                                                    <div class="dh-gas-row">
+                                                        <div id="labelSACDecoGasLitersWrap" class="dh-gas-input-wrap">
+                                                            <div class="dh-gas-editable">
+                                                                <input type="text" inputmode="decimal" class="dh-gas-input" id="labelSACDecoGasLiters" value="14">
+                                                                <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                            </div>
+                                                            <span class="dh-gas-unit">liters/min</span>
+                                                        </div>
+                                                        <div id="labelSACDecoGasWrap" class="dh-gas-input-wrap">
+                                                            <div class="dh-gas-editable">
+                                                                <input type="text" inputmode="decimal" class="dh-gas-input" id="labelSACDecoGas" value="0.5">
+                                                                <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                            </div>
+                                                            <span class="dh-gas-unit">cuft/min</span>
+                                                        </div>
+                                                        <div class="slider-styled" id="sliderSACDecoGas" data-dh-num-mirror="1"></div>
                                                     </div>
-                                                    <div class="slider-styled" id="sliderSACDecoGas"></div>
-                                                    <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">SAC</div>
 
-                                                    <div class="label-container d-flex justify-content-center align-items-center" style="margin-top:20px;">                                                                  
+                                                    <div class="label-container d-flex justify-content-center align-items-center" style="margin-top:20px;">
                                                         <label class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" id="decoTableTitle">Gas Consumption</label>
                                                     </div>
                                                     <div id="decoGasConsumptionTableContainer"></div>
@@ -1373,7 +1503,7 @@
             const labelBO = document.getElementById("switchDepthLabelBO");
 
             if (label && lang === "es-ES") {
-                label.textContent = "PPO2 a máxima profundidad";
+                label.textContent = "PPO₂ a máxima profundidad";
             }
 
             if (label1 && lang === "es-ES") {
@@ -1437,10 +1567,12 @@
             document.getElementById("ascRateContainerImp").style.display = "flex";
             document.getElementById("desRateContainerImp").style.display = "flex";
             document.getElementById("maxDepthContainerImp").style.setProperty("display", "flex", "important");
-            
 
-            
-            
+            document.getElementById("labelSACBottomGasLitersWrap").style.display = "none";
+            document.getElementById("labelSACDecoGasLitersWrap").style.display = "none";
+            document.getElementById("labelSACBottomGasWrap").style.display = "flex";
+            document.getElementById("labelSACDecoGasWrap").style.display = "flex";
+
         } else {
             document.getElementById("maxDepthSliderTitle").innerText = "Max Depth (m)";
             //document.getElementById("maxDepthInputLabel").innerText = "m";
@@ -1461,6 +1593,10 @@
             document.getElementById("desRateContainerImp").style.display = "none";
             document.getElementById("maxDepthContainerImp").style.setProperty("display", "none", "important");
 
+            document.getElementById("labelSACBottomGasLitersWrap").style.display = "flex";
+            document.getElementById("labelSACDecoGasLitersWrap").style.display = "flex";
+            document.getElementById("labelSACBottomGasWrap").style.display = "none";
+            document.getElementById("labelSACDecoGasWrap").style.display = "none";
 
         }
         
@@ -1493,45 +1629,45 @@
             resetCalculationArea()
 
             // Get values from the input fields
-            const maxDepth = parseInt(labelDepth.textContent);
-            const bottomTime = parseInt(labelBottomTime.textContent);
+            const maxDepth = parseInt(labelDepth.value);
+            const bottomTime = parseInt(labelBottomTime.value);
             const bottomGas = {
-                O2: parseInt(labelBottomGasO2.textContent),
-                He: parseInt(labelBottomGasHe.textContent)
+                O2: parseInt(labelBottomGasO2.value),
+                He: parseInt(labelBottomGasHe.value)
             };
             const GFs = {
-                low: parseInt(labelGFL.textContent),
-                high: parseInt(labelGFH.textContent)
+                low: parseInt(labelGFL.value),
+                high: parseInt(labelGFH.value)
             };
             const rate = {
-                descent: parseInt(labelDes.textContent),
-                ascent: parseInt(labelAsc.textContent)
+                descent: parseInt(labelDes.value),
+                ascent: parseInt(labelAsc.value)
             };
-            const surfTime = parseFloat(labelSurfaceTime.textContent);
-            const setpoint = parseFloat(labelSetpoint.textContent);
+            const surfTime = parseFloat(labelSurfaceTime.value);
+            const setpoint = parseFloat(labelSetpoint.value);
 
             var decoGases = [];
 
-            function addDecoGas(iconId, o2LabelId, heLabelId, switchLabelId) {
-                if (document.getElementById(iconId).style.display === 'none') {
+            function addDecoGas(tabBtnId, o2LabelId, heLabelId, switchLabelId) {
+                if (!document.getElementById(tabBtnId).hidden) {
                     decoGases.push({
-                        O2: parseInt(document.getElementById(o2LabelId).textContent),
-                        He: parseInt(document.getElementById(heLabelId).textContent),
+                        O2: parseInt(document.getElementById(o2LabelId).value),
+                        He: parseInt(document.getElementById(heLabelId).value),
                         switchDepth: Math.floor(parseInt(document.getElementById(switchLabelId).textContent) * {{ $deco_unit ? 3.28084 : 1 }})
                     });
                 }
             }
 
-            // Add gases dynamically if the icons are hidden
-            
-            if (modeOCOrCC == "CC")
-                addDecoGas("addGasIcon1", "labelDecoGas1O2", "labelDecoGas1He", "labelBailoutSwitch");
-            else
-                addDecoGas("addGasIcon1", "labelDecoGas1O2", "labelDecoGas1He", "labelDecoGas1Switch");
+            // Add gases dynamically if they've been added (their tab exists)
 
-            addDecoGas("addGasIcon2", "labelDecoGas2O2", "labelDecoGas2He", "labelDecoGas2Switch");
-            addDecoGas("addGasIcon3", "labelDecoGas3O2", "labelDecoGas3He", "labelDecoGas3Switch");
-            addDecoGas("addGasIcon4", "labelDecoGas4O2", "labelDecoGas4He", "labelDecoGas4Switch");
+            if (modeOCOrCC == "CC")
+                addDecoGas("gasAccordionItemDeco1", "labelDecoGas1O2", "labelDecoGas1He", "labelBailoutSwitch");
+            else
+                addDecoGas("gasAccordionItemDeco1", "labelDecoGas1O2", "labelDecoGas1He", "labelDecoGas1Switch");
+
+            addDecoGas("gasAccordionItemDeco2", "labelDecoGas2O2", "labelDecoGas2He", "labelDecoGas2Switch");
+            addDecoGas("gasAccordionItemDeco3", "labelDecoGas3O2", "labelDecoGas3He", "labelDecoGas3Switch");
+            addDecoGas("gasAccordionItemDeco4", "labelDecoGas4O2", "labelDecoGas4He", "labelDecoGas4Switch");
 
             // Create final JSON structure
             const diveProfile = {
@@ -1582,7 +1718,7 @@
 
                     } else {
                         document.getElementById("decoTableContainer").style.display ="block";
-                        document.getElementById("profileChartContainer").className = "col-lg-9 col-12";
+                        document.getElementById("profileChartContainer").className = "col-lg-6 col-12";
                     }
                     filter1RTDT = calculateDecoTime(response['add5min']);
                     filter2RTDT = calculateDecoTime(response['add10ft']);
@@ -1633,6 +1769,7 @@
                     document.querySelectorAll(".form-check-input").forEach(cb => {
                             cb.checked = false; // Uncheck all other checkboxes
                     });
+                    if (typeof window.dhUpdateWhatIfVisibility === 'function') window.dhUpdateWhatIfVisibility();
 
                     console.log("modeOCCC = " + modeOCOrCC);
                     console.log("Length=" + (diveProfile['decoGases'].length));
@@ -1649,15 +1786,15 @@
                     }
 
                     @if($deco_unit)
-                        document.getElementById('labelSACBottomGas').style.display="none";
-                        document.getElementById('labelSACBottomGasLiters').style.display="block";
-                        document.getElementById('labelSACDecoGas').style.display="none";
-                        document.getElementById('labelSACDecoGasLiters').style.display="block";
+                        document.getElementById('labelSACBottomGasWrap').style.display="none";
+                        document.getElementById('labelSACBottomGasLitersWrap').style.display="flex";
+                        document.getElementById('labelSACDecoGasWrap').style.display="none";
+                        document.getElementById('labelSACDecoGasLitersWrap').style.display="flex";
                     @else
-                        document.getElementById('labelSACBottomGas').style.display="block";
-                        document.getElementById('labelSACBottomGasLiters').style.display="none";
-                        document.getElementById('labelSACDecoGas').style.display="block";
-                        document.getElementById('labelSACDecoGasLiters').style.display="none";
+                        document.getElementById('labelSACBottomGasWrap').style.display="flex";
+                        document.getElementById('labelSACBottomGasLitersWrap').style.display="none";
+                        document.getElementById('labelSACDecoGasWrap').style.display="flex";
+                        document.getElementById('labelSACDecoGasLitersWrap').style.display="none";
                     @endif
                 },
                 error: function (xhr, status, error) {
@@ -1814,7 +1951,7 @@
                     ambientPressure
                 ) / 22.4; // Use 22.4 L/mol at standard temperature and pressure
             } else {
-                var currentSetPoint = parseFloat(labelSetpoint.textContent);
+                var currentSetPoint = parseFloat(labelSetpoint.value);
                 gasDensity = calculateLoopGasDensity(depth, currentSetPoint, O2 / 100, He / 100, 1);
             }
             // Round the result to 2 decimal places
@@ -1827,14 +1964,14 @@
             }
 
             if (densityRounded > 6.2) {
-                gasDensityLabel.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
-                gasDensityLabel.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+                gasDensityLabel.classList.remove("is-warn");
+                gasDensityLabel.classList.add("is-danger");
             } else if (densityRounded > 5.2) {
-                gasDensityLabel.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
-                gasDensityLabel.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+                gasDensityLabel.classList.remove("is-danger");
+                gasDensityLabel.classList.add("is-warn");
             } else {
-                gasDensityLabel.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
-                gasDensityLabel.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+                gasDensityLabel.classList.remove("is-warn", "is-danger");
+                gasDensityLabel.classList.add("is-safe");
             }
 
             
@@ -1854,7 +1991,7 @@
 
                    
             } else {
-                bottomGasEND = calculateENDCCR(depth, parseFloat(labelSetpoint.textContent), O2 / 100, He / 100, 1); 
+                bottomGasEND = calculateENDCCR(depth, parseFloat(labelSetpoint.value), O2 / 100, He / 100, 1); 
             }
 
             // adjust the unit
@@ -1864,14 +2001,14 @@
                 labelBottomGasEND.textContent = (Math.max(0,(bottomGasEND)) * 0.3048).toFixed(0);
 
             if (bottomGasEND > 130) {
-                labelBottomGasEND.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
-                labelBottomGasEND.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+                labelBottomGasEND.classList.remove("is-warn");
+                labelBottomGasEND.classList.add("is-danger");
             } else if (bottomGasEND > 100) {
-                labelBottomGasEND.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
-                labelBottomGasEND.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+                labelBottomGasEND.classList.remove("is-danger");
+                labelBottomGasEND.classList.add("is-warn");
             } else {
-                labelBottomGasEND.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
-                labelBottomGasEND.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+                labelBottomGasEND.classList.remove("is-warn", "is-danger");
+                labelBottomGasEND.classList.add("is-safe");
             } 
         }
 
@@ -1881,7 +2018,7 @@
         
         // Get the canvas element
         const bottomGasStackedBarChartElement = document.getElementById('bottomGasStackedBar').getContext('2d');
-        let labelHorizontalOffset = -40;
+        let labelHorizontalOffset = -28;
 
         // Create the chart with a custom plugin for labels
         const bottomGasstackedBarChart = new Chart(bottomGasStackedBarChartElement, {
@@ -1892,21 +2029,21 @@
                     {
                         label: 'Oxygen',
                         data: [18], // Data points for this dataset
-                        backgroundColor: 'rgb(76, 175, 80, 1.0)', // Bar color
+                        backgroundColor: '#2e7d4f', // Bar color
                         borderRadius: 0, // Rounded corners
                         barPercentage: 1 // Adjust bar width (smaller bars)
                     },
                     {
                         label: 'Helium',
                         data: [45], // Data points for this dataset
-                        backgroundColor: 'rgb(26, 115, 232, 1.0)', // Bar color
+                        backgroundColor: '#0e7c9e', // Bar color
                         borderRadius: 0, // Rounded corners
                         barPercentage: 1 // Adjust bar width (smaller bars)
                     },
                     {
                         label: 'Nitrogen',
                         data: [37], // Data points for this dataset
-                        backgroundColor: '#7b809a', // Bar color
+                        backgroundColor: '#5a6b78', // Bar color
                         borderRadius: 0, // Rounded corners
                         barPercentage: 1 // Adjust bar width (smaller bars)
                     }
@@ -1914,6 +2051,15 @@
             },
             options: {
                 responsive: true, // Makes the chart responsive
+                // Without this, Chart.js ignores the canvas's own CSS height
+                // and instead derives it from the container's width divided
+                // by a default aspect ratio (~2:1) - on this ~210px-wide
+                // tank column that works out to roughly half the height we
+                // actually set, which is why the gas-color bar never reached
+                // the top of the tank's transparent cutout (Pablo,
+                // 2026-09-17: "make the bar chart taller to cover all the
+                // tank mask").
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         display: false, // Hide legend
@@ -1930,11 +2076,22 @@
                     }
                 },
                 layout: {
+                    // Measured directly from the mask PNG's alpha channel:
+                    // the transparent "window" cut into the tank body starts
+                    // at y=58/300 (double), 57/300 (single) of the source
+                    // image. Scaled to this 156px-tall canvas (matching the
+                    // now-fixed 156px parent, see maintainAspectRatio note
+                    // above), that's ~29px/28px down from the canvas top -
+                    // top: 28 sits just inside that so the gas-color fill
+                    // reaches the mask's northmost transparent point without
+                    // gap (Pablo, 2026-09-17: "find the northest point in
+                    // each mask that is transparent - that's the limit to
+                    // where we want the bar chart to render up to").
                     padding: {
-                        left: 20,
-                        right: 20,
-                        top: 20,
-                        bottom: 4
+                        left: 14,
+                        right: 14,
+                        top: 28,
+                        bottom: 3
                     }
                 }
             },
@@ -1948,18 +2105,18 @@
                             meta.data.forEach((bar, index) => {
                                 const data = dataset.data[index];
                                 if (data != 100 && data != 0) {
-                                    ctx.font = '12px Roboto';
+                                    ctx.font = '8px Roboto';
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x + labelHorizontalOffset, bar.y + 10); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x + labelHorizontalOffset, bar.y + 7); // Position label slightly above the bar
                                     
                                 } else if (data == 100) {
-                                    ctx.font = '12px Roboto';
+                                    ctx.font = '8px Roboto';
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x +labelHorizontalOffset , bar.y + 70); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x +labelHorizontalOffset , bar.y + 49); // Position label slightly above the bar
                                 }
                             });
                         });
@@ -1982,17 +2139,17 @@
                 {
                     label: 'Oxygen',
                     data: [oxygen],
-                    backgroundColor: 'rgb(76, 175, 80, 1.0)'
+                    backgroundColor: '#2e7d4f'
                 },
                 {
                     label: 'Helium',
                     data: [helium],
-                    backgroundColor: 'rgb(26, 115, 232, 1.0)'
+                    backgroundColor: '#0e7c9e'
                 },
                 {
                     label: 'Nitrogen',
                     data: [nitrogen],
-                    backgroundColor: '#7b809a'
+                    backgroundColor: '#5a6b78'
                 }
             ];
 
@@ -2011,9 +2168,9 @@
             document.getElementById("BOTableContainer").style.display = "none";
             document.getElementById("decoTableTitle").innerText = "Decompression Table";
             document.getElementById("labelWhatIfRunTime").innerText="-";
-            document.getElementById("labelWhatIfRunTimeDiff").innerText="()";
+            document.getElementById("labelWhatIfRunTimeDiff").innerText="-";
             document.getElementById("labelWhatIfDecoTime").innerText="-";
-            document.getElementById("labelWhatIfDecoTimeDiff").innerText="()";
+            document.getElementById("labelWhatIfDecoTimeDiff").innerText="-";
             // Any input change invalidates whatever's on screen (already hidden
             // above) - bring the inputs panel back if Calculate had collapsed it.
             if (typeof window.dhDecoInputsSetOpen === 'function') window.dhDecoInputsSetOpen(true);
@@ -2035,21 +2192,21 @@
                     {
                         label: 'Oxygen',
                         data: [18], // Data points for this dataset
-                        backgroundColor: 'rgb(76, 175, 80, 1.0)', // Bar color
+                        backgroundColor: '#2e7d4f', // Bar color
                         borderRadius: 0, // Rounded corners
                         barPercentage: 1 // Adjust bar width (smaller bars)
                     },
                     {
                         label: 'Helium',
                         data: [45], // Data points for this dataset
-                        backgroundColor: 'rgb(26, 115, 232, 1.0)', // Bar color
+                        backgroundColor: '#0e7c9e', // Bar color
                         borderRadius: 0, // Rounded corners
                         barPercentage: 1 // Adjust bar width (smaller bars)
                     },
                     {
                         label: 'Nitrogen',
                         data: [37], // Data points for this dataset
-                        backgroundColor: '#7b809a', // Bar color
+                        backgroundColor: '#5a6b78', // Bar color
                         borderRadius: 0, // Rounded corners
                         barPercentage: 1 // Adjust bar width (smaller bars)
                     }
@@ -2057,6 +2214,15 @@
             },
             options: {
                 responsive: true, // Makes the chart responsive
+                // Without this, Chart.js ignores the canvas's own CSS height
+                // and instead derives it from the container's width divided
+                // by a default aspect ratio (~2:1) - on this ~210px-wide
+                // tank column that works out to roughly half the height we
+                // actually set, which is why the gas-color bar never reached
+                // the top of the tank's transparent cutout (Pablo,
+                // 2026-09-17: "make the bar chart taller to cover all the
+                // tank mask").
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         display: false, // Hide legend
@@ -2073,11 +2239,22 @@
                     }
                 },
                 layout: {
+                    // Measured directly from the mask PNG's alpha channel:
+                    // the transparent "window" cut into the tank body starts
+                    // at y=58/300 (double), 57/300 (single) of the source
+                    // image. Scaled to this 156px-tall canvas (matching the
+                    // now-fixed 156px parent, see maintainAspectRatio note
+                    // above), that's ~29px/28px down from the canvas top -
+                    // top: 28 sits just inside that so the gas-color fill
+                    // reaches the mask's northmost transparent point without
+                    // gap (Pablo, 2026-09-17: "find the northest point in
+                    // each mask that is transparent - that's the limit to
+                    // where we want the bar chart to render up to").
                     padding: {
-                        left: 20,
-                        right: 20,
-                        top: 20,
-                        bottom: 4
+                        left: 14,
+                        right: 14,
+                        top: 28,
+                        bottom: 3
                     }
                 }
             },
@@ -2091,18 +2268,18 @@
                             meta.data.forEach((bar, index) => {
                                 const data = dataset.data[index];
                                 if (data != 100 && data != 0) {
-                                    ctx.font = '12px Roboto';
+                                    ctx.font = '8px Roboto';
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x, bar.y + 10); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x, bar.y + 7); // Position label slightly above the bar
                                     
                                 } else if (data == 100) {
-                                    ctx.font = '12px Roboto';
+                                    ctx.font = '8px Roboto';
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x , bar.y + 70); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x , bar.y + 49); // Position label slightly above the bar
                                 }
                             });
                         });
@@ -2125,17 +2302,17 @@
                 {
                     label: 'Oxygen',
                     data: [oxygen],
-                    backgroundColor: 'rgb(76, 175, 80, 1.0)'
+                    backgroundColor: '#2e7d4f'
                 },
                 {
                     label: 'Helium',
                     data: [helium],
-                    backgroundColor: 'rgb(26, 115, 232, 1.0)'
+                    backgroundColor: '#0e7c9e'
                 },
                 {
                     label: 'Nitrogen',
                     data: [nitrogen],
-                    backgroundColor: '#7b809a'
+                    backgroundColor: '#5a6b78'
                 }
             ];
 
@@ -2160,21 +2337,21 @@
                     {
                         label: 'Oxygen',
                         data: [18], // Data points for this dataset
-                        backgroundColor: 'rgb(76, 175, 80, 1.0)', // Bar color
+                        backgroundColor: '#2e7d4f', // Bar color
                         borderRadius: 0, // Rounded corners
                         barPercentage: 1 // Adjust bar width (smaller bars)
                     },
                     {
                         label: 'Helium',
                         data: [45], // Data points for this dataset
-                        backgroundColor: 'rgb(26, 115, 232, 1.0)', // Bar color
+                        backgroundColor: '#0e7c9e', // Bar color
                         borderRadius: 0, // Rounded corners
                         barPercentage: 1 // Adjust bar width (smaller bars)
                     },
                     {
                         label: 'Nitrogen',
                         data: [37], // Data points for this dataset
-                        backgroundColor: '#7b809a', // Bar color
+                        backgroundColor: '#5a6b78', // Bar color
                         borderRadius: 0, // Rounded corners
                         barPercentage: 1 // Adjust bar width (smaller bars)
                     }
@@ -2182,6 +2359,15 @@
             },
             options: {
                 responsive: true, // Makes the chart responsive
+                // Without this, Chart.js ignores the canvas's own CSS height
+                // and instead derives it from the container's width divided
+                // by a default aspect ratio (~2:1) - on this ~210px-wide
+                // tank column that works out to roughly half the height we
+                // actually set, which is why the gas-color bar never reached
+                // the top of the tank's transparent cutout (Pablo,
+                // 2026-09-17: "make the bar chart taller to cover all the
+                // tank mask").
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         display: false, // Hide legend
@@ -2198,11 +2384,22 @@
                     }
                 },
                 layout: {
+                    // Measured directly from the mask PNG's alpha channel:
+                    // the transparent "window" cut into the tank body starts
+                    // at y=58/300 (double), 57/300 (single) of the source
+                    // image. Scaled to this 156px-tall canvas (matching the
+                    // now-fixed 156px parent, see maintainAspectRatio note
+                    // above), that's ~29px/28px down from the canvas top -
+                    // top: 28 sits just inside that so the gas-color fill
+                    // reaches the mask's northmost transparent point without
+                    // gap (Pablo, 2026-09-17: "find the northest point in
+                    // each mask that is transparent - that's the limit to
+                    // where we want the bar chart to render up to").
                     padding: {
-                        left: 20,
-                        right: 20,
-                        top: 20,
-                        bottom: 4
+                        left: 14,
+                        right: 14,
+                        top: 28,
+                        bottom: 3
                     }
                 }
             },
@@ -2216,18 +2413,18 @@
                             meta.data.forEach((bar, index) => {
                                 const data = dataset.data[index];
                                 if (data != 100 && data != 0) {
-                                    ctx.font = '12px Roboto';
+                                    ctx.font = '8px Roboto';
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x, bar.y + 10); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x, bar.y + 7); // Position label slightly above the bar
                                     
                                 } else if (data == 100) {
-                                    ctx.font = '12px Roboto';
+                                    ctx.font = '8px Roboto';
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x , bar.y + 70); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x , bar.y + 49); // Position label slightly above the bar
                                 }
                             });
                         });
@@ -2250,17 +2447,17 @@
                 {
                     label: 'Oxygen',
                     data: [oxygen],
-                    backgroundColor: 'rgb(76, 175, 80, 1.0)'
+                    backgroundColor: '#2e7d4f'
                 },
                 {
                     label: 'Helium',
                     data: [helium],
-                    backgroundColor: 'rgb(26, 115, 232, 1.0)'
+                    backgroundColor: '#0e7c9e'
                 },
                 {
                     label: 'Nitrogen',
                     data: [nitrogen],
-                    backgroundColor: '#7b809a'
+                    backgroundColor: '#5a6b78'
                 }
             ];
 
@@ -2285,21 +2482,21 @@
                     {
                         label: 'Oxygen',
                         data: [18], // Data points for this dataset
-                        backgroundColor: 'rgb(76, 175, 80, 1.0)', // Bar color
+                        backgroundColor: '#2e7d4f', // Bar color
                         borderRadius: 0, // Rounded corners
                         barPercentage: 1 // Adjust bar width (smaller bars)
                     },
                     {
                         label: 'Helium',
                         data: [45], // Data points for this dataset
-                        backgroundColor: 'rgb(26, 115, 232, 1.0)', // Bar color
+                        backgroundColor: '#0e7c9e', // Bar color
                         borderRadius: 0, // Rounded corners
                         barPercentage: 1 // Adjust bar width (smaller bars)
                     },
                     {
                         label: 'Nitrogen',
                         data: [37], // Data points for this dataset
-                        backgroundColor: '#7b809a', // Bar color
+                        backgroundColor: '#5a6b78', // Bar color
                         borderRadius: 0, // Rounded corners
                         barPercentage: 1 // Adjust bar width (smaller bars)
                     }
@@ -2307,6 +2504,15 @@
             },
             options: {
                 responsive: true, // Makes the chart responsive
+                // Without this, Chart.js ignores the canvas's own CSS height
+                // and instead derives it from the container's width divided
+                // by a default aspect ratio (~2:1) - on this ~210px-wide
+                // tank column that works out to roughly half the height we
+                // actually set, which is why the gas-color bar never reached
+                // the top of the tank's transparent cutout (Pablo,
+                // 2026-09-17: "make the bar chart taller to cover all the
+                // tank mask").
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         display: false, // Hide legend
@@ -2323,11 +2529,22 @@
                     }
                 },
                 layout: {
+                    // Measured directly from the mask PNG's alpha channel:
+                    // the transparent "window" cut into the tank body starts
+                    // at y=58/300 (double), 57/300 (single) of the source
+                    // image. Scaled to this 156px-tall canvas (matching the
+                    // now-fixed 156px parent, see maintainAspectRatio note
+                    // above), that's ~29px/28px down from the canvas top -
+                    // top: 28 sits just inside that so the gas-color fill
+                    // reaches the mask's northmost transparent point without
+                    // gap (Pablo, 2026-09-17: "find the northest point in
+                    // each mask that is transparent - that's the limit to
+                    // where we want the bar chart to render up to").
                     padding: {
-                        left: 20,
-                        right: 20,
-                        top: 20,
-                        bottom: 4
+                        left: 14,
+                        right: 14,
+                        top: 28,
+                        bottom: 3
                     }
                 }
             },
@@ -2341,18 +2558,18 @@
                             meta.data.forEach((bar, index) => {
                                 const data = dataset.data[index];
                                 if (data != 100 && data != 0) {
-                                    ctx.font = '12px Roboto';
+                                    ctx.font = '8px Roboto';
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x, bar.y + 10); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x, bar.y + 7); // Position label slightly above the bar
                                     
                                 } else if (data == 100) {
-                                    ctx.font = '12px Roboto';
+                                    ctx.font = '8px Roboto';
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x , bar.y + 70); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x , bar.y + 49); // Position label slightly above the bar
                                 }
                             });
                         });
@@ -2375,17 +2592,17 @@
                 {
                     label: 'Oxygen',
                     data: [oxygen],
-                    backgroundColor: 'rgb(76, 175, 80, 1.0)'
+                    backgroundColor: '#2e7d4f'
                 },
                 {
                     label: 'Helium',
                     data: [helium],
-                    backgroundColor: 'rgb(26, 115, 232, 1.0)'
+                    backgroundColor: '#0e7c9e'
                 },
                 {
                     label: 'Nitrogen',
                     data: [nitrogen],
-                    backgroundColor: '#7b809a'
+                    backgroundColor: '#5a6b78'
                 }
             ];
 
@@ -2410,21 +2627,21 @@
                     {
                         label: 'Oxygen',
                         data: [18], // Data points for this dataset
-                        backgroundColor: 'rgb(76, 175, 80, 1.0)', // Bar color
+                        backgroundColor: '#2e7d4f', // Bar color
                         borderRadius: 0, // Rounded corners
                         barPercentage: 1 // Adjust bar width (smaller bars)
                     },
                     {
                         label: 'Helium',
                         data: [45], // Data points for this dataset
-                        backgroundColor: 'rgb(26, 115, 232, 1.0)', // Bar color
+                        backgroundColor: '#0e7c9e', // Bar color
                         borderRadius: 0, // Rounded corners
                         barPercentage: 1 // Adjust bar width (smaller bars)
                     },
                     {
                         label: 'Nitrogen',
                         data: [37], // Data points for this dataset
-                        backgroundColor: '#7b809a', // Bar color
+                        backgroundColor: '#5a6b78', // Bar color
                         borderRadius: 0, // Rounded corners
                         barPercentage: 1 // Adjust bar width (smaller bars)
                     }
@@ -2432,6 +2649,15 @@
             },
             options: {
                 responsive: true, // Makes the chart responsive
+                // Without this, Chart.js ignores the canvas's own CSS height
+                // and instead derives it from the container's width divided
+                // by a default aspect ratio (~2:1) - on this ~210px-wide
+                // tank column that works out to roughly half the height we
+                // actually set, which is why the gas-color bar never reached
+                // the top of the tank's transparent cutout (Pablo,
+                // 2026-09-17: "make the bar chart taller to cover all the
+                // tank mask").
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         display: false, // Hide legend
@@ -2448,11 +2674,22 @@
                     }
                 },
                 layout: {
+                    // Measured directly from the mask PNG's alpha channel:
+                    // the transparent "window" cut into the tank body starts
+                    // at y=58/300 (double), 57/300 (single) of the source
+                    // image. Scaled to this 156px-tall canvas (matching the
+                    // now-fixed 156px parent, see maintainAspectRatio note
+                    // above), that's ~29px/28px down from the canvas top -
+                    // top: 28 sits just inside that so the gas-color fill
+                    // reaches the mask's northmost transparent point without
+                    // gap (Pablo, 2026-09-17: "find the northest point in
+                    // each mask that is transparent - that's the limit to
+                    // where we want the bar chart to render up to").
                     padding: {
-                        left: 20,
-                        right: 20,
-                        top: 20,
-                        bottom: 4
+                        left: 14,
+                        right: 14,
+                        top: 28,
+                        bottom: 3
                     }
                 }
             },
@@ -2466,18 +2703,18 @@
                             meta.data.forEach((bar, index) => {
                                 const data = dataset.data[index];
                                 if (data != 100 && data != 0) {
-                                    ctx.font = '12px Roboto';
+                                    ctx.font = '8px Roboto';
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x, bar.y + 10); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x, bar.y + 7); // Position label slightly above the bar
                                     
                                 } else if (data == 100) {
-                                    ctx.font = '12px Roboto';
+                                    ctx.font = '8px Roboto';
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
-                                    ctx.fillText(data + '%', bar.x , bar.y + 70); // Position label slightly above the bar
+                                    ctx.fillText(data + '%', bar.x , bar.y + 49); // Position label slightly above the bar
                                 }
                             });
                         });
@@ -2500,17 +2737,17 @@
                 {
                     label: 'Oxygen',
                     data: [oxygen],
-                    backgroundColor: 'rgb(76, 175, 80, 1.0)'
+                    backgroundColor: '#2e7d4f'
                 },
                 {
                     label: 'Helium',
                     data: [helium],
-                    backgroundColor: 'rgb(26, 115, 232, 1.0)'
+                    backgroundColor: '#0e7c9e'
                 },
                 {
                     label: 'Nitrogen',
                     data: [nitrogen],
-                    backgroundColor: '#7b809a'
+                    backgroundColor: '#5a6b78'
                 }
             ];
 
@@ -2546,14 +2783,20 @@
 
         surfaceTimeSlider.noUiSlider.on('update', function (values, handle) {
             var surfaceTimeSliderValue = values[handle];
-            labelSurfaceTime.textContent = parseFloat(surfaceTimeSliderValue).toFixed(1);
-            
+            labelSurfaceTime.value = parseFloat(surfaceTimeSliderValue).toFixed(1);
+
             // reset calculation area
             resetCalculationArea()
 
         });
 
         surfaceTimeSlider.setAttribute('disabled', true);
+
+        labelSurfaceTime.addEventListener('change', function () {
+            var typedSurface = parseFloat(labelSurfaceTime.value);
+            if (isNaN(typedSurface)) { labelSurfaceTime.value = parseFloat(surfaceTimeSlider.noUiSlider.get()).toFixed(1); return; }
+            surfaceTimeSlider.noUiSlider.set(typedSurface);
+        });
     </script>
 
     {{-- Scripts slider GFs --}}
@@ -2563,7 +2806,7 @@
 
 
         noUiSlider.create(GFLSlider, {
-            start: 40,
+            start: {{ $decoPrefs['gfLow'] ?? 40 }}, // diver's saved GF Low, if any (Pablo, 2026-09-18)
             connect: [true, false],
             range: {
                 'min': 10,
@@ -2582,10 +2825,16 @@
 
         GFLSlider.noUiSlider.on('update', function (values, handle) {
             var GFLSliderValue = values[handle];
-            labelGFL.textContent = parseInt(GFLSliderValue);
+            labelGFL.value = parseInt(GFLSliderValue);
 
             // reset calculation area
             resetCalculationArea()
+        });
+
+        labelGFL.addEventListener('change', function () {
+            var typedGFL = parseInt(labelGFL.value);
+            if (isNaN(typedGFL)) { labelGFL.value = Math.round(GFLSlider.noUiSlider.get()); return; }
+            GFLSlider.noUiSlider.set(typedGFL);
         });
 
         var GFHSlider = document.getElementById('GFHSlider');
@@ -2593,7 +2842,7 @@
 
 
         noUiSlider.create(GFHSlider, {
-            start: 75,
+            start: {{ $decoPrefs['gfHigh'] ?? 75 }}, // diver's saved GF High, if any (Pablo, 2026-09-18)
             connect: [true, false],
             range: {
                 'min': 10,
@@ -2612,7 +2861,7 @@
 
         GFHSlider.noUiSlider.on('update', function (values, handle) {
             var GFHSliderValue = parseInt(values[handle]);
-            labelGFH.textContent = GFHSliderValue;
+            labelGFH.value = GFHSliderValue;
 
             // Update GFL max range dynamically
             GFLSlider.noUiSlider.updateOptions({
@@ -2630,6 +2879,12 @@
 
             // reset calculation area
             resetCalculationArea()
+        });
+
+        labelGFH.addEventListener('change', function () {
+            var typedGFH = parseInt(labelGFH.value);
+            if (isNaN(typedGFH)) { labelGFH.value = Math.round(GFHSlider.noUiSlider.get()); return; }
+            GFHSlider.noUiSlider.set(typedGFH);
         });
     </script>
 
@@ -2661,16 +2916,27 @@
         desSlider.noUiSlider.on('update', function (values, handle) {
             var desSliderValue = values[handle];
             if(modeImpOrMetric === "imp") {
-                labelDes.textContent = parseInt(desSliderValue);
-                labelDesMET.textContent = parseInt(desSliderValue * 0.3948);
+                labelDes.value = parseInt(desSliderValue);
+                labelDesMET.value = parseInt(desSliderValue * 0.3948);
             } else {
-                labelDes.textContent = parseInt(desSliderValue * 3.281);
-                labelDesMET.textContent = parseInt(desSliderValue);
+                labelDes.value = parseInt(desSliderValue * 3.281);
+                labelDesMET.value = parseInt(desSliderValue);
                 desSliderValue = parseInt(desSliderValue * 3.281);
             }
 
             // reset calculation area
             resetCalculationArea()
+        });
+
+        labelDes.addEventListener('change', function () {
+            var typedDes = parseInt(labelDes.value);
+            if (isNaN(typedDes)) { labelDes.value = Math.round(desSlider.noUiSlider.get()); return; }
+            desSlider.noUiSlider.set(modeImpOrMetric === "imp" ? typedDes : typedDes / 3.281);
+        });
+        labelDesMET.addEventListener('change', function () {
+            var typedDesMET = parseInt(labelDesMET.value);
+            if (isNaN(typedDesMET)) { labelDesMET.value = Math.round(desSlider.noUiSlider.get()); return; }
+            desSlider.noUiSlider.set(modeImpOrMetric === "imp" ? typedDesMET / 0.3948 : typedDesMET);
         });
 
         var ascSlider = document.getElementById('ascSlider');
@@ -2695,69 +2961,420 @@
         ascSlider.noUiSlider.on('update', function (values, handle) {
             var ascSliderValue = values[handle];
             if(modeImpOrMetric === "imp") {
-                labelAsc.textContent = parseInt(ascSliderValue);
-                labelAscMET.textContent = parseInt(ascSliderValue * 0.3948);
+                labelAsc.value = parseInt(ascSliderValue);
+                labelAscMET.value = parseInt(ascSliderValue * 0.3948);
             } else {
-                labelAsc.textContent = parseInt(ascSliderValue * 3.281);
-                labelAscMET.textContent = parseInt(ascSliderValue);
+                labelAsc.value = parseInt(ascSliderValue * 3.281);
+                labelAscMET.value = parseInt(ascSliderValue);
                 ascSliderValue = parseInt(ascSliderValue * 3.281);
             }
 
             // reset calculation area
             resetCalculationArea()
         });
+
+        labelAsc.addEventListener('change', function () {
+            var typedAsc = parseInt(labelAsc.value);
+            if (isNaN(typedAsc)) { labelAsc.value = Math.round(ascSlider.noUiSlider.get()); return; }
+            ascSlider.noUiSlider.set(modeImpOrMetric === "imp" ? typedAsc : typedAsc / 3.281);
+        });
+        labelAscMET.addEventListener('change', function () {
+            var typedAscMET = parseInt(labelAscMET.value);
+            if (isNaN(typedAscMET)) { labelAscMET.value = Math.round(ascSlider.noUiSlider.get()); return; }
+            ascSlider.noUiSlider.set(modeImpOrMetric === "imp" ? typedAscMET / 0.3948 : typedAscMET);
+        });
     </script>
 
-    {{-- Scripts slider setPoint --}}
+
+
+    {{-- Gas tabs: bottom gas / diluent + up to 4 deco/bailout gases, one shown
+         at a time so the tank graphics and sliders get the full width instead
+         of being squeezed into a 1/4-width card (Pablo, 2026-09-16: "we can
+         do horizontally collapsable tabs...show them one at a time"). Deco
+         slots 2-4 stay hidden - both their tab and panel - until "+ Add gas"
+         reveals the next one; deleting a gas hides it again and frees the
+         slot. Slot 1 doubles as CCR's mandatory Bailout gas: showClosedCircuit
+         forces it visible and hides its own delete button so the diver can't
+         leave a CCR plan with zero bailout gas (not a rule for Open Circuit,
+         which can dive on backgas alone). --}}
     <script>
-        var setpointSlider = document.getElementById('setpointSlider');
-        var labelSetpoint = document.getElementById('labelSetpoint');
+        var activeGasTab = null;
+        var isSettingDepthFromSite = false;
 
+        function dhNextGasSlot() {
+            for (var i = 1; i <= 4; i++) {
+                if (document.getElementById('gasAccordionItemDeco' + i).hidden) return i;
+            }
+            return null;
+        }
 
-        noUiSlider.create(setpointSlider, {
-            start: 1.3,
-            connect: [true, false],
-            range: {
-                'min': 0.5,
-                'max': 1.6
-            },
-            step: 0.05,
-            
+        function dhUpdateAddGasButtonVisibility() {
+            document.getElementById('gasTabBtnAdd').hidden = (dhNextGasSlot() === null);
+        }
 
-        });
+        // Switching Open/Closed Circuit is a different dive plan, not a
+        // toggle on top of the same one - any deco/bailout gases the diver
+        // had added under the old mode shouldn't silently carry over into
+        // the new one (Pablo, 2026-09-16: "reset all the form including
+        // gases that he may have had there"). Slot 1 is re-added right after
+        // this by showOpenCircuit/showClosedCircuit themselves (OC: hidden
+        // again; CC: forced back on as the mandatory Bailout).
+        function dhResetGasSlots() {
+            for (var i = 1; i <= 4; i++) {
+                document.getElementById('gasAccordionItemDeco' + i).hidden = true;
+                window['decoGas' + i + 'O2Slider'].noUiSlider.reset();
+                window['decoGas' + i + 'HeSlider'].noUiSlider.reset();
+                window['decoGas' + i + 'SwitchSlider'].noUiSlider.reset();
+            }
+            // Every gas card starts collapsed, including Bottom gas/Diluent
+            // (Pablo, 2026-09-16: "by default...show all the gases cards
+            // collapsed").
+            dhShowGasTab(null);
+            dhUpdateAddGasButtonVisibility();
+        }
 
-        // Hide the tick mark labels
-        var setpointSliderTicks = setpointSlider.querySelectorAll('.noUi-value-sub');
-        setpointSliderTicks.forEach(function (setpointSlider) {
-            setpointSlider.style.display = 'none';
-        });
-
-        setpointSlider.noUiSlider.on('update', function (values, handle) {
-            var setpointSliderValue = values[handle];
-            labelSetpoint.textContent = parseFloat(setpointSliderValue).toFixed(2);
-
-            if (setpointSliderValue > 1.5) {
-                labelSetpoint.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
-                labelSetpoint.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
-            } else if (setpointSliderValue > 1.4) {
-                labelSetpoint.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
-                labelSetpoint.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
-            } else {
-                labelSetpoint.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
-                labelSetpoint.classList.add("text-info", "right-label-normal"); // Add "text-info" class
-            } 
-
-            // update dil PPO2 slider
-            var O2At12 = 1.2 / (depth / 33 +1) * 100;
-            var O2AtSetpoint = (parseFloat(setpointSliderValue) - 0.1) / (depth / 33 +1) * 100;
-            var O2SliderMaxValue = Math.min(O2At12, O2AtSetpoint)
-            bottomGasO2Slider.noUiSlider.updateOptions({
-                range: {
-                    'min': 5,    // Keep the minimum value as is
-                    'max': O2SliderMaxValue   // Update the maximum value to 120
-                }
+        function dhShowGasTab(tab) {
+            activeGasTab = tab;
+            document.querySelectorAll('#gas-accordion .dh-gas-accordion-head[data-gas-tab]').forEach(function (btn) {
+                btn.classList.toggle('is-active', btn.getAttribute('data-gas-tab') === tab);
             });
+            document.getElementById('gasPanelBottom').hidden = (tab !== 'bottom');
+            for (var i = 1; i <= 4; i++) {
+                document.getElementById('deco' + i).hidden = (tab !== ('deco' + i));
+            }
 
+            // Chart.js measures its canvas at creation time - a chart created
+            // while its tab panel was still hidden gets a 0x0 layout and never
+            // fixes itself on its own. Resizing right after the panel becomes
+            // visible (now that the container has a real size) is what makes
+            // the tank-content bar chart actually draw (Pablo, 2026-09-16:
+            // "the bottom gas graph is showing fine, but all others are not").
+            var chartsByTab = { deco1: decoGas1stackedBarChart, deco2: decoGas2stackedBarChart, deco3: decoGas3stackedBarChart, deco4: decoGas4stackedBarChart };
+            var chart = chartsByTab[tab];
+            if (chart) {
+                requestAnimationFrame(function () {
+                    chart.resize();
+                    chart.update();
+                });
+            }
+        }
+
+        // Updates the live O2/He mix shown in a gas's tab on every slider
+        // tick (including mid-drag). The "Deco N"/"Bailout" prefix is NOT
+        // recomputed here - it's read from data-gas-prefix, last written by
+        // dhReorderGasAccordion() - so dragging one slider can't make its
+        // own or any other card's prefix flicker between its raw slot
+        // number and its sorted display position (Pablo, 2026-09-17: "wait
+        // until the user releases the slider...avoid too much movement").
+        // Falls back to the slot number only before any reorder has ever
+        // run for this slot (e.g. the immediate 'update' fire at page load).
+        function dhUpdateGasTabLabel(n, o2, he) {
+            var btn = document.getElementById('gasTabBtnDeco' + n);
+            var title = btn.querySelector('.dh-gas-accordion-head-title');
+            var prefix = btn.dataset.gasPrefix || ((n === 1 && modeOCOrCC === 'CC') ? 'Bailout' : ('Deco ' + n));
+            var mix = he > 0 ? (o2 + '% O₂ / ' + he + '% He') : (o2 + '% O₂');
+            title.textContent = prefix + ' (' + mix + ')';
+        }
+
+        // Orders the visible deco/bailout cards by O2 content, low to high
+        // (Pablo, 2026-09-17: "order and name the deco gases in order from
+        // more less O2 content to more O2 content"). Bottom gas/Diluent is
+        // never touched - its item never moves. In CC, slot 1 (Bailout) is
+        // mandatory and pinned right after Diluent - it's never part of the
+        // ascending-O2 group ("Diluent shows first in CC and then bailout.
+        // Then all others with the sort"). Everything else visible gets
+        // physically reordered in the DOM and relabeled "Deco 1/2/3..." by
+        // its DISPLAY position, not its internal slot number (1-4), which
+        // stays fixed so the sliders/inputs it's wired to don't change.
+        //
+        // Only called once a slider value is actually committed (its 'set'
+        // event - see the listeners registered right after the deco gas 4
+        // script block), never on every drag tick, so cards don't jump
+        // around while the diver is still moving a handle.
+        function dhReorderGasAccordion() {
+            var container = document.getElementById('gas-accordion');
+            var addBtn = document.getElementById('gasTabBtnAdd');
+            if (!container || !addBtn) return;
+
+            var pinnedBailout = (modeOCOrCC === 'CC') ? 1 : null;
+            if (pinnedBailout) {
+                var bO2 = parseInt(document.getElementById('labelDecoGas1O2').value, 10);
+                var bHe = parseInt(document.getElementById('labelDecoGas1He').value, 10);
+                var bBtn = document.getElementById('gasTabBtnDeco1');
+                var bMix = bHe > 0 ? (bO2 + '% O₂ / ' + bHe + '% He') : (bO2 + '% O₂');
+                bBtn.dataset.gasPrefix = 'Bailout';
+                bBtn.querySelector('.dh-gas-accordion-head-title').textContent = 'Bailout (' + bMix + ')';
+            }
+
+            var sortable = [];
+            for (var i = 1; i <= 4; i++) {
+                if (i === pinnedBailout) continue;
+                var item = document.getElementById('gasAccordionItemDeco' + i);
+                if (!item.hidden) {
+                    sortable.push({ n: i, o2: parseInt(document.getElementById('labelDecoGas' + i + 'O2').value, 10), item: item });
+                }
+            }
+            sortable.sort(function (a, b) { return a.o2 - b.o2; });
+
+            var bottomItem = document.getElementById('gasPanelBottom').closest('.dh-gas-accordion-item');
+            var afterNode = pinnedBailout ? document.getElementById('gasAccordionItemDeco' + pinnedBailout) : bottomItem;
+            sortable.forEach(function (entry) {
+                afterNode.insertAdjacentElement('afterend', entry.item);
+                afterNode = entry.item;
+            });
+            container.appendChild(addBtn); // "+ Add gas" always stays last
+
+            sortable.forEach(function (entry, idx) {
+                var o2 = parseInt(document.getElementById('labelDecoGas' + entry.n + 'O2').value, 10);
+                var he = parseInt(document.getElementById('labelDecoGas' + entry.n + 'He').value, 10);
+                var mix = he > 0 ? (o2 + '% O₂ / ' + he + '% He') : (o2 + '% O₂');
+                var entryBtn = document.getElementById('gasTabBtnDeco' + entry.n);
+                var prefix = 'Deco ' + (idx + 1);
+                entryBtn.dataset.gasPrefix = prefix;
+                entryBtn.querySelector('.dh-gas-accordion-head-title').textContent = prefix + ' (' + mix + ')';
+            });
+        }
+
+        function dhUpdateBottomGasTabLabel() {
+            var btn = document.getElementById('gasTabBtnBottom');
+            var title = btn.querySelector('.dh-gas-accordion-head-title');
+            var o2 = parseInt(labelBottomGasO2.value);
+            var he = parseInt(labelBottomGasHe.value);
+            var prefix = modeOCOrCC === 'CC' ? 'Diluent' : 'Bottom gas';
+            var mix = he > 0 ? (o2 + '% O₂ / ' + he + '% He') : (o2 + '% O₂');
+            title.textContent = prefix + ' (' + mix + ')';
+        }
+
+        // Nitrox mixes (He = 0) show one plain, fully-rounded O2 pill instead
+        // of a split pill with an empty/zero He half (Pablo, 2026-09-16).
+        function dhUpdateSplitPillSolo(hePillId) {
+            var hePill = document.getElementById(hePillId);
+            var solo = parseInt(hePill.textContent, 10) === 0;
+            hePill.hidden = solo;
+            hePill.parentElement.classList.toggle('is-solo', solo);
+        }
+
+        document.getElementById('gasTabBtnAdd').addEventListener('click', function () {
+            var n = dhNextGasSlot();
+            if (n === null) return;
+            window['showDecoGas' + n]();
+        });
+
+        // Standard gas presets for each deco/bailout/diluent card (Pablo,
+        // 2026-09-16, refined 2026-09-17). Picking one drives both sliders
+        // at once; the reverse direction - highlighting a preset when the
+        // current O2/He happens to match it, and clearing all of them the
+        // moment it doesn't - runs from each gas's own O2/He slider update
+        // handler via dhUpdateGasPreset.
+        //
+        // Slot 1 has TWO preset rows sharing one entry here - #gasPreset1
+        // (Deco 1, shown in OC) and #gasPresetBailout (shown in CC) both
+        // drive decoGas1's own sliders, since Bailout IS slot 1's gas, just
+        // a different menu for a different context (Pablo, 2026-09-17: "for
+        // decos: 32%, 50%, 80%...for bailout: Air, 32%, 21/35, 18/45").
+        // "bottom" is the Diluent-only row on the Bottom gas/Diluent card,
+        // which uses bottomGasO2Slider/HeSlider instead of the decoGasN
+        // naming the other slots use.
+        var dhGasPresetSlots = {
+            bottom: { o2Id: 'labelBottomGasO2', heId: 'labelBottomGasHe', o2SliderVar: 'bottomGasO2Slider', heSliderVar: 'bottomGasHeSlider', rowIds: ['gasPresetDiluent'] },
+            1: { o2Id: 'labelDecoGas1O2', heId: 'labelDecoGas1He', o2SliderVar: 'decoGas1O2Slider', heSliderVar: 'decoGas1HeSlider', rowIds: ['gasPreset1', 'gasPresetBailout'] },
+            2: { o2Id: 'labelDecoGas2O2', heId: 'labelDecoGas2He', o2SliderVar: 'decoGas2O2Slider', heSliderVar: 'decoGas2HeSlider', rowIds: ['gasPreset2'] },
+            3: { o2Id: 'labelDecoGas3O2', heId: 'labelDecoGas3He', o2SliderVar: 'decoGas3O2Slider', heSliderVar: 'decoGas3HeSlider', rowIds: ['gasPreset3'] },
+            4: { o2Id: 'labelDecoGas4O2', heId: 'labelDecoGas4He', o2SliderVar: 'decoGas4O2Slider', heSliderVar: 'decoGas4HeSlider', rowIds: ['gasPreset4'] },
+        };
+
+        document.querySelectorAll('.dh-gas-preset-row').forEach(function (row) {
+            var cfg = dhGasPresetSlots[row.dataset.slot];
+            if (!cfg) return;
+            row.querySelectorAll('.dh-channel-chip').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var o2 = parseInt(btn.getAttribute('data-o2'), 10);
+                    var he = parseInt(btn.getAttribute('data-he'), 10);
+                    window[cfg.o2SliderVar].noUiSlider.set(o2);
+                    window[cfg.heSliderVar].noUiSlider.set(he);
+                });
+            });
+        });
+
+        function dhUpdateGasPreset(slot) {
+            var cfg = dhGasPresetSlots[slot];
+            if (!cfg) return;
+            var o2 = parseInt(document.getElementById(cfg.o2Id).value, 10);
+            var he = parseInt(document.getElementById(cfg.heId).value, 10);
+            cfg.rowIds.forEach(function (rowId) {
+                var row = document.getElementById(rowId);
+                if (!row) return;
+                row.querySelectorAll('.dh-channel-chip').forEach(function (btn) {
+                    var matches = parseInt(btn.getAttribute('data-o2'), 10) === o2 && parseInt(btn.getAttribute('data-he'), 10) === he;
+                    btn.classList.toggle('is-active', matches);
+                });
+            });
+        }
+
+        // "My Gases" - up to 10 custom gas mixes a registered diver can
+        // save from any gas card and reuse on any other (Pablo, 2026-09-18:
+        // "add in all gas cards another pill at the top...My Gases" /
+        // "add a small save icon where a modal will show up and confirm").
+        // savedGasesData starts from what the controller already loaded for
+        // this diver; every save/delete keeps it (and the modal list) in
+        // sync without a full page reload.
+        var savedGasesData = @json($savedGases ?? []);
+        var dhMyGasesTargetSlot = null;
+        var dhSaveGasTargetSlot = null;
+        var modalMyGasesEl = document.getElementById('modalMyGases');
+        var modalSaveGasEl = document.getElementById('modalSaveGas');
+        var modalMyGases = modalMyGasesEl ? new bootstrap.Modal(modalMyGasesEl) : null;
+        var modalSaveGas = modalSaveGasEl ? new bootstrap.Modal(modalSaveGasEl) : null;
+
+        function dhFormatGasMix(o2, he) {
+            return he > 0 ? (o2 + '% O₂ / ' + he + '% He') : (o2 + '% O₂');
+        }
+
+        // Flashes an icon button green/red for ~1.5s after a save attempt,
+        // then puts its original glyph back - a lightweight inline
+        // confirmation instead of pulling in a toast library for this one
+        // page (Pablo: no toast helper already exists here to reuse).
+        function dhFlashIconButton(btn, ok) {
+            var icon = btn.querySelector('.material-icons-round');
+            var originalGlyph = icon.textContent;
+            btn.classList.add(ok ? 'is-success' : 'is-error');
+            icon.textContent = ok ? 'check' : 'error_outline';
+            setTimeout(function () {
+                btn.classList.remove('is-success', 'is-error');
+                icon.textContent = originalGlyph;
+            }, 1500);
+        }
+
+        function dhRenderMyGasesList() {
+            var list = document.getElementById('modalMyGasesList');
+            var empty = document.getElementById('modalMyGasesEmpty');
+            if (!list) return;
+            list.innerHTML = '';
+            empty.hidden = savedGasesData.length > 0;
+            savedGasesData.forEach(function (gas) {
+                var row = document.createElement('div');
+                row.className = 'dh-mygases-row';
+
+                var pick = document.createElement('button');
+                pick.type = 'button';
+                pick.className = 'dh-mygases-pick';
+                var pill = document.createElement('span');
+                pill.className = 'dh-gas-result-pill is-compact';
+                pill.textContent = dhFormatGasMix(gas.o2, gas.he);
+                pick.appendChild(pill);
+                pick.addEventListener('click', function () {
+                    var cfg = dhGasPresetSlots[dhMyGasesTargetSlot];
+                    if (cfg) {
+                        window[cfg.o2SliderVar].noUiSlider.set(gas.o2);
+                        window[cfg.heSliderVar].noUiSlider.set(gas.he);
+                    }
+                    modalMyGases.hide();
+                });
+
+                var del = document.createElement('button');
+                del.type = 'button';
+                del.className = 'dh-mygases-delete';
+                del.title = 'Delete this saved gas';
+                var delIcon = document.createElement('span');
+                delIcon.className = 'material-icons-round';
+                delIcon.setAttribute('aria-hidden', 'true');
+                delIcon.textContent = 'delete_outline';
+                del.appendChild(delIcon);
+                del.addEventListener('click', function () {
+                    if (!confirm('Delete this saved gas (' + dhFormatGasMix(gas.o2, gas.he) + ')?')) return;
+                    $.ajax({
+                        url: '{{ route("DecoPlanner.deleteGas", ["id" => "__ID__"]) }}'.replace('__ID__', gas.id),
+                        method: 'DELETE',
+                        success: function () {
+                            savedGasesData = savedGasesData.filter(function (g) { return g.id !== gas.id; });
+                            dhRenderMyGasesList();
+                        },
+                        error: function () {
+                            alert('Could not delete that gas - please try again.');
+                        },
+                    });
+                });
+
+                row.appendChild(pick);
+                row.appendChild(del);
+                list.appendChild(row);
+            });
+        }
+        dhRenderMyGasesList();
+
+        document.querySelectorAll('.dh-gas-mygases-chip').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                dhMyGasesTargetSlot = btn.getAttribute('data-mygases-slot');
+                if (modalMyGases) modalMyGases.show();
+            });
+        });
+
+        document.querySelectorAll('[data-save-slot]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                dhSaveGasTargetSlot = btn.getAttribute('data-save-slot');
+                var cfg = dhGasPresetSlots[dhSaveGasTargetSlot];
+                if (!cfg || !modalSaveGas) return;
+                var o2 = parseInt(document.getElementById(cfg.o2Id).value, 10);
+                var he = parseInt(document.getElementById(cfg.heId).value, 10);
+                document.getElementById('modalSaveGasMix').textContent = dhFormatGasMix(o2, he);
+                var errorEl = document.getElementById('modalSaveGasError');
+                errorEl.hidden = true;
+                errorEl.textContent = '';
+                modalSaveGas.show();
+            });
+        });
+
+        document.getElementById('modalSaveGasConfirm').addEventListener('click', function () {
+            var cfg = dhGasPresetSlots[dhSaveGasTargetSlot];
+            if (!cfg) return;
+            var o2 = parseInt(document.getElementById(cfg.o2Id).value, 10);
+            var he = parseInt(document.getElementById(cfg.heId).value, 10);
+            var errorEl = document.getElementById('modalSaveGasError');
+            errorEl.hidden = true;
+
+            $.ajax({
+                url: '{{ route("DecoPlanner.saveGas") }}',
+                method: 'POST',
+                data: { o2: o2, he: he },
+                success: function (gas) {
+                    savedGasesData.push(gas);
+                    dhRenderMyGasesList();
+                    modalSaveGas.hide();
+                },
+                error: function (xhr) {
+                    errorEl.textContent = (xhr.responseJSON && xhr.responseJSON.message) || 'Could not save that gas - please try again.';
+                    errorEl.hidden = false;
+                },
+            });
+        });
+
+        var saveDecoPrefsBtn = document.getElementById('saveDecoPrefsBtn');
+        if (saveDecoPrefsBtn) {
+            saveDecoPrefsBtn.addEventListener('click', function () {
+                $.ajax({
+                    url: '{{ route("DecoPlanner.savePreferences") }}',
+                    method: 'POST',
+                    data: {
+                        gfLow: parseInt(labelGFL.value, 10),
+                        gfHigh: parseInt(labelGFH.value, 10),
+                        setpoint: parseFloat(labelSetpoint.value),
+                    },
+                    success: function () { dhFlashIconButton(saveDecoPrefsBtn, true); },
+                    error: function () { dhFlashIconButton(saveDecoPrefsBtn, false); },
+                });
+            });
+        }
+
+        document.querySelectorAll('#gas-accordion .dh-gas-accordion-head[data-gas-tab]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var tab = this.getAttribute('data-gas-tab');
+                // Clicking the already-open gas collapses it - it does NOT
+                // fall back to opening Bottom gas/Diluent (Pablo, 2026-09-16:
+                // "if I collapse bailout it opens diluent in CC" - each gas
+                // needs to be independently collapsible, including down to
+                // none open at all).
+                dhShowGasTab(activeGasTab === tab ? null : tab);
+            });
         });
     </script>
 
@@ -2808,27 +3425,28 @@
 
         bottomGasO2Slider.noUiSlider.on('update', function (values, handle) {
             var bottomGasO2SliderValue = values[handle];
-            labelBottomGasO2.textContent = parseInt(bottomGasO2SliderValue);
+            labelBottomGasO2.value = parseInt(bottomGasO2SliderValue);
+            document.getElementById('bottomGasSplitO2').textContent = labelBottomGasO2.value;
 
-            depth = parseInt(labelDepth.textContent);
+            depth = parseInt(labelDepth.value);
 
-            var bottomGasPPO2 = parseFloat((depth / 33 +1) * labelBottomGasO2.textContent / 100);
-            labelBottomGasPPO2.textContent = ((depth / 33 +1) * labelBottomGasO2.textContent / 100).toFixed(1);
+            var bottomGasPPO2 = parseFloat((depth / 33 +1) * labelBottomGasO2.value / 100);
+            labelBottomGasPPO2.textContent = ((depth / 33 +1) * labelBottomGasO2.value / 100).toFixed(1);
 
             if (bottomGasPPO2 > 1.6 || bottomGasPPO2 < 0.16) {
-                labelBottomGasPPO2.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
-                labelBottomGasPPO2.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+                labelBottomGasPPO2.classList.remove("is-warn");
+                labelBottomGasPPO2.classList.add("is-danger");
             } else if (bottomGasPPO2 > 1.41 || bottomGasPPO2 < 0.2) {
-                labelBottomGasPPO2.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
-                labelBottomGasPPO2.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+                labelBottomGasPPO2.classList.remove("is-danger");
+                labelBottomGasPPO2.classList.add("is-warn");
             } else {
-                labelBottomGasPPO2.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
-                labelBottomGasPPO2.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+                labelBottomGasPPO2.classList.remove("is-warn", "is-danger");
+                labelBottomGasPPO2.classList.add("is-safe");
             }
         
-            updateEND(parseInt(labelBottomGasO2.textContent), parseInt(labelBottomGasHe.textContent), depth);
+            updateEND(parseInt(labelBottomGasO2.value), parseInt(labelBottomGasHe.value), depth);
 
-            updateGasDensity(parseInt(labelBottomGasO2.textContent), parseInt(labelBottomGasHe.textContent), depth, labelBottomGasDensity);
+            updateGasDensity(parseInt(labelBottomGasO2.value), parseInt(labelBottomGasHe.value), depth, labelBottomGasDensity);
 
             // Update MAX on He slider
             bottomGasHeSlider.noUiSlider.updateOptions({
@@ -2838,16 +3456,22 @@
                 }
             });
 
-            var oxygen = parseInt(labelBottomGasO2.textContent);
-            var helium = parseInt(labelBottomGasHe.textContent);
+            var oxygen = parseInt(labelBottomGasO2.value);
+            var helium = parseInt(labelBottomGasHe.value);
             updateBottomGasChart(oxygen, helium);
+            dhUpdateBottomGasTabLabel();
+            dhUpdateGasPreset('bottom');
 
             // reset calculation area
             resetCalculationArea()
 
         });
 
-        
+        labelBottomGasO2.addEventListener('change', function () {
+            var typedO2 = parseInt(labelBottomGasO2.value);
+            if (isNaN(typedO2)) { labelBottomGasO2.value = Math.round(bottomGasO2Slider.noUiSlider.get()); return; }
+            bottomGasO2Slider.noUiSlider.set(typedO2);
+        });
 
 
         
@@ -2860,108 +3484,93 @@
 
         bottomGasHeSlider.noUiSlider.on('update', function (values, handle) {
             var bottomGasHeSliderValue = values[handle];
-            depth = parseInt(labelDepth.textContent);
-            labelBottomGasHe.textContent = parseInt(bottomGasHeSliderValue);
+            depth = parseInt(labelDepth.value);
+            labelBottomGasHe.value = parseInt(bottomGasHeSliderValue);
+            document.getElementById('bottomGasSplitHe').textContent = labelBottomGasHe.value;
+            dhUpdateSplitPillSolo('bottomGasSplitHe');
 
-            var oxygen = parseInt(labelBottomGasO2.textContent);
-            var helium = parseInt(labelBottomGasHe.textContent);
+            var oxygen = parseInt(labelBottomGasO2.value);
+            var helium = parseInt(labelBottomGasHe.value);
             updateBottomGasChart(oxygen, helium);
 
-            updateEND(parseInt(labelBottomGasO2.textContent), parseInt(labelBottomGasHe.textContent), depth);
+            updateEND(parseInt(labelBottomGasO2.value), parseInt(labelBottomGasHe.value), depth);
 
-            updateGasDensity(parseInt(labelBottomGasO2.textContent), parseInt(labelBottomGasHe.textContent), depth, labelBottomGasDensity);
+            updateGasDensity(parseInt(labelBottomGasO2.value), parseInt(labelBottomGasHe.value), depth, labelBottomGasDensity);
+            dhUpdateBottomGasTabLabel();
+            dhUpdateGasPreset('bottom');
 
             // reset calculation area
             resetCalculationArea()
         });
 
+        labelBottomGasHe.addEventListener('change', function () {
+            var typedHe = parseInt(labelBottomGasHe.value);
+            if (isNaN(typedHe)) { labelBottomGasHe.value = Math.round(bottomGasHeSlider.noUiSlider.get()); return; }
+            bottomGasHeSlider.noUiSlider.set(typedHe);
+        });
+
     </script>
 
-     {{-- Slider depth --}}
-     <script>
-        var depthSlider = document.getElementById('depthSlider');
-        var labelDepth = document.getElementById('labelDepth');
-        var labelDepthMET = document.getElementById('labelDepthMET');
-        var labelBailoutSwitch = document.getElementById("labelBailoutSwitch");
-        
+    {{-- Scripts slider setPoint --}}
+    <script>
+        var setpointSlider = document.getElementById('setpointSlider');
+        var labelSetpoint = document.getElementById('labelSetpoint');
 
-        //console.log("Current Site Max Depth:", currentSite.maxDepth);
-        let startDepth = (currentSite ? currentSite.maxDepth : 100 ) * FT2M;
-        //console.log("Slider Start Depth:", startDepth);
 
-        noUiSlider.create(depthSlider, {
-            start: startDepth,
+        noUiSlider.create(setpointSlider, {
+            start: {{ $decoPrefs['setpoint'] ?? 1.3 }}, // diver's saved setpoint, if any (Pablo, 2026-09-18)
             connect: [true, false],
             range: {
-                'min': 10 * FT2M,
-                'max': 450 * FT2M
+                'min': 0.5,
+                'max': 1.6
             },
-            step: 1,
+            step: 0.05,
             
 
         });
 
         // Hide the tick mark labels
-        var depthSliderTicks = depthSlider.querySelectorAll('.noUi-value-sub');
-        depthSliderTicks.forEach(function (depthSlider) {
-            depthSlider.style.display = 'none';
+        var setpointSliderTicks = setpointSlider.querySelectorAll('.noUi-value-sub');
+        setpointSliderTicks.forEach(function (setpointSlider) {
+            setpointSlider.style.display = 'none';
         });
 
-        depthSlider.noUiSlider.on('update', function (values, handle) {
-            var depthSliderValue = values[handle];
-            if(modeImpOrMetric == "imp") {
-                labelDepth.textContent = parseInt(depthSliderValue);
-                labelDepthMET.textContent = parseInt(depthSliderValue * 0.3948);
-                labelBailoutSwitch.textContent = parseInt(depthSliderValue);    // update bailout switching depth
-                depthSliderValue = parseInt(depthSliderValue);
+        setpointSlider.noUiSlider.on('update', function (values, handle) {
+            var setpointSliderValue = values[handle];
+            labelSetpoint.value = parseFloat(setpointSliderValue).toFixed(2);
+
+            if (setpointSliderValue > 1.5) {
+                labelSetpoint.classList.remove("is-safe", "is-warn");
+                labelSetpoint.classList.add("is-danger");
+            } else if (setpointSliderValue > 1.4) {
+                labelSetpoint.classList.remove("is-safe", "is-danger");
+                labelSetpoint.classList.add("is-warn");
             } else {
-                labelDepth.textContent = parseInt(depthSliderValue * 3.281);
-                labelDepthMET.textContent = parseInt(depthSliderValue);
-                labelBailoutSwitch.textContent = parseInt(depthSliderValue);    // update bailout switching depth
-                depthSliderValue = parseInt(depthSliderValue * 3.281);
+                labelSetpoint.classList.remove("is-warn", "is-danger");
+                labelSetpoint.classList.add("is-safe");
             }
 
-            
-            //bottomGasO2Slider.noUiSlider.set(bottomGasO2Slider.noUiSlider.get());
-            //bottomGasHeSlider.noUiSlider.set(bottomGasHeSlider.noUiSlider.get());
-            console.log("Setpoint: " + setPointOCOrCC);
-            bottomGasO2Slider.noUiSlider.set(Math.round((setPointOCOrCC / (depthSliderValue / 33 + 1) * 100)));
-            bottomGasHeSlider.noUiSlider.set(((1 - ((80 / 33) +1) / (depthSliderValue / 33 + 1)) * 100).toFixed(0));
+            // update dil PPO2 slider
+            var O2At12 = 1.2 / (depth / 33 +1) * 100;
+            var O2AtSetpoint = (parseFloat(setpointSliderValue) - 0.1) / (depth / 33 +1) * 100;
+            var O2SliderMaxValue = Math.min(O2At12, O2AtSetpoint)
+            bottomGasO2Slider.noUiSlider.updateOptions({
+                range: {
+                    'min': 5,    // Keep the minimum value as is
+                    'max': O2SliderMaxValue   // Update the maximum value to 120
+                }
+            });
 
-            if(modeOCOrCC == "CC") {
-                decoGas1O2Slider.noUiSlider.updateOptions({
-                    start: Math.min(100, 1.4 / (depth /33 +1) * 100),
-                    range: {
-                        'min': 5, //parseFloat(Math.max(5, (10 / 33 + 1) * Math.floor(decoGas1O2SliderValue / 100).toFixed(1))),    // Keep the minimum value as is
-                        'max': Math.min(100, 1.6 / (depth /33 +1) * 100),
-                    }
-                });
-                decoGas1HeSlider.noUiSlider.updateOptions({
-                    start: ((1 - ((80 / 33) +1) / (depthSliderValue / 33 + 1)) * 100).toFixed(0)
-                });
-
-            } else {
-                decoGas1O2Slider.noUiSlider.updateOptions({
-                    start: 50,
-                    range: {
-                        'min': 5, //parseFloat(Math.max(5, (10 / 33 + 1) * Math.floor(decoGas1O2SliderValue / 100).toFixed(1))),    // Keep the minimum value as is
-                        'max': 100, //Math.min(100, 1.6 / (depth /33 +1) * 100),
-                    }
-                });    
-                decoGas1HeSlider.noUiSlider.updateOptions({
-                    start: 0
-                });
-            }
-
-            // reset calculation area
-            resetCalculationArea()
         });
 
-        function useSiteDepth() {
-            
-            depthSlider.noUiSlider.set(startDepth);
-        }
+        labelSetpoint.addEventListener('change', function () {
+            var typedSetpoint = parseFloat(labelSetpoint.value);
+            if (isNaN(typedSetpoint)) { labelSetpoint.value = parseFloat(setpointSlider.noUiSlider.get()).toFixed(2); return; }
+            setpointSlider.noUiSlider.set(typedSetpoint);
+        });
     </script>
+
+
 
      {{-- Scripts slider time --}}
      <script>
@@ -2989,12 +3598,18 @@
 
         bottomTimeSlider.noUiSlider.on('update', function (values, handle) {
             var bottomTimeSliderValue = values[handle];
-            labelBottomTime.textContent = parseInt(bottomTimeSliderValue);
+            labelBottomTime.value = parseInt(bottomTimeSliderValue);
 
             // reset calculation area
             resetCalculationArea()
-            
 
+
+        });
+
+        labelBottomTime.addEventListener('change', function () {
+            var typedBottomTime = parseInt(labelBottomTime.value);
+            if (isNaN(typedBottomTime)) { labelBottomTime.value = Math.round(bottomTimeSlider.noUiSlider.get()); return; }
+            bottomTimeSlider.noUiSlider.set(typedBottomTime);
         });
     </script>
 
@@ -3054,7 +3669,8 @@
 
         decoGas1O2Slider.noUiSlider.on('update', function (values, handle) {
             var decoGas1O2SliderValue = values[handle];
-            labelDecoGas1O2.textContent = parseInt(decoGas1O2SliderValue);
+            labelDecoGas1O2.value = parseInt(decoGas1O2SliderValue);
+            document.getElementById('decoGas1SplitO2').textContent = labelDecoGas1O2.value;
 
             // Update MAX on He slider
             decoGas1HeSlider.noUiSlider.updateOptions({
@@ -3064,12 +3680,14 @@
                 }
             });
 
-            
-            
 
-            var oxygen = parseInt(labelDecoGas1O2.textContent);
-            var helium = parseInt(labelDecoGas1He.textContent);
+
+
+            var oxygen = parseInt(labelDecoGas1O2.value);
+            var helium = parseInt(labelDecoGas1He.value);
             updateDecoGas1Chart(oxygen, helium);
+            dhUpdateGasTabLabel(1, oxygen, helium);
+            dhUpdateGasPreset(1);
 
             // Update MAX and Min on Switch depth slider
             decoGas1SwitchSlider.noUiSlider.updateOptions({
@@ -3083,8 +3701,14 @@
             resetCalculationArea();
 
             // update the CC portion on the bailout
-            labelBailoutSwitchPPO2.textContent = ((depth / 33 +1) * parseInt(labelDecoGas1O2.textContent) /100).toFixed(2);
+            labelBailoutSwitchPPO2.textContent = ((depth / 33 +1) * parseInt(labelDecoGas1O2.value) /100).toFixed(2);
 
+        });
+
+        labelDecoGas1O2.addEventListener('change', function () {
+            var typedO2 = parseInt(labelDecoGas1O2.value);
+            if (isNaN(typedO2)) { labelDecoGas1O2.value = Math.round(decoGas1O2Slider.noUiSlider.get()); return; }
+            decoGas1O2Slider.noUiSlider.set(typedO2);
         });
 
         // Hide the tick mark labels
@@ -3095,18 +3719,22 @@
 
         decoGas1HeSlider.noUiSlider.on('update', function (values, handle) {
             var decoGas1HeSliderValue = values[handle];
-            labelDecoGas1He.textContent = parseInt(decoGas1HeSliderValue);
+            labelDecoGas1He.value = parseInt(decoGas1HeSliderValue);
+            document.getElementById('decoGas1SplitHe').textContent = labelDecoGas1He.value;
+            dhUpdateSplitPillSolo('decoGas1SplitHe');
 
-            var oxygen = parseInt(labelDecoGas1O2.textContent);
-            var helium = parseInt(labelDecoGas1He.textContent);
+            var oxygen = parseInt(labelDecoGas1O2.value);
+            var helium = parseInt(labelDecoGas1He.value);
             updateDecoGas1Chart(oxygen, helium);
+            dhUpdateGasTabLabel(1, oxygen, helium);
+            dhUpdateGasPreset(1);
 
             // reset calculation area
             resetCalculationArea()
 
             // change on CCvar ambientPressure = depth / 33 +1;
             var ambientPressure = (depth /33 +1);
-            var bottomGasPPHe = ambientPressure * parseInt(labelDecoGas1He.textContent) / 100;
+            var bottomGasPPHe = ambientPressure * parseInt(labelDecoGas1He.value) / 100;
             var bottomGasENDPressure = ambientPressure - bottomGasPPHe;
             bottomGasEND = (bottomGasENDPressure - 1 ) * 33;
 
@@ -3115,16 +3743,22 @@
 
 
             if (labelBailoutEND.textContent > 130) {
-                labelBailoutEND.classList.remove("text-info", "text-warning", "right-label-normal", "right-label-warning"); // Remove other classes
-                labelBailoutEND.classList.add("text-danger", "right-label-danger"); // Add "text-danger" class
+                labelBailoutEND.classList.remove("is-warn");
+                labelBailoutEND.classList.add("is-danger");
             } else if (labelBailoutEND.textContent > 100) {
-                labelBailoutEND.classList.remove("text-info", "text-danger", "right-label-normal", "right-label-danger"); // Remove other classes
-                labelBailoutEND.classList.add("text-warning", "right-label-warning"); // Add "text-warning" class
+                labelBailoutEND.classList.remove("is-danger");
+                labelBailoutEND.classList.add("is-warn");
             } else {
-                labelBailoutEND.classList.remove("text-warning", "text-danger", "right-label-warning", "right-label-danger"); // Remove other classes
-                labelBailoutEND.classList.add("text-info", "right-label-normal"); // Add "text-info" class
+                labelBailoutEND.classList.remove("is-warn", "is-danger");
+                labelBailoutEND.classList.add("is-safe");
             }
 
+        });
+
+        labelDecoGas1He.addEventListener('change', function () {
+            var typedHe = parseInt(labelDecoGas1He.value);
+            if (isNaN(typedHe)) { labelDecoGas1He.value = Math.round(decoGas1HeSlider.noUiSlider.get()); return; }
+            decoGas1HeSlider.noUiSlider.set(typedHe);
         });
 
         // Hide the tick mark labels
@@ -3135,11 +3769,9 @@
 
         decoGas1SwitchSlider.noUiSlider.on('update', function (values, handle) {
             var decoGas1SwitchSliderValue = values[handle];
-            labelDecoGas1SwitchPPO2.textContent = parseFloat(decoGas1SwitchSliderValue).toFixed(2);
+            labelDecoGas1SwitchPPO2.value = parseFloat(decoGas1SwitchSliderValue).toFixed(2);
 
-            var O2Content = labelDecoGas1O2.textContent / 100;
-            
-            labelDecoGas1Switch.textContent = (((decoGas1SwitchSliderValue / O2Content) - 1 ) * 33).toFixed(0);
+            var O2Content = labelDecoGas1O2.value / 100;
 
             // adjust the unit
             if(modeImpOrMetric === "imp")
@@ -3147,23 +3779,135 @@
             else
                 labelDecoGas1Switch.textContent = (((decoGas1SwitchSliderValue / O2Content) - 1 ) * 33 * 0.3048).toFixed(0);
 
-            
+
 
             // reset calculation area
             resetCalculationArea()
         });
-        
+
+        labelDecoGas1SwitchPPO2.addEventListener('change', function () {
+            var typedSwitchPPO2 = parseFloat(labelDecoGas1SwitchPPO2.value);
+            if (isNaN(typedSwitchPPO2)) { labelDecoGas1SwitchPPO2.value = parseFloat(decoGas1SwitchSlider.noUiSlider.get()).toFixed(2); return; }
+            decoGas1SwitchSlider.noUiSlider.set(typedSwitchPPO2);
+        });
+
         function showDecoGas1() {
-            document.getElementById("addGasIcon1").style.display = "none"; // Hide add gas icon
+            document.getElementById("gasAccordionItemDeco1").hidden = false;
+            dhShowGasTab('deco1');
+            dhUpdateAddGasButtonVisibility();
+            dhReorderGasAccordion();
             // reset calculation area
             resetCalculationArea()
         }
 
         function hideDecoGas1() {
-            document.getElementById("addGasIcon1").style.display = "flex"; // Hide add gas icon
+            document.getElementById("gasAccordionItemDeco1").hidden = true;
+            dhShowGasTab('bottom');
+            dhUpdateAddGasButtonVisibility();
+            dhReorderGasAccordion();
             // reset calculation area
             resetCalculationArea()
         }
+    </script>
+
+     {{-- Slider depth --}}
+     <script>
+        var depthSlider = document.getElementById('depthSlider');
+        var labelDepth = document.getElementById('labelDepth');
+        var labelDepthMET = document.getElementById('labelDepthMET');
+        var labelBailoutSwitch = document.getElementById("labelBailoutSwitch");
+        
+
+        //console.log("Current Site Max Depth:", currentSite.maxDepth);
+        let startDepth = (currentSite ? currentSite.maxDepth : 100 ) * FT2M;
+        //console.log("Slider Start Depth:", startDepth);
+
+        noUiSlider.create(depthSlider, {
+            start: startDepth,
+            connect: [true, false],
+            range: {
+                'min': 10 * FT2M,
+                'max': 450 * FT2M
+            },
+            step: 1,
+            
+
+        });
+
+        // Hide the tick mark labels
+        var depthSliderTicks = depthSlider.querySelectorAll('.noUi-value-sub');
+        depthSliderTicks.forEach(function (depthSlider) {
+            depthSlider.style.display = 'none';
+        });
+
+        depthSlider.noUiSlider.on('update', function (values, handle) {
+            var depthSliderValue = values[handle];
+            if (!isSettingDepthFromSite) {
+                document.getElementById('selectedSitePill').hidden = true;
+            }
+            if(modeImpOrMetric == "imp") {
+                labelDepth.value = parseInt(depthSliderValue);
+                labelDepthMET.value = parseInt(depthSliderValue * 0.3948);
+                labelBailoutSwitch.textContent = parseInt(depthSliderValue);    // update bailout switching depth
+                depthSliderValue = parseInt(depthSliderValue);
+            } else {
+                labelDepth.value = parseInt(depthSliderValue * 3.281);
+                labelDepthMET.value = parseInt(depthSliderValue);
+                labelBailoutSwitch.textContent = parseInt(depthSliderValue);    // update bailout switching depth
+                depthSliderValue = parseInt(depthSliderValue * 3.281);
+            }
+
+            
+            //bottomGasO2Slider.noUiSlider.set(bottomGasO2Slider.noUiSlider.get());
+            //bottomGasHeSlider.noUiSlider.set(bottomGasHeSlider.noUiSlider.get());
+            console.log("Setpoint: " + setPointOCOrCC);
+            bottomGasO2Slider.noUiSlider.set(Math.round((setPointOCOrCC / (depthSliderValue / 33 + 1) * 100)));
+            bottomGasHeSlider.noUiSlider.set(((1 - ((80 / 33) +1) / (depthSliderValue / 33 + 1)) * 100).toFixed(0));
+
+            if(modeOCOrCC == "CC") {
+                decoGas1O2Slider.noUiSlider.updateOptions({
+                    start: Math.min(100, 1.4 / (depth /33 +1) * 100),
+                    range: {
+                        'min': 5, //parseFloat(Math.max(5, (10 / 33 + 1) * Math.floor(decoGas1O2SliderValue / 100).toFixed(1))),    // Keep the minimum value as is
+                        'max': Math.min(100, 1.6 / (depth /33 +1) * 100),
+                    }
+                });
+                decoGas1HeSlider.noUiSlider.updateOptions({
+                    start: ((1 - ((80 / 33) +1) / (depthSliderValue / 33 + 1)) * 100).toFixed(0)
+                });
+
+            } else {
+                decoGas1O2Slider.noUiSlider.updateOptions({
+                    start: 50,
+                    range: {
+                        'min': 5, //parseFloat(Math.max(5, (10 / 33 + 1) * Math.floor(decoGas1O2SliderValue / 100).toFixed(1))),    // Keep the minimum value as is
+                        'max': 100, //Math.min(100, 1.6 / (depth /33 +1) * 100),
+                    }
+                });    
+                decoGas1HeSlider.noUiSlider.updateOptions({
+                    start: 0
+                });
+            }
+
+            // reset calculation area
+            resetCalculationArea()
+        });
+
+        function useSiteDepth() {
+
+            depthSlider.noUiSlider.set(startDepth);
+        }
+
+        labelDepth.addEventListener('change', function () {
+            var typedDepth = parseInt(labelDepth.value);
+            if (isNaN(typedDepth)) { labelDepth.value = Math.round(depthSlider.noUiSlider.get()); return; }
+            depthSlider.noUiSlider.set(modeImpOrMetric === "imp" ? typedDepth : typedDepth / 3.281);
+        });
+        labelDepthMET.addEventListener('change', function () {
+            var typedDepthMET = parseInt(labelDepthMET.value);
+            if (isNaN(typedDepthMET)) { labelDepthMET.value = Math.round(depthSlider.noUiSlider.get()); return; }
+            depthSlider.noUiSlider.set(modeImpOrMetric === "imp" ? typedDepthMET / 0.3948 : typedDepthMET);
+        });
     </script>
 
     {{-- Scripts slider Deco gas 2 O2, He and switch depth --}}
@@ -3221,7 +3965,8 @@
 
         decoGas2O2Slider.noUiSlider.on('update', function (values, handle) {
             var decoGas2O2SliderValue = values[handle];
-            labelDecoGas2O2.textContent = parseInt(decoGas2O2SliderValue);
+            labelDecoGas2O2.value = parseInt(decoGas2O2SliderValue);
+            document.getElementById('decoGas2SplitO2').textContent = labelDecoGas2O2.value;
 
             // Update MAX on He slider
             decoGas2HeSlider.noUiSlider.updateOptions({
@@ -3231,11 +3976,13 @@
                 }
             });
 
-            
 
-            var oxygen = parseInt(labelDecoGas2O2.textContent);
-            var helium = parseInt(labelDecoGas2He.textContent);
+
+            var oxygen = parseInt(labelDecoGas2O2.value);
+            var helium = parseInt(labelDecoGas2He.value);
             updateDecoGas2Chart(oxygen, helium);
+            dhUpdateGasTabLabel(2, oxygen, helium);
+            dhUpdateGasPreset(2);
 
             // Update MAX and Min on Switch depth slider
             decoGas2SwitchSlider.noUiSlider.updateOptions({
@@ -3249,6 +3996,12 @@
             resetCalculationArea()
         });
 
+        labelDecoGas2O2.addEventListener('change', function () {
+            var typedO2 = parseInt(labelDecoGas2O2.value);
+            if (isNaN(typedO2)) { labelDecoGas2O2.value = Math.round(decoGas2O2Slider.noUiSlider.get()); return; }
+            decoGas2O2Slider.noUiSlider.set(typedO2);
+        });
+
         // Hide the tick mark labels
         var decoGas2HeSliderTicks = decoGas2HeSlider.querySelectorAll('.noUi-value-sub');
         decoGas2HeSliderTicks.forEach(function (decoGas2HeSlider) {
@@ -3257,14 +4010,24 @@
 
         decoGas2HeSlider.noUiSlider.on('update', function (values, handle) {
             var decoGas2HeSliderValue = values[handle];
-            labelDecoGas2He.textContent = parseInt(decoGas2HeSliderValue);
+            labelDecoGas2He.value = parseInt(decoGas2HeSliderValue);
+            document.getElementById('decoGas2SplitHe').textContent = labelDecoGas2He.value;
+            dhUpdateSplitPillSolo('decoGas2SplitHe');
 
-            var oxygen = parseInt(labelDecoGas2O2.textContent);
-            var helium = parseInt(labelDecoGas2He.textContent);
+            var oxygen = parseInt(labelDecoGas2O2.value);
+            var helium = parseInt(labelDecoGas2He.value);
             updateDecoGas2Chart(oxygen, helium);
+            dhUpdateGasTabLabel(2, oxygen, helium);
+            dhUpdateGasPreset(2);
 
             // reset calculation area
             resetCalculationArea()
+        });
+
+        labelDecoGas2He.addEventListener('change', function () {
+            var typedHe = parseInt(labelDecoGas2He.value);
+            if (isNaN(typedHe)) { labelDecoGas2He.value = Math.round(decoGas2HeSlider.noUiSlider.get()); return; }
+            decoGas2HeSlider.noUiSlider.set(typedHe);
         });
 
         // Hide the tick mark labels
@@ -3275,11 +4038,11 @@
 
         decoGas2SwitchSlider.noUiSlider.on('update', function (values, handle) {
             var decoGas2SwitchSliderValue = values[handle];
-            labelDecoGas2SwitchPPO2.textContent = parseFloat(decoGas2SwitchSliderValue).toFixed(1);
+            labelDecoGas2SwitchPPO2.value = parseFloat(decoGas2SwitchSliderValue).toFixed(1);
 
-            var O2Content = labelDecoGas2O2.textContent / 100;
-            
-            
+            var O2Content = labelDecoGas2O2.value / 100;
+
+
 
             // adjust the unit
             if(modeImpOrMetric === "imp")
@@ -3290,15 +4053,27 @@
             // reset calculation area
             resetCalculationArea()
         });
-        
+
+        labelDecoGas2SwitchPPO2.addEventListener('change', function () {
+            var typedSwitchPPO2 = parseFloat(labelDecoGas2SwitchPPO2.value);
+            if (isNaN(typedSwitchPPO2)) { labelDecoGas2SwitchPPO2.value = parseFloat(decoGas2SwitchSlider.noUiSlider.get()).toFixed(1); return; }
+            decoGas2SwitchSlider.noUiSlider.set(typedSwitchPPO2);
+        });
+
         function showDecoGas2() {
-            document.getElementById("addGasIcon2").style.display = "none"; // Hide add gas icon
+            document.getElementById("gasAccordionItemDeco2").hidden = false;
+            dhShowGasTab('deco2');
+            dhUpdateAddGasButtonVisibility();
+            dhReorderGasAccordion();
             // reset calculation area
             resetCalculationArea()
         }
 
         function hideDecoGas2() {
-            document.getElementById("addGasIcon2").style.display = "flex"; // Hide add gas icon
+            document.getElementById("gasAccordionItemDeco2").hidden = true;
+            dhShowGasTab('bottom');
+            dhUpdateAddGasButtonVisibility();
+            dhReorderGasAccordion();
             // reset calculation area
             resetCalculationArea()
         }
@@ -3359,7 +4134,8 @@
 
         decoGas3O2Slider.noUiSlider.on('update', function (values, handle) {
             var decoGas3O2SliderValue = values[handle];
-            labelDecoGas3O2.textContent = parseInt(decoGas3O2SliderValue);
+            labelDecoGas3O2.value = parseInt(decoGas3O2SliderValue);
+            document.getElementById('decoGas3SplitO2').textContent = labelDecoGas3O2.value;
 
             // Update MAX on He slider
             decoGas3HeSlider.noUiSlider.updateOptions({
@@ -3369,11 +4145,13 @@
                 }
             });
 
-            
 
-            var oxygen = parseInt(labelDecoGas3O2.textContent);
-            var helium = parseInt(labelDecoGas3He.textContent);
+
+            var oxygen = parseInt(labelDecoGas3O2.value);
+            var helium = parseInt(labelDecoGas3He.value);
             updateDecoGas3Chart(oxygen, helium);
+            dhUpdateGasTabLabel(3, oxygen, helium);
+            dhUpdateGasPreset(3);
 
             // Update MAX and Min on Switch depth slider
             decoGas3SwitchSlider.noUiSlider.updateOptions({
@@ -3387,6 +4165,12 @@
             resetCalculationArea()
         });
 
+        labelDecoGas3O2.addEventListener('change', function () {
+            var typedO2 = parseInt(labelDecoGas3O2.value);
+            if (isNaN(typedO2)) { labelDecoGas3O2.value = Math.round(decoGas3O2Slider.noUiSlider.get()); return; }
+            decoGas3O2Slider.noUiSlider.set(typedO2);
+        });
+
         // Hide the tick mark labels
         var decoGas3HeSliderTicks = decoGas3HeSlider.querySelectorAll('.noUi-value-sub');
         decoGas3HeSliderTicks.forEach(function (decoGas3HeSlider) {
@@ -3395,14 +4179,24 @@
 
         decoGas3HeSlider.noUiSlider.on('update', function (values, handle) {
             var decoGas3HeSliderValue = values[handle];
-            labelDecoGas3He.textContent = parseInt(decoGas3HeSliderValue);
+            labelDecoGas3He.value = parseInt(decoGas3HeSliderValue);
+            document.getElementById('decoGas3SplitHe').textContent = labelDecoGas3He.value;
+            dhUpdateSplitPillSolo('decoGas3SplitHe');
 
-            var oxygen = parseInt(labelDecoGas3O2.textContent);
-            var helium = parseInt(labelDecoGas3He.textContent);
+            var oxygen = parseInt(labelDecoGas3O2.value);
+            var helium = parseInt(labelDecoGas3He.value);
             updateDecoGas3Chart(oxygen, helium);
+            dhUpdateGasTabLabel(3, oxygen, helium);
+            dhUpdateGasPreset(3);
 
             // reset calculation area
             resetCalculationArea()
+        });
+
+        labelDecoGas3He.addEventListener('change', function () {
+            var typedHe = parseInt(labelDecoGas3He.value);
+            if (isNaN(typedHe)) { labelDecoGas3He.value = Math.round(decoGas3HeSlider.noUiSlider.get()); return; }
+            decoGas3HeSlider.noUiSlider.set(typedHe);
         });
 
         // Hide the tick mark labels
@@ -3413,10 +4207,10 @@
 
         decoGas3SwitchSlider.noUiSlider.on('update', function (values, handle) {
             var decoGas3SwitchSliderValue = values[handle];
-            labelDecoGas3SwitchPPO2.textContent = parseFloat(decoGas3SwitchSliderValue).toFixed(1);
+            labelDecoGas3SwitchPPO2.value = parseFloat(decoGas3SwitchSliderValue).toFixed(1);
 
-            var O2Content = labelDecoGas3O2.textContent / 100;
-            
+            var O2Content = labelDecoGas3O2.value / 100;
+
 
             // adjust the unit
             if(modeImpOrMetric === "imp")
@@ -3427,15 +4221,27 @@
             // reset calculation area
             resetCalculationArea()
         });
+
+        labelDecoGas3SwitchPPO2.addEventListener('change', function () {
+            var typedSwitchPPO2 = parseFloat(labelDecoGas3SwitchPPO2.value);
+            if (isNaN(typedSwitchPPO2)) { labelDecoGas3SwitchPPO2.value = parseFloat(decoGas3SwitchSlider.noUiSlider.get()).toFixed(1); return; }
+            decoGas3SwitchSlider.noUiSlider.set(typedSwitchPPO2);
+        });
         
         function showDecoGas3() {
-            document.getElementById("addGasIcon3").style.display = "none"; // Hide add gas icon
+            document.getElementById("gasAccordionItemDeco3").hidden = false;
+            dhShowGasTab('deco3');
+            dhUpdateAddGasButtonVisibility();
+            dhReorderGasAccordion();
             // reset calculation area
             resetCalculationArea()
         }
 
         function hideDecoGas3() {
-            document.getElementById("addGasIcon3").style.display = "flex"; // Hide add gas icon
+            document.getElementById("gasAccordionItemDeco3").hidden = true;
+            dhShowGasTab('bottom');
+            dhUpdateAddGasButtonVisibility();
+            dhReorderGasAccordion();
             // reset calculation area
             resetCalculationArea()
         }
@@ -3496,7 +4302,8 @@
 
         decoGas4O2Slider.noUiSlider.on('update', function (values, handle) {
             var decoGas4O2SliderValue = values[handle];
-            labelDecoGas4O2.textContent = parseInt(decoGas4O2SliderValue);
+            labelDecoGas4O2.value = parseInt(decoGas4O2SliderValue);
+            document.getElementById('decoGas4SplitO2').textContent = labelDecoGas4O2.value;
 
             // Update MAX on He slider
             decoGas4HeSlider.noUiSlider.updateOptions({
@@ -3506,11 +4313,13 @@
                 }
             });
 
-            
 
-            var oxygen = parseInt(labelDecoGas4O2.textContent);
-            var helium = parseInt(labelDecoGas4He.textContent);
+
+            var oxygen = parseInt(labelDecoGas4O2.value);
+            var helium = parseInt(labelDecoGas4He.value);
             updateDecoGas4Chart(oxygen, helium);
+            dhUpdateGasTabLabel(4, oxygen, helium);
+            dhUpdateGasPreset(4);
 
             // Update MAX and Min on Switch depth slider
             decoGas4SwitchSlider.noUiSlider.updateOptions({
@@ -3524,6 +4333,12 @@
             resetCalculationArea()
         });
 
+        labelDecoGas4O2.addEventListener('change', function () {
+            var typedO2 = parseInt(labelDecoGas4O2.value);
+            if (isNaN(typedO2)) { labelDecoGas4O2.value = Math.round(decoGas4O2Slider.noUiSlider.get()); return; }
+            decoGas4O2Slider.noUiSlider.set(typedO2);
+        });
+
         // Hide the tick mark labels
         var decoGas4HeSliderTicks = decoGas4HeSlider.querySelectorAll('.noUi-value-sub');
         decoGas4HeSliderTicks.forEach(function (decoGas4HeSlider) {
@@ -3532,14 +4347,24 @@
 
         decoGas4HeSlider.noUiSlider.on('update', function (values, handle) {
             var decoGas4HeSliderValue = values[handle];
-            labelDecoGas4He.textContent = parseInt(decoGas4HeSliderValue);
+            labelDecoGas4He.value = parseInt(decoGas4HeSliderValue);
+            document.getElementById('decoGas4SplitHe').textContent = labelDecoGas4He.value;
+            dhUpdateSplitPillSolo('decoGas4SplitHe');
 
-            var oxygen = parseInt(labelDecoGas4O2.textContent);
-            var helium = parseInt(labelDecoGas4He.textContent);
+            var oxygen = parseInt(labelDecoGas4O2.value);
+            var helium = parseInt(labelDecoGas4He.value);
             updateDecoGas4Chart(oxygen, helium);
+            dhUpdateGasTabLabel(4, oxygen, helium);
+            dhUpdateGasPreset(4);
 
             // reset calculation area
             resetCalculationArea()
+        });
+
+        labelDecoGas4He.addEventListener('change', function () {
+            var typedHe = parseInt(labelDecoGas4He.value);
+            if (isNaN(typedHe)) { labelDecoGas4He.value = Math.round(decoGas4HeSlider.noUiSlider.get()); return; }
+            decoGas4HeSlider.noUiSlider.set(typedHe);
         });
 
         // Hide the tick mark labels
@@ -3550,9 +4375,9 @@
 
         decoGas4SwitchSlider.noUiSlider.on('update', function (values, handle) {
             var decoGas4SwitchSliderValue = values[handle];
-            labelDecoGas4SwitchPPO2.textContent = parseFloat(decoGas4SwitchSliderValue).toFixed(1);
+            labelDecoGas4SwitchPPO2.value = parseFloat(decoGas4SwitchSliderValue).toFixed(1);
 
-            var O2Content = labelDecoGas4O2.textContent / 100;
+            var O2Content = labelDecoGas4O2.value / 100;
 
             // adjust the unit
             if(modeImpOrMetric === "imp")
@@ -3563,18 +4388,45 @@
             // reset calculation area
             resetCalculationArea()
         });
+
+        labelDecoGas4SwitchPPO2.addEventListener('change', function () {
+            var typedSwitchPPO2 = parseFloat(labelDecoGas4SwitchPPO2.value);
+            if (isNaN(typedSwitchPPO2)) { labelDecoGas4SwitchPPO2.value = parseFloat(decoGas4SwitchSlider.noUiSlider.get()).toFixed(1); return; }
+            decoGas4SwitchSlider.noUiSlider.set(typedSwitchPPO2);
+        });
         
         function showDecoGas4() {
-            document.getElementById("addGasIcon4").style.display = "none"; // Hide add gas icon
+            document.getElementById("gasAccordionItemDeco4").hidden = false;
+            dhShowGasTab('deco4');
+            dhUpdateAddGasButtonVisibility();
+            dhReorderGasAccordion();
             // reset calculation area
             resetCalculationArea()
         }
 
         function hideDecoGas4() {
-            document.getElementById("addGasIcon4").style.display = "flex"; // Hide add gas icon
+            document.getElementById("gasAccordionItemDeco4").hidden = true;
+            dhShowGasTab('bottom');
+            dhUpdateAddGasButtonVisibility();
+            dhReorderGasAccordion();
             // reset calculation area
             resetCalculationArea()
         }
+    </script>
+
+    {{-- Re-sort the gas accordion only once a value is actually committed,
+         not on every tick while a slider is being dragged (Pablo,
+         2026-09-17: "wait until the user releases the slider...avoid too
+         much movement while the user is playing with the O2 handle"). Per
+         nouislider.js: dragging only fires 'update'/'slide' on every frame;
+         'set' fires exactly once - on drag release, on a keyboard step, and
+         on a programmatic .set() (typed input, preset pill, mode switch) -
+         so it's the right event to hang the reorder on instead of 'update'. --}}
+    <script>
+        [1, 2, 3, 4].forEach(function (n) {
+            window['decoGas' + n + 'O2Slider'].noUiSlider.on('set', dhReorderGasAccordion);
+            window['decoGas' + n + 'HeSlider'].noUiSlider.on('set', dhReorderGasAccordion);
+        });
     </script>
 
     {{-- Script to show profile chart --}}
@@ -3604,6 +4456,112 @@
 
         let profileChartInstance = null; // Global variable to store chart instance
 
+        // Badge every gas switch directly on the profile (Pablo, 2026-09-16:
+        // "mark the gas changes...add a badge icon on the chart at that
+        // time").
+        //
+        // The API's own 'gas_switch' phase only ever flags the FIRST switch
+        // (bottom/travel gas -> first deco gas) - it's really there for the
+        // table to look up the bailout gas, not as a complete list of every
+        // switch. Later switches between deco gas 1 -> 2 -> 3 -> 4 show up
+        // only as the 'gas' field changing between consecutive rows, with
+        // no phase tag of their own (Pablo, 2026-09-17: "There are two gas
+        // switches at RT 29m and RT 39m...you are only showing one"). So
+        // instead of trusting that phase tag, walk the same row sequence
+        // the decompression table builds (descent -> bottom -> last ascent
+        // before deco -> every deco stop -> final ascent) and drop a marker
+        // anywhere the O2/He mix differs from the previous row - that
+        // matches exactly what the table itself shows as a gas change.
+        //
+        // Pulled out to top-level (not nested in renderProfileChart) so the
+        // "Bailout to OC" what-if handler can reuse it too (Pablo,
+        // 2026-09-17: "in CC when the what if case is 'Bail out to OC' you
+        // need to show the switching markers as in OC in the chart" - once
+        // bailout kicks in the diver IS effectively running an OC profile).
+        function formatGasLabel(gasArray) {
+            return gasArray[3] == 0 ? (gasArray[1] + '%') : (gasArray[1] + '/' + gasArray[3]);
+        }
+        // `firstSwitchAtMaxDepth`: bailing out to OC happens the instant the
+        // diver decides to bail, at the bottom - there's no swimming up to
+        // a configured switch depth first like a planned OC deco gas change
+        // (Pablo, 2026-09-18: "the first switch to the bailout happens at
+        // max depth exactly when the diver starts to come up"). The API
+        // bundles the whole ascent-before-first-deco-stop into one entry,
+        // so without this flag the marker lands wherever that ascent ends
+        // (correct for a regular OC dive's planned switch depth - already
+        // confirmed working - but wrong for an immediate bailout). When
+        // true, that specific transition is marked at the previous entry's
+        // position (end of bottom time = max depth) instead of its own.
+        function computeOCGasSwitchPoints(baseline, firstSwitchAtMaxDepth) {
+            var points = [];
+            var prevMix = null;
+            var prevEntry = null;
+            function consider(entry, markAtPreviousEntry) {
+                if (!entry || !Array.isArray(entry.gas)) return;
+                var mix = entry.gas[1] + '/' + entry.gas[3];
+                if (prevMix !== null && mix !== prevMix) {
+                    var marker = markAtPreviousEntry ? prevEntry : entry;
+                    points.push({ time: marker.time, abs_p: marker.abs_p, gasLabel: formatGasLabel(entry.gas) });
+                }
+                prevMix = mix;
+                prevEntry = entry;
+            }
+            consider(baseline.find(function (r) { return r.phase === 'descent'; }));
+            consider(baseline.find(function (r) { return r.phase === 'const'; }));
+
+            var firstDecoStopIndex = baseline.findIndex(function (r) { return r.phase === 'deco_stop'; });
+            var lastAscentBeforeDeco = null;
+            for (var i = 0; i < baseline.length; i++) {
+                if (baseline[i].phase === 'ascent') lastAscentBeforeDeco = baseline[i];
+                if (baseline[i].phase === 'deco_stop') break;
+            }
+            consider(lastAscentBeforeDeco, !!firstSwitchAtMaxDepth);
+
+            if (firstDecoStopIndex !== -1) {
+                for (var j = firstDecoStopIndex; j < baseline.length; j++) {
+                    if (baseline[j].phase === 'deco_stop') consider(baseline[j]);
+                }
+                consider(baseline[baseline.length - 1]); // final ascent to surface
+            }
+            return points;
+        }
+
+        // A point annotation's own `label` sub-option only exists on
+        // line/box annotations in chartjs-plugin-annotation v3 - point
+        // annotations silently ignore it, which is why the gas text never
+        // showed up. The documented way to caption a point is a second,
+        // separate `type: 'label'` annotation anchored to the same
+        // xValue/yValue.
+        function buildGasSwitchAnnotations(baseline, unitConversion, firstSwitchAtMaxDepth) {
+            var annotations = {};
+            computeOCGasSwitchPoints(baseline, firstSwitchAtMaxDepth).forEach(function (point, idx) {
+                annotations['gasSwitch' + idx] = {
+                    type: 'point',
+                    xValue: point.time,
+                    yValue: -(point.abs_p - 1) * unitConversion,
+                    backgroundColor: '#c2660f',
+                    borderColor: '#ffffff',
+                    borderWidth: 2,
+                    radius: 7,
+                    z: 10,
+                };
+                annotations['gasSwitchLabel' + idx] = {
+                    type: 'label',
+                    xValue: point.time,
+                    yValue: -(point.abs_p - 1) * unitConversion,
+                    yAdjust: -18,
+                    content: point.gasLabel,
+                    backgroundColor: '#c2660f',
+                    color: '#ffffff',
+                    font: { size: 11, weight: 'bold' },
+                    padding: 4,
+                    borderRadius: 4,
+                    z: 10,
+                };
+            });
+            return annotations;
+        }
+
         function renderProfileChart(response) {
             
             let unitConversion = 33;
@@ -3611,6 +4569,8 @@
                 unitConversion = 10;
             // Convert data into correct format for a scatter plot
             formattedData = response['baseline'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * unitConversion }));
+
+            var gasSwitchAnnotations = modeOCOrCC === "OC" ? buildGasSwitchAnnotations(response['baseline'], unitConversion) : {};
             formattedData1 = response['add5min'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * unitConversion }));
             formattedData2 = response['add10ft'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * unitConversion }));
             formattedData3 = response['lostDecoGas'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * unitConversion }));
@@ -3646,7 +4606,6 @@
                             pointRadius: 0,
                             pointHoverRadius: 6 // Shows markers on hover
                         },
-                        
                     ]
                 },
                 options: {
@@ -3657,6 +4616,9 @@
                             labels: {
                                 color: '#FFFFFF' // Sets label font color to white
                             }
+                        },
+                        annotation: {
+                            annotations: gasSwitchAnnotations,
                         },
                         tooltip: {
                             enabled: true, // Enables tooltips
@@ -3745,8 +4707,8 @@
             console.log(response);
             console.log(response.some(entry => entry.phase === "deco_stop"));
             if(response.some(entry => entry.phase === "deco_stop") === false) {
-                GFL = document.getElementById("labelGFL").textContent
-                GFH = document.getElementById("labelGFH").textContent
+                GFL = document.getElementById("labelGFL").value
+                GFH = document.getElementById("labelGFH").value
                 model = "ZH-L16C-GF";
                 let totalRuntime = Math.round(response[response.length - 1].time);
                 document.getElementById("labelTotalDecoTime").innerHTML = "<b>" +"0 (No deco)" + "</b>";
@@ -3894,7 +4856,7 @@
                                 <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Time</th>
                                 <th class="text-sm" style="padding-left: 0px; padding-right:0px;">RT</th>
                                 <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Gas</th>
-                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">PPO2</th>
+                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">PPO&#8322;</th>
                                 <th class="text-sm" style="padding-left: 0px; padding-right:0px;">GF</th>
                             </tr>
                         </thead>
@@ -3921,7 +4883,7 @@
                                 <th class="depth-column text-sm" style="padding-left: 0px; padding-right:0px;">Depth</th>
                                 <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Time</th>
                                 <th class="text-sm" style="padding-left: 0px; padding-right:0px;">RT</th>
-                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">PPO2</th>
+                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">PPO&#8322;</th>
                                 <th class="text-sm" style="padding-left: 0px; padding-right:0px;">GF</th>
                             </tr>
                         </thead>
@@ -3933,7 +4895,7 @@
                         <td>${row.depth}</td>
                         <td class="text-sm text-left">${formatTimeMin(row.time)}</td>
                         <td class="text-sm">${formatTimeMin(row.runtime)}</td>
-                        <td class="text-sm">${labelSetpoint.textContent}</td>
+                        <td class="text-sm">${labelSetpoint.value}</td>
                         <td class="text-sm">${(row.gf * 100).toFixed(0)}%</td>
                     </tr>`;
                 });
@@ -3949,7 +4911,7 @@
                                 <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Time</th>
                                 <th class="text-sm" style="padding-left: 0px; padding-right:0px;">RT</th>
                                 <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Gas</th>
-                                <th class="text-sm hide-on-mobile" style="padding-left: 0px; padding-right:0px;">PPO2</th>
+                                <th class="text-sm hide-on-mobile" style="padding-left: 0px; padding-right:0px;">PPO&#8322;</th>
                                 <th class="text-sm hide-on-mobile" style="padding-left: 0px; padding-right:0px;">GF</th>
                             </tr>
                         </thead>
@@ -3976,8 +4938,8 @@
             else {
                 document.getElementById("decoTableContainer").innerHTML = tableHTML;
 
-                GFL = document.getElementById("labelGFL").textContent
-                GFH = document.getElementById("labelGFH").textContent
+                GFL = document.getElementById("labelGFL").value
+                GFH = document.getElementById("labelGFH").value
                 model = "ZH-L16C-GF";
                 updateDecoSummary(totalDecoTime, totalRuntime, model, GFH, GFL);
             }
@@ -4153,9 +5115,9 @@
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
                 document.getElementById("labelWhatIfRunTime").innerText="-";
-                document.getElementById("labelWhatIfRunTimeDiff").innerText="()";
+                document.getElementById("labelWhatIfRunTimeDiff").innerText="-";
                 document.getElementById("labelWhatIfDecoTime").innerText="-";
-                document.getElementById("labelWhatIfDecoTimeDiff").innerText="()";
+                document.getElementById("labelWhatIfDecoTimeDiff").innerText="-";
             } else {
                 profileChartInstance.data.datasets = [
                     {
@@ -4192,10 +5154,11 @@
                 var sign = difference >= 0 ? "+" : "-";
 
                 // Update text with the correct sign
-                labelRTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+                labelRTDiff.textContent = difference === 0 ? "-" : `${sign}${Math.abs(difference)}`;
 
                 // Change color based on sign
-                labelRTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+                labelRTDiff.classList.toggle("is-danger", difference > 0);
+                labelRTDiff.classList.toggle("is-ideal", difference < 0);
 
                 let labelDT = document.getElementById("labelWhatIfDecoTime");
                 let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff");
@@ -4206,10 +5169,11 @@
                 sign = difference >= 0 ? "+" : "-";
 
                 // Update text with the correct sign
-                labelDTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+                labelDTDiff.textContent = difference === 0 ? "-" : `${sign}${Math.abs(difference)}`;
 
                 // Change color based on sign
-                labelDTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+                labelDTDiff.classList.toggle("is-danger", difference > 0);
+                labelDTDiff.classList.toggle("is-ideal", difference < 0);
             }
 
             profileChartInstance.update(); // Refresh chart
@@ -4238,9 +5202,9 @@
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
                 let labelRT = document.getElementById("labelWhatIfRunTime").innerText="-";
-                let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff").innerText="()";
+                let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff").innerText="-";
                 let labelDT = document.getElementById("labelWhatIfDecoTime").innerText="-";
-                let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff").innerText="()";
+                let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff").innerText="-";
             } else {
                 profileChartInstance.data.datasets = [
                     {
@@ -4277,10 +5241,11 @@
                 var sign = difference >= 0 ? "+" : "-";
 
                 // Update text with the correct sign
-                labelRTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+                labelRTDiff.textContent = difference === 0 ? "-" : `${sign}${Math.abs(difference)}`;
 
                 // Change color based on sign
-                labelRTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+                labelRTDiff.classList.toggle("is-danger", difference > 0);
+                labelRTDiff.classList.toggle("is-ideal", difference < 0);
 
                 let labelDT = document.getElementById("labelWhatIfDecoTime");
                 let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff");
@@ -4291,10 +5256,11 @@
                 sign = difference >= 0 ? "+" : "-";
 
                 // Update text with the correct sign
-                labelDTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+                labelDTDiff.textContent = difference === 0 ? "-" : `${sign}${Math.abs(difference)}`;
 
                 // Change color based on sign
-                labelDTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+                labelDTDiff.classList.toggle("is-danger", difference > 0);
+                labelDTDiff.classList.toggle("is-ideal", difference < 0);
             }
 
             profileChartInstance.update(); // Refresh chart
@@ -4322,10 +5288,11 @@
 
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
+                profileChartInstance.options.plugins.annotation.annotations = {};
                 let labelRT = document.getElementById("labelWhatIfRunTime").innerText="-";
-                let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff").innerText="()";
+                let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff").innerText="-";
                 let labelDT = document.getElementById("labelWhatIfDecoTime").innerText="-";
-                let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff").innerText="()";
+                let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff").innerText="-";
             } else {
                 profileChartInstance.data.datasets = [
                     {
@@ -4351,6 +5318,14 @@
                         pointHoverRadius: 6
                     }
                 ];
+                // Losing every extra deco gas still leaves one real switch -
+                // diluent/backgas to the (mandatory, in CC) bailout gas,
+                // right at the bottom (Pablo, 2026-09-18: "there is only one
+                // switch to the bailout and that's it"). In OC this
+                // naturally computes to zero switches (losing deco gases
+                // just means staying on bottom gas the whole way up).
+                var unitConversion3 = modeImpOrMetric == "met" ? 10 : 33;
+                profileChartInstance.options.plugins.annotation.annotations = buildGasSwitchAnnotations(globalResponse['lostDecoGas'], unitConversion3, true);
 
                 // update new decoT and newRT
             
@@ -4362,10 +5337,11 @@
                 var sign = difference >= 0 ? "+" : "-";
 
                 // Update text with the correct sign
-                labelRTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+                labelRTDiff.textContent = difference === 0 ? "-" : `${sign}${Math.abs(difference)}`;
 
                 // Change color based on sign
-                labelRTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+                labelRTDiff.classList.toggle("is-danger", difference > 0);
+                labelRTDiff.classList.toggle("is-ideal", difference < 0);
 
                 let labelDT = document.getElementById("labelWhatIfDecoTime");
                 let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff");
@@ -4376,10 +5352,11 @@
                 sign = difference >= 0 ? "+" : "-";
 
                 // Update text with the correct sign
-                labelDTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+                labelDTDiff.textContent = difference === 0 ? "-" : `${sign}${Math.abs(difference)}`;
 
                 // Change color based on sign
-                labelDTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+                labelDTDiff.classList.toggle("is-danger", difference > 0);
+                labelDTDiff.classList.toggle("is-ideal", difference < 0);
             }
 
             profileChartInstance.update(); // Refresh chart
@@ -4407,9 +5384,9 @@
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
                 let labelRT = document.getElementById("labelWhatIfRunTime").innerText="-";
-                let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff").innerText="()";
+                let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff").innerText="-";
                 let labelDT = document.getElementById("labelWhatIfDecoTime").innerText="-";
-                let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff").innerText="()";
+                let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff").innerText="-";
             } else {
                 profileChartInstance.data.datasets = [
                     {
@@ -4447,10 +5424,11 @@
                 var sign = difference >= 0 ? "+" : "-";
 
                 // Update text with the correct sign
-                labelRTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+                labelRTDiff.textContent = difference === 0 ? "-" : `${sign}${Math.abs(difference)}`;
 
                 // Change color based on sign
-                labelRTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+                labelRTDiff.classList.toggle("is-danger", difference > 0);
+                labelRTDiff.classList.toggle("is-ideal", difference < 0);
 
                 let labelDT = document.getElementById("labelWhatIfDecoTime");
                 let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff");
@@ -4461,10 +5439,11 @@
                 sign = difference >= 0 ? "+" : "-";
 
                 // Update text with the correct sign
-                labelDTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+                labelDTDiff.textContent = difference === 0 ? "-" : `${sign}${Math.abs(difference)}`;
 
                 // Change color based on sign
-                labelDTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+                labelDTDiff.classList.toggle("is-danger", difference > 0);
+                labelDTDiff.classList.toggle("is-ideal", difference < 0);
             }
 
             profileChartInstance.update(); // Refresh chart
@@ -4493,9 +5472,9 @@
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
                 let labelRT = document.getElementById("labelWhatIfRunTime").innerText="-";
-                let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff").innerText="()";
+                let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff").innerText="-";
                 let labelDT = document.getElementById("labelWhatIfDecoTime").innerText="-";
-                let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff").innerText="()";
+                let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff").innerText="-";
                 
             } else {
                 profileChartInstance.data.datasets = [
@@ -4534,10 +5513,11 @@
                 var sign = difference >= 0 ? "+" : "-";
 
                 // Update text with the correct sign
-                labelRTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+                labelRTDiff.textContent = difference === 0 ? "-" : `${sign}${Math.abs(difference)}`;
 
                 // Change color based on sign
-                labelRTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+                labelRTDiff.classList.toggle("is-danger", difference > 0);
+                labelRTDiff.classList.toggle("is-ideal", difference < 0);
 
                 let labelDT = document.getElementById("labelWhatIfDecoTime");
                 let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff");
@@ -4548,10 +5528,11 @@
                 sign = difference >= 0 ? "+" : "-";
 
                 // Update text with the correct sign
-                labelDTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+                labelDTDiff.textContent = difference === 0 ? "-" : `${sign}${Math.abs(difference)}`;
 
                 // Change color based on sign
-                labelDTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+                labelDTDiff.classList.toggle("is-danger", difference > 0);
+                labelDTDiff.classList.toggle("is-ideal", difference < 0);
             }
 
             profileChartInstance.update(); // Refresh chart
@@ -4579,9 +5560,9 @@
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
                 let labelRT = document.getElementById("labelWhatIfRunTime").innerText="-";
-                let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff").innerText="()";
+                let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff").innerText="-";
                 let labelDT = document.getElementById("labelWhatIfDecoTime").innerText="-";
-                let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff").innerText="()";
+                let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff").innerText="-";
 
                 
                 
@@ -4622,10 +5603,11 @@
                 var sign = difference >= 0 ? "+" : "-";
 
                 // Update text with the correct sign
-                labelRTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+                labelRTDiff.textContent = difference === 0 ? "-" : `${sign}${Math.abs(difference)}`;
 
                 // Change color based on sign
-                labelRTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+                labelRTDiff.classList.toggle("is-danger", difference > 0);
+                labelRTDiff.classList.toggle("is-ideal", difference < 0);
 
                 let labelDT = document.getElementById("labelWhatIfDecoTime");
                 let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff");
@@ -4636,10 +5618,11 @@
                 sign = difference >= 0 ? "+" : "-";
 
                 // Update text with the correct sign
-                labelDTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+                labelDTDiff.textContent = difference === 0 ? "-" : `${sign}${Math.abs(difference)}`;
 
                 // Change color based on sign
-                labelDTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+                labelDTDiff.classList.toggle("is-danger", difference > 0);
+                labelDTDiff.classList.toggle("is-ideal", difference < 0);
             }
 
             profileChartInstance.update(); // Refresh chart
@@ -4663,10 +5646,13 @@
 
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
+                // Back to CC's baseline - no gas-switch markers (the CC
+                // diluent itself never changes mid-dive).
+                profileChartInstance.options.plugins.annotation.annotations = {};
                 let labelRT = document.getElementById("labelWhatIfRunTime").innerText="-";
-                let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff").innerText="()";
+                let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff").innerText="-";
                 let labelDT = document.getElementById("labelWhatIfDecoTime").innerText="-";
-                let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff").innerText="()";
+                let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff").innerText="-";
 
                 // hide BO table and show regular table
                 decoTableContainer.style.display = "block";
@@ -4675,8 +5661,8 @@
 
                 // hide gas Consumption// hide gas consumption if CC
                 document.getElementById("gasConsumptionRow").style.display="none";
-                
-                
+
+
             } else {
                 profileChartInstance.data.datasets = [
                     {
@@ -4702,7 +5688,14 @@
                         pointHoverRadius: 6
                     }
                 ];
-                    
+                // Once bailout kicks in the diver is effectively running an
+                // OC profile - badge its real gas switches the same way an
+                // OC dive's chart would (Pablo, 2026-09-17: "in CC when the
+                // what if case is 'Bail out to OC' you need to show the
+                // switching markers as in OC in the chart").
+                var unitConversion = modeImpOrMetric == "met" ? 10 : 33;
+                profileChartInstance.options.plugins.annotation.annotations = buildGasSwitchAnnotations(globalResponse['bailout'], unitConversion, true);
+
                 // show BO table and change table title
                 decoTableContainer.style.display = "none";
                 BOTableContainer.style.display = "block";
@@ -4718,10 +5711,11 @@
                 var sign = difference >= 0 ? "+" : "-";
 
                 // Update text with the correct sign
-                labelRTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+                labelRTDiff.textContent = difference === 0 ? "-" : `${sign}${Math.abs(difference)}`;
 
                 // Change color based on sign
-                labelRTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+                labelRTDiff.classList.toggle("is-danger", difference > 0);
+                labelRTDiff.classList.toggle("is-ideal", difference < 0);
 
                 let labelDT = document.getElementById("labelWhatIfDecoTime");
                 let labelDTDiff = document.getElementById("labelWhatIfDecoTimeDiff");
@@ -4732,10 +5726,11 @@
                 sign = difference >= 0 ? "+" : "-";
 
                 // Update text with the correct sign
-                labelDTDiff.innerText = `(${sign}${Math.abs(difference)})`;
+                labelDTDiff.textContent = difference === 0 ? "-" : `${sign}${Math.abs(difference)}`;
 
                 // Change color based on sign
-                labelDTDiff.style.color = difference >= 0 ? "#f44335" : "#4caf50";
+                labelDTDiff.classList.toggle("is-danger", difference > 0);
+                labelDTDiff.classList.toggle("is-ideal", difference < 0);
             }
 
             profileChartInstance.update(); // Refresh chart
@@ -4780,22 +5775,54 @@
         document.querySelectorAll(".dropdown-item").forEach(item => {
             item.addEventListener("click", function() {
                 let selectedDepth = this.getAttribute("data-depth");
+                let siteName = this.getAttribute("data-site-name");
+                let levelIcon = this.getAttribute("data-level-icon");
+                let levelName = this.getAttribute("data-level-name");
                 let depthSlider = document.getElementById("depthSlider");
 
                 if (depthSlider && selectedDepth) {
+                    // Picking a site sets the depth FOR the diver, so the pill
+                    // stays showing which site that came from; typing a depth
+                    // by hand means "not from this site anymore" (Pablo,
+                    // 2026-09-16). isSettingDepthFromSite tells the depth
+                    // slider's own update handler not to clear the pill for
+                    // the very set() call this click just triggered.
+                    isSettingDepthFromSite = true;
+                    var pill = document.getElementById('selectedSitePill');
+                    pill.innerHTML = ''; // clear without touching the DOM API's escaping guarantees below
+                    // The level icon comes from Divers Hub's own dive-level
+                    // set (OW/AOW/...) - those PNGs aren't drawn white, so
+                    // force it with a filter rather than needing a second,
+                    // white-only export of every icon (Pablo, 2026-09-16:
+                    // "all white in order to keep the contrast with the
+                    // pill bg"). Built with real DOM nodes, not an innerHTML
+                    // string, so a site name with HTML-special characters in
+                    // it can never be interpreted as markup.
+                    if (levelIcon) {
+                        var levelImg = document.createElement('img');
+                        levelImg.src = levelIcon;
+                        levelImg.alt = levelName || '';
+                        levelImg.title = levelName || '';
+                        levelImg.style.cssText = 'height:14px;vertical-align:-2px;margin-right:4px;filter:brightness(0) invert(1);';
+                        pill.appendChild(levelImg);
+                    }
+                    pill.appendChild(document.createTextNode(siteName));
+                    pill.hidden = false;
                     depthSlider.noUiSlider.set(selectedDepth); // Updates slider value
+                    isSettingDepthFromSite = false;
                 }
             });
         });
 
     </script>
 
+
+
     {{-- Script to switch from OC to CC --}}
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const navLinks = document.querySelectorAll('#nav-tabs .nav-link');
-            openCircuitTab = navLinks[0];
-            closedCircuitTab = navLinks[1];
+            openCircuitTab = document.querySelector('#nav-tabs [data-tag="OC"]');
+            closedCircuitTab = document.querySelector('#nav-tabs [data-tag="CC"]');
             const tankDouble = document.getElementById("tank_double");
             const tankCCR = document.getElementById("tank_ccr");
             const labelBottomGasOrDiluent = document.getElementById("labelBottomGasOrDiluent");
@@ -4820,17 +5847,21 @@
 
                 // set model to mode OC
                 modeOCOrCC = "OC";
-                // Update padding bottom dynamically
-                bottomGasstackedBarChart.options.layout.padding.bottom = 4; // New padding bottom value
-                bottomGasstackedBarChart.options.layout.padding.top = 20;
-                labelHorizontalOffset = -40;
+                dhResetGasSlots();
+                // tank_double.png's transparent window starts at y=58/300 of
+                // the source image - scaled to this 156px canvas that's ~28px
+                // down from the top (Pablo, 2026-09-17: mark the mask's own
+                // northmost transparent point as the fill limit).
+                bottomGasstackedBarChart.options.layout.padding.bottom = 3;
+                bottomGasstackedBarChart.options.layout.padding.top = 28;
+                labelHorizontalOffset = -28;
                 // Refresh chart to apply changes
                 setPointOCOrCC = 1.4;
                 bottomGasO2Slider.noUiSlider.set(setPointOCOrCC * 100 / (depth / 33 + 1));
                 bottomGasstackedBarChart.update();
 
                 //update label descriptors
-                labelMaxDepthPPO2Description.textContent = "Max depth PPO2";
+                labelMaxDepthPPO2Description.textContent = "Max depth PPO₂";
                 labelENDDescription.textContent = "Equivalent Narcotic Depth";
                 labelGasDensityDescription.textContent = "Gas density";
 
@@ -4848,6 +5879,15 @@
                 containerDeco1OCInfo.style.display = "block";
                 containerDeco1OCButton.style.display = "block";
                 containerDeco1CCInfo.style.display = "none";
+                // Diluent/Bailout presets don't apply to OC - swap slot 1
+                // back to the Deco 1 preset menu (Pablo, 2026-09-17); Bottom
+                // gas's own My-Gases-only row (guests never get one of
+                // these, so it may not exist) comes back too.
+                document.getElementById("gasPresetDiluent").hidden = true;
+                document.getElementById("gasPreset1").hidden = false;
+                document.getElementById("gasPresetBailout").hidden = true;
+                var gasPresetBottomOC = document.getElementById("gasPresetBottomOC");
+                if (gasPresetBottomOC) gasPresetBottomOC.hidden = false;
                 hideDecoGas1();
                 depthSlider.noUiSlider.set(depthSlider.noUiSlider.get()); //refresh slider to have the deco sliders updated
 
@@ -4862,17 +5902,22 @@
 
                 // set model to mode OC
                 modeOCOrCC = "CC";
-                // Update padding bottom dynamically
-                bottomGasstackedBarChart.options.layout.padding.bottom = 30; // New padding bottom value
-                bottomGasstackedBarChart.options.layout.padding.top = 0;
-                labelHorizontalOffset = -3;
+                dhResetGasSlots();
+                // tank_ccr.png's window starts higher in the tank body than
+                // tank_double's - y=34/300 of the source image, ~16px down
+                // from the top of this 156px canvas - so CC needs its own,
+                // smaller top padding to reach that mask's northmost
+                // transparent point (Pablo, 2026-09-17).
+                bottomGasstackedBarChart.options.layout.padding.bottom = 21;
+                bottomGasstackedBarChart.options.layout.padding.top = 16;
+                labelHorizontalOffset = -2;
                 // Refresh chart to apply changes
                 setPointOCOrCC = 1.2;
                 bottomGasO2Slider.noUiSlider.set(setPointOCOrCC * 100 / (depth / 33 + 1));
                 bottomGasstackedBarChart.update();
 
                 //update label descriptors
-                labelMaxDepthPPO2Description.textContent = "Dil Max depth PPO2";
+                labelMaxDepthPPO2Description.textContent = "Dil Max depth PPO₂";
                 labelENDDescription.textContent = "Loop END";
                 labelGasDensityDescription.textContent = "Loop Gas density";
 
@@ -4886,7 +5931,19 @@
                 containerDeco1OCInfo.style.display = "none";
                 containerDeco1OCButton.style.display = "none";
                 containerDeco1CCInfo.style.display = "block";
-                showDecoGas1();
+                // Diluent gets its own preset row, and slot 1 swaps to the
+                // Bailout preset menu instead of Deco 1's (Pablo, 2026-09-17).
+                document.getElementById("gasPresetDiluent").hidden = false;
+                document.getElementById("gasPreset1").hidden = true;
+                document.getElementById("gasPresetBailout").hidden = false;
+                var gasPresetBottomOCEl = document.getElementById("gasPresetBottomOC");
+                if (gasPresetBottomOCEl) gasPresetBottomOCEl.hidden = true;
+                // Reveal Bailout's card (it's mandatory in CC) without forcing
+                // it open - every gas card starts collapsed (Pablo, 2026-09-16).
+                document.getElementById("gasAccordionItemDeco1").hidden = false;
+                dhUpdateAddGasButtonVisibility();
+                dhReorderGasAccordion();
+                resetCalculationArea();
                 depthSlider.noUiSlider.set(depthSlider.noUiSlider.get()); //refresh slider to have the deco sliders updated
             }
 
@@ -5144,9 +6201,9 @@
 
         function updateLabel1() {
             const label = document.getElementById("labelMaxDepthPPO2Description");
-            let originalText = "Dil Max Depth PPO2";
+            let originalText = "Dil Max Depth PPO₂";
             if(modeOCOrCC == "OC")
-                originalText = "Max Depth PPO2";
+                originalText = "Max Depth PPO₂";
             
             label.textContent = originalText; // Set original text first
 
@@ -5167,9 +6224,9 @@
             // Replace text only if wrapping is required
             if (textWidth > containerWidth) {
                 if(modeOCOrCC == "OC")
-                    label.textContent = "Max PPO2";
+                    label.textContent = "Max PPO₂";
                 else
-                    label.textContent = "Dil Max PPO2";
+                    label.textContent = "Dil Max PPO₂";
             }
         }
 
@@ -5215,18 +6272,18 @@
     {{--  Script to avoid the pill selector OC CC to go back to default OC --}}
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            const navLinks = document.querySelectorAll("#nav-tabs .nav-link");
+            const navLinks = document.querySelectorAll("#nav-tabs .dh-channel-chip");
 
             navLinks.forEach(link => {
                 link.addEventListener("click", function () {
                     // Remove 'active' class from all tabs
-                    navLinks.forEach(nav => nav.classList.remove("active"));
-                    
+                    navLinks.forEach(nav => nav.classList.remove("is-active"));
+
                     // Add 'active' class to the clicked tab
-                    this.classList.add("active");
+                    this.classList.add("is-active");
 
                     // Save selected tab in local storage (optional)
-                    localStorage.setItem("activeTab", this.innerText.trim());
+                    localStorage.setItem("activeTab", this.getAttribute("data-tag"));
                 });
             });
 
@@ -5234,12 +6291,17 @@
             const savedTab = localStorage.getItem("activeTab");
             if (savedTab) {
                 navLinks.forEach(link => {
-                    if (link.innerText.trim() === savedTab) {
-                        link.classList.add("active");
+                    if (link.getAttribute("data-tag") === savedTab) {
+                        link.classList.add("is-active");
                     } else {
-                        link.classList.remove("active");
+                        link.classList.remove("is-active");
                     }
                 });
+                if (savedTab === "CC" && typeof closedCircuitTab !== 'undefined') {
+                    closedCircuitTab.click();
+                } else if (savedTab === "OC" && typeof openCircuitTab !== 'undefined') {
+                    openCircuitTab.click();
+                }
             }
         });
     </script>
@@ -5247,8 +6309,8 @@
     {{-- Scripts to manage gas consumption --}}
     <script>
         function calculateGasConsumption(diveData) {
-            const sacBottomGas = parseFloat(document.getElementById('labelSACBottomGas').textContent);
-            const sacDecoGas = parseFloat(document.getElementById('labelSACDecoGas').textContent);
+            const sacBottomGas = parseFloat(document.getElementById('labelSACBottomGas').value);
+            const sacDecoGas = parseFloat(document.getElementById('labelSACDecoGas').value);
 
             const gasVolume = {};
             let bottomGasMix; // Store bottom gas mix from descent/constant phases
@@ -5365,9 +6427,9 @@
 
         sliderSACBottomGas.noUiSlider.on('update', function (values, handle) {
             var sliderSACBottomGasValue = values[handle];
-            labelSACBottomGas.textContent = parseFloat(sliderSACBottomGasValue).toFixed(1);
-            labelSACBottomGasLiters.textContent = parseFloat(sliderSACBottomGasValue * 28.3168).toFixed(0);
-            
+            labelSACBottomGas.value = parseFloat(sliderSACBottomGasValue).toFixed(1);
+            labelSACBottomGasLiters.value = parseFloat(sliderSACBottomGasValue * 28.3168).toFixed(0);
+
             // update gas consumption table
             if(globalResponse != null) {
                 if(modeOCOrCC === "OC") {
@@ -5376,6 +6438,17 @@
                 }
             }
 
+        });
+
+        labelSACBottomGas.addEventListener('change', function () {
+            var typed = parseFloat(labelSACBottomGas.value);
+            if (isNaN(typed)) { labelSACBottomGas.value = parseFloat(sliderSACBottomGas.noUiSlider.get()).toFixed(1); return; }
+            sliderSACBottomGas.noUiSlider.set(typed);
+        });
+        labelSACBottomGasLiters.addEventListener('change', function () {
+            var typed = parseFloat(labelSACBottomGasLiters.value);
+            if (isNaN(typed)) { labelSACBottomGasLiters.value = parseFloat(sliderSACBottomGas.noUiSlider.get() * 28.3168).toFixed(0); return; }
+            sliderSACBottomGas.noUiSlider.set(typed / 28.3168);
         });
 
         var sliderSACDecoGas = document.getElementById('sliderSACDecoGas');
@@ -5404,9 +6477,9 @@
         sliderSACDecoGas.noUiSlider.on('update', function (values, handle) {
             console.log("paso");
             var sliderSACDecoGasValue = values[handle];
-            labelSACDecoGas.textContent = parseFloat(sliderSACDecoGasValue).toFixed(1);
-            labelSACDecoGasLiters.textContent = parseFloat(sliderSACDecoGasValue * 28.3168).toFixed(0);
-            
+            labelSACDecoGas.value = parseFloat(sliderSACDecoGasValue).toFixed(1);
+            labelSACDecoGasLiters.value = parseFloat(sliderSACDecoGasValue * 28.3168).toFixed(0);
+
             // update gas consumption table
             if (globalResponse != null) {
                 if(modeOCOrCC === "OC") {
@@ -5418,11 +6491,20 @@
                 }
 
             }
-            
+
 
         });
 
-        
+        labelSACDecoGas.addEventListener('change', function () {
+            var typed = parseFloat(labelSACDecoGas.value);
+            if (isNaN(typed)) { labelSACDecoGas.value = parseFloat(sliderSACDecoGas.noUiSlider.get()).toFixed(1); return; }
+            sliderSACDecoGas.noUiSlider.set(typed);
+        });
+        labelSACDecoGasLiters.addEventListener('change', function () {
+            var typed = parseFloat(labelSACDecoGasLiters.value);
+            if (isNaN(typed)) { labelSACDecoGasLiters.value = parseFloat(sliderSACDecoGas.noUiSlider.get() * 28.3168).toFixed(0); return; }
+            sliderSACDecoGas.noUiSlider.set(typed / 28.3168);
+        });
     </script>
 
     

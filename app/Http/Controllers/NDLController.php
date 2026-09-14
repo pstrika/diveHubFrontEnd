@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\Site;
+use App\Models\UserDiveGas;
 
 class NDLController extends Controller
 {
@@ -900,6 +901,27 @@ class NDLController extends Controller
         Log::debug($currentGasLoad);
     }
     
+    /**
+     * The Decompression Dive Planner's saved GF Low/High + CCR setpoint
+     * and custom gas mixes ("My Gases") - both null/empty for guests, since
+     * the shared guest account (id 5, via the 'guest' middleware) never has
+     * either (Pablo, 2026-09-18).
+     */
+    private function decoPlannerViewExtras(): array
+    {
+        $user = auth()->user();
+        return [
+            'decoPrefs' => [
+                'gfLow' => $user->deco_gf_low,
+                'gfHigh' => $user->deco_gf_high,
+                'setpoint' => $user->deco_setpoint,
+            ],
+            'savedGases' => $user->isNotGuest()
+                ? UserDiveGas::where('user_id', $user->id)->orderBy('id')->get(['id', 'o2', 'he'])
+                : collect(),
+        ];
+    }
+
     public function show($id = null) {
 
         // Guests (shared user 5) have no unit preference; imperial is the Florida default.
@@ -915,12 +937,13 @@ class NDLController extends Controller
 
         // get site list to print map
         $allSites = Site::where('_hidden', '<>', 1)
-             ->select('id', 'name', 'maxDepth', 'type', 'location')
+             ->select('id', 'name', 'maxDepth', 'type', 'location', 'level')
              ->get()
              ->sortBy('name');
 
+        [$decoPrefs, $savedGases] = array_values($this->decoPlannerViewExtras());
 
-        return view('pages.DivePlanner', compact('currentSite', 'allSites', 'deco_unit'));
+        return view('pages.DivePlanner', compact('currentSite', 'allSites', 'deco_unit', 'decoPrefs', 'savedGases'));
     }
 
     public function showImperial($id = null) {
@@ -937,12 +960,13 @@ class NDLController extends Controller
 
         // get site list to print map
         $allSites = Site::where('_hidden', '<>', 1)
-             ->select('id', 'name', 'maxDepth', 'type', 'location')
+             ->select('id', 'name', 'maxDepth', 'type', 'location', 'level')
              ->get()
              ->sortBy('name');
 
+        [$decoPrefs, $savedGases] = array_values($this->decoPlannerViewExtras());
 
-        return view('pages.DivePlanner', compact('currentSite', 'allSites', 'deco_unit'));
+        return view('pages.DivePlanner', compact('currentSite', 'allSites', 'deco_unit', 'decoPrefs', 'savedGases'));
     }
 
     public function showMetric($id = null) {
@@ -959,13 +983,98 @@ class NDLController extends Controller
 
         // get site list to print map
         $allSites = Site::where('_hidden', '<>', 1)
-             ->select('id', 'name', 'maxDepth', 'type', 'location')
+             ->select('id', 'name', 'maxDepth', 'type', 'location', 'level')
              ->get()
              ->sortBy('name');
 
 
-        return view('pages.DivePlanner', compact('currentSite', 'allSites', 'deco_unit'));
+        [$decoPrefs, $savedGases] = array_values($this->decoPlannerViewExtras());
+
+        return view('pages.DivePlanner', compact('currentSite', 'allSites', 'deco_unit', 'decoPrefs', 'savedGases'));
     }
-    
-    
+
+    /**
+     * Saves the diver's GF Low/High + CCR setpoint to their profile so the
+     * planner remembers them next visit (Pablo, 2026-09-18: "save into the
+     * user profile...the GF Low, GF High and set point"). Guests can't -
+     * there's nowhere to persist it for the shared guest account, and it'd
+     * silently change the default for every other guest too.
+     */
+    public function saveDecoPreferences(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user->isNotGuest()) {
+            return response()->json(['message' => 'Create an account to save your preferences.'], 403);
+        }
+
+        $validated = $request->validate([
+            'gfLow' => 'required|integer|min:10|max:100',
+            'gfHigh' => 'required|integer|min:10|max:100',
+            'setpoint' => 'required|numeric|min:0.5|max:1.6',
+        ]);
+
+        $user->update([
+            'deco_gf_low' => $validated['gfLow'],
+            'deco_gf_high' => $validated['gfHigh'],
+            'deco_setpoint' => $validated['setpoint'],
+        ]);
+
+        return response()->json(['message' => 'Saved.']);
+    }
+
+    /**
+     * The Decompression Dive Planner's "My Gases" pill: up to 10 custom
+     * gas mixes a registered diver can save from any gas card and reuse on
+     * any other (Pablo, 2026-09-18). Guests can't save one - there's no
+     * profile to attach it to.
+     */
+    private const MAX_SAVED_GASES = 10;
+
+    public function saveDiveGas(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user->isNotGuest()) {
+            return response()->json(['message' => 'Create an account to save custom gases.'], 403);
+        }
+
+        $validated = $request->validate([
+            'o2' => 'required|integer|min:5|max:100',
+            'he' => 'required|integer|min:0|max:95',
+        ]);
+        if ($validated['o2'] + $validated['he'] > 100) {
+            return response()->json(['message' => 'O2 and He can\'t add up to more than 100%.'], 422);
+        }
+
+        $existing = UserDiveGas::where('user_id', $user->id)
+            ->where('o2', $validated['o2'])
+            ->where('he', $validated['he'])
+            ->first();
+        if ($existing) {
+            return response()->json(['message' => 'That gas is already saved.'], 422);
+        }
+
+        if (UserDiveGas::where('user_id', $user->id)->count() >= self::MAX_SAVED_GASES) {
+            return response()->json(['message' => 'You can save up to ' . self::MAX_SAVED_GASES . ' custom gases - delete one first.'], 422);
+        }
+
+        $gas = UserDiveGas::create([
+            'user_id' => $user->id,
+            'o2' => $validated['o2'],
+            'he' => $validated['he'],
+        ]);
+
+        return response()->json(['id' => $gas->id, 'o2' => $gas->o2, 'he' => $gas->he]);
+    }
+
+    public function deleteDiveGas(Request $request, $id)
+    {
+        $user = auth()->user();
+        $gas = UserDiveGas::where('user_id', $user->id)->where('id', $id)->first();
+        if (!$gas) {
+            return response()->json(['message' => 'Not found.'], 404);
+        }
+        $gas->delete();
+
+        return response()->json(['message' => 'Deleted.']);
+    }
 }

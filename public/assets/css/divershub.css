@@ -938,8 +938,12 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-cal-legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--dh-ink); }
 .dh-cal-legend-swatch { width: 11px; height: 11px; border-radius: 3px; flex: 0 0 auto; }
 
-/* Shark/Lobster "About" card: a collapsible intro carried over from the old front end. */
-.dh-about-card { margin-bottom: var(--dh-space-3); }
+/* Shark/Lobster "About" card: a collapsible intro carried over from the old
+   front end. .dh-dash-collapse's own 8px left/right margin stacked on top
+   of .dh-board's padding, making this card the only thing on the page
+   narrower than the date bar/grid/trip list below it (Pablo, 2026-09-18:
+   "they are not respecting the paddings to the right and left"). */
+.dh-about-card { margin-bottom: var(--dh-space-3); margin-left: 0; margin-right: 0; }
 .dh-about-body { display: flex; flex-wrap: wrap; gap: var(--dh-space-3); padding: var(--dh-space-3) 4px 4px; }
 .dh-about-img { width: 220px; max-width: 100%; height: auto; border-radius: var(--dh-radius); object-fit: cover; flex: 0 0 auto; }
 .dh-about-text { flex: 1 1 260px; min-width: 0; font-size: .88rem; color: var(--dh-ink); line-height: 1.5; }
@@ -1437,6 +1441,84 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-calc-inputs-hint { font-size: .78rem; font-weight: 600; color: rgba(255,255,255,.7); }
 .dh-calc-inputs-head:hover { background: var(--dh-deep); }
 
+/* Same dark header bar as .dh-calc-inputs-head, reused for every section
+   of the results card (Decompression plan, What if, Gas consumption,
+   Tissue compartments) so the whole page reads as one theme instead of
+   the old blue/grey Material-Dashboard gradient banners (Pablo,
+   2026-09-16: "retheme...and all the titles inside that card"). Collapsible
+   variant adds the pointer cursor + chevron; non-collapsible sections
+   (the outer "Decompression plan" card) just drop .is-toggle.
+   Named dh-deco-section-* (not dh-section-*) because that generic name is
+   already a different, older component (Landing.blade.php's h2-based
+   section title) - reusing it left this header inheriting that unrelated
+   rule's `margin` and rendering as if it floated inside its own card
+   instead of flush at the top (Pablo, 2026-09-16: "not at the top? there
+   is a white card behind"). */
+.dh-deco-section-head {
+  display: flex; align-items: center; gap: 10px; padding: 14px 20px; margin: 0;
+  background: var(--dh-ink); color: #fff; border-radius: 14px 14px 0 0;
+}
+.dh-deco-section-head .material-icons-round { color: #fff; opacity: .85; }
+.dh-deco-section-head h3, .dh-deco-section-head h4 { flex: 1 1 auto; margin: 0; font-size: 1rem; font-weight: 800; color: #fff; }
+.dh-deco-section-head.is-toggle { cursor: pointer; user-select: none; }
+.dh-deco-section-head.is-toggle:hover { background: var(--dh-deep); }
+.dh-deco-section-head-chevron { transition: transform .15s; }
+.dh-deco-section-head.is-collapsed .dh-deco-section-head-chevron { transform: rotate(-90deg); }
+.dh-deco-section-body { border: 1px solid var(--dh-line); border-top: none; border-radius: 0 0 14px 14px; padding: 16px; background: var(--dh-paper); }
+
+/* Decompression plan's summary strip - one compact line instead of a
+   two-column table (Pablo, 2026-09-16: "smaller and more sleek...one
+   single line"). Run/deco time are calculated results, so they get the
+   same blue pill as everywhere else; model/GFs are just context, so they
+   stay small, grey, plain text. */
+.dh-deco-summary {
+  display: flex; align-items: stretch; gap: 12px;
+  padding: 14px 16px;
+}
+/* Run time and Deco time each take half the card as one big pill - not a
+   plain label next to a small result pill anymore (Pablo, 2026-09-17:
+   "center in the middle of the card and make it larger...include the whole
+   'Run time xm' in one pill taking half the card"). */
+.dh-deco-summary-pill {
+  flex: 1 1 50%; height: 52px; gap: 8px; padding: 0 16px; font-size: 1.05rem;
+}
+.dh-deco-summary-pill-label { font-weight: 600; opacity: .85; font-size: .8em; }
+
+/* Model/GFs moved into the "Decompression plan" title itself, in a smaller
+   un-bold light font right next to it (Pablo, 2026-09-16). */
+.dh-deco-section-head-meta { font-size: .76rem; font-weight: 400; color: rgba(255,255,255,.7); flex: 0 1 auto; white-space: nowrap; }
+.dh-deco-section-head-meta b { font-weight: 400; }
+
+/* The Inputs card's grey row separators only earn their keep on a phone,
+   where each slider group is its own full-width block stacked vertically -
+   on tablet/desktop, the same groups sit side by side in columns, and the
+   lines read as visual clutter cutting across otherwise-related content
+   (Pablo, 2026-09-16: "hide...ONLY in desktop and iPad views...keep them
+   for mobile ONLY"). Bootstrap's own md breakpoint (768px) is what these
+   same rows already switch from stacked to columned at. */
+.dh-deco-input-divider { border-bottom: 1px solid #D3D3D3; }
+@media (min-width: 768px) {
+  .dh-deco-input-divider { border-bottom: none; }
+}
+
+/* "What if...?" scenario toggles, restyled as pill chips instead of the
+   old Bootstrap form-switch (Pablo, 2026-09-16: "make them pills, they
+   look old"). The checkbox stays real and unstyled (hidden) so every
+   existing filter1-7 .checked read keeps working untouched - only the
+   chrome changes. Wrapping the input INSIDE the label also fixes a
+   latent bug where the label's for= pointed at a nonexistent id, so
+   clicking the text never actually toggled the box. */
+.dh-whatif-chips { display: flex; flex-direction: column; gap: 8px; }
+.dh-whatif-chip { display: inline-flex; align-items: center; cursor: pointer; user-select: none; margin: 0; }
+.dh-whatif-chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.dh-whatif-chip-body {
+  display: inline-flex; align-items: center; width: 100%; padding: 8px 14px; border-radius: var(--dh-radius-pill);
+  border: 1px solid var(--dh-line); background: var(--dh-paper); color: var(--dh-muted);
+  font-size: .8rem; font-weight: 600; transition: background .15s, color .15s, border-color .15s;
+}
+.dh-whatif-chip input:checked + .dh-whatif-chip-body { background: var(--dh-ink); border-color: var(--dh-ink); color: #fff; }
+.dh-whatif-chip input:focus-visible + .dh-whatif-chip-body { box-shadow: 0 0 0 2px var(--dh-foam); }
+
 .dh-slider-num {
   display: block; width: 88px; margin: 8px auto 0; padding: 5px 8px; text-align: center;
   border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill);
@@ -1546,7 +1628,7 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 @media (min-width: 992px) { .dh-chat-fab { bottom: 24px; } }
 
 /* Admin console: icon-chip channel picker (2026-09-14), New message modal + reply form. */
-.dh-channel-picker { display: flex; gap: 8px; }
+.dh-channel-picker { display: flex; flex-wrap: wrap; gap: 8px; row-gap: 6px; }
 .dh-channel-chip {
   flex: 1 1 0; display: flex; align-items: center; justify-content: center; gap: 6px;
   padding: 8px 10px; border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill);
@@ -1635,6 +1717,22 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 }
 .dh-gas-result-pill.is-ideal { background: var(--dh-good); }
 
+/* Small delta badge sitting on a pill's corner (Deco Planner's "What if"
+   new run/deco time vs baseline) instead of a second free-floating pill -
+   red for worse, green for better, grey "-" when there's no change. */
+/* Left margin keeps room for a 3-digit result (e.g. "123") without it
+   crowding the label to its left in the What-if summary table (Pablo,
+   2026-09-17: "3 digit numbers overlap with the text to the left"). */
+.dh-gas-pill-wrap { position: relative; display: inline-flex; margin: 0 10px 0 10px; }
+.dh-gas-pill-badge {
+  position: absolute; top: -7px; right: -8px; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: var(--dh-radius-pill); font-size: .62rem; font-weight: 800; color: #fff;
+  display: flex; align-items: center; justify-content: center; line-height: 1;
+  background: var(--dh-muted); border: 2px solid var(--dh-paper);
+}
+.dh-gas-pill-badge.is-danger { background: var(--dh-danger); }
+.dh-gas-pill-badge.is-ideal { background: var(--dh-good); }
+
 /* Some result pills (Gas Density) aren't "ideal vs not" - they're a real
    safety reading, so they use the same warn/danger ladder as the
    editable inputs, just as a fill instead of a border. */
@@ -1649,6 +1747,15 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    completely unchanged. */
 .dh-gas-result-pill.is-o2::before { content: "O\2082"; opacity: .75; font-weight: 800; font-size: .68rem; }
 .dh-gas-result-pill.is-he::before { content: "He"; opacity: .75; font-weight: 800; font-size: .68rem; }
+/* O2 = green, He = blue everywhere a split pill shows both side by side
+   (Pablo, 2026-09-16) - same mapping the tank-mix legend (is-mix-o2/
+   is-mix-he) already used, just extended to the plain is-o2/is-he pills. */
+.dh-gas-result-pill.is-o2 { background: var(--dh-good); }
+.dh-gas-result-pill.is-he { background: var(--dh-sea); }
+/* "Ideal" (matches best mix) still wins over the O2/He color mapping above -
+   both are single-class selectors so declaration order would otherwise
+   decide it; this two-class selector outranks either on its own. */
+.dh-gas-result-pill.is-he.is-ideal, .dh-gas-result-pill.is-o2.is-ideal { background: var(--dh-good); }
 
 /* Gas density: a calculation result like the others, but a supporting
    figure rather than the headline the split pill above it is - smaller,
@@ -1696,6 +1803,10 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    markup), so it visually overflows past the plain column gap. */
 .dh-gas-tank-layout { display: flex; gap: var(--dh-space-4); align-items: flex-start; padding-left: var(--dh-space-4); }
 .dh-gas-tank-graphic { flex: 0 0 auto; text-align: center; margin-top: -44px; }
+/* CC's tank column sits directly under #nav-tabs with no buffering picker row
+   above it (unlike OC's oc-fuel-picker row), so OC's -44px pulls it up into
+   the OC/CC picker and blocks clicks on "Open Circuit" - give it a safe value. */
+#cc-tank-col .dh-gas-tank-graphic { margin-top: 0; }
 .dh-gas-tank-img-wrap { margin: 0 auto; }
 .dh-gas-tank-side { flex: 1 1 auto; min-width: 0; padding-left: var(--dh-space-3); }
 .dh-gas-tank-side .dh-wx-more { margin-top: 0; }
@@ -1811,6 +1922,12 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 /* Trimix's raw .textContent has no "%" (unlike Nitrox's, which appends
    its own) - only here does the pill need one generated for display. */
 .dh-gas-split-pill .dh-gas-result-pill.is-o2::after, .dh-gas-split-pill .dh-gas-result-pill.is-he::after { content: "%"; }
+/* No He in the mix (Nitrox, not Trimix) - hide its half of the split pill
+   and let the O2 half read as one normal, fully-rounded pill instead of
+   half a pair (Pablo, 2026-09-16). The He pill keeps `hidden` (still
+   first/last-child in the DOM), so this needs its own override rather
+   than relying on :first-child/:last-child, which don't know about it. */
+.dh-gas-split-pill.is-solo .dh-gas-result-pill { border-radius: var(--dh-radius-pill); box-shadow: none; }
 
 /* Slider fill/handle in the theme's blue instead of Material Dashboard's
    default purple (Pablo: "slider colors should follow theme") - applies
@@ -1820,3 +1937,70 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .slider-styled .noUi-connect { background: var(--dh-sea); }
 .slider-styled .noUi-handle { border-color: var(--dh-sea); }
 .slider-styled .noUi-handle:hover { border-color: var(--dh-deep); }
+
+/* Deco Planner gas selector, v2: a vertical accordion instead of horizontal
+   tabs (Pablo, 2026-09-16: tabs "go out of screen" with 4 gases and aren't
+   "intuitive or efficient" - picked this over a two-pane layout or carousel
+   for lowest risk and because it reuses the collapsible-header language
+   already used for Inputs/What-if/Gas consumption on this same page). Each
+   gas is one item; tapping its header opens that gas's tank+sliders and
+   closes whichever was open, so exactly one gas is ever full width at a
+   time - same one-at-a-time intent the tabs had, just stacked instead of
+   packed side by side, so it can never overflow no matter how many gases
+   exist or how long their "(32% O2 / 45% He)" label gets. */
+.dh-gas-accordion { display: flex; flex-direction: column; gap: 10px; }
+.dh-gas-accordion-item { border: 1px solid var(--dh-line); border-radius: 12px; overflow: hidden; }
+.dh-gas-accordion-head {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 16px; border: 0;
+  cursor: pointer; user-select: none; background: var(--dh-paper); color: var(--dh-ink);
+  font-family: var(--dh-font); font-weight: 700; font-size: .88rem; text-align: left;
+}
+.dh-gas-accordion-head:hover { background: var(--dh-foam); }
+.dh-gas-accordion-head.is-active { background: var(--dh-ink); color: #fff; }
+.dh-gas-accordion-head .material-icons-round { opacity: .8; flex: 0 0 auto; }
+.dh-gas-accordion-head-title { flex: 1 1 auto; }
+.dh-gas-accordion-chevron { flex: 0 0 auto; transition: transform .15s; }
+.dh-gas-accordion-head.is-active .dh-gas-accordion-chevron { transform: rotate(180deg); }
+.dh-gas-accordion-body { padding: 16px; border-top: 1px solid var(--dh-line); background: var(--dh-paper); }
+.dh-gas-accordion-add {
+  display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%;
+  padding: 12px 16px; border: 1px dashed var(--dh-line); border-radius: 12px; background: none;
+  color: var(--dh-sea); font-family: var(--dh-font); font-weight: 700; font-size: .85rem; cursor: pointer;
+}
+.dh-gas-accordion-add:hover { background: var(--dh-foam); }
+.dh-gas-accordion-add .material-icons-round { font-size: 18px; }
+
+/* Small round icon button - saving GF/setpoint to the profile, and saving
+   a gas card's current mix as a custom gas (Pablo, 2026-09-18). Neutral at
+   rest; briefly turns green/red after a save attempt via .is-success /
+   .is-error (JS toggles the class and swaps the icon glyph for ~1.5s). */
+.dh-btn-icon {
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(255,255,255,.15); color: #fff;
+}
+.dh-btn-icon:hover { background: rgba(255,255,255,.3); }
+.dh-btn-icon .material-icons-round { font-size: 18px; }
+.dh-btn-icon.is-success { background: var(--dh-good); color: #fff; }
+.dh-btn-icon.is-error { background: var(--dh-danger); color: #fff; }
+/* Same icon button, but living on a light card body instead of the dark
+   Inputs header - the gas cards' own save-this-gas button. */
+.dh-gas-preset-row .dh-btn-icon { background: var(--dh-paper); color: var(--dh-muted); border: 1px solid var(--dh-line); }
+.dh-gas-preset-row .dh-btn-icon:hover { color: var(--dh-ink); border-color: var(--dh-ink); }
+.dh-gas-preset-row .dh-btn-icon.is-success { background: var(--dh-good); color: #fff; border-color: var(--dh-good); }
+.dh-gas-preset-row .dh-btn-icon.is-error { background: var(--dh-danger); color: #fff; border-color: var(--dh-danger); }
+/* "My Gases" reuses the standard preset chip look but pinned to the far
+   right of its row, since it opens a picker rather than setting a value
+   directly like its siblings. */
+.dh-gas-mygases-chip { margin-left: auto; }
+
+/* "My Gases" picker modal: one row per saved gas - the mix itself (click to
+   apply) plus a small delete button, same is-o2/is-he pill styling as the
+   rest of the app so a saved "21/35" reads the same everywhere. */
+.dh-mygases-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 1px solid var(--dh-line); }
+.dh-mygases-row:last-child { border-bottom: none; }
+.dh-mygases-pick { flex: 1 1 auto; display: flex; align-items: center; gap: 8px; background: none; border: none; padding: 4px; cursor: pointer; text-align: left; }
+.dh-mygases-pick:hover .dh-gas-result-pill { filter: brightness(1.08); }
+.dh-mygases-delete { flex: 0 0 auto; background: none; border: none; color: var(--dh-muted); cursor: pointer; padding: 4px; }
+.dh-mygases-delete:hover { color: var(--dh-danger); }
+.dh-mygases-empty { text-align: center; color: var(--dh-muted); padding: 24px 8px; font-size: .88rem; }
