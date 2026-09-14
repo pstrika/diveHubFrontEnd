@@ -184,7 +184,7 @@
 
                 @php $boatsToday = $boatsByDate[$today->date] ?? 0; @endphp
                 <a class="dh-wx-boats" href="{{ route('Trips') }}/{{ $today->date }}">
-                    <span class="material-icons-round" aria-hidden="true">sailing</span>
+                    <span class="material-icons-round" aria-hidden="true">directions_boat</span>
                     @if($boatsToday > 0)
                         {{ $boatsToday }} {{ Str::plural('boat', $boatsToday) }} going out from {{ ucwords($location) }} today
                     @else
