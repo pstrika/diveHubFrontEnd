@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Weatherday;
 use App\Models\Operator;
+use App\Support\Coast;
 use App\Support\TripBoard;
 use Illuminate\Http\Request;
 
@@ -205,13 +206,24 @@ class TripsController extends Controller
         $allWeather = Weatherday::whereBetween('date', [$from, $to])->get()->groupBy('date');
         $operators = Operator::select('id', 'location', 'phone')->get()->keyBy('id')->all();
 
+        // Registered divers with favourite locations still see those coasts'
+        // groups first, ahead of the pill-matching order otherwise applied
+        // (Pablo, 2026-09-19: "we keep the rule that if the user is
+        // registered and have fav locations, we show those first").
+        $favoriteCoasts = [];
+        if ($user && $user->isNotGuest() && $user->favLocations) {
+            $favIds = array_values(array_filter(array_map('intval', explode(',', $user->favLocations))));
+            $favShorts = $favIds ? $locations->whereIn('id', $favIds)->pluck('short')->all() : [];
+            $favoriteCoasts = array_values(array_unique(array_map(fn ($short) => Coast::forCode($short), $favShorts)));
+        }
+
         // One board per day in the range (a single day in day mode). Every date
         // is present, even with no trips, so the day strip has a cell for each.
         $byDate = $trips->groupBy('date');
         $days = [];
         for ($d = Carbon::parse($from); $d->lte(Carbon::parse($to)); $d->addDay()) {
             $key = $d->toDateString();
-            $days[$key] = TripBoard::build($byDate->get($key, collect()), $allWeather->get($key, collect()), $locations, $filters, $operators);
+            $days[$key] = TripBoard::build($byDate->get($key, collect()), $allWeather->get($key, collect()), $locations, $filters, $operators, $favoriteCoasts);
         }
         $board = $mode === 'day' ? $days[$date] : TripBoard::merge($days);
         $presets = TripBoard::rangePresets(Carbon::today());

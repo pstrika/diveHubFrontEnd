@@ -74,4 +74,22 @@ final class Coast
         }
         return $out;
     }
+
+    /**
+     * Full display order for anywhere trips/operators are grouped by coast -
+     * the chip order above, then Argentina/Other appended (they're outside
+     * the chip picker but a group still needs to render if it has trips).
+     * TripBoard's own group order used to just walk COASTS' declaration
+     * order (Treasure Coast, then Palm Beach, ...), which drifted out of
+     * sync once the chips were re-sorted for the finder (Pablo, 2026-09-19:
+     * "we resorted the order of the region pills in Trips, but we are still
+     * showing Palm Beach first in the list of trips below...need to be
+     * consistent with the sort that we had with the pills").
+     *
+     * @return string[]
+     */
+    public static function boardOrder(): array
+    {
+        return array_merge(self::CHIP_ORDER, ['argentina', 'other']);
+    }
 }

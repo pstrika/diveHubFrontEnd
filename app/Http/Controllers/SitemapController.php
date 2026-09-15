@@ -35,7 +35,10 @@ class SitemapController extends Controller
                         $sitemap->add(
                             Url::create(route('SiteDetails') . '/' . ($site->slug ?? $site->id))
                                 ->setLastModificationDate($site->updated_at ?? now())
-                                ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
+                                // Each site page embeds that site's upcoming trip
+                                // calendar, which is crawler-refreshed daily, not
+                                // the site's own static content (Pablo, 2026-09-19).
+                                ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY)
                                 ->setPriority(0.8)
                         );
                     }
@@ -50,7 +53,10 @@ class SitemapController extends Controller
                     foreach ($operators as $operator) {
                         $sitemap->add(
                             Url::create(route('OperatorDetails', ['id' => $operator->slug ?? $operator->id]))
-                                ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
+                                // Same reasoning as sites above - each operator
+                                // page includes their own trip calendar, refreshed
+                                // daily by the crawler (Pablo, 2026-09-19).
+                                ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY)
                                 ->setPriority(0.6)
                         );
                     }

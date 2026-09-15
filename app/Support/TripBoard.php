@@ -62,13 +62,16 @@ final class TripBoard
     }
 
     /**
-     * @param Collection $trips     enriched Trip models for one date
-     * @param Collection $weathers  Weatherday rows for that date, all locations
-     * @param Collection $locations WeatherLocation rows (short => location name)
-     * @param array      $filters   from filtersFromRequest()
-     * @param array      $operators id => Operator (for phone numbers on "Call to book"), optional
+     * @param Collection $trips          enriched Trip models for one date
+     * @param Collection $weathers       Weatherday rows for that date, all locations
+     * @param Collection $locations      WeatherLocation rows (short => location name)
+     * @param array      $filters        from filtersFromRequest()
+     * @param array      $operators      id => Operator (for phone numbers on "Call to book"), optional
+     * @param string[]   $favoriteCoasts Coast keys to show first, ahead of the
+     *                                   normal Coast::boardOrder() sequence -
+     *                                   a registered diver's favourite locations.
      */
-    public static function build(Collection $trips, Collection $weathers, Collection $locations, array $filters, array $operators = []): array
+    public static function build(Collection $trips, Collection $weathers, Collection $locations, array $filters, array $operators = [], array $favoriteCoasts = []): array
     {
         $now = Carbon::now();
         $shortToName = $locations->pluck('location', 'short')->map(fn ($n) => strtolower($n))->all();
@@ -147,9 +150,17 @@ final class TripBoard
             }
         }
 
-        // Coast display order is fixed (north to south); trips within by time.
+        // Coast display order matches the region chips (Coast::boardOrder()),
+        // not COASTS' own north-to-south declaration order - the chips were
+        // re-sorted for the finder and the trip list needs to agree with
+        // them (Pablo, 2026-09-19). A registered diver's favourite coasts
+        // still jump to the front of that same order. Trips within a coast
+        // still sort by time.
+        $baseOrder = Coast::boardOrder();
+        $favOrder = array_values(array_intersect($baseOrder, $favoriteCoasts));
+        $displayOrder = array_merge($favOrder, array_values(array_diff($baseOrder, $favOrder)));
         $ordered = [];
-        foreach (array_keys(Coast::all()) as $key) {
+        foreach ($displayOrder as $key) {
             if (isset($groups[$key])) {
                 usort($groups[$key]['trips'], fn ($a, $b) => strcmp($a['sortKey'], $b['sortKey']));
                 $groups[$key]['locations'] = array_values($groups[$key]['locations']);
