@@ -6932,12 +6932,20 @@
                 // everywhere else in this PDF (Pablo, 2026-09-19: "now with
                 // no padding at all on the top...make those show in the
                 // middle of the wrapper").
-                // Padding bumped 3px -> 8px -> 14px top/bottom - the pill
-                // kept reading as crowded against the chip's own border
-                // (Pablo, 2026-09-19: "the padding on the gas pills go from
-                // 8px to 14px").
+                // DIAGNOSTIC TEST (Pablo, 2026-09-19: "let's do a dramatic
+                // test: bump it to 25px...make the wrapper as tight as
+                // possible"): padding is on this outer chip div, wrapping
+                // BOTH the label text and the pill together as one table
+                // row - not on the pill by itself. Both cells already use
+                // vertical-align:middle with zero padding of their own
+                // (tdPill below, tdLabel a few lines down has only
+                // horizontal padding between the two), so a uniform 25px
+                // here should push text and pill down/up together, evenly,
+                // with visibly more gap above/below both than the border.
+                // If it doesn't look even after this, the row's own
+                // vertical-align is the thing to revisit, not this padding.
                 var chip = document.createElement('div');
-                chip.style.cssText = 'display:inline-block; border:1.5px solid #0b2a3a; border-radius:999px; padding:14px 14px 14px 16px; flex:0 0 auto;';
+                chip.style.cssText = 'display:inline-block; border:1.5px solid #0b2a3a; border-radius:999px; padding:25px; flex:0 0 auto;';
                 var table = document.createElement('table');
                 table.style.cssText = 'border-collapse:collapse;';
                 var tr = document.createElement('tr');
