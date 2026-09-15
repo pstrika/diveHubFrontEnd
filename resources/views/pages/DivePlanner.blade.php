@@ -1819,10 +1819,16 @@
                     if(baselineRTDT[1] == 0){  //No deco, we hide the table and adjust the size of the chart to col-12
                         document.getElementById("decoTableContainer").style.display = "none";
                         document.getElementById("profileChartContainer").className = "col-lg-12 col-12";
+                        // Nothing to export - a pure NDL dive has no
+                        // decompression plan (Pablo, 2026-09-19: "if deco
+                        // time is 0 for the case, just don't show the
+                        // export to pdf, there is no deco to print").
+                        document.getElementById("exportDecoPlanPdfBtn").hidden = true;
 
                     } else {
                         document.getElementById("decoTableContainer").style.display ="block";
                         document.getElementById("profileChartContainer").className = "col-lg-6 col-12";
+                        document.getElementById("exportDecoPlanPdfBtn").hidden = false;
                     }
                     filter1RTDT = calculateDecoTime(response['add5min']);
                     filter2RTDT = calculateDecoTime(response['add10ft']);
@@ -6724,26 +6730,35 @@
         // reimplemented by hand for the PDF.
         function dhBuildPdfSplitPill(o2, he, compact) {
             var sizeClass = compact ? ' is-compact' : '';
+            var pillHeight = compact ? 24 : 32;
             var wrap = document.createElement('span');
             wrap.className = 'dh-gas-split-pill' + (he === 0 ? ' is-solo' : '');
-            // Forcing an explicit height here (a prior attempt at this fix)
-            // pinned the pill to the top of its wrapper with no play left
-            // for centering, instead of fixing the centering itself - real
-            // vertical centering now comes from wherever this pill is
-            // placed (a table cell with vertical-align:middle), which
-            // html2canvas handles reliably, unlike flex align-items on a
-            // row of mismatched-height children (Pablo, 2026-09-19: "now
-            // with no padding at all on the top...make those show in the
-            // middle of the wrapper").
+            // Getting this pill vertically centered where it sits took two
+            // earlier attempts at the WRAPPER's alignment (a fixed height on
+            // this span, then a table cell instead of flex) - the remaining
+            // offset is inside the pill itself: its number text relies on
+            // .dh-gas-result-pill's own align-items:center (a flex row) to
+            // center vertically, and html2canvas doesn't compute that
+            // reliably either. line-height centering (below, on each pill
+            // label) is plain text layout, not flex, so it renders
+            // correctly (Pablo, 2026-09-19: "still not centered...add more
+            // padding at the top of the split pills").
             wrap.style.cssText = 'display:inline-flex; vertical-align:middle;';
+            function styleForLineHeightCentering(el) {
+                el.style.display = 'inline-block';
+                el.style.lineHeight = pillHeight + 'px';
+                el.style.textAlign = 'center';
+            }
             var o2Pill = document.createElement('label');
             o2Pill.className = 'dh-gas-result-pill is-o2' + sizeClass;
             o2Pill.textContent = o2;
+            styleForLineHeightCentering(o2Pill);
             wrap.appendChild(o2Pill);
             if (he !== 0) {
                 var hePill = document.createElement('label');
                 hePill.className = 'dh-gas-result-pill is-he' + sizeClass;
                 hePill.textContent = he;
+                styleForLineHeightCentering(hePill);
                 wrap.appendChild(hePill);
             }
             return wrap;
@@ -6968,12 +6983,11 @@
             var points = computeOCGasSwitchPoints(baseline, false);
             if (!points.length) return wrap;
 
-            // Same font/color as the Decompression Table/Chart headers, but
-            // with a blue (not navy) underline to set it apart as a
-            // secondary section (Pablo, 2026-09-19: "use the same font and
-            // color that Decompression table or Decompression chart...add
-            // the line below in blue").
-            wrap.appendChild(dhBuildPdfColumnHeader('Gas switches', '#0e7c9e'));
+            // Same font/color AND underline as every other section header -
+            // the blue underline from the previous round didn't match after
+            // all (Pablo, 2026-09-19: "the line below gas switches needs to
+            // be the same color as the other lines").
+            wrap.appendChild(dhBuildPdfColumnHeader('Gas switches'));
 
             var table = document.createElement('table');
             table.style.cssText = 'width:100%; border-collapse:collapse; font-size:12px;';
