@@ -1659,6 +1659,13 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-channel-chip.is-whatsapp:hover:not(.is-active) { border-color: var(--dh-good); color: var(--dh-good); }
 .dh-channel-chip.is-email:hover:not(.is-active) { border-color: var(--dh-avg); color: var(--dh-avg); }
 
+/* Save-GF/setpoint icon embedded in the OC/CC pills themselves (Pablo,
+   2026-09-19). Inherits the pill's own text color (grey at rest, white on
+   .is-active) until a save attempt flashes it green/red. */
+.dh-channel-chip .dh-save-prefs-icon:hover { opacity: .75; }
+.dh-channel-chip .dh-save-prefs-icon.is-success { color: var(--dh-good); }
+.dh-channel-chip .dh-save-prefs-icon.is-error { color: var(--dh-danger); }
+
 /* Thread header: "Send registration invite" - one chip per channel that
    actually reaches this contact (SMS+WhatsApp for a phone, Email for an
    address), sized down to fit inline next to the contact's name. */

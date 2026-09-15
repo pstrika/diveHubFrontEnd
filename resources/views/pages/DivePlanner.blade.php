@@ -294,17 +294,22 @@
                             <div class="row">
                                 <div class="col-12">
                                     <div class="dh-channel-picker dh-gas-picker" id="nav-tabs">
-                                        <button type="button" class="dh-channel-chip is-active" data-tag="OC">Open Circuit</button>
-                                        <button type="button" class="dh-channel-chip" data-tag="CC">Close Circuit CCR</button>
                                         {{-- Saves GF Low/High + setpoint to the diver's profile so the
-                                             planner remembers them next visit (Pablo, 2026-09-18). Always
-                                             visible - like Export PDF - rather than hidden for guests
-                                             (Pablo, 2026-09-19: "I don't see the save button"); a guest who
-                                             clicks it gets a clear message instead of the control just not
-                                             being there (easy to miss why on a slot with its own separate
-                                             login session). --}}
-                                        <button type="button" class="dh-btn-icon" id="saveDecoPrefsBtn" style="margin-left:auto;" title="Save GF Low/High and setpoint to your profile">
-                                            <span class="material-icons-round" aria-hidden="true">bookmark_border</span>
+                                             planner remembers them next visit (Pablo, 2026-09-18) - one
+                                             icon embedded in each pill's own right edge (Pablo, 2026-09-19:
+                                             "aligned right in the open circuit and close circuit pills"),
+                                             not a single shared button after both. Always visible, even for
+                                             guests, who get a clear message on click instead of the control
+                                             just not being there. Both icons trigger the same save (the
+                                             values aren't mode-specific), and stopPropagation keeps a click
+                                             on the icon from also switching OC/CC. --}}
+                                        <button type="button" class="dh-channel-chip is-active" data-tag="OC">
+                                            <span>Open Circuit</span>
+                                            <span class="material-icons-round dh-save-prefs-icon" aria-hidden="true" title="Save GF Low/High and setpoint to your profile" style="margin-left:auto;">bookmark_border</span>
+                                        </button>
+                                        <button type="button" class="dh-channel-chip" data-tag="CC">
+                                            <span>Close Circuit CCR</span>
+                                            <span class="material-icons-round dh-save-prefs-icon" aria-hidden="true" title="Save GF Low/High and setpoint to your profile" style="margin-left:auto;">bookmark_border</span>
                                         </button>
                                     </div>
                                 </div>
@@ -3389,9 +3394,25 @@
             });
         });
 
-        var saveDecoPrefsBtn = document.getElementById('saveDecoPrefsBtn');
-        if (saveDecoPrefsBtn) {
-            saveDecoPrefsBtn.addEventListener('click', function () {
+        // One icon embedded in each of the OC/CC pills (Pablo, 2026-09-19) -
+        // both trigger the same save, since GF/setpoint aren't mode-specific.
+        // stopPropagation keeps a click on the icon from also bubbling up
+        // to the pill's own click handler and switching OC/CC.
+        var saveDecoPrefsIcons = document.querySelectorAll('.dh-save-prefs-icon');
+        function dhFlashSaveIcon(ok) {
+            saveDecoPrefsIcons.forEach(function (icon) {
+                var original = icon.textContent;
+                icon.textContent = ok ? 'check' : 'error_outline';
+                icon.classList.add(ok ? 'is-success' : 'is-error');
+                setTimeout(function () {
+                    icon.textContent = original;
+                    icon.classList.remove('is-success', 'is-error');
+                }, 1500);
+            });
+        }
+        saveDecoPrefsIcons.forEach(function (icon) {
+            icon.addEventListener('click', function (event) {
+                event.stopPropagation();
                 $.ajax({
                     url: '{{ route("DecoPlanner.savePreferences") }}',
                     method: 'POST',
@@ -3400,9 +3421,9 @@
                         gfHigh: parseInt(labelGFH.value, 10),
                         setpoint: parseFloat(labelSetpoint.value),
                     },
-                    success: function () { dhFlashIconButton(saveDecoPrefsBtn, true); },
+                    success: function () { dhFlashSaveIcon(true); },
                     error: function (xhr) {
-                        dhFlashIconButton(saveDecoPrefsBtn, false);
+                        dhFlashSaveIcon(false);
                         if (xhr.status === 403) {
                             // Guest (the shared account) - explain why instead of
                             // leaving a bare red flash with no context.
@@ -3411,7 +3432,7 @@
                     },
                 });
             });
-        }
+        });
 
         document.querySelectorAll('#gas-accordion .dh-gas-accordion-head[data-gas-tab]').forEach(function (btn) {
             btn.addEventListener('click', function () {
