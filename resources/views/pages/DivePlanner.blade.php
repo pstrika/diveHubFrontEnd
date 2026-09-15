@@ -335,9 +335,14 @@
                                          embedded in the OC/CC pills. Always visible, even for guests, who
                                          get a clear message on click instead of the control just not
                                          being there. --}}
-                                    <button type="button" class="dh-channel-chip" id="saveDecoPrefsPill" style="margin-left:auto;" title="Save GF Low/High and setpoint to your profile">
+                                    <button type="button" class="dh-channel-chip" id="saveDecoPrefsPill" style="flex: 0 0 auto; margin-left:auto;" title="Save GF Low/High and setpoint to your profile">
                                         <span class="material-icons-round" aria-hidden="true" style="font-size: 15px; vertical-align: -3px;">bookmark_border</span>
-                                        Save GFs &amp; Setpoint
+                                        {{-- Setpoint only applies to CC (OC has no CCR setpoint) - label
+                                             matches whichever the diver is currently looking at (Pablo,
+                                             2026-09-19: "the pill in OC needs to say Save GFs, the one in
+                                             CC is correct as is"). showOpenCircuit/showClosedCircuit swap
+                                             this text; default here matches the page's default OC mode. --}}
+                                        <span id="saveDecoPrefsPillLabel">Save GFs</span>
                                     </button>
                                 </div>
                             </div>
@@ -5897,6 +5902,8 @@
 
                 // set model to mode OC
                 modeOCOrCC = "OC";
+                // OC has no CCR setpoint, so the save pill only mentions GFs.
+                document.getElementById('saveDecoPrefsPillLabel').textContent = 'Save GFs';
                 dhResetGasSlots();
                 // tank_double.png's transparent window starts at y=58/300 of
                 // the source image - scaled to this 156px canvas that's ~28px
@@ -5952,6 +5959,8 @@
 
                 // set model to mode OC
                 modeOCOrCC = "CC";
+                // CC has a setpoint, so the save pill covers both.
+                document.getElementById('saveDecoPrefsPillLabel').textContent = 'Save GFs & Setpoint';
                 dhResetGasSlots();
                 // tank_ccr.png's window starts higher in the tank body than
                 // tank_double's - y=34/300 of the source image, ~16px down
