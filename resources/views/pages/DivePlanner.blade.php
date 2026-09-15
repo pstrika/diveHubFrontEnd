@@ -6943,9 +6943,16 @@
                 tdLabel.textContent = label + ':';
                 tr.appendChild(tdLabel);
 
+                // Alignment itself comes from the flat row's shared
+                // vertical-align:middle above - this is a deliberate few-px
+                // nudge on top of that, purely visual (doesn't touch layout/
+                // alignment math at all), per Pablo, 2026-09-19: "now that
+                // you have the pill and text aligned...push the pill even
+                // further down compared to the text".
                 var o2Pill = document.createElement('label');
                 o2Pill.className = 'dh-gas-result-pill is-o2 is-compact';
                 o2Pill.textContent = o2 + '%';
+                o2Pill.style.cssText = 'position:relative; top:3px;';
                 var tdO2 = document.createElement('td');
                 tdO2.style.cssText = 'vertical-align:middle; padding:0;';
                 tdO2.appendChild(o2Pill);
@@ -6956,7 +6963,7 @@
                     var hePill = document.createElement('label');
                     hePill.className = 'dh-gas-result-pill is-he is-compact';
                     hePill.textContent = he + '%';
-                    hePill.style.borderRadius = '0 24px 24px 0';
+                    hePill.style.cssText = 'position:relative; top:3px; border-radius:0 24px 24px 0;';
                     var tdHe = document.createElement('td');
                     tdHe.style.cssText = 'vertical-align:middle; padding:0;';
                     tdHe.appendChild(hePill);
