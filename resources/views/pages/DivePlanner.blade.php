@@ -6724,9 +6724,17 @@
         // reimplemented by hand for the PDF.
         function dhBuildPdfSplitPill(o2, he, compact) {
             var sizeClass = compact ? ' is-compact' : '';
+            var pillHeight = compact ? 24 : 32;
             var wrap = document.createElement('span');
             wrap.className = 'dh-gas-split-pill' + (he === 0 ? ' is-solo' : '');
-            wrap.style.verticalAlign = 'middle';
+            // Explicit height/centering instead of trusting the wrapper's
+            // content-driven size to exactly match its sibling label text -
+            // html2canvas rasterizes the pill's rounded corners a pixel or
+            // two differently than plain text, which read as a visible
+            // vertical offset once flattened to an image (Pablo, 2026-09-19:
+            // "the split pills in the wrappers are not vertically aligned
+            // in the middle...make sure the padding is even top and bottom").
+            wrap.style.cssText = 'display:inline-flex; align-items:center; height:' + pillHeight + 'px; vertical-align:middle;';
             var o2Pill = document.createElement('label');
             o2Pill.className = 'dh-gas-result-pill is-o2' + sizeClass;
             o2Pill.textContent = o2;
@@ -6788,7 +6796,7 @@
             var lines = [
                 '<b>Site/Depth:</b> ' + siteName + ' (' + profile.maxDepth + dhFormatDepthUnit() + ')',
                 '<b>Bottom time:</b> ' + profile.bottomTime + 'm &nbsp;&nbsp; <b>GFs:</b> ' + gfsText,
-                '<b>Asc/Dsc rates:</b> ' + profile.rate.descent + '/' + profile.rate.ascent + ' ' + dhFormatRateUnit(),
+                '<b>Dsc/Asc rates:</b> ' + profile.rate.descent + '/' + profile.rate.ascent + ' ' + dhFormatRateUnit(),
             ];
             if (isCC) lines.push('<b>Set Point:</b> ' + profile.setpoint);
             infoBlock.innerHTML = lines.map(function (l) { return '<div>' + l + '</div>'; }).join('');
@@ -7064,11 +7072,18 @@
                 sub1.textContent = 'Bottom gas';
                 col3.appendChild(sub1);
                 col3.appendChild(dhBuildPdfGasConsumptionTable('bottomGasConsumptionTableContainer'));
-                var sub2 = document.createElement('div');
-                sub2.style.cssText = 'font-weight:700; font-size:12px; color:#5a6b78; text-transform:uppercase; letter-spacing:.03em; margin:12px 0 6px;';
-                sub2.textContent = 'Decompression gases';
-                col3.appendChild(sub2);
-                col3.appendChild(dhBuildPdfGasConsumptionTable('decoGasConsumptionTableContainer'));
+                // No deco gases added to this plan - there's nothing for a
+                // "Decompression gases" table to ever show, so skip the
+                // label entirely instead of a heading over an empty table
+                // (Pablo, 2026-09-19: "if there is no deco gases in the
+                // plan for OC, just remove the word decompression gases").
+                if (profile.decoGases && profile.decoGases.length) {
+                    var sub2 = document.createElement('div');
+                    sub2.style.cssText = 'font-weight:700; font-size:12px; color:#5a6b78; text-transform:uppercase; letter-spacing:.03em; margin:12px 0 6px;';
+                    sub2.textContent = 'Decompression gases';
+                    col3.appendChild(sub2);
+                    col3.appendChild(dhBuildPdfGasConsumptionTable('decoGasConsumptionTableContainer'));
+                }
             }
             row.appendChild(col3);
 
