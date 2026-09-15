@@ -6724,17 +6724,18 @@
         // reimplemented by hand for the PDF.
         function dhBuildPdfSplitPill(o2, he, compact) {
             var sizeClass = compact ? ' is-compact' : '';
-            var pillHeight = compact ? 24 : 32;
             var wrap = document.createElement('span');
             wrap.className = 'dh-gas-split-pill' + (he === 0 ? ' is-solo' : '');
-            // Explicit height/centering instead of trusting the wrapper's
-            // content-driven size to exactly match its sibling label text -
-            // html2canvas rasterizes the pill's rounded corners a pixel or
-            // two differently than plain text, which read as a visible
-            // vertical offset once flattened to an image (Pablo, 2026-09-19:
-            // "the split pills in the wrappers are not vertically aligned
-            // in the middle...make sure the padding is even top and bottom").
-            wrap.style.cssText = 'display:inline-flex; align-items:center; height:' + pillHeight + 'px; vertical-align:middle;';
+            // Forcing an explicit height here (a prior attempt at this fix)
+            // pinned the pill to the top of its wrapper with no play left
+            // for centering, instead of fixing the centering itself - real
+            // vertical centering now comes from wherever this pill is
+            // placed (a table cell with vertical-align:middle), which
+            // html2canvas handles reliably, unlike flex align-items on a
+            // row of mismatched-height children (Pablo, 2026-09-19: "now
+            // with no padding at all on the top...make those show in the
+            // middle of the wrapper").
+            wrap.style.cssText = 'display:inline-flex; vertical-align:middle;';
             var o2Pill = document.createElement('label');
             o2Pill.className = 'dh-gas-result-pill is-o2' + sizeClass;
             o2Pill.textContent = o2;
@@ -6840,18 +6841,31 @@
                 // 2026-09-19: "the pills with the gases...are two large.
                 // Make sure that all gas split pills have the same size in
                 // all the pdf. The wrapper needs to be more tight").
+                //
+                // A real table + td vertical-align:middle instead of a flex
+                // row - flex align-items:center on a row of mismatched-
+                // height children (plain text next to a pill) is not
+                // reliable under html2canvas (two earlier attempts at this
+                // exact fix both left the pill mis-centered), whereas table
+                // cell vertical alignment already renders correctly
+                // everywhere else in this PDF (Pablo, 2026-09-19: "now with
+                // no padding at all on the top...make those show in the
+                // middle of the wrapper").
                 var chip = document.createElement('div');
-                chip.style.cssText = 'display:flex; align-items:center; gap:6px; border:1.5px solid #0b2a3a; border-radius:999px; padding:3px 10px 3px 12px; flex:0 0 auto;';
-                var labelSpan = document.createElement('span');
-                // Matches the compact split pill's own 24px height exactly,
-                // instead of trusting the flex row's align-items:center -
-                // html2canvas has a known habit of mis-centering flex
-                // children of different heights (Pablo, 2026-09-19: "result
-                // pills are showing slightly above the text before them").
-                labelSpan.style.cssText = 'display:inline-flex; align-items:center; height:24px; font-weight:700; font-size:12px; color:#0b2a3a; white-space:nowrap;';
-                labelSpan.textContent = label + ':';
-                chip.appendChild(labelSpan);
-                chip.appendChild(dhBuildPdfSplitPill(o2, he, true));
+                chip.style.cssText = 'display:inline-block; border:1.5px solid #0b2a3a; border-radius:999px; padding:3px 10px 3px 12px; flex:0 0 auto;';
+                var table = document.createElement('table');
+                table.style.cssText = 'border-collapse:collapse;';
+                var tr = document.createElement('tr');
+                var tdLabel = document.createElement('td');
+                tdLabel.style.cssText = 'vertical-align:middle; padding:0 6px 0 0; font-weight:700; font-size:12px; color:#0b2a3a; white-space:nowrap;';
+                tdLabel.textContent = label + ':';
+                var tdPill = document.createElement('td');
+                tdPill.style.cssText = 'vertical-align:middle; padding:0;';
+                tdPill.appendChild(dhBuildPdfSplitPill(o2, he, true));
+                tr.appendChild(tdLabel);
+                tr.appendChild(tdPill);
+                table.appendChild(tr);
+                chip.appendChild(table);
                 row.appendChild(chip);
             }
 
@@ -7015,18 +7029,25 @@
             var row = document.createElement('div');
             row.style.cssText = 'display:flex; align-items:center; gap:20px; margin-bottom:18px;';
 
+            // Table + td vertical-align:middle, not a flex row - same fix
+            // and same reason as dhBuildPdfGases's addChip below.
             function addTimePill(label, value) {
-                var chip = document.createElement('span');
-                chip.style.cssText = 'display:inline-flex; align-items:center; gap:8px; flex:0 0 auto;';
-                var labelSpan = document.createElement('span');
-                labelSpan.style.cssText = 'display:inline-flex; align-items:center; height:32px; font-weight:700; font-size:13px; color:#0b2a3a; white-space:nowrap;';
-                labelSpan.textContent = label;
-                chip.appendChild(labelSpan);
+                var table = document.createElement('table');
+                table.style.cssText = 'display:inline-table; border-collapse:collapse; margin-right:20px;';
+                var tr = document.createElement('tr');
+                var tdLabel = document.createElement('td');
+                tdLabel.style.cssText = 'vertical-align:middle; padding:0 8px 0 0; font-weight:700; font-size:13px; color:#0b2a3a; white-space:nowrap;';
+                tdLabel.textContent = label;
+                var tdPill = document.createElement('td');
+                tdPill.style.cssText = 'vertical-align:middle; padding:0;';
                 var pill = document.createElement('label');
                 pill.className = 'dh-gas-result-pill';
                 pill.textContent = value;
-                chip.appendChild(pill);
-                row.appendChild(chip);
+                tdPill.appendChild(pill);
+                tr.appendChild(tdLabel);
+                tr.appendChild(tdPill);
+                table.appendChild(tr);
+                row.appendChild(table);
             }
 
             addTimePill('Run time', document.getElementById('labelTotalRunTime').textContent.trim());
