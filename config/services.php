@@ -75,15 +75,35 @@ return [
         // match the template Pablo built directly in Meta Business
         // Manager - that direct-in-Meta original doesn't sync into
         // Twilio's Content API on its own, so this is its own resource and
-        // needed its own Meta review - approved 2026-09-14 (Pablo: "all
-        // WhatsApp templates were approved"), live. Fallbacks if this one
-        // ever needs to be swapped out, in order of how close a match they
-        // are:
+        // needed its own Meta review - approved 2026-09-14.
+        //
+        // IMPORTANT (2026-09-15, found via a real test send that came back
+        // Twilio error 63049): "approved" only means Meta accepted the
+        // content - it does NOT mean it delivers. Meta has blocked WhatsApp
+        // MARKETING-category template messages to US recipients since April
+        // 1, 2025, and this template is approved under that category, so
+        // every send to a US number bounces as undelivered regardless of
+        // retries. Confirmed the account/credentials/number are otherwise
+        // fine by sending trip_reminder_2 (UTILITY) to the same number,
+        // which delivered.
+        //
+        // Fix in progress: an approved WhatsApp template can't be
+        // recategorized in place (Twilio error 92009 - "recreate a new
+        // template to make any changes"), so HX5d3a236a3d6d03242b812be6ec5eb334
+        // "trip_reminder_3_with_waiver_utility" is a duplicate of this exact
+        // content, submitted 2026-09-15 for approval as UTILITY instead.
+        // Once Meta approves it, swap this config value (or
+        // TWILIO_WHATSAPP_TRIP_REMINDER_SID) over to it - do not swap before
+        // approval, an unapproved ContentSid won't send at all.
+        //
+        // Other fallbacks, in order of how close a match they are:
         //   - HXc96f0ea171f85fca8b3ecaa3a00fb9a4 "trip_reminder_3" - same
-        //     but without the Sign Waiver button (also approved).
+        //     but without the Sign Waiver button. Also approved as
+        //     MARKETING, so also blocked for US recipients until/unless it
+        //     gets the same recategorization treatment.
         //   - HXe8039180c734c549ecc59fe2e0c343c1 "trip_reminder_2" - plain
-        //     text, no image/buttons at all, category UTILITY, approved
-        //     and live-tested earlier.
+        //     text, no image/buttons at all, category UTILITY, approved and
+        //     confirmed delivering to a real US number 2026-09-15.
         //   - HXdb6d8053b6017f001e74d9787321dbdb - dead, first
         //     trip_reminder_3 attempt, submitted as UTILITY by mistake.
         'trip_reminder_content_sid' => env('TWILIO_WHATSAPP_TRIP_REMINDER_SID', 'HX3c63aba80c351d4a492df18b407b16cc'),
