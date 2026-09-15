@@ -1813,8 +1813,14 @@
                     baselineRTDT = generateDecoTable(response['baseline']);
                     
                     // generate BO table
-                    if (modeOCOrCC == "CC")
-                        generateDecoTable(response['bailout'], 1);
+                    if (modeOCOrCC == "CC") {
+                        // Captured for the PDF's red "+Xm" badges on the
+                        // Dive times pills - how much longer a real bailout
+                        // to OC would run vs the planned CC profile (Pablo,
+                        // 2026-09-19: "add the red badges with the +xm over
+                        // the Run Time and Deco time").
+                        window.lastBailoutTotals = generateDecoTable(response['bailout'], 1);
+                    }
 
                     if(baselineRTDT[1] == 0){  //No deco, we hide the table and adjust the size of the chart to col-12
                         document.getElementById("decoTableContainer").style.display = "none";
@@ -4911,11 +4917,7 @@
             // ever feeds straight into a <td> below, so returning markup
             // here (instead of a plain string) is safe.
             function formatGas(gasArray) {
-                var o2 = gasArray[1], he = gasArray[3];
-                if (he == 0) {
-                    return '<span class="dh-gas-split-pill is-solo"><label class="dh-gas-result-pill is-o2 is-compact">' + o2 + '</label></span>';
-                }
-                return '<span class="dh-gas-split-pill"><label class="dh-gas-result-pill is-o2 is-compact">' + o2 + '</label><label class="dh-gas-result-pill is-he is-compact">' + he + '</label></span>';
+                return dhBuildGasSplitPillHtml(gasArray[1], gasArray[3], true);
             }
             function formatTime(minutes) {
                 let totalSeconds = Math.round(minutes * 60);
@@ -6604,9 +6606,15 @@
                 if (filterType === "bottom" && entry.type !== "bottom") return;
                 if (filterType === "deco" && entry.type !== "deco") return;
 
+                // Real green-O2/blue-He split pill instead of plain
+                // "18/45" text - same convention as the Gas column
+                // elsewhere (Pablo, 2026-09-19: "we can use the gas split
+                // pills in the gas consumption...same criteria we do for
+                // everywhere else").
+                var mix = dhParseGasMixString(entry.gas);
                 const row = document.createElement("tr");
                 row.innerHTML = `
-                    <td>${entry.gas}</td>
+                    <td>${dhBuildGasSplitPillHtml(mix.o2, mix.he, true)}</td>
                     <td>${(entry.volume * ({{ $deco_unit ? 28.3168 : 1 }})).toFixed(2)}</td>
                 `;
                 tbody.appendChild(row);
@@ -6820,6 +6828,20 @@
             return { o2: parseInt(str, 10) || 0, he: 0 };
         }
 
+        // The one green-O2/blue-He split pill markup, as an HTML string for
+        // the places that build a table row via innerHTML rather than the
+        // DOM API (Pablo, 2026-09-19: "in the app view, we can use the gas
+        // split pills in the gas consumption...same criteria we do
+        // everywhere else"). Shared by generateDecoTable's Gas column and
+        // the Gas Consumption tables below, so both stay in sync.
+        function dhBuildGasSplitPillHtml(o2, he, compact) {
+            var sizeClass = compact ? ' is-compact' : '';
+            if (he == 0) {
+                return '<span class="dh-gas-split-pill is-solo"><label class="dh-gas-result-pill is-o2' + sizeClass + '">' + o2 + '</label></span>';
+            }
+            return '<span class="dh-gas-split-pill"><label class="dh-gas-result-pill is-o2' + sizeClass + '">' + o2 + '</label><label class="dh-gas-result-pill is-he' + sizeClass + '">' + he + '</label></span>';
+        }
+
         function dhBuildPdfHeader(profile, isCC) {
             var header = document.createElement('div');
             header.style.cssText = 'position:relative; background:#0b2a3a; color:#fff; display:flex; align-items:center; padding:26px 48px; gap:28px; flex:0 0 auto;';
@@ -6910,8 +6932,12 @@
                 // everywhere else in this PDF (Pablo, 2026-09-19: "now with
                 // no padding at all on the top...make those show in the
                 // middle of the wrapper").
+                // Padding bumped from 3px top/bottom to 8px - the pill was
+                // reading as crowded against the chip's own border (Pablo,
+                // 2026-09-19: "we need more top padding on top of the gas
+                // pills to separate them from the wrapper border").
                 var chip = document.createElement('div');
-                chip.style.cssText = 'display:inline-block; border:1.5px solid #0b2a3a; border-radius:999px; padding:3px 10px 3px 12px; flex:0 0 auto;';
+                chip.style.cssText = 'display:inline-block; border:1.5px solid #0b2a3a; border-radius:999px; padding:8px 14px 8px 16px; flex:0 0 auto;';
                 var table = document.createElement('table');
                 table.style.cssText = 'border-collapse:collapse;';
                 var tr = document.createElement('tr');
@@ -7084,16 +7110,19 @@
         // Full-size (not .is-compact) pills, a step up from every other gas
         // pill in the PDF, since this is the one summary section rather
         // than a per-row/per-gas label.
-        function dhBuildPdfDiveTimesSection() {
+        // `bailoutTotals` is the [runTime, decoTime] generateDecoTable(...,1)
+        // already returned for the bailout profile (window.lastBailoutTotals)
+        // - only meaningful, and only passed, for CC.
+        function dhBuildPdfDiveTimesSection(isCC, bailoutTotals) {
             var wrap = document.createElement('div');
             wrap.appendChild(dhBuildPdfColumnHeader('Dive times'));
 
             var row = document.createElement('div');
-            row.style.cssText = 'display:flex; align-items:center; gap:20px; margin-bottom:18px;';
+            row.style.cssText = 'display:flex; align-items:center; gap:20px; margin-bottom:6px;';
 
             // Table + td vertical-align:middle, not a flex row - same fix
             // and same reason as dhBuildPdfGases's addChip below.
-            function addTimePill(label, value) {
+            function addTimePill(label, value, deltaMinutes) {
                 var table = document.createElement('table');
                 table.style.cssText = 'display:inline-table; border-collapse:collapse; margin-right:20px;';
                 var tr = document.createElement('tr');
@@ -7102,36 +7131,72 @@
                 tdLabel.textContent = label;
                 var tdPill = document.createElement('td');
                 tdPill.style.cssText = 'vertical-align:middle; padding:0;';
+                // Wrapped in a relatively-positioned span so the delta badge
+                // (CC only) can sit absolutely on the pill's own corner,
+                // same convention as the on-screen What-if summary's
+                // .dh-gas-pill-badge.
+                var pillWrap = document.createElement('span');
+                pillWrap.style.cssText = 'position:relative; display:inline-block;';
                 var pill = document.createElement('label');
                 pill.className = 'dh-gas-result-pill';
                 pill.textContent = value;
-                tdPill.appendChild(pill);
+                pillWrap.appendChild(pill);
+                if (deltaMinutes > 0) {
+                    var badge = document.createElement('span');
+                    badge.style.cssText = 'position:absolute; top:-8px; right:-10px; min-width:20px; height:20px; padding:0 5px; border-radius:999px; background:#b0322b; color:#fff; font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center; border:2px solid #fff; line-height:1;';
+                    badge.textContent = '+' + deltaMinutes;
+                    pillWrap.appendChild(badge);
+                }
+                tdPill.appendChild(pillWrap);
                 tr.appendChild(tdLabel);
                 tr.appendChild(tdPill);
                 table.appendChild(tr);
                 row.appendChild(table);
             }
 
-            addTimePill('Run time', document.getElementById('labelTotalRunTime').textContent.trim());
-            addTimePill('Deco time', document.getElementById('labelTotalDecoTime').textContent.trim());
+            // Deltas match the on-screen What-if summary's own convention
+            // (round the difference of the raw totals, not the difference
+            // of two already-rounded display strings).
+            var runDelta = 0, decoDelta = 0;
+            if (isCC && bailoutTotals) {
+                runDelta = Math.round(bailoutTotals[0] - baselineRTDT[0]);
+                decoDelta = Math.round(bailoutTotals[1] - baselineRTDT[1]);
+            }
+
+            addTimePill('Run time', document.getElementById('labelTotalRunTime').textContent.trim(), runDelta);
+            addTimePill('Deco time', document.getElementById('labelTotalDecoTime').textContent.trim(), decoDelta);
 
             wrap.appendChild(row);
+
+            // Legend only makes sense once at least one badge could show
+            // (Pablo, 2026-09-19: "add a small red legend just below to say
+            // in red added time if bailout to OC").
+            if (isCC && (runDelta > 0 || decoDelta > 0)) {
+                var legend = document.createElement('div');
+                legend.style.cssText = 'color:#b0322b; font-size:10px; font-weight:600; margin-bottom:12px;';
+                legend.textContent = 'in red: added time if bailout to OC';
+                wrap.appendChild(legend);
+            }
+
             return wrap;
         }
 
         function dhBuildPdfColumns(profile, isCC, mainChartUrl, baseline, bailout) {
             var row = document.createElement('div');
+            row.id = 'dhPdfColumnsRow';
             row.style.cssText = 'display:flex; gap:30px; padding:12px 48px 34px; flex:1 1 auto; min-height:0;';
 
             var col1 = document.createElement('div');
+            col1.className = 'dh-pdf-fit-col';
             col1.style.cssText = 'flex:1 1 0; min-width:0;';
             col1.appendChild(dhBuildPdfColumnHeader('Decompression Table'));
             col1.appendChild(dhBuildPdfTableClone('decoTableContainer'));
             row.appendChild(col1);
 
             var col2 = document.createElement('div');
+            col2.className = 'dh-pdf-fit-col';
             col2.style.cssText = 'flex:1 1 0; min-width:0;';
-            col2.appendChild(dhBuildPdfDiveTimesSection());
+            col2.appendChild(dhBuildPdfDiveTimesSection(isCC, bailout ? window.lastBailoutTotals : null));
             col2.appendChild(dhBuildPdfColumnHeader('Decompression Chart'));
             var chartCard = document.createElement('div');
             chartCard.style.cssText = 'background:#0b2a3a; border-radius:14px; padding:16px;';
@@ -7144,6 +7209,7 @@
             row.appendChild(col2);
 
             var col3 = document.createElement('div');
+            col3.className = 'dh-pdf-fit-col';
             col3.style.cssText = 'flex:1 1 0; min-width:0;';
             if (isCC) {
                 col3.appendChild(dhBuildPdfColumnHeader('Bailout Table'));
@@ -7190,6 +7256,44 @@
             return page;
         }
 
+        // A long enough plan (many deco stops, or a bailout table with its
+        // own gas-switch table underneath) can be taller than the fixed
+        // page - since the page clips with overflow:hidden, that content
+        // was just gone from the export (Pablo, 2026-09-19: "content on the
+        // pdf will overflow beyond the page...part of the deco table is
+        // missing or the graph chart also cuts...scale the content in the
+        // three columns"). Must run AFTER `page` is in the real DOM (layout/
+        // scrollHeight only exist then) and BEFORE the html2canvas snapshot.
+        //
+        // Each column that overflows gets uniformly scaled down to fit,
+        // independently of the other two - a wide chart card shouldn't
+        // shrink just because the table next to it happens to be long.
+        // transform:scale() alone would also shrink the column's WIDTH,
+        // leaving a gap where its neighbor doesn't fill in - widening the
+        // column by 1/scale first, then scaling by that same factor,
+        // cancels that out and the column still fills its original slot.
+        function dhFitPdfColumnsToPage(page) {
+            var row = page.querySelector('#dhPdfColumnsRow');
+            if (!row) return;
+            var pageBottom = page.getBoundingClientRect().bottom;
+            var rowTop = row.getBoundingClientRect().top;
+            var rowBottomPadding = 34; // matches dhBuildPdfColumns's own row padding
+            var availableHeight = pageBottom - rowTop - rowBottomPadding;
+            row.querySelectorAll('.dh-pdf-fit-col').forEach(function (col) {
+                var actualHeight = col.scrollHeight;
+                if (actualHeight <= availableHeight || actualHeight <= 0) return;
+                var scale = availableHeight / actualHeight;
+                var originalWidth = col.getBoundingClientRect().width;
+                // flex:1 1 0 sets flex-basis:0, which overrides `width`
+                // entirely for a flex item - flex:0 0 auto is what makes
+                // the explicit width (and so the compensation above) apply.
+                col.style.flex = '0 0 auto';
+                col.style.width = (originalWidth / scale) + 'px';
+                col.style.transform = 'scale(' + scale + ')';
+                col.style.transformOrigin = 'top left';
+            });
+        }
+
         async function dhExportDecoPlanToPDF() {
             if (!globalResponse || !window.lastDiveProfile) {
                 alert('Calculate a decompression plan first.');
@@ -7208,6 +7312,7 @@
                 var mainChartUrl = document.getElementById('profileChart').toDataURL('image/png');
 
                 page = dhBuildPdfPage(profile, isCC, mainChartUrl, globalResponse['baseline'], globalResponse['bailout']);
+                dhFitPdfColumnsToPage(page);
 
                 // html2canvas mis-renders the split pills' inset box-shadow
                 // divider (real Chrome shows a crisp 1px highlight; canvas
