@@ -6952,7 +6952,7 @@
                 var o2Pill = document.createElement('label');
                 o2Pill.className = 'dh-gas-result-pill is-o2 is-compact';
                 o2Pill.textContent = o2 + '%';
-                o2Pill.style.cssText = 'position:relative; top:3px;';
+                o2Pill.style.cssText = 'position:relative; top:4px;';
                 var tdO2 = document.createElement('td');
                 tdO2.style.cssText = 'vertical-align:middle; padding:0;';
                 tdO2.appendChild(o2Pill);
@@ -6963,7 +6963,7 @@
                     var hePill = document.createElement('label');
                     hePill.className = 'dh-gas-result-pill is-he is-compact';
                     hePill.textContent = he + '%';
-                    hePill.style.cssText = 'position:relative; top:3px; border-radius:0 24px 24px 0;';
+                    hePill.style.cssText = 'position:relative; top:4px; border-radius:0 24px 24px 0;';
                     var tdHe = document.createElement('td');
                     tdHe.style.cssText = 'vertical-align:middle; padding:0;';
                     tdHe.appendChild(hePill);
