@@ -616,15 +616,16 @@
                                     </div>
 
                                     {{-- Bottom gas (OC) standard presets (Pablo, 2026-09-18: "Air, 32%,
-                                         36%, 21/31, 18/45 and 10/55") - visible to everyone, like every
-                                         other card's presets; "My Gases" and the save icon stay behind
-                                         isNotGuest() same as elsewhere, since only a registered diver has
-                                         anywhere to save one. --}}
+                                         36%, 21/31, 18/45 and 10/55" - corrected 2026-09-19 to 21/35, the
+                                         intended value) - visible to everyone, like every other card's
+                                         presets; "My Gases" and the save icon stay behind isNotGuest()
+                                         same as elsewhere, since only a registered diver has anywhere to
+                                         save one. --}}
                                     <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPresetBottomOC" data-slot="bottom">
                                         <button type="button" class="dh-channel-chip" data-o2="21" data-he="0">Air</button>
                                         <button type="button" class="dh-channel-chip" data-o2="32" data-he="0">32%</button>
                                         <button type="button" class="dh-channel-chip" data-o2="36" data-he="0">36%</button>
-                                        <button type="button" class="dh-channel-chip" data-o2="21" data-he="31">21/31</button>
+                                        <button type="button" class="dh-channel-chip" data-o2="21" data-he="35">21/35</button>
                                         <button type="button" class="dh-channel-chip" data-o2="18" data-he="45">18/45</button>
                                         <button type="button" class="dh-channel-chip" data-o2="10" data-he="55">10/55</button>
                                         @if(auth()->user()->isNotGuest())
