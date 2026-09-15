@@ -90,11 +90,16 @@ Route::get('home', function () {
     return view('pages.home', compact('SEO'));
 })->name('home');
 
+// SEO here was a copy-paste of the Landing page's generic Florida-diving
+// copy - none of it actually described this tool, so it never had a real
+// shot at ranking for gas-planning searches (Pablo, 2026-09-19: "Best Gases
+// [is a] VERY important page that need[s] to have strong SEO...a HUGE
+// asset to divers").
 Route::get('gasplanning', function () {
 	$SEO = [
-        "title" => "Florida scuba diving sites, calendars and operators",
-        "desc" => "All you need to know for diving in Florida: dive operators, dive sites and wreckwiki, calendars, dive planning and more",
-        "keywords" => "scuba diving florida, scuba, dive operators miami, dive operators fort lauderdale, diving florida keys, dive sites florida",
+        "title" => "Best Gas Mix Calculator for Scuba Diving (Nitrox & Trimix) | Divers Hub",
+        "desc" => "Find your best nitrox and trimix gas mixes for free: MOD, END, PPO2, gas density and standard-mix matching for bottom, travel and deco gases - built for real dive planning, not a toy calculator.",
+        "keywords" => "best gas mix calculator, nitrox calculator, trimix calculator, MOD calculator, best mix diving, gas density calculator, END calculator, scuba gas planning tool",
 		"canonical" => route("gasplanning"),
     ];
     return view('pages.GasPlanning', compact('SEO'));
@@ -141,11 +146,17 @@ Route::middleware(['auth', 'admin'])->group(function () {
 });
 
 // Deco planner and My Calendar render for guests (show, then gate); saving actions below stay on 'auth'.
-Route::get('DecoPlanner/{id}', 'App\Http\Controllers\NDLController@show')->middleware('guest')->name('DecoPlanner');
+// {id} is constrained to digits only (Pablo, 2026-09-19 bugfix: "the open a
+// dive does not [work]") - without it, this wildcard registered ahead of
+// DecoPlanner/plans below swallowed literal requests to that path too
+// (Laravel matches route-by-route in registration order), sending
+// GET/DELETE DecoPlanner/plans into NDLController@show with id="plans"
+// instead of the new list/delete plan endpoints.
+Route::get('DecoPlanner/{id}', 'App\Http\Controllers\NDLController@show')->where('id', '[0-9]+')->middleware('guest')->name('DecoPlanner');
 Route::get('DecoPlanner', 'App\Http\Controllers\NDLController@show')->middleware('guest')->name('DecoPlanner');
-Route::get('DecoPlannerImperial/{id}', 'App\Http\Controllers\NDLController@showImperial')->middleware('guest')->name('DecoPlannerImperial');
+Route::get('DecoPlannerImperial/{id}', 'App\Http\Controllers\NDLController@showImperial')->where('id', '[0-9]+')->middleware('guest')->name('DecoPlannerImperial');
 Route::get('DecoPlannerImperial', 'App\Http\Controllers\NDLController@showImperial')->middleware('guest')->name('DecoPlannerImperial');
-Route::get('DecoPlannerMetric/{id}', 'App\Http\Controllers\NDLController@showMetric')->middleware('guest')->name('DecoPlannerMetric');
+Route::get('DecoPlannerMetric/{id}', 'App\Http\Controllers\NDLController@showMetric')->where('id', '[0-9]+')->middleware('guest')->name('DecoPlannerMetric');
 Route::get('DecoPlannerMetric', 'App\Http\Controllers\NDLController@showMetric')->middleware('guest')->name('DecoPlannerMetric');
 
 // Saving GF Low/High + setpoint and custom gas mixes needs a real profile
@@ -156,6 +167,8 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
     Route::post('DecoPlanner/gases', 'App\Http\Controllers\NDLController@saveDiveGas')->name('DecoPlanner.saveGas');
     Route::delete('DecoPlanner/gases/{id}', 'App\Http\Controllers\NDLController@deleteDiveGas')->name('DecoPlanner.deleteGas');
     Route::post('DecoPlanner/plans', 'App\Http\Controllers\NDLController@saveDecoPlan')->name('DecoPlanner.savePlan');
+    Route::get('DecoPlanner/plans', 'App\Http\Controllers\NDLController@listDecoPlans')->name('DecoPlanner.listPlans');
+    Route::delete('DecoPlanner/plans/{id}', 'App\Http\Controllers\NDLController@deleteDecoPlan')->name('DecoPlanner.deletePlan');
 });
 
 Route::get('Weather/{location}', 'App\Http\Controllers\WeatherController@show')->middleware('guest')->name('Weather');

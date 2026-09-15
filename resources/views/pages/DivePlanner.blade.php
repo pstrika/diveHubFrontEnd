@@ -1,4 +1,4 @@
-<x-page-template bodyClass='dh-shell bg-gray-200'>
+<x-page-template bodyClass='dh-shell bg-gray-200' :SEO="$SEO ?? []">
     <x-shell.nav active="me" />
     
     
@@ -265,7 +265,47 @@
                 </div>
             </div>
 
+            {{-- Names a plan before it's saved (Pablo, 2026-09-19: "open a
+                 modal to give the dive a name and save it with a date time
+                 stamp") - replaces the earlier native prompt(). The
+                 timestamp itself is just the row's created_at, set server-side. --}}
+            <div class="modal fade" id="modalSaveDecoPlan" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h6 class="modal-title font-weight-normal">Save this dive</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <label class="dh-gas-label" for="modalSaveDecoPlanLabel">Name (optional)</label>
+                            <input type="text" class="form-control" id="modalSaveDecoPlanLabel" placeholder="e.g. Hydro Atlantic - 180ft trimix" maxlength="255">
+                            <p class="text-danger mt-2" id="modalSaveDecoPlanError" hidden></p>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-info" id="modalSaveDecoPlanConfirm">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            {{-- "Open a dive" (Pablo, 2026-09-19): lists every plan the diver
+                 has saved so one can be reloaded (all inputs restored + the
+                 calculation re-run) or removed. --}}
+            <div class="modal fade" id="modalOpenDive" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h6 class="modal-title font-weight-normal">Open a dive</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="dh-mygases-empty" id="modalOpenDiveEmpty" hidden>You haven't saved any dives yet - use "Save Plan" on a calculated decompression plan first.</div>
+                            <div id="modalOpenDiveList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="dh-panel-head-row mb-3">
                 <h2 class="dh-panel-title mb-0">Decompression Dive Planner</h2>
@@ -292,21 +332,43 @@
 
                         <div class="card-body" id="dh-deco-inputs-body">
                             <div class="row">
-                                <div class="col-12">
-                                    <div class="dh-channel-picker dh-gas-picker" id="nav-tabs">
+                                <div class="col-12 d-flex align-items-center flex-wrap" style="gap: 8px;">
+                                    <div class="dh-channel-picker dh-gas-picker" id="nav-tabs" style="margin-bottom: 0;">
                                         <button type="button" class="dh-channel-chip is-active" data-tag="OC">Open Circuit</button>
                                         <button type="button" class="dh-channel-chip" data-tag="CC">Close Circuit CCR</button>
                                     </div>
+                                    {{-- Loads a previously saved plan's exact inputs and re-runs the
+                                         calculation (Pablo, 2026-09-19: "a button to Open a dive in the
+                                         input card in line with Open Circuit and Close Circuit CCR
+                                         aligned to the right"). Same guest gating as Save Plan - there's
+                                         nothing to list without a real profile. --}}
+                                    @if(auth()->user()->isNotGuest())
+                                        <button type="button" class="dh-channel-chip dh-deco-searchrow-pill" id="openDivePlanBtn" style="flex: 0 0 auto; margin-left:auto;" title="Load a previously saved dive plan">
+                                            <span class="material-icons-round" aria-hidden="true" style="font-size: 15px; vertical-align: -3px;">folder_open</span>
+                                            Open a dive
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
                             <div class="row mt-2">
                                 <div class="col-12 d-flex align-items-center flex-wrap" style="gap: 8px;">
-                                    <div class="dropdown d-inline-flex align-items-center" style="gap: 8px;">
-                                        <button type="button" class="dh-channel-chip" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <span class="material-icons-round" aria-hidden="true" style="font-size: 15px; vertical-align: -3px;">search</span>
-                                            Search dive sites
+                                    <div class="dropdown d-inline-flex align-items-center" id="decoSiteSearchWrap" style="gap: 8px;">
+                                        {{-- One button doing both jobs instead of a button + a separate
+                                             result pill next to it (Pablo, 2026-09-19: "replace the pill
+                                             Search a dive with the result...add a magnifier glass on that
+                                             pill. If the user clicks again, you open again the search
+                                             dropdown...save space...prevent the save GFs pill to
+                                             overflow"). data-bs-toggle="dropdown" stays on it either way,
+                                             so Bootstrap's own toggle behavior reopens the menu on a
+                                             second click with no extra JS. #dropdownMenuButtonContent is
+                                             swapped between the two states by dhResetSiteSearchButton()/
+                                             the dropdown-item click handler below. --}}
+                                        <button type="button" class="dh-channel-chip dh-deco-searchrow-pill" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <span id="dropdownMenuButtonContent">
+                                                <span class="material-icons-round" aria-hidden="true" style="font-size: 15px; vertical-align: -3px;">search</span>
+                                                Search dive sites
+                                            </span>
                                         </button>
-                                        <label class="dh-gas-result-pill is-compact" id="selectedSitePill" hidden></label>
                                         <ul class="dropdown-menu" id="dropdownMenu">
                                             <li>
                                                 <input type="text" class="form-control mb-2" id="dropdownSearch" placeholder="Search..." style="display: block;">
@@ -335,7 +397,7 @@
                                          embedded in the OC/CC pills. Always visible, even for guests, who
                                          get a clear message on click instead of the control just not
                                          being there. --}}
-                                    <button type="button" class="dh-channel-chip" id="saveDecoPrefsPill" style="flex: 0 0 auto; margin-left:auto;" title="Save GF Low/High and setpoint to your profile">
+                                    <button type="button" class="dh-channel-chip dh-deco-searchrow-pill" id="saveDecoPrefsPill" style="flex: 0 0 auto; margin-left:auto;" title="Save GF Low/High and setpoint to your profile">
                                         <span class="material-icons-round" aria-hidden="true" style="font-size: 15px; vertical-align: -3px;">bookmark_border</span>
                                         {{-- Setpoint only applies to CC (OC has no CCR setpoint) - label
                                              matches whichever the diver is currently looking at (Pablo,
@@ -1195,13 +1257,15 @@
                     <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
                         <div class="dh-deco-section-head">
                             <span class="material-icons-round" aria-hidden="true">route</span>
-                            <h3>Decompression plan</h3>
-                            <span class="dh-deco-section-head-meta">Model <span id="labelModel">ZL</span> &middot; GFs <span id="labelGFs">40/70</span></span>
-                            <button type="button" class="dh-deco-header-btn" id="exportDecoPlanPdfBtn" title="Export this decompression plan to PDF">
+                            <div class="dh-deco-section-head-title-wrap">
+                                <h3>Decompression plan</h3>
+                                <span class="dh-deco-section-head-meta">Model <span id="labelModel">ZL</span> &middot; GFs <span id="labelGFs">40/70</span></span>
+                            </div>
+                            <button type="button" class="dh-deco-header-btn dh-deco-searchrow-pill" id="exportDecoPlanPdfBtn" title="Export this decompression plan to PDF">
                                 <span class="material-icons-round" aria-hidden="true">picture_as_pdf</span> Export PDF
                             </button>
                             @if(auth()->user()->isNotGuest())
-                                <button type="button" class="dh-deco-header-btn" id="saveDecoPlanBtn" title="Save this plan's inputs so you can regenerate it later">
+                                <button type="button" class="dh-deco-header-btn dh-deco-searchrow-pill" id="saveDecoPlanBtn" title="Save this plan's inputs so you can regenerate it later">
                                     <span class="material-icons-round" aria-hidden="true">save</span> Save Plan
                                 </button>
                             @endif
@@ -1209,8 +1273,11 @@
 
                         <div class="card-body">
                             <div>
-                                <!-- Row for summary -->
-                                <div class="row mx-0">
+                                <!-- Row for summary - plain "row" (not
+                                     mx-0), same as the table/chart row right
+                                     below it, so both line up at the same
+                                     edges (Pablo, 2026-09-19). -->
+                                <div class="row">
                                     <div class="col-12">
                                         <div class="dh-deco-summary">
                                             <span class="dh-gas-result-pill dh-deco-summary-pill">
@@ -1512,7 +1579,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
     {{-- "Export to PDF" on the Decompression plan card (Pablo, 2026-09-18). --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    {{-- Renders the offscreen PDF page (built as real HTML/CSS reusing the
+         app's own theme) to an image, dropped into the PDF as one full page -
+         see dhExportDecoPlanToPDF (Pablo, 2026-09-19). --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     
 
@@ -3034,6 +3104,51 @@
         var activeGasTab = null;
         var isSettingDepthFromSite = false;
 
+        // "Search dive sites" and its result now share one button (Pablo,
+        // 2026-09-19: "replace the pill Search a dive with the result...add
+        // a magnifier glass...save space in the screen") - dhSelectedSiteName
+        // is the one source of truth the PDF header also reads, instead of
+        // scraping a separate result pill's text/hidden state.
+        var dhSelectedSiteName = null;
+
+        function dhResetSiteSearchButton() {
+            dhSelectedSiteName = null;
+            document.getElementById('dropdownMenuButton').classList.remove('dh-site-selected');
+            document.getElementById('dropdownMenuButtonContent').innerHTML =
+                '<span class="material-icons-round" aria-hidden="true" style="font-size: 15px; vertical-align: -3px;">search</span> Search dive sites';
+        }
+
+        // Built with real DOM nodes, not an innerHTML string, so a site
+        // name with HTML-special characters in it can never be interpreted
+        // as markup. The level icon comes from Divers Hub's own dive-level
+        // set (OW/AOW/...) - those PNGs aren't drawn white, so it's forced
+        // with a filter rather than needing a second, white-only export of
+        // every icon (Pablo, 2026-09-16: "all white in order to keep the
+        // contrast with the pill bg").
+        function dhSetSiteSearchButton(siteName, levelIcon, levelName) {
+            dhSelectedSiteName = siteName;
+            document.getElementById('dropdownMenuButton').classList.add('dh-site-selected');
+            var content = document.getElementById('dropdownMenuButtonContent');
+            content.innerHTML = '';
+            if (levelIcon) {
+                var levelImg = document.createElement('img');
+                levelImg.src = levelIcon;
+                levelImg.alt = levelName || '';
+                levelImg.title = levelName || '';
+                levelImg.style.cssText = 'height:14px;vertical-align:-2px;margin-right:4px;filter:brightness(0) invert(1);';
+                content.appendChild(levelImg);
+            }
+            content.appendChild(document.createTextNode(siteName));
+            // The magnifier glass is what tells the diver this pill is
+            // still clickable to search again, not just a static label.
+            var searchIcon = document.createElement('span');
+            searchIcon.className = 'material-icons-round';
+            searchIcon.setAttribute('aria-hidden', 'true');
+            searchIcon.style.cssText = 'font-size: 15px; vertical-align: -3px; margin-left: 6px;';
+            searchIcon.textContent = 'search';
+            content.appendChild(searchIcon);
+        }
+
         function dhNextGasSlot() {
             for (var i = 1; i <= 4; i++) {
                 if (document.getElementById('gasAccordionItemDeco' + i).hidden) return i;
@@ -3898,7 +4013,7 @@
         depthSlider.noUiSlider.on('update', function (values, handle) {
             var depthSliderValue = values[handle];
             if (!isSettingDepthFromSite) {
-                document.getElementById('selectedSitePill').hidden = true;
+                dhResetSiteSearchButton();
             }
             if(modeImpOrMetric == "imp") {
                 labelDepth.value = parseInt(depthSliderValue);
@@ -4547,16 +4662,34 @@
         // confirmed working - but wrong for an immediate bailout). When
         // true, that specific transition is marked at the previous entry's
         // position (end of bottom time = max depth) instead of its own.
+        // `timeMode` picks which entry's time/depth the marker uses when a
+        // switch is detected:
+        //   - 'entry' (default): the entry's own time+depth - correct for
+        //     the bottom gas -> first deco gas switch, since the API's
+        //     ascent-before-deco entry's time already IS the moment the
+        //     diver arrives at that first stop.
+        //   - 'prevEntry': the previous entry's time AND depth - the
+        //     CC-bailout-at-max-depth case, where the switch is a discrete
+        //     event that happens at the bottom, not on the walked list at all.
+        //   - 'prevTime': previous entry's TIME but this entry's DEPTH -
+        //     every deco-stop-to-deco-stop switch (and the final ascent to
+        //     surface). A deco_stop's own .time is when the diver LEAVES
+        //     that stop, but the gas switch itself happens the moment they
+        //     ARRIVE at it, i.e. the previous stop's departure time, at the
+        //     new (this entry's) depth (Pablo, 2026-09-19: "the switch
+        //     happens at the beginning of the depth stop...take the RT from
+        //     the previous stop...the current depth shown is correct").
         function computeOCGasSwitchPoints(baseline, firstSwitchAtMaxDepth) {
             var points = [];
             var prevMix = null;
             var prevEntry = null;
-            function consider(entry, markAtPreviousEntry) {
+            function consider(entry, timeMode) {
                 if (!entry || !Array.isArray(entry.gas)) return;
                 var mix = entry.gas[1] + '/' + entry.gas[3];
                 if (prevMix !== null && mix !== prevMix) {
-                    var marker = markAtPreviousEntry ? prevEntry : entry;
-                    points.push({ time: marker.time, abs_p: marker.abs_p, gasLabel: formatGasLabel(entry.gas) });
+                    var timeVal = timeMode === 'prevEntry' || timeMode === 'prevTime' ? prevEntry.time : entry.time;
+                    var depthVal = timeMode === 'prevEntry' ? prevEntry.abs_p : entry.abs_p;
+                    points.push({ time: timeVal, abs_p: depthVal, gasLabel: formatGasLabel(entry.gas) });
                 }
                 prevMix = mix;
                 prevEntry = entry;
@@ -4570,13 +4703,13 @@
                 if (baseline[i].phase === 'ascent') lastAscentBeforeDeco = baseline[i];
                 if (baseline[i].phase === 'deco_stop') break;
             }
-            consider(lastAscentBeforeDeco, !!firstSwitchAtMaxDepth);
+            consider(lastAscentBeforeDeco, firstSwitchAtMaxDepth ? 'prevEntry' : 'entry');
 
             if (firstDecoStopIndex !== -1) {
                 for (var j = firstDecoStopIndex; j < baseline.length; j++) {
-                    if (baseline[j].phase === 'deco_stop') consider(baseline[j]);
+                    if (baseline[j].phase === 'deco_stop') consider(baseline[j], 'prevTime');
                 }
-                consider(baseline[baseline.length - 1]); // final ascent to surface
+                consider(baseline[baseline.length - 1], 'prevTime'); // final ascent to surface
             }
             return points;
         }
@@ -4740,12 +4873,23 @@
             let tableData = []; // Store table rows
             let prevTime = 0; // Track cumulative runtime
 
-            // Function to format gas mixture (O2/He)
+            // Gas column as the real green-O2/blue-He split pill instead of
+            // plain "18/45" text (Pablo, 2026-09-19: "replace the Gas column
+            // in the decompression tables with the gas pills format" /
+            // "I don't like [the stacked pills]...just need to make sure
+            // the width of the col is wide enough to fit the split pill") -
+            // the Gas <th> now gets a fixed, generous % width instead
+            // (table-layout:fixed above), so the normal joined split pill
+            // fits without overlapping PPO2 next to it. .is-compact keeps a
+            // dense multi-row table from getting too tall. row.gas only
+            // ever feeds straight into a <td> below, so returning markup
+            // here (instead of a plain string) is safe.
             function formatGas(gasArray) {
-                if (gasArray[3] == 0)
-                    return `${gasArray[1]}%`; // O2/He format
-                else
-                    return `${gasArray[1]}/${gasArray[3]}`; // O2/He format
+                var o2 = gasArray[1], he = gasArray[3];
+                if (he == 0) {
+                    return '<span class="dh-gas-split-pill is-solo"><label class="dh-gas-result-pill is-o2 is-compact">' + o2 + '</label></span>';
+                }
+                return '<span class="dh-gas-split-pill"><label class="dh-gas-result-pill is-o2 is-compact">' + o2 + '</label><label class="dh-gas-result-pill is-he is-compact">' + he + '</label></span>';
             }
             function formatTime(minutes) {
                 let totalSeconds = Math.round(minutes * 60);
@@ -4901,18 +5045,27 @@
 
             let tableHTML = "";
             if(modeOCOrCC == "OC") {
-                tableHTML = 
+                // table-layout:fixed + explicit % widths (Pablo, 2026-09-19:
+                // "you fixed the table with the gas pills, but not with the
+                // split pills we have been using...make sure the width of
+                // the col is wide enough...take space from other columns
+                // that do not show content that wide") - auto layout just
+                // squeezed every column to an equal share and let the split
+                // pill (O2+He joined, ~130px wide) overflow into PPO2;
+                // fixed sizing is the only way to hand Gas real room while
+                // shrinking the phase-icon/Time/RT columns that don't need it.
+                tableHTML =
                 `<div class="table-responsive">
-                    <table class="table table-striped table-sm">
+                    <table class="table table-striped table-sm" style="table-layout: fixed; width: 100%;">
                         <thead>
                             <tr>
-                                <th class="phase-column"></th>
-                                <th class="depth-column text-sm" style="padding-left: 0px; padding-right:0px;">Depth</th>
-                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Time</th>
-                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">RT</th>
-                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Gas</th>
-                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">PPO&#8322;</th>
-                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">GF</th>
+                                <th class="phase-column" style="width: 7%;"></th>
+                                <th class="depth-column text-sm" style="width: 12%; padding-left: 0px; padding-right:0px;">Depth</th>
+                                <th class="text-sm" style="width: 9%; padding-left: 0px; padding-right:0px;">Time</th>
+                                <th class="text-sm" style="width: 9%; padding-left: 0px; padding-right:0px;">RT</th>
+                                <th class="text-sm" style="width: 32%; padding-left: 0px; padding-right:0px;">Gas</th>
+                                <th class="text-sm" style="width: 17%; padding-left: 0px; padding-right:0px;">PPO&#8322;</th>
+                                <th class="text-sm" style="width: 14%; padding-left: 0px; padding-right:0px;">GF</th>
                             </tr>
                         </thead>
                         <tbody>`;
@@ -4960,14 +5113,14 @@
                     <table class="table table-striped table-sm" style="min-width:300px; width: 100%; table-layout: fixed;">
                         <thead>
                             <tr>
-                                <th class="phase-column"></th>
-                                <th class="text-xs" style="padding-left: 0px;">M</th>
-                                <th class="depth-column text-sm" style="padding-left: 0px; padding-right:0px;">Depth</th>
-                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Time</th>
-                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">RT</th>
-                                <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Gas</th>
-                                <th class="text-sm hide-on-mobile" style="padding-left: 0px; padding-right:0px;">PPO&#8322;</th>
-                                <th class="text-sm hide-on-mobile" style="padding-left: 0px; padding-right:0px;">GF</th>
+                                <th class="phase-column" style="width: 6%;"></th>
+                                <th class="text-xs" style="width: 7%; padding-left: 0px;">M</th>
+                                <th class="depth-column text-sm" style="width: 11%; padding-left: 0px; padding-right:0px;">Depth</th>
+                                <th class="text-sm" style="width: 8%; padding-left: 0px; padding-right:0px;">Time</th>
+                                <th class="text-sm" style="width: 8%; padding-left: 0px; padding-right:0px;">RT</th>
+                                <th class="text-sm" style="width: 30%; padding-left: 0px; padding-right:0px;">Gas</th>
+                                <th class="text-sm hide-on-mobile" style="width: 16%; padding-left: 0px; padding-right:0px;">PPO&#8322;</th>
+                                <th class="text-sm hide-on-mobile" style="width: 14%; padding-left: 0px; padding-right:0px;">GF</th>
                             </tr>
                         </thead>
                         <tbody>`;
@@ -5836,33 +5989,15 @@
                 let depthSlider = document.getElementById("depthSlider");
 
                 if (depthSlider && selectedDepth) {
-                    // Picking a site sets the depth FOR the diver, so the pill
-                    // stays showing which site that came from; typing a depth
-                    // by hand means "not from this site anymore" (Pablo,
-                    // 2026-09-16). isSettingDepthFromSite tells the depth
-                    // slider's own update handler not to clear the pill for
-                    // the very set() call this click just triggered.
+                    // Picking a site sets the depth FOR the diver, so the
+                    // button keeps showing which site that came from; typing
+                    // a depth by hand means "not from this site anymore"
+                    // (Pablo, 2026-09-16). isSettingDepthFromSite tells the
+                    // depth slider's own update handler not to reset the
+                    // button for the very set() call this click just
+                    // triggered.
                     isSettingDepthFromSite = true;
-                    var pill = document.getElementById('selectedSitePill');
-                    pill.innerHTML = ''; // clear without touching the DOM API's escaping guarantees below
-                    // The level icon comes from Divers Hub's own dive-level
-                    // set (OW/AOW/...) - those PNGs aren't drawn white, so
-                    // force it with a filter rather than needing a second,
-                    // white-only export of every icon (Pablo, 2026-09-16:
-                    // "all white in order to keep the contrast with the
-                    // pill bg"). Built with real DOM nodes, not an innerHTML
-                    // string, so a site name with HTML-special characters in
-                    // it can never be interpreted as markup.
-                    if (levelIcon) {
-                        var levelImg = document.createElement('img');
-                        levelImg.src = levelIcon;
-                        levelImg.alt = levelName || '';
-                        levelImg.title = levelName || '';
-                        levelImg.style.cssText = 'height:14px;vertical-align:-2px;margin-right:4px;filter:brightness(0) invert(1);';
-                        pill.appendChild(levelImg);
-                    }
-                    pill.appendChild(document.createTextNode(siteName));
-                    pill.hidden = false;
+                    dhSetSiteSearchButton(siteName, levelIcon, levelName);
                     depthSlider.noUiSlider.set(selectedDepth); // Updates slider value
                     isSettingDepthFromSite = false;
                 }
@@ -6575,100 +6710,379 @@
         function dhFormatDepthUnit() { return modeImpOrMetric === 'met' ? 'm' : 'ft'; }
         function dhFormatRateUnit() { return modeImpOrMetric === 'met' ? 'm/min' : 'ft/min'; }
 
-        function dhBuildPdfInputRows(profile) {
-            var rows = [];
-            rows.push(['Mode', profile.mode === 'CC' ? 'Closed Circuit (CCR)' : 'Open Circuit']);
-            rows.push(['Max depth', profile.maxDepth + ' ' + dhFormatDepthUnit()]);
-            rows.push(['Bottom time', profile.bottomTime + ' min']);
-            rows.push(['Descent rate', profile.rate.descent + ' ' + dhFormatRateUnit()]);
-            rows.push(['Ascent rate', profile.rate.ascent + ' ' + dhFormatRateUnit()]);
-            rows.push(['GF Low / GF High', profile.gradientFactors.low + ' / ' + profile.gradientFactors.high]);
-            if (profile.mode === 'CC') {
-                rows.push(['Setpoint', profile.setpoint + ' atm']);
-                rows.push(['Diluent', dhFormatGasMix(profile.bottomGas.O2, profile.bottomGas.He)]);
-            } else {
-                rows.push(['Bottom gas', dhFormatGasMix(profile.bottomGas.O2, profile.bottomGas.He)]);
+        // Landscape US Letter at 2x (792x612pt -> 1584x1224px) for a crisp
+        // rasterized page (Pablo, 2026-09-19: matched pixel-for-pixel
+        // against the reference templates provided).
+        var DH_PDF_PAGE_W = 1584;
+        var DH_PDF_PAGE_H = 1224;
+
+        // Same green O2 / blue He split pill used everywhere else in the
+        // app (Pablo, 2026-09-19: "Use the gas pills with the O2 and He
+        // colors we use in the app") - reuses the real .dh-gas-split-pill/
+        // .dh-gas-result-pill classes so colors and shape are exact, not
+        // reimplemented by hand for the PDF.
+        function dhBuildPdfSplitPill(o2, he, compact) {
+            var sizeClass = compact ? ' is-compact' : '';
+            var wrap = document.createElement('span');
+            wrap.className = 'dh-gas-split-pill' + (he === 0 ? ' is-solo' : '');
+            wrap.style.verticalAlign = 'middle';
+            var o2Pill = document.createElement('label');
+            o2Pill.className = 'dh-gas-result-pill is-o2' + sizeClass;
+            o2Pill.textContent = o2;
+            wrap.appendChild(o2Pill);
+            if (he !== 0) {
+                var hePill = document.createElement('label');
+                hePill.className = 'dh-gas-result-pill is-he' + sizeClass;
+                hePill.textContent = he;
+                wrap.appendChild(hePill);
             }
-            if (profile.surfaceTime) {
-                rows.push(['Surface interval', profile.surfaceTime + ' min']);
+            return wrap;
+        }
+
+        // "18/45" -> {o2:18, he:45}; "50%" -> {o2:50, he:0} - the same
+        // string shapes formatGas()/calculateGasConsumption() already
+        // produce for the on-screen tables' Gas column/cells.
+        function dhParseGasMixString(str) {
+            str = (str || '').trim();
+            if (str.indexOf('/') !== -1) {
+                var parts = str.split('/');
+                return { o2: parseInt(parts[0], 10) || 0, he: parseInt(parts[1], 10) || 0 };
             }
+            return { o2: parseInt(str, 10) || 0, he: 0 };
+        }
+
+        function dhBuildPdfHeader(profile, isCC) {
+            var header = document.createElement('div');
+            header.style.cssText = 'position:relative; background:#0b2a3a; color:#fff; display:flex; align-items:center; padding:26px 48px; gap:28px; flex:0 0 auto;';
+
+            var logo = document.createElement('img');
+            logo.src = '{{ asset("assets") }}/img/logos/logo_circle.png';
+            logo.style.cssText = 'width:80px; height:80px; border-radius:50%; flex:0 0 auto; object-fit:cover;';
+            header.appendChild(logo);
+
+            var titleBlock = document.createElement('div');
+            titleBlock.style.cssText = 'flex:1 1 auto; min-width:0;';
+            var model = document.getElementById('labelModel').textContent || 'ZH-L16C-GF';
+            titleBlock.innerHTML =
+                '<div style="font-size:32px; font-weight:800; line-height:1.2;">Decompression Plan</div>' +
+                '<div style="font-size:15px; opacity:.8; margin-top:6px;">created on ' + new Date().toLocaleString() + '</div>' +
+                '<div style="font-size:15px; opacity:.8;">Model: ' + model + '</div>';
+            header.appendChild(titleBlock);
+
+            // Absolutely centered on the page rather than a flex sibling -
+            // titleBlock/infoBlock content widths differ, so splitting the
+            // remaining flex space between them doesn't actually land the
+            // badge in the middle of the page (Pablo, 2026-09-19: "the
+            // circle OC and CC at the top need to be in the center of the
+            // page").
+            var badge = document.createElement('div');
+            badge.style.cssText = 'position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:100px; height:100px; border:4px solid #fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:800;';
+            badge.textContent = isCC ? 'CC' : 'OC';
+            header.appendChild(badge);
+
+            var infoBlock = document.createElement('div');
+            infoBlock.style.cssText = 'flex:1 1 auto; text-align:right; font-size:15px; line-height:1.8; min-width:0;';
+            var siteName = dhSelectedSiteName || 'Custom dive';
+            var gfsText = document.getElementById('labelGFs').textContent;
+            var lines = [
+                '<b>Site/Depth:</b> ' + siteName + ' (' + profile.maxDepth + dhFormatDepthUnit() + ')',
+                '<b>Bottom time:</b> ' + profile.bottomTime + 'm &nbsp;&nbsp; <b>GFs:</b> ' + gfsText,
+                '<b>Asc/Dsc rates:</b> ' + profile.rate.descent + '/' + profile.rate.ascent + ' ' + dhFormatRateUnit(),
+            ];
+            if (isCC) lines.push('<b>Set Point:</b> ' + profile.setpoint);
+            infoBlock.innerHTML = lines.map(function (l) { return '<div>' + l + '</div>'; }).join('');
+            header.appendChild(infoBlock);
+
+            return header;
+        }
+
+        function dhBuildPdfDisclaimer() {
+            var bar = document.createElement('div');
+            bar.style.cssText = 'background:#fbeceb; border-left:8px solid #b0322b; display:flex; align-items:center; gap:20px; padding:14px 48px; flex:0 0 auto;';
+            var icon = document.createElement('span');
+            icon.className = 'material-icons-round';
+            icon.textContent = 'warning';
+            icon.style.cssText = 'color:#b0322b; font-size:32px; flex:0 0 auto;';
+            bar.appendChild(icon);
+            var text = document.createElement('div');
+            text.style.cssText = 'color:#b0322b; font-size:13px; line-height:1.5;';
+            text.textContent = 'Diving, especially decompression diving, is a risky activity. These calculations are based on mathematical models and do not guarantee prevention of decompression sickness or other diving hazards. Always use a reliable dive computer, follow established safety guidelines, dive within your training and experience level, and plan for contingencies. This plan is an informational aid, not a replacement for professional dive planning and real-time monitoring.';
+            bar.appendChild(text);
+            return bar;
+        }
+
+        function dhBuildPdfGases(profile, isCC) {
+            var section = document.createElement('div');
+            section.style.cssText = 'padding:18px 48px 4px; flex:0 0 auto;';
+
+            var heading = document.createElement('div');
+            heading.style.cssText = 'font-weight:800; font-size:16px; color:#0b2a3a; border-bottom:2px solid #0b2a3a; padding-bottom:8px; margin-bottom:16px;';
+            heading.textContent = 'Gases';
+            section.appendChild(heading);
+
+            var row = document.createElement('div');
+            row.style.cssText = 'display:flex; gap:16px; flex-wrap:wrap;';
+
+            function addChip(label, o2, he) {
+                // Compact pills (24px) - same size as every other gas pill
+                // in the PDF (Gas column, Gas Consumption, Gas switches),
+                // and a tighter wrapper around them, not the earlier
+                // full-size pill in a generously-padded chip (Pablo,
+                // 2026-09-19: "the pills with the gases...are two large.
+                // Make sure that all gas split pills have the same size in
+                // all the pdf. The wrapper needs to be more tight").
+                var chip = document.createElement('div');
+                chip.style.cssText = 'display:flex; align-items:center; gap:6px; border:1.5px solid #0b2a3a; border-radius:999px; padding:3px 10px 3px 12px; flex:0 0 auto;';
+                var labelSpan = document.createElement('span');
+                // Matches the compact split pill's own 24px height exactly,
+                // instead of trusting the flex row's align-items:center -
+                // html2canvas has a known habit of mis-centering flex
+                // children of different heights (Pablo, 2026-09-19: "result
+                // pills are showing slightly above the text before them").
+                labelSpan.style.cssText = 'display:inline-flex; align-items:center; height:24px; font-weight:700; font-size:12px; color:#0b2a3a; white-space:nowrap;';
+                labelSpan.textContent = label + ':';
+                chip.appendChild(labelSpan);
+                chip.appendChild(dhBuildPdfSplitPill(o2, he, true));
+                row.appendChild(chip);
+            }
+
+            addChip(isCC ? 'Diluent' : 'Bottom gas', profile.bottomGas.O2, profile.bottomGas.He);
             profile.decoGases.forEach(function (gas, idx) {
-                var label = (profile.mode === 'CC' && idx === 0) ? 'Bailout gas' : ('Deco gas ' + (idx + 1));
-                rows.push([label, dhFormatGasMix(gas.O2, gas.He) + ' — switch at ' + gas.switchDepth + ' ' + dhFormatDepthUnit()]);
+                var label = (isCC && idx === 0) ? 'Bailout' : ('Deco ' + (idx + 1));
+                addChip(label, gas.O2, gas.He);
             });
-            return rows;
+
+            section.appendChild(row);
+            return section;
         }
 
-        // Same-origin fetch + FileReader avoids canvas taint issues that
-        // Image+canvas can hit depending on how the asset is served.
-        function dhLoadImageAsDataUrl(url) {
-            return fetch(url)
-                .then(function (r) { return r.blob(); })
-                .then(function (blob) {
-                    return new Promise(function (resolve, reject) {
-                        var reader = new FileReader();
-                        reader.onload = function () { resolve(reader.result); };
-                        reader.onerror = reject;
-                        reader.readAsDataURL(blob);
-                    });
-                });
+        // `underlineColor` defaults to navy (the same color as the text) -
+        // the Gas switches table asks for a distinct blue line instead
+        // (Pablo, 2026-09-19: "use the same font and color that
+        // Decompression table or Decompression chart...add the line below
+        // in blue").
+        function dhBuildPdfColumnHeader(text, underlineColor) {
+            var h = document.createElement('div');
+            h.style.cssText = 'font-weight:800; font-size:15px; color:#0b2a3a; border-bottom:2px solid ' + (underlineColor || '#0b2a3a') + '; padding-bottom:8px; margin-bottom:14px;';
+            h.textContent = text;
+            return h;
         }
 
-        // Renders a profile line chart on an off-screen canvas so the PDF
-        // can include the CC "Bailout to OC" chart without disturbing the
-        // visible profileChart or the diver's current what-if selection
-        // (Pablo, 2026-09-18: "add the table and the chart for the case
-        // under the name 'Bailout to OC'").
-        function dhRenderOffscreenProfileChart(data, annotations) {
-            return new Promise(function (resolve) {
-                var canvas = document.createElement('canvas');
-                canvas.width = 900;
-                canvas.height = 450;
-                canvas.style.position = 'fixed';
-                canvas.style.left = '-9999px';
-                canvas.style.top = '0';
-                document.body.appendChild(canvas);
-                var chart = new Chart(canvas.getContext('2d'), {
-                    type: 'scatter',
-                    data: {
-                        datasets: [{
-                            label: 'Bailout to OC',
-                            data: data,
-                            borderColor: '#0e7c9e',
-                            backgroundColor: 'rgba(14, 124, 158, 0.35)',
-                            borderWidth: 2,
-                            showLine: true,
-                            fill: true,
-                            pointRadius: 0,
-                        }]
-                    },
-                    options: {
-                        responsive: false,
-                        animation: false,
-                        plugins: {
-                            legend: { display: false },
-                            annotation: { annotations: annotations || {} },
-                        },
-                    },
-                });
-                requestAnimationFrame(function () {
-                    requestAnimationFrame(function () {
-                        var url = canvas.toDataURL('image/png');
-                        chart.destroy();
-                        document.body.removeChild(canvas);
-                        resolve(url);
-                    });
-                });
-            });
-        }
-
-        function dhPdfEnsureSpace(doc, y, needed, marginTop) {
-            var pageHeight = doc.internal.pageSize.getHeight();
-            if (y + needed > pageHeight - 40) {
-                doc.addPage();
-                return marginTop;
+        // Clones an already-rendered table container verbatim - same
+        // classes (table-striped, the phase icons via Material Icons
+        // ligatures), so html2canvas rasterizes it exactly as it already
+        // looks on screen instead of needing every icon/color reimplemented
+        // by hand for the PDF.
+        function dhBuildPdfTableClone(sourceId) {
+            var source = document.getElementById(sourceId);
+            var wrap = document.createElement('div');
+            wrap.style.fontSize = '12px';
+            if (source && source.innerHTML.trim()) {
+                wrap.innerHTML = source.innerHTML;
+                var responsive = wrap.querySelector('.table-responsive');
+                if (responsive) responsive.style.overflow = 'visible';
+                var table = wrap.querySelector('table');
+                if (table) {
+                    table.style.width = '100%';
+                    table.style.fontSize = '12px';
+                }
             }
-            return y;
+            return wrap;
+        }
+
+        // Rebuilt from the on-screen table's own cells (rather than cloning
+        // its innerHTML like dhBuildPdfTableClone) so the plain "18/45"/
+        // "50%" gas text can become a real split pill and the striped rows
+        // can go away (Pablo, 2026-09-19: "we can use gas pills too...I
+        // don't like the grey and white alternating row shade...align the
+        // pill to the left...volume to the right").
+        function dhBuildPdfGasConsumptionTable(sourceId) {
+            var wrap = document.createElement('div');
+            var source = document.getElementById(sourceId);
+            var sourceRows = source ? source.querySelectorAll('table tbody tr') : [];
+            if (!sourceRows.length) return wrap;
+
+            var volumeHeaderEl = source.querySelector('table thead th:last-child');
+            var volumeHeaderText = volumeHeaderEl ? volumeHeaderEl.textContent.trim() : 'Volume';
+
+            var table = document.createElement('table');
+            table.style.cssText = 'width:100%; border-collapse:collapse; font-size:12px;';
+            var thead = document.createElement('thead');
+            thead.innerHTML =
+                '<tr>' +
+                '<th style="text-align:left; padding:4px 4px 8px; font-weight:700; color:#5a6b78; font-size:10px; text-transform:uppercase; letter-spacing:.03em;">Gas</th>' +
+                '<th style="text-align:right; padding:4px 4px 8px; font-weight:700; color:#5a6b78; font-size:10px; text-transform:uppercase; letter-spacing:.03em;">' + volumeHeaderText + '</th>' +
+                '</tr>';
+            table.appendChild(thead);
+
+            var tbody = document.createElement('tbody');
+            sourceRows.forEach(function (sourceRow) {
+                var cells = sourceRow.querySelectorAll('td');
+                if (cells.length < 2) return;
+                var mix = dhParseGasMixString(cells[0].textContent);
+                var tr = document.createElement('tr');
+                var tdGas = document.createElement('td');
+                tdGas.style.cssText = 'padding:6px 4px; text-align:left; background:#fff;';
+                tdGas.appendChild(dhBuildPdfSplitPill(mix.o2, mix.he, true));
+                var tdVolume = document.createElement('td');
+                tdVolume.style.cssText = 'padding:6px 4px; text-align:right; background:#fff; font-weight:700; color:#0b2a3a;';
+                tdVolume.textContent = cells[1].textContent.trim();
+                tr.appendChild(tdGas);
+                tr.appendChild(tdVolume);
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            wrap.appendChild(table);
+            return wrap;
+        }
+
+        // OC only (Pablo, 2026-09-19: "we could add a small table under the
+        // chart with the gas switches...this applies only for OC") - the
+        // exact same switch points already driving the chart's annotation
+        // markers, so this table and the graph can never disagree.
+        function dhBuildPdfGasSwitchTable(baseline) {
+            var wrap = document.createElement('div');
+            var points = computeOCGasSwitchPoints(baseline, false);
+            if (!points.length) return wrap;
+
+            // Same font/color as the Decompression Table/Chart headers, but
+            // with a blue (not navy) underline to set it apart as a
+            // secondary section (Pablo, 2026-09-19: "use the same font and
+            // color that Decompression table or Decompression chart...add
+            // the line below in blue").
+            wrap.appendChild(dhBuildPdfColumnHeader('Gas switches', '#0e7c9e'));
+
+            var table = document.createElement('table');
+            table.style.cssText = 'width:100%; border-collapse:collapse; font-size:12px;';
+            var thead = document.createElement('thead');
+            thead.innerHTML =
+                '<tr>' +
+                '<th style="text-align:left; padding:4px; font-weight:700; color:#5a6b78; font-size:10px; text-transform:uppercase; letter-spacing:.03em;">RT</th>' +
+                '<th style="text-align:left; padding:4px; font-weight:700; color:#5a6b78; font-size:10px; text-transform:uppercase; letter-spacing:.03em;">Depth</th>' +
+                '<th style="text-align:left; padding:4px; font-weight:700; color:#5a6b78; font-size:10px; text-transform:uppercase; letter-spacing:.03em;">Gas</th>' +
+                '</tr>';
+            table.appendChild(thead);
+
+            var tbody = document.createElement('tbody');
+            points.forEach(function (point) {
+                var mix = dhParseGasMixString(point.gasLabel);
+                var tr = document.createElement('tr');
+                // Same rounding the Decompression Table itself uses for
+                // these two columns (formatTimeMin/absPressureToDepthDeco) -
+                // anything else and this table's numbers won't quite match
+                // the RT/Depth already printed next to them.
+                var tdRT = document.createElement('td');
+                tdRT.style.cssText = 'padding:5px 4px; text-align:left; background:#fff; font-weight:600; color:#0b2a3a;';
+                tdRT.textContent = Math.ceil(point.time) + ' m';
+                var tdDepth = document.createElement('td');
+                tdDepth.style.cssText = 'padding:5px 4px; text-align:left; background:#fff; font-weight:600; color:#0b2a3a;';
+                tdDepth.textContent = absPressureToDepthDeco(point.abs_p) + ' ' + dhFormatDepthUnit();
+                var tdGas = document.createElement('td');
+                tdGas.style.cssText = 'padding:5px 4px; text-align:left; background:#fff;';
+                tdGas.appendChild(dhBuildPdfSplitPill(mix.o2, mix.he, true));
+                tr.appendChild(tdRT);
+                tr.appendChild(tdDepth);
+                tr.appendChild(tdGas);
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            wrap.appendChild(table);
+            return wrap;
+        }
+
+        // Its own section (title + line separator) above the chart, instead
+        // of pills crammed onto the Decompression Table/Bailout Table
+        // header lines - that made both headers misalign against each
+        // other (Pablo, 2026-09-19: "the run time and deco time pills are
+        // creating misalignment. Let's create a row above the Decompression
+        // Chart...called 'Dive times'...slightly larger...single line").
+        // Full-size (not .is-compact) pills, a step up from every other gas
+        // pill in the PDF, since this is the one summary section rather
+        // than a per-row/per-gas label.
+        function dhBuildPdfDiveTimesSection() {
+            var wrap = document.createElement('div');
+            wrap.appendChild(dhBuildPdfColumnHeader('Dive times'));
+
+            var row = document.createElement('div');
+            row.style.cssText = 'display:flex; align-items:center; gap:20px; margin-bottom:18px;';
+
+            function addTimePill(label, value) {
+                var chip = document.createElement('span');
+                chip.style.cssText = 'display:inline-flex; align-items:center; gap:8px; flex:0 0 auto;';
+                var labelSpan = document.createElement('span');
+                labelSpan.style.cssText = 'display:inline-flex; align-items:center; height:32px; font-weight:700; font-size:13px; color:#0b2a3a; white-space:nowrap;';
+                labelSpan.textContent = label;
+                chip.appendChild(labelSpan);
+                var pill = document.createElement('label');
+                pill.className = 'dh-gas-result-pill';
+                pill.textContent = value;
+                chip.appendChild(pill);
+                row.appendChild(chip);
+            }
+
+            addTimePill('Run time', document.getElementById('labelTotalRunTime').textContent.trim());
+            addTimePill('Deco time', document.getElementById('labelTotalDecoTime').textContent.trim());
+
+            wrap.appendChild(row);
+            return wrap;
+        }
+
+        function dhBuildPdfColumns(profile, isCC, mainChartUrl, baseline) {
+            var row = document.createElement('div');
+            row.style.cssText = 'display:flex; gap:30px; padding:12px 48px 34px; flex:1 1 auto; min-height:0;';
+
+            var col1 = document.createElement('div');
+            col1.style.cssText = 'flex:1 1 0; min-width:0;';
+            col1.appendChild(dhBuildPdfColumnHeader('Decompression Table'));
+            col1.appendChild(dhBuildPdfTableClone('decoTableContainer'));
+            row.appendChild(col1);
+
+            var col2 = document.createElement('div');
+            col2.style.cssText = 'flex:1 1 0; min-width:0;';
+            col2.appendChild(dhBuildPdfDiveTimesSection());
+            col2.appendChild(dhBuildPdfColumnHeader('Decompression Chart'));
+            var chartCard = document.createElement('div');
+            chartCard.style.cssText = 'background:#0b2a3a; border-radius:14px; padding:16px;';
+            var chartImg = document.createElement('img');
+            chartImg.src = mainChartUrl;
+            chartImg.style.cssText = 'width:100%; display:block;';
+            chartCard.appendChild(chartImg);
+            col2.appendChild(chartCard);
+            if (!isCC && baseline) col2.appendChild(dhBuildPdfGasSwitchTable(baseline));
+            row.appendChild(col2);
+
+            var col3 = document.createElement('div');
+            col3.style.cssText = 'flex:1 1 0; min-width:0;';
+            if (isCC) {
+                col3.appendChild(dhBuildPdfColumnHeader('Bailout Table'));
+                col3.appendChild(dhBuildPdfTableClone('BOTableContainer'));
+            } else {
+                col3.appendChild(dhBuildPdfColumnHeader('Gas Consumption'));
+                var sub1 = document.createElement('div');
+                sub1.style.cssText = 'font-weight:700; font-size:12px; color:#5a6b78; text-transform:uppercase; letter-spacing:.03em; margin:4px 0 6px;';
+                sub1.textContent = 'Bottom gas';
+                col3.appendChild(sub1);
+                col3.appendChild(dhBuildPdfGasConsumptionTable('bottomGasConsumptionTableContainer'));
+                var sub2 = document.createElement('div');
+                sub2.style.cssText = 'font-weight:700; font-size:12px; color:#5a6b78; text-transform:uppercase; letter-spacing:.03em; margin:12px 0 6px;';
+                sub2.textContent = 'Decompression gases';
+                col3.appendChild(sub2);
+                col3.appendChild(dhBuildPdfGasConsumptionTable('decoGasConsumptionTableContainer'));
+            }
+            row.appendChild(col3);
+
+            return row;
+        }
+
+        function dhBuildPdfPage(profile, isCC, mainChartUrl, baseline) {
+            var page = document.createElement('div');
+            page.style.cssText = 'position:fixed; left:-99999px; top:0; width:' + DH_PDF_PAGE_W + 'px; height:' + DH_PDF_PAGE_H + 'px; background:#ffffff; font-family: "Roboto", Arial, sans-serif; display:flex; flex-direction:column; overflow:hidden;';
+            page.appendChild(dhBuildPdfHeader(profile, isCC));
+            page.appendChild(dhBuildPdfDisclaimer());
+            page.appendChild(dhBuildPdfGases(profile, isCC));
+            page.appendChild(dhBuildPdfColumns(profile, isCC, mainChartUrl, baseline));
+            document.body.appendChild(page);
+            return page;
         }
 
         async function dhExportDecoPlanToPDF() {
@@ -6682,139 +7096,37 @@
             btn.innerHTML = '<span class="material-icons-round" aria-hidden="true">hourglass_top</span> Exporting…';
             btn.disabled = true;
 
+            var page = null;
             try {
                 var profile = window.lastDiveProfile;
+                var isCC = profile.mode === 'CC';
+                var mainChartUrl = document.getElementById('profileChart').toDataURL('image/png');
+
+                page = dhBuildPdfPage(profile, isCC, mainChartUrl, globalResponse['baseline']);
+
+                // html2canvas mis-renders the split pills' inset box-shadow
+                // divider (real Chrome shows a crisp 1px highlight; canvas
+                // output shows a diagonal gradient across the whole pill) -
+                // it's a purely decorative divider, so just drop it for the
+                // snapshot rather than fight html2canvas's box-shadow
+                // support (Pablo, 2026-09-19: "the He rendering weird...
+                // need to be in the same color as the theme").
+                page.querySelectorAll('.dh-gas-result-pill').forEach(function (el) { el.style.boxShadow = 'none'; });
+
+                var canvas = await html2canvas(page, { scale: 1, backgroundColor: '#ffffff', useCORS: true });
+                var imgData = canvas.toDataURL('image/png');
+
                 var { jsPDF } = window.jspdf;
-                var doc = new jsPDF({ unit: 'pt', format: 'letter' });
-                var margin = 40;
+                var doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
                 var pageWidth = doc.internal.pageSize.getWidth();
-                var contentWidth = pageWidth - margin * 2;
-                var y = margin;
-
-                // 1. Header: logo + created-on timestamp.
-                try {
-                    var logoDataUrl = await dhLoadImageAsDataUrl('{{ asset("assets") }}/img/logos/logo_horizontal.png');
-                    doc.addImage(logoDataUrl, 'PNG', margin, y, 110, 31);
-                } catch (e) {
-                    // Logo is a nice-to-have - a failed fetch shouldn't block the export.
-                }
-                doc.setFontSize(9);
-                doc.setTextColor(90, 90, 90);
-                doc.text('Decompression plan created on ' + new Date().toLocaleString(), pageWidth - margin, y + 20, { align: 'right' });
-                y += 50;
-
-                // 2. Disclosure - condensed from the safety modal shown on every page load.
-                doc.setFillColor(250, 244, 230);
-                var disclosureText = 'Diving, especially decompression diving, is a risky activity. These calculations are based on mathematical models and do not guarantee prevention of decompression sickness or other diving hazards. Always use a reliable dive computer, follow established safety guidelines, dive within your training and experience level, and plan for contingencies. This plan is an informational aid, not a replacement for professional dive planning and real-time monitoring.';
-                var disclosureLines = doc.setFontSize(8).splitTextToSize(disclosureText, contentWidth - 20);
-                var disclosureHeight = disclosureLines.length * 10 + 14;
-                doc.rect(margin, y, contentWidth, disclosureHeight, 'F');
-                doc.setTextColor(120, 90, 20);
-                doc.text(disclosureLines, margin + 10, y + 12);
-                y += disclosureHeight + 20;
-
-                // 3. Inputs table.
-                doc.setFontSize(12);
-                doc.setTextColor(20, 20, 20);
-                doc.text('Inputs', margin, y);
-                y += 8;
-                doc.autoTable({
-                    startY: y,
-                    margin: { left: margin, right: margin },
-                    head: [['Field', 'Value']],
-                    body: dhBuildPdfInputRows(profile),
-                    theme: 'grid',
-                    headStyles: { fillColor: [20, 30, 40] },
-                    styles: { fontSize: 9 },
-                });
-                y = doc.lastAutoTable.finalY + 20;
-
-                // 4. Decompression table + chart.
-                y = dhPdfEnsureSpace(doc, y, 60, margin);
-                doc.setFontSize(12);
-                doc.text('Decompression Table', margin, y);
-                y += 8;
-                doc.autoTable({
-                    startY: y,
-                    margin: { left: margin, right: margin },
-                    html: '#decoTableContainer table',
-                    theme: 'grid',
-                    headStyles: { fillColor: [20, 30, 40] },
-                    styles: { fontSize: 8 },
-                });
-                y = doc.lastAutoTable.finalY + 20;
-
-                var profileChartCanvas = document.getElementById('profileChart');
-                var chartImgHeight = contentWidth * (profileChartCanvas.height / profileChartCanvas.width);
-                y = dhPdfEnsureSpace(doc, y, chartImgHeight + 30, margin);
-                doc.setFontSize(12);
-                doc.text('Decompression Profile', margin, y);
-                y += 8;
-                doc.addImage(profileChartCanvas.toDataURL('image/png'), 'PNG', margin, y, contentWidth, chartImgHeight);
-                y += chartImgHeight + 20;
-
-                // 5. CC only: Bailout to OC table + chart.
-                if (modeOCOrCC === 'CC') {
-                    y = dhPdfEnsureSpace(doc, y, 60, margin);
-                    doc.setFontSize(12);
-                    doc.text('Bailout to OC', margin, y);
-                    y += 8;
-                    doc.autoTable({
-                        startY: y,
-                        margin: { left: margin, right: margin },
-                        html: '#BOTableContainer table',
-                        theme: 'grid',
-                        headStyles: { fillColor: [20, 30, 40] },
-                        styles: { fontSize: 8 },
-                    });
-                    y = doc.lastAutoTable.finalY + 20;
-
-                    var unitConversionForPdf = modeImpOrMetric == 'met' ? 10 : 33;
-                    var bailoutAnnotations = buildGasSwitchAnnotations(globalResponse['bailout'], unitConversionForPdf, true);
-                    var bailoutChartUrl = await dhRenderOffscreenProfileChart(formattedData7, bailoutAnnotations);
-                    y = dhPdfEnsureSpace(doc, y, chartImgHeight + 30, margin);
-                    doc.setFontSize(12);
-                    doc.text('Bailout to OC Profile', margin, y);
-                    y += 8;
-                    doc.addImage(bailoutChartUrl, 'PNG', margin, y, contentWidth, chartImgHeight);
-                    y += chartImgHeight + 20;
-                }
-
-                // 6. OC only: gas consumption.
-                if (modeOCOrCC === 'OC') {
-                    y = dhPdfEnsureSpace(doc, y, 60, margin);
-                    doc.setFontSize(12);
-                    doc.text('Gas Consumption', margin, y);
-                    y += 8;
-                    if (document.querySelector('#bottomGasConsumptionTableContainer table')) {
-                        doc.autoTable({
-                            startY: y,
-                            margin: { left: margin, right: margin },
-                            html: '#bottomGasConsumptionTableContainer table',
-                            theme: 'grid',
-                            headStyles: { fillColor: [20, 30, 40] },
-                            styles: { fontSize: 8 },
-                        });
-                        y = doc.lastAutoTable.finalY + 14;
-                    }
-                    if (document.querySelector('#decoGasConsumptionTableContainer table')) {
-                        y = dhPdfEnsureSpace(doc, y, 60, margin);
-                        doc.autoTable({
-                            startY: y,
-                            margin: { left: margin, right: margin },
-                            html: '#decoGasConsumptionTableContainer table',
-                            theme: 'grid',
-                            headStyles: { fillColor: [20, 30, 40] },
-                            styles: { fontSize: 8 },
-                        });
-                    }
-                }
-
+                var pageHeight = doc.internal.pageSize.getHeight();
+                doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
                 doc.save('decompression-plan-' + new Date().toISOString().slice(0, 10) + '.pdf');
             } catch (e) {
                 console.error(e);
                 alert('Could not export this plan to PDF - please try again.');
             } finally {
+                if (page && page.parentNode) page.parentNode.removeChild(page);
                 btn.innerHTML = originalHtml;
                 btn.disabled = false;
             }
@@ -6822,26 +7134,202 @@
 
         document.getElementById('exportDecoPlanPdfBtn').addEventListener('click', dhExportDecoPlanToPDF);
 
+        // "Save a dive" now opens a naming modal instead of a native
+        // prompt() (Pablo, 2026-09-19: "open a modal to give the dive a
+        // name and save it with a date time stamp") - the timestamp is just
+        // the row's created_at, already set server-side on every insert.
         var saveDecoPlanBtn = document.getElementById('saveDecoPlanBtn');
-        if (saveDecoPlanBtn) {
+        var modalSaveDecoPlanEl = document.getElementById('modalSaveDecoPlan');
+        var modalSaveDecoPlan = modalSaveDecoPlanEl ? new bootstrap.Modal(modalSaveDecoPlanEl) : null;
+        if (saveDecoPlanBtn && modalSaveDecoPlan) {
             saveDecoPlanBtn.addEventListener('click', function () {
                 if (!window.lastDiveProfile) {
                     alert('Calculate a decompression plan first.');
                     return;
                 }
-                var label = prompt('Name this plan (optional):', '');
-                if (label === null) return; // cancelled
+                document.getElementById('modalSaveDecoPlanLabel').value = '';
+                document.getElementById('modalSaveDecoPlanError').hidden = true;
+                modalSaveDecoPlan.show();
+            });
 
+            document.getElementById('modalSaveDecoPlanConfirm').addEventListener('click', function () {
+                var errorEl = document.getElementById('modalSaveDecoPlanError');
+                errorEl.hidden = true;
                 $.ajax({
                     url: '{{ route("DecoPlanner.savePlan") }}',
                     method: 'POST',
                     data: {
                         mode: window.lastDiveProfile.mode,
                         inputs: window.lastDiveProfile,
-                        label: label || null,
+                        label: document.getElementById('modalSaveDecoPlanLabel').value || null,
                     },
-                    success: function () { dhFlashIconButton(saveDecoPlanBtn, true); },
-                    error: function () { dhFlashIconButton(saveDecoPlanBtn, false); },
+                    success: function () {
+                        modalSaveDecoPlan.hide();
+                        dhFlashIconButton(saveDecoPlanBtn, true);
+                        dhSavedDecoPlansCache = null; // stale - refetch next time "Open a dive" opens
+                    },
+                    error: function (xhr) {
+                        errorEl.textContent = (xhr.responseJSON && xhr.responseJSON.message) || 'Could not save that dive - please try again.';
+                        errorEl.hidden = false;
+                    },
+                });
+            });
+        }
+
+        // "Open a dive" (Pablo, 2026-09-19): reloads a saved plan's exact
+        // inputs and re-runs the calculation. Fetched fresh each time the
+        // modal opens (except right after this same session already loaded
+        // the list and nothing's changed) rather than kept in sync live -
+        // this list only ever changes from this same modal/Save Plan, both
+        // in this tab.
+        var openDivePlanBtn = document.getElementById('openDivePlanBtn');
+        var modalOpenDiveEl = document.getElementById('modalOpenDive');
+        var modalOpenDive = modalOpenDiveEl ? new bootstrap.Modal(modalOpenDiveEl) : null;
+        var dhSavedDecoPlansCache = null;
+
+        function dhFormatSavedPlanWhen(isoString) {
+            var d = new Date(isoString);
+            return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) +
+                ' ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+        }
+
+        function dhRenderOpenDiveList(plans) {
+            var list = document.getElementById('modalOpenDiveList');
+            var empty = document.getElementById('modalOpenDiveEmpty');
+            if (!list) return;
+            list.innerHTML = '';
+            empty.hidden = plans.length > 0;
+            plans.forEach(function (plan) {
+                var row = document.createElement('div');
+                row.className = 'dh-mygases-row';
+
+                var pick = document.createElement('button');
+                pick.type = 'button';
+                pick.className = 'dh-mygases-pick';
+                pick.style.cssText = 'flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 14px;';
+                var titleLine = document.createElement('span');
+                titleLine.style.cssText = 'font-weight: 700; font-size: .82rem;';
+                titleLine.textContent = plan.label || (plan.mode === 'CC' ? 'Untitled CC dive' : 'Untitled OC dive');
+                var metaLine = document.createElement('span');
+                metaLine.style.cssText = 'font-size: .72rem; opacity: .75;';
+                metaLine.textContent = plan.mode + ' · ' + (plan.inputs.maxDepth || '?') + dhFormatDepthUnit() + ' · ' + dhFormatSavedPlanWhen(plan.created_at);
+                pick.appendChild(titleLine);
+                pick.appendChild(metaLine);
+                pick.addEventListener('click', function () {
+                    dhLoadSavedDecoPlan(plan);
+                    modalOpenDive.hide();
+                });
+
+                var del = document.createElement('button');
+                del.type = 'button';
+                del.className = 'dh-mygases-delete';
+                del.title = 'Delete this saved dive';
+                var delIcon = document.createElement('span');
+                delIcon.className = 'material-icons-round';
+                delIcon.setAttribute('aria-hidden', 'true');
+                delIcon.textContent = 'delete_outline';
+                del.appendChild(delIcon);
+                del.addEventListener('click', function () {
+                    if (!confirm('Delete "' + titleLine.textContent + '"?')) return;
+                    $.ajax({
+                        url: '{{ route("DecoPlanner.deletePlan", ["id" => "__ID__"]) }}'.replace('__ID__', plan.id),
+                        method: 'DELETE',
+                        success: function () {
+                            dhSavedDecoPlansCache = dhSavedDecoPlansCache.filter(function (p) { return p.id !== plan.id; });
+                            dhRenderOpenDiveList(dhSavedDecoPlansCache);
+                        },
+                        error: function () {
+                            alert('Could not delete that dive - please try again.');
+                        },
+                    });
+                });
+
+                row.appendChild(pick);
+                row.appendChild(del);
+                list.appendChild(row);
+            });
+        }
+
+        // Sets one field's value and dispatches the same 'change' event a
+        // real edit + blur would - every input on this page (sliders
+        // included) already listens for exactly that to sync its slider/
+        // recompute dependents, so this reproduces a manual edit rather
+        // than needing a second, parallel way to drive each field.
+        function dhSetFieldValue(id, value) {
+            var el = document.getElementById(id);
+            if (!el || value === undefined || value === null) return;
+            el.value = value;
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        // Restores every input exactly as the diver had it when they saved
+        // this plan, then forces a recalculation so the results reproduce
+        // (Pablo, 2026-09-19: "load all configs...exactly as the user
+        // configured. Then force to run the decompression so we can
+        // reproduce the same results").
+        function dhLoadSavedDecoPlan(plan) {
+            var inputs = plan.inputs;
+            var isCC = plan.mode === 'CC';
+
+            // Always click the target tab, even if already active - its
+            // handler (showOpenCircuit/showClosedCircuit) is what resets
+            // every gas slot back to empty, which this load needs whether
+            // or not the mode itself is actually changing.
+            (isCC ? closedCircuitTab : openCircuitTab).click();
+
+            dhSetFieldValue('labelDepth', inputs.maxDepth);
+            dhSetFieldValue('labelBottomTime', inputs.bottomTime);
+            if (inputs.gradientFactors) {
+                dhSetFieldValue('labelGFL', inputs.gradientFactors.low);
+                dhSetFieldValue('labelGFH', inputs.gradientFactors.high);
+            }
+            dhSetFieldValue('labelSurfaceTime', inputs.surfaceTime);
+            if (inputs.rate) {
+                dhSetFieldValue('labelDes', inputs.rate.descent);
+                dhSetFieldValue('labelAsc', inputs.rate.ascent);
+            }
+            if (isCC) dhSetFieldValue('labelSetpoint', inputs.setpoint);
+
+            if (inputs.bottomGas) {
+                dhSetFieldValue('labelBottomGasO2', inputs.bottomGas.O2);
+                dhSetFieldValue('labelBottomGasHe', inputs.bottomGas.He);
+            }
+
+            var decoGases = inputs.decoGases || [];
+            // CC's slot 1 (Bailout) is already revealed by showClosedCircuit
+            // above - only slots beyond that need an "Add gas" click each,
+            // same as OC needing one click per slot including the first.
+            var slotsToAdd = isCC ? Math.max(0, decoGases.length - 1) : decoGases.length;
+            for (var i = 0; i < slotsToAdd; i++) {
+                document.getElementById('gasTabBtnAdd').click();
+            }
+            decoGases.forEach(function (gas, idx) {
+                var n = idx + 1;
+                dhSetFieldValue('labelDecoGas' + n + 'O2', gas.O2);
+                dhSetFieldValue('labelDecoGas' + n + 'He', gas.He);
+            });
+
+            document.getElementById('calculateDecoProfile').click();
+        }
+
+        if (openDivePlanBtn && modalOpenDive) {
+            openDivePlanBtn.addEventListener('click', function () {
+                if (dhSavedDecoPlansCache) {
+                    dhRenderOpenDiveList(dhSavedDecoPlansCache);
+                    modalOpenDive.show();
+                    return;
+                }
+                $.ajax({
+                    url: '{{ route("DecoPlanner.listPlans") }}',
+                    method: 'GET',
+                    success: function (plans) {
+                        dhSavedDecoPlansCache = plans;
+                        dhRenderOpenDiveList(plans);
+                        modalOpenDive.show();
+                    },
+                    error: function () {
+                        alert('Could not load your saved dives - please try again.');
+                    },
                 });
             });
         }

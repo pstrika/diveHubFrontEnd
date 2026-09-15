@@ -46,8 +46,12 @@
 
   @unless($dhFrozen)
   {{-- Boot splash CSS, inline so it applies before the external stylesheet
-       loads. display-mode:standalone is what keeps it off in a normal
-       browser tab - no JS involved in that decision. --}}
+       loads. display-mode:standalone keeps it off in a normal browser tab
+       by default; .dh-splash-force (set server-side, once, right after a
+       successful login) shows it there too regardless of screen size
+       (Pablo, 2026-09-19: "right after login...show the splash. The load
+       takes quite a long time...in all screen sizes"). Either way, no JS
+       is involved in the visibility decision itself. --}}
   <style>
     #dh-splash { display: none; position: fixed; inset: 0; z-index: 99999; align-items: center; justify-content: center; background: #0b2a3a; transition: opacity .25s ease; }
     #dh-splash img { width: 88px; height: 88px; border-radius: 22px; animation: dhSplashPulse 1.1s ease-in-out infinite; }
@@ -56,6 +60,7 @@
     @media (display-mode: standalone) {
       #dh-splash { display: flex; }
     }
+    #dh-splash.dh-splash-force { display: flex; }
   </style>
   @endunless
 
@@ -120,7 +125,10 @@
 <body class="{{ $bodyClass }}">
 
 @unless($dhFrozen)
-<x-pwa-splash />
+{{-- session()->pull removes the flag as it's read, so this only fires once
+     - the very first page render right after login, never again until the
+     next login. --}}
+<x-pwa-splash :forceShow="session()->pull('dh_show_splash', false)" />
 @endunless
 
 {{ $slot }}

@@ -923,6 +923,24 @@ class NDLController extends Controller
         ];
     }
 
+    /**
+     * The Decompression Dive Planner is a real tool divers rely on, not a
+     * marketing page - imperial/metric/site-specific URLs are the same
+     * content in different units, so canonical always points at the one
+     * plain DecoPlanner URL to avoid split/duplicate-content signals
+     * (Pablo, 2026-09-19: "Deco Planner and Best Gases are VERY important
+     * pages that need to have strong SEO...a HUGE asset to divers").
+     */
+    private function decoPlannerSeo(): array
+    {
+        return [
+            'title' => 'Free Scuba Decompression Dive Planner | Divers Hub',
+            'desc' => 'Plan technical and recreational dives for free: gradient factors, multi-gas OC deco schedules, CCR bailout tables, gas consumption and a full deco profile chart - built for real dive planning, not a toy calculator.',
+            'keywords' => 'decompression planner, dive planner, deco planner, gradient factors calculator, technical diving, CCR bailout planner, dive deco tables, tech diving florida, scuba decompression calculator',
+            'canonical' => route('DecoPlanner'),
+        ];
+    }
+
     public function show($id = null) {
 
         // Guests (shared user 5) have no unit preference; imperial is the Florida default.
@@ -943,8 +961,9 @@ class NDLController extends Controller
              ->sortBy('name');
 
         [$decoPrefs, $savedGases] = array_values($this->decoPlannerViewExtras());
+        $SEO = $this->decoPlannerSeo();
 
-        return view('pages.DivePlanner', compact('currentSite', 'allSites', 'deco_unit', 'decoPrefs', 'savedGases'));
+        return view('pages.DivePlanner', compact('currentSite', 'allSites', 'deco_unit', 'decoPrefs', 'savedGases', 'SEO'));
     }
 
     public function showImperial($id = null) {
@@ -966,8 +985,9 @@ class NDLController extends Controller
              ->sortBy('name');
 
         [$decoPrefs, $savedGases] = array_values($this->decoPlannerViewExtras());
+        $SEO = $this->decoPlannerSeo();
 
-        return view('pages.DivePlanner', compact('currentSite', 'allSites', 'deco_unit', 'decoPrefs', 'savedGases'));
+        return view('pages.DivePlanner', compact('currentSite', 'allSites', 'deco_unit', 'decoPrefs', 'savedGases', 'SEO'));
     }
 
     public function showMetric($id = null) {
@@ -990,8 +1010,9 @@ class NDLController extends Controller
 
 
         [$decoPrefs, $savedGases] = array_values($this->decoPlannerViewExtras());
+        $SEO = $this->decoPlannerSeo();
 
-        return view('pages.DivePlanner', compact('currentSite', 'allSites', 'deco_unit', 'decoPrefs', 'savedGases'));
+        return view('pages.DivePlanner', compact('currentSite', 'allSites', 'deco_unit', 'decoPrefs', 'savedGases', 'SEO'));
     }
 
     /**
@@ -1108,5 +1129,36 @@ class NDLController extends Controller
         ]);
 
         return response()->json(['id' => $plan->id]);
+    }
+
+    /**
+     * "Open a dive" (Pablo, 2026-09-19): lists the diver's own saved plans
+     * so the modal can offer to reload one and re-run the calculation.
+     */
+    public function listDecoPlans(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user->isNotGuest()) {
+            return response()->json(['message' => 'Create an account to save decompression plans.'], 403);
+        }
+
+        $plans = DecoPlan::where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->get(['id', 'label', 'mode', 'inputs', 'created_at']);
+
+        return response()->json($plans);
+    }
+
+    /** Deletes one of the diver's own saved plans from the "Open a dive" modal. */
+    public function deleteDecoPlan(Request $request, $id)
+    {
+        $user = auth()->user();
+        $plan = DecoPlan::where('user_id', $user->id)->where('id', $id)->first();
+        if (!$plan) {
+            return response()->json(['message' => 'Plan not found.'], 404);
+        }
+        $plan->delete();
+
+        return response()->json(['success' => true]);
     }
 }

@@ -87,14 +87,16 @@ return [
         // fine by sending trip_reminder_2 (UTILITY) to the same number,
         // which delivered.
         //
-        // Fix in progress: an approved WhatsApp template can't be
+        // Fixed 2026-09-15: an approved WhatsApp template can't be
         // recategorized in place (Twilio error 92009 - "recreate a new
         // template to make any changes"), so HX5d3a236a3d6d03242b812be6ec5eb334
-        // "trip_reminder_3_with_waiver_utility" is a duplicate of this exact
-        // content, submitted 2026-09-15 for approval as UTILITY instead.
-        // Once Meta approves it, swap this config value (or
-        // TWILIO_WHATSAPP_TRIP_REMINDER_SID) over to it - do not swap before
-        // approval, an unapproved ContentSid won't send at all.
+        // "trip_reminder_3_with_waiver_utility" is a duplicate of the
+        // original MARKETING-blocked content, submitted as UTILITY - Meta
+        // approved it 2026-09-15 and a real test send to a US number came
+        // back "delivered" (no error_code), so this is now the active SID.
+        //
+        // The old MARKETING-category original (HX3c63aba80c351d4a492df18b407b16cc)
+        // is left below for reference only - never delivers to a US number.
         //
         // Other fallbacks, in order of how close a match they are:
         //   - HXc96f0ea171f85fca8b3ecaa3a00fb9a4 "trip_reminder_3" - same
@@ -106,7 +108,7 @@ return [
         //     confirmed delivering to a real US number 2026-09-15.
         //   - HXdb6d8053b6017f001e74d9787321dbdb - dead, first
         //     trip_reminder_3 attempt, submitted as UTILITY by mistake.
-        'trip_reminder_content_sid' => env('TWILIO_WHATSAPP_TRIP_REMINDER_SID', 'HX3c63aba80c351d4a492df18b407b16cc'),
+        'trip_reminder_content_sid' => env('TWILIO_WHATSAPP_TRIP_REMINDER_SID', 'HX5d3a236a3d6d03242b812be6ec5eb334'),
         // @mention in a group chat -> an immediate WhatsApp ping to the
         // person mentioned. No template exists for this yet - null until
         // one is created and approved, which is its own review separate

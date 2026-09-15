@@ -44,6 +44,11 @@ class SessionsController extends Controller
         
         session()->regenerate();
         session()->put('logged_in', true);  // use this to clear the localStorage for filter in the client side
+        // Shows the boot splash on the very next page load - MyDashboard's
+        // first render after a fresh login is the slow one (Pablo,
+        // 2026-09-19: "right after login...show the splash...it feels like
+        // the site is dead otherwise").
+        session()->put('dh_show_splash', true);
 
         //return redirect()->intended($this->redirectTo);
         //return redirect('/Trips');

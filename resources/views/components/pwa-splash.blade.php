@@ -1,14 +1,18 @@
 {{--
-    Boot splash, installed-PWA only. Launching from the home screen icon opens
-    a blank WebView while the page actually loads (a few seconds is enough to
-    read as "black screen" - Pablo, 2026-09-13); this covers that gap with the
-    app icon and a small pulse so it reads as "starting up", not "broken".
-
-    Pure CSS decides whether it's even visible - @media (display-mode:
-    standalone) below - so there is no JS race and it never flashes in a
-    regular browser tab. JS only ever hides it once the page is ready.
+    Boot splash. Originally installed-PWA only (launching from the home
+    screen icon opens a blank WebView while the page actually loads - a few
+    seconds is enough to read as "black screen", Pablo 2026-09-13) - the
+    same gap exists right after logging in from a regular browser tab too,
+    on any screen size, while MyDashboard's first load pulls everything
+    together (Pablo, 2026-09-19: "right after login...show the splash. The
+    load takes quite a long time...it feels like the site is dead
+    otherwise"). Pure CSS decides visibility in both cases (the standalone
+    media query, or the one-time $forceShow class set server-side right
+    after a successful login) - no JS race, never flashes on an ordinary
+    page load. JS only ever hides it once the page is ready.
 --}}
-<div id="dh-splash" aria-hidden="true">
+@props(['forceShow' => false])
+<div id="dh-splash" aria-hidden="true" class="{{ $forceShow ? 'dh-splash-force' : '' }}">
     <img src="{{ asset('assets') }}/img/pwa/icon-512.png" alt="">
 </div>
 <script>

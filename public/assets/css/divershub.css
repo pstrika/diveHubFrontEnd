@@ -1460,6 +1460,12 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 }
 .dh-deco-section-head .material-icons-round { color: #fff; opacity: .85; }
 .dh-deco-section-head h3, .dh-deco-section-head h4 { flex: 1 1 auto; margin: 0; font-size: 1rem; font-weight: 800; color: #fff; }
+/* Title + Model/GFs stacked instead of sharing the title's own line, so
+   Export PDF/Save Plan on a narrow card don't get squeezed against a long
+   "Model ZH-L16C-GF - GFs 40/70" string (Pablo, 2026-09-19: "show the model
+   and GF below Decompression Plan text so the two...pills don't overflow"). */
+.dh-deco-section-head-title-wrap { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.dh-deco-section-head-title-wrap h3 { flex: 0 0 auto; }
 .dh-deco-section-head.is-toggle { cursor: pointer; user-select: none; }
 .dh-deco-section-head.is-toggle:hover { background: var(--dh-deep); }
 .dh-deco-section-head-chevron { transition: transform .15s; }
@@ -1471,9 +1477,16 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    single line"). Run/deco time are calculated results, so they get the
    same blue pill as everywhere else; model/GFs are just context, so they
    stay small, grey, plain text. */
+/* Horizontal padding dropped to 0 (was 14px 16px) - the column's own
+   Bootstrap gutter already lines this row up with the card's edges;
+   keeping a padding here on top of that made it sit noticeably more inset
+   than the Decompression Table/Chart row right below it (Pablo, 2026-09-19:
+   "need to take all the card width, with the right padding like the table
+   and the graph below"). Vertical padding stays so the pills don't crowd
+   the header/table above and below them. */
 .dh-deco-summary {
   display: flex; align-items: stretch; gap: 12px;
-  padding: 14px 16px;
+  padding: 14px 0;
 }
 /* Run time and Deco time each take half the card as one big pill - not a
    plain label next to a small result pill anymore (Pablo, 2026-09-17:
@@ -1733,7 +1746,7 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    safety threshold, just "matches the calculated best mix or not". */
 .dh-gas-result-pill {
   display: inline-flex; align-items: center; justify-content: center; gap: 4px;
-  padding: 0 16px; color: #fff; background: var(--dh-sea);
+  padding: 0 16px; color: #fff; background: var(--dh-sea); vertical-align: middle;
 }
 .dh-gas-result-pill.is-ideal { background: var(--dh-good); }
 
@@ -1895,6 +1908,36 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    width"). */
 .dh-gas-picker { justify-content: flex-start; margin-bottom: 10px; }
 .dh-gas-picker .dh-channel-chip { flex: 0 0 auto; padding: 3px 12px; font-size: .76rem; }
+
+/* Search dive sites / Save GFs / the selected-site result pill, all forced
+   to the exact same box regardless of their different base components (a
+   button vs a <label> result pill) - matches the Open Circuit/Close Circuit
+   CCR chips above them pixel-for-pixel instead of each keeping its own
+   family's padding math (Pablo, 2026-09-19: "make them all with that font
+   and the pill height to be the same for all these"). Height is the real
+   measured render of .dh-gas-picker .dh-channel-chip, not a guess. Also
+   applied to the Decompression plan card's Export PDF/Save Plan buttons
+   (Pablo, 2026-09-19: "make these pills the same height and font size as
+   the ones in the input card for Close Circuit CCR and Open Circuit") -
+   only sizing here, so each keeps its own component's colors. */
+.dh-channel-chip.dh-deco-searchrow-pill,
+.dh-gas-result-pill.dh-deco-searchrow-pill,
+.dh-deco-header-btn.dh-deco-searchrow-pill {
+  height: 27px; padding: 0 12px; font-size: .76rem; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+
+/* "Search dive sites" and its result now share one button instead of a
+   button plus a separate variable-length pill next to it - the button
+   itself switches to the colored result-pill look once a site is picked
+   (Pablo, 2026-09-19: "replace the pill Search a dive with the result...
+   save space in the screen. That will also...prevent the save GFs pill to
+   overflow and have no row misalignment"). ID-scoped so it outranks
+   .dh-channel-chip's plain white/bordered look regardless of source order. */
+#dropdownMenuButton.dh-site-selected {
+  background: var(--dh-sea); border-color: var(--dh-sea); color: #fff;
+}
+#dropdownMenuButton.dh-site-selected:hover { background: var(--dh-sea); color: #fff; }
 .dh-gas-toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin: 0; }
 .dh-gas-toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .dh-gas-toggle-track {
@@ -1930,7 +1973,12 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    .textContent exactly as before, untouched, so every existing
    calculation that reads them (updateGasMix, gas density, END) keeps
    working with no JS changes beyond the ones already made. */
-.dh-gas-split-pill { display: inline-flex; }
+/* vertical-align:middle because this is an inline-flex box sitting inline
+   next to plain text (a table cell's other columns, a chip's label) -
+   without it, its default "baseline" alignment reads as visibly shifted up
+   or down from that text (Pablo, 2026-09-19, a recurring complaint: "the
+   gas split pills are not aligned middle vertically within the wrapper"). */
+.dh-gas-split-pill { display: inline-flex; vertical-align: middle; }
 .dh-gas-split-pill .dh-gas-result-pill:first-child { border-radius: var(--dh-radius-pill) 0 0 var(--dh-radius-pill); }
 .dh-gas-split-pill .dh-gas-result-pill:last-child { border-radius: 0 var(--dh-radius-pill) var(--dh-radius-pill) 0; box-shadow: inset 1px 0 0 rgba(255,255,255,.4); }
 /* A middle segment (the He third of a 3-way split) is neither first nor

@@ -85,7 +85,15 @@ class SitemapController extends Controller
             'WreckSites' => ['priority' => 0.9, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'BeachDiving' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'Operators' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
-            'gasplanning' => ['priority' => 0.5, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            // Both real planning tools, not marketing pages - bumped from
+            // the previous 0.5/missing (Pablo, 2026-09-19: "Deco Planner
+            // and Best Gases are VERY important pages...a HUGE asset to
+            // divers"). DecoPlannerImperial/DecoPlannerMetric are the same
+            // content in different units, so only the plain DecoPlanner URL
+            // goes in the sitemap - its own canonical tag is what tells
+            // crawlers the other two aren't separate pages.
+            'gasplanning' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            'DecoPlanner' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'home' => ['priority' => 0.6, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'Waivers' => ['priority' => 0.4, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'CalendarHydrotherapy' => ['priority' => 0.4, 'changefreq' => Url::CHANGE_FREQUENCY_DAILY],
