@@ -5091,7 +5091,7 @@
                                 <th class="depth-column text-sm" style="width: 12%; padding-left: 0px; padding-right:0px;">Depth</th>
                                 <th class="text-sm" style="width: 9%; padding-left: 0px; padding-right:0px;">Time</th>
                                 <th class="text-sm" style="width: 9%; padding-left: 0px; padding-right:0px;">RT</th>
-                                <th class="text-sm" style="width: 32%; padding-left: 0px; padding-right:0px;">Gas</th>
+                                <th class="text-sm" style="width: 32%; padding-left: 0px; padding-right:0px; text-align:center;">Gas</th>
                                 <th class="text-sm" style="width: 17%; padding-left: 0px; padding-right:0px;">PPO&#8322;</th>
                                 <th class="text-sm" style="width: 14%; padding-left: 0px; padding-right:0px;">GF</th>
                             </tr>
@@ -5146,7 +5146,7 @@
                                 <th class="depth-column text-sm" style="width: 11%; padding-left: 0px; padding-right:0px;">Depth</th>
                                 <th class="text-sm" style="width: 8%; padding-left: 0px; padding-right:0px;">Time</th>
                                 <th class="text-sm" style="width: 8%; padding-left: 0px; padding-right:0px;">RT</th>
-                                <th class="text-sm" style="width: 30%; padding-left: 0px; padding-right:0px;">Gas</th>
+                                <th class="text-sm" style="width: 30%; padding-left: 0px; padding-right:0px; text-align:center;">Gas</th>
                                 <th class="text-sm hide-on-mobile" style="width: 16%; padding-left: 0px; padding-right:0px;">PPO&#8322;</th>
                                 <th class="text-sm hide-on-mobile" style="width: 14%; padding-left: 0px; padding-right:0px;">GF</th>
                             </tr>
@@ -6932,12 +6932,12 @@
                 // everywhere else in this PDF (Pablo, 2026-09-19: "now with
                 // no padding at all on the top...make those show in the
                 // middle of the wrapper").
-                // Padding bumped from 3px top/bottom to 8px - the pill was
-                // reading as crowded against the chip's own border (Pablo,
-                // 2026-09-19: "we need more top padding on top of the gas
-                // pills to separate them from the wrapper border").
+                // Padding bumped 3px -> 8px -> 14px top/bottom - the pill
+                // kept reading as crowded against the chip's own border
+                // (Pablo, 2026-09-19: "the padding on the gas pills go from
+                // 8px to 14px").
                 var chip = document.createElement('div');
-                chip.style.cssText = 'display:inline-block; border:1.5px solid #0b2a3a; border-radius:999px; padding:8px 14px 8px 16px; flex:0 0 auto;';
+                chip.style.cssText = 'display:inline-block; border:1.5px solid #0b2a3a; border-radius:999px; padding:14px 14px 14px 16px; flex:0 0 auto;';
                 var table = document.createElement('table');
                 table.style.cssText = 'border-collapse:collapse;';
                 var tr = document.createElement('tr');
@@ -7027,7 +7027,20 @@
             sourceRows.forEach(function (sourceRow) {
                 var cells = sourceRow.querySelectorAll('td');
                 if (cells.length < 2) return;
-                var mix = dhParseGasMixString(cells[0].textContent);
+                // The source cell holds a real split pill now (Pablo,
+                // 2026-09-19: "in the app view, we can use the gas split
+                // pills in the gas consumption"), not the plain "18/55"
+                // text this used to scrape - reading its .textContent would
+                // concatenate the two pill labels with no separator ("1855"
+                // instead of "18/55", found from Pablo: "the gas was 18/55
+                // and I see in the pdf 1855% in a green pill"). Read the O2/
+                // He labels directly instead.
+                var o2Label = cells[0].querySelector('.is-o2');
+                var heLabel = cells[0].querySelector('.is-he');
+                var mix = {
+                    o2: o2Label ? parseInt(o2Label.textContent, 10) || 0 : 0,
+                    he: heLabel ? parseInt(heLabel.textContent, 10) || 0 : 0,
+                };
                 var tr = document.createElement('tr');
                 var tdGas = document.createElement('td');
                 tdGas.style.cssText = 'padding:6px 4px; text-align:left; background:#fff;';
