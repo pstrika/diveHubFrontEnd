@@ -660,7 +660,17 @@
             }
 
             //force calculation on ccr
-            updateCCRSliders();
+            // Guarded the same way dhSelectGasFuel already is just below -
+            // noUiSlider fires 'update' immediately/synchronously during
+            // .create() at page load, before updateCCRSliders' own <script>
+            // block (further down the page) has run yet. Calling it
+            // unguarded threw ReferenceError on that very first firing,
+            // which aborted the REST of this script block before it ever
+            // reached the labelDepth 'change' listener below - so typing a
+            // depth silently did nothing at all (Pablo, 2026-09-19:
+            // "manually typing the depth is not updating the calculations
+            // or sliders").
+            if (typeof updateCCRSliders === 'function') updateCCRSliders();
 
             // if the depth slider is changed, we enable the Calculate NDL button
             document.getElementById("calculateNDLButton").classList.add("btn-info");
@@ -689,6 +699,14 @@
             var typed = parseFloat(labelDepth.value);
             if (isNaN(typed)) { labelDepth.value = Number(depth).toFixed(0); return; }
             sliderDepth.noUiSlider.set(typed);
+        });
+        // 'change' only fires on blur - pressing Enter while still focused
+        // did nothing (Pablo, 2026-09-19: "if I type the number and then
+        // hit enter, I'm expecting the update to happen"). Blurring fires
+        // the real 'change' event above, reusing that logic instead of
+        // duplicating it.
+        labelDepth.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); labelDepth.blur(); }
         });
     </script>
 
