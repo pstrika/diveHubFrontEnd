@@ -1719,6 +1719,22 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-gas-input:focus { outline: none; box-shadow: 0 0 0 3px var(--dh-foam); }
 .dh-gas-input:hover { filter: brightness(.97); }
 
+/* iOS Safari (including the installed PWA) auto-zooms the page on focus of
+   any text input whose computed font-size is under 16px, and never zooms
+   back out on its own once the keyboard closes - it isn't scoped to the
+   input, so the whole page is left zoomed in until pinched back out by
+   hand (Pablo, 2026-09-19: "once the keyboard is shown, the page zooms in
+   but never goes back...I only saw this on my iPhone [not sure about
+   iPad]"). This is a touch-keyboard behavior, not a narrow-screen one - an
+   iPad's viewport is as wide as a laptop's, so a max-width breakpoint would
+   miss it there; (hover:none)+(pointer:coarse) targets touch-primary
+   devices (phones and tablets) specifically, leaving an actual desktop/
+   laptop's pill size untouched. 16px is the documented threshold that
+   avoids the zoom entirely. */
+@media (hover: none) and (pointer: coarse) {
+  .dh-gas-input { font-size: 16px; }
+}
+
 /* Pencil icon so the pill reads as "type here", not a static badge - shown
    at rest (works on touch, where there's no hover to rely on) and hidden
    the moment the field actually has focus, since the caret says it now

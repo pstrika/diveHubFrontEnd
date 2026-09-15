@@ -4690,13 +4690,13 @@
             var points = [];
             var prevMix = null;
             var prevEntry = null;
-            function consider(entry, timeMode) {
+            function consider(entry, timeMode, gasOverride) {
                 if (!entry || !Array.isArray(entry.gas)) return;
                 var mix = entry.gas[1] + '/' + entry.gas[3];
                 if (prevMix !== null && mix !== prevMix) {
                     var timeVal = timeMode === 'prevEntry' || timeMode === 'prevTime' ? prevEntry.time : entry.time;
                     var depthVal = timeMode === 'prevEntry' ? prevEntry.abs_p : entry.abs_p;
-                    points.push({ time: timeVal, abs_p: depthVal, gasLabel: formatGasLabel(entry.gas) });
+                    points.push({ time: timeVal, abs_p: depthVal, gasLabel: formatGasLabel(gasOverride || entry.gas) });
                 }
                 prevMix = mix;
                 prevEntry = entry;
@@ -4710,7 +4710,26 @@
                 if (baseline[i].phase === 'ascent') lastAscentBeforeDeco = baseline[i];
                 if (baseline[i].phase === 'deco_stop') break;
             }
-            consider(lastAscentBeforeDeco, firstSwitchAtMaxDepth ? 'prevEntry' : 'entry');
+            // A bailout's "ascent to the first stop" can bundle more than
+            // one real switch (diluent -> bailout gas, then bailout ->
+            // the next deco gas, both before reaching the first stop) into
+            // this single row/point - lastAscentBeforeDeco.gas would then
+            // be the LATER switch's gas at the EARLIER switch's position.
+            // The API's 'gas_switch' phase tag (unreliable for later
+            // switches, but always present for this first one) is what
+            // generateDecoTable's own BOGas already uses for this exact
+            // row's Gas column in a CC bailout table - matching it here too
+            // (Pablo, 2026-09-19 bugfix, found adding the CC Gas Switch
+            // table: this point showed "50%" where the table's own ascent
+            // row correctly shows the bailout gas).
+            var firstTaggedSwitchGas = null;
+            if (firstSwitchAtMaxDepth) {
+                for (var k = 0; k < baseline.length; k++) {
+                    if (baseline[k].phase === 'gas_switch') { firstTaggedSwitchGas = baseline[k].gas; break; }
+                    if (baseline[k].phase === 'deco_stop') break;
+                }
+            }
+            consider(lastAscentBeforeDeco, firstSwitchAtMaxDepth ? 'prevEntry' : 'entry', firstTaggedSwitchGas);
 
             if (firstDecoStopIndex !== -1) {
                 for (var j = firstDecoStopIndex; j < baseline.length; j++) {
@@ -6731,36 +6750,61 @@
         function dhBuildPdfSplitPill(o2, he, compact) {
             var sizeClass = compact ? ' is-compact' : '';
             var pillHeight = compact ? 24 : 32;
-            var wrap = document.createElement('span');
-            wrap.className = 'dh-gas-split-pill' + (he === 0 ? ' is-solo' : '');
-            // Getting this pill vertically centered where it sits took two
-            // earlier attempts at the WRAPPER's alignment (a fixed height on
-            // this span, then a table cell instead of flex) - the remaining
-            // offset is inside the pill itself: its number text relies on
-            // .dh-gas-result-pill's own align-items:center (a flex row) to
-            // center vertically, and html2canvas doesn't compute that
-            // reliably either. line-height centering (below, on each pill
-            // label) is plain text layout, not flex, so it renders
-            // correctly (Pablo, 2026-09-19: "still not centered...add more
-            // padding at the top of the split pills").
-            wrap.style.cssText = 'display:inline-flex; vertical-align:middle;';
-            function styleForLineHeightCentering(el) {
-                el.style.display = 'inline-block';
+            // Three earlier attempts at centering this (the wrapper's own
+            // height, a table cell around the wrapper, line-height on each
+            // pill) all still read as "higher" - because the wrapper itself
+            // is .dh-gas-split-pill, an inline-flex row with NO align-items
+            // set, so its default is "stretch": html2canvas stretches each
+            // pill to the flex line's height rather than respecting the
+            // pill's own explicit height, undoing line-height centering
+            // from the inside. A real <table> has no such default -
+            // dropping the flex wrapper entirely and laying the two pills
+            // out as table cells (Pablo, 2026-09-19: "still showing
+            // higher...add more padding to the top").
+            //
+            // .dh-gas-split-pill's joined-corner/box-shadow-divider CSS and
+            // its "%" suffix are both selectors scoped to a DIRECT
+            // .dh-gas-result-pill child of that class - once these pills
+            // are inside <td>s instead, neither would match, so both are
+            // replicated by hand below instead.
+            var wrap = document.createElement('table');
+            wrap.style.cssText = 'display:inline-table; border-collapse:collapse; vertical-align:middle;';
+            var tr = document.createElement('tr');
+
+            // Belt and suspenders on the text itself too: .dh-gas-result-pill
+            // is ALSO an inline-flex box internally (for centering its own
+            // number), the exact mechanism already shown unreliable here -
+            // overriding it to plain block + line-height is real text
+            // layout, not flex, regardless of what container it now sits in.
+            function killInternalFlexCentering(el) {
+                el.style.display = 'block';
                 el.style.lineHeight = pillHeight + 'px';
                 el.style.textAlign = 'center';
             }
+
             var o2Pill = document.createElement('label');
             o2Pill.className = 'dh-gas-result-pill is-o2' + sizeClass;
-            o2Pill.textContent = o2;
-            styleForLineHeightCentering(o2Pill);
-            wrap.appendChild(o2Pill);
+            o2Pill.textContent = o2 + '%';
+            killInternalFlexCentering(o2Pill);
+            var tdO2 = document.createElement('td');
+            tdO2.style.cssText = 'vertical-align:middle; padding:0;';
+            tdO2.appendChild(o2Pill);
+            tr.appendChild(tdO2);
+
             if (he !== 0) {
+                o2Pill.style.borderRadius = pillHeight + 'px 0 0 ' + pillHeight + 'px';
                 var hePill = document.createElement('label');
                 hePill.className = 'dh-gas-result-pill is-he' + sizeClass;
-                hePill.textContent = he;
-                styleForLineHeightCentering(hePill);
-                wrap.appendChild(hePill);
+                hePill.textContent = he + '%';
+                hePill.style.borderRadius = '0 ' + pillHeight + 'px ' + pillHeight + 'px 0';
+                killInternalFlexCentering(hePill);
+                var tdHe = document.createElement('td');
+                tdHe.style.cssText = 'vertical-align:middle; padding:0;';
+                tdHe.appendChild(hePill);
+                tr.appendChild(tdHe);
             }
+
+            wrap.appendChild(tr);
             return wrap;
         }
 
@@ -6978,9 +7022,13 @@
         // chart with the gas switches...this applies only for OC") - the
         // exact same switch points already driving the chart's annotation
         // markers, so this table and the graph can never disagree.
-        function dhBuildPdfGasSwitchTable(baseline) {
+        // `firstSwitchAtMaxDepth` matches the CC bailout profile's own
+        // marker rule (buildGasSwitchAnnotations): bailing out happens the
+        // instant the diver decides to, at the bottom, not wherever the
+        // API's combined ascent-to-first-stop entry happens to end.
+        function dhBuildPdfGasSwitchTable(profileResponse, firstSwitchAtMaxDepth) {
             var wrap = document.createElement('div');
-            var points = computeOCGasSwitchPoints(baseline, false);
+            var points = computeOCGasSwitchPoints(profileResponse, !!firstSwitchAtMaxDepth);
             if (!points.length) return wrap;
 
             // Same font/color AND underline as every other section header -
@@ -7071,7 +7119,7 @@
             return wrap;
         }
 
-        function dhBuildPdfColumns(profile, isCC, mainChartUrl, baseline) {
+        function dhBuildPdfColumns(profile, isCC, mainChartUrl, baseline, bailout) {
             var row = document.createElement('div');
             row.style.cssText = 'display:flex; gap:30px; padding:12px 48px 34px; flex:1 1 auto; min-height:0;';
 
@@ -7092,7 +7140,7 @@
             chartImg.style.cssText = 'width:100%; display:block;';
             chartCard.appendChild(chartImg);
             col2.appendChild(chartCard);
-            if (!isCC && baseline) col2.appendChild(dhBuildPdfGasSwitchTable(baseline));
+            if (!isCC && baseline) col2.appendChild(dhBuildPdfGasSwitchTable(baseline, false));
             row.appendChild(col2);
 
             var col3 = document.createElement('div');
@@ -7100,6 +7148,12 @@
             if (isCC) {
                 col3.appendChild(dhBuildPdfColumnHeader('Bailout Table'));
                 col3.appendChild(dhBuildPdfTableClone('BOTableContainer'));
+                // Same gas-switch table OC gets under its own chart, just
+                // built from the bailout profile instead of the baseline
+                // one (Pablo, 2026-09-19: "for CC bailout section...also
+                // include at the bottom the Gas Switch table - like you did
+                // in OC").
+                if (bailout) col3.appendChild(dhBuildPdfGasSwitchTable(bailout, true));
             } else {
                 col3.appendChild(dhBuildPdfColumnHeader('Gas Consumption'));
                 var sub1 = document.createElement('div');
@@ -7125,13 +7179,13 @@
             return row;
         }
 
-        function dhBuildPdfPage(profile, isCC, mainChartUrl, baseline) {
+        function dhBuildPdfPage(profile, isCC, mainChartUrl, baseline, bailout) {
             var page = document.createElement('div');
             page.style.cssText = 'position:fixed; left:-99999px; top:0; width:' + DH_PDF_PAGE_W + 'px; height:' + DH_PDF_PAGE_H + 'px; background:#ffffff; font-family: "Roboto", Arial, sans-serif; display:flex; flex-direction:column; overflow:hidden;';
             page.appendChild(dhBuildPdfHeader(profile, isCC));
             page.appendChild(dhBuildPdfDisclaimer());
             page.appendChild(dhBuildPdfGases(profile, isCC));
-            page.appendChild(dhBuildPdfColumns(profile, isCC, mainChartUrl, baseline));
+            page.appendChild(dhBuildPdfColumns(profile, isCC, mainChartUrl, baseline, bailout));
             document.body.appendChild(page);
             return page;
         }
@@ -7153,7 +7207,7 @@
                 var isCC = profile.mode === 'CC';
                 var mainChartUrl = document.getElementById('profileChart').toDataURL('image/png');
 
-                page = dhBuildPdfPage(profile, isCC, mainChartUrl, globalResponse['baseline']);
+                page = dhBuildPdfPage(profile, isCC, mainChartUrl, globalResponse['baseline'], globalResponse['bailout']);
 
                 // html2canvas mis-renders the split pills' inset box-shadow
                 // divider (real Chrome shows a crisp 1px highlight; canvas
