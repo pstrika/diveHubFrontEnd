@@ -6914,49 +6914,55 @@
             var row = document.createElement('div');
             row.style.cssText = 'display:flex; gap:16px; flex-wrap:wrap;';
 
+            // Real fix for the label text vs. pill misalignment (Pablo,
+            // 2026-09-19: "I never wanted to move the text and pill
+            // together...referring to moving the split pill down in
+            // relation to the text...right now they are not [aligned]"):
+            // the previous version put the split pill in its own <td> as a
+            // NESTED <table> (dhBuildPdfSplitPill's own return value) -
+            // vertical-align:middle on a <td> whose only child is another
+            // <table> is exactly the kind of nested-table layout
+            // html2canvas doesn't compute reliably, matching what he's
+            // seeing. Flattened here into ONE row - label, O2 pill, He
+            // pill all as direct sibling <td>s - so there's no nested
+            // table for html2canvas to get wrong; every visible piece
+            // aligns off the same single row's vertical-align:middle.
             function addChip(label, o2, he) {
-                // Compact pills (24px) - same size as every other gas pill
-                // in the PDF (Gas column, Gas Consumption, Gas switches),
-                // and a tighter wrapper around them, not the earlier
-                // full-size pill in a generously-padded chip (Pablo,
-                // 2026-09-19: "the pills with the gases...are two large.
-                // Make sure that all gas split pills have the same size in
-                // all the pdf. The wrapper needs to be more tight").
-                //
-                // A real table + td vertical-align:middle instead of a flex
-                // row - flex align-items:center on a row of mismatched-
-                // height children (plain text next to a pill) is not
-                // reliable under html2canvas (two earlier attempts at this
-                // exact fix both left the pill mis-centered), whereas table
-                // cell vertical alignment already renders correctly
-                // everywhere else in this PDF (Pablo, 2026-09-19: "now with
-                // no padding at all on the top...make those show in the
-                // middle of the wrapper").
-                // DIAGNOSTIC TEST (Pablo, 2026-09-19: "let's do a dramatic
-                // test: bump it to 25px...make the wrapper as tight as
-                // possible"): padding is on this outer chip div, wrapping
-                // BOTH the label text and the pill together as one table
-                // row - not on the pill by itself. Both cells already use
-                // vertical-align:middle with zero padding of their own
-                // (tdPill below, tdLabel a few lines down has only
-                // horizontal padding between the two), so a uniform 25px
-                // here should push text and pill down/up together, evenly,
-                // with visibly more gap above/below both than the border.
-                // If it doesn't look even after this, the row's own
-                // vertical-align is the thing to revisit, not this padding.
                 var chip = document.createElement('div');
-                chip.style.cssText = 'display:inline-block; border:1.5px solid #0b2a3a; border-radius:999px; padding:25px; flex:0 0 auto;';
+                // Tightened per Pablo, 2026-09-19: "once we fix that, then
+                // I want the outer chip to be tighter wrapping the text
+                // and split pill" - small, deliberate padding now that
+                // alignment itself isn't riding on this value.
+                chip.style.cssText = 'display:inline-block; border:1.5px solid #0b2a3a; border-radius:999px; padding:5px 12px 5px 14px; flex:0 0 auto;';
                 var table = document.createElement('table');
                 table.style.cssText = 'border-collapse:collapse;';
                 var tr = document.createElement('tr');
+
                 var tdLabel = document.createElement('td');
                 tdLabel.style.cssText = 'vertical-align:middle; padding:0 6px 0 0; font-weight:700; font-size:12px; color:#0b2a3a; white-space:nowrap;';
                 tdLabel.textContent = label + ':';
-                var tdPill = document.createElement('td');
-                tdPill.style.cssText = 'vertical-align:middle; padding:0;';
-                tdPill.appendChild(dhBuildPdfSplitPill(o2, he, true));
                 tr.appendChild(tdLabel);
-                tr.appendChild(tdPill);
+
+                var o2Pill = document.createElement('label');
+                o2Pill.className = 'dh-gas-result-pill is-o2 is-compact';
+                o2Pill.textContent = o2 + '%';
+                var tdO2 = document.createElement('td');
+                tdO2.style.cssText = 'vertical-align:middle; padding:0;';
+                tdO2.appendChild(o2Pill);
+                tr.appendChild(tdO2);
+
+                if (he !== 0) {
+                    o2Pill.style.borderRadius = '24px 0 0 24px';
+                    var hePill = document.createElement('label');
+                    hePill.className = 'dh-gas-result-pill is-he is-compact';
+                    hePill.textContent = he + '%';
+                    hePill.style.borderRadius = '0 24px 24px 0';
+                    var tdHe = document.createElement('td');
+                    tdHe.style.cssText = 'vertical-align:middle; padding:0;';
+                    tdHe.appendChild(hePill);
+                    tr.appendChild(tdHe);
+                }
+
                 table.appendChild(tr);
                 chip.appendChild(table);
                 row.appendChild(chip);
