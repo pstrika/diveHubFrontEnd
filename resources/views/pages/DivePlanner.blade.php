@@ -11,6 +11,13 @@
 
             <div class="d-none" data-color="info" id="sidebarColorDiv"></div>
 
+            <!-- Material Symbols Rounded - a separate icon font from the
+                 classic "Material Icons Round" loaded site-wide, needed just
+                 for the What-if bubble's "Question Exchange" icon (Pablo,
+                 2026-09-19), which doesn't exist in the classic set. Scoped
+                 to this page only rather than added to the shared layout. -->
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block">
+
             <style>
                 .modal {
                 z-index: 10050; /* Adjust this value to be higher than the sidebar's z-index */
@@ -1274,6 +1281,14 @@
 
                         <div class="card-body">
                             <div>
+                                <!-- position:relative anchor for the What-if floating bubble
+                                     below - scoped tightly to JUST the summary/table/chart
+                                     block, not the whole card-body (which continues on further
+                                     down into the Nitrogen tissue / Gas consumption sections) -
+                                     otherwise the bubble's bottom-right anchoring would sit at
+                                     the bottom of ALL of that instead of "over the Decompression
+                                     results card" specifically (Pablo, 2026-09-19). -->
+                                <div class="dh-whatif-anchor" style="position: relative;">
                                 <!-- Row for summary - plain "row" (not
                                      mx-0), same as the table/chart row right
                                      below it, so both line up at the same
@@ -1281,14 +1296,44 @@
                                 <div class="row">
                                     <div class="col-12">
                                         <div class="dh-deco-summary">
-                                            <span class="dh-gas-result-pill dh-deco-summary-pill">
+                                            <span class="dh-gas-result-pill dh-deco-summary-pill" style="position: relative;">
                                                 <span class="dh-deco-summary-pill-label">Run time</span>
                                                 <span id="labelTotalRunTime">67</span>
+                                                <span class="dh-gas-pill-badge" id="labelWhatIfRunTimeDiff" hidden>-</span>
                                             </span>
-                                            <span class="dh-gas-result-pill dh-deco-summary-pill">
+                                            <span class="dh-gas-result-pill dh-deco-summary-pill" style="position: relative;">
                                                 <span class="dh-deco-summary-pill-label">Deco time</span>
                                                 <span id="labelTotalDecoTime">28</span>
+                                                <span class="dh-gas-pill-badge" id="labelWhatIfDecoTimeDiff" hidden>-</span>
                                             </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- New RT / New Deco Time - a second pill row that only
+                                     appears once a What-if scenario is picked from the bubble
+                                     below, colored red/green by whether the delta is worse or
+                                     better than baseline (Pablo, 2026-09-19 floating-bubble
+                                     redesign: "We show the New RT and New Deco Time right below
+                                     the baseline RT and Deco time...another row of pills").
+                                     Below it, a small legend pill names the active scenario with
+                                     an X to clear it back to baseline-only. -->
+                                <div class="row" id="dhWhatIfSummaryRowWrap" hidden>
+                                    <div class="col-12">
+                                        <div class="dh-deco-summary">
+                                            <span class="dh-gas-result-pill dh-deco-summary-pill" id="labelWhatIfRunTimePill">
+                                                <span class="dh-deco-summary-pill-label">New RT</span>
+                                                <span id="labelWhatIfRunTime">-</span>
+                                            </span>
+                                            <span class="dh-gas-result-pill dh-deco-summary-pill" id="labelWhatIfDecoTimePill">
+                                                <span class="dh-deco-summary-pill-label">New Deco Time</span>
+                                                <span id="labelWhatIfDecoTime">-</span>
+                                            </span>
+                                        </div>
+                                        <div class="dh-whatif-legend" id="dhWhatIfLegend" hidden>
+                                            <span class="material-symbols-rounded" aria-hidden="true">question_exchange</span>
+                                            <span id="dhWhatIfLegendText">-</span>
+                                            <span class="material-icons-round dh-whatif-legend-clear" id="dhWhatIfLegendClear" role="button" tabindex="0" aria-label="Clear scenario">close</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1305,140 +1350,194 @@
                                     </div>
 
                                     <div class="col-lg-6 col-12" id="profileChartContainer">
-                                        <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1"> 
+                                        <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
                                             <canvas id="profileChart" class="chart-canvas border-radius-lg" height="500px"></canvas>
                                         </div>
-                                        
+
                                     </div>
                                 </div>
-                                
-                                <!-- What if row -->
-                                <div class="row">
-                                    <div class="col-lg-12 col-12 mt-2">
-                                        <div class="dh-deco-section-head is-toggle is-collapsed" id="dh-whatif-toggle" role="button" tabindex="0" aria-expanded="false" aria-controls="dh-whatif-body">
-                                            <span class="material-icons-round" aria-hidden="true">help_outline</span>
-                                            <h4>What if...?</h4>
-                                            <span class="material-icons-round dh-deco-section-head-chevron" id="dh-whatif-chevron" aria-hidden="true">expand_more</span>
+
+                                <!-- "What if...?" floating bubble (Pablo, 2026-09-19: "show a
+                                     floating bubble...open a modal and let the user select the
+                                     What if scenario"). Positioned within this card only (see
+                                     the position:relative wrapper above), not fixed to the
+                                     viewport like the chat bubble - "it only shows over the
+                                     Decompression results card". Hidden until a plan is
+                                     calculated (revealed from the calculate button's success
+                                     handler). Picking a scenario is still strictly one-at-a-time
+                                     - unchanged from today ("It's been always one scenario at
+                                     the time...the logic of showing does not change"). Icon per
+                                     Pablo's explicit choice: "Implement picking the icon Question
+                                     Exchange" (Material Symbols, not in the classic Material
+                                     Icons Round set already used elsewhere - loaded separately,
+                                     see the font link near the top of this page). -->
+                                <button type="button" class="dh-whatif-fab" id="dhWhatIfFab" hidden aria-haspopup="dialog" aria-label="What if scenarios">
+                                    <span class="material-symbols-rounded" aria-hidden="true">question_exchange</span>
+                                </button>
+
+                                <div class="dh-whatif-modal-backdrop" id="dhWhatIfModalBackdrop" hidden>
+                                    <div class="dh-whatif-modal" role="dialog" aria-modal="true" aria-labelledby="dhWhatIfModalTitle">
+                                        <div class="dh-whatif-modal-head">
+                                            <span class="material-symbols-rounded" aria-hidden="true">question_exchange</span>
+                                            <h4 id="dhWhatIfModalTitle">What if...?</h4>
+                                            <button type="button" class="dh-whatif-modal-close" id="dhWhatIfModalClose" aria-label="Close">
+                                                <span class="material-icons-round" aria-hidden="true">close</span>
+                                            </button>
                                         </div>
-                                        <div class="dh-deco-section-body" id="dh-whatif-body" hidden>
+                                        <div class="dh-whatif-modal-body">
+                                            <p class="dh-whatif-modal-hint">Pick one scenario to overlay on the baseline plan.</p>
+                                            <div class="dh-whatif-chips">
+                                                <label class="dh-whatif-chip" for="filter1">
+                                                    <input class="form-check-input" type="checkbox" id="filter1">
+                                                    <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="Extend the dive for 5 m, how's deco profile affected??">Extend bottom time 5 min</span>
+                                                </label>
 
-                                            <div class="row mx-0 g-2">
-                                                <div class="col-lg-4 col-6">
-                                                    <div class="dh-whatif-chips">
-                                                        <label class="dh-whatif-chip" for="filter1">
-                                                            <input class="form-check-input" type="checkbox" id="filter1">
-                                                            <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="Extend the dive for 5 m, how's deco profile affected??">Extend bottom time 5 min</span>
-                                                        </label>
+                                                <label class="dh-whatif-chip" for="filter2">
+                                                    <input class="form-check-input" type="checkbox" id="filter2">
+                                                    <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="Dive 10 ft deeper, how is RT and DT changed?">Increase max depth by {{ $deco_unit ? "3 m" : "10 ft" }}</span>
+                                                </label>
 
-                                                        <label class="dh-whatif-chip" for="filter2">
-                                                            <input class="form-check-input" type="checkbox" id="filter2">
-                                                            <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="Dive 10 ft deeper, how is RT and DT changed?">Increase max depth by {{ $deco_unit ? "3 m" : "10 ft" }}</span>
-                                                        </label>
+                                                <label class="dh-whatif-chip" for="filter3" id="filter3Container">
+                                                    <input class="form-check-input" type="checkbox" id="filter3">
+                                                    <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="calculate RT and deco time using only backgas">Lost all deco gases</span>
+                                                </label>
 
-                                                        <label class="dh-whatif-chip" for="filter7" id="filter7Container" style="display: none;">
-                                                            <input class="form-check-input" type="checkbox" id="filter7">
-                                                            <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="calculate RT and deco time switching to BO">Bailout to OC</span>
-                                                        </label>
+                                                <label class="dh-whatif-chip" for="filter4">
+                                                    <input class="form-check-input" type="checkbox" id="filter4">
+                                                    <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="How's the RT affected if the dive is shorter?">Shorten bottom time 5 min</span>
+                                                </label>
 
-                                                        <label class="dh-whatif-chip" for="filter3" id="filter3Container">
-                                                            <input class="form-check-input" type="checkbox" id="filter3">
-                                                            <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="calculate RT and deco time using only backgas">Lost all deco gases</span>
-                                                        </label>
-                                                    </div>
-                                                </div>
+                                                <label class="dh-whatif-chip" for="filter5">
+                                                    <input class="form-check-input" type="checkbox" id="filter5">
+                                                    <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="What's the impact of diving 10 ft shallower than planned?">Reduce max depth by {{ $deco_unit ? "3 m" : "10 ft" }}</span>
+                                                </label>
 
-                                                <div class="col-lg-4 col-6">
-                                                    <div class="dh-whatif-chips">
-                                                        <label class="dh-whatif-chip" for="filter4">
-                                                            <input class="form-check-input" type="checkbox" id="filter4">
-                                                            <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="How's the RT affected if the dive is shorter?">Shorten bottom time 5 min</span>
-                                                        </label>
+                                                <label class="dh-whatif-chip" for="filter6">
+                                                    <input class="form-check-input" type="checkbox" id="filter6">
+                                                    <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="Minimum deco time">Minimum deco (GFs=100%)</span>
+                                                </label>
 
-                                                        <label class="dh-whatif-chip" for="filter5">
-                                                            <input class="form-check-input" type="checkbox" id="filter5">
-                                                            <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="What's the impact of diving 10 ft shallower than planned?">Reduce max depth by {{ $deco_unit ? "3 m" : "10 ft" }}</span>
-                                                        </label>
-
-                                                        <label class="dh-whatif-chip" for="filter6">
-                                                            <input class="form-check-input" type="checkbox" id="filter6">
-                                                            <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="Minimum deco time">Minimum deco (GFs=100%)</span>
-                                                        </label>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-lg-3 col-12 mb-2 mt-2">
-                                                    <div class="table-responsive" id="summaryWhatIfTable" hidden style="border: 1px solid var(--dh-line); border-radius: 10px;">
-                                                        <table class="table align-items-center mb-0">
-                                                            <tbody>
-                                                                <tr class="align-top w-30"><td class="text-secondary text-end text-md font-weight-bolder opacity-7">New Run Time:</td>
-                                                                <td class="align-middle text-wrap" style="text-align: left;">
-                                                                    <span class="dh-gas-pill-wrap">
-                                                                        <label class="dh-gas-result-pill is-compact" id="labelWhatIfRunTime">-</label>
-                                                                        <span class="dh-gas-pill-badge" id="labelWhatIfRunTimeDiff">-</span>
-                                                                    </span>
-                                                                </td></tr>
-
-                                                                <tr class="align-top w-30"><td class="text-secondary text-end text-md font-weight-bolder opacity-7">New Deco Time:</td>
-                                                                <td class="align-middle text-wrap" style="text-align: left;">
-                                                                    <span class="dh-gas-pill-wrap">
-                                                                        <label class="dh-gas-result-pill is-compact" id="labelWhatIfDecoTime">-</label>
-                                                                        <span class="dh-gas-pill-badge" id="labelWhatIfDecoTimeDiff">-</span>
-                                                                    </span>
-                                                                </td></tr>
-
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
+                                                <label class="dh-whatif-chip" for="filter7" id="filter7Container" style="display: none;">
+                                                    <input class="form-check-input" type="checkbox" id="filter7">
+                                                    <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="calculate RT and deco time switching to BO">Bailout to OC</span>
+                                                </label>
                                             </div>
-
                                         </div>
                                     </div>
+                                </div>
                                 </div>
 
                                 <script>
-                                    // "What if...?" starts collapsed (Pablo, 2026-09-16), same
-                                    // expand/collapse mechanics as the Inputs card. Placed here,
-                                    // right after its own markup, rather than up with the Inputs
-                                    // card's toggle script - that script tag runs before this
-                                    // section of the DOM even exists, so getElementById returned
-                                    // null and the click listener was silently never attached
-                                    // (Pablo, 2026-09-16: "the what if collapsed is not expanding
-                                    // when I click").
+                                    // Bubble open/close. Picking a chip (or the legend's X)
+                                    // closes the modal - the checkbox's own native 'change' event
+                                    // still drives 100% of the existing calculation logic further
+                                    // below, completely untouched.
                                     (function () {
-                                        var body = document.getElementById('dh-whatif-body');
-                                        var toggle = document.getElementById('dh-whatif-toggle');
-                                        var chevron = document.getElementById('dh-whatif-chevron');
-                                        if (!body || !toggle) return;
+                                        var fab = document.getElementById('dhWhatIfFab');
+                                        var backdrop = document.getElementById('dhWhatIfModalBackdrop');
+                                        if (!fab || !backdrop) return;
 
-                                        function setOpen(open) {
-                                            body.hidden = !open;
-                                            toggle.classList.toggle('is-collapsed', !open);
-                                            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-                                            if (chevron) chevron.textContent = open ? 'expand_less' : 'expand_more';
-                                        }
+                                        // The Decompression card is a Bootstrap .card with its own
+                                        // "position:relative; z-index:2" (a real stacking context),
+                                        // which traps this backdrop's own z-index inside it no
+                                        // matter how high it's set - it could never paint above the
+                                        // topbar/sidebar outside the card. Re-parenting the backdrop
+                                        // onto <body> escapes that trap so it lands in the root
+                                        // stacking context, same trick the page's own
+                                        // .modal{z-index:10050} comment already flags for "higher
+                                        // than the sidebar's z-index". The FAB itself stays put -
+                                        // it's meant to be anchored inside this specific card.
+                                        document.body.appendChild(backdrop);
 
-                                        toggle.addEventListener('click', function () { setOpen(body.hidden); });
-                                        toggle.addEventListener('keydown', function (e) {
-                                            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(body.hidden); }
+                                        function openModal() { backdrop.hidden = false; }
+                                        function closeModal() { backdrop.hidden = true; }
+
+                                        fab.addEventListener('click', openModal);
+                                        var closeBtn = document.getElementById('dhWhatIfModalClose');
+                                        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+                                        // Clicking the backdrop itself (not the modal card) closes
+                                        // with no change (Pablo: "If user clicks outside the modal,
+                                        // we do nothing and collapse bubble").
+                                        backdrop.addEventListener('click', function (e) {
+                                            if (e.target === backdrop) closeModal();
+                                        });
+                                        document.addEventListener('keydown', function (e) {
+                                            if (e.key === 'Escape' && !backdrop.hidden) closeModal();
+                                        });
+
+                                        document.querySelectorAll('.dh-whatif-chip input[type=checkbox]').forEach(function (cb) {
+                                            cb.addEventListener('change', function () {
+                                                if (this.checked) closeModal();
+                                            });
                                         });
                                     })();
 
-                                    // The "New Run Time / New Deco Time" frame only means anything
-                                    // once a scenario pill is picked - hide it otherwise (Pablo,
-                                    // 2026-09-16: "if there is no pill selected...hide the...frame").
+                                    // Mirrors the checkboxes' own state onto the new result-pill
+                                    // row, the baseline pills' delta badges, and the legend pill -
+                                    // purely presentational, doesn't touch a single filterN
+                                    // handler. Deferred with setTimeout(0): this listener is
+                                    // attached to each checkbox right now, at initial page parse,
+                                    // which is BEFORE filterN's own "change" listener gets
+                                    // attached later in the page (down where filter1..7's handlers
+                                    // are registered) - same-event listeners fire in attachment
+                                    // order, so without deferring, this would run and read state
+                                    // BEFORE filterN's handler had set it. A setTimeout(fn, 0)
+                                    // always runs after the whole synchronous listener chain for
+                                    // this event has finished, regardless of attachment order.
                                     (function () {
-                                        var summary = document.getElementById('summaryWhatIfTable');
+                                        var rowWrap = document.getElementById('dhWhatIfSummaryRowWrap');
+                                        var legend = document.getElementById('dhWhatIfLegend');
+                                        var legendText = document.getElementById('dhWhatIfLegendText');
+                                        var legendClear = document.getElementById('dhWhatIfLegendClear');
+                                        var rtBadge = document.getElementById('labelWhatIfRunTimeDiff');
+                                        var dtBadge = document.getElementById('labelWhatIfDecoTimeDiff');
+                                        var rtPill = document.getElementById('labelWhatIfRunTimePill');
+                                        var dtPill = document.getElementById('labelWhatIfDecoTimePill');
                                         var checkboxes = document.querySelectorAll('.dh-whatif-chip input[type=checkbox]');
-                                        if (!summary || !checkboxes.length) return;
+                                        if (!rowWrap || !checkboxes.length) return;
 
-                                        function update() {
-                                            var anyChecked = Array.prototype.some.call(checkboxes, function (cb) { return cb.checked; });
-                                            summary.hidden = !anyChecked;
+                                        function mirrorColor(badge, pill) {
+                                            if (!badge || !pill) return;
+                                            pill.classList.toggle('is-danger', badge.classList.contains('is-danger'));
+                                            pill.classList.toggle('is-ideal', badge.classList.contains('is-ideal'));
                                         }
 
-                                        checkboxes.forEach(function (cb) { cb.addEventListener('change', update); });
+                                        function update() {
+                                            var checked = document.querySelector('.dh-whatif-chip input[type=checkbox]:checked');
+                                            rowWrap.hidden = !checked;
+                                            if (rtBadge) rtBadge.hidden = !checked;
+                                            if (dtBadge) dtBadge.hidden = !checked;
+                                            mirrorColor(rtBadge, rtPill);
+                                            mirrorColor(dtBadge, dtPill);
+
+                                            if (legend) legend.hidden = !checked;
+                                            if (checked && legendText) {
+                                                var chipBody = document.querySelector('label[for="' + checked.id + '"] .dh-whatif-chip-body');
+                                                legendText.textContent = chipBody ? chipBody.textContent : '';
+                                            }
+                                        }
+
+                                        checkboxes.forEach(function (cb) {
+                                            cb.addEventListener('change', function () { setTimeout(update, 0); });
+                                        });
+
+                                        // The legend's X is the exact equivalent of unchecking the
+                                        // active chip today - uncheck it and fire the same native
+                                        // 'change' event its own handler already listens for
+                                        // (equivalent to "unclicking the pill in the current
+                                        // design").
+                                        if (legendClear) {
+                                            legendClear.addEventListener('click', function () {
+                                                var checked = document.querySelector('.dh-whatif-chip input[type=checkbox]:checked');
+                                                if (!checked) return;
+                                                checked.checked = false;
+                                                checked.dispatchEvent(new Event('change'));
+                                            });
+                                        }
+
                                         window.dhUpdateWhatIfVisibility = update;
+                                        update();
                                     })();
                                 </script>
 
@@ -1843,7 +1942,12 @@
                     filter5RTDT = calculateDecoTime(response['short10ft']);
                     filter6RTDT = calculateDecoTime(response['minDeco']);
                     filter7RTDT = calculateDecoTime(response['bailout']);
-                    
+
+                    // Reveal the What-if floating bubble - it only makes sense once a
+                    // plan actually exists (Pablo, 2026-09-19: "once decompression was
+                    // calculated...show an icon bubble").
+                    if (document.getElementById('dhWhatIfFab')) document.getElementById('dhWhatIfFab').hidden = false;
+
                     // update timeLapse tissue data
                     conveyor = response['conveyor'];
                     console.log(conveyor.length);
