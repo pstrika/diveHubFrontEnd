@@ -294,28 +294,13 @@
                             <div class="row">
                                 <div class="col-12">
                                     <div class="dh-channel-picker dh-gas-picker" id="nav-tabs">
-                                        {{-- Saves GF Low/High + setpoint to the diver's profile so the
-                                             planner remembers them next visit (Pablo, 2026-09-18) - one
-                                             icon embedded in each pill's own right edge (Pablo, 2026-09-19:
-                                             "aligned right in the open circuit and close circuit pills"),
-                                             not a single shared button after both. Always visible, even for
-                                             guests, who get a clear message on click instead of the control
-                                             just not being there. Both icons trigger the same save (the
-                                             values aren't mode-specific), and stopPropagation keeps a click
-                                             on the icon from also switching OC/CC. --}}
-                                        <button type="button" class="dh-channel-chip is-active" data-tag="OC">
-                                            <span>Open Circuit</span>
-                                            <span class="material-icons-round dh-save-prefs-icon" aria-hidden="true" title="Save GF Low/High and setpoint to your profile" style="margin-left:auto;">bookmark_border</span>
-                                        </button>
-                                        <button type="button" class="dh-channel-chip" data-tag="CC">
-                                            <span>Close Circuit CCR</span>
-                                            <span class="material-icons-round dh-save-prefs-icon" aria-hidden="true" title="Save GF Low/High and setpoint to your profile" style="margin-left:auto;">bookmark_border</span>
-                                        </button>
+                                        <button type="button" class="dh-channel-chip is-active" data-tag="OC">Open Circuit</button>
+                                        <button type="button" class="dh-channel-chip" data-tag="CC">Close Circuit CCR</button>
                                     </div>
                                 </div>
                             </div>
                             <div class="row mt-2">
-                                <div class="col-12">
+                                <div class="col-12 d-flex align-items-center flex-wrap" style="gap: 8px;">
                                     <div class="dropdown d-inline-flex align-items-center" style="gap: 8px;">
                                         <button type="button" class="dh-channel-chip" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                                             <span class="material-icons-round" aria-hidden="true" style="font-size: 15px; vertical-align: -3px;">search</span>
@@ -342,6 +327,18 @@
                                             <?php endforeach; ?>
                                         </ul>
                                     </div>
+                                    {{-- Saves GF Low/High + setpoint to the diver's profile so the
+                                         planner remembers them next visit (Pablo, 2026-09-18) - a
+                                         standalone pill on the Search dive sites row, aligned right
+                                         (Pablo, 2026-09-19: "They need to be new pills. Put them at the
+                                         line with search dive sites aligned to the right"), not icons
+                                         embedded in the OC/CC pills. Always visible, even for guests, who
+                                         get a clear message on click instead of the control just not
+                                         being there. --}}
+                                    <button type="button" class="dh-channel-chip" id="saveDecoPrefsPill" style="margin-left:auto;" title="Save GF Low/High and setpoint to your profile">
+                                        <span class="material-icons-round" aria-hidden="true" style="font-size: 15px; vertical-align: -3px;">bookmark_border</span>
+                                        Save GFs &amp; Setpoint
+                                    </button>
                                 </div>
                             </div>
                             <div class="row mt-3 dh-deco-input-divider" style="padding-bottom: 10px;">
@@ -3394,25 +3391,9 @@
             });
         });
 
-        // One icon embedded in each of the OC/CC pills (Pablo, 2026-09-19) -
-        // both trigger the same save, since GF/setpoint aren't mode-specific.
-        // stopPropagation keeps a click on the icon from also bubbling up
-        // to the pill's own click handler and switching OC/CC.
-        var saveDecoPrefsIcons = document.querySelectorAll('.dh-save-prefs-icon');
-        function dhFlashSaveIcon(ok) {
-            saveDecoPrefsIcons.forEach(function (icon) {
-                var original = icon.textContent;
-                icon.textContent = ok ? 'check' : 'error_outline';
-                icon.classList.add(ok ? 'is-success' : 'is-error');
-                setTimeout(function () {
-                    icon.textContent = original;
-                    icon.classList.remove('is-success', 'is-error');
-                }, 1500);
-            });
-        }
-        saveDecoPrefsIcons.forEach(function (icon) {
-            icon.addEventListener('click', function (event) {
-                event.stopPropagation();
+        var saveDecoPrefsPill = document.getElementById('saveDecoPrefsPill');
+        if (saveDecoPrefsPill) {
+            saveDecoPrefsPill.addEventListener('click', function () {
                 $.ajax({
                     url: '{{ route("DecoPlanner.savePreferences") }}',
                     method: 'POST',
@@ -3421,9 +3402,9 @@
                         gfHigh: parseInt(labelGFH.value, 10),
                         setpoint: parseFloat(labelSetpoint.value),
                     },
-                    success: function () { dhFlashSaveIcon(true); },
+                    success: function () { dhFlashIconButton(saveDecoPrefsPill, true); },
                     error: function (xhr) {
-                        dhFlashSaveIcon(false);
+                        dhFlashIconButton(saveDecoPrefsPill, false);
                         if (xhr.status === 403) {
                             // Guest (the shared account) - explain why instead of
                             // leaving a bare red flash with no context.
@@ -3432,7 +3413,7 @@
                     },
                 });
             });
-        });
+        }
 
         document.querySelectorAll('#gas-accordion .dh-gas-accordion-head[data-gas-tab]').forEach(function (btn) {
             btn.addEventListener('click', function () {
