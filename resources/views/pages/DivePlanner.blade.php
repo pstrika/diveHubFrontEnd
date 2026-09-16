@@ -1320,7 +1320,12 @@
                                      an X to clear it back to baseline-only. -->
                                 <div class="row" id="dhWhatIfSummaryRowWrap" hidden>
                                     <div class="col-12">
-                                        <div class="dh-deco-summary">
+                                        <div class="dh-whatif-legend" id="dhWhatIfLegend" hidden>
+                                            <span class="material-symbols-rounded" aria-hidden="true">question_exchange</span>
+                                            <span id="dhWhatIfLegendText">-</span>
+                                            <span class="material-icons-round dh-whatif-legend-clear" id="dhWhatIfLegendClear" role="button" tabindex="0" aria-label="Clear scenario">close</span>
+                                        </div>
+                                        <div class="dh-deco-summary dh-whatif-summary-row">
                                             <span class="dh-gas-result-pill dh-deco-summary-pill" id="labelWhatIfRunTimePill">
                                                 <span class="dh-deco-summary-pill-label">New RT</span>
                                                 <span id="labelWhatIfRunTime">-</span>
@@ -1329,11 +1334,6 @@
                                                 <span class="dh-deco-summary-pill-label">New Deco Time</span>
                                                 <span id="labelWhatIfDecoTime">-</span>
                                             </span>
-                                        </div>
-                                        <div class="dh-whatif-legend" id="dhWhatIfLegend" hidden>
-                                            <span class="material-symbols-rounded" aria-hidden="true">question_exchange</span>
-                                            <span id="dhWhatIfLegendText">-</span>
-                                            <span class="material-icons-round dh-whatif-legend-clear" id="dhWhatIfLegendClear" role="button" tabindex="0" aria-label="Clear scenario">close</span>
                                         </div>
                                     </div>
                                 </div>
@@ -4800,13 +4800,13 @@
             var points = [];
             var prevMix = null;
             var prevEntry = null;
-            function consider(entry, timeMode, gasOverride) {
+            function consider(entry, timeMode) {
                 if (!entry || !Array.isArray(entry.gas)) return;
                 var mix = entry.gas[1] + '/' + entry.gas[3];
                 if (prevMix !== null && mix !== prevMix) {
                     var timeVal = timeMode === 'prevEntry' || timeMode === 'prevTime' ? prevEntry.time : entry.time;
                     var depthVal = timeMode === 'prevEntry' ? prevEntry.abs_p : entry.abs_p;
-                    points.push({ time: timeVal, abs_p: depthVal, gasLabel: formatGasLabel(gasOverride || entry.gas) });
+                    points.push({ time: timeVal, abs_p: depthVal, gasLabel: formatGasLabel(entry.gas) });
                 }
                 prevMix = mix;
                 prevEntry = entry;
@@ -4815,31 +4815,38 @@
             consider(baseline.find(function (r) { return r.phase === 'const'; }));
 
             var firstDecoStopIndex = baseline.findIndex(function (r) { return r.phase === 'deco_stop'; });
-            var lastAscentBeforeDeco = null;
-            for (var i = 0; i < baseline.length; i++) {
-                if (baseline[i].phase === 'ascent') lastAscentBeforeDeco = baseline[i];
-                if (baseline[i].phase === 'deco_stop') break;
+            // A bailout's "ascent to the first stop" can bundle MORE THAN
+            // ONE real switch (diluent -> bailout gas, then bailout -> the
+            // next OC deco gas, both before reaching the first stop) -
+            // confirmed against the raw API response, which showed two
+            // separate 'gas_switch'-tagged rows here. Collapsing this whole
+            // span into a single point (as before, using only the LAST
+            // ascent row) silently dropped every switch but the last one
+            // (Pablo, 2026-09-19: "you are missing a gas switch when
+            // Bailout... check you are not skipping any gas switch"). Walk
+            // every row in order instead, exactly like the deco-stop loop
+            // below already does, so each real mix change gets its own
+            // point. The very first tagged switch still plots at max depth
+            // (prevEntry - the bottom/const phase) to match the existing
+            // "you bail right at the bottom" convention; any further
+            // switch plots at its own real time/depth, since those are
+            // genuine depth-triggered switches during the ascent.
+            var ascentEnd = firstDecoStopIndex === -1 ? baseline.length : firstDecoStopIndex;
+            var sawFirstTaggedSwitch = false;
+            for (var i = 0; i < ascentEnd; i++) {
+                var row = baseline[i];
+                if (row.phase !== 'ascent' && row.phase !== 'gas_switch') continue;
+                // Skip pass-through ascent waypoints whose gas hasn't
+                // actually changed yet - calling consider() on them would
+                // still advance prevEntry to that waypoint, which would
+                // wreck the "at max depth" positioning below (prevEntry
+                // needs to stay the bottom/const row until the FIRST real
+                // transition, whichever row that turns out to be).
+                if (!Array.isArray(row.gas) || row.gas[1] + '/' + row.gas[3] === prevMix) continue;
+                var isFirstTaggedSwitch = firstSwitchAtMaxDepth && row.phase === 'gas_switch' && !sawFirstTaggedSwitch;
+                if (row.phase === 'gas_switch') sawFirstTaggedSwitch = true;
+                consider(row, isFirstTaggedSwitch ? 'prevEntry' : 'entry');
             }
-            // A bailout's "ascent to the first stop" can bundle more than
-            // one real switch (diluent -> bailout gas, then bailout ->
-            // the next deco gas, both before reaching the first stop) into
-            // this single row/point - lastAscentBeforeDeco.gas would then
-            // be the LATER switch's gas at the EARLIER switch's position.
-            // The API's 'gas_switch' phase tag (unreliable for later
-            // switches, but always present for this first one) is what
-            // generateDecoTable's own BOGas already uses for this exact
-            // row's Gas column in a CC bailout table - matching it here too
-            // (Pablo, 2026-09-19 bugfix, found adding the CC Gas Switch
-            // table: this point showed "50%" where the table's own ascent
-            // row correctly shows the bailout gas).
-            var firstTaggedSwitchGas = null;
-            if (firstSwitchAtMaxDepth) {
-                for (var k = 0; k < baseline.length; k++) {
-                    if (baseline[k].phase === 'gas_switch') { firstTaggedSwitchGas = baseline[k].gas; break; }
-                    if (baseline[k].phase === 'deco_stop') break;
-                }
-            }
-            consider(lastAscentBeforeDeco, firstSwitchAtMaxDepth ? 'prevEntry' : 'entry', firstTaggedSwitchGas);
 
             if (firstDecoStopIndex !== -1) {
                 for (var j = firstDecoStopIndex; j < baseline.length; j++) {
