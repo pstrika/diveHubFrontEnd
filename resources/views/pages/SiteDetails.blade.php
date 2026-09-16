@@ -1318,10 +1318,13 @@
                                 </div>
                             </div>
                             <div class="card-body mt-4">
-                                <div id="desc" style="max-height: 424px; overflow-y: auto;">
-                                </div>
-                            
-                                
+                                {{-- Plain text server-rendered so a crawler that doesn't run
+                                     JS still sees real content here (Pablo, 2026-09-16 SEO
+                                     review) - the script below still overwrites this with the
+                                     fully formatted HTML for real visitors, unchanged. --}}
+                                <div id="desc" style="max-height: 424px; overflow-y: auto; white-space: pre-wrap;">{{ $site->getPlainTextDesc() }}</div>
+
+
                             </div>
                         </div>
                     </div>
@@ -1339,8 +1342,7 @@
                             </div>
                         </div>
                         <div class="card-body mt-4">
-                            <div id="route" style="max-height: 424px; overflow-y: auto;">
-                            </div>
+                            <div id="route" style="max-height: 424px; overflow-y: auto; white-space: pre-wrap;">{{ $site->getPlainTextRoute() }}</div>
                         </div>
                     </div>
                 </div>
@@ -1355,8 +1357,7 @@
                             </div>
                         </div>
                         <div class="card-body mt-4">
-                                <div id="typicalConditions" style="max-height: 424px; overflow-y: auto;">
-                            </div>
+                                <div id="typicalConditions" style="max-height: 424px; overflow-y: auto; white-space: pre-wrap;">{{ $site->getPlainTextTypicalConditions() }}</div>
                         </div>
                     </div>
                 </div>
@@ -1386,7 +1387,7 @@
                                 @else
                                     <div class="col-md-12">
                                 @endif
-                                    <div id="history" style="flex-grow: 1; max-height: 424px; overflow-y: auto;" class="mt-2"></div>
+                                    <div id="history" style="flex-grow: 1; max-height: 424px; overflow-y: auto; white-space: pre-wrap;" class="mt-2">{{ $site->getPlainTextHistory() }}</div>
                                 </div>                            
                             </div>
                         </div>
