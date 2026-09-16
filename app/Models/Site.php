@@ -65,19 +65,52 @@ class Site extends Model
         return $this->hasOne(WeatherLocation::class, 'short', 'location');
     }
 
-    public function getPlainTextDesc()
+    /**
+     * The desc/route/typicalConditions/history columns store a Quill
+     * "Delta" (rich text as JSON ops), rendered to HTML entirely
+     * client-side today - a search crawler that doesn't execute that JS
+     * sees empty containers (Pablo, 2026-09-16 SEO review: confirmed on
+     * ~370 live site pages). Extracting plain text here lets a controller
+     * server-render real words into the page immediately; the existing
+     * client-side Quill script still overwrites that with the fully
+     * formatted HTML afterward for real visitors, unchanged.
+     */
+    private function deltaToPlainText(?string $json): string
     {
-        // Assuming 'content' is the Quill delta column in your database
-        $delta = json_decode($this->desc);
+        if (!$json) {
+            return '';
+        }
+        $delta = json_decode($json);
+        if (!$delta || !isset($delta->ops) || !is_array($delta->ops)) {
+            return '';
+        }
         $plainText = '';
-
         foreach ($delta->ops as $op) {
             if (isset($op->insert) && is_string($op->insert)) {
                 $plainText .= $op->insert;
             }
         }
-
         return $plainText;
+    }
+
+    public function getPlainTextDesc()
+    {
+        return $this->deltaToPlainText($this->desc);
+    }
+
+    public function getPlainTextRoute()
+    {
+        return $this->deltaToPlainText($this->route);
+    }
+
+    public function getPlainTextTypicalConditions()
+    {
+        return $this->deltaToPlainText($this->typicalConditions);
+    }
+
+    public function getPlainTextHistory()
+    {
+        return $this->deltaToPlainText($this->history);
     }
 
 }

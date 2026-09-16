@@ -1019,7 +1019,11 @@
                     <div class="col-md-{{ $site->type == "wreck" ? 8 : 12 }} px-0 @if($site->type == 'wreck') ps-md-2 @endif">
                         <section class="dh-panel">
                             <h2 class="dh-panel-title">Site description</h2>
-                            <div id="desc" style="max-height: 424px; overflow-y: auto;"></div>
+                            {{-- Plain text server-rendered so a crawler that doesn't run JS
+                                 still sees real content here (Pablo, 2026-09-16 SEO review)
+                                 - the script below still overwrites this with the fully
+                                 formatted HTML for real visitors, unchanged. --}}
+                            <div id="desc" style="max-height: 424px; overflow-y: auto; white-space: pre-wrap;">{{ $site->getPlainTextDesc() }}</div>
                         </section>
                     </div>
             </div>
@@ -1032,11 +1036,11 @@
                         <div class="dh-panel-cols">
                             <div>
                                 <h3 class="dh-panel-subtitle">Route</h3>
-                                <div id="route" style="max-height: 300px; overflow-y: auto;"></div>
+                                <div id="route" style="max-height: 300px; overflow-y: auto; white-space: pre-wrap;">{{ $site->getPlainTextRoute() }}</div>
                             </div>
                             <div>
                                 <h3 class="dh-panel-subtitle">Typical conditions</h3>
-                                <div id="typicalConditions" style="max-height: 300px; overflow-y: auto;"></div>
+                                <div id="typicalConditions" style="max-height: 300px; overflow-y: auto; white-space: pre-wrap;">{{ $site->getPlainTextTypicalConditions() }}</div>
                             </div>
                         </div>
                     </section>
@@ -1061,7 +1065,7 @@
                             @else
                                 <div class="col-md-12">
                             @endif
-                                <div id="history" style="flex-grow: 1; max-height: 424px; overflow-y: auto;"></div>
+                                <div id="history" style="flex-grow: 1; max-height: 424px; overflow-y: auto; white-space: pre-wrap;">{{ $site->getPlainTextHistory() }}</div>
                             </div>
                         </div>
                     </section>

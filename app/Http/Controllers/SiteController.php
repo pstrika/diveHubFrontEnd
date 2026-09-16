@@ -198,9 +198,15 @@ class SiteController extends Controller
         Log::debug("User already has site on wishlist? " . str($wished));
 
         /*Provide SEO metadata */
+        // Location comes through in whatever casing it was entered with
+        // ("pompano beach") - title-cased here so the search-snippet
+        // description reads like a real sentence (Pablo, 2026-09-16 SEO
+        // review: "city names are lowercase...at minimum, title-case the
+        // location").
+        $locationTitleCase = ucwords(strtolower($location->location));
         $SEO = array(
             "title" => $site->name . " ". $site->type,
-            "desc" => $site->name . " " . $site->type . " in " . $location->location . ". Max depth " . $site->maxDepth . " ft",
+            "desc" => $site->name . " " . $site->type . " in " . $locationTitleCase . ". Max depth " . $site->maxDepth . " ft",
             "keywords" => $site->name . "," . ($site->aka ? $site->aka . "," : "") . $location->location . "," . $site->type,
             "canonical" => route("SiteDetails") . "/" . ($site->slug ?? $site->id),
         );
