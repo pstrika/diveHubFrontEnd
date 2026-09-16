@@ -34,9 +34,14 @@ use App\Http\Controllers\Auth\GoogleController;
 // valid session, so a signed in member goes to their dashboard and the shared
 // guest user to the trip board. Everyone else gets the redesigned home page
 // (HomeController::index, same URL, route name and SEO metadata as before).
+// Signed-in users get a tiny splash-then-redirect page instead of a bare
+// 302 (Pablo, 2026-09-19: relaunching the PWA showed a blank screen for a
+// couple of seconds while the invisible redirect resolved and the real,
+// much heavier destination page loaded - see BootRedirect.blade.php).
 Route::get('/', function (\Illuminate\Http\Request $request) {
     if (auth()->check()) {
-        return redirect()->route(auth()->id() == 5 ? 'Trips' : 'MyDashboard');
+        $to = route(auth()->id() == 5 ? 'Trips' : 'MyDashboard');
+        return view('pages.BootRedirect', ['to' => $to]);
     }
     return app(\App\Http\Controllers\HomeController::class)->index($request);
 })->name('/');

@@ -122,7 +122,7 @@
   <link href="{{ asset('assets') }}/css/divershub.css?v={{ config('divehub.version') }}" rel="stylesheet" />
   @endunless
 </head>
-<body class="{{ $bodyClass }}">
+<body class="{{ $bodyClass }}" data-dh-pinch-zoom-enabled="{{ auth()->check() && auth()->user()->pinch_zoom_enabled ? '1' : '0' }}">
 
 @unless($dhFrozen)
 {{-- session()->pull removes the flag as it's read, so this only fires once

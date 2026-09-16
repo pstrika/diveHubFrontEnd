@@ -321,6 +321,12 @@ class UserController extends Controller
             $user->deco_unit = 0;
         }
 
+        if($request->has('pinch_zoom_enabled')) {
+            $user->pinch_zoom_enabled = 1;
+        } else {
+            $user->pinch_zoom_enabled = 0;
+        }
+
 
         // Consent timestamps for the channels that changed, before the save.
         \App\Support\NotificationConsent::stamp($user, $commsBefore);

@@ -1218,6 +1218,17 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Calculate is a real server-side round trip (the deco
+                                 planning API), a few seconds long - shown immediately on
+                                 click so the app doesn't read as frozen while it waits
+                                 (Pablo, 2026-09-19: "show the splash immediately after the
+                                 user clicks Calculate"). Same visual language as the boot
+                                 splash, but its own independent element since the boot
+                                 splash deletes itself from the DOM the first time it hides. -->
+                            <div class="dh-action-splash" id="dhCalcSplash" aria-hidden="true">
+                                <img src="{{ asset('assets') }}/img/pwa/icon-512.png" alt="">
+                            </div>
                         
                         </div>
 
@@ -1825,6 +1836,23 @@
             // reset calculation area
             resetCalculationArea()
 
+            // The deco planning API call below is a real server round trip,
+            // a few seconds long - show the splash immediately so the app
+            // doesn't read as frozen while it waits (Pablo, 2026-09-19).
+            var dhCalcSplash = document.getElementById('dhCalcSplash');
+            if (dhCalcSplash) {
+                // The Inputs card is a Bootstrap .card with its own
+                // "position:relative; z-index:2" (a real stacking context) -
+                // same trap the What-if modal hit - which caps this
+                // fixed-position overlay's z-index below the topbar/nav no
+                // matter how high it's set. Re-parenting onto <body>
+                // escapes it into the root stacking context. appendChild on
+                // an element already there is a harmless no-op re-append,
+                // so this is safe to run on every click.
+                document.body.appendChild(dhCalcSplash);
+                dhCalcSplash.classList.add('is-visible');
+            }
+
             // Get values from the input fields
             const maxDepth = parseInt(labelDepth.value);
             const bottomTime = parseInt(labelBottomTime.value);
@@ -1901,6 +1929,11 @@
                 contentType: 'application/json',  // Ensures JSON format
                 data: JSON.stringify({inputs: diveProfile}), // Converts data to JSON
                 crossDomain: true,  // Explicitly allow CORS
+                complete: function () {
+                    // Fires on both success and error - the splash should
+                    // never outlive the request either way.
+                    if (dhCalcSplash) dhCalcSplash.classList.remove('is-visible');
+                },
                 success: function (response) {
                     console.log('Success:', response);
                     // make a copy of the basline response to have to calculate gas consumption

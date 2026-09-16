@@ -455,10 +455,23 @@ document.addEventListener('click', function (e) {
  * property - see the `:where(.dh-pwa-standalone) *` rule in
  * divershub.css, which does the real blocking. This script's only job is
  * flagging standalone mode by adding that class.
+ *
+ * touch-action doesn't fight the gesture as hard as gesturestart used to -
+ * it takes a few tries before a pinch actually zooms, then it will. Pablo
+ * tried this live and decided he likes that softened-resistance behavior
+ * as the default (2026-09-16: "I like the behavior we see now...leave it
+ * as is"), rather than chasing a harder block - so this stays as-is. The
+ * new part is a per-user escape hatch: a "pinch_zoom_enabled" profile
+ * preference (Settings > Preferences > Accessibility) lets a diver who
+ * actually needs full, unresisted zoom turn this restriction off entirely
+ * for their own account, read here via the data attribute page-template
+ * puts on <body> from the logged-in user's own column - defaults to off
+ * (0) for guests and anyone who hasn't opted in.
  */
 (function () {
     var isStandalone = window.navigator.standalone === true ||
         (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
     if (!isStandalone) return;
+    if (document.body && document.body.dataset.dhPinchZoomEnabled === '1') return;
     document.documentElement.classList.add('dh-pwa-standalone');
 })();

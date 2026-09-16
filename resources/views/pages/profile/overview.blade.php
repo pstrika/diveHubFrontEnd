@@ -306,8 +306,20 @@
                                                 </div>
                                             </li>
                                         </ul>
-                                        
-                                        
+
+                                        <h6 class="text-uppercase text-body text-xs mt-4 font-weight-bolder">Accessibility</h6>
+                                        <ul class="list-group">
+                                            <li class="list-group-item border-0 px-0">
+                                                <div class="form-check form-switch ps-0">
+                                                    <input name="pinch_zoom_enabled" class="form-check-input ms-auto" type="checkbox"
+                                                        id="pinch_zoom_enabled" {{ $user->pinch_zoom_enabled ? "checked" : ""}} value="1">
+                                                    <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
+                                                        for="pinch_zoom_enabled">Allow pinch-to-zoom in the installed app</label>
+                                                </div>
+                                            </li>
+                                        </ul>
+
+
                                     </div>
                                 </div>
                             </div>
@@ -785,6 +797,11 @@
 
         var deco_unit =document.getElementById('deco_unit');
         deco_unit.addEventListener('click', () => {
+            divButton.style.display = 'block';
+        });
+
+        var pinch_zoom_enabled = document.getElementById('pinch_zoom_enabled');
+        pinch_zoom_enabled.addEventListener('click', () => {
             divButton.style.display = 'block';
         });
     </script>
