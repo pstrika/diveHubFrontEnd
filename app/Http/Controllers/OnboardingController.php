@@ -8,6 +8,7 @@ use App\Models\WeatherLocation;
 use App\Support\Coast;
 use App\Support\DiveLevel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -30,17 +31,24 @@ class OnboardingController extends Controller
     private const SKIP_DAYS = 14;
 
     /** Steps in order; the view renders one at a time. */
-    public const STEPS = ['welcome', 'level', 'places', 'operators', 'comms', 'done'];
+    public const STEPS = ['welcome', 'level', 'places', 'operators', 'phone', 'comms', 'done'];
 
-    /** True when the member is missing what the personalised features need. */
+    /**
+     * True when this member has never been through the wizard. Used to be a
+     * "is certLevel/favLocations/favOperators empty" heuristic, which meant
+     * an already-registered member (real data, or the old fake registration
+     * defaults) could never be prompted at all - wizard_completed_at is an
+     * explicit flag instead, left null for every existing user on purpose
+     * (Pablo, 2026-09-16: "the wizard needs to run to all users that never
+     * ran before...I want already registered users to run the wizard when
+     * the first login into the new version").
+     */
     public static function needs(?User $user): bool
     {
         if (!$user || !$user->isNotGuest()) {
             return false;
         }
-        $noLevel  = $user->certLevel === null || $user->certLevel === '';
-        $noPlaces = trim((string) $user->favLocations) === '' && trim((string) $user->favOperators) === '';
-        return $noLevel || $noPlaces;
+        return $user->wizard_completed_at === null;
     }
 
     /** True when the dashboard should send this request to the wizard. */
@@ -57,6 +65,17 @@ class OnboardingController extends Controller
             $step = 'welcome';
         }
         $request->session()->put('welcome_seen', true);
+
+        // Reaching "done" is what actually marks the wizard as run - whether
+        // by completing every step or by tapping "Skip this" on each one in
+        // turn, both land here. Only the separate "Skip for now, ask me in
+        // two weeks" button (skip()) leaves this unset, so that one keeps
+        // re-prompting on its own schedule instead of marking the wizard
+        // permanently done.
+        if ($step === 'done' && $user->wizard_completed_at === null) {
+            $user->wizard_completed_at = now();
+            $user->save();
+        }
 
         // Locations grouped by coast, US only (Argentina has its own pages).
         $locations = WeatherLocation::where('country', 'US')->get()->map(fn ($l) => [
@@ -88,19 +107,37 @@ class OnboardingController extends Controller
 
         switch ($step) {
             case 'welcome':
+                // Name isn't asked here - already captured at registration
+                // (or pulled from the Google profile on SSO sign-up), per
+                // Pablo, 2026-09-16: "Don't ask for name, they've already
+                // put this at the registration (or we grabbed from Google
+                // profile)".
                 $data = $request->validate([
-                    'name'    => 'nullable|string|max:100',
                     'picture' => 'nullable|image|max:8192',
                 ]);
-                if (!empty($data['name'])) {
-                    $user->name = $data['name'];
-                }
                 if ($request->hasFile('picture')) {
                     // Same disk and folder the profile page uses, so the header finds it.
                     $file = $request->file('picture');
                     $filename = time() . '_' . preg_replace('/[^A-Za-z0-9._-]/', '_', $file->getClientOriginalName());
                     Storage::disk('siteAssets')->putFileAs('img/users', $file, $filename);
                     $user->picture = $filename;
+                } elseif ($request->input('photoSource') === 'google' && $user->google_avatar_url && !$user->picture) {
+                    // "Use my Google photo" - fetched and saved into our own
+                    // storage rather than just linking Google's URL, since
+                    // every other page already assumes users.picture is a
+                    // filename under siteAssets/img/users (Pablo, 2026-09-16:
+                    // "ask them if they want to use their Google Profile Pic
+                    // or upload a new one").
+                    try {
+                        $response = Http::timeout(10)->get($user->google_avatar_url);
+                        if ($response->successful()) {
+                            $filename = time() . '_google_' . $user->id . '.jpg';
+                            Storage::disk('siteAssets')->put('img/users/' . $filename, $response->body());
+                            $user->picture = $filename;
+                        }
+                    } catch (\Throwable $e) {
+                        // No Google photo is no worse than today - just move on.
+                    }
                 }
                 break;
 
@@ -129,14 +166,60 @@ class OnboardingController extends Controller
                 $user->prefersLocation = ($data['recommendBy'] ?? 'locations') === 'locations';
                 break;
 
+            case 'phone':
+                // Same rules as the profile page's phone field
+                // (UserController::updateProfile): a US number goes through
+                // real SMS verification before it's trusted; an
+                // international number is saved straight away since there's
+                // no SMS channel to verify it on (WhatsApp only, no
+                // verification concept). Pablo, 2026-09-16: "ask and verify
+                // the phone number...once verified, they can opt in for sms
+                // and whatsApp comms" - comms opt-in is a separate step
+                // further on, deliberately after this one.
+                if ($request->boolean('resetPhone')) {
+                    // "Use a different number" - abandon the pending code
+                    // and re-show the entry form, rather than advancing.
+                    \App\Services\PhoneVerificationService::clearPending($user);
+                    $user->save();
+                    return redirect()->route('welcome', ['step' => 'phone']);
+                }
+                $rawPhone = trim((string) $request->input('phone'));
+                if ($rawPhone === '') {
+                    // Nothing entered - move on, nothing to verify.
+                    break;
+                }
+                $e164 = \App\Support\PhoneNumber::toE164($rawPhone);
+                if ($e164 === null) {
+                    session()->flash('phoneError', "That doesn't look like a valid phone number.");
+                    return redirect()->route('welcome', ['step' => 'phone']);
+                }
+                if ($e164 === $user->phone) {
+                    // Already verified from before (e.g. came back to this
+                    // step) - nothing to do, move on.
+                    break;
+                }
+                if (\App\Support\PhoneNumber::isUs($e164)) {
+                    $started = \App\Services\PhoneVerificationService::start($user, $e164);
+                    if (!$started) {
+                        session()->flash('phoneError', 'A code was already sent recently - check your messages, or wait a bit before requesting another.');
+                    }
+                    // Stay on this step either way so the code-entry form
+                    // shows (or the "wait a bit" message, on the existing
+                    // pending number).
+                    return redirect()->route('welcome', ['step' => 'phone']);
+                }
+                // International: save directly, nothing to verify.
+                $user->phone = $e164;
+                $user->phone_verified_at = null;
+                \App\Services\PhoneVerificationService::clearPending($user);
+                $user->sms_notifications = false;
+                break;
+
             case 'comms':
                 // The consent screen. Absent means unticked, same as the profile page.
                 $before = \App\Support\NotificationConsent::state($user);
                 foreach (\App\Support\NotificationConsent::switches() as $column) {
                     $user->{$column} = $request->boolean($column) ? 1 : 0;
-                }
-                if ($request->filled('phone')) {
-                    $user->phone = $request->input('phone');
                 }
                 \App\Support\NotificationConsent::stamp($user, $before);
                 break;

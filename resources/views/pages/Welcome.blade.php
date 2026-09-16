@@ -27,24 +27,57 @@
 
                 @if($step === 'welcome')
                     <h1 class="dh-wizard-title">Welcome to the new Divers Hub</h1>
-                    <p class="dh-wizard-lead">Same boats, same sites, a lot more personal. Four quick questions and the app starts working around how you dive: the boats you follow, the sites you can do, the weather where you launch.</p>
+                    <p class="dh-wizard-lead">You're in. With an account you can save trips, plan and log your dives, join dive groups, and get a reminder before a trip you've saved. A few quick questions and the app starts working around how and where you dive.</p>
                     <form method="POST" action="{{ route('welcome.save') }}" enctype="multipart/form-data" class="dh-wizard-form">
                         @csrf
                         <input type="hidden" name="step" value="welcome">
-                        <label class="dh-wizard-field">
-                            <span>What should we call you?</span>
-                            <input type="text" name="name" value="{{ old('name', $user->name) }}" maxlength="100" autocomplete="name">
-                        </label>
                         <label class="dh-wizard-field dh-wizard-photo">
                             <span>A photo for your profile <small>(optional)</small></span>
-                            <span class="dh-wizard-photo-row">
-                                @if($user->picture)
+                            @if($user->picture)
+                                <span class="dh-wizard-photo-row">
                                     <img src="{{ asset('assets') }}/img/users/{{ $user->picture }}" alt="" width="56" height="56">
-                                @else
+                                    <input type="file" name="picture" accept="image/*">
+                                </span>
+                            @elseif($user->google_avatar_url)
+                                {{-- Signed up with Google - offer their Google photo instead of
+                                     only a blank upload field (Pablo, 2026-09-16: "if the user
+                                     registered using Google SSO, we can ask them if they want to
+                                     use their Google Profile Pic or upload a new one"). --}}
+                                <div class="dh-wizard-choices dh-wizard-choices-compact">
+                                    <label class="dh-choice">
+                                        <input type="radio" name="photoSource" value="google" checked>
+                                        <span class="dh-choice-body dh-choice-body-row">
+                                            <img src="{{ $user->google_avatar_url }}" alt="" width="40" height="40" style="border-radius: 50%;">
+                                            <span class="dh-choice-title">Use my Google photo</span>
+                                        </span>
+                                    </label>
+                                    <label class="dh-choice">
+                                        <input type="radio" name="photoSource" value="upload" id="dhPhotoUploadChoice">
+                                        <span class="dh-choice-body dh-choice-body-row">
+                                            <span class="material-icons-round" aria-hidden="true">upload</span>
+                                            <span class="dh-choice-title">Upload a different photo</span>
+                                        </span>
+                                    </label>
+                                </div>
+                                <input type="file" name="picture" accept="image/*" id="dhPhotoUploadInput" hidden style="margin-top: 8px;">
+                                <script>
+                                    (function () {
+                                        var uploadChoice = document.getElementById('dhPhotoUploadChoice');
+                                        var uploadInput = document.getElementById('dhPhotoUploadInput');
+                                        if (!uploadChoice || !uploadInput) return;
+                                        document.querySelectorAll('input[name="photoSource"]').forEach(function (radio) {
+                                            radio.addEventListener('change', function () {
+                                                uploadInput.hidden = !uploadChoice.checked;
+                                            });
+                                        });
+                                    })();
+                                </script>
+                            @else
+                                <span class="dh-wizard-photo-row">
                                     <span class="material-icons-round" aria-hidden="true">account_circle</span>
-                                @endif
-                                <input type="file" name="picture" accept="image/*">
-                            </span>
+                                    <input type="file" name="picture" accept="image/*">
+                                </span>
+                            @endif
                         </label>
                         @error('picture')<p class="text-danger text-sm">{{ $message }}</p>@enderror
                         <div class="dh-wizard-actions">
@@ -126,9 +159,76 @@
                         </fieldset>
                         <div class="dh-wizard-actions">
                             <button type="submit" class="dh-btn dh-btn-primary">Next</button>
-                            <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl('comms') }}">Skip this</a>
+                            <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl('phone') }}">Skip this</a>
                         </div>
                     </form>
+
+                @elseif($step === 'phone')
+                    @php
+                        $isPending = !empty($user->pending_phone);
+                        $isVerified = !empty($user->phone) && !empty($user->phone_verified_at);
+                        $isIntlSaved = !empty($user->phone) && empty($user->phone_verified_at) && !$isPending;
+                    @endphp
+                    <h1 class="dh-wizard-title">Can we text you about your trips?</h1>
+                    <p class="dh-wizard-lead">We'll only use this for trip reminders and last-minute schedule changes - never more than a few messages a month. Verify your number now and you can turn on SMS or WhatsApp reminders on the next step.</p>
+
+                    @if(session('phoneError'))
+                        <p class="text-danger text-sm">{{ session('phoneError') }}</p>
+                    @endif
+
+                    @if($isPending)
+                        <form method="POST" action="{{ route('profile.verifyPhone') }}" class="dh-wizard-form">
+                            @csrf
+                            <label class="dh-wizard-field">
+                                <span>Enter the code we texted to {{ $user->pending_phone }}</span>
+                                <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required>
+                            </label>
+                            <div class="dh-wizard-actions">
+                                <button type="submit" class="dh-btn dh-btn-primary">Verify</button>
+                                <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl('comms') }}">Skip this</a>
+                            </div>
+                        </form>
+                        <div class="dh-wizard-actions" style="margin-top: 4px;">
+                            <form method="POST" action="{{ route('profile.resendPhoneCode') }}">
+                                @csrf
+                                <button type="submit" class="dh-link-btn">Resend code</button>
+                            </form>
+                            <form method="POST" action="{{ route('welcome.save') }}">
+                                @csrf
+                                <input type="hidden" name="step" value="phone">
+                                <input type="hidden" name="resetPhone" value="1">
+                                <button type="submit" class="dh-link-btn">Use a different number</button>
+                            </form>
+                        </div>
+                    @elseif($isVerified)
+                        <div class="dh-comms-row" style="display: flex; align-items: center; gap: 10px;">
+                            <span class="material-icons-round" style="color: var(--dh-good);" aria-hidden="true">check_circle</span>
+                            <span><strong>Verified:</strong> {{ $user->phone }}</span>
+                        </div>
+                        <form method="POST" action="{{ route('welcome.save') }}" class="dh-wizard-form">
+                            @csrf
+                            <input type="hidden" name="step" value="phone">
+                            <div class="dh-wizard-actions">
+                                <button type="submit" class="dh-btn dh-btn-primary">Next</button>
+                            </div>
+                        </form>
+                    @else
+                        <form method="POST" action="{{ route('welcome.save') }}" class="dh-wizard-form">
+                            @csrf
+                            <input type="hidden" name="step" value="phone">
+                            <label class="dh-wizard-field">
+                                <span>Mobile number</span>
+                                <input type="tel" name="phone" value="{{ old('phone', $isIntlSaved ? $user->phone : '') }}" autocomplete="tel" inputmode="tel" placeholder="(555) 123-4567">
+                            </label>
+                            @if($isIntlSaved)
+                                <p class="dh-comms-note">Saved for WhatsApp - international numbers can't receive our SMS verification codes.</p>
+                            @endif
+                            <div class="dh-wizard-actions">
+                                <button type="submit" class="dh-btn dh-btn-primary">Send code</button>
+                                <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl('comms') }}">Skip this</a>
+                            </div>
+                        </form>
+                    @endif
 
                 @elseif($step === 'comms')
                     <h1 class="dh-wizard-title">How should we reach you?</h1>
@@ -136,11 +236,10 @@
                     <form method="POST" action="{{ route('welcome.save') }}" class="dh-wizard-form">
                         @csrf
                         <input type="hidden" name="step" value="comms">
-                        <label class="dh-wizard-field">
-                            <span>Mobile number <small>(only needed for SMS or WhatsApp)</small></span>
-                            <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" autocomplete="tel" inputmode="tel">
-                        </label>
-                        <x-comms-preferences :user="$user" :ids="false" :showPhone="false" />
+                        @if(!$user->phone)
+                            <p class="dh-comms-note">Add a verified mobile number to enable SMS or WhatsApp - you can always do that later from your profile.</p>
+                        @endif
+                        <x-comms-preferences :user="$user" :ids="false" :showPhone="false" :forceUnchecked="true" />
                         <div class="dh-wizard-actions">
                             <button type="submit" class="dh-btn dh-btn-primary">Finish</button>
                             <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl('done') }}">Skip this</a>
@@ -152,9 +251,95 @@
                     <p class="dh-wizard-lead">Everything you picked can be changed any time under My Profile. Here is where to start.</p>
                     <div class="dh-wizard-actions dh-wizard-actions-stack">
                         <a class="dh-btn dh-btn-primary" href="{{ route('MyDashboard') }}"><span class="material-icons-round">dashboard</span>My dashboard</a>
-                        <a class="dh-btn dh-btn-ghost-dark" href="{{ route('Trips') }}?range=weekend{{ $favOperators ? '&op=' . implode(',', $favOperators) : '' }}"><span class="material-icons-round">sailing</span>Boats this weekend</a>
+                        <a class="dh-btn dh-btn-ghost-dark" href="{{ route('Trips') }}?range=weekend{{ $favOperators ? '&op=' . implode(',', $favOperators) : '' }}"><span class="material-icons-round">directions_boat</span>Boats this weekend</a>
                         <a class="dh-btn dh-btn-ghost-dark" href="{{ route('MyGroups') }}"><span class="material-icons-round">groups</span>My groups</a>
+                        <button type="button" class="dh-btn dh-btn-ghost-dark" id="dhTourOpen"><span class="material-icons-round">tour</span>Take a quick tour</button>
                     </div>
+
+                    {{-- Brief illustrated tour, offered once the wizard is done (Pablo,
+                         2026-09-16: "After this wizard is completed, we can offer a
+                         brief 'tour' showing the app"). A self-contained slide carousel
+                         rather than live on-page spotlights - it doesn't depend on
+                         which page it's shown from or what state that page is in. --}}
+                    <div class="dh-tour-backdrop" id="dhTourModal" hidden>
+                        <div class="dh-tour" role="dialog" aria-modal="true" aria-labelledby="dhTourTitle">
+                            <button type="button" class="dh-tour-close" id="dhTourClose" aria-label="Close tour">
+                                <span class="material-icons-round" aria-hidden="true">close</span>
+                            </button>
+                            <ol class="dh-wizard-dots dh-tour-dots" id="dhTourDots" aria-hidden="true"></ol>
+                            <div id="dhTourSlides">
+                                <div class="dh-tour-slide">
+                                    <span class="material-icons-round dh-tour-icon" aria-hidden="true">dashboard</span>
+                                    <h2 id="dhTourTitle" class="dh-wizard-title">Your dashboard</h2>
+                                    <p class="dh-wizard-lead">Today's conditions, your upcoming trips, and picks built around the places and boats you chose - all in one place.</p>
+                                </div>
+                                <div class="dh-tour-slide" hidden>
+                                    <span class="material-icons-round dh-tour-icon" aria-hidden="true">directions_boat</span>
+                                    <h2 class="dh-wizard-title">Find a trip</h2>
+                                    <p class="dh-wizard-lead">Browse boats by date, region or your favorite operators, filtered to what your certification allows.</p>
+                                </div>
+                                <div class="dh-tour-slide" hidden>
+                                    <span class="material-icons-round dh-tour-icon" aria-hidden="true">waves</span>
+                                    <h2 class="dh-wizard-title">Weather</h2>
+                                    <p class="dh-wizard-lead">Sea state and forecasts for every coast, so you know before you launch.</p>
+                                </div>
+                                <div class="dh-tour-slide" hidden>
+                                    <span class="material-icons-round dh-tour-icon" aria-hidden="true">groups</span>
+                                    <h2 class="dh-wizard-title">Groups</h2>
+                                    <p class="dh-wizard-lead">Create or join a dive group, share a calendar, and keep everyone posted in one thread.</p>
+                                </div>
+                                <div class="dh-tour-slide" hidden>
+                                    <span class="material-icons-round dh-tour-icon" aria-hidden="true">timer</span>
+                                    <h2 class="dh-wizard-title">Dive tools</h2>
+                                    <p class="dh-wizard-lead">Plan a dive minute by minute with the Deco Planner, or find your best gas mix with Best Gases.</p>
+                                </div>
+                            </div>
+                            <div class="dh-wizard-actions">
+                                <button type="button" class="dh-btn dh-btn-ghost-dark" id="dhTourPrev" hidden>Back</button>
+                                <button type="button" class="dh-btn dh-btn-primary" id="dhTourNext">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                    <script>
+                        (function () {
+                            var openBtn = document.getElementById('dhTourOpen');
+                            var closeBtn = document.getElementById('dhTourClose');
+                            var backdrop = document.getElementById('dhTourModal');
+                            var slides = backdrop ? Array.prototype.slice.call(backdrop.querySelectorAll('.dh-tour-slide')) : [];
+                            var dotsWrap = document.getElementById('dhTourDots');
+                            var prevBtn = document.getElementById('dhTourPrev');
+                            var nextBtn = document.getElementById('dhTourNext');
+                            if (!openBtn || !backdrop || !slides.length) return;
+
+                            slides.forEach(function () {
+                                var dot = document.createElement('li');
+                                dotsWrap.appendChild(dot);
+                            });
+                            var dots = Array.prototype.slice.call(dotsWrap.querySelectorAll('li'));
+                            var index = 0;
+
+                            function render() {
+                                slides.forEach(function (slide, i) { slide.hidden = i !== index; });
+                                dots.forEach(function (dot, i) {
+                                    dot.classList.toggle('is-current', i === index);
+                                    dot.classList.toggle('is-done', i < index);
+                                });
+                                prevBtn.hidden = index === 0;
+                                nextBtn.textContent = index === slides.length - 1 ? 'Done' : 'Next';
+                            }
+
+                            function open() { index = 0; render(); backdrop.hidden = false; }
+                            function close() { backdrop.hidden = true; }
+
+                            openBtn.addEventListener('click', open);
+                            closeBtn.addEventListener('click', close);
+                            backdrop.addEventListener('click', function (e) { if (e.target === backdrop) close(); });
+                            prevBtn.addEventListener('click', function () { if (index > 0) { index--; render(); } });
+                            nextBtn.addEventListener('click', function () {
+                                if (index < slides.length - 1) { index++; render(); } else { close(); }
+                            });
+                        })();
+                    </script>
                 @endif
 
                 @if($step !== 'done')

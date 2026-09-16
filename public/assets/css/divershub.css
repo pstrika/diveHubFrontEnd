@@ -976,7 +976,11 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-wizard-field { display: flex; flex-direction: column; gap: 6px; border: 0; padding: 0; margin: 0; }
 .dh-wizard-field > span, .dh-wizard-field legend { font-weight: 700; color: var(--dh-ink); font-size: .95rem; }
 .dh-wizard-field small { color: var(--dh-muted); font-weight: 400; }
-.dh-wizard-field input[type="text"] { border: 1px solid var(--dh-line); border-radius: var(--dh-radius); padding: 10px 12px; font: inherit; font-size: 1rem; }
+/* type=tel was already used (the old comms step's phone field) but never
+   actually had a rule here - picked up now that the new phone-verification
+   step (Pablo, 2026-09-16) also uses it, alongside type=text for the
+   6-digit code field. */
+.dh-wizard-field input[type="text"], .dh-wizard-field input[type="tel"] { border: 1px solid var(--dh-line); border-radius: var(--dh-radius); padding: 10px 12px; font: inherit; font-size: 1rem; }
 .dh-wizard-photo-row { display: flex; align-items: center; gap: 12px; }
 .dh-wizard-photo-row img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
 .dh-wizard-photo-row .material-icons-round { font-size: 56px; color: var(--dh-line); }
@@ -992,6 +996,9 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-choice input:checked + .dh-choice-body { border-color: var(--dh-deep); background: var(--dh-foam); }
 .dh-choice input:focus-visible + .dh-choice-body { outline: 3px solid var(--dh-shallow); outline-offset: 2px; }
 .dh-wizard-choices-compact .dh-choice-body { padding: 10px 12px; }
+/* Photo-source choice on the welcome step's Google-avatar offer - a
+   thumbnail/icon beside the label instead of stacked (Pablo, 2026-09-16). */
+.dh-choice-body-row { flex-direction: row; align-items: center; gap: 10px; }
 .dh-radio { display: flex; align-items: center; gap: 8px; font-size: .95rem; color: var(--dh-ink); }
 .dh-radio input { width: 18px; height: 18px; accent-color: var(--dh-deep); }
 .dh-wizard-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
@@ -999,6 +1006,29 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-wizard-skip { margin-top: var(--dh-space-4); text-align: center; }
 .dh-link-btn { border: 0; background: transparent; color: var(--dh-muted); text-decoration: underline; font-size: .85rem; cursor: pointer; }
 @media (max-width: 575.98px) { .dh-wizard { padding: var(--dh-space-4); margin: var(--dh-space-3) 0; } }
+
+/* Post-wizard "quick tour" - a self-contained slide carousel offered from
+   the wizard's done step (Pablo, 2026-09-16: "we can offer a brief tour
+   showing the app"). Reuses .dh-wizard-dots/.dh-wizard-title/.dh-wizard-lead
+   for visual consistency with the wizard itself. */
+.dh-tour-backdrop {
+  position: fixed; inset: 0; z-index: 10060; background: rgba(11, 42, 58, .55);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.dh-tour {
+  position: relative; width: 100%; max-width: 440px; max-height: 85vh; overflow-y: auto;
+  background: var(--dh-paper); border-radius: 16px; padding: var(--dh-space-6);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .3); text-align: center;
+}
+.dh-tour-close {
+  position: absolute; top: 12px; right: 12px; border: 0; background: transparent;
+  color: var(--dh-muted); cursor: pointer; display: flex; padding: 4px;
+}
+.dh-tour-close:hover { color: var(--dh-ink); }
+.dh-tour-dots { justify-content: center; margin: 0 0 var(--dh-space-4); }
+.dh-tour-icon { font-size: 56px; color: var(--dh-sea); margin-bottom: 8px; }
+.dh-tour .dh-wizard-title, .dh-tour .dh-wizard-lead { text-align: center; max-width: none; }
+.dh-tour .dh-wizard-actions { justify-content: center; margin-top: var(--dh-space-4); }
 
 /* ------------------------------------------------------------------ */
 /* Communication preferences (the consent screen). Shared by the        */
@@ -1015,6 +1045,20 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-comms-warn .material-icons-round { font-size: 16px; }
 .dh-comms-legal { font-size: .78rem; color: var(--dh-muted); margin: 0; }
 .dh-comms-since { color: var(--dh-good); font-weight: 700; margin-top: 2px; }
+/* Material Dashboard's base checkbox styling (`.form-check-input { appearance:
+   none }`) draws its own checked state with a hardcoded pink/magenta
+   gradient (#e91e63/#EC407A) instead of a native control, which is why
+   setting accent-color on it does nothing - appearance:none opts a checkbox
+   out of native rendering entirely, and accent-color only ever affects that
+   native rendering. !important is used deliberately here since Material
+   Dashboard's own checked-state rule is itself high-specificity and loaded
+   first (Pablo, 2026-09-16: "the color of the picker in the notifications is
+   a pink that has nothing to do with the theme...use the blue"). */
+.dh-comms .form-check-input:checked {
+  background-color: var(--dh-deep) !important;
+  background-image: none !important;
+  border-color: var(--dh-deep) !important;
+}
 
 /* Guest prompt: create an account or sign in, side by side and stacking on phones. */
 .dh-guest-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: var(--dh-space-3); }

@@ -12,15 +12,39 @@
     ("Yes, I'd like..."), the frequency and rates language stays, the way to stop
     stays, and Terms and Privacy are linked.
 
-    $user      the diver
-    $ids       true to keep the element ids the profile page's script listens for
-    $showPhone true to warn when SMS or WhatsApp is picked without a phone number
+    $user           the diver
+    $ids            true to keep the element ids the profile page's script listens for
+    $showPhone      true to warn when SMS or WhatsApp is picked without a phone number
+    $forceUnchecked true to render every box unchecked regardless of the diver's
+                     existing preference - the welcome wizard uses this so an
+                     already-registered member re-opts-in explicitly on first
+                     login to the new version rather than inheriting old consent
+                     (Pablo, 2026-09-16: "they need to opt in again for mail, sms
+                     and whatsapp"). The "Agreed <date>" line still shows when
+                     there's a real prior timestamp - only the checkbox itself
+                     defaults off.
 
     Usage: <x-comms-preferences :user="$user" />
 --}}
-@props(['user', 'ids' => true, 'showPhone' => true])
+@props(['user', 'ids' => true, 'showPhone' => true, 'forceUnchecked' => false])
 
 @php
+    // Same small colored channel glyph used in AdminMessages (conversation
+    // list, channel picker, thread bubbles) - one real WhatsApp SVG (there's
+    // no WhatsApp glyph in Material Icons) plus Material Icons Round for the
+    // other two, so a channel reads at a glance instead of as a word (Pablo,
+    // 2026-09-16: "adding in the notification picker the icons for mail,
+    // sms and whatsapp").
+    $channelIcon = function (string $channel) {
+        if ($channel === 'whatsapp') {
+            $whatsappSvg = file_get_contents(public_path('assets/img/icons/whatsapp.svg'));
+            return '<span class="dh-ch-icon is-whatsapp">' . $whatsappSvg . '</span>';
+        }
+        $icon = $channel === 'email' ? 'mail' : 'sms';
+        $class = $channel === 'email' ? 'is-email' : 'is-sms';
+        return '<span class="dh-ch-icon ' . $class . ' material-icons-round" aria-hidden="true">' . $icon . '</span>';
+    };
+
     $channels = [
         'email' => [
             'column' => 'email_notifications',
@@ -54,10 +78,10 @@
                 <input class="form-check-input" type="checkbox"
                        @if($ids) id="{{ $c['column'] }}" @endif
                        name="{{ $c['column'] }}" value="1"
-                       {{ ($user->{$c['column']} && !$smsLockedOff) ? 'checked' : '' }}
+                       {{ ($user->{$c['column']} && !$smsLockedOff && !$forceUnchecked) ? 'checked' : '' }}
                        {{ $smsLockedOff ? 'disabled' : '' }}>
                 <span>
-                    <strong>{{ ['email' => 'Email', 'sms' => 'SMS', 'whatsapp' => 'WhatsApp'][$key] }}</strong>
+                    <strong>{!! $channelIcon($key) !!} {{ ['email' => 'Email', 'sms' => 'SMS', 'whatsapp' => 'WhatsApp'][$key] }}</strong>
                     {{ $c['label'] }}
                 </span>
             </label>

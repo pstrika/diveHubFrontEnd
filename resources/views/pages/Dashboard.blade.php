@@ -27,7 +27,7 @@
                     <h6 class="dh-sheet-title" id="modal-title-notification-calendar">Edit calendar</h6>
                     <div class="dh-sheet-actions">
                         <a id="button-go" class="dh-sheet-action" href="">
-                            <span class="material-icons-round" aria-hidden="true">sailing</span>
+                            <span class="material-icons-round" aria-hidden="true">directions_boat</span>
                             <span><strong>Go to the dive</strong><small>Sites, seats, price and the boat</small></span>
                         </a>
                         <div id="div-button-link">
@@ -79,7 +79,7 @@
                         <div class="dh-card-body" style="display: block; max-height: 350px; overflow-y: scroll">
                             @if(count($trips) == 0)
                                 <p class="text-sm mb-2">Nothing saved yet. Find a dive and add it to your calendar; it shows up here and in the calendar below.</p>
-                                <a class="dh-btn dh-btn-primary" href="{{ route('Trips') }}"><span class="material-icons-round">sailing</span>Find a dive</a>
+                                <a class="dh-btn dh-btn-primary" href="{{ route('Trips') }}"><span class="material-icons-round">directions_boat</span>Find a dive</a>
                             @else
                                 {{--
                                     One row per saved dive (Zach, 2026-09-10). The row itself is the

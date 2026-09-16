@@ -29,10 +29,14 @@ class RegisterController extends Controller
 
         // force role_id to Member
         $attributes['role_id'] = 3;
-        $attributes['showLevel'] = '0, 4';
-        $attributes['favLocations'] = '3, 5, 8';
-        $attributes['certLevel'] = 0;
-        $attributes['prefersLocation'] = 0;
+        // certLevel/favLocations/showLevel/prefersLocation are deliberately
+        // left unset (null) here, not given fake placeholder defaults - the
+        // welcome wizard (OnboardingController::needs()) uses exactly these
+        // fields being empty to decide whether to prompt a fresh registrant,
+        // and the old hardcoded defaults ('0, 4' / '3, 5, 8' / certLevel 0)
+        // silently satisfied that check for every single new user, so the
+        // wizard could never actually fire (Pablo, 2026-09-16: "I just
+        // registered as a new user and I did not see any wizard at all").
 
         $user = User::create($attributes);
 

@@ -167,7 +167,7 @@
             <section class="dh-site-facts">
                 <div class="dh-op-head dh-site-facts-main">
                     <span class="dh-op-logo">
-                        @if($operator->logoUrl)<img src="{{ asset('assets') }}{{ $operator->logoUrl }}" alt="{{ $operator->operatorName }} logo">@else<span class="material-icons-round">sailing</span>@endif
+                        @if($operator->logoUrl)<img src="{{ asset('assets') }}{{ $operator->logoUrl }}" alt="{{ $operator->operatorName }} logo">@else<span class="material-icons-round">directions_boat</span>@endif
                     </span>
                     <div>
                         <p class="dh-trip-kicker">{{ $operator->cityAddress }}@if($card['coast'] !== 'Other' && strcasecmp($card['coast'], $operator->cityAddress) !== 0) · {{ $card['coast'] }}@endif</p>

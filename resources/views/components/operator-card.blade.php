@@ -15,7 +15,7 @@
         @if($card['logo'])
             <img src="{{ $card['logo'] }}" alt="" loading="lazy" decoding="async">
         @else
-            <span class="material-icons-round">sailing</span>
+            <span class="material-icons-round">directions_boat</span>
         @endif
     </a>
     <div class="dh-op-body">
