@@ -441,38 +441,24 @@ document.addEventListener('click', function (e) {
  * Block pinch-to-zoom in the installed PWA only (Pablo, 2026-09-16: "I
  * noticed the PWA in iphone and ipad is allowing me to zoom in with two
  * fingers...I dont want this behavior"). Scoped to standalone/home-screen
- * mode - a normal Safari/Chrome tab keeps its usual pinch-zoom, since
- * disabling that everywhere would be a real accessibility regression
- * (WCAG requires content to remain zoomable). Two separate mechanisms are
- * needed: Android's WebView PWA respects the viewport meta tag's
- * maximum-scale/user-scalable, but iOS Safari has ignored that same meta
- * tag for pinch-zoom since iOS 10 (also for accessibility) even when
- * installed as a PWA - the only thing that still works there is
- * preventing WebKit's proprietary 'gesturestart'/'gesturechange' events
- * and multi-touch touchstart/touchmove. Every one of these listeners
- * MUST be registered with {passive:false} - modern browsers otherwise
- * treat touch-family listeners as passive by default, which makes
- * preventDefault() a silent no-op instead of an error (first attempt at
- * this missed it on gesturestart/gesturechange specifically, which is
- * why pinch-zoom kept working on a real iPad even though this code
- * looked like it should have blocked it - Pablo, 2026-09-16).
+ * mode via a class on <html> - a normal Safari/Chrome tab keeps its usual
+ * pinch-zoom, since disabling that everywhere would be a real
+ * accessibility regression (WCAG requires content to remain zoomable).
+ *
+ * Round 1 of this fix used the viewport meta tag's maximum-scale/
+ * user-scalable plus JS 'gesturestart'/'gesturechange'/touchmove
+ * preventDefault() - confirmed dead on a real iPad even after fixing a
+ * missing {passive:false}. Modern Safari no longer honors either
+ * mechanism at all (it hasn't honored the viewport meta tag for this
+ * since iOS 10; the gesturestart trick has quietly stopped working too).
+ * The one thing that's still actually respected is the CSS `touch-action`
+ * property - see the `:where(.dh-pwa-standalone) *` rule in
+ * divershub.css, which does the real blocking. This script's only job is
+ * flagging standalone mode by adding that class.
  */
 (function () {
     var isStandalone = window.navigator.standalone === true ||
         (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
     if (!isStandalone) return;
-
-    var viewport = document.querySelector('meta[name="viewport"]');
-    if (viewport && viewport.content.indexOf('user-scalable') === -1) {
-        viewport.setAttribute('content', viewport.content + ', maximum-scale=1, user-scalable=no');
-    }
-
-    document.addEventListener('gesturestart', function (e) { e.preventDefault(); }, { passive: false });
-    document.addEventListener('gesturechange', function (e) { e.preventDefault(); }, { passive: false });
-    document.addEventListener('touchstart', function (e) {
-        if (e.touches && e.touches.length > 1) e.preventDefault();
-    }, { passive: false });
-    document.addEventListener('touchmove', function (e) {
-        if (e.touches && e.touches.length > 1) e.preventDefault();
-    }, { passive: false });
+    document.documentElement.classList.add('dh-pwa-standalone');
 })();

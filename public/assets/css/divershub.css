@@ -1712,6 +1712,22 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-msg-avatar .dh-ch-icon { width: 20px; height: 20px; }
 .dh-msg-avatar .dh-ch-icon.is-sms, .dh-msg-avatar .dh-ch-icon.is-email { font-size: 20px; }
 
+/* Blocks pinch-to-zoom in the installed PWA only - the `dh-pwa-standalone`
+   class is added to <html> by divershub.js when running standalone
+   (Pablo, 2026-09-16: "it does not work" after the viewport-meta-tag +
+   JS gesturestart approach - confirmed dead on a real iPad; touch-action
+   is the one mechanism modern Safari still actually respects for this).
+   pan-x/pan-y explicitly keep normal one-finger scrolling/dragging
+   working (sliders, swipeable chip rows, charts) - only pinch and
+   double-tap zoom get dropped. Wrapped in :where() so this carries
+   effectively zero specificity, same as a bare `*` - existing
+   component-level touch-action rules (e.g. noUiSlider's own
+   `.noUi-target, .noUi-target * { touch-action: none }`, needed for its
+   drag handles) still win and are left completely alone. */
+:where(.dh-pwa-standalone) * {
+  touch-action: pan-x pan-y;
+}
+
 /* "Chat with us" floating button (2026-09-14). Sits well above the mobile
    tab bar (60px) and the install-prompt bar's own band above that, so the
    three never stack on top of each other; desktop has neither, so it can
