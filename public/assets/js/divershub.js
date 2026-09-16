@@ -449,7 +449,13 @@ document.addEventListener('click', function (e) {
  * tag for pinch-zoom since iOS 10 (also for accessibility) even when
  * installed as a PWA - the only thing that still works there is
  * preventing WebKit's proprietary 'gesturestart'/'gesturechange' events
- * and multi-touch touchmove.
+ * and multi-touch touchstart/touchmove. Every one of these listeners
+ * MUST be registered with {passive:false} - modern browsers otherwise
+ * treat touch-family listeners as passive by default, which makes
+ * preventDefault() a silent no-op instead of an error (first attempt at
+ * this missed it on gesturestart/gesturechange specifically, which is
+ * why pinch-zoom kept working on a real iPad even though this code
+ * looked like it should have blocked it - Pablo, 2026-09-16).
  */
 (function () {
     var isStandalone = window.navigator.standalone === true ||
@@ -461,8 +467,11 @@ document.addEventListener('click', function (e) {
         viewport.setAttribute('content', viewport.content + ', maximum-scale=1, user-scalable=no');
     }
 
-    document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
-    document.addEventListener('gesturechange', function (e) { e.preventDefault(); });
+    document.addEventListener('gesturestart', function (e) { e.preventDefault(); }, { passive: false });
+    document.addEventListener('gesturechange', function (e) { e.preventDefault(); }, { passive: false });
+    document.addEventListener('touchstart', function (e) {
+        if (e.touches && e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
     document.addEventListener('touchmove', function (e) {
         if (e.touches && e.touches.length > 1) e.preventDefault();
     }, { passive: false });
