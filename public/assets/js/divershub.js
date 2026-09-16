@@ -436,3 +436,34 @@ document.addEventListener('click', function (e) {
         window.addEventListener('load', mirrorAll);
     }
 })();
+
+/*
+ * Block pinch-to-zoom in the installed PWA only (Pablo, 2026-09-16: "I
+ * noticed the PWA in iphone and ipad is allowing me to zoom in with two
+ * fingers...I dont want this behavior"). Scoped to standalone/home-screen
+ * mode - a normal Safari/Chrome tab keeps its usual pinch-zoom, since
+ * disabling that everywhere would be a real accessibility regression
+ * (WCAG requires content to remain zoomable). Two separate mechanisms are
+ * needed: Android's WebView PWA respects the viewport meta tag's
+ * maximum-scale/user-scalable, but iOS Safari has ignored that same meta
+ * tag for pinch-zoom since iOS 10 (also for accessibility) even when
+ * installed as a PWA - the only thing that still works there is
+ * preventing WebKit's proprietary 'gesturestart'/'gesturechange' events
+ * and multi-touch touchmove.
+ */
+(function () {
+    var isStandalone = window.navigator.standalone === true ||
+        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+    if (!isStandalone) return;
+
+    var viewport = document.querySelector('meta[name="viewport"]');
+    if (viewport && viewport.content.indexOf('user-scalable') === -1) {
+        viewport.setAttribute('content', viewport.content + ', maximum-scale=1, user-scalable=no');
+    }
+
+    document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+    document.addEventListener('gesturechange', function (e) { e.preventDefault(); });
+    document.addEventListener('touchmove', function (e) {
+        if (e.touches && e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+})();
