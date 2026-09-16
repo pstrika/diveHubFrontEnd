@@ -143,6 +143,43 @@ class SiteController extends Controller
         return view('pages.BeachDiving', compact('beaches', 'SEO'));
     }
 
+    /**
+     * Every site's meta description used to be the identical template
+     * ("Name type in Location. Max depth X ft") - Pablo, 2026-09-16 SEO
+     * review: "every site puts the same on the meta...what do you think is
+     * good to add so we can drive more Google traffic?" For wrecks,
+     * appends the ship type/length/sunk date already sitting unused in
+     * wreckData - exactly the kind of specific fact a diver searches for
+     * ("workboat wreck", "wreck sunk 1994"). For every site, appends the
+     * minimum certification level - a real search modifier ("beginner
+     * reef dive", "advanced wreck dive") and, for wrecks specifically,
+     * genuinely useful info a diver needs before choosing the site
+     * (Pablo: "we need to add the minimum certification level to the
+     * wreck too").
+     */
+    private function buildSiteMetaDescription(Site $site, string $locationTitleCase): string
+    {
+        $desc = $site->name . " " . $site->type . " in " . $locationTitleCase . ". Max depth " . $site->maxDepth . " ft.";
+
+        if ($site->type === "wreck" && $site->wreckData) {
+            $wreckData = json_decode($site->wreckData, true);
+            if (is_array($wreckData) && !empty($wreckData['type'])) {
+                $wreckBits = (!empty($wreckData['length']) ? $wreckData['length'] . '-ft ' : '') . $wreckData['type'];
+                $sentence = "A " . $wreckBits;
+                if (!empty($wreckData['sunkDate'])) {
+                    $sentence .= " sunk " . $wreckData['sunkDate'];
+                }
+                $desc .= " " . $sentence . ".";
+            }
+        }
+
+        if (DiveLevel::isValid($site->level)) {
+            $desc .= " Suitable for " . DiveLevel::name($site->level) . " divers.";
+        }
+
+        return $desc;
+    }
+
     public function show($id = null) {
         if (is_numeric($id)) {
             $site = Site::with('reviews.user')->findOrFail(intval($id));
@@ -206,7 +243,7 @@ class SiteController extends Controller
         $locationTitleCase = ucwords(strtolower($location->location));
         $SEO = array(
             "title" => $site->name . " ". $site->type,
-            "desc" => $site->name . " " . $site->type . " in " . $locationTitleCase . ". Max depth " . $site->maxDepth . " ft",
+            "desc" => $this->buildSiteMetaDescription($site, $locationTitleCase),
             "keywords" => $site->name . "," . ($site->aka ? $site->aka . "," : "") . $location->location . "," . $site->type,
             "canonical" => route("SiteDetails") . "/" . ($site->slug ?? $site->id),
         );
