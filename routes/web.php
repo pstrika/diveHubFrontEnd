@@ -265,6 +265,21 @@ Route::get('DiveSites', 'App\Http\Controllers\SiteController@showTopRated')->mid
 // BlogController - see its docblock. SEO content marketing, so public/
 // indexable like every other content page, hence 'guest' not 'auth'.
 Route::get('Blog', 'App\Http\Controllers\BlogController@index')->middleware('guest')->name('Blog');
+
+// Creator/Admin authoring (2026-09-18) - declared before Blog/{slug} below,
+// which would otherwise swallow /Blog/manage as slug="manage". Policy
+// checks happen inside BlogAdminController (App\Policies\PostPolicy);
+// 'auth' here just keeps guests out entirely.
+Route::middleware('auth')->group(function () {
+    Route::get('Blog/manage', 'App\Http\Controllers\BlogAdminController@index')->name('Blog.manage.index');
+    Route::get('Blog/manage/create', 'App\Http\Controllers\BlogAdminController@create')->name('Blog.manage.create');
+    Route::post('Blog/manage', 'App\Http\Controllers\BlogAdminController@store')->name('Blog.manage.store');
+    Route::get('Blog/manage/search-sites', 'App\Http\Controllers\BlogAdminController@searchSites')->name('Blog.manage.searchSites');
+    Route::get('Blog/manage/{post}/edit', 'App\Http\Controllers\BlogAdminController@edit')->name('Blog.manage.edit');
+    Route::put('Blog/manage/{post}', 'App\Http\Controllers\BlogAdminController@update')->name('Blog.manage.update');
+    Route::delete('Blog/manage/{post}', 'App\Http\Controllers\BlogAdminController@destroy')->name('Blog.manage.destroy');
+});
+
 Route::get('Blog/{slug}', 'App\Http\Controllers\BlogController@show')->middleware('guest')->name('Blog.show');
 // Redesign W4: Search and Map became views of the Dive Sites explorer. Both
 // pages were noindex, so the 301s cost nothing. Listed in docs/seo/redirect-map.md.

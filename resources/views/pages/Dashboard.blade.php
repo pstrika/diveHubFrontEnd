@@ -78,8 +78,8 @@
     own (which would need its default look overridden anyway) or the
     wizard tour's full-screen one (wrong shape for an inline dashboard
     card). Posts and their order come from MyDashboardController -
-    App\Support\BlogPosts::forViewer(), ranked by the diver's own
-    certification level.
+    App\Models\Post::forViewer(), ranked by the diver's own certification
+    level.
 --}}
 @if(!empty($blogPosts))
 <div class="row">

@@ -3,30 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Photo;
-use App\Models\Site;
-use App\Support\BlogPosts;
+use App\Models\Post;
 
 /**
- * Visual design pass only (Pablo, 2026-09-17): mock post content lives in
- * App\Support\BlogPosts, no `posts` table or admin authoring screen yet.
- * Real routes and views so the look can be reviewed in the actual theme,
- * not a throwaway static file. Once the design is approved, BlogPosts'
- * arrays become a Post model and its static methods become queries - same
- * shape either way, so nothing here gets thrown away.
+ * Public-facing blog (Pablo, 2026-09-17/18). Authoring lives in
+ * BlogAdminController; this only ever reads published posts.
  *
- * Authorship (Pablo, 2026-09-17: "anybody that is user type Creator", then
- * "both Creator and Admins can create articles") is
- * User::isCreator() (role_id == 2, never previously used anywhere in the
- * app) OR User::isAdmin() (role_id == 1) - the same pairing Public Groups'
- * one-per-admin exemption already checks, so the future authoring screen's
- * gate is `$user->isCreator() || $user->isAdmin()`.
+ * Authorship ("anybody that is user type Creator", then "both Creator and
+ * Admins can create articles") is User::isCreator() (role_id == 2, never
+ * previously used anywhere in the app before this) OR User::isAdmin()
+ * (role_id == 1) - see App\Policies\PostPolicy.
  */
 class BlogController extends Controller
 {
     public function index()
     {
-        $posts = BlogPosts::all();
-        $categories = collect($posts)->pluck('category')->unique()->values();
+        $posts = Post::published()->latest('published_at')->get();
+        $categories = $posts->pluck('category')->unique()->values();
 
         $SEO = [
             'title' => 'Diving guides, gear tips and news - Divers Hub Blog',
@@ -40,28 +33,29 @@ class BlogController extends Controller
 
     public function show(string $slug)
     {
-        $post = BlogPosts::find($slug);
+        $post = Post::published()->where('slug', $slug)->first();
         abort_unless($post, 404);
 
-        $related = collect(BlogPosts::all())->where('slug', '!=', $slug)->take(2)->values();
+        $related = Post::published()->where('slug', '!=', $slug)->latest('published_at')->take(2)->get();
 
-        // Real sites, so the "internal links" this post exists to drive
-        // actually go somewhere - the whole point of an SEO guide post.
-        $diveSites = Site::whereIn('slug', ['spiegel-grove', 'lady-luck', 'hydro-atlantic', 'ancient-mariner', 'princess-britney'])
-            ->select('id', 'name', 'slug', 'type', 'level', 'maxDepth', 'rate', 'votes')
-            ->get();
-        $photos = Photo::whereIn('siteId', $diveSites->pluck('id'))->get()->groupBy('siteId');
-        foreach ($diveSites as $site) {
-            $site->photoFile = $photos->get($site->id)?->first()?->file;
+        // Real sites, so the "internal links" a guide post exists to drive
+        // actually go somewhere - not every post has these ("not in all
+        // cases we will have rankings" - Pablo, 2026-09-17).
+        $rankedSites = $post->rankedSites();
+        if ($rankedSites->isNotEmpty()) {
+            $photos = Photo::whereIn('siteId', $rankedSites->pluck('site.id'))->get()->groupBy('siteId');
+            foreach ($rankedSites as $entry) {
+                $entry['site']->photoFile = $photos->get($entry['site']->id)?->first()?->file;
+            }
         }
 
         $SEO = [
-            'title' => $post['title'] . ' - Divers Hub Blog',
-            'desc' => $post['excerpt'],
-            'canonical' => route('Blog.show', $post['slug']),
-            'image' => asset($post['image']),
+            'title' => $post->title . ' - Divers Hub Blog',
+            'desc' => $post->excerpt,
+            'canonical' => route('Blog.show', $post->slug),
+            'image' => $post->cover_image ? asset($post->cover_image) : null,
         ];
 
-        return view('pages.Blog.Show', compact('post', 'related', 'diveSites', 'SEO'));
+        return view('pages.Blog.Show', compact('post', 'related', 'rankedSites', 'SEO'));
     }
 }

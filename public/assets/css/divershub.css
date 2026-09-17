@@ -2482,6 +2482,19 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
   margin: var(--dh-space-6) 0 var(--dh-space-3);
 }
 .dh-blog-body h3 { font-size: 1.1rem; font-weight: 800; color: var(--dh-ink); margin: 0 0 4px; }
+/* Real Creator-written content (2026-09-18, Quill Delta rendered client-side
+   into .dh-blog-body - see edit-site.blade.php for the same pattern): the
+   hand-built mockup never needed list/quote styling since its "lists" were
+   hard-coded .dh-blog-ranked markup, not something a Creator actually
+   typed. Quill's own "Quote" toolbar button becomes the callout box for
+   free - a Creator never needs a custom block type to get one. */
+.dh-blog-body ol, .dh-blog-body ul { margin: 0 0 var(--dh-space-4); padding-left: 1.4em; }
+.dh-blog-body li { margin-bottom: 6px; }
+.dh-blog-body blockquote {
+  margin: 0 0 var(--dh-space-4); padding: var(--dh-space-3) var(--dh-space-4);
+  background: var(--dh-foam); border-radius: var(--dh-radius); border: 0;
+  font-size: .95rem; color: var(--dh-deep);
+}
 .dh-blog-lead { font-size: 1.15rem; color: var(--dh-muted); }
 
 .dh-blog-callout {
@@ -2504,3 +2517,11 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-blog-related-sites h2 { font-family: 'Roboto Slab', serif; font-size: 1.3rem; font-weight: 700; color: var(--dh-ink); margin-bottom: var(--dh-space-3); }
 .dh-blog-more { margin-top: var(--dh-space-6); }
 .dh-blog-more .dh-panel-title { font-family: 'Roboto Slab', serif; font-size: 1.3rem; text-transform: none; letter-spacing: 0; }
+
+/* Blog authoring form (2026-09-18): the related-sites search dropdown and
+   the picked-sites list underneath it. */
+.dh-related-site-results { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 20; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: var(--dh-radius); box-shadow: 0 8px 20px rgba(11,42,58,.16); max-height: 240px; overflow-y: auto; }
+.dh-related-sites-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.dh-related-site-row { border: 1px solid var(--dh-line); border-radius: var(--dh-radius); padding: 10px 12px; }
+.dh-related-site-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.dh-related-site-row textarea { width: 100%; border: 1px solid var(--dh-line); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: .88rem; resize: vertical; }
