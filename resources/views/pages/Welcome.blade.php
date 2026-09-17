@@ -231,18 +231,42 @@
                         <form method="POST" action="{{ route('welcome.save') }}" class="dh-wizard-form">
                             @csrf
                             <input type="hidden" name="step" value="phone">
-                            <label class="dh-wizard-field">
-                                <span>Mobile number</span>
-                                <input type="tel" name="phone" value="{{ old('phone', $isIntlSaved ? $user->phone : '') }}" autocomplete="tel" inputmode="tel" placeholder="(555) 123-4567">
-                            </label>
                             @if($isIntlSaved)
+                                <label class="dh-wizard-field">
+                                    <span>Mobile number</span>
+                                    <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" autocomplete="tel" inputmode="tel" placeholder="+52 55 1234 5678">
+                                </label>
                                 <p class="dh-comms-note">Saved for WhatsApp - international numbers can't receive our SMS verification codes.</p>
+                            @else
+                                <label class="dh-wizard-field">
+                                    <span>Mobile number</span>
+                                    <div class="dh-phone-us">
+                                        <span class="dh-phone-us-prefix">+1</span>
+                                        <input type="tel" id="dhPhoneUs" name="phone" value="{{ old('phone') }}" autocomplete="tel" inputmode="numeric" maxlength="12" placeholder="555-123-4567">
+                                    </div>
+                                </label>
                             @endif
                             <div class="dh-wizard-actions">
                                 <button type="submit" class="dh-btn dh-btn-primary">Send code</button>
                                 <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl('comms') }}">Skip this</a>
                             </div>
                         </form>
+                        <script>
+                            (function () {
+                                var input = document.getElementById('dhPhoneUs');
+                                if (!input) return;
+                                function format(digits) {
+                                    digits = digits.slice(0, 10);
+                                    var parts = [digits.slice(0, 3), digits.slice(3, 6), digits.slice(6, 10)].filter(Boolean);
+                                    return parts.join('-');
+                                }
+                                input.value = format(input.value.replace(/\D/g, ''));
+                                input.addEventListener('input', function () {
+                                    var digits = input.value.replace(/\D/g, '');
+                                    input.value = format(digits);
+                                });
+                            })();
+                        </script>
                     @endif
 
                 @elseif($step === 'comms')

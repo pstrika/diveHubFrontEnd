@@ -981,6 +981,9 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
    step (Pablo, 2026-09-16) also uses it, alongside type=text for the
    6-digit code field. */
 .dh-wizard-field input[type="text"], .dh-wizard-field input[type="tel"] { border: 1px solid var(--dh-line); border-radius: var(--dh-radius); padding: 10px 12px; font: inherit; font-size: 1rem; }
+.dh-phone-us { display: flex; align-items: stretch; border: 1px solid var(--dh-line); border-radius: var(--dh-radius); overflow: hidden; }
+.dh-phone-us-prefix { display: flex; align-items: center; padding: 10px 10px 10px 12px; background: var(--dh-foam); color: var(--dh-deep); font-weight: 700; border-right: 1px solid var(--dh-line); }
+.dh-phone-us input[type="tel"] { border: 0 !important; border-radius: 0 !important; flex: 1; min-width: 0; }
 .dh-wizard-photo-row { display: flex; align-items: center; gap: 12px; }
 .dh-wizard-photo-row img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
 .dh-wizard-photo-row .material-icons-round { font-size: 56px; color: var(--dh-line); }
@@ -1059,13 +1062,20 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
   background-image: none !important;
   border-color: var(--dh-deep) !important;
 }
-/* Material Dashboard's own unchecked border (#d1d7e1) is nearly invisible
-   against a white row - a darker, clearly visible outline so an UNCHECKED
-   box actually reads as a box (Pablo, 2026-09-17: "you can't see the
-   checkbox if not selected...use a darker grey"). Disabled (locked-off,
-   e.g. unverified phone) stays visibly lighter than an actionable one. */
+/* Round 1 of this only set border-color, which did nothing: Material
+   Dashboard's real base rule is `.form-check-input { border: none }` (a
+   single class, the actual baseline here) - the OTHER rule that looks like
+   it draws a visible #d1d7e1 border, `.form-check:not(.form-switch)
+   .form-check-input[type=checkbox]`, never applies to this component at
+   all, since its markup doesn't wrap the input in a .form-check div the
+   way Bootstrap expects. So there was never a border to recolor - width
+   and style both computed to 0/none regardless of what color was set,
+   confirmed via the live site's own computed styles (border-width: 0px,
+   border-style: none) after the color-only fix visibly did nothing
+   (Pablo, 2026-09-17: "shows exactly the same as before"). Setting the
+   full shorthand here actually draws one. */
 .dh-comms .form-check-input {
-  border-color: var(--dh-muted) !important;
+  border: 1px solid var(--dh-muted) !important;
 }
 .dh-comms .form-check-input:disabled {
   border-color: var(--dh-line) !important;
