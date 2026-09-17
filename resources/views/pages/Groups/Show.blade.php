@@ -99,6 +99,13 @@
                                 Allow any member to add dives (otherwise only admins can)
                             </label>
                         </div>
+                        <div class="form-check form-switch mb-1">
+                            <input class="form-check-input" type="checkbox" name="is_public" value="1" id="isPublicInput" {{ $group->is_public ? 'checked' : '' }}>
+                            <label class="form-check-label" for="isPublicInput">
+                                Public group - anyone can find and join, no invitation needed
+                            </label>
+                        </div>
+                        <p class="text-xs text-secondary mt-n2 mb-4">Everything else about the group (who can add dives, notifications) stays exactly as configured above. You can only be an admin of one public group at a time.</p>
                         <div class="form-check form-switch mb-4">
                             <input class="form-check-input" type="checkbox" name="notifications_muted" value="1" id="notificationsMutedInput" {{ $group->notifications_muted ? 'checked' : '' }}>
                             <label class="form-check-label" for="notificationsMutedInput">

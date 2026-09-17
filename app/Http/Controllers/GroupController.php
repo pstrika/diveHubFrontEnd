@@ -51,6 +51,63 @@ class GroupController extends Controller
         return view('pages.Groups.MyGroups', compact('groups', 'invites', 'SEO'));
     }
 
+    /**
+     * Live search box on My Groups for discovering public groups - same
+     * name-search + JSON-response pattern as GroupInviteController::search().
+     * Excludes groups the diver is already a member of or has a pending
+     * invite to, so "Join" never shows for something they're already in.
+     */
+    public function searchPublic(Request $request)
+    {
+        $userId = auth()->user()->id;
+        $q = trim((string) $request->input('q'));
+        if (mb_strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $alreadyInGroupIds = GroupMember::where('user_id', $userId)->pluck('group_id');
+
+        $groups = Group::where('is_public', true)
+            ->where('name', 'LIKE', "%$q%")
+            ->whereNotIn('id', $alreadyInGroupIds)
+            ->withCount(['activeMembers'])
+            ->take(10)
+            ->get(['id', 'name', 'slug', 'description', 'avatar']);
+
+        return response()->json($groups);
+    }
+
+    /**
+     * Direct self-join for a public group - the whole point of "public" is
+     * skipping the invite/accept round trip (Pablo, 2026-09-16: "these
+     * don't require invitation"). Same end state as GroupInviteController::
+     * accept() (an active GroupMember), just created straight away instead
+     * of starting as 'invited'.
+     */
+    public function joinPublic($groupSlug)
+    {
+        $group = Group::where('slug', $groupSlug)->firstOrFail();
+
+        if (!$group->is_public) {
+            abort(404);
+        }
+
+        $userId = auth()->user()->id;
+        if ($group->members()->where('user_id', $userId)->exists()) {
+            return redirect()->route('Groups.show', ['group' => $group->slug]);
+        }
+
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => $userId,
+            'role' => 'member',
+            'status' => 'active',
+        ]);
+
+        return redirect()->route('Groups.show', ['group' => $group->slug])
+            ->with('msg', 'Welcome to ' . $group->name . '!');
+    }
+
     public function create()
     {
         $SEO = [
@@ -433,14 +490,27 @@ class GroupController extends Controller
             'digest_enabled' => 'nullable|boolean',
             'notifications_muted' => 'nullable|boolean',
             'allow_members_add_dives' => 'nullable|boolean',
+            'is_public' => 'nullable|boolean',
             'favorite_operators' => 'nullable|array',
             'favorite_operators.*' => 'integer|exists:mysql_trips.operators,id',
         ]);
+
+        $wantsPublic = $request->boolean('is_public');
+        if ($wantsPublic && !$group->is_public && !auth()->user()->isAdmin()) {
+            // One public group per admin, to stop unused ones piling up
+            // (Pablo, 2026-09-16) - waived for platform admins (role_id 1,
+            // "the rule of only one public group does not apply to
+            // platform admins").
+            if (Group::publicGroupLimitReachedFor(auth()->id(), $group->id)) {
+                return redirect()->back()->with('msg', "You're already an admin of a public group - only one at a time is allowed.");
+            }
+        }
 
         $group->reminders_enabled = $request->boolean('reminders_enabled');
         $group->digest_enabled = $request->boolean('digest_enabled');
         $group->notifications_muted = $request->boolean('notifications_muted');
         $group->allow_members_add_dives = $request->boolean('allow_members_add_dives');
+        $group->is_public = $wantsPublic;
         $group->save();
 
         $group->favoriteOperators()->sync($request->input('favorite_operators', []));

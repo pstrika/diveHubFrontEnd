@@ -33,6 +33,7 @@ class Group extends Model
         'fb_connected_at',
         'fb_auto_post',
         'created_by',
+        'is_public',
     ];
 
     protected $casts = [
@@ -44,6 +45,7 @@ class Group extends Model
         'fb_page_access_token' => 'encrypted',
         'fb_connected_at' => 'datetime',
         'fb_auto_post' => 'boolean',
+        'is_public' => 'boolean',
     ];
 
     /**
@@ -54,6 +56,25 @@ class Group extends Model
     public function canAddDives($userId): bool
     {
         return $this->isAdmin($userId) || $this->allow_members_add_dives;
+    }
+
+    /**
+     * True when $userId is already the admin of some OTHER public group.
+     * Backs the "one public group per admin" cap (Pablo, 2026-09-16: "we
+     * dont allow tons of unused groups to be created...allow a user to
+     * ONLY create ONE public group (create or be admin of)") - the creator
+     * of a group is automatically its admin, so "created" and "is admin
+     * of" collapse into this one check. Platform admins (role_id 1) are
+     * exempt - checked by the caller, not here.
+     */
+    public static function publicGroupLimitReachedFor(int $userId, ?int $excludeGroupId = null): bool
+    {
+        return self::where('is_public', true)
+            ->when($excludeGroupId, fn ($q) => $q->where('id', '!=', $excludeGroupId))
+            ->whereHas('members', function ($q) use ($userId) {
+                $q->where('user_id', $userId)->where('status', 'active')->where('role', 'admin');
+            })
+            ->exists();
     }
 
     public function isFacebookConnected(): bool

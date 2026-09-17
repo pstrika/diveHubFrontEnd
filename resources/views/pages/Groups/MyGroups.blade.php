@@ -75,6 +75,60 @@
                 @endif
             </section>
 
+            {{-- Public groups skip the invite flow entirely - anyone can find and
+                 join one directly (Pablo, 2026-09-16: "On My Groups, you can have
+                 a card below to search and join public groups"). --}}
+            <section class="dh-panel">
+                <h2 class="dh-panel-title">Discover public groups</h2>
+                <p class="text-xs text-secondary mt-n2 mb-2">Public groups are open to join - no invitation needed.</p>
+                <input type="text" id="publicGroupSearchInput" class="form-control border" placeholder="Search public groups by name..." autocomplete="off">
+                <ul class="dh-invite-list" id="publicGroupResults"></ul>
+            </section>
+
+            @push('js')
+            <script>
+                (function () {
+                    let searchTimeout;
+                    const input = document.getElementById('publicGroupSearchInput');
+                    const resultsEl = document.getElementById('publicGroupResults');
+                    if (!input || !resultsEl) return;
+
+                    input.addEventListener('input', function () {
+                        const q = this.value;
+                        clearTimeout(searchTimeout);
+                        if (q.length < 2) {
+                            resultsEl.innerHTML = '';
+                            return;
+                        }
+                        searchTimeout = setTimeout(function () {
+                            fetch("{{ route('Groups.public.search') }}?q=" + encodeURIComponent(q))
+                                .then(r => r.json())
+                                .then(function (groups) {
+                                    resultsEl.innerHTML = groups.map(function (g) {
+                                        const avatarSrc = g.avatar
+                                            ? "{{ asset('assets') }}/" + g.avatar
+                                            : null;
+                                        const avatarHtml = avatarSrc
+                                            ? '<img src="' + avatarSrc + '" alt="" style="width:32px;height:32px;border-radius:50%;object-fit:cover;margin-right:8px;">'
+                                            : '<span class="material-icons-round" aria-hidden="true" style="margin-right:8px;">groups</span>';
+                                        const joinUrl = "{{ url('Groups') }}/" + g.slug + "/join";
+                                        return '<li class="dh-invite-row">' +
+                                            '<span class="d-flex align-items-center">' + avatarHtml +
+                                                '<span>' + g.name + ' <span class="text-secondary text-xs ms-1">' + (g.active_members_count || 0) + ' members</span></span>' +
+                                            '</span>' +
+                                            '<form method="POST" action="' + joinUrl + '">' +
+                                                '{{ csrf_field() }}' +
+                                                '<button type="submit" class="dh-btn dh-btn-primary">Join</button>' +
+                                            '</form>' +
+                                        '</li>';
+                                    }).join('') || '<p class="text-secondary mb-0 mt-2">No matching public groups found.</p>';
+                                });
+                        }, 300);
+                    });
+                })();
+            </script>
+            @endpush
+
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>
     </main>

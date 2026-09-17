@@ -594,6 +594,8 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::get('MyGroups', 'App\Http\Controllers\GroupController@myGroups')->name('MyGroups');
 	Route::get('Groups/create', 'App\Http\Controllers\GroupController@create')->name('Groups.create');
 	Route::post('Groups', 'App\Http\Controllers\GroupController@store')->name('Groups.store');
+	Route::get('Groups/public/search', 'App\Http\Controllers\GroupController@searchPublic')->name('Groups.public.search');
+	Route::post('Groups/{group}/join', 'App\Http\Controllers\GroupController@joinPublic')->name('Groups.joinPublic');
 
 	Route::post('push/subscribe', 'App\Http\Controllers\PushSubscriptionController@store')->name('push.subscribe');
 	Route::post('push/unsubscribe', 'App\Http\Controllers\PushSubscriptionController@destroy')->name('push.unsubscribe');
