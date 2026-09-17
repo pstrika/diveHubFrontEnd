@@ -220,7 +220,12 @@ class UserController extends Controller
                         Log::info('Starting phone verification for user ' . $user->id . ' -> ' . $e164);
                         $phoneVerificationStarted = \App\Services\PhoneVerificationService::start($user, $e164);
                         if (!$phoneVerificationStarted) {
-                            session()->flash('phoneError', 'A code was already sent recently - check your messages, or wait a bit before requesting another.');
+                            // start() returning false now covers two different
+                            // things: the resend cooldown, or the SMS genuinely
+                            // failing to send - kept generic since a diver can't
+                            // tell which happened either way (Pablo, 2026-09-16:
+                            // "it said send OTP, but I didn't receive anything").
+                            session()->flash('phoneError', "We couldn't send a code just now - if you requested one recently, check your messages; otherwise please try again in a moment.");
                         }
                     } else {
                         // International: nothing to verify (we have no SMS channel to

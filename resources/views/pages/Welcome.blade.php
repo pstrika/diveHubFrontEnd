@@ -183,9 +183,15 @@
                                 <span>Enter the code we texted to {{ $user->pending_phone }}</span>
                                 <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required>
                             </label>
+                            {{-- No "Skip this" here on purpose - once a code has actually
+                                 been sent to a real number, that has to be verified (or
+                                 abandoned via "Use a different number" below) rather than
+                                 walked away from mid-flow (Pablo, 2026-09-16: "we need for
+                                 the phone to be validated if the user didn't skip"). Skip
+                                 is only available before entering a number at all, or by
+                                 resetting back to that entry form. --}}
                             <div class="dh-wizard-actions">
                                 <button type="submit" class="dh-btn dh-btn-primary">Verify</button>
-                                <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl('comms') }}">Skip this</a>
                             </div>
                         </form>
                         <div class="dh-wizard-actions" style="margin-top: 4px;">
@@ -274,12 +280,22 @@
                                     <p class="dh-wizard-lead">Today's conditions, your upcoming trips, and picks built around the places and boats you chose - all in one place.</p>
                                 </div>
                                 <div class="dh-tour-slide" hidden>
-                                    <span class="material-icons-round dh-tour-icon" aria-hidden="true">directions_boat</span>
+                                    <span class="material-icons-round dh-tour-icon" aria-hidden="true">scuba_diving</span>
                                     <h2 class="dh-wizard-title">Find a trip</h2>
                                     <p class="dh-wizard-lead">Browse boats by date, region or your favorite operators, filtered to what your certification allows.</p>
                                 </div>
                                 <div class="dh-tour-slide" hidden>
-                                    <span class="material-icons-round dh-tour-icon" aria-hidden="true">waves</span>
+                                    <span class="material-icons-round dh-tour-icon" aria-hidden="true">calendar_month</span>
+                                    <h2 class="dh-wizard-title">Specialty calendars</h2>
+                                    <p class="dh-wizard-lead">Dedicated calendars for lobster season, shark dives, wreck diving and technical trips, plus a whole section for beach diving - browse by what you're into, not just by date.</p>
+                                </div>
+                                <div class="dh-tour-slide" hidden>
+                                    <span class="material-icons-round dh-tour-icon" aria-hidden="true">directions_boat</span>
+                                    <h2 class="dh-wizard-title">Dive operators</h2>
+                                    <p class="dh-wizard-lead">A large, growing database of Florida dive operators - many with a direct link to their online waiver, so you're never hunting for it right before a trip.</p>
+                                </div>
+                                <div class="dh-tour-slide" hidden>
+                                    <span class="material-icons-round dh-tour-icon" aria-hidden="true">cloud</span>
                                     <h2 class="dh-wizard-title">Weather</h2>
                                     <p class="dh-wizard-lead">Sea state and forecasts for every coast, so you know before you launch.</p>
                                 </div>

@@ -201,11 +201,18 @@ class OnboardingController extends Controller
                 if (\App\Support\PhoneNumber::isUs($e164)) {
                     $started = \App\Services\PhoneVerificationService::start($user, $e164);
                     if (!$started) {
-                        session()->flash('phoneError', 'A code was already sent recently - check your messages, or wait a bit before requesting another.');
+                        // start() returning false now covers two different
+                        // things: the resend cooldown, or the SMS genuinely
+                        // failing to send, in which case it also clears
+                        // pending_phone back to null - so the entry form
+                        // shows again here rather than a code box for a
+                        // code that was never actually sent (Pablo,
+                        // 2026-09-16: "it said send OTP, but I didn't
+                        // receive anything").
+                        session()->flash('phoneError', "We couldn't send a code just now - if you requested one recently, check your messages; otherwise please try again in a moment.");
+                        return redirect()->route('welcome', ['step' => 'phone'])->withInput();
                     }
-                    // Stay on this step either way so the code-entry form
-                    // shows (or the "wait a bit" message, on the existing
-                    // pending number).
+                    // Stay on this step so the code-entry form shows.
                     return redirect()->route('welcome', ['step' => 'phone']);
                 }
                 // International: save directly, nothing to verify.

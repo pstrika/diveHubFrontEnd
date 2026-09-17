@@ -36,7 +36,22 @@ class PhoneVerificationService
         $user->phone_verification_sent_at = now();
         $user->save();
 
-        SmsService::send($e164, "Your Divers Hub verification code is {$code}. It expires in " . self::CODE_TTL_MINUTES . ' minutes.');
+        // Used to always return true here regardless of whether Twilio
+        // actually accepted the message - SmsService::send() already
+        // reports that (false on missing config, an invalid number, or a
+        // rejected send), it just wasn't being checked. That's exactly how
+        // a caller could show "code sent!" while nothing went out (Pablo,
+        // 2026-09-16: "it said send OTP, but I didn't receive anything").
+        // Rolling the pending state back on a real failure also means the
+        // 30s resend cooldown doesn't block an immediate retry once
+        // whatever was wrong (config, number) is fixed.
+        $sent = SmsService::send($e164, "Your Divers Hub verification code is {$code}. It expires in " . self::CODE_TTL_MINUTES . ' minutes.');
+
+        if (!$sent) {
+            self::clearPending($user);
+            $user->save();
+            return false;
+        }
 
         return true;
     }
