@@ -97,7 +97,16 @@
     {!! $link('Marine forecast', route('Weather'), 'cloud') !!}
     {!! $link('Beach diving', route('BeachDiving'), 'beach_access') !!}
     {!! $link('Online waivers', route('Waivers'), 'assignment') !!}
-    {!! $link('Blog', route('Blog'), 'article') !!}
+</div>
+
+{{-- Own group rather than folded into "Operators and shore" (2026-09-17: "I
+     don't know in which drawer category to put it") - a blog post isn't a
+     task like the other groups' items, it's something to read, and this
+     leaves room for more reading material (FAQs, guides) without another
+     rename. --}}
+<div class="dh-menu-group">
+    <h6>Learn</h6>
+    {!! $link('Blog', route('Blog'), 'auto_stories') !!}
 </div>
 
 <div class="dh-menu-group">

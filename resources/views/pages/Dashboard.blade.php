@@ -71,6 +71,49 @@
                 because some divers use nothing else, but it is a poor first
                 impression and a bad use of the top of the page.
             --}}
+{{--
+    "From the blog" carousel (Pablo, 2026-09-17: "the first thing in the
+    My Dashboard"). One slide visible at a time, auto-advancing, dots to
+    jump directly - a small, purpose-built carousel rather than Bootstrap's
+    own (which would need its default look overridden anyway) or the
+    wizard tour's full-screen one (wrong shape for an inline dashboard
+    card). Posts and their order come from MyDashboardController -
+    App\Support\BlogPosts::forViewer(), ranked by the diver's own
+    certification level.
+--}}
+@if(!empty($blogPosts))
+<div class="row">
+    <div class="col-md-12">
+        <section class="dh-card">
+            <h2 class="dh-card-head">From the blog
+                <a class="dh-dash-headlink" href="{{ route('Blog') }}">See all</a></h2>
+            <div class="dh-card-body">
+                <div class="dh-mini-carousel" id="dhBlogCarousel">
+                    <div class="dh-mini-carousel-track">
+                        @foreach($blogPosts as $i => $bp)
+                            <a href="{{ route('Blog.show', $bp['slug']) }}" class="dh-mini-carousel-slide {{ $i === 0 ? 'is-active' : '' }}">
+                                <img src="{{ asset($bp['image']) }}" alt="" loading="lazy">
+                                <span class="dh-mini-carousel-body">
+                                    <span class="dh-blog-eyebrow">{{ $bp['category'] }}</span>
+                                    <span class="dh-mini-carousel-title">{{ $bp['title'] }}</span>
+                                </span>
+                            </a>
+                        @endforeach
+                    </div>
+                    @if(count($blogPosts) > 1)
+                        <div class="dh-mini-carousel-dots">
+                            @foreach($blogPosts as $i => $bp)
+                                <button type="button" class="dh-mini-carousel-dot {{ $i === 0 ? 'is-active' : '' }}" data-dh-carousel-dot="{{ $i }}" aria-label="Show article {{ $i + 1 }}"></button>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+@endif
+
 <div class="row dh-dash-cards">
                 {{---Card My Upcoming trips--}}
                 <div class="col-md-5 mb-4">
@@ -318,49 +361,6 @@
                         </div>
                     </section>
                 </div>
-
-                {{--
-                    "From the blog" carousel (Pablo, 2026-09-17: "a carousel in
-                    My dashboard rotating 4 or 5 articles...mini picture and
-                    title of article will be fine"). One slide visible at a
-                    time, auto-advancing, dots to jump directly - a small,
-                    purpose-built carousel rather than Bootstrap's own (which
-                    would need its default look overridden anyway) or the
-                    wizard tour's full-screen one (wrong shape for an inline
-                    dashboard card). Posts and their order come from
-                    MyDashboardController - App\Support\BlogPosts::forViewer(),
-                    ranked by the diver's own certification level.
-                --}}
-                @if(!empty($blogPosts))
-                <div class="col-md-12">
-                    <section class="dh-card">
-                        <h2 class="dh-card-head">From the blog
-                            <a class="dh-dash-headlink" href="{{ route('Blog') }}">See all</a></h2>
-                        <div class="dh-card-body">
-                            <div class="dh-mini-carousel" id="dhBlogCarousel">
-                                <div class="dh-mini-carousel-track">
-                                    @foreach($blogPosts as $i => $bp)
-                                        <a href="{{ route('Blog.show', $bp['slug']) }}" class="dh-mini-carousel-slide {{ $i === 0 ? 'is-active' : '' }}">
-                                            <img src="{{ asset($bp['image']) }}" alt="" loading="lazy">
-                                            <span class="dh-mini-carousel-body">
-                                                <span class="dh-blog-eyebrow">{{ $bp['category'] }}</span>
-                                                <span class="dh-mini-carousel-title">{{ $bp['title'] }}</span>
-                                            </span>
-                                        </a>
-                                    @endforeach
-                                </div>
-                                @if(count($blogPosts) > 1)
-                                    <div class="dh-mini-carousel-dots">
-                                        @foreach($blogPosts as $i => $bp)
-                                            <button type="button" class="dh-mini-carousel-dot {{ $i === 0 ? 'is-active' : '' }}" data-dh-carousel-dot="{{ $i }}" aria-label="Show article {{ $i + 1 }}"></button>
-                                        @endforeach
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </section>
-                </div>
-                @endif
             </div>
 
             {{--

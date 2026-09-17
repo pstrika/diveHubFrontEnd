@@ -14,9 +14,12 @@ use App\Support\BlogPosts;
  * arrays become a Post model and its static methods become queries - same
  * shape either way, so nothing here gets thrown away.
  *
- * Authorship (Pablo, 2026-09-17: "anybody that is user type Creator") maps
- * onto the role that already exists on User - App\Models\User::isCreator()
- * (role_id == 2) - never previously used anywhere in the app.
+ * Authorship (Pablo, 2026-09-17: "anybody that is user type Creator", then
+ * "both Creator and Admins can create articles") is
+ * User::isCreator() (role_id == 2, never previously used anywhere in the
+ * app) OR User::isAdmin() (role_id == 1) - the same pairing Public Groups'
+ * one-per-admin exemption already checks, so the future authoring screen's
+ * gate is `$user->isCreator() || $user->isAdmin()`.
  */
 class BlogController extends Controller
 {
