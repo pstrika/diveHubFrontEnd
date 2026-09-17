@@ -1733,6 +1733,13 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-profile-avatar-edit .material-icons-round { font-size: 16px; }
 .dh-profile-avatar-edit:hover { background: var(--dh-deep); }
 .dh-profile-who h5 { font-weight: 800; color: var(--dh-ink); }
+.dh-google-badge {
+  display: inline-flex; align-items: center; gap: 5px; margin-top: 6px;
+  font-size: .72rem; font-weight: 700; color: var(--dh-muted);
+  background: var(--dh-sand); border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill);
+  padding: 3px 10px 3px 8px;
+}
+.dh-google-badge img { display: block; }
 
 .dh-profile-card { border: 1px solid var(--dh-line); border-radius: 12px; margin-bottom: var(--dh-space-4); }
 .dh-profile-card-head { padding: 14px 16px 0; }
@@ -1741,6 +1748,56 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-profile-edit-btn { display: inline-flex; color: var(--dh-sea); cursor: pointer; }
 .dh-profile-edit-btn .material-icons-round { font-size: 18px; }
 .dh-profile-edit-btn:hover { color: var(--dh-deep); }
+
+/* My Profile redesign (2026-09-17): compact themed replacements for the old
+   Material Dashboard noUiSlider (certLevel, show-dives-within-level) and the
+   Choices.js multi-select (favorite operators/locations) - neither is used
+   anywhere else on the site (Pablo: "fav operators and fav location picker
+   is something we don't use anywhere else"). Selects and the .dh-choice
+   tile grid (already used by the welcome wizard) replace them so this page
+   only speaks the one visual language the rest of the redesign already
+   uses, and level values always render as their translated name (Open
+   Water, etc.) instead of a raw number. */
+/* x-dh-select: a themed dropdown, not a native <select> - the popup list
+   on a native select renders with the OS's own chrome and font, completely
+   outside the page's CSS (Pablo, 2026-09-17: "I really hate the native
+   dropdowns...I'm ok with dropdowns, but not the system natives"). This is
+   a button + an absolutely positioned <ul> the page's own CSS fully
+   controls, with a hidden input carrying the real value. */
+.dh-select { position: relative; }
+.dh-select-btn {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 12px 14px; font-size: 1rem; font-family: inherit; color: var(--dh-ink); text-align: left;
+  background: #fff; border: 1px solid var(--dh-line); border-radius: 12px; cursor: pointer;
+}
+.dh-select-btn:focus-visible { outline: none; border-color: var(--dh-sea); box-shadow: 0 0 0 3px rgba(14,124,158,.15); }
+.dh-select-btn:disabled { background-color: var(--dh-sand); color: var(--dh-muted); cursor: not-allowed; }
+.dh-select-btn .material-icons-round { font-size: 20px; color: var(--dh-muted); flex: 0 0 auto; }
+.dh-select-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dh-select-menu {
+  position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; right: 0;
+  background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(11,42,58,.16); list-style: none; margin: 0; padding: 6px;
+  max-height: 260px; overflow-y: auto;
+}
+.dh-select-menu li { padding: 9px 10px; border-radius: 8px; cursor: pointer; font-size: .92rem; color: var(--dh-ink); }
+.dh-select-menu li:hover { background: var(--dh-foam); }
+.dh-select-menu li.is-selected { background: var(--dh-foam); color: var(--dh-deep); font-weight: 700; }
+.dh-hint { font-size: .78rem; color: var(--dh-muted); margin: 6px 0 0; line-height: 1.45; }
+.dh-level-row { display: flex; align-items: center; gap: 10px; }
+.dh-level-row select { flex: 1; }
+.dh-range-row { display: flex; gap: 12px; }
+.dh-range-row .dh-field { flex: 1; margin-bottom: 0; }
+.dh-chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.dh-fav-empty { font-size: .85rem; color: var(--dh-muted); font-style: italic; margin: 0; }
+.dh-choice-toolbar { margin-bottom: 10px; }
+.dh-choice-toolbar input {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--dh-line); border-radius: 10px;
+  font-size: .9rem; font-family: inherit;
+}
+.dh-choice-toolbar input:focus { outline: none; border-color: var(--dh-sea); box-shadow: 0 0 0 3px rgba(14,124,158,.15); }
+.dh-choice-scroll { max-height: 360px; overflow-y: auto; padding-right: 4px; }
+.dh-profile-savebar { position: sticky; bottom: 12px; }
 
 /* Verify-phone modal. */
 .dh-verify-code-input { text-align: center; font-size: 1.4rem; font-weight: 800; letter-spacing: .3em; }

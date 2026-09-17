@@ -5,58 +5,6 @@
 
         <div class="container-fluid py-0 dh-board">
 
-            <!-- Customize slider colors -->
-            <style>
-                .choices__list .choices__item--selectable.is-highlighted {
-                    background-color: #2F88EC;
-                    color: white;
-                }
-                
-                {{--Code to change the color of the input text--}}
-                .input-group.input-group-dynamic .form-control, .input-group.input-group-dynamic .form-control:focus, .input-group.input-group-static .form-control, .input-group.input-group-static .form-control:focus {
-                    background-image: linear-gradient(0deg, #2F88EC 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #d2d2d2 1px, rgba(209, 209, 209, 0) 0);
-                    border-radius: 0 !important;
-                }
-
-                .input-group.input-group-dynamic.is-focused label, .input-group.input-group-static.is-focused label {
-                    color: #2F88EC;
-                }
-
-                {{--This rule is to change the color of the line for input multiple--}}
-                .choices .choices__input {
-                    background-image: linear-gradient(0deg, #2F88EC 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #d2d2d2 1px, rgba(209, 209, 209, 0) 0);
-                    background-size: 0 100%, 100% 100%;
-                }
-                {{---This rule changes the color of the pill on a seleted multiple input--}}
-                .choices__list--multiple .choices__item {
-                    display: inline-block;
-                    vertical-align: middle;
-                    border-radius: 20px;
-                    padding: 4px 10px;
-                    font-size: 12px;
-                    font-weight: 500;
-                    margin-right: 3.75px;
-                    margin-bottom: 3.75px;
-                    background-color: #2F88EC;
-                    border: 1px solid #2F88EC;
-                    color: #ffffff;
-                    word-break: break-all;
-                    box-sizing: border-box;
-                }
-
-                {{--This rules changes the background of the multi choice: set to white here--}}
-                .choices.is-disabled .choices__inner, .choices.is-disabled .choices__input {
-                    background-color: #ffffff;
-                    cursor: not-allowed;
-                    -webkit-user-select: none;
-                    -ms-user-select: none;
-                    -moz-user-select: none;
-                    user-select: none;
-                }
-   
-            </style>
-
-
             <meta name="csrf-token" content="{{ csrf_token() }}">
 
             {{--modal change pwd--}}
@@ -65,14 +13,12 @@
                     <div class="modal-content">
                         <div class="modal-header text-center">
                             <h6 class="modal-title font-weight-normal" id="modal-title-notification">Change password</h6>
-                            {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
                             </button>
                         </div>
                         <div class="modal-body">
-                        
+
                             <div class="card mt-4" id="password">
                                 <div class="card-header">
-                                    {{--<h5>Change Password</h5>--}}
                                     @if (session('error'))
                                     <div class="row">
                                         <div class="alert alert-danger alert-dismissible text-white" role="alert">
@@ -134,7 +80,6 @@
                     <div class="modal-content">
                         <div class="modal-header text-center">
                             <h6 class="modal-title font-weight-normal" id="modal-title-notification">Notification</h6>
-                            {{--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">--}}
                             <span aria-hidden="true">×</span>
                             </button>
                         </div>
@@ -147,8 +92,8 @@
                             <div  class="form-control border dropzone" id="myDropzone"></div>
                             <div class="modal-footer">
                                 <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button class="btn bg-gradient-info ms-auto" id="upload-pics-button" title="Delete" onclick="">Crop and upload</button> {{---type="submit"----}}
-                                
+                                <button class="btn bg-gradient-info ms-auto" id="upload-pics-button" title="Delete" onclick="">Crop and upload</button>
+
                             </div>
                             </div>
                         </div>
@@ -166,7 +111,10 @@
                         </div>
                         <div class="modal-body">
                             @if(session('phoneError'))
-                                <p class="text-danger text-sm">{{ session('phoneError') }}</p>
+                                <p class="dh-comms-note dh-comms-warn">
+                                    <span class="material-icons-round" aria-hidden="true">error_outline</span>
+                                    {{ session('phoneError') }}
+                                </p>
                             @endif
                             @if($user->pending_phone)
                                 <p class="text-sm text-secondary">We texted a 6-digit code to <b>{{ \App\Support\PhoneNumber::display($user->pending_phone) }}</b>. Enter it below.</p>
@@ -199,235 +147,295 @@
                 <div class="dh-profile-who">
                     <h5 class="mb-1">{{ $user->name }}</h5>
                     <p class="mb-0 text-sm text-muted">{{ $user->email }}</p>
+                    @if($user->google_id)
+                        <span class="dh-google-badge">
+                            <img src="{{ asset('assets') }}/img/icons/google_icon.webp" alt="" width="14" height="14">
+                            Signed in with Google
+                        </span>
+                    @endif
                 </div>
             </section>
 
-            <section class="dh-panel">
-                <form id="myForm" class="multisteps-form__form" action="{{ route('overview') }}" method="POST" enctype="multipart/form-data">
-                    @csrf <!-- Add CSRF token for security -->
-                    <div class="row">
-                        <div class="row mt-3">
-                            <div class="col-12 col-md-6 col-xl-4 position-relative">
-                                {{--Card Contact information--}}
-                                <div class="dh-profile-card">
-                                    <div class="dh-profile-card-head dh-panel-head-row">
-                                        <h6 class="dh-panel-title">Contact information</h6>
-                                        <span id="editContactButton" class="dh-profile-edit-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit contact information...">
-                                            <span class="material-icons-round" aria-hidden="true">edit</span>
-                                        </span>
-                                    </div>
-                                    <div class="dh-profile-card-body">
+            @php
+                $favOperatorIds = $favOperators->pluck('id')->all();
+                $favLocationIds = $favLocations->pluck('id')->all();
+                $groupedLocations = $locations->map(fn ($l) => [
+                    'id' => $l->id,
+                    'name' => ucwords($l->location),
+                    'coast' => \App\Support\Coast::label(\App\Support\Coast::forCode($l->short)),
+                ])->groupBy('coast');
+            @endphp
 
-                                        <div class="input-group input-group-dynamic">
-                                            <label id="labelName" for="exampleFormControlInput1" class="form-label"></label>
-                                            <input disabled id="name" class="multisteps-form__input form-control" type="text" name="name" value="{{ $user->name }}"/>
-                                        </div>
+            <form id="myForm" action="{{ route('overview') }}" method="POST" enctype="multipart/form-data">
+                @csrf
 
-                                        <div class="input-group input-group-dynamic mt-4">
-                                            <label id="labelPhone" for="exampleFormControlInput1" class="form-label"></label>
-                                            <input disabled id="phone" class="multisteps-form__input form-control" type="text" name="phone" value="{{ \App\Support\PhoneNumber::display($user->phone) }}" placeholder="10-digit US number, or +country code"/>
-                                        </div>
-                                        <p class="dh-comms-note mt-1">US numbers (10 or 11 digits) get a text verification code. Any other well-formatted international number (with country code) works for WhatsApp only.</p>
-
-                                        @if(session('phoneError') && !session('phoneVerificationStarted'))
-                                            <p class="text-danger text-sm mb-0">{{ session('phoneError') }}</p>
-                                        @endif
-
-                                        @if($user->pending_phone)
-                                            <p class="dh-comms-note dh-comms-warn">
-                                                <span class="material-icons-round" aria-hidden="true">pending</span>
-                                                Verifying {{ \App\Support\PhoneNumber::display($user->pending_phone) }} -
-                                                <a href="#" onclick="event.preventDefault(); showModalVerifyPhone();">enter the code</a>
-                                            </p>
-                                        @endif
-
-                                        <a href="#" onclick="showModalChangePassword();">
-                                            <span class="dh-btn dh-btn-ghost-dark mt-2">Change password</span>
-                                        </a>
-
-                                    </div>
-                                </div>
-
-                                {{--Card Certifican Level--}}
-                                <div class="dh-profile-card">
-                                    <div class="dh-profile-card-head dh-panel-head-row">
-                                        <h6 class="dh-panel-title">Certification level</h6>
-                                        <span id="editCertButton" class="dh-profile-edit-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit certification level...">
-                                            <span class="material-icons-round" aria-hidden="true">edit</span>
-                                        </span>
-                                    </div>
-                                    <div class="dh-profile-card-body">
-
-                                        <div class="mt-n2">
-                                            <input type="hidden" id="slider-value" name="level">
-                                            <label class="mt-0 mx-n1" id="labelLevel">Level</label>
-                                            <div class="slider-styled" id="sliderLevel"></div>
-                                        </div>
-
-                                        {{-- Communication preferences: the consent screen. One component so the
-                                             wording here is the same as in the welcome wizard and the same as the
-                                             text recorded against the consent (Twilio A2P 10DLC). --}}
-                                        <h6 class="text-uppercase text-body text-xs mt-5 font-weight-bolder" id="communication-preferences">Communication preferences</h6>
-                                        <x-comms-preferences :user="$user" />
-
-                                        <h6 class="text-uppercase text-body text-xs mt-4 font-weight-bolder">Preferences</h6>
-                                        <ul class="list-group">
-                                        </ul>
-
-                                        <ul class="list-group">
-                                            <li class="list-group-item border-0 px-0">
-                                                <div class="form-check form-switch ps-0">
-                                                    <input name="firstDayOfWeek" class="form-check-input ms-auto" type="checkbox"
-                                                        id="firstDayOfWeek" {{ $user->firstDayOfWeek ? "checked" : ""}} value="1">
-                                                    <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                        for="firstDayOfWeek">Set Monday as the first day of the week</label>
-                                                </div>
-                                            </li>
-                                        </ul>
-
-                                        <ul class="list-group">
-                                            <li class="list-group-item border-0 px-0">
-                                                <div class="form-check form-switch ps-0">
-                                                    <input name="show_visited" class="form-check-input ms-auto" type="checkbox"
-                                                        id="show_visited" {{ $user->show_visited ? "checked" : ""}} value="1">
-                                                    <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                        for="show_visited">Highlight sites already visited in upcoming trips</label>
-                                                </div>
-                                            </li>
-                                        </ul>
-
-                                        <ul class="list-group">
-                                            <li class="list-group-item border-0 px-0">
-                                                <div class="form-check form-switch ps-0">
-                                                    <input name="deco_unit" class="form-check-input ms-auto" type="checkbox"
-                                                        id="deco_unit" {{ $user->deco_unit ? "checked" : ""}} value="1">
-                                                    <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                        for="deco_unit">Use metric units for deco planning (default imperial)</label>
-                                                </div>
-                                            </li>
-                                        </ul>
-
-                                        <h6 class="text-uppercase text-body text-xs mt-4 font-weight-bolder">Accessibility</h6>
-                                        <ul class="list-group">
-                                            <li class="list-group-item border-0 px-0">
-                                                <div class="form-check form-switch ps-0">
-                                                    <input name="pinch_zoom_enabled" class="form-check-input ms-auto" type="checkbox"
-                                                        id="pinch_zoom_enabled" {{ $user->pinch_zoom_enabled ? "checked" : ""}} value="1">
-                                                    <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                        for="pinch_zoom_enabled">Allow pinch-to-zoom in the installed app</label>
-                                                </div>
-                                            </li>
-                                        </ul>
-
-
-                                    </div>
-                                </div>
+                <div class="dh-panel-cols">
+                    <div>
+                        {{-- Contact information --}}
+                        <div class="dh-profile-card">
+                            <div class="dh-profile-card-head dh-panel-head-row">
+                                <h6 class="dh-panel-title">Contact information</h6>
+                                <span id="editContactButton" class="dh-profile-edit-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit contact information...">
+                                    <span class="material-icons-round" aria-hidden="true">edit</span>
+                                </span>
                             </div>
-                            <div class="col-12 col-md-6 col-xl-8 mt-md-0 mt-4 position-relative">
-                                {{-- Favorite Operators--}}
-                                <div class="dh-profile-card">
-                                    <div class="dh-profile-card-head dh-panel-head-row">
-                                        <h6 class="dh-panel-title">Favorite operators</h6>
-                                        <span id="editFavOpeButton" class="dh-profile-edit-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit Favorite operators...">
-                                            <span class="material-icons-round" aria-hidden="true">edit</span>
-                                        </span>
-                                    </div>
-                                    <div class="dh-profile-card-body">
-                                        <input type="hidden" id="intentEditFavOperators" name="intentEditFavOperators" value="0">
-                                        <div>
-                                            <select id="favOperators" class="form-control" name="favOperators[]" multiple>
-                                                @foreach($operators as $operator)
-                                                    <option value="{{ $operator->id }}">{{ $operator->operatorName }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
+                            <div class="dh-profile-card-body">
+                                <div class="dh-field">
+                                    <label for="name">Name</label>
+                                    <input disabled id="name" type="text" name="name" value="{{ $user->name }}">
                                 </div>
 
-                                {{-- Favorite Locations--}}
-                                <div class="dh-profile-card">
-                                    <div class="dh-profile-card-head dh-panel-head-row">
-                                        <h6 class="dh-panel-title">Favorite locations</h6>
-                                        <span id="editFavLocButton" class="dh-profile-edit-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit Favorite locations...">
-                                            <span class="material-icons-round" aria-hidden="true">edit</span>
-                                        </span>
-                                    </div>
-                                    <div class="dh-profile-card-body">
-                                        <input type="hidden" id="intentEditFavLocations" name="intentEditFavLocations" value="0">
-                                        <div>
-                                            <select id="favLocations" class="form-control" name="favLocations[]" multiple>
-                                                @foreach($locations as $location)
-                                                    <option value="{{ $location->id }}">{{ $location->location }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
+                                <div class="dh-field">
+                                    <label for="phone">Mobile number</label>
+                                    <input disabled id="phone" type="text" name="phone" value="{{ \App\Support\PhoneNumber::display($user->phone) }}" placeholder="10-digit US number, or +country code">
                                 </div>
+                                <p class="dh-hint">US numbers (10 or 11 digits) get a text verification code. Any other well-formatted international number (with country code) works for WhatsApp only.</p>
 
-                                {{-- Show Dives--}}
-                                <div class="dh-profile-card">
-                                    <div class="dh-profile-card-head">
-                                        <h6 class="dh-panel-title">Show dives</h6>
-                                        <p class="text-wrap text-xs text-body">Diver's Hub will use your "Favorite Operators" to prioritize what trips to show. You can choose to use "Favorite Locations" as your main filter criteria.</p>
-                                    </div>
-                                    <div class="dh-profile-card-body">
-                                        <ul class="list-group">
-                                            <li class="list-group-item border-0 px-0">
-                                                <div class="form-check form-switch ps-0">
-                                                    <input name="prefersLocation" class="form-check-input ms-auto" type="checkbox"
-                                                        id="prefersLocation" {{ $user->prefersLocation ? "checked" : ""}} value="1">
-                                                    <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                        for="prefersLocation">Use "Favorite Locations" to show me dive trips</label>
-                                                </div>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
+                                @if(session('phoneError') && !session('phoneVerificationStarted'))
+                                    <p class="dh-hint" style="color: var(--dh-danger);">{{ session('phoneError') }}</p>
+                                @endif
 
-                                {{-- Show Levels--}}
-                                <div class="dh-profile-card">
-                                    <div class="dh-profile-card-head dh-panel-head-row">
-                                        <h6 class="dh-panel-title">Show dives within level</h6>
-                                        <span id="buttonEditShowLevel" class="dh-profile-edit-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit level range...">
-                                            <span class="material-icons-round" aria-hidden="true">edit</span>
-                                        </span>
-                                    </div>
-                                    <div class="dh-profile-card-body">
-                                        <p class="text-wrap text-xs text-body mt-n2">Select range level to show as favorites</p>
-                                        <div class="mt-n2">
-                                            <input type="hidden" id="slider-valueLow" name="levelLow">
-                                            <input type="hidden" id="slider-valueHigh" name="levelHigh">
-                                            <label class="mt-0 mx-n1 text-start" id="labelSliderFilterLow">Level Low</label>
-                                            <div class="text-end" style="float: right;">
-                                                <label class="mt-0 mx-n1 text-end" id="labelSliderFilterHigh">Level High</label>
-                                            </div>
-                                            <div class="slider-styled" id="sliderLevelFilter"></div>
-                                        </div>
-                                    </div>
-                                </div>
+                                @if($user->pending_phone)
+                                    <p class="dh-comms-note dh-comms-warn">
+                                        <span class="material-icons-round" aria-hidden="true">pending</span>
+                                        Verifying {{ \App\Support\PhoneNumber::display($user->pending_phone) }} -
+                                        <a href="#" onclick="event.preventDefault(); showModalVerifyPhone();">enter the code</a>
+                                    </p>
+                                @endif
 
-                                <div class="text-end mt-5" id="divButton" style="display: none;">
-                                    <button class="dh-btn dh-btn-primary ms-auto" id="submit-all" title="Send" onclick="submitform()">Submit</button>
-                                </div>
+                                <a href="#" onclick="showModalChangePassword();" class="dh-btn dh-btn-ghost-dark mt-2" style="display: inline-flex;">Change password</a>
                             </div>
-                        
                         </div>
-                        
+
+                        {{-- Certification level --}}
+                        <div class="dh-profile-card">
+                            <div class="dh-profile-card-head dh-panel-head-row">
+                                <h6 class="dh-panel-title">Certification level</h6>
+                                <span id="editCertButton" class="dh-profile-edit-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit certification level...">
+                                    <span class="material-icons-round" aria-hidden="true">edit</span>
+                                </span>
+                            </div>
+                            <div class="dh-profile-card-body">
+                                <div class="dh-level-row">
+                                    @if(!is_null($user->certLevel))
+                                        <x-dive-level.icon :level="$user->certLevel" height="32" />
+                                    @else
+                                        <span class="material-icons-round" aria-hidden="true" style="color: var(--dh-line); font-size: 32px;">help_outline</span>
+                                    @endif
+                                    @php
+                                        $certLevelOptions = collect(\App\Support\DiveLevel::all())
+                                            ->mapWithKeys(fn ($lvl) => [$lvl['value'] => $lvl['name'] . ' (' . $lvl['code'] . ')'])
+                                            ->all();
+                                    @endphp
+                                    <x-dh-select name="level" :options="$certLevelOptions" :selected="is_null($user->certLevel) ? null : (int) $user->certLevel" placeholder="Not set" />
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Preferences --}}
+                        <div class="dh-profile-card">
+                            <div class="dh-profile-card-head">
+                                <h6 class="dh-panel-title">Preferences</h6>
+                            </div>
+                            <div class="dh-profile-card-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item border-0 px-0">
+                                        <div class="form-check form-switch ps-0">
+                                            <input name="firstDayOfWeek" class="form-check-input ms-auto" type="checkbox"
+                                                id="firstDayOfWeek" {{ $user->firstDayOfWeek ? "checked" : ""}} value="1">
+                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
+                                                for="firstDayOfWeek">Set Monday as the first day of the week</label>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item border-0 px-0">
+                                        <div class="form-check form-switch ps-0">
+                                            <input name="show_visited" class="form-check-input ms-auto" type="checkbox"
+                                                id="show_visited" {{ $user->show_visited ? "checked" : ""}} value="1">
+                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
+                                                for="show_visited">Highlight sites already visited in upcoming trips</label>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item border-0 px-0">
+                                        <div class="form-check form-switch ps-0">
+                                            <input name="deco_unit" class="form-check-input ms-auto" type="checkbox"
+                                                id="deco_unit" {{ $user->deco_unit ? "checked" : ""}} value="1">
+                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
+                                                for="deco_unit">Use metric units for deco planning (default imperial)</label>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {{-- Accessibility --}}
+                        <div class="dh-profile-card">
+                            <div class="dh-profile-card-head">
+                                <h6 class="dh-panel-title">Accessibility</h6>
+                            </div>
+                            <div class="dh-profile-card-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item border-0 px-0">
+                                        <div class="form-check form-switch ps-0">
+                                            <input name="pinch_zoom_enabled" class="form-check-input ms-auto" type="checkbox"
+                                                id="pinch_zoom_enabled" {{ $user->pinch_zoom_enabled ? "checked" : ""}} value="1">
+                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
+                                                for="pinch_zoom_enabled">Allow pinch-to-zoom in the installed app</label>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
-                </form>
-            </section>
+
+                    <div>
+                        {{-- Communication preferences: unchanged from the wizard's wording/component. --}}
+                        <div class="dh-profile-card">
+                            <div class="dh-profile-card-head">
+                                <h6 class="dh-panel-title">Communication preferences</h6>
+                            </div>
+                            <div class="dh-profile-card-body">
+                                <x-comms-preferences :user="$user" />
+                            </div>
+                        </div>
+
+                        {{-- Favorite Operators--}}
+                        <div class="dh-profile-card">
+                            <div class="dh-profile-card-head dh-panel-head-row">
+                                <h6 class="dh-panel-title">Favorite operators</h6>
+                                <span id="editFavOpeButton" class="dh-profile-edit-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit Favorite operators...">
+                                    <span class="material-icons-round" aria-hidden="true">edit</span>
+                                </span>
+                            </div>
+                            <div class="dh-profile-card-body">
+                                <input type="hidden" id="intentEditFavOperators" name="intentEditFavOperators" value="0">
+
+                                <div id="favOperatorsRead" class="dh-chip-row">
+                                    @forelse($favOperators as $op)
+                                        <span class="chip chip-static">{{ $op->operatorName }}</span>
+                                    @empty
+                                        <p class="dh-fav-empty">No favorite operators yet.</p>
+                                    @endforelse
+                                </div>
+
+                                <div id="favOperatorsEdit" hidden>
+                                    <div class="dh-choice-toolbar">
+                                        <input type="text" id="favOperatorsSearch" placeholder="Search operators…">
+                                    </div>
+                                    <div class="dh-wizard-choices-compact dh-choice-scroll">
+                                        @foreach($operators as $op)
+                                            <label class="dh-choice dh-choice-op" data-name="{{ strtolower($op->operatorName) }}">
+                                                <input type="checkbox" name="favOperators[]" value="{{ $op->id }}" disabled @if(in_array($op->id, $favOperatorIds, true)) checked @endif>
+                                                <span class="dh-choice-body">
+                                                    @if($op->logoUrl)<img src="{{ asset('assets') }}{{ $op->logoUrl }}" alt="" loading="lazy">@endif
+                                                    <span class="dh-choice-title">{{ $op->operatorName }}</span>
+                                                    <span class="dh-choice-sub">{{ $op->cityAddress }}@if($op->tec) · tech @endif</span>
+                                                </span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Favorite Locations--}}
+                        <div class="dh-profile-card">
+                            <div class="dh-profile-card-head dh-panel-head-row">
+                                <h6 class="dh-panel-title">Favorite locations</h6>
+                                <span id="editFavLocButton" class="dh-profile-edit-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit Favorite locations...">
+                                    <span class="material-icons-round" aria-hidden="true">edit</span>
+                                </span>
+                            </div>
+                            <div class="dh-profile-card-body">
+                                <input type="hidden" id="intentEditFavLocations" name="intentEditFavLocations" value="0">
+
+                                <div id="favLocationsRead" class="dh-chip-row">
+                                    @forelse($favLocations as $loc)
+                                        <span class="chip chip-static">{{ ucwords($loc->location) }}</span>
+                                    @empty
+                                        <p class="dh-fav-empty">No favorite locations yet.</p>
+                                    @endforelse
+                                </div>
+
+                                <div id="favLocationsEdit" hidden>
+                                    <div class="dh-choice-toolbar">
+                                        <input type="text" id="favLocationsSearch" placeholder="Search locations…">
+                                    </div>
+                                    <div class="dh-choice-scroll">
+                                        @foreach($groupedLocations as $coast => $locs)
+                                            <h2 class="dh-wizard-group">{{ $coast }}</h2>
+                                            <div class="dh-wizard-choices-compact">
+                                                @foreach($locs as $loc)
+                                                    <label class="dh-choice" data-name="{{ strtolower($loc['name']) }}">
+                                                        <input type="checkbox" name="favLocations[]" value="{{ $loc['id'] }}" disabled @if(in_array($loc['id'], $favLocationIds, true)) checked @endif>
+                                                        <span class="dh-choice-body"><span class="dh-choice-title">{{ $loc['name'] }}</span></span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Show Dives--}}
+                        <div class="dh-profile-card">
+                            <div class="dh-profile-card-head">
+                                <h6 class="dh-panel-title">Show dives</h6>
+                                <p class="dh-hint" style="margin-top: 6px;">Divers Hub will use your "Favorite Operators" to prioritize what trips to show. You can choose to use "Favorite Locations" as your main filter criteria instead.</p>
+                            </div>
+                            <div class="dh-profile-card-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item border-0 px-0">
+                                        <div class="form-check form-switch ps-0">
+                                            <input name="prefersLocation" class="form-check-input ms-auto" type="checkbox"
+                                                id="prefersLocation" {{ $user->prefersLocation ? "checked" : ""}} value="1">
+                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
+                                                for="prefersLocation">Use "Favorite Locations" to show me dive trips</label>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {{-- Show Levels--}}
+                        <div class="dh-profile-card">
+                            <div class="dh-profile-card-head dh-panel-head-row">
+                                <h6 class="dh-panel-title">Show dives within level</h6>
+                                <span id="buttonEditShowLevel" class="dh-profile-edit-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit level range...">
+                                    <span class="material-icons-round" aria-hidden="true">edit</span>
+                                </span>
+                            </div>
+                            <div class="dh-profile-card-body">
+                                <p class="dh-hint" style="margin-top: 0;">Select a level range to show as favorites.</p>
+                                @php
+                                    $rangeLevelOptions = collect(\App\Support\DiveLevel::all())->mapWithKeys(fn ($lvl) => [$lvl['value'] => $lvl['short']])->all();
+                                @endphp
+                                <div class="dh-range-row">
+                                    <div class="dh-field">
+                                        <label for="levelLow">From</label>
+                                        <x-dh-select name="levelLow" :options="$rangeLevelOptions" :selected="$showLevelLow" />
+                                    </div>
+                                    <div class="dh-field">
+                                        <label for="levelHigh">To</label>
+                                        <x-dh-select name="levelHigh" :options="$rangeLevelOptions" :selected="$showLevelHigh" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-end mt-4 dh-profile-savebar" id="divButton" style="display: none;">
+                    <button class="dh-btn dh-btn-primary" id="submit-all" type="submit" title="Save changes">Save changes</button>
+                </div>
+            </form>
         </div>
         <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
     </main>
-    {{--<x-plugins></x-plugins>--}}
     @push('js')
     <script src="{{ asset('assets') }}/js/plugins/perfect-scrollbar.min.js"></script>
-    {{--<script src="{{ asset('assets') }}/js/plugins/nouislider.min.js"></script>--}}
-    <script src="{{ asset('assets') }}/js/plugins/nouislider.js"></script>
-    <link href="{{ asset('assets') }}/css/nouislider.css" rel="stylesheet">
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     <script src="{{ asset('assets') }}/js/core/bootstrap.min.js" type="text/javascript"></script>
-    <script src="{{ asset('assets') }}/js/plugins/choices.min.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/dropzone.min.js"></script>
 
     {{-- Cropper.js 1.6.2, vendored. The unpinned CDN link this page used to load
@@ -439,6 +447,7 @@
 
     <script>
         var divButton = document.getElementById('divButton');
+        function revealSave() { divButton.style.display = 'block'; }
     </script>
 
     <script>
@@ -458,15 +467,13 @@
             acceptedFiles: ".jpeg,.jpg,.png,.gif,.webp", // Specify accepted file types
             parallelUploads: 1, // Number of parallel uploads
             maxFiles: 1,
-            //uploadMultiple: true, // Allow multiple files to be uploaded together
             addRemoveLinks: true, // Show remove links for uploaded files
             method: "post", // sets the form method to PUT
             resizeWidth: 800,
-            //chunking: true,
             paramName: "img_file",
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                
+
             },
             queuecomplete: function (file, response) {
                 window.location.href = '{{ route("overview") }}';
@@ -475,20 +482,19 @@
             sending: function(file, xhr, formData) {
                 // Add metadata to formData
                 formData.append('userId', ' {{ $user->id }}'); // Replace with actual data
-                // ... add other metadata as needed ...
             },
 
             init: function () {
                 var submitButton = document.querySelector("#upload-pics-button");
                 var myDropzone = this;
-                
+
 
                 // Manually trigger form submission when button is clicked
                 submitButton.addEventListener("click", function (e) {
                     e.preventDefault();
                     e.stopPropagation();
                     $('#modal-upload').modal('show'); // Show the moda
-                    myDropzone.processQueue();  
+                    myDropzone.processQueue();
                 });
 
                 // Handle successful uploads
@@ -501,7 +507,7 @@
                     console.error("Error uploading file:", file.name, errorMessage);
                 });
             },
-        
+
             transformFile: function(file, done) {
                 // Create Dropzone reference for use in confirm button click handler
                 var myDropZone = this;
@@ -537,9 +543,9 @@
                         myDropZone.options.thumbnailWidth,
                         myDropZone.options.thumbnailHeight,
                         myDropZone.options.thumbnailMethod,
-                        false, 
+                        false,
                         function(dataURL) {
-                        
+
                         // Update the Dropzone file thumbnail
                         myDropZone.emit('thumbnail', file, dataURL);
                         // Return the file to Dropzone
@@ -553,256 +559,143 @@
                 var image = new Image();
                 image.src = URL.createObjectURL(file);
                 editor.appendChild(image);
-                
+
                 // Create Cropper.js
                 var cropper = new Cropper(image, { aspectRatio: 1 });
                 },
         };
     </script>
 
-
-    {{-- Slider script--}}
+    {{-- Edit-to-unlock toggles: contact info, certification level, level
+         range. Simple boolean switches elsewhere on the page have no lock -
+         they always submit their real state - only these richer fields
+         start disabled so an untouched field never overwrites itself. --}}
     <script>
-        var slider = document.getElementById('sliderLevel');
-        var label = document.getElementById('labelLevel');
-        var sliderValueInput = document.getElementById('slider-value');
-        var buttonEditCert = document.getElementById('editCertButton'); // Replace with your button ID
-
-        var sliderFilter = document.getElementById('sliderLevelFilter');
-        var labelSliderFilterLow = document.getElementById('labelSliderFilterLow');
-        var labelSliderFilterHigh = document.getElementById('labelSliderFilterHigh');
-        var sliderValueLowInput = document.getElementById('slider-valueLow');
-        var sliderValueHighInput = document.getElementById('slider-valueHigh');
-        
-        
-
-        // Define the level names
-        var levelNames = [
-            'Open Water',
-            'Advanced Open Water',
-            'Tec ANDP',
-            'Tec Trimix Normoxic',
-            'Tec Trimix Hypoxic'
-        ];
-
-        noUiSlider.create(slider, {
-            start: 0,
-            connect: [true, false],
-            range: {
-                'min': 0,
-                'max': 4
-            },
-            step: 1,
-            pips: {
-                mode: 'steps',
-                density: 1000,
-                format: {
-                    to: function (value) {
-                        return ''; // Hide all labels
-                    }
-                }
-            },
-            
-            
-        
-        
-        });
-        
-        // Hide the tick mark labels
-        var tickLabels = slider.querySelectorAll('.noUi-value-sub');
-        tickLabels.forEach(function (label) {
-            label.style.display = 'none';
-        });
-        
-        // Listen for the 'update' event
-        slider.noUiSlider.on('update', function (values, handle) {
-            label.textContent = levelNames[parseInt(values[handle])];
-            var sliderValue = values[handle];
-            sliderValueInput.value = parseInt(sliderValue);
-        });
-
-        slider.noUiSlider.set({{ $user->certLevel }});
-        slider.noUiSlider.disable();
-        
-        buttonEditCert.addEventListener('click', () => {
-            // Change the handle color based on your logic
-            const newColor = '#FF0000'; // Red color
-            slider.noUiSlider.enable();
-            divButton.style.display = 'block';
-        });
-       
-        noUiSlider.create(sliderFilter, {
-            start: [{{ $showLevelLow }}, {{ $showLevelHigh }}],
-            connect: [false, true, false],
-            range: {
-                'min': [0],
-                'max': [4]
-            },
-            step: 1,
-            pips: {
-                mode: 'steps',
-                density: 1000,
-                format: {
-                    to: function (value) {
-                        return ''; // Hide all labels
-                    }
-                }
-            },
-            
-            
-        
-        
-        });
-        
-        // Hide the tick mark labels
-        var tickLabels = sliderFilter.querySelectorAll('.noUi-value-sub');
-        tickLabels.forEach(function (label) {
-            label.style.display = 'none';
-        });
-
-        sliderFilter.noUiSlider.disable();
-
-        sliderFilter.noUiSlider.on('update', function (values, handle) {
-            const currentValues = this.get();
-            const [lowValue, highValue] = currentValues;
-            labelSliderFilterLow.textContent = levelNames[parseInt(lowValue)];
-            labelSliderFilterHigh.textContent = levelNames[parseInt(highValue)];
-            
-            sliderValueLowInput.value = parseInt(lowValue);
-            sliderValueHighInput.value = parseInt(highValue);
-        });
-
-        buttonEditShowLevel.addEventListener('click', () => {
-            // Change the handle color based on your logic
-            const newColor = '#FF0000'; // Red color
-            sliderFilter.noUiSlider.enable();
-            divButton.style.display = 'block';
-        });
-
-    </script>
-    {{-------------------}}
-
-    <script>
-        var buttonEditFavOpe = document.getElementById('editFavOpeButton'); // Replace with your button ID
-
-        if (document.getElementById('favOperators')) {
-            var element = document.getElementById('favOperators');
-            const example = new Choices(element, {
-                searchEnabled: true,
-                removeItemButton: true,
-            });
-
-            @foreach($favOperators as $favOperator)
-                example.setChoiceByValue('{{ $favOperator->id}}');
-            @endforeach
-            
-            example.disable();
-
-            buttonEditFavOpe.addEventListener('click', () => {
-                // Change the handle color based on your logic
-                const newColor = '#FF0000'; // Red color
-                example.enable();
-                divButton.style.display = 'block';
-                // enable flag in case the user selects nothing
-                document.getElementById('intentEditFavOperators').value = '1';
-            });
-        };
-
-
-
-    </script>
-
-    <script>
-        var buttonEditFavLoc = document.getElementById('editFavLocButton'); // Replace with your button ID
-
-        if (document.getElementById('favLocations')) {
-            var element = document.getElementById('favLocations');
-            const example1 = new Choices(element, {
-                searchEnabled: true,
-                removeItemButton: true,
-                maxItemCount: 3,
-            });
-
-            @foreach($favLocations as $favLocation)
-                example1.setChoiceByValue('{{ $favLocation->id}}');
-            @endforeach
-            example1.disable();
-
-            buttonEditFavLoc.addEventListener('click', () => {
-                // Change the handle color based on your logic
-                const newColor = '#FF0000'; // Red color
-                example1.enable();
-                divButton.style.display = 'block';
-                document.getElementById('intentEditFavLocations').value = '1';
-            });
-        };
-
-    </script>   
-
-    <script>
-        editContactButton = document.getElementById('editContactButton');
-        nameInput = document.getElementById('name');
-        nameLabel = document.getElementById('labelName');
-        phoneInput = document.getElementById('phone');
-        phoneLabel = document.getElementById('labelPhone');
-        editContactButton.addEventListener('click', () => {
-                
+        (function () {
+            var editContactButton = document.getElementById('editContactButton');
+            var nameInput = document.getElementById('name');
+            var phoneInput = document.getElementById('phone');
+            editContactButton.addEventListener('click', function () {
                 nameInput.disabled = false;
                 phoneInput.disabled = false;
-                divButton.style.display = 'block';
+                revealSave();
+            });
+        })();
+
+        {{-- x-dh-select renders a button (id "{name}-btn") plus the real
+             hidden input (id "{name}") that actually submits - both start
+             disabled, so unlocking one of these fields has to flip both. --}}
+        function unlockDhSelect(name) {
+            var btn = document.getElementById(name + '-btn');
+            var hidden = document.getElementById(name);
+            if (btn) btn.disabled = false;
+            if (hidden) hidden.disabled = false;
+        }
+
+        (function () {
+            var editCertButton = document.getElementById('editCertButton');
+            editCertButton.addEventListener('click', function () {
+                unlockDhSelect('level');
+                revealSave();
+            });
+        })();
+
+        (function () {
+            var editShowLevel = document.getElementById('buttonEditShowLevel');
+            editShowLevel.addEventListener('click', function () {
+                unlockDhSelect('levelLow');
+                unlockDhSelect('levelHigh');
+                revealSave();
+            });
+        })();
+    </script>
+
+    {{-- x-dh-select behavior: open/close the menu, pick an option. --}}
+    <script>
+        function closeAllDhSelects() {
+            document.querySelectorAll('.dh-select-menu').forEach(function (m) { m.hidden = true; });
+        }
+
+        document.querySelectorAll('.dh-select').forEach(function (wrap) {
+            var btn = wrap.querySelector('.dh-select-btn');
+            var menu = wrap.querySelector('.dh-select-menu');
+            var hidden = wrap.querySelector('input[type="hidden"]');
+            var valueSpan = wrap.querySelector('.dh-select-value');
+
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (btn.disabled) return;
+                var wasOpen = !menu.hidden;
+                closeAllDhSelects();
+                menu.hidden = wasOpen;
             });
 
-        nameInput.addEventListener('click', () => {
-            nameLabel.innerText = "Name";
+            menu.querySelectorAll('li').forEach(function (li) {
+                li.addEventListener('click', function () {
+                    hidden.value = li.dataset.value;
+                    valueSpan.textContent = li.textContent;
+                    menu.querySelectorAll('li').forEach(function (o) { o.classList.remove('is-selected'); });
+                    li.classList.add('is-selected');
+                    menu.hidden = true;
+                    revealSave();
+                });
+            });
         });
 
-        phoneInput.addEventListener('click', () => {
-            phoneLabel.innerText = "Phone number";
+        document.addEventListener('click', closeAllDhSelects);
+    </script>
+
+    {{-- Favorite operators / locations: read-view chips swap for a
+         search + tile grid (same .dh-choice tiles the welcome wizard
+         uses) once "Edit" is tapped - replaces the Choices.js multi-select
+         this page used to be the only place in the site to use. --}}
+    <script>
+        function wireFavPicker(opts) {
+            var editBtn = document.getElementById(opts.editBtn);
+            var readView = document.getElementById(opts.readView);
+            var editView = document.getElementById(opts.editView);
+            var intent = document.getElementById(opts.intent);
+
+            editBtn.addEventListener('click', function () {
+                readView.hidden = true;
+                editView.hidden = false;
+                intent.value = '1';
+                editView.querySelectorAll('input[type="checkbox"]').forEach(function (cb) {
+                    cb.disabled = false;
+                });
+                revealSave();
+            });
+
+            var search = opts.search ? document.getElementById(opts.search) : null;
+            if (search) {
+                search.addEventListener('input', function () {
+                    var q = search.value.trim().toLowerCase();
+                    editView.querySelectorAll('.dh-choice').forEach(function (tile) {
+                        tile.hidden = q !== '' && tile.dataset.name.indexOf(q) === -1;
+                    });
+                });
+            }
+        }
+
+        wireFavPicker({
+            editBtn: 'editFavOpeButton', readView: 'favOperatorsRead', editView: 'favOperatorsEdit',
+            intent: 'intentEditFavOperators', search: 'favOperatorsSearch',
+        });
+        wireFavPicker({
+            editBtn: 'editFavLocButton', readView: 'favLocationsRead', editView: 'favLocationsEdit',
+            intent: 'intentEditFavLocations', search: 'favLocationsSearch',
         });
     </script>
 
+    {{-- Always-on toggle switches (including Communication preferences,
+         untouched from before) just reveal Save when clicked. --}}
     <script>
-        var prefersLocation =document.getElementById('prefersLocation');
-        prefersLocation.addEventListener('click', () => {
-            divButton.style.display = 'block';
-        });
-
-        var firstDayOfWeek =document.getElementById('firstDayOfWeek');
-        firstDayOfWeek.addEventListener('click', () => {
-            divButton.style.display = 'block';
-        });
-
-        var email_notifications =document.getElementById('email_notifications');
-        email_notifications.addEventListener('click', () => {
-            divButton.style.display = 'block';
-        });
-
-        var sms_notifications =document.getElementById('sms_notifications');
-        sms_notifications.addEventListener('click', () => {
-            divButton.style.display = 'block';
-        });
-
-        // WhatsApp joined email and SMS (2026-09-10); same behaviour, reveal Save.
-        var whatsapp_notifications = document.getElementById('whatsapp_notifications');
-        if (whatsapp_notifications) {
-            whatsapp_notifications.addEventListener('click', () => {
-                divButton.style.display = 'block';
-            });
-        }
-
-        var show_visited =document.getElementById('show_visited');
-        show_visited.addEventListener('click', () => {
-            divButton.style.display = 'block';
-        });
-
-        var deco_unit =document.getElementById('deco_unit');
-        deco_unit.addEventListener('click', () => {
-            divButton.style.display = 'block';
-        });
-
-        var pinch_zoom_enabled = document.getElementById('pinch_zoom_enabled');
-        pinch_zoom_enabled.addEventListener('click', () => {
-            divButton.style.display = 'block';
+        [
+            'prefersLocation', 'firstDayOfWeek', 'email_notifications', 'sms_notifications',
+            'whatsapp_notifications', 'show_visited', 'deco_unit', 'pinch_zoom_enabled',
+        ].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.addEventListener('click', revealSave);
         });
     </script>
 
