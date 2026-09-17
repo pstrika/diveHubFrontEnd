@@ -1659,7 +1659,11 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    circle+pill version didn't land (Pablo, 2026-09-17: "let's avoid the
    circle and do only a pill"). */
 .dh-whatif-fab {
-  position: absolute; top: 10px; right: 10px; z-index: 20;
+  /* top was 10px - level with Chart.js's own "Deco profile" legend row at
+     the top of the canvas, so the pill sat right on top of it (Pablo,
+     2026-09-17: "push the what if bubble down a little...overlapping with
+     the chart title"). Cleared below it. */
+  position: absolute; top: 40px; right: 10px; z-index: 20;
   display: flex; align-items: center; gap: 8px;
   border: 0; background: var(--dh-sea); color: #fff;
   padding: 10px 16px; border-radius: var(--dh-radius-pill);
