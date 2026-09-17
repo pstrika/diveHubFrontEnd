@@ -97,6 +97,7 @@
     {!! $link('Marine forecast', route('Weather'), 'cloud') !!}
     {!! $link('Beach diving', route('BeachDiving'), 'beach_access') !!}
     {!! $link('Online waivers', route('Waivers'), 'assignment') !!}
+    {!! $link('Blog', route('Blog'), 'article') !!}
 </div>
 
 <div class="dh-menu-group">

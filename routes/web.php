@@ -260,6 +260,12 @@ Route::get('UpdateWished/{siteId}', 'App\Http\Controllers\SiteController@updateW
 Route::post('AddSiteReview/{siteId}', 'App\Http\Controllers\SiteController@addReview')->middleware('auth')->name('AddSiteReview');
 
 Route::get('DiveSites', 'App\Http\Controllers\SiteController@showTopRated')->middleware('guest')->name('DiveSites');
+
+// Blog (2026-09-17): visual design pass only, mock content in
+// BlogController - see its docblock. SEO content marketing, so public/
+// indexable like every other content page, hence 'guest' not 'auth'.
+Route::get('Blog', 'App\Http\Controllers\BlogController@index')->middleware('guest')->name('Blog');
+Route::get('Blog/{slug}', 'App\Http\Controllers\BlogController@show')->middleware('guest')->name('Blog.show');
 // Redesign W4: Search and Map became views of the Dive Sites explorer. Both
 // pages were noindex, so the 301s cost nothing. Listed in docs/seo/redirect-map.md.
 // The POST is the navbar search form; SiteController::searchSites searches
