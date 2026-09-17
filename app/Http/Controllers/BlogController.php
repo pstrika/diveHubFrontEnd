@@ -4,14 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Photo;
 use App\Models\Site;
+use App\Support\BlogPosts;
 
 /**
- * Visual design pass only (Pablo, 2026-09-17): mock post content, no
- * `posts` table or admin authoring screen yet. Real routes and views so the
- * look can be reviewed in the actual theme, not a throwaway static file.
- * Once the design is approved, the mock arrays below become a Post model
- * and this controller's queries - same shape either way, so nothing here
- * gets thrown away.
+ * Visual design pass only (Pablo, 2026-09-17): mock post content lives in
+ * App\Support\BlogPosts, no `posts` table or admin authoring screen yet.
+ * Real routes and views so the look can be reviewed in the actual theme,
+ * not a throwaway static file. Once the design is approved, BlogPosts'
+ * arrays become a Post model and its static methods become queries - same
+ * shape either way, so nothing here gets thrown away.
  *
  * Authorship (Pablo, 2026-09-17: "anybody that is user type Creator") maps
  * onto the role that already exists on User - App\Models\User::isCreator()
@@ -19,52 +20,9 @@ use App\Models\Site;
  */
 class BlogController extends Controller
 {
-    /** @return array<int, array> Newest first. */
-    private function posts(): array
-    {
-        return [
-            [
-                'slug' => 'top-5-wrecks-fort-lauderdale',
-                'category' => 'Site Guides',
-                'title' => 'Top 5 Wrecks to Dive in Fort Lauderdale',
-                'excerpt' => "Fort Lauderdale's artificial reef program put more than eighty wrecks within reach of a single tank of air. Here are the five worth building a trip around.",
-                'image' => 'assets/img/illustrations/site_wreck.webp',
-                'author' => 'Maria Torres',
-                'authorRole' => 'Creator',
-                'publishedAt' => '2026-09-10',
-                'readMinutes' => 7,
-                'featured' => true,
-            ],
-            [
-                'slug' => 'nitrox-vs-air',
-                'category' => 'Gear & Tips',
-                'title' => 'Nitrox vs. Air: Which Should You Choose for Your Next Dive?',
-                'excerpt' => 'Longer bottom times, shorter surface intervals, a bit more cost per fill. Here is how to actually decide, dive by dive.',
-                'image' => 'assets/img/illustrations/dive-site.webp',
-                'author' => 'Jordan Reyes',
-                'authorRole' => 'Creator',
-                'publishedAt' => '2026-09-05',
-                'readMinutes' => 5,
-                'featured' => false,
-            ],
-            [
-                'slug' => 'lobster-season-2026',
-                'category' => 'News',
-                'title' => 'Lobster Season 2026: What Divers Need to Know',
-                'excerpt' => "Regular season opens August 6. Bag limits, measuring gauges, and the sites that get crowded fastest - plan around it, not into it.",
-                'image' => 'assets/img/illustrations/dive-site.webp',
-                'author' => 'Maria Torres',
-                'authorRole' => 'Creator',
-                'publishedAt' => '2026-08-28',
-                'readMinutes' => 4,
-                'featured' => false,
-            ],
-        ];
-    }
-
     public function index()
     {
-        $posts = $this->posts();
+        $posts = BlogPosts::all();
         $categories = collect($posts)->pluck('category')->unique()->values();
 
         $SEO = [
@@ -79,11 +37,10 @@ class BlogController extends Controller
 
     public function show(string $slug)
     {
-        $posts = $this->posts();
-        $post = collect($posts)->firstWhere('slug', $slug);
+        $post = BlogPosts::find($slug);
         abort_unless($post, 404);
 
-        $related = collect($posts)->where('slug', '!=', $slug)->take(2)->values();
+        $related = collect(BlogPosts::all())->where('slug', '!=', $slug)->take(2)->values();
 
         // Real sites, so the "internal links" this post exists to drive
         // actually go somewhere - the whole point of an SEO guide post.

@@ -24,6 +24,27 @@
                     <span>{{ $post['readMinutes'] }} min read</span>
                 </div>
 
+                @if(!empty($post['tags']))
+                    <div class="dh-blog-tags">
+                        @foreach($post['tags'] as $tag)<span class="dh-blog-tag">{{ $tag }}</span>@endforeach
+                    </div>
+                @endif
+
+                @if(!is_null($post['minLevel'] ?? null))
+                    {{-- Mock demonstration of the targeting Pablo described
+                         (2026-09-17: "if tag is tech diving, we can prioritize
+                         the show of this article to Tech Air and above
+                         certified users") - real ranking lives in
+                         App\Support\BlogPosts::forViewer(), used by the My
+                         Dashboard carousel. Shown here so the connection
+                         between a post's tags and who it's actually for is
+                         visible, not just implied. --}}
+                    <div class="dh-blog-callout dh-blog-audience">
+                        <x-dive-level.icon :level="$post['minLevel']" height="22" />
+                        <p>Best suited for divers certified <strong>{{ \App\Support\DiveLevel::name($post['minLevel']) }}</strong> and above.</p>
+                    </div>
+                @endif
+
                 <img class="dh-blog-hero-img" src="{{ asset($post['image']) }}" alt="">
 
                 <div class="dh-blog-body">

@@ -32,6 +32,11 @@
                         <span class="dh-blog-eyebrow">{{ $featured['category'] }}</span>
                         <span class="dh-blog-featured-title">{{ $featured['title'] }}</span>
                         <span class="dh-blog-excerpt">{{ $featured['excerpt'] }}</span>
+                        @if(!empty($featured['tags']))
+                            <span class="dh-blog-tags">
+                                @foreach($featured['tags'] as $tag)<span class="dh-blog-tag">{{ $tag }}</span>@endforeach
+                            </span>
+                        @endif
                         <span class="dh-blog-byline">
                             <span class="dh-blog-avatar">{{ Str::of($featured['author'])->substr(0, 1) }}</span>
                             <span><strong>{{ $featured['author'] }}</strong> <span class="chip chip-static dh-blog-role">{{ $featured['authorRole'] }}</span></span>
@@ -54,6 +59,11 @@
                         <span class="dh-blog-card-body">
                             <span class="dh-blog-card-title">{{ $post['title'] }}</span>
                             <span class="dh-blog-excerpt">{{ $post['excerpt'] }}</span>
+                            @if(!empty($post['tags']))
+                                <span class="dh-blog-tags">
+                                    @foreach($post['tags'] as $tag)<span class="dh-blog-tag">{{ $tag }}</span>@endforeach
+                                </span>
+                            @endif
                             <span class="dh-blog-byline">
                                 <span class="dh-blog-avatar">{{ Str::of($post['author'])->substr(0, 1) }}</span>
                                 <span>{{ $post['author'] }}</span>

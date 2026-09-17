@@ -293,6 +293,12 @@ class MyDashboardController extends Controller
             //Log::debug($favCalendars);
 
 
-        return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers', 'wished', 'favOperators', 'favCalendars', 'weekendStart', 'myGroups', 'groupInvites'));
+        // "From the blog" carousel (Pablo, 2026-09-17): posts matching the
+        // diver's own certification level first - see
+        // App\Support\BlogPosts::forViewer() for the ranking, the mock
+        // version of the tag-based targeting Pablo described.
+        $blogPosts = \App\Support\BlogPosts::forViewer($user->certLevel, 5);
+
+        return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers', 'wished', 'favOperators', 'favCalendars', 'weekendStart', 'myGroups', 'groupInvites', 'blogPosts'));
     }
 }

@@ -318,6 +318,49 @@
                         </div>
                     </section>
                 </div>
+
+                {{--
+                    "From the blog" carousel (Pablo, 2026-09-17: "a carousel in
+                    My dashboard rotating 4 or 5 articles...mini picture and
+                    title of article will be fine"). One slide visible at a
+                    time, auto-advancing, dots to jump directly - a small,
+                    purpose-built carousel rather than Bootstrap's own (which
+                    would need its default look overridden anyway) or the
+                    wizard tour's full-screen one (wrong shape for an inline
+                    dashboard card). Posts and their order come from
+                    MyDashboardController - App\Support\BlogPosts::forViewer(),
+                    ranked by the diver's own certification level.
+                --}}
+                @if(!empty($blogPosts))
+                <div class="col-md-12">
+                    <section class="dh-card">
+                        <h2 class="dh-card-head">From the blog
+                            <a class="dh-dash-headlink" href="{{ route('Blog') }}">See all</a></h2>
+                        <div class="dh-card-body">
+                            <div class="dh-mini-carousel" id="dhBlogCarousel">
+                                <div class="dh-mini-carousel-track">
+                                    @foreach($blogPosts as $i => $bp)
+                                        <a href="{{ route('Blog.show', $bp['slug']) }}" class="dh-mini-carousel-slide {{ $i === 0 ? 'is-active' : '' }}">
+                                            <img src="{{ asset($bp['image']) }}" alt="" loading="lazy">
+                                            <span class="dh-mini-carousel-body">
+                                                <span class="dh-blog-eyebrow">{{ $bp['category'] }}</span>
+                                                <span class="dh-mini-carousel-title">{{ $bp['title'] }}</span>
+                                            </span>
+                                        </a>
+                                    @endforeach
+                                </div>
+                                @if(count($blogPosts) > 1)
+                                    <div class="dh-mini-carousel-dots">
+                                        @foreach($blogPosts as $i => $bp)
+                                            <button type="button" class="dh-mini-carousel-dot {{ $i === 0 ? 'is-active' : '' }}" data-dh-carousel-dot="{{ $i }}" aria-label="Show article {{ $i + 1 }}"></button>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                @endif
             </div>
 
             {{--
@@ -659,6 +702,53 @@
 
 
 
+
+    {{-- "From the blog" carousel: auto-advance, pause on hover/focus so a
+         diver reading one card doesn't have it swap out from under them,
+         dots jump straight to a slide. Slide-count-agnostic like the
+         wizard tour's, so adding a 6th mock post (or a real one later)
+         needs no JS change. --}}
+    <script>
+        (function () {
+            var root = document.getElementById('dhBlogCarousel');
+            if (!root) return;
+            var slides = Array.prototype.slice.call(root.querySelectorAll('.dh-mini-carousel-slide'));
+            var dots = Array.prototype.slice.call(root.querySelectorAll('.dh-mini-carousel-dot'));
+            if (slides.length < 2) return;
+
+            var index = 0;
+            var timer = null;
+
+            function show(i) {
+                index = (i + slides.length) % slides.length;
+                slides.forEach(function (s, si) { s.classList.toggle('is-active', si === index); });
+                dots.forEach(function (d, di) { d.classList.toggle('is-active', di === index); });
+            }
+
+            function start() {
+                stop();
+                timer = setInterval(function () { show(index + 1); }, 4500);
+            }
+            function stop() {
+                if (timer) clearInterval(timer);
+                timer = null;
+            }
+
+            dots.forEach(function (dot) {
+                dot.addEventListener('click', function () {
+                    show(parseInt(dot.getAttribute('data-dh-carousel-dot'), 10));
+                    start();
+                });
+            });
+
+            root.addEventListener('mouseenter', stop);
+            root.addEventListener('mouseleave', start);
+            root.addEventListener('focusin', stop);
+            root.addEventListener('focusout', start);
+
+            start();
+        })();
+    </script>
 
     @endpush
 </x-page-template>
