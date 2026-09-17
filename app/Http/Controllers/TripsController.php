@@ -119,9 +119,14 @@ class TripsController extends Controller
                     ->pluck('short')
                     ->toArray();
 
-                $favoriteLevels = explode(',', $user->showLevel);
-                $showLevelLow = intval($favoriteLevels[0]);
-                $showLevelHigh = intval($favoriteLevels[1]);
+                // showLevel can be null - see MyDashboardController for why
+                // (a diver who skipped the wizard's level step, or an old
+                // account predating any level-picking UI at all). Falls
+                // back to the full 0-4 range rather than fataling on an
+                // undefined [1] key.
+                $favoriteLevels = explode(',', $user->showLevel ?: '0,4');
+                $showLevelLow = intval($favoriteLevels[0] ?? 0);
+                $showLevelHigh = intval($favoriteLevels[1] ?? 4);
 
                 if(in_array(substr($trip->tags,0 ,3),  $favLocationShorts)) {
                     Log::debug("Operator for this trip is in favorites!");
@@ -144,9 +149,14 @@ class TripsController extends Controller
                 }
             } else {
                 $favoriteOperatorsIndex = explode(',', $user->favOperators);
-                $favoriteLevels = explode(',', $user->showLevel);
-                $showLevelLow = intval($favoriteLevels[0]);
-                $showLevelHigh = intval($favoriteLevels[1]);
+                // showLevel can be null - see MyDashboardController for why
+                // (a diver who skipped the wizard's level step, or an old
+                // account predating any level-picking UI at all). Falls
+                // back to the full 0-4 range rather than fataling on an
+                // undefined [1] key.
+                $favoriteLevels = explode(',', $user->showLevel ?: '0,4');
+                $showLevelLow = intval($favoriteLevels[0] ?? 0);
+                $showLevelHigh = intval($favoriteLevels[1] ?? 4);
 
                 if(in_array($trip->operatorId, $favoriteOperatorsIndex)) {
                     Log::debug("Operator for this trip is in favorites!");

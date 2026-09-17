@@ -75,7 +75,6 @@
         @endif
         {!! $link('My Calendar', route('MyCalendar'), 'event') !!}
         {!! $link('My Groups', route('MyGroups'), 'groups') !!}
-        <x-shell.push-toggle />
         {!! $link('My Visited Sites', route('MyVisitedSites'), 'check_circle') !!}
     </div>
 @endif
@@ -130,6 +129,7 @@
         {!! $link('About Divers Hub', route('AboutUs'), 'info') !!}
     @else
         {!! $link('My profile', route('overview'), 'person') !!}
+        <x-shell.push-toggle />
         {!! $link('About Divers Hub', route('AboutUs'), 'info') !!}
         <a class="dh-menu-link" href="{{ route('logout') }}" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
             <span class="material-icons-round" aria-hidden="true">logout</span><span>Log out</span>

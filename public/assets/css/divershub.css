@@ -1059,6 +1059,18 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
   background-image: none !important;
   border-color: var(--dh-deep) !important;
 }
+/* Material Dashboard's own unchecked border (#d1d7e1) is nearly invisible
+   against a white row - a darker, clearly visible outline so an UNCHECKED
+   box actually reads as a box (Pablo, 2026-09-17: "you can't see the
+   checkbox if not selected...use a darker grey"). Disabled (locked-off,
+   e.g. unverified phone) stays visibly lighter than an actionable one. */
+.dh-comms .form-check-input {
+  border-color: var(--dh-muted) !important;
+}
+.dh-comms .form-check-input:disabled {
+  border-color: var(--dh-line) !important;
+  opacity: .6;
+}
 
 /* Guest prompt: create an account or sign in, side by side and stacking on phones. */
 .dh-guest-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: var(--dh-space-3); }

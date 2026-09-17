@@ -228,6 +228,12 @@ class OnboardingController extends Controller
                 foreach (\App\Support\NotificationConsent::switches() as $column) {
                     $user->{$column} = $request->boolean($column) ? 1 : 0;
                 }
+                // Same rule as the profile page: SMS/WhatsApp need a
+                // verified phone, not just one submitted - if the diver
+                // skipped verification, they stay off no matter what this
+                // form sent (Pablo, 2026-09-17: "If the user skips, no sms
+                // or whatsapp notifs").
+                \App\Support\NotificationConsent::enforcePhoneVerification($user);
                 \App\Support\NotificationConsent::stamp($user, $before);
                 break;
         }

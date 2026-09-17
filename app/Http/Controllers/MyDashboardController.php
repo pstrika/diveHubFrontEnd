@@ -150,9 +150,16 @@ class MyDashboardController extends Controller
                 //    ->pluck('short')
                 //    ->toArray();
 
-                $favoriteLevels = explode(',', $user->showLevel);
-                $showLevelLow = intval($favoriteLevels[0]);
-                $showLevelHigh = intval($favoriteLevels[1]);
+                // showLevel can be null - a diver who skipped the welcome
+                // wizard's level step, or (before that wizard existed) an
+                // old account that never went through any level-picking UI
+                // at all, never gets it set. Falls back to the full 0-4
+                // range ("show everything") rather than fataling on an
+                // undefined [1] key (Pablo hit this testing a fresh
+                // account, 2026-09-17).
+                $favoriteLevels = explode(',', $user->showLevel ?: '0,4');
+                $showLevelLow = intval($favoriteLevels[0] ?? 0);
+                $showLevelHigh = intval($favoriteLevels[1] ?? 4);
 
                 if(in_array(substr($trip->tags,0 ,3),  $favLocationShorts)) {
                     //Log::debug("Operator for this trip is in favorites!");
@@ -170,9 +177,16 @@ class MyDashboardController extends Controller
                 }
             } else {
                 $favoriteOperatorsIndex = explode(',', $user->favOperators);
-                $favoriteLevels = explode(',', $user->showLevel);
-                $showLevelLow = intval($favoriteLevels[0]);
-                $showLevelHigh = intval($favoriteLevels[1]);
+                // showLevel can be null - a diver who skipped the welcome
+                // wizard's level step, or (before that wizard existed) an
+                // old account that never went through any level-picking UI
+                // at all, never gets it set. Falls back to the full 0-4
+                // range ("show everything") rather than fataling on an
+                // undefined [1] key (Pablo hit this testing a fresh
+                // account, 2026-09-17).
+                $favoriteLevels = explode(',', $user->showLevel ?: '0,4');
+                $showLevelLow = intval($favoriteLevels[0] ?? 0);
+                $showLevelHigh = intval($favoriteLevels[1] ?? 4);
 
                 if(in_array($trip->operatorId, $favoriteOperatorsIndex)) {
                     //Log::debug("Operator for this trip is in favorites!");

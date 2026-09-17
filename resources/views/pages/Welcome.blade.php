@@ -173,7 +173,16 @@
                     <p class="dh-wizard-lead">We'll only use this for trip reminders and last-minute schedule changes - never more than a few messages a month. Verify your number now and you can turn on SMS or WhatsApp reminders on the next step.</p>
 
                     @if(session('phoneError'))
-                        <p class="text-danger text-sm">{{ session('phoneError') }}</p>
+                        {{-- Same visible warning-box treatment as the comms picker's own
+                             notes, not easy-to-miss small red text - a diver reported
+                             the send-code failure as "doing nothing" (Pablo, 2026-09-17),
+                             which this alone doesn't fix (that's a real SMS delivery
+                             problem), but it should at least be impossible to miss when
+                             it does happen. --}}
+                        <p class="dh-comms-note dh-comms-warn">
+                            <span class="material-icons-round" aria-hidden="true">error_outline</span>
+                            {{ session('phoneError') }}
+                        </p>
                     @endif
 
                     @if($isPending)

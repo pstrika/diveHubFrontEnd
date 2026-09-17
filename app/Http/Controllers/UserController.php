@@ -172,9 +172,14 @@ class UserController extends Controller
         $favLocationsIndex = explode(',', $user->favLocations);
         $favLocations = WeatherLocation::whereIn('id', $favLocationsIndex)->get();
 
-        $favoriteLevels = explode(',', $user->showLevel);
-        $showLevelLow = intval($favoriteLevels[0]);
-        $showLevelHigh = intval($favoriteLevels[1]);
+        // showLevel can be null - see MyDashboardController for why (a
+        // diver who skipped the wizard's level step, or an old account
+        // predating any level-picking UI at all). Falls back to the full
+        // 0-4 range rather than fataling the profile page on an undefined
+        // [1] key.
+        $favoriteLevels = explode(',', $user->showLevel ?: '0,4');
+        $showLevelLow = intval($favoriteLevels[0] ?? 0);
+        $showLevelHigh = intval($favoriteLevels[1] ?? 4);
 
         return view('pages.profile.overview', compact('user', 'operators', 'favOperators', 'locations', 'favLocations', 'showLevelLow', 'showLevelHigh'));
     }
@@ -332,6 +337,11 @@ class UserController extends Controller
             $user->pinch_zoom_enabled = 0;
         }
 
+
+        // A submitted form should never be trusted alone for this - the
+        // checkboxes are already disabled client-side, but SMS/WhatsApp
+        // genuinely require a verified phone (Pablo, 2026-09-17).
+        \App\Support\NotificationConsent::enforcePhoneVerification($user);
 
         // Consent timestamps for the channels that changed, before the save.
         \App\Support\NotificationConsent::stamp($user, $commsBefore);

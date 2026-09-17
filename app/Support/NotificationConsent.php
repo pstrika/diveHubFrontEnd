@@ -41,6 +41,29 @@ final class NotificationConsent
         return array_map(fn ($pair) => $pair[0], self::CHANNELS);
     }
 
+    /** Channels that need a verified phone number, since they both reach the same number. */
+    public const PHONE_VERIFIED_CHANNELS = ['sms', 'whatsapp'];
+
+    /**
+     * Forces sms/whatsapp off when the phone isn't verified, regardless of
+     * what a request submitted - comms-preferences.blade.php already
+     * disables those checkboxes for this case, but a submitted form should
+     * never be trusted alone (Pablo, 2026-09-17: "the idea of the OTP...is
+     * that the user verifies the number. If the number is not verified,
+     * then we can't allow for SMS or WhatsApp notifications"). Call this
+     * after setting switches from the request, before stamp()/save().
+     */
+    public static function enforcePhoneVerification(User $user): void
+    {
+        if (!empty($user->phone_verified_at)) {
+            return;
+        }
+        foreach (self::PHONE_VERIFIED_CHANNELS as $channel) {
+            [$switch] = self::CHANNELS[$channel];
+            $user->{$switch} = false;
+        }
+    }
+
     /** Current on/off per channel: ['email' => bool, 'sms' => bool, 'whatsapp' => bool]. */
     public static function state($user): array
     {
