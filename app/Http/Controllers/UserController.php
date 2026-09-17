@@ -218,7 +218,16 @@ class UserController extends Controller
 
                 if ($e164 === null) {
                     session()->flash('phoneError', 'That doesn\'t look like a valid phone number.');
-                } elseif ($e164 !== $user->phone) {
+                } elseif ($e164 !== $user->phone || !$user->phone_verified_at) {
+                    // Not just "did they type a different number" - a
+                    // number carried over from the old front end (or an
+                    // international one saved without verification) sits in
+                    // `phone` with phone_verified_at still null, so
+                    // re-entering that SAME number must still start real
+                    // verification rather than silently no-op (Pablo,
+                    // 2026-09-17: entered his already-on-file 954-292-2846
+                    // and got no code at all - `phone` was set from legacy
+                    // data, `phone_verified_at` never was).
                     if (\App\Support\PhoneNumber::isUs($e164)) {
                         // Held as pending until the SMS code comes back verified -
                         // the number already on file (if any) keeps working until then.

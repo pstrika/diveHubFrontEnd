@@ -193,9 +193,17 @@ class OnboardingController extends Controller
                     session()->flash('phoneError', "That doesn't look like a valid phone number.");
                     return redirect()->route('welcome', ['step' => 'phone']);
                 }
-                if ($e164 === $user->phone) {
-                    // Already verified from before (e.g. came back to this
-                    // step) - nothing to do, move on.
+                if ($e164 === $user->phone && $user->phone_verified_at) {
+                    // Genuinely already verified (e.g. came back to this
+                    // step without changing anything) - nothing to do, move
+                    // on. A number that's merely on file but never verified
+                    // (legacy data from the old front end, or an
+                    // international save) must fall through to real
+                    // verification below even when it's the same digits
+                    // (Pablo, 2026-09-17: re-entered his own already-on-file
+                    // 954-292-2846 in the wizard and got no code at all -
+                    // this exact check was silently treating "same number"
+                    // as "already verified" and skipping the send).
                     break;
                 }
                 if (\App\Support\PhoneNumber::isUs($e164)) {

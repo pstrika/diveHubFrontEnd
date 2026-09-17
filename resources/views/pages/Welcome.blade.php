@@ -167,7 +167,15 @@
                     @php
                         $isPending = !empty($user->pending_phone);
                         $isVerified = !empty($user->phone) && !empty($user->phone_verified_at);
-                        $isIntlSaved = !empty($user->phone) && empty($user->phone_verified_at) && !$isPending;
+                        // Was missing the isUs() check - any unverified number
+                        // on file (including a US number carried over from the
+                        // old front end, never actually verified there) fell
+                        // into this branch and told the diver it was "saved
+                        // for WhatsApp, international numbers can't be
+                        // verified" even when it was his own real 954 number
+                        // (Pablo, 2026-09-17). Only a genuinely non-US number
+                        // belongs here.
+                        $isIntlSaved = !empty($user->phone) && empty($user->phone_verified_at) && !$isPending && !\App\Support\PhoneNumber::isUs($user->phone);
                     @endphp
                     <h1 class="dh-wizard-title">Can we text you about your trips?</h1>
                     <p class="dh-wizard-lead">We'll only use this for trip reminders and last-minute schedule changes - never more than a few messages a month. Verify your number now and you can turn on SMS or WhatsApp reminders on the next step.</p>
@@ -238,11 +246,18 @@
                                 </label>
                                 <p class="dh-comms-note">Saved for WhatsApp - international numbers can't receive our SMS verification codes.</p>
                             @else
+                                @php
+                                    // Pre-fill with digits already on file (e.g. an
+                                    // unverified US number carried over from the old
+                                    // front end) so the diver doesn't have to retype
+                                    // a number we already have - just confirm and send.
+                                    $prefillDigits = \App\Support\PhoneNumber::isUs($user->phone) ? substr($user->phone, 2) : '';
+                                @endphp
                                 <label class="dh-wizard-field">
                                     <span>Mobile number</span>
                                     <div class="dh-phone-us">
                                         <span class="dh-phone-us-prefix">+1</span>
-                                        <input type="tel" id="dhPhoneUs" name="phone" value="{{ old('phone') }}" autocomplete="tel" inputmode="numeric" maxlength="12" placeholder="555-123-4567">
+                                        <input type="tel" id="dhPhoneUs" name="phone" value="{{ old('phone', $prefillDigits) }}" autocomplete="tel" inputmode="numeric" maxlength="12" placeholder="555-123-4567">
                                     </div>
                                 </label>
                             @endif
