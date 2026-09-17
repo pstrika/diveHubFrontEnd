@@ -112,6 +112,17 @@ class User extends Authenticatable
         return Message::where('userId', $this->id)->where('deleted', 0)->where('read', 0)->count();
     }
 
+    /**
+     * Same as unreadNotifications() but scoped to Groups-folder messages
+     * only (group_id set) - the Groups tab badge used to reuse the whole
+     * inbox+groups total, which read wrong once the two folders actually
+     * diverged (Pablo, 2026-09-17: "the message badge for groups...we want
+     * here the message count for groups, not the entire unread inbox").
+     */
+    public function unreadGroupNotifications() {
+        return Message::where('userId', $this->id)->where('deleted', 0)->where('read', 0)->whereNotNull('group_id')->count();
+    }
+
     public function ensureCalendarToken()
     {
         if (!$this->calendar_token) {

@@ -41,6 +41,13 @@
                         <button type="button" class="dh-btn dh-btn-danger" id="dh-msg-bulk-destroy" hidden onclick="dhBulkAction('destroy')">
                             <span class="material-icons-round" aria-hidden="true">delete_forever</span> Delete forever
                         </button>
+                        {{-- Independent of selection - shown whenever the Bin has
+                             anything in it, so clearing it out doesn't first
+                             require selecting everything (Pablo, 2026-09-17:
+                             "a button to empty trash (delete forever all)"). --}}
+                        <button type="button" class="dh-btn dh-btn-danger" id="dh-msg-empty-trash" hidden onclick="dhEmptyTrash()">
+                            <span class="material-icons-round" aria-hidden="true">delete_sweep</span> Empty trash
+                        </button>
                     </div>
                 </div>
 
@@ -157,6 +164,29 @@
             document.getElementById('dh-msg-select-all').checked = false;
             dhCloseReading();
             dhOnCheckToggle();
+            dhUpdateEmptyTrashVisibility();
+        }
+
+        // Independent of selection, unlike the other bulk buttons - visible
+        // any time the Bin folder is open and has something in it.
+        function dhUpdateEmptyTrashVisibility() {
+            var hasItems = document.getElementById(dhListEl.bin).querySelectorAll('.dh-msg-row').length > 0;
+            document.getElementById('dh-msg-empty-trash').hidden = !(dhFolder === 'bin' && hasItems);
+        }
+
+        function dhEmptyTrash() {
+            var ids = Array.prototype.slice.call(document.getElementById(dhListEl.bin).querySelectorAll('[data-msg-checkbox]'))
+                .map(function (el) { return el.getAttribute('data-msg-checkbox'); });
+            if (!ids.length) return;
+            if (!confirm('Permanently delete all ' + ids.length + ' notification(s) in the bin? This cannot be undone.')) return;
+
+            dhPost('{{ route("messages.destroy") }}', ids).then(function (r) { return r.ok ? r.json() : Promise.reject(); }).then(function () {
+                ids.forEach(function (id) { dhMoveRow(id, 'destroy'); });
+                document.getElementById('dh-msg-select-all').checked = false;
+                dhOnCheckToggle();
+                dhRefreshTabCounts();
+                dhUpdateEmptyTrashVisibility();
+            }).catch(function () { alert('Something went wrong - please try again.'); });
         }
 
         function dhCurrentList() {
@@ -242,6 +272,7 @@
                 delete dhMessages[id];
             }
             if (dhOpenId == id) dhCloseReading();
+            dhUpdateEmptyTrashVisibility();
         }
 
         // Used after a move so the row shows up in its new folder without a

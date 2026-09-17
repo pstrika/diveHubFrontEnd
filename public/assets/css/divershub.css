@@ -132,9 +132,15 @@ body.dh-shell .main-content > .container-fluid {
    is why some pages read as having more top padding than others). Zero
    the redundant one out, one level of .row > column deep too since Beach
    Diving's verdict cards live inside a column, not directly in the
-   container. */
+   container - EVERY column of that first row, not just the first one
+   (:first-child on the column was dropped 2026-09-17: with it, only
+   Fort Lauderdale's card - the first column - got its margin-top zeroed,
+   so it rendered 12px higher than West Palm Beach's identical card right
+   next to it, both being "first on the page" the same way side by side;
+   Pablo: "fort lauderdale card is slightly above compared to west palm
+   beach"). */
 body.dh-shell .main-content > .container-fluid > *:first-child,
-body.dh-shell .main-content > .container-fluid > .row:first-child > [class*="col"]:first-child > *:first-child {
+body.dh-shell .main-content > .container-fluid > .row:first-child > [class*="col"] > *:first-child {
   margin-top: 0 !important;
 }
 body.dh-shell .sidenav, body.dh-shell #sidenav-main { display: none !important; }
@@ -1628,13 +1634,20 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 }
 
 /* Floating "What if...?" bubble + picker modal (Pablo, 2026-09-19): replaces
-   the old always-visible collapsible chip panel. Scoped to the
-   Decompression card via its own position:relative wrapper - "it only
-   shows over the Decompression results card" - not fixed to the viewport
-   like .dh-chat-fab is. */
+   the old always-visible collapsible chip panel. Scoped to the deco chart
+   card via its own position:relative wrapper, not fixed to the viewport
+   like .dh-chat-fab is - but otherwise the SAME bubble (size, color, hover)
+   as that one, with a labeled pill alongside it (Pablo, 2026-09-17: "the
+   same bubble with an added pill...float at the top right of the deco
+   chart"). */
+.dh-whatif-trigger { position: absolute; top: 10px; right: 10px; z-index: 20; display: flex; align-items: center; gap: 8px; }
+.dh-whatif-pill {
+  background: var(--dh-sea); color: #fff; font-weight: 700; font-size: .78rem; line-height: 1;
+  padding: 8px 12px; border-radius: var(--dh-radius-pill); box-shadow: 0 4px 12px rgba(11,42,58,.24); white-space: nowrap;
+}
 .dh-whatif-fab {
-  position: absolute; right: 12px; bottom: 64px; z-index: 20;
-  width: 46px; height: 46px; border-radius: 50%; border: 0; background: var(--dh-sea); color: #fff;
+  flex: 0 0 auto; border: 0; background: var(--dh-sea); color: #fff;
+  width: 52px; height: 52px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(11,42,58,.28); cursor: pointer;
 }
 .dh-whatif-fab:hover { background: var(--dh-deep); }

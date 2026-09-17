@@ -121,6 +121,12 @@
                     <div>
                         <h1 class="dh-wx-place">{{ ucwords($location) }}</h1>
                         <p class="dh-wx-date">{{ \Carbon\Carbon::parse($today->date)->format('l j F') }}</p>
+                        @if($today->conditions_text)
+                            <p class="dh-beach-sky">
+                                @if($today->conditions_icon)<img src="{{ $today->conditions_icon }}" alt="" width="22" height="22">@endif
+                                {{ $today->conditions_text }}
+                            </p>
+                        @endif
                     </div>
                     <a class="dh-wx-swap" href="#dh-wx-coast">
                         <span class="material-icons-round" aria-hidden="true">place</span>Change

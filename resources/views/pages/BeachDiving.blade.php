@@ -244,10 +244,15 @@
                             <div class="row">
                                 <div class="col-md-5">
                                     <div id="map{{ $i }}" class="dh-beach-map"></div>
+                                    {{-- Swatches match the actual map pin colors exactly (sampled
+                                         from marker_reef/wreck/other.png) - they used to be an
+                                         unrelated teal/rust/grey trio that didn't match a single
+                                         pin on the map above them (Pablo, 2026-09-17: "red is
+                                         Reef, yellow is other and green is wreck"). --}}
                                     <div class="dh-cal-legend">
-                                        <span class="dh-cal-legend-item"><span class="dh-cal-legend-swatch" style="background:#0e7c9e"></span>Reef</span>
-                                        <span class="dh-cal-legend-item"><span class="dh-cal-legend-swatch" style="background:#b0532a"></span>Wreck</span>
-                                        <span class="dh-cal-legend-item"><span class="dh-cal-legend-swatch" style="background:#8a95a1"></span>Other</span>
+                                        <span class="dh-cal-legend-item"><span class="dh-cal-legend-swatch" style="background:#F44336"></span>Reef</span>
+                                        <span class="dh-cal-legend-item"><span class="dh-cal-legend-swatch" style="background:#4CAF50"></span>Wreck</span>
+                                        <span class="dh-cal-legend-item"><span class="dh-cal-legend-swatch" style="background:#FB8C00"></span>Other</span>
                                     </div>
                                 </div>
                                 <div class="col-md-7">

@@ -1361,30 +1361,35 @@
                                     </div>
 
                                     <div class="col-lg-6 col-12" id="profileChartContainer">
-                                        <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
+                                        <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1" style="position: relative;">
                                             <canvas id="profileChart" class="chart-canvas border-radius-lg" height="500px"></canvas>
+
+                                            <!-- "What if...?" floating bubble (Pablo, 2026-09-19:
+                                                 "show a floating bubble...open a modal and let the
+                                                 user select the What if scenario"; 2026-09-17: "same
+                                                 bubble with an added pill...float at the top right
+                                                 of the deco chart"). Same round button as the site's
+                                                 other floating bubble (.dh-chat-fab) - not fixed to
+                                                 the viewport like that one is, scoped to just this
+                                                 chart card via the position:relative wrapper above.
+                                                 Hidden until a plan is calculated (revealed from the
+                                                 calculate button's success handler). Picking a
+                                                 scenario is still strictly one-at-a-time - unchanged
+                                                 from today. Icon per Pablo's explicit choice:
+                                                 "Implement picking the icon Question Exchange"
+                                                 (Material Symbols, not in the classic Material Icons
+                                                 Round set already used elsewhere - loaded separately,
+                                                 see the font link near the top of this page). -->
+                                            <div class="dh-whatif-trigger" id="dhWhatIfTrigger" hidden>
+                                                <span class="dh-whatif-pill">What if...?</span>
+                                                <button type="button" class="dh-whatif-fab" id="dhWhatIfFab" aria-haspopup="dialog" aria-label="What if scenarios">
+                                                    <span class="material-symbols-rounded" aria-hidden="true">question_exchange</span>
+                                                </button>
+                                            </div>
                                         </div>
 
                                     </div>
                                 </div>
-
-                                <!-- "What if...?" floating bubble (Pablo, 2026-09-19: "show a
-                                     floating bubble...open a modal and let the user select the
-                                     What if scenario"). Positioned within this card only (see
-                                     the position:relative wrapper above), not fixed to the
-                                     viewport like the chat bubble - "it only shows over the
-                                     Decompression results card". Hidden until a plan is
-                                     calculated (revealed from the calculate button's success
-                                     handler). Picking a scenario is still strictly one-at-a-time
-                                     - unchanged from today ("It's been always one scenario at
-                                     the time...the logic of showing does not change"). Icon per
-                                     Pablo's explicit choice: "Implement picking the icon Question
-                                     Exchange" (Material Symbols, not in the classic Material
-                                     Icons Round set already used elsewhere - loaded separately,
-                                     see the font link near the top of this page). -->
-                                <button type="button" class="dh-whatif-fab" id="dhWhatIfFab" hidden aria-haspopup="dialog" aria-label="What if scenarios">
-                                    <span class="material-symbols-rounded" aria-hidden="true">question_exchange</span>
-                                </button>
 
                                 <div class="dh-whatif-modal-backdrop" id="dhWhatIfModalBackdrop" hidden>
                                     <div class="dh-whatif-modal" role="dialog" aria-modal="true" aria-labelledby="dhWhatIfModalTitle">
@@ -1979,7 +1984,7 @@
                     // Reveal the What-if floating bubble - it only makes sense once a
                     // plan actually exists (Pablo, 2026-09-19: "once decompression was
                     // calculated...show an icon bubble").
-                    if (document.getElementById('dhWhatIfFab')) document.getElementById('dhWhatIfFab').hidden = false;
+                    if (document.getElementById('dhWhatIfTrigger')) document.getElementById('dhWhatIfTrigger').hidden = false;
 
                     // update timeLapse tissue data
                     conveyor = response['conveyor'];

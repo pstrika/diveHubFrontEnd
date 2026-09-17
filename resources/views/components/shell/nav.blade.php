@@ -43,10 +43,12 @@
         'groups'  => ['label' => 'Groups',     'short' => 'Groups',  'icon' => 'groups',       'href' => $isGuest ? '#' : route('MyGroups'), 'gated' => $isGuest],
     ];
 
-    // Unread in-app notifications. Every notification but the welcome message comes
-    // from a group (dives posted, reminders, invites, chat), so the count sits on
-    // Groups, the tab that pulls people back. The Messages page keeps it too.
+    // Unread in-app notifications, for the bell icon - inbox and groups combined.
     $unread = $isGuest ? 0 : (int) $user->unreadNotifications();
+    // The Groups tab's own badge is scoped to Groups-folder messages only,
+    // not the bell's combined total (Pablo, 2026-09-17: "we want here the
+    // message count for groups, not the entire unread inbox").
+    $unreadGroups = $isGuest ? 0 : (int) $user->unreadGroupNotifications();
 
     // The Me icon is the diver's own picture when they have one. users.picture is a
     // bare file name under public/assets/img/users (UserController::updateProfilePic);
@@ -72,7 +74,7 @@
 
         <nav class="dh-topnav" aria-label="Main">
             @foreach($tabs as $key => $tab)
-                <a href="{{ $tab['href'] }}" class="dh-topnav-link {{ $active === $key ? 'is-active' : '' }}" data-dh-tab="{{ $key }}" @if($active === $key) aria-current="page" @endif @if(!empty($tab['gated'])) onclick="event.preventDefault();showModalGuest();" @endif>{{ $tab['label'] }}@if($key === 'groups' && $unread > 0)<span class="dh-tab-badge" aria-label="{{ $unread }} unread">{{ $unread > 99 ? '99+' : $unread }}</span>@endif</a>
+                <a href="{{ $tab['href'] }}" class="dh-topnav-link {{ $active === $key ? 'is-active' : '' }}" data-dh-tab="{{ $key }}" @if($active === $key) aria-current="page" @endif @if(!empty($tab['gated'])) onclick="event.preventDefault();showModalGuest();" @endif>{{ $tab['label'] }}@if($key === 'groups' && $unreadGroups > 0)<span class="dh-tab-badge" aria-label="{{ $unreadGroups }} unread">{{ $unreadGroups > 99 ? '99+' : $unreadGroups }}</span>@endif</a>
             @endforeach
         </nav>
 
@@ -135,7 +137,7 @@
         <a href="{{ $tab['href'] }}" class="dh-tab {{ $active === $key ? 'is-active' : '' }}" data-dh-tab="{{ $key }}" @if($active === $key) aria-current="page" @endif @if(!empty($tab['gated'])) onclick="event.preventDefault();showModalGuest();" @endif>
             <span class="dh-tab-icon">
                 <span class="material-icons-round" aria-hidden="true">{{ $tab['icon'] }}</span>
-                @if($key === 'groups' && $unread > 0)<span class="dh-tab-badge" aria-label="{{ $unread }} unread">{{ $unread > 99 ? '99+' : $unread }}</span>@endif
+                @if($key === 'groups' && $unreadGroups > 0)<span class="dh-tab-badge" aria-label="{{ $unreadGroups }} unread">{{ $unreadGroups > 99 ? '99+' : $unreadGroups }}</span>@endif
             </span>
             <span>{{ $tab['short'] }}</span>
         </a>
