@@ -1366,12 +1366,11 @@
 
                                             <!-- "What if...?" floating bubble (Pablo, 2026-09-19:
                                                  "show a floating bubble...open a modal and let the
-                                                 user select the What if scenario"; 2026-09-17: one
-                                                 merged shape per Pablo's reference image - a round
-                                                 icon bubble fused straight into a pill label below
-                                                 it, not two separate pieces side by side; position
-                                                 (top-right of this chart) stayed the same, "The
-                                                 position where you put is now perfect"). Not fixed
+                                                 user select the What if scenario"). One pill - icon
+                                                 then label - after a fused circle+pill version
+                                                 didn't land (Pablo, 2026-09-17: "let's avoid the
+                                                 circle and do only a pill"). Position (top-right of
+                                                 this chart) confirmed correct, unchanged. Not fixed
                                                  to the viewport like .dh-chat-fab, scoped to just
                                                  this chart card via the position:relative wrapper
                                                  above. Hidden until a plan is calculated (revealed
@@ -1384,7 +1383,7 @@
                                                  loaded separately, see the font link near the top
                                                  of this page). -->
                                             <button type="button" class="dh-whatif-fab" id="dhWhatIfFab" hidden aria-haspopup="dialog" aria-label="What if scenarios">
-                                                <span class="dh-whatif-fab-icon material-symbols-rounded" aria-hidden="true">question_exchange</span>
+                                                <span class="material-symbols-rounded" aria-hidden="true">question_exchange</span>
                                                 <span class="dh-whatif-fab-label">What if...?</span>
                                             </button>
                                         </div>

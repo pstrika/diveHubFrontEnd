@@ -1655,30 +1655,19 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 /* Floating "What if...?" bubble + picker modal (Pablo, 2026-09-19): replaces
    the old always-visible collapsible chip panel. Scoped to the deco chart
    card via its own position:relative wrapper, not fixed to the viewport
-   like .dh-chat-fab is. One fused shape per Pablo's reference image
-   (2026-09-17) - a round icon bubble on top flowing straight into a pill
-   label below it, same solid color throughout so the seam between them
-   disappears, rather than two separate pieces side by side. The negative
-   margin pulls the pill up under the circle; painting the label AFTER the
-   icon in source order keeps its top corners tucked behind the circle's
-   bottom edge instead of poking out past it. */
+   like .dh-chat-fab is. One plain pill - icon then label - after a fused
+   circle+pill version didn't land (Pablo, 2026-09-17: "let's avoid the
+   circle and do only a pill"). */
 .dh-whatif-fab {
   position: absolute; top: 10px; right: 10px; z-index: 20;
-  display: flex; flex-direction: column; align-items: center;
-  border: 0; background: transparent; padding: 0; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  border: 0; background: var(--dh-sea); color: #fff;
+  padding: 10px 16px; border-radius: var(--dh-radius-pill);
+  box-shadow: 0 6px 18px rgba(11,42,58,.28); cursor: pointer;
 }
-.dh-whatif-fab-icon {
-  width: 64px; height: 64px; border-radius: 50%; flex: 0 0 auto;
-  background: var(--dh-sea); color: #fff; font-size: 30px;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 6px 18px rgba(11,42,58,.28);
-}
-.dh-whatif-fab-label {
-  margin-top: -16px; padding: 12px 16px 6px; border-radius: var(--dh-radius-pill);
-  background: var(--dh-sea); color: #fff; font-weight: 800; font-size: .8rem; line-height: 1;
-  white-space: nowrap; box-shadow: 0 6px 14px rgba(11,42,58,.24);
-}
-.dh-whatif-fab:hover .dh-whatif-fab-icon, .dh-whatif-fab:hover .dh-whatif-fab-label { background: var(--dh-deep); }
+.dh-whatif-fab .material-symbols-rounded { font-size: 20px; }
+.dh-whatif-fab-label { font-weight: 800; font-size: .82rem; white-space: nowrap; }
+.dh-whatif-fab:hover { background: var(--dh-deep); }
 
 .dh-whatif-modal-backdrop {
   position: fixed; inset: 0; z-index: 10060; background: rgba(11,42,58,.45);
