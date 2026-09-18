@@ -164,8 +164,6 @@
                 $phoneHref = $operator->phone ? 'tel:' . preg_replace('/[^0-9+]/', '', $operator->phone) : null;
             @endphp
 
-            <x-shell.pwa-back :fallback="route('Operators')" />
-
             <section class="dh-site-facts">
                 <div class="dh-op-head dh-site-facts-main">
                     <span class="dh-op-logo">
@@ -173,7 +171,10 @@
                     </span>
                     <div>
                         <p class="dh-trip-kicker">{{ $operator->cityAddress }}@if($card['coast'] !== 'Other' && strcasecmp($card['coast'], $operator->cityAddress) !== 0) · {{ $card['coast'] }}@endif</p>
-                        <h1 class="dh-site-title">{{ $operator->operatorName }}</h1>
+                        <div class="dh-title-row">
+                            <h1 class="dh-site-title">{{ $operator->operatorName }}</h1>
+                            <x-shell.pwa-back :fallback="route('Operators')" />
+                        </div>
                         <div class="dh-site-chips">
                             @if($card['price'])<span class="chip chip-static" title="{{ $card['priceLabel'] }}">from ${{ $card['price'] }}</span>@endif
                             @if($card['tec'])<span class="chip chip-static chip-tec">Technical trips</span>@endif

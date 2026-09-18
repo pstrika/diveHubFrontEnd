@@ -157,12 +157,13 @@
                 $a = $card['availability'];
             @endphp
 
-            <x-shell.pwa-back :fallback="route('Trips')" />
-
             <section class="dh-site-facts dh-trip-head">
                 <div class="dh-site-facts-main">
                     <p class="dh-trip-kicker">{{ $when->format('l, F j') }} · {{ ucwords($location->location) }}</p>
-                    <h1 class="dh-site-title">{{ $tripDetails->tripName }}</h1>
+                    <div class="dh-title-row">
+                        <h1 class="dh-site-title">{{ $tripDetails->tripName }}</h1>
+                        <x-shell.pwa-back :fallback="route('Trips')" />
+                    </div>
                     <p class="dh-site-sub">
                         <a href="{{ route('OperatorDetails', ['id' => $operator->slug ?? $operator->id]) }}">{{ $operator->operatorName }}</a>
                         @if($card['time24'] !== '00:00') · departs {{ $card['time'] }} {{ $card['meridiem'] }} @else · departure time to be confirmed @endif

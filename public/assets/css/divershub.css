@@ -458,10 +458,15 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 /* Installed-PWA-only back control (components/shell/pwa-back.blade.php) -
    starts [hidden], material-dashboard.css's [hidden]{display:none!important}
    keeps it that way in an ordinary browser tab until its own script confirms
-   standalone display-mode and reveals it. */
-.dh-pwa-back { display: inline-flex; align-items: center; gap: 4px; font-size: .85rem; font-weight: 700; color: var(--dh-ink); text-decoration: none; margin-bottom: var(--dh-space-3); }
+   standalone display-mode and reveals it. Sits on the title's own row, to
+   the right (Pablo, 2026-09-18), so .dh-title-row is what actually places
+   it - this rule is just its own look. */
+.dh-pwa-back { display: inline-flex; align-items: center; gap: 4px; font-size: .85rem; font-weight: 700; color: var(--dh-ink); text-decoration: none; flex-shrink: 0; }
 .dh-pwa-back:hover { color: var(--dh-sea); }
 .dh-pwa-back .material-icons-round { font-size: 18px; }
+
+/* Title plus the PWA back button on the same line, button pinned right. */
+.dh-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 
 /* Groups (MyGroups, retheme 2026-09-11). */
 .dh-groups-toolbar { display: flex; justify-content: flex-end; margin: var(--dh-space-3) 0; }

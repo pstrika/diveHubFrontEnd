@@ -37,10 +37,6 @@
                 </div>
             @endif
 
-            @if(!$preview)
-                <x-shell.pwa-back :fallback="route('Blog')" />
-            @endif
-
             <nav class="dh-blog-crumb" aria-label="Breadcrumb">
                 <a href="{{ route('Blog') }}">Blog</a>
                 <span class="material-icons-round" aria-hidden="true">chevron_right</span>
@@ -49,7 +45,12 @@
 
             <article class="dh-blog-article">
                 <span class="dh-blog-eyebrow">{{ $post->category }}</span>
-                <h1>{{ $post->title }}</h1>
+                <div class="dh-title-row">
+                    <h1>{{ $post->title }}</h1>
+                    @if(!$preview)
+                        <x-shell.pwa-back :fallback="route('Blog')" />
+                    @endif
+                </div>
                 <div class="dh-blog-byline">
                     <span class="dh-blog-avatar">{{ Str::of($post->author->name ?? '?')->substr(0, 1) }}</span>
                     <span><strong>{{ $post->author->name ?? 'Divers Hub' }}</strong> <span class="chip chip-static dh-blog-role">{{ $roleLabel }}</span></span>

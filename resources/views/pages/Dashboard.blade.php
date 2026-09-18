@@ -767,6 +767,13 @@
                 if (e.touches.length !== 1) return;
                 touchStartX = e.touches[0].clientX;
                 touchStartY = e.touches[0].clientY;
+                // Reset here, not just after a swipe's click - once a real
+                // drag happens, mobile browsers don't fire a click at all on
+                // release (that's how they tell a swipe from a tap), so the
+                // click handler below never got a turn to clear the flag.
+                // Left set from the previous gesture, it would silently
+                // swallow every plain tap after the first swipe.
+                swiped = false;
                 stop();
             }, { passive: true });
 

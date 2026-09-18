@@ -241,8 +241,6 @@
                 $forecastText = $forecast ? ($hour < 12 ? $forecast->conditionsAM_text : $forecast->conditionsPM_text) : null;
             @endphp
 
-            <x-shell.pwa-back :fallback="route('DiveSites')" />
-
             {{-- Gallery header (W3 note 1). Main photo plus two thumbnails; all link to the full gallery below. --}}
             <section class="dh-site-hero">
                 <a class="dh-site-hero-main" href="#pictures" style="background-image:url('{{ $heroUrl }}')" aria-label="Photos of {{ $site->name }}"></a>
@@ -259,7 +257,10 @@
             {{-- Facts and actions (W3 note 2). --}}
             <section class="dh-site-facts">
                 <div class="dh-site-facts-main">
-                    <h1 class="dh-site-title">{{ $site->name }}</h1>
+                    <div class="dh-title-row">
+                        <h1 class="dh-site-title">{{ $site->name }}</h1>
+                        <x-shell.pwa-back :fallback="route('DiveSites')" />
+                    </div>
                     <p class="dh-site-sub">
                         <x-site-type-icon :type="$site->type" />
                         {{ ucfirst($site->type) }} · {{ ucwords($location->location ?? '') }}
