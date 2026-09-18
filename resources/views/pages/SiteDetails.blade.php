@@ -241,6 +241,8 @@
                 $forecastText = $forecast ? ($hour < 12 ? $forecast->conditionsAM_text : $forecast->conditionsPM_text) : null;
             @endphp
 
+            <x-shell.pwa-back :fallback="route('DiveSites')" />
+
             {{-- Gallery header (W3 note 1). Main photo plus two thumbnails; all link to the full gallery below. --}}
             <section class="dh-site-hero">
                 <a class="dh-site-hero-main" href="#pictures" style="background-image:url('{{ $heroUrl }}')" aria-label="Photos of {{ $site->name }}"></a>

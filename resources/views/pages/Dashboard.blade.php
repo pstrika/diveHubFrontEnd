@@ -751,6 +751,51 @@
             root.addEventListener('focusin', stop);
             root.addEventListener('focusout', start);
 
+            // Swipe left/right for next/previous article (Pablo, 2026-09-18).
+            // touchmove stays passive (never blocks the page's own vertical
+            // scroll) and only counts a gesture as a swipe once it's clearly
+            // more horizontal than vertical, so scrolling past the carousel
+            // still works normally. A slide is a link to the article, so a
+            // swipe that crossed the threshold also cancels the click that
+            // follows on release - otherwise every swipe would also open
+            // whichever slide it ended on.
+            var touchStartX = null;
+            var touchStartY = null;
+            var swiped = false;
+
+            root.addEventListener('touchstart', function (e) {
+                if (e.touches.length !== 1) return;
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                stop();
+            }, { passive: true });
+
+            root.addEventListener('touchmove', function (e) {
+                if (touchStartX === null) return;
+                var dx = e.touches[0].clientX - touchStartX;
+                var dy = e.touches[0].clientY - touchStartY;
+                if (Math.abs(dx) > 24 && Math.abs(dx) > Math.abs(dy)) {
+                    swiped = true;
+                }
+            }, { passive: true });
+
+            root.addEventListener('touchend', function (e) {
+                if (swiped && touchStartX !== null) {
+                    var dx = e.changedTouches[0].clientX - touchStartX;
+                    show(index + (dx < 0 ? 1 : -1));
+                }
+                touchStartX = null;
+                touchStartY = null;
+                start();
+            });
+
+            root.addEventListener('click', function (e) {
+                if (swiped) {
+                    e.preventDefault();
+                    swiped = false;
+                }
+            });
+
             start();
         })();
     </script>

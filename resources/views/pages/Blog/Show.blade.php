@@ -37,6 +37,10 @@
                 </div>
             @endif
 
+            @if(!$preview)
+                <x-shell.pwa-back :fallback="route('Blog')" />
+            @endif
+
             <nav class="dh-blog-crumb" aria-label="Breadcrumb">
                 <a href="{{ route('Blog') }}">Blog</a>
                 <span class="material-icons-round" aria-hidden="true">chevron_right</span>

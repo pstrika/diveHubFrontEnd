@@ -455,6 +455,14 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-empty { text-align: center; padding: var(--dh-space-6); color: var(--dh-muted); }
 .dh-empty .material-icons-round { font-size: 40px; color: var(--dh-shallow); }
 
+/* Installed-PWA-only back control (components/shell/pwa-back.blade.php) -
+   starts [hidden], material-dashboard.css's [hidden]{display:none!important}
+   keeps it that way in an ordinary browser tab until its own script confirms
+   standalone display-mode and reveals it. */
+.dh-pwa-back { display: inline-flex; align-items: center; gap: 4px; font-size: .85rem; font-weight: 700; color: var(--dh-ink); text-decoration: none; margin-bottom: var(--dh-space-3); }
+.dh-pwa-back:hover { color: var(--dh-sea); }
+.dh-pwa-back .material-icons-round { font-size: 18px; }
+
 /* Groups (MyGroups, retheme 2026-09-11). */
 .dh-groups-toolbar { display: flex; justify-content: flex-end; margin: var(--dh-space-3) 0; }
 .dh-invite-list { list-style: none; margin: 0; padding: 0; }

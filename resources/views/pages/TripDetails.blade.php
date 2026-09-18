@@ -157,6 +157,8 @@
                 $a = $card['availability'];
             @endphp
 
+            <x-shell.pwa-back :fallback="route('Trips')" />
+
             <section class="dh-site-facts dh-trip-head">
                 <div class="dh-site-facts-main">
                     <p class="dh-trip-kicker">{{ $when->format('l, F j') }} · {{ ucwords($location->location) }}</p>

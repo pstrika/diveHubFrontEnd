@@ -164,6 +164,8 @@
                 $phoneHref = $operator->phone ? 'tel:' . preg_replace('/[^0-9+]/', '', $operator->phone) : null;
             @endphp
 
+            <x-shell.pwa-back :fallback="route('Operators')" />
+
             <section class="dh-site-facts">
                 <div class="dh-op-head dh-site-facts-main">
                     <span class="dh-op-logo">
