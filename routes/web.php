@@ -275,6 +275,11 @@ Route::middleware('auth')->group(function () {
     Route::get('Blog/manage/create', 'App\Http\Controllers\BlogAdminController@create')->name('Blog.manage.create');
     Route::post('Blog/manage', 'App\Http\Controllers\BlogAdminController@store')->name('Blog.manage.store');
     Route::get('Blog/manage/search-sites', 'App\Http\Controllers\BlogAdminController@searchSites')->name('Blog.manage.searchSites');
+    // Renders the public article template from whatever is currently in the
+    // form - including unsaved edits - without touching the database, so a
+    // Creator can check how a draft will look before publishing (Pablo,
+    // 2026-09-18: "a preview of the article...opened in a temporary tab").
+    Route::post('Blog/manage/preview', 'App\Http\Controllers\BlogAdminController@preview')->name('Blog.manage.preview');
     Route::get('Blog/manage/{post}/edit', 'App\Http\Controllers\BlogAdminController@edit')->name('Blog.manage.edit');
     Route::put('Blog/manage/{post}', 'App\Http\Controllers\BlogAdminController@update')->name('Blog.manage.update');
     Route::delete('Blog/manage/{post}', 'App\Http\Controllers\BlogAdminController@destroy')->name('Blog.manage.destroy');

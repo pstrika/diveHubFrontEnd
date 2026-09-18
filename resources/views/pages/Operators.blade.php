@@ -63,7 +63,7 @@
                 <div id="map" class="dh-map" role="application" aria-label="Map of dive operators"></div>
             @elseif(empty($board['cards']))
                 <div class="dh-empty">
-                    <span class="material-icons-round" aria-hidden="true">sailing</span>
+                    <span class="material-icons-round" aria-hidden="true">directions_boat</span>
                     <p>No operators match. Try fewer filters or another spelling.</p>
                     <a class="dh-btn dh-btn-primary" href="{{ url()->current() }}">Show all</a>
                 </div>

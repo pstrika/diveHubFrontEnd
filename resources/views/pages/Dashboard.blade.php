@@ -72,24 +72,19 @@
                 impression and a bad use of the top of the page.
             --}}
 {{--
-    "From the blog" (Pablo, 2026-09-17: "the first thing in the My
-    Dashboard"; 2026-09-18: "show the articles like you did in the All
-    filter: the last one shows wide, the rest show below in 3 columns" -
-    dropped the rotating carousel for the same static featured+grid layout
-    the Blog index already uses, just reusing .dh-blog-featured/-grid/-card
-    directly rather than a second copy of that markup. Posts and their
-    order come from MyDashboardController - App\Models\Post::forViewer(),
-    ranked by the diver's own certification level, so the "last"
-    (first/widest) one here is whichever post that ranking puts first, not
-    strictly the newest. .dh-blog-grid-3col forces exactly 3 columns on
-    desktop instead of the Blog index's auto-fill, which the mock-array
-    days' cover_image bug (a leftover ['image'] array key that doesn't
-    exist on the real Post model - "the mini picture...is not showing")
-    made an unrelated but simultaneous fix. --}}
+    "From the blog" carousel (Pablo, 2026-09-17: "the first thing in the My
+    Dashboard"; reverted 2026-09-18 - a "show it like the Blog index" grid
+    version briefly replaced this, but "you broke the carousel. The
+    carousel was perfect as it was" - back to one slide at a time,
+    auto-advancing, dots to jump directly). Posts and their order come
+    from MyDashboardController - App\Models\Post::forViewer(), ranked by
+    the diver's own certification level. The thumbnail-not-showing bug
+    (Pablo, 2026-09-18) was a leftover ['image'] array key from the
+    mock-array days - the real column is cover_image - fixed here too,
+    with the same illustration fallback the Blog index uses when a post
+    has no uploaded cover. --}}
 @if(!empty($blogPosts))
     @php
-        $dashFeatured = $blogPosts->first();
-        $dashRest = $blogPosts->slice(1)->values();
         $dashCoverOr = fn ($p) => $p->cover_image ? asset($p->cover_image) : asset('assets/img/illustrations/dive-site.webp');
     @endphp
     <div class="row">
@@ -98,31 +93,26 @@
                 <h2 class="dh-card-head">From the blog
                     <a class="dh-dash-headlink" href="{{ route('Blog') }}">See all</a></h2>
                 <div class="dh-card-body">
-                    <a href="{{ route('Blog.show', $dashFeatured->slug) }}" class="dh-blog-featured">
-                        <span class="dh-blog-featured-img">
-                            <img src="{{ $dashCoverOr($dashFeatured) }}" alt="" loading="lazy">
-                        </span>
-                        <span class="dh-blog-featured-body">
-                            <span class="dh-blog-eyebrow">{{ $dashFeatured->category }}</span>
-                            <span class="dh-blog-featured-title">{{ $dashFeatured->title }}</span>
-                            <span class="dh-blog-excerpt">{{ $dashFeatured->excerpt }}</span>
-                        </span>
-                    </a>
-                    @if($dashRest->isNotEmpty())
-                        <div class="dh-blog-grid dh-blog-grid-3col">
-                            @foreach($dashRest as $bp)
-                                <a href="{{ route('Blog.show', $bp->slug) }}" class="dh-blog-card">
-                                    <span class="dh-blog-card-img">
-                                        <img src="{{ $dashCoverOr($bp) }}" alt="" loading="lazy">
-                                        <span class="chip chip-static dh-blog-cat-chip">{{ $bp->category }}</span>
-                                    </span>
-                                    <span class="dh-blog-card-body">
-                                        <span class="dh-blog-card-title">{{ $bp->title }}</span>
+                    <div class="dh-mini-carousel" id="dhBlogCarousel">
+                        <div class="dh-mini-carousel-track">
+                            @foreach($blogPosts as $i => $bp)
+                                <a href="{{ route('Blog.show', $bp->slug) }}" class="dh-mini-carousel-slide {{ $i === 0 ? 'is-active' : '' }}">
+                                    <img src="{{ $dashCoverOr($bp) }}" alt="" loading="lazy">
+                                    <span class="dh-mini-carousel-body">
+                                        <span class="dh-blog-eyebrow">{{ $bp->category }}</span>
+                                        <span class="dh-mini-carousel-title">{{ $bp->title }}</span>
                                     </span>
                                 </a>
                             @endforeach
                         </div>
-                    @endif
+                        @if(count($blogPosts) > 1)
+                            <div class="dh-mini-carousel-dots">
+                                @foreach($blogPosts as $i => $bp)
+                                    <button type="button" class="dh-mini-carousel-dot {{ $i === 0 ? 'is-active' : '' }}" data-dh-carousel-dot="{{ $i }}" aria-label="Show article {{ $i + 1 }}"></button>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </section>
         </div>
@@ -350,7 +340,7 @@
                                                 <span class="material-icons-round dh-dive-chevron" aria-hidden="true">chevron_right</span>
                                             </a>
                                             <span class="dh-wish-next">
-                                                <span class="material-icons-round" aria-hidden="true">{{ $hasBoat ? 'sailing' : 'schedule' }}</span>
+                                                <span class="material-icons-round" aria-hidden="true">{{ $hasBoat ? 'directions_boat' : 'schedule' }}</span>
                                                 @if($hasBoat)
                                                     @php $wd = \Carbon\Carbon::parse($wish->date); @endphp
                                                     <span>Next boat</span>
@@ -717,6 +707,52 @@
 
 
 
+
+    {{-- "From the blog" carousel: auto-advance, pause on hover/focus so a
+         diver reading one card doesn't have it swap out from under them,
+         dots jump straight to a slide. Slide-count-agnostic, so a 6th post
+         later needs no JS change. --}}
+    <script>
+        (function () {
+            var root = document.getElementById('dhBlogCarousel');
+            if (!root) return;
+            var slides = Array.prototype.slice.call(root.querySelectorAll('.dh-mini-carousel-slide'));
+            var dots = Array.prototype.slice.call(root.querySelectorAll('.dh-mini-carousel-dot'));
+            if (slides.length < 2) return;
+
+            var index = 0;
+            var timer = null;
+
+            function show(i) {
+                index = (i + slides.length) % slides.length;
+                slides.forEach(function (s, si) { s.classList.toggle('is-active', si === index); });
+                dots.forEach(function (d, di) { d.classList.toggle('is-active', di === index); });
+            }
+
+            function start() {
+                stop();
+                timer = setInterval(function () { show(index + 1); }, 4500);
+            }
+            function stop() {
+                if (timer) clearInterval(timer);
+                timer = null;
+            }
+
+            dots.forEach(function (dot) {
+                dot.addEventListener('click', function () {
+                    show(parseInt(dot.getAttribute('data-dh-carousel-dot'), 10));
+                    start();
+                });
+            });
+
+            root.addEventListener('mouseenter', stop);
+            root.addEventListener('mouseleave', start);
+            root.addEventListener('focusin', stop);
+            root.addEventListener('focusout', start);
+
+            start();
+        })();
+    </script>
 
     @endpush
 </x-page-template>

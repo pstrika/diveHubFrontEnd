@@ -42,7 +42,7 @@
             @if(($site->access ?? '') === 'Beach Access')<span class="chip chip-static dh-site-shore">Shore entry</span>@endif
             @if($soon > 0)
                 <span class="chip chip-static dh-site-soon" title="Confirmed boat trips to this site in the next 30 days">
-                    <span class="material-icons-round" aria-hidden="true">sailing</span>{{ $soon }} {{ Str::plural('boat', $soon) }} this month
+                    <span class="material-icons-round" aria-hidden="true">directions_boat</span>{{ $soon }} {{ Str::plural('boat', $soon) }} this month
                 </span>
             @endif
         </span>

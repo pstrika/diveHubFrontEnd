@@ -99,6 +99,60 @@ class BlogAdminController extends Controller
         return redirect()->route('Blog.manage.index')->with('success', 'Article removed.');
     }
 
+    /**
+     * Renders the public article page from whatever is currently in the form,
+     * including unsaved edits - nothing is written to the database. The form
+     * posts here with target="_blank" (Form.blade.php) so it opens as a real
+     * new tab rather than needing a JS-side render.
+     */
+    public function preview(Request $request)
+    {
+        $this->authorize('create', Post::class);
+
+        $tags = array_values(array_filter(array_map('trim', explode(',', (string) $request->input('tags', '')))));
+        $relatedSitesRaw = json_decode((string) $request->input('related_sites', ''), true) ?: [];
+
+        $post = new Post([
+            'title' => (string) $request->input('title', 'Untitled article'),
+            'category' => (string) $request->input('category', ''),
+            'tags' => $tags,
+            'min_level' => $request->filled('min_level') ? (int) $request->input('min_level') : null,
+            'excerpt' => (string) $request->input('excerpt', ''),
+            'body' => (string) $request->input('body', ''),
+            'related_sites' => $relatedSitesRaw,
+            'status' => 'draft',
+        ]);
+        $post->exists = false;
+        $post->author_id = $request->user()->id;
+        $post->setRelation('author', $request->user());
+        $post->published_at = now();
+
+        $rankedSites = $post->rankedSites();
+        if ($rankedSites->isNotEmpty()) {
+            $photos = \App\Models\Photo::whereIn('siteId', $rankedSites->pluck('site.id'))->get()->groupBy('siteId');
+            foreach ($rankedSites as $entry) {
+                $entry['site']->photoFile = $photos->get($entry['site']->id)?->first()?->file;
+            }
+        }
+
+        // A picked-but-unsaved cover comes in as a data: URL (Form.blade.php
+        // reads the file with FileReader before submitting) so the preview
+        // can show it without an upload; an existing cover just reuses its
+        // real asset path, same as the live page.
+        $previewCoverUrl = $request->input('cover_data_url') ?: null;
+
+        $SEO = ['title' => $post->title . ' - Divers Hub Blog', 'desc' => $post->excerpt];
+
+        return view('pages.Blog.Show', [
+            'post' => $post,
+            'related' => collect(),
+            'rankedSites' => $rankedSites,
+            'SEO' => $SEO,
+            'preview' => true,
+            'previewCoverUrl' => $previewCoverUrl,
+        ]);
+    }
+
     /** Small JSON search behind the "related dive sites" picker in the form - name only, real Site records. */
     public function searchSites(Request $request)
     {

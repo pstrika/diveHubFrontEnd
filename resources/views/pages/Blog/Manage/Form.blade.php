@@ -78,6 +78,9 @@
                                     </select>
                                 </div>
                                 <button type="submit" class="dh-btn dh-btn-primary" style="width: 100%; justify-content: center;">Save article</button>
+                                <button type="button" id="previewArticleBtn" class="dh-btn dh-btn-ghost-dark" style="width: 100%; justify-content: center; margin-top: 8px;">
+                                    <span class="material-icons-round" aria-hidden="true">visibility</span>Preview
+                                </button>
                             </div>
                         </div>
 
@@ -120,6 +123,22 @@
                         </div>
                     </div>
                 </div>
+            </form>
+
+            {{-- A real POST in a new tab (target="_blank"), not a JS-rendered
+                 mock - so the preview goes through the exact same Blade template
+                 and Quill render path the live article uses. Sibling to #postForm
+                 rather than nested inside it: forms can't nest. --}}
+            <form method="POST" action="{{ route('Blog.manage.preview') }}" target="_blank" id="postPreviewForm" class="d-none">
+                @csrf
+                <input type="hidden" name="title" id="previewTitle">
+                <input type="hidden" name="category" id="previewCategory">
+                <input type="hidden" name="tags" id="previewTags">
+                <input type="hidden" name="min_level" id="previewMinLevel">
+                <input type="hidden" name="excerpt" id="previewExcerpt">
+                <input type="hidden" name="body" id="previewBody">
+                <input type="hidden" name="related_sites" id="previewRelatedSites">
+                <input type="hidden" name="cover_data_url" id="previewCoverDataUrl">
             </form>
 
         </div>
@@ -219,6 +238,43 @@
                 document.getElementById('relatedSitesInput').value = JSON.stringify(relatedSites.map(function (s) {
                     return { site_id: s.id, note: s.note || '' };
                 }));
+            });
+
+            // Preview: posts everything currently in the form - unsaved edits
+            // included - to a route that renders the live article template
+            // without touching the database (Pablo, 2026-09-18). The tab is
+            // opened synchronously on the click, before the cover image's
+            // FileReader (async) finishes, so popup blockers don't treat the
+            // later form.submit() as an unrequested popup.
+            document.getElementById('previewArticleBtn').addEventListener('click', function () {
+                var previewWindow = window.open('', 'dhBlogPreview');
+                var form = document.getElementById('postPreviewForm');
+
+                document.getElementById('previewTitle').value = document.getElementById('title').value;
+                document.getElementById('previewCategory').value = document.getElementById('category').value;
+                document.getElementById('previewTags').value = document.getElementById('tags').value;
+                document.getElementById('previewMinLevel').value = document.getElementById('min_level').value;
+                document.getElementById('previewExcerpt').value = document.getElementById('excerpt').value;
+                document.getElementById('previewBody').value = JSON.stringify(quill.getContents());
+                document.getElementById('previewRelatedSites').value = JSON.stringify(relatedSites.map(function (s) {
+                    return { site_id: s.id, note: s.note || '' };
+                }));
+
+                function send(coverDataUrl) {
+                    document.getElementById('previewCoverDataUrl').value = coverDataUrl || '';
+                    form.target = 'dhBlogPreview';
+                    form.submit();
+                }
+
+                var fileInput = document.querySelector('input[name="cover_image"]');
+                if (fileInput && fileInput.files && fileInput.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function () { send(reader.result); };
+                    reader.onerror = function () { send({!! json_encode($post->cover_image ? asset($post->cover_image) : '') !!}); };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else {
+                    send({!! json_encode($post->cover_image ? asset($post->cover_image) : '') !!});
+                }
             });
         })();
     </script>

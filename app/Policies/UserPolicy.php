@@ -63,9 +63,13 @@ class UserPolicy
 
     /**
      * Determine whether the authenticate user can manage items and other related entities(tags, categories).
+     *
+     * Admin-only (Pablo, 2026-09-18: Creators should have no access outside
+     * Article management) - this used to also admit Creators, which is what
+     * let them reach Dive Sites Admin, tags and categories.
      */
     public function manageItems(User $user)
     {
-        return $user->isAdmin() || $user->isCreator();
+        return $user->isAdmin();
     }
 }

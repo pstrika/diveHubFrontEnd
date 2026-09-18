@@ -107,15 +107,10 @@
 <div class="dh-menu-group">
     <h6>Learn</h6>
     {!! $link('Blog', route('Blog'), 'auto_stories') !!}
-    {{-- Only visible entry point into /Blog/manage - it existed with no
-         link anywhere a Creator or Admin could actually find it (Pablo,
-         2026-09-18: "I couldn't find the blog editor. Have you
-         implemented it?"). Gated the same way PostPolicy gates the
-         screen itself, not the users-only "Admin" group below, since
-         Creators need this too. --}}
-    @can('viewAny', \App\Models\Post::class)
-        {!! $link('Manage articles', route('Blog.manage.index'), 'edit_note') !!}
-    @endcan
+    {{-- The editor link itself now lives in "Admin Tools" (admins) or
+         "Creator Tools" (creators) below, not here - Pablo, 2026-09-18:
+         keep this group reading-only, one entry point per role instead
+         of the editor link showing up twice. --}}
 </div>
 
 <div class="dh-menu-group">
@@ -125,21 +120,31 @@
 </div>
 
 @auth
+    {{-- Everything an Admin can reach lives in one group (Pablo, 2026-09-18).
+         Site Management now carries its own "Add site" action, so that link
+         no longer needs a separate drawer row. --}}
     @can('manage-users', App\Models\User::class)
     <div class="dh-menu-group">
-        <h6>Admin</h6>
+        <h6>Admin Tools</h6>
         {!! $link('Platform health', route('PlatformHealth'), 'monitor_heart') !!}
         {!! $link('User management', route('users'), 'manage_accounts') !!}
         {!! $link('Message management', route('admin.messages.index'), 'forum') !!}
+        {!! $link('Article management', route('Blog.manage.index'), 'edit_note') !!}
+        {!! $link('Site management', route('DiveSitesAdmin'), 'edit_location_alt') !!}
     </div>
     @endcan
-    @can('manage-items', App\Models\User::class)
+    {{-- Creators are not Admins, and see only their one tool (Pablo,
+         2026-09-18: "Article management ONLY"). Checked against isCreator()
+         directly rather than the manage-items gate, which used to also
+         admit Creators into dive-site/tag/category admin - that gate was
+         tightened to admins-only in UserPolicy@manageItems for the same
+         reason. --}}
+    @if($user->isCreator())
     <div class="dh-menu-group">
-        <h6>Dive sites admin</h6>
-        {!! $link('Add site', route('new-site'), 'add_location_alt') !!}
-        {!! $link('Manage sites', route('DiveSitesAdmin'), 'edit_location_alt') !!}
+        <h6>Creator Tools</h6>
+        {!! $link('Article management', route('Blog.manage.index'), 'edit_note') !!}
     </div>
-    @endcan
+    @endif
 @endauth
 
 <div class="dh-menu-group">

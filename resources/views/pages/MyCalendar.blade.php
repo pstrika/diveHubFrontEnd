@@ -122,7 +122,7 @@
 
             @if($totalTrips === 0)
                 <div class="dh-empty">
-                    <span class="material-icons-round" aria-hidden="true">sailing</span>
+                    <span class="material-icons-round" aria-hidden="true">directions_boat</span>
                     <p>No saved trips this month.</p>
                 </div>
             @else

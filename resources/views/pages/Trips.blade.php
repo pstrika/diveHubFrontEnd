@@ -53,7 +53,7 @@
                     @include('pages.trips._regions', ['board' => $board, 'date' => $date, 'query' => $query, 'limit' => null])
                 @else
                     <div class="dh-empty">
-                        <span class="material-icons-round" aria-hidden="true">sailing</span>
+                        <span class="material-icons-round" aria-hidden="true">directions_boat</span>
                         <p>No trips match on this day.</p>
                         @if($board['total'] > 0)
                             <a class="dh-btn dh-btn-primary" href="{{ route('Trips') }}/{{ $date }}">Clear filters</a>
@@ -78,7 +78,7 @@
                 @php $anyShown = collect($days)->sum('shown'); @endphp
                 @if($anyShown === 0)
                     <div class="dh-empty">
-                        <span class="material-icons-round" aria-hidden="true">sailing</span>
+                        <span class="material-icons-round" aria-hidden="true">directions_boat</span>
                         <p>No trips match between these dates.</p>
                         @if($board['total'] > 0)
                             <a class="dh-btn dh-btn-primary" href="{{ $clearUrl }}">Clear filters</a>

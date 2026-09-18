@@ -7,9 +7,21 @@
         <div class="container-fluid py-0 dh-board">
 
             @php
+                $preview = $preview ?? false;
                 $roleLabel = $post->author && $post->author->isAdmin() ? 'Admin' : 'Creator';
-                $coverOr = fn ($p) => $p->cover_image ? asset($p->cover_image) : asset('assets/img/illustrations/dive-site.webp');
+                $coverOr = fn ($p) => ($previewCoverUrl ?? null) ?: ($p->cover_image ? asset($p->cover_image) : asset('assets/img/illustrations/dive-site.webp'));
             @endphp
+
+            @if($preview)
+                {{-- Opened by the "Preview" button in Blog/Manage/Form.blade.php,
+                     from whatever is currently in the form - not yet saved, so
+                     this banner is the one thing that tells it apart from the
+                     live article (Pablo, 2026-09-18). --}}
+                <p class="dh-comms-note dh-comms-warn">
+                    <span class="material-icons-round" aria-hidden="true">visibility</span>
+                    Preview only - this article has not been saved. Close this tab to keep editing.
+                </p>
+            @endif
 
             <nav class="dh-blog-crumb" aria-label="Breadcrumb">
                 <a href="{{ route('Blog') }}">Blog</a>

@@ -64,7 +64,7 @@
 
             @if($totalMonthTrips === 0)
                 <div class="dh-empty">
-                    <span class="material-icons-round" aria-hidden="true">sailing</span>
+                    <span class="material-icons-round" aria-hidden="true">directions_boat</span>
                     <p>No {{ strtolower($title) }} trips this month.</p>
                 </div>
             @else

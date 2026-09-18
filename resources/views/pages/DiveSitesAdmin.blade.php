@@ -56,6 +56,12 @@
             <div class="dh-panel-head-row mb-3">
                 <h2 class="dh-panel-title mb-0">Dive Sites Admin</h2>
                 <span class="dh-board-count" id="siteCount"></span>
+                {{-- Moved here from its own drawer link (Pablo, 2026-09-18: "move the
+                     Add Site and remove from the drawer") so Site Management is the
+                     one place an admin looks for every site action. --}}
+                <a class="dh-btn dh-btn-primary" href="{{ route('new-site') }}">
+                    <span class="material-icons-round" aria-hidden="true">add_location_alt</span>Add site
+                </a>
             </div>
 
             <div class="dh-admin-toolbar">
