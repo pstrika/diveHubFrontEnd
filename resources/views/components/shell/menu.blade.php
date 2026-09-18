@@ -107,6 +107,15 @@
 <div class="dh-menu-group">
     <h6>Learn</h6>
     {!! $link('Blog', route('Blog'), 'auto_stories') !!}
+    {{-- Only visible entry point into /Blog/manage - it existed with no
+         link anywhere a Creator or Admin could actually find it (Pablo,
+         2026-09-18: "I couldn't find the blog editor. Have you
+         implemented it?"). Gated the same way PostPolicy gates the
+         screen itself, not the users-only "Admin" group below, since
+         Creators need this too. --}}
+    @can('viewAny', \App\Models\Post::class)
+        {!! $link('Manage articles', route('Blog.manage.index'), 'edit_note') !!}
+    @endcan
 </div>
 
 <div class="dh-menu-group">
