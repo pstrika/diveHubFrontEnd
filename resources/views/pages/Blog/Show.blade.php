@@ -14,13 +14,22 @@
 
             @if($preview)
                 {{-- Opened by the "Preview" button in Blog/Manage/Form.blade.php,
-                     from whatever is currently in the form - not yet saved, so
-                     this banner is the one thing that tells it apart from the
-                     live article (Pablo, 2026-09-18). --}}
-                <p class="dh-comms-note dh-comms-warn">
+                     from whatever is currently in the form - not yet saved.
+                     "Close this tab" doesn't hold up in the installed PWA
+                     (Pablo, 2026-09-18: "gets you trapped") - there's no tab
+                     chrome to close, and window.open() there just navigates
+                     the one app window instead of opening a real new one. The
+                     button below tries window.close() (works when this really
+                     is a separate script-opened tab) and falls back to
+                     history.back()/the article list otherwise, so there's
+                     always a way out. --}}
+                <div class="dh-preview-banner">
                     <span class="material-icons-round" aria-hidden="true">visibility</span>
-                    Preview only - this article has not been saved. Close this tab to keep editing.
-                </p>
+                    <span>Preview only - this article has not been saved.</span>
+                    <button type="button" class="dh-btn dh-btn-ghost-dark dh-preview-close" onclick="dhClosePreview()">
+                        <span class="material-icons-round" aria-hidden="true">close</span>Close preview
+                    </button>
+                </div>
             @endif
 
             <nav class="dh-blog-crumb" aria-label="Breadcrumb">
@@ -118,6 +127,26 @@
     </main>
 
     @push('js')
+    @if($preview)
+        <script>
+            // window.close() only works on a window/tab that script actually
+            // opened - true in a normal browser, but the installed PWA has no
+            // separate tab to close and window.open() just navigates its one
+            // window, so close() silently no-ops there. The timeout gives it a
+            // beat to work before falling back to leaving the page some other
+            // way, so this never leaves the diver stuck on the preview.
+            function dhClosePreview() {
+                try { window.close(); } catch (e) {}
+                setTimeout(function () {
+                    if (window.history.length > 1) {
+                        window.history.back();
+                    } else {
+                        window.location.href = '{{ route('Blog.manage.index') }}';
+                    }
+                }, 150);
+            }
+        </script>
+    @endif
     <script src="{{ asset('assets') }}/js/plugins/quill.min.js"></script>
     <script>
         (function () {
