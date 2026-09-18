@@ -96,7 +96,7 @@
     
     <main class="main-content position-relative h-100 border-radius-lg">
         <!-- Navbar -->
-        <x-shell.header title="Dive Operators" />
+        <x-shell.header title="Dive Operators" :back="route('Operators')" />
         <!-- End Navbar -->
         <div class="container-fluid py-0">
 
@@ -171,10 +171,7 @@
                     </span>
                     <div>
                         <p class="dh-trip-kicker">{{ $operator->cityAddress }}@if($card['coast'] !== 'Other' && strcasecmp($card['coast'], $operator->cityAddress) !== 0) · {{ $card['coast'] }}@endif</p>
-                        <div class="dh-title-row">
-                            <h1 class="dh-site-title">{{ $operator->operatorName }}</h1>
-                            <x-shell.pwa-back :fallback="route('Operators')" />
-                        </div>
+                        <h1 class="dh-site-title">{{ $operator->operatorName }}</h1>
                         <div class="dh-site-chips">
                             @if($card['price'])<span class="chip chip-static" title="{{ $card['priceLabel'] }}">from ${{ $card['price'] }}</span>@endif
                             @if($card['tec'])<span class="chip chip-static chip-tec">Technical trips</span>@endif

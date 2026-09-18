@@ -9,8 +9,14 @@
     used for the matching drawer link (<x-shell.header title="Wreck Diving Calendar" icon="wreck_icon.svg" />),
     or a plain Material icon name, same as the drawer's non-SVG entries
     (<x-shell.header title="Beach Diving" icon="beach_access" />).
+
+    $back: a fallback href, adds the installed-PWA-only <x-shell.pwa-back />
+    to this same row, pinned right (Pablo, 2026-09-18: "in the blog where it
+    says 'blog'...same for all other cases" - Dive Sites/Dive
+    Operators/Dive Trip Details/Blog are exactly this title). Omit it on
+    every page that isn't a drill-down from something else.
 --}}
-@props(['title' => '', 'icon' => null])
+@props(['title' => '', 'icon' => null, 'back' => null])
 
 @php
     $__headIconSvg = ($icon && str_ends_with($icon, '.svg')) ? \App\Support\IconSvg::themed('assets/img/icons/' . $icon) : null;
@@ -34,5 +40,8 @@
             <span class="material-icons-round" aria-hidden="true">person_add_alt</span>
             Browsing as a guest. Create a free account to save trips and plan dives.
         </a>
+    @endif
+    @if($back)
+        <x-shell.pwa-back :fallback="$back" />
     @endif
 </div>

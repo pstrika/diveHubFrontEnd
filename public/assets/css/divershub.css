@@ -288,6 +288,10 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-pagehead-icon.is-font { width: auto; height: auto; font-size: 24px; }
 .dh-pagehead-guest { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--dh-sea); text-decoration: none; }
 .dh-pagehead-guest .material-icons-round { font-size: 18px; }
+/* Pins to the row's right edge whether or not the guest prompt above is
+   also present - if it is, that already claimed the free space, so this
+   just sits directly after it with the row's normal gap. */
+.dh-pagehead .dh-pwa-back { margin-left: auto; }
 .dh-pagehead-guest:hover { text-decoration: underline; color: var(--dh-deep); }
 
 /* Horizontal chip rows on phones: swipe instead of wrap. */
@@ -458,15 +462,14 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 /* Installed-PWA-only back control (components/shell/pwa-back.blade.php) -
    starts [hidden], material-dashboard.css's [hidden]{display:none!important}
    keeps it that way in an ordinary browser tab until its own script confirms
-   standalone display-mode and reveals it. Sits on the title's own row, to
-   the right (Pablo, 2026-09-18), so .dh-title-row is what actually places
-   it - this rule is just its own look. */
+   standalone display-mode and reveals it. Lives in the page's own <x-shell.
+   header> row (Pablo, 2026-09-18: "in the blog where it says 'blog'...
+   Dive Sites, Dive Operators, Dive Trip Details and Blog") - see the
+   .dh-pagehead .dh-pwa-back rule above for how it pins to that row's right
+   edge; this one is just its own look. */
 .dh-pwa-back { display: inline-flex; align-items: center; gap: 4px; font-size: .85rem; font-weight: 700; color: var(--dh-ink); text-decoration: none; flex-shrink: 0; }
 .dh-pwa-back:hover { color: var(--dh-sea); }
 .dh-pwa-back .material-icons-round { font-size: 18px; }
-
-/* Title plus the PWA back button on the same line, button pinned right. */
-.dh-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 
 /* Groups (MyGroups, retheme 2026-09-11). */
 .dh-groups-toolbar { display: flex; justify-content: flex-end; margin: var(--dh-space-3) 0; }

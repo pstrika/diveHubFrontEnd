@@ -168,7 +168,7 @@
         </style>
 
         <!-- Navbar -->
-        <x-shell.header title="Dive Sites" />
+        <x-shell.header title="Dive Sites" :back="route('DiveSites')" />
         <!-- End Navbar -->
         <div class="container-fluid py-0">
 
@@ -257,10 +257,7 @@
             {{-- Facts and actions (W3 note 2). --}}
             <section class="dh-site-facts">
                 <div class="dh-site-facts-main">
-                    <div class="dh-title-row">
-                        <h1 class="dh-site-title">{{ $site->name }}</h1>
-                        <x-shell.pwa-back :fallback="route('DiveSites')" />
-                    </div>
+                    <h1 class="dh-site-title">{{ $site->name }}</h1>
                     <p class="dh-site-sub">
                         <x-site-type-icon :type="$site->type" />
                         {{ ucfirst($site->type) }} · {{ ucwords($location->location ?? '') }}

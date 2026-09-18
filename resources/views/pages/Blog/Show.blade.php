@@ -2,7 +2,7 @@
     <x-shell.nav active="" />
 
     <main class="main-content position-relative h-100 border-radius-lg">
-        <x-shell.header title="Blog" icon="auto_stories" />
+        <x-shell.header title="Blog" icon="auto_stories" :back="(isset($preview) && $preview) ? null : route('Blog')" />
 
         <div class="container-fluid py-0 dh-board">
 
@@ -45,12 +45,7 @@
 
             <article class="dh-blog-article">
                 <span class="dh-blog-eyebrow">{{ $post->category }}</span>
-                <div class="dh-title-row">
-                    <h1>{{ $post->title }}</h1>
-                    @if(!$preview)
-                        <x-shell.pwa-back :fallback="route('Blog')" />
-                    @endif
-                </div>
+                <h1>{{ $post->title }}</h1>
                 <div class="dh-blog-byline">
                     <span class="dh-blog-avatar">{{ Str::of($post->author->name ?? '?')->substr(0, 1) }}</span>
                     <span><strong>{{ $post->author->name ?? 'Divers Hub' }}</strong> <span class="chip chip-static dh-blog-role">{{ $roleLabel }}</span></span>

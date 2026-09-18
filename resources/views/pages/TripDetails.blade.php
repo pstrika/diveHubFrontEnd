@@ -140,7 +140,7 @@
         </style>
         
         <!-- Navbar -->
-        <x-shell.header title="Dive Trip Details" />
+        <x-shell.header title="Dive Trip Details" :back="route('Trips')" />
 
         <div class="container-fluid py-0 dh-board">
             {{--
@@ -160,10 +160,7 @@
             <section class="dh-site-facts dh-trip-head">
                 <div class="dh-site-facts-main">
                     <p class="dh-trip-kicker">{{ $when->format('l, F j') }} · {{ ucwords($location->location) }}</p>
-                    <div class="dh-title-row">
-                        <h1 class="dh-site-title">{{ $tripDetails->tripName }}</h1>
-                        <x-shell.pwa-back :fallback="route('Trips')" />
-                    </div>
+                    <h1 class="dh-site-title">{{ $tripDetails->tripName }}</h1>
                     <p class="dh-site-sub">
                         <a href="{{ route('OperatorDetails', ['id' => $operator->slug ?? $operator->id]) }}">{{ $operator->operatorName }}</a>
                         @if($card['time24'] !== '00:00') · departs {{ $card['time'] }} {{ $card['meridiem'] }} @else · departure time to be confirmed @endif
