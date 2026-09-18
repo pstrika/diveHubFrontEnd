@@ -10,6 +10,11 @@
                 $preview = $preview ?? false;
                 $roleLabel = $post->author && $post->author->isAdmin() ? 'Admin' : 'Creator';
                 $coverOr = fn ($p) => ($previewCoverUrl ?? null) ?: ($p->cover_image ? asset($p->cover_image) : asset('assets/img/illustrations/dive-site.webp'));
+                // Which part of the photo to keep once object-fit: cover crops
+                // it to the wide banner shape - a Creator-set field, not a
+                // fixed center crop (Pablo, 2026-09-18: the shark/diver in the
+                // first real article sat low in frame and got cropped out).
+                $focusOf = fn ($p) => 'object-position: center ' . ($p->cover_focus ?: 'center') . ';';
             @endphp
 
             @if($preview)
@@ -70,7 +75,7 @@
                     </div>
                 @endif
 
-                <img class="dh-blog-hero-img" src="{{ $coverOr($post) }}" alt="">
+                <img class="dh-blog-hero-img" src="{{ $coverOr($post) }}" alt="" style="{{ $focusOf($post) }}">
 
                 {{-- Quill Delta rendered client-side, same pattern as
                      sites.desc/route/typicalConditions/history (see
@@ -109,7 +114,7 @@
                         @foreach($related as $rp)
                             <a href="{{ route('Blog.show', $rp->slug) }}" class="dh-blog-card">
                                 <span class="dh-blog-card-img">
-                                    <img src="{{ $coverOr($rp) }}" alt="" loading="lazy">
+                                    <img src="{{ $coverOr($rp) }}" alt="" loading="lazy" style="{{ $focusOf($rp) }}">
                                     <span class="chip chip-static dh-blog-cat-chip">{{ $rp->category }}</span>
                                 </span>
                                 <span class="dh-blog-card-body">

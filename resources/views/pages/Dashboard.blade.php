@@ -86,6 +86,7 @@
 @if(!empty($blogPosts))
     @php
         $dashCoverOr = fn ($p) => $p->cover_image ? asset($p->cover_image) : asset('assets/img/illustrations/dive-site.webp');
+        $dashFocusOf = fn ($p) => 'object-position: center ' . ($p->cover_focus ?: 'center') . ';';
     @endphp
     <div class="row">
         <div class="col-md-12">
@@ -97,7 +98,7 @@
                         <div class="dh-mini-carousel-track">
                             @foreach($blogPosts as $i => $bp)
                                 <a href="{{ route('Blog.show', $bp->slug) }}" class="dh-mini-carousel-slide {{ $i === 0 ? 'is-active' : '' }}">
-                                    <img src="{{ $dashCoverOr($bp) }}" alt="" loading="lazy">
+                                    <img src="{{ $dashCoverOr($bp) }}" alt="" loading="lazy" style="{{ $dashFocusOf($bp) }}">
                                     <span class="dh-mini-carousel-body">
                                         <span class="dh-blog-eyebrow">{{ $bp->category }}</span>
                                         <span class="dh-mini-carousel-title">{{ $bp->title }}</span>

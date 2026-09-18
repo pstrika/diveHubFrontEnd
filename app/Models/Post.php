@@ -32,6 +32,7 @@ class Post extends Model
         'excerpt',
         'body',
         'cover_image',
+        'cover_focus',
         'related_sites',
         'author_id',
         'status',

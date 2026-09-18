@@ -27,11 +27,21 @@
                                     <label for="title">Title</label>
                                     <input type="text" id="title" name="title" value="{{ old('title', $post->title) }}" required>
                                 </div>
-                                <div class="dh-field">
-                                    <label for="slug">URL slug</label>
-                                    <input type="text" id="slug" name="slug" value="{{ old('slug', $post->slug) }}" required>
-                                    <p class="dh-hint">Only auto-fills from the title while you haven't typed one yourself.</p>
-                                </div>
+                                @if(auth()->user()->isAdmin())
+                                    <div class="dh-field">
+                                        <label for="slug">URL slug</label>
+                                        <input type="text" id="slug" name="slug" value="{{ old('slug', $post->slug) }}" required>
+                                        <p class="dh-hint">Only auto-fills from the title while you haven't typed one yourself.</p>
+                                    </div>
+                                @elseif($post->exists)
+                                    {{-- Creators don't get to edit the URL at all (Pablo, 2026-09-18) -
+                                         not just hidden here, BlogAdminController::validated() ignores
+                                         a slug in the request for anyone who isn't an Admin. --}}
+                                    <div class="dh-field">
+                                        <label>URL slug</label>
+                                        <p class="dh-hint" style="margin-top: 4px;">/Blog/{{ $post->slug }} - only an Admin can change this.</p>
+                                    </div>
+                                @endif
                                 <div class="dh-field">
                                     <label for="excerpt">Excerpt</label>
                                     <textarea id="excerpt" name="excerpt" rows="2" maxlength="500">{{ old('excerpt', $post->excerpt) }}</textarea>
@@ -114,11 +124,24 @@
                         <div class="dh-profile-card">
                             <div class="dh-profile-card-head"><h6 class="dh-panel-title">Cover image</h6></div>
                             <div class="dh-profile-card-body">
-                                @if($post->cover_image)
-                                    <img src="{{ asset($post->cover_image) }}" alt="" style="width: 100%; border-radius: 12px; margin-bottom: 10px; aspect-ratio: 16/9; object-fit: cover;">
-                                @endif
-                                <input type="file" name="cover_image" accept="image/*">
+                                {{-- Same crop the live hero uses (aspect-ratio 16/9, object-fit
+                                     cover) so the focal point picker below shows exactly what a
+                                     reader will see, not an approximation - the first real
+                                     article's cover had its subject sitting low in the frame and
+                                     a centered crop cut it out of the banner entirely (Pablo,
+                                     2026-09-18). --}}
+                                <img id="coverPreviewImg" src="{{ $post->cover_image ? asset($post->cover_image) : '' }}" alt="" style="width: 100%; border-radius: 12px; margin-bottom: 10px; aspect-ratio: 16/9; object-fit: cover; object-position: center {{ old('cover_focus', $post->cover_focus ?: 'center') }};" @if(!$post->cover_image) hidden @endif>
+                                <input type="file" name="cover_image" id="coverImageInput" accept="image/*">
                                 <p class="dh-hint">{{ $post->cover_image ? 'Choose a new file to replace it.' : 'One picture, used on the index card and the article hero.' }}</p>
+                                <div class="dh-field" style="margin-top: 10px;">
+                                    <label for="cover_focus">Focal point</label>
+                                    <select id="cover_focus" name="cover_focus">
+                                        <option value="top" @selected(old('cover_focus', $post->cover_focus) === 'top')>Top</option>
+                                        <option value="center" @selected(old('cover_focus', $post->cover_focus ?: 'center') === 'center')>Center</option>
+                                        <option value="bottom" @selected(old('cover_focus', $post->cover_focus) === 'bottom')>Bottom</option>
+                                    </select>
+                                    <p class="dh-hint">Which part of the photo stays visible once it's cropped into the wide banner shown on the article and in feeds.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -139,6 +162,7 @@
                 <input type="hidden" name="body" id="previewBody">
                 <input type="hidden" name="related_sites" id="previewRelatedSites">
                 <input type="hidden" name="cover_data_url" id="previewCoverDataUrl">
+                <input type="hidden" name="cover_focus" id="previewCoverFocus">
             </form>
 
         </div>
@@ -154,9 +178,12 @@
         @endif
 
         // Slug auto-fills from the title until the slug field itself is touched.
+        // Creators don't get this field at all (see the Content card), so
+        // there's nothing to wire up for them here.
         (function () {
             var titleInput = document.getElementById('title');
             var slugInput = document.getElementById('slug');
+            if (!slugInput) return;
             var slugTouched = {{ $post->exists ? 'true' : 'false' }};
             slugInput.addEventListener('input', function () { slugTouched = true; });
             titleInput.addEventListener('input', function () {
@@ -164,6 +191,32 @@
                 slugInput.value = titleInput.value.toLowerCase().trim()
                     .replace(/[^a-z0-9]+/g, '-')
                     .replace(/(^-|-$)/g, '');
+            });
+        })();
+
+        // Cover focal point: the preview mirrors the live hero's exact crop
+        // (16/9, object-fit: cover) so picking top/center/bottom shows the
+        // real effect immediately, for a freshly chosen file as well as an
+        // already-saved cover.
+        (function () {
+            var preview = document.getElementById('coverPreviewImg');
+            var fileInput = document.getElementById('coverImageInput');
+            var focusSelect = document.getElementById('cover_focus');
+
+            function applyFocus() {
+                preview.style.objectPosition = 'center ' + focusSelect.value;
+            }
+            focusSelect.addEventListener('change', applyFocus);
+
+            fileInput.addEventListener('change', function () {
+                if (!fileInput.files || !fileInput.files[0]) return;
+                var reader = new FileReader();
+                reader.onload = function () {
+                    preview.src = reader.result;
+                    preview.hidden = false;
+                    applyFocus();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
             });
         })();
 
@@ -259,6 +312,7 @@
                 document.getElementById('previewRelatedSites').value = JSON.stringify(relatedSites.map(function (s) {
                     return { site_id: s.id, note: s.note || '' };
                 }));
+                document.getElementById('previewCoverFocus').value = document.getElementById('cover_focus').value;
 
                 function send(coverDataUrl) {
                     document.getElementById('previewCoverDataUrl').value = coverDataUrl || '';

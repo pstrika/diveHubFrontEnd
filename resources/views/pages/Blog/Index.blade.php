@@ -27,6 +27,9 @@
                 $rest = $posts->slice(1)->values();
                 $coverOr = fn ($post) => $post->cover_image ? asset($post->cover_image) : asset('assets/img/illustrations/dive-site.webp');
                 $roleLabel = fn ($post) => $post->author && $post->author->isAdmin() ? 'Admin' : 'Creator';
+                // Which part of the photo survives the object-fit: cover crop -
+                // a Creator-set field, not always dead center (Pablo, 2026-09-18).
+                $focusOf = fn ($post) => 'object-position: center ' . ($post->cover_focus ?: 'center') . ';';
 
                 // @json() splits its argument on every top-level comma to look for
                 // optional encoding-options/depth args, so a closure this size (a
@@ -42,6 +45,7 @@
                         'excerpt' => $p->excerpt,
                         'category' => $p->category,
                         'image' => $coverOr($p),
+                        'focus' => $p->cover_focus ?: 'center',
                         'tags' => $p->tags ?? [],
                         'authorInitial' => (string) Str::of($p->author->name ?? '?')->substr(0, 1),
                         'authorName' => $p->author->name ?? 'Divers Hub',
@@ -63,7 +67,7 @@
                 @if($featured)
                     <a href="{{ route('Blog.show', $featured->slug) }}" class="dh-blog-featured">
                         <span class="dh-blog-featured-img">
-                            <img src="{{ $coverOr($featured) }}" alt="" loading="lazy">
+                            <img src="{{ $coverOr($featured) }}" alt="" loading="lazy" style="{{ $focusOf($featured) }}">
                         </span>
                         <span class="dh-blog-featured-body">
                             <span class="dh-blog-eyebrow">{{ $featured->category }}</span>
@@ -94,7 +98,7 @@
                 @foreach($rest as $post)
                     <a href="{{ route('Blog.show', $post->slug) }}" class="dh-blog-card">
                         <span class="dh-blog-card-img">
-                            <img src="{{ $coverOr($post) }}" alt="" loading="lazy">
+                            <img src="{{ $coverOr($post) }}" alt="" loading="lazy" style="{{ $focusOf($post) }}">
                             <span class="chip chip-static dh-blog-cat-chip">{{ $post->category }}</span>
                         </span>
                         <span class="dh-blog-card-body">
@@ -145,7 +149,7 @@
 
             function featuredHtml(p) {
                 return '<a href="/Blog/' + esc(p.slug) + '" class="dh-blog-featured">'
-                    + '<span class="dh-blog-featured-img"><img src="' + esc(p.image) + '" alt="" loading="lazy"></span>'
+                    + '<span class="dh-blog-featured-img"><img src="' + esc(p.image) + '" alt="" loading="lazy" style="object-position: center ' + esc(p.focus || 'center') + ';"></span>'
                     + '<span class="dh-blog-featured-body">'
                     + '<span class="dh-blog-eyebrow">' + esc(p.category) + '</span>'
                     + '<span class="dh-blog-featured-title">' + esc(p.title) + '</span>'
@@ -161,7 +165,7 @@
 
             function cardHtml(p) {
                 return '<a href="/Blog/' + esc(p.slug) + '" class="dh-blog-card">'
-                    + '<span class="dh-blog-card-img"><img src="' + esc(p.image) + '" alt="" loading="lazy"><span class="chip chip-static dh-blog-cat-chip">' + esc(p.category) + '</span></span>'
+                    + '<span class="dh-blog-card-img"><img src="' + esc(p.image) + '" alt="" loading="lazy" style="object-position: center ' + esc(p.focus || 'center') + ';"><span class="chip chip-static dh-blog-cat-chip">' + esc(p.category) + '</span></span>'
                     + '<span class="dh-blog-card-body">'
                     + '<span class="dh-blog-card-title">' + esc(p.title) + '</span>'
                     + '<span class="dh-blog-excerpt">' + esc(p.excerpt) + '</span>'

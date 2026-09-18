@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Models\Site;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Creator/Admin authoring screen (Pablo, 2026-09-17/18). Creators publish
@@ -119,6 +120,7 @@ class BlogAdminController extends Controller
             'min_level' => $request->filled('min_level') ? (int) $request->input('min_level') : null,
             'excerpt' => (string) $request->input('excerpt', ''),
             'body' => (string) $request->input('body', ''),
+            'cover_focus' => in_array($request->input('cover_focus'), ['top', 'center', 'bottom'], true) ? $request->input('cover_focus') : 'center',
             'related_sites' => $relatedSitesRaw,
             'status' => 'draft',
         ]);
@@ -191,23 +193,66 @@ class BlogAdminController extends Controller
 
     private function validated(Request $request, Post $post): array
     {
-        $data = $request->validate([
+        $isAdmin = $request->user()->isAdmin();
+
+        $rules = [
             'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|alpha_dash:ascii|unique:posts,slug,' . ($post->id ?: 'NULL') . ',id',
             'category' => 'required|string|max:100',
             'tags' => 'nullable|string|max:500',
             'min_level' => 'nullable|integer|min:0|max:4',
             'excerpt' => 'nullable|string|max:500',
             'body' => 'nullable|string',
             'cover_image' => 'nullable|image|max:8192',
+            'cover_focus' => 'nullable|in:top,center,bottom',
             'related_sites' => 'nullable|string',
             'status' => 'required|in:draft,published',
-        ]);
+        ];
+
+        // Only Admins can set/change the article's URL (Pablo, 2026-09-18:
+        // "if you're a creator, I don't want them to be able to edit the...
+        // slug field. If you're an admin, yes"). The form doesn't even
+        // render the field for a Creator, but that's a UI nicety, not the
+        // enforcement - a crafted request could still post a slug, so it's
+        // ignored server-side for anyone who isn't an Admin, same as any
+        // other authorization check in this app.
+        if ($isAdmin) {
+            $rules['slug'] = 'required|string|max:255|alpha_dash:ascii|unique:posts,slug,' . ($post->id ?: 'NULL') . ',id';
+        }
+
+        $data = $request->validate($rules);
 
         $data['tags'] = array_values(array_filter(array_map('trim', explode(',', $data['tags'] ?? ''))));
         $data['related_sites'] = json_decode($data['related_sites'] ?? '', true) ?: [];
+        $data['cover_focus'] = $data['cover_focus'] ?? 'center';
+        // The "Not set" option posts min_level as '' - nullable|integer lets
+        // an empty string past validation (it just skips the integer check),
+        // but the column itself rejects '' outright, so every post left at
+        // "suits every level" would fail to save with a SQL error. Found
+        // while testing the slug lockdown above, not caused by it.
+        $data['min_level'] = $request->filled('min_level') ? (int) $data['min_level'] : null;
         unset($data['cover_image']); // handled separately in store()/update() - keeps the UploadedFile out of a plain update() call
 
+        if (!$isAdmin) {
+            // Editing: keep the slug exactly as it is. Creating: the server
+            // picks one from the title - the same alpha_dash/unique shape an
+            // Admin's manual slug would have to satisfy, just computed here
+            // instead of validated from input.
+            $data['slug'] = $post->exists ? $post->slug : $this->uniqueSlugFrom($data['title']);
+        }
+
         return $data;
+    }
+
+    /** Slugifies a title and appends -2, -3... until it's not already taken - the same uniqueness an Admin's manual slug is validated against. */
+    private function uniqueSlugFrom(string $title): string
+    {
+        $base = Str::slug($title) ?: 'article';
+        $slug = $base;
+        $i = 2;
+        while (Post::where('slug', $slug)->exists()) {
+            $slug = $base . '-' . $i++;
+        }
+
+        return $slug;
     }
 }
