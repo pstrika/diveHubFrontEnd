@@ -784,7 +784,19 @@
                 if (Math.abs(dx) > 24 && Math.abs(dx) > Math.abs(dy)) {
                     swiped = true;
                 }
-            }, { passive: true });
+                // Once it's a confirmed horizontal swipe, tell iOS we're
+                // handling this gesture ourselves - otherwise, with no
+                // horizontal scroll to actually perform, Safari plays its
+                // rubber-band bounce on the whole page instead (Pablo,
+                // 2026-09-18: "the whole screen tries to swipe...nothing
+                // really moves, but the whole screen goes and then comes").
+                // Can't call this on a passive listener, hence {passive:
+                // false} below - a vertical drag (swiped stays false) is
+                // still never touched, so normal page scroll is unaffected.
+                if (swiped) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
 
             root.addEventListener('touchend', function (e) {
                 if (swiped && touchStartX !== null) {
