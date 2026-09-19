@@ -2454,6 +2454,15 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    toggling (not absolute-stacked) - simpler, and every slide is roughly
    the same height (thumb + a 2-line clamped title) so there's no layout
    jump swapping between them. */
+/* touch-action tells the browser's OWN gesture recognizer, before any JS
+   runs, that this element never pans horizontally - preventDefault() in
+   the swipe script's touchmove was already too late on iOS (it decides
+   whether to hand a touch off to native scroll/bounce on the very first
+   touchmove, not once a threshold is crossed a few pixels in), which is
+   why the rubber-band bounce kept happening despite that (Pablo,
+   2026-09-18: "the elastic bounce is still there"). pan-y keeps vertical
+   page scrolling working normally through this element. */
+.dh-mini-carousel { touch-action: pan-y; }
 .dh-mini-carousel-track { position: relative; min-height: 92px; }
 .dh-mini-carousel-slide { display: none; align-items: center; gap: 14px; text-decoration: none; color: inherit; }
 .dh-mini-carousel-slide.is-active { display: flex; }
