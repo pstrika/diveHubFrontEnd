@@ -37,10 +37,12 @@ class CronController extends Controller
     }
 
     /**
-     * Hourly (see .github/workflows/detect-cancelled-trips.yml). The
-     * 2-consecutive-misses rule in the command means calling this more
-     * often than hourly can't cancel anything early - the second miss is
-     * ignored unless it's at least ~an hour after the first.
+     * Hourly, triggered by an Azure Logic App (Recurrence + HTTP action)
+     * in the same resource group as this App Service - kept out of GitHub
+     * Actions deliberately, so the trigger doesn't depend on a separate
+     * platform. The 2-consecutive-misses rule in the command means calling
+     * this more often than hourly can't cancel anything early - the second
+     * miss is ignored unless it's at least ~an hour after the first.
      */
     public function detectCancelledTrips(Request $request)
     {

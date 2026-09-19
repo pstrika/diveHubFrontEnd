@@ -108,7 +108,14 @@ class DetectCancelledTrips extends Command
 
             $key = Carbon::parse($event->date)->toDateString() . '|' . $event->time . '|'
                 . $event->operatorId . '|' . $event->tripName;
-            $resolved[$key] ??= Trip::existsForComposite($event->date, $event->time, $event->operatorId, $event->tripName);
+            // $event only passed on a cache miss (and never during --dry-run) so a
+            // detected rename can self-heal the event's stored tripName; other
+            // events sharing this exact key already have the identical name, so
+            // the cache hit path costs them nothing beyond healing lazily later.
+            $resolved[$key] ??= Trip::existsForComposite(
+                $event->date, $event->time, $event->operatorId, $event->tripName,
+                $this->dryRun ? null : $event
+            );
 
             if ($resolved[$key]) {
                 $this->counts['resolved']++;
