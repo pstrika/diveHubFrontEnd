@@ -76,6 +76,12 @@
                                         <img src="{{ asset('assets') }}/img/default-avatar-background.png" alt="avatar"
                                             class="w-100 rounded-circle shadow-sm">
                                         @endif
+                                        {{-- Dropped during the retheme, put back (Pablo, 2026-09-18) -
+                                             at a glance, is this account Google SSO or a native Divers
+                                             Hub signup. --}}
+                                        <span class="dh-user-auth-badge" title="{{ $user->google_id ? 'Signed up with Google' : 'Registered on Divers Hub' }}">
+                                            <img src="{{ asset('assets') }}/img/icons/{{ $user->google_id ? 'google_icon.webp' : 'favicon.png' }}" alt="">
+                                        </span>
                                     </div>
                                 </td>
                                 <td><b>{{ $user->name }}</b></td>

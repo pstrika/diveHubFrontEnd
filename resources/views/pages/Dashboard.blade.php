@@ -724,15 +724,50 @@
             var index = 0;
             var timer = null;
 
-            function show(i) {
-                index = (i + slides.length) % slides.length;
-                slides.forEach(function (s, si) { s.classList.toggle('is-active', si === index); });
+            // Slides left/right instead of an instant cut, on the timer and
+            // on a swipe alike (Pablo, 2026-09-18: "when they move for timer
+            // or we swipe, the content moves left or right like a carousel
+            // effect"). dir is +1 (next) or -1 (prev), always passed
+            // explicitly by the caller rather than derived from the index
+            // change - deriving it would get the direction backwards at the
+            // wraparound point (last slide back to the first, or the
+            // reverse), since going from index 4 to 0 numerically looks
+            // like "backward" even though a swipe-left or the auto-advance
+            // timer both mean "forward".
+            function show(i, dir) {
+                var newIndex = (i + slides.length) % slides.length;
+                if (newIndex === index) return;
+                var direction = typeof dir === 'number' ? dir : (newIndex > index ? 1 : -1);
+
+                var outgoing = slides[index];
+                var incoming = slides[newIndex];
+
+                // Snap the incoming slide off-screen on the correct side
+                // with transitions off, then force a reflow so the browser
+                // registers that starting position before re-enabling the
+                // transition - without this there's nothing to animate
+                // from and it would just appear already in place.
+                incoming.style.transition = 'none';
+                incoming.style.transform = 'translateX(' + (direction > 0 ? '100%' : '-100%') + ')';
+                incoming.style.opacity = '0';
+                void incoming.offsetWidth;
+                incoming.style.transition = '';
+
+                outgoing.classList.remove('is-active');
+                outgoing.style.transform = 'translateX(' + (direction > 0 ? '-100%' : '100%') + ')';
+                outgoing.style.opacity = '0';
+
+                incoming.classList.add('is-active');
+                incoming.style.transform = 'translateX(0)';
+                incoming.style.opacity = '1';
+
+                index = newIndex;
                 dots.forEach(function (d, di) { d.classList.toggle('is-active', di === index); });
             }
 
             function start() {
                 stop();
-                timer = setInterval(function () { show(index + 1); }, 4500);
+                timer = setInterval(function () { show(index + 1, 1); }, 4500);
             }
             function stop() {
                 if (timer) clearInterval(timer);
@@ -801,7 +836,8 @@
             root.addEventListener('touchend', function (e) {
                 if (swiped && touchStartX !== null) {
                     var dx = e.changedTouches[0].clientX - touchStartX;
-                    show(index + (dx < 0 ? 1 : -1));
+                    var dir = dx < 0 ? 1 : -1;
+                    show(index + dir, dir);
                 }
                 touchStartX = null;
                 touchStartY = null;

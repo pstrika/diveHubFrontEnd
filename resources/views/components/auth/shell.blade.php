@@ -11,8 +11,11 @@
     Same photo and the same dive feel as before, but the redesign's tokens: the
     deep ink wash instead of the grey gradient, one white card with the round
     logo in it, a plain heading instead of the floating gradient banner, and the
-    normal dh buttons. No tab bar and no drawer: signing in is one task and the
-    logo is the way back out.
+    normal dh buttons. No tab bar and no drawer.
+
+    The horizontal wordmark that used to sit above the card is gone (Pablo,
+    2026-09-18: "the all blue logo has to be removed on top of the login
+    window") - the round logo inside the card is the only one now.
 
     The forms themselves are passed in by each page and are unchanged: same
     field names, same @error blocks, same routes, same captcha. Only the wrapper
@@ -25,10 +28,6 @@
 
 <div class="dh-auth">
     <div class="dh-auth-bg" aria-hidden="true"></div>
-
-    <a class="dh-auth-brand" href="{{ route('/') }}" aria-label="Divers Hub home">
-        <img src="{{ asset('assets') }}/img/logos/logo_horizontal.png" alt="Divers Hub">
-    </a>
 
     <main class="dh-auth-main">
         <div class="dh-auth-card">
