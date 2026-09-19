@@ -440,6 +440,8 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-trip { display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: var(--dh-space-3); align-items: center; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: var(--dh-radius); padding: 10px 12px; margin-bottom: 6px; }
 .dh-trip.is-fav { border-left: 3px solid var(--dh-sea); }
 .dh-trip.is-departed { opacity: .55; }
+.dh-trip.is-cancelled { opacity: .7; }
+.dh-trip.is-cancelled .dh-trip-title span { text-decoration: line-through; color: var(--dh-muted); }
 .dh-trip-time { text-align: center; border-right: 1px solid var(--dh-line); padding-right: 10px; line-height: 1.1; }
 .dh-trip-hour { display: block; font-size: 1.15rem; font-weight: 800; color: var(--dh-ink); }
 .dh-trip-ampm, .dh-trip-date { display: block; font-size: .65rem; font-weight: 700; letter-spacing: .06em; color: var(--dh-muted); }
@@ -463,6 +465,9 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-avail-full { color: var(--dh-poor); }
 .dh-avail-call { color: var(--dh-muted); }
 .dh-avail-departed { color: var(--dh-muted); }
+.dh-avail-cancelled { color: var(--dh-poor); }
+
+.chip-cancelled { background: var(--dh-poor); border-color: var(--dh-poor); color: #fff; }
 
 .dh-empty { text-align: center; padding: var(--dh-space-6); color: var(--dh-muted); }
 .dh-empty .material-icons-round { font-size: 40px; color: var(--dh-shallow); }
@@ -1212,6 +1217,8 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-dive-status .material-icons-round { font-size: 18px; }
 .dh-dive-status.is-booked { color: #0f7b3f; border-color: #a9dcbb; background: #eaf7ee; }
 .dh-dive-status.is-open { color: #b0322b; border-color: #f2b9b4; background: #fdf0ee; }
+.dh-dive-status.is-cancelled { color: #5a5a5a; border-color: #cfcfcf; background: #eee; }
+.dh-dive-row.is-cancelled .dh-dive-title { text-decoration: line-through; color: var(--dh-muted); }
 .dh-dive-status-more { font-weight: 600; opacity: .75; }
 .dh-dive-status-more::before { content: "\00b7"; margin-right: 6px; }
 .dh-dive-status:hover { filter: brightness(.97); }

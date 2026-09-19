@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         Commands\SendGroupDiveReminders::class,
         Commands\SendGroupActivityDigest::class,
+        Commands\DetectCancelledTrips::class,
     ];
 
     /**

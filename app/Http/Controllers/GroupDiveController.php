@@ -136,12 +136,13 @@ class GroupDiveController extends Controller
             ->where('user_id', auth()->user()->id)
             ->delete();
 
-        // Remove the matching auto-added entry from their personal calendar too.
+        // Only the entry this dive created (or adopted) - see addRsvp(). A
+        // trip the diver saved separately from search has group_dive_id
+        // null and is left alone (Pablo, 2026-09-19: this used to delete by
+        // a blind date/time/operator/name match, which could wipe an
+        // unrelated manual save of the same trip).
         Event::where('userId', auth()->user()->id)
-            ->where('date', $dive->date)
-            ->where('time', $dive->time)
-            ->where('operatorId', $dive->operatorId)
-            ->where('tripName', $dive->tripName)
+            ->where('group_dive_id', $dive->id)
             ->delete();
 
         return redirect()->back()->with('msg', 'You are no longer going on this dive.');
@@ -151,7 +152,10 @@ class GroupDiveController extends Controller
      * RSVPs the user to a group dive, and mirrors it into their personal
      * calendar (Event) the same way EventController::addEventToCalendar
      * does for a directly-added trip, so "going" on a group dive shows up
-     * everywhere the user tracks their dives.
+     * everywhere the user tracks their dives. Stamps events.group_dive_id
+     * so leave()/EventController::removeFromCalendar() can find exactly
+     * this row later instead of guessing by composite key (Pablo,
+     * 2026-09-19).
      */
     private function addRsvp(GroupDive $dive, $userId)
     {
@@ -162,23 +166,38 @@ class GroupDiveController extends Controller
             ]);
         }
 
-        $alreadyOnPersonalCalendar = Event::where('userId', $userId)
-            ->where('date', $dive->date)
+        // Already linked to this dive - nothing to do.
+        if (Event::where('userId', $userId)->where('group_dive_id', $dive->id)->exists()) {
+            return;
+        }
+
+        // The diver had already saved this exact trip from search. Adopt
+        // that row rather than creating a second one: one trip, one
+        // calendar entry, and "Leaving" now takes it off the calendar the
+        // way the product is supposed to work.
+        $existing = Event::where('userId', $userId)
+            ->whereDate('date', $dive->date)
             ->where('time', $dive->time)
             ->where('operatorId', $dive->operatorId)
             ->where('tripName', $dive->tripName)
-            ->exists();
+            ->whereNull('group_dive_id')
+            ->first();
 
-        if (!$alreadyOnPersonalCalendar) {
-            Event::create([
-                'userId' => $userId,
-                'operatorId' => $dive->operatorId,
-                'date' => $dive->date,
-                'time' => $dive->time,
-                'tripName' => $dive->tripName,
-                'booked' => false,
-            ]);
+        if ($existing) {
+            $existing->group_dive_id = $dive->id;
+            $existing->save();
+            return;
         }
+
+        Event::create([
+            'userId' => $userId,
+            'operatorId' => $dive->operatorId,
+            'date' => $dive->date,
+            'time' => $dive->time,
+            'tripName' => $dive->tripName,
+            'group_dive_id' => $dive->id,
+            'booked' => false,
+        ]);
     }
 
     /**
@@ -312,6 +331,12 @@ class GroupDiveController extends Controller
         }
 
         $this->deleteDiveFacebookPost($group, $dive);
+
+        // Normally a no-op (the guard above already refuses to run while
+        // anyone is RSVP'd), but a cheap indexed delete that closes the gap
+        // for any row orphaned before events.group_dive_id existed, or by a
+        // race (Pablo, 2026-09-19).
+        Event::where('group_dive_id', $dive->id)->delete();
 
         $dive->delete();
 

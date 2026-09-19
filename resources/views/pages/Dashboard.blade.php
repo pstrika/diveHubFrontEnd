@@ -142,12 +142,13 @@
                                 <ul class="dh-dive-list">
                                     @foreach($trips as $trip)
                                         @php
-                                            $tags = (string) $trip->tags;
+                                            $cancelled = $trip->cancelled ?? false;
+                                            $tags = (string) ($trip->tags ?? '');
                                             $typeIcon = str_contains($tags, 'SHA') ? 'icons_shark_center.png' : (str_contains($tags, 'TEC') ? 'icons_tec_center.png' : (str_contains($tags, 'LOB') ? 'icons_lobster_center.png' : 'icons_rec_center.png'));
                                             $typeName = str_contains($tags, 'SHA') ? 'Shark' : (str_contains($tags, 'TEC') ? 'Technical' : (str_contains($tags, 'LOB') ? 'Lobster' : 'Recreational'));
                                             $when = DateTime::createFromFormat('Y-m-d', $trip->date);
                                         @endphp
-                                        <li class="dh-dive-row">
+                                        <li class="dh-dive-row {{ $cancelled ? 'is-cancelled' : '' }}">
                                             {{-- Hidden fields read by clickOnMyTrips() for the options sheet. --}}
                                             <label id="upComingTripsDate-{{ $trip->eventId }}" hidden>{{ $trip->date }}</label>
                                             <label id="upComingTripsTime-{{ $trip->eventId }}" hidden>{{ $trip->departureTime }}</label>
@@ -158,19 +159,32 @@
                                             <label id="upComingTripsBooked-{{ $trip->eventId }}" hidden>{{ $trip->booked}}</label>
                                             <label id="upComingTripsOperator-{{ $trip->eventId }}" hidden>{{ $trip->operatorName}}</label>
                                             <label id="upComingTripsTitle-{{ $trip->eventId }}" hidden>{{ $trip->tripName}}</label>
+                                            <label id="upComingTripsCancelled-{{ $trip->eventId }}" hidden>{{ $cancelled ? '1' : '0' }}</label>
 
-                                            <a class="dh-dive-main" href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">
-                                                <span class="dh-dive-type" title="{{ $typeName }} dive"><img src="{{ asset('assets') }}/img/icons/{{ $typeIcon }}" alt="{{ $typeName }}"></span>
-                                                <span class="dh-dive-text">
-                                                    <span class="dh-dive-title do-not-translate">{{ $trip->tripName }}</span>
-                                                    <span class="dh-dive-when">{{ $when ? $when->format('D, M j') : $trip->date }} <b>{{ $trip->departureTime }}</b></span>
-                                                    <span class="dh-dive-op do-not-translate">{{ $trip->operatorName }}</span>
-                                                </span>
-                                                <span class="material-icons-round dh-dive-chevron" aria-hidden="true">chevron_right</span>
-                                            </a>
-                                            <button type="button" class="dh-dive-status {{ $trip->booked ? 'is-booked' : 'is-open' }}" onclick="clickOnMyTrips({{ $trip->eventId }})" aria-haspopup="dialog">
-                                                <span class="material-icons-round" aria-hidden="true">{{ $trip->booked ? 'check_circle' : 'radio_button_unchecked' }}</span>
-                                                <span>{{ $trip->booked ? 'Booked' : 'Not booked yet' }}</span>
+                                            @if($trip->id)
+                                                <a class="dh-dive-main" href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">
+                                                    <span class="dh-dive-type" title="{{ $typeName }} dive"><img src="{{ asset('assets') }}/img/icons/{{ $typeIcon }}" alt="{{ $typeName }}"></span>
+                                                    <span class="dh-dive-text">
+                                                        <span class="dh-dive-title do-not-translate">{{ $trip->tripName }}</span>
+                                                        <span class="dh-dive-when">{{ $when ? $when->format('D, M j') : $trip->date }} <b>{{ $trip->departureTime }}</b></span>
+                                                        <span class="dh-dive-op do-not-translate">{{ $trip->operatorName }}</span>
+                                                    </span>
+                                                    <span class="material-icons-round dh-dive-chevron" aria-hidden="true">chevron_right</span>
+                                                </a>
+                                            @else
+                                                {{-- Cancelled: no live trip page left to link to. --}}
+                                                <div class="dh-dive-main">
+                                                    <span class="dh-dive-type" title="{{ $typeName }} dive"><img src="{{ asset('assets') }}/img/icons/{{ $typeIcon }}" alt="{{ $typeName }}"></span>
+                                                    <span class="dh-dive-text">
+                                                        <span class="dh-dive-title do-not-translate">{{ $trip->tripName }}</span>
+                                                        <span class="dh-dive-when">{{ $when ? $when->format('D, M j') : $trip->date }} <b>{{ $trip->departureTime }}</b></span>
+                                                        <span class="dh-dive-op do-not-translate">{{ $trip->operatorName }}</span>
+                                                    </span>
+                                                </div>
+                                            @endif
+                                            <button type="button" class="dh-dive-status {{ $cancelled ? 'is-cancelled' : ($trip->booked ? 'is-booked' : 'is-open') }}" onclick="clickOnMyTrips({{ $trip->eventId }})" aria-haspopup="dialog">
+                                                <span class="material-icons-round" aria-hidden="true">{{ $cancelled ? 'cancel' : ($trip->booked ? 'check_circle' : 'radio_button_unchecked') }}</span>
+                                                <span>{{ $cancelled ? 'Cancelled' : ($trip->booked ? 'Booked' : 'Not booked yet') }}</span>
                                                 <span class="dh-dive-status-more">Options</span>
                                             </button>
                                         </li>
@@ -501,15 +515,31 @@
             const linkToBook = document.getElementById("upComingTripsLinkToBook-" + id).innerText;
             const waiver = document.getElementById("upComingTripsWaiver-" + id).innerText;
             const booked = document.getElementById("upComingTripsBooked-" + id).innerText;
+            const cancelled = document.getElementById("upComingTripsCancelled-" + id).innerText;
             // Create the desired string
             const formattedString = `${day} ${month} ${year} ${hours}:${String(minutes).padStart(2, '0')}`;
             var modal = document.getElementById('modal-title-notification-calendar');
-            modal.innerHTML = "Edit event in calendar: <br>" + formattedString + "<br> <b>" + title + "</b> <br> <p class='text-info text-sm text-bold'>" + operator + "<p>";
+            modal.innerHTML = "Edit event in calendar: <br>" + formattedString + "<br> <b>" + title + "</b> <br> <p class='text-info text-sm text-bold'>" + operator + "<p>" +
+                (cancelled == '1' ? "<p class='text-danger text-sm text-bold'>This trip was cancelled by the operator.</p>" : "");
             $('#modal-calendar').modal('show');
 
+            document.getElementById("button-remove").href = '/RemoveFromCalendar/' + eventId;
+
+            // A cancelled trip has no live trip/booking data left to act on -
+            // Remove is the only thing left for the diver to do here.
+            if (cancelled == '1') {
+                document.getElementById("button-go").hidden = true;
+                document.getElementById("div-button-link").hidden = true;
+                document.getElementById("div-button-book").hidden = true;
+                document.getElementById("div-button-waiver").hidden = true;
+                document.getElementById("span-booked").hidden = true;
+                document.getElementById("span-not-booked").hidden = true;
+                return;
+            }
+
+            document.getElementById("button-go").hidden = false;
             document.getElementById("button-go").href = '/TripDetails/' + tripId;
             document.getElementById("button-book").href = '/SetEventBook/' + eventId;
-            document.getElementById("button-remove").href = '/RemoveFromCalendar/' + eventId;
             document.getElementById("button-link").href = linkToBook;
             document.getElementById("button-waiver").href = waiver;
 
@@ -671,7 +701,7 @@
                         echo "title: '" . (strstr($tripName, '(', true) ? strstr($tripName, '(', true) : $tripName) . "',";
                         echo "start: '" . $trip->date . " " . $trip->departureTime . "',";
                         echo "extendedProps: { eventId: " . (int) $trip->eventId . " },";
-                        echo "color: '" . ($trip->booked ? '#0f7b3f' : '#c0392b') . "' },";
+                        echo "color: '" . (($trip->cancelled ?? false) ? '#8c8c8c' : ($trip->booked ? '#0f7b3f' : '#c0392b')) . "' },";
                     }
                 @endphp
             ],

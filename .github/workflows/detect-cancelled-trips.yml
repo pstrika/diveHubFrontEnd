@@ -1,0 +1,15 @@
+name: Detect cancelled trips
+
+on:
+  schedule:
+    - cron: '0 * * * *' # every hour
+  workflow_dispatch: {}
+
+jobs:
+  detect-cancelled:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger trips:detect-cancelled
+        run: |
+          curl -sf "https://divers-hub.com/cron/detect-cancelled-trips?secret=${{ secrets.CRON_SECRET }}"

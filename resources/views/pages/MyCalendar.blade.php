@@ -168,11 +168,30 @@
                 eventClick: function (info) {
                     var p = info.event.extendedProps;
                     document.getElementById('modal-title-notification-calendar').innerHTML =
-                        info.event.title + '<br><span class="text-sm text-secondary">' + p.operator + '</span>';
+                        info.event.title + '<br><span class="text-sm text-secondary">' + p.operator + '</span>' +
+                        (p.cancelled == '1' ? '<br><span class="chip chip-static chip-cancelled mt-1">Cancelled by operator</span>' : '');
 
+                    document.getElementById('button-remove').href = '{{ url('RemoveFromCalendar') }}/' + p.eventId;
+
+                    // A cancelled trip has no live trip/booking data left to act on -
+                    // Remove is the only thing left for the diver to do here.
+                    if (p.cancelled == '1') {
+                        document.getElementById('button-go').hidden = true;
+                        document.getElementById('button-book').hidden = true;
+                        document.getElementById('button-link').hidden = true;
+                        document.getElementById('button-waiver').hidden = true;
+                        document.getElementById('button-waiver-signed').hidden = true;
+                        document.getElementById('span-booked').hidden = true;
+                        document.getElementById('span-not-booked').hidden = true;
+                        document.getElementById('span-waiver-signed').hidden = true;
+
+                        new bootstrap.Modal(document.getElementById('modal-calendar')).show();
+                        return;
+                    }
+
+                    document.getElementById('button-go').hidden = false;
                     document.getElementById('button-go').href = '{{ url('TripDetails') }}/' + p.myId;
                     document.getElementById('button-book').href = '{{ url('SetEventBook') }}/' + p.eventId;
-                    document.getElementById('button-remove').href = '{{ url('RemoveFromCalendar') }}/' + p.eventId;
                     document.getElementById('button-link').href = p.linkToBook;
                     document.getElementById('button-waiver').href = p.waiver;
                     document.getElementById('button-waiver-signed').href = '{{ url('SetEventWaiverSigned') }}/' + p.eventId;
@@ -199,7 +218,7 @@
                     {
                         title: {!! json_encode($card['title']) !!},
                         start: {!! json_encode($card['date'] . ' ' . $card['time24']) !!},
-                        color: '{{ $card['booked'] ? '#0f7b3f' : '#c0392b' }}',
+                        color: '{{ $card['cancelled'] ? '#8c8c8c' : ($card['booked'] ? '#0f7b3f' : '#c0392b') }}',
                         extendedProps: {
                             myId: {!! json_encode($card['id']) !!},
                             operator: {!! json_encode($card['operatorName']) !!},
@@ -207,7 +226,8 @@
                             booked: {!! json_encode($card['booked'] ? '1' : '0') !!},
                             waiverSigned: {!! json_encode($card['waiverSigned'] ? '1' : '0') !!},
                             linkToBook: {!! json_encode($card['bookUrl']) !!},
-                            waiver: {!! json_encode($card['waiver']) !!}
+                            waiver: {!! json_encode($card['waiver']) !!},
+                            cancelled: {!! json_encode($card['cancelled'] ? '1' : '0') !!}
                         }
                     },
                     @endforeach

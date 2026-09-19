@@ -73,4 +73,20 @@ class Trip extends Model
             return 0;
 
     }
+
+    /**
+     * Does the live schedule still carry this trip? Unlike findByComposite()
+     * this answers true when the scraper wrote the same trip twice (it
+     * happens) - "duplicated" must never read as "cancelled". Used by
+     * App\Console\Commands\DetectCancelledTrips; the display path above is
+     * left as-is (Pablo, 2026-09-19).
+     */
+    public static function existsForComposite($date, $time, $operatorId, $tripName): bool
+    {
+        return Trip::where('date', $date)
+            ->where('departureTime', $time)
+            ->where('operatorId', $operatorId)
+            ->where('tripName', $tripName)
+            ->exists();
+    }
 }

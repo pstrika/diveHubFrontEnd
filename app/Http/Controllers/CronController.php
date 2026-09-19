@@ -35,4 +35,21 @@ class CronController extends Controller
 
         return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
     }
+
+    /**
+     * Hourly (see .github/workflows/detect-cancelled-trips.yml). The
+     * 2-consecutive-misses rule in the command means calling this more
+     * often than hourly can't cancel anything early - the second miss is
+     * ignored unless it's at least ~an hour after the first.
+     */
+    public function detectCancelledTrips(Request $request)
+    {
+        if (!hash_equals((string) env('CRON_SECRET'), (string) $request->query('secret'))) {
+            abort(403);
+        }
+
+        Artisan::call('trips:detect-cancelled');
+
+        return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
+    }
 }

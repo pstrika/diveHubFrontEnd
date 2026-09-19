@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Event;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\Trip;
@@ -605,6 +606,11 @@ class GroupController extends Controller
         }
 
         foreach ($group->dives as $dive) {
+            // Deleting the group takes the dive off every attendee's
+            // personal calendar too - without this the events survive as
+            // orphans pointing at a group_dive_id that no longer exists
+            // (Pablo, 2026-09-19).
+            Event::where('group_dive_id', $dive->id)->delete();
             $dive->rsvps()->delete();
             $dive->delete();
         }

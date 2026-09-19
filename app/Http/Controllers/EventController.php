@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Event;
+use App\Models\GroupDiveRsvp;
 use App\Models\Trip;
 use App\Models\Operator;
 use App\Models\User;
@@ -74,13 +75,21 @@ class EventController extends Controller
             : collect();
 
         $sites = Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get()->keyBy('id');
-        $operators = Operator::select('id', 'location', 'phone')->get()->keyBy('id')->all();
+        $operators = Operator::select('id', 'location', 'phone', 'operatorName')->get()->keyBy('id')->all();
         $now = Carbon::now();
 
         $cards = [];
         foreach ($events as $event) {
             $trip = Trip::tripInEvent($event);
             if (!$trip) {
+                // Confirmed cancelled (DetectCancelledTrips): keep it on the
+                // calendar, marked, until the diver removes it. Not yet
+                // confirmed - a miss or two so far, still could be a scraper
+                // blip - behaves as before and stays out rather than cry
+                // wolf (Pablo, 2026-09-19).
+                if ($event->cancelled_at) {
+                    $cards[] = $this->cancelledCard($event, $operators);
+                }
                 continue; // re-scraped daily; an old saved trip can age out of today's data
             }
             $siteIds = $trip->siteId ? explode(',', $trip->siteId) : [];
@@ -90,6 +99,7 @@ class EventController extends Controller
             $card['eventId'] = $event->id;
             $card['waiverSigned'] = (bool) $event->waiver_signed;
             $card['waiver'] = $trip->operator->waiverLink ?? null;
+            $card['cancelled'] = false;
             $cards[] = $card;
         }
         usort($cards, fn ($a, $b) => [$a['date'], $a['sortKey']] <=> [$b['date'], $b['sortKey']]);
@@ -108,7 +118,59 @@ class EventController extends Controller
             'totalTrips'   => count($monthCards),
             'calendarFeedUrl' => $calendarFeedUrl,
         ]);
- 
+
+    }
+
+    /**
+     * A TripBoard-shaped card for a trip whose live row is gone and that
+     * DetectCancelledTrips has confirmed cancelled - built from the event's
+     * own snapshot fields, so <x-trip-card> renders it like any other trip.
+     * id/detailsUrl/operatorUrl are null where there is no live trip row to
+     * link to any more (Pablo, 2026-09-19).
+     */
+    private function cancelledCard(Event $event, array $operators): array
+    {
+        $time = $event->time ?: '00:00';
+        $timeUnknown = $time === '00:00';
+        $departure = Carbon::parse(Carbon::parse($event->date)->format('Y-m-d') . ' ' . $time);
+        $operator = $operators[$event->operatorId] ?? null;
+
+        return [
+            'id' => null,
+            'date' => Carbon::parse($event->date)->toDateString(),
+            'time24' => $time,
+            'sortKey' => $timeUnknown ? '99:99' : $time,
+            'time' => $departure->format('g:i'),
+            'meridiem' => $departure->format('A'),
+            'period' => $timeUnknown ? 'TBD' : ((int) substr($time, 0, 2) < 12 ? 'AM' : 'PM'),
+            'departed' => false,
+            'title' => $event->tripName,
+            'fullTitle' => $event->tripName,
+            'siteNames' => [],
+            'operatorName' => $operator->operatorName ?? null,
+            'operatorId' => $event->operatorId,
+            'operatorPhone' => $operator->phone ?? null,
+            'locationCode' => $operator->location ?? null,
+            'level' => null,
+            'maxDepth' => null,
+            'isTech' => false,
+            'isWreck' => false,
+            'isShark' => false,
+            'isLobster' => false,
+            'isNight' => false,
+            'fav' => false,
+            'visited' => false,
+            'availability' => ['state' => 'cancelled', 'label' => 'Cancelled', 'count' => null],
+            'bookUrl' => null,
+            'detailsUrl' => null,
+            'operatorUrl' => $event->operatorId ? route('OperatorDetails', ['id' => $event->operatorId]) : null,
+            'siteUrl' => null,
+            'booked' => (bool) $event->booked,
+            'eventId' => $event->id,
+            'waiverSigned' => (bool) $event->waiver_signed,
+            'waiver' => null,
+            'cancelled' => true,
+        ];
     }
 
 /**
@@ -135,6 +197,12 @@ class EventController extends Controller
 
     public function setEventBook($eventId) {
         $event = Event::findOrFail($eventId);
+        // These three actions never checked ownership - any signed-in user
+        // could mutate/delete another diver's saved trip by guessing an id
+        // (Pablo, 2026-09-19, found while fixing the calendar/group sync).
+        if ((int) $event->userId !== (int) auth()->id()) {
+            abort(403);
+        }
         $event->booked = true;
 
         $event->save();
@@ -144,6 +212,9 @@ class EventController extends Controller
 
     public function setEventWaiverSigned($eventId) {
         $event = Event::findOrFail($eventId);
+        if ((int) $event->userId !== (int) auth()->id()) {
+            abort(403);
+        }
         $event->waiver_signed = true;
 
         $event->save();
@@ -151,8 +222,26 @@ class EventController extends Controller
         return redirect()->back();
     }
 
+    /**
+     * Remove a saved trip. If it got here from a group dive ("I'm going"),
+     * that RSVP goes too - the calendar and the group feed are two views of
+     * the same decision, so clearing one clears the other (the mirror of
+     * GroupDiveController::leave(), which deletes this event). Pablo,
+     * 2026-09-19: "if I remove it directly from my calendar, the group
+     * should not show going".
+     */
     public function removeFromCalendar($eventId) {
         $event = Event::findOrFail($eventId);
+        if ((int) $event->userId !== (int) auth()->id()) {
+            abort(403);
+        }
+
+        if ($event->group_dive_id) {
+            GroupDiveRsvp::where('group_dive_id', $event->group_dive_id)
+                ->where('user_id', $event->userId)
+                ->delete();
+        }
+
         $event->delete();
 
         return redirect()->back();

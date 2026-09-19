@@ -50,6 +50,7 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
 Route::get('sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 Route::get('cron/send-group-reminders', [\App\Http\Controllers\CronController::class, 'sendGroupReminders']);
 Route::get('cron/send-group-activity-digest', [\App\Http\Controllers\CronController::class, 'sendGroupActivityDigest']);
+Route::get('cron/detect-cancelled-trips', [\App\Http\Controllers\CronController::class, 'detectCancelledTrips']);
 
 // Twilio's own webhook - configured against the Twilio number in the
 // Twilio Console (Messaging configuration), not something a diver visits.

@@ -13,9 +13,13 @@
 @php
     $a = $trip['availability'];
     $levelInfo = $trip['level'] !== null ? \App\Support\DiveLevel::get($trip['level']) : null;
+    // Only a My Calendar entry the operator has dropped sets this - every
+    // other caller passes a plain TripBoard::card() array with no such key
+    // (Pablo, 2026-09-19: don't silently vanish a cancelled trip, mark it).
+    $cancelled = $trip['cancelled'] ?? false;
 @endphp
 
-<article class="dh-trip {{ $trip['departed'] ? 'is-departed' : '' }} {{ $trip['fav'] ? 'is-fav' : '' }}" data-trip-id="{{ $trip['id'] }}">
+<article class="dh-trip {{ $trip['departed'] ? 'is-departed' : '' }} {{ $trip['fav'] ? 'is-fav' : '' }} {{ $cancelled ? 'is-cancelled' : '' }}" data-trip-id="{{ $trip['id'] }}">
     <div class="dh-trip-time" aria-label="Departs {{ $trip['time'] }} {{ $trip['meridiem'] }}">
         @if($showDate)<span class="dh-trip-date">{{ \Carbon\Carbon::parse($trip['date'])->format('D M j') }}</span>@endif
         @if($trip['time24'] === '00:00')
@@ -30,11 +34,20 @@
 
     <div class="dh-trip-body">
         <h3 class="dh-trip-title">
-            <a href="{{ $trip['detailsUrl'] }}" title="{{ $trip['fullTitle'] }}">{{ $trip['title'] }}</a>
+            @if($trip['detailsUrl'])
+                <a href="{{ $trip['detailsUrl'] }}" title="{{ $trip['fullTitle'] }}">{{ $trip['title'] }}</a>
+            @else
+                <span title="{{ $trip['fullTitle'] }}">{{ $trip['title'] }}</span>
+            @endif
+            @if($cancelled)<span class="chip chip-static chip-cancelled">Cancelled</span>@endif
             @if($trip['fav'])<span class="material-icons-round dh-trip-favicon" title="Matches your favorites">favorite</span>@endif
         </h3>
         <p class="dh-trip-meta">
-            <a href="{{ $trip['operatorUrl'] }}">{{ $trip['operatorName'] }}</a>
+            @if($trip['operatorUrl'])
+                <a href="{{ $trip['operatorUrl'] }}">{{ $trip['operatorName'] }}</a>
+            @else
+                {{ $trip['operatorName'] }}
+            @endif
             @if($trip['siteNames'])
                 <span class="dh-dot">·</span>
                 @if($trip['siteUrl'])<a href="{{ $trip['siteUrl'] }}">{{ implode(', ', array_slice($trip['siteNames'], 0, 2)) }}</a>
@@ -58,7 +71,11 @@
 
     <div class="dh-trip-action">
         <span class="dh-avail dh-avail-{{ $a['state'] }}">{{ $a['label'] }}</span>
-        @if($trip['bookUrl'] && $a['state'] !== 'full')
+        @if($cancelled)
+            @if($trip['eventId'] ?? null)
+                <a class="dh-btn dh-btn-danger" href="{{ url('RemoveFromCalendar') }}/{{ $trip['eventId'] }}">Remove</a>
+            @endif
+        @elseif($trip['bookUrl'] && $a['state'] !== 'full')
             <a class="dh-btn dh-btn-primary" href="{{ $trip['bookUrl'] }}" target="_blank" rel="noopener">Book</a>
         @elseif($a['state'] === 'call' && $trip['operatorPhone'])
             <a class="dh-btn dh-btn-ghost-dark" href="tel:{{ preg_replace('/[^0-9+]/', '', $trip['operatorPhone']) }}">Call</a>

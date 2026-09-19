@@ -63,10 +63,16 @@ class MyDashboardController extends Controller
             if($trip) {
                 $trip->booked = $event->booked;
                 $trip->eventId = $event->id;
+                $trip->cancelled = false;
                 // need to get the link to the waiver
                 $operator = Operator::where('id', $trip->operatorId)->first();
-                $trip->waiver = $operator->waiverLink;
+                $trip->waiver = optional($operator)->waiverLink;
                 $trips[] = $trip;
+            } elseif ($event->cancelled_at) {
+                // Confirmed cancelled (DetectCancelledTrips): keep it in the
+                // list, marked, until the diver removes it - not yet
+                // confirmed just behaves as before and drops out quietly.
+                $trips[] = $this->cancelledDashboardTrip($event);
             }
         }
         //---------------------------
@@ -300,5 +306,23 @@ class MyDashboardController extends Controller
         $blogPosts = \App\Models\Post::forViewer($user->certLevel, 5);
 
         return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers', 'wished', 'favOperators', 'favCalendars', 'weekendStart', 'myGroups', 'groupInvites', 'blogPosts'));
+    }
+
+    private function cancelledDashboardTrip(Event $event): object
+    {
+        return (object) [
+            'id' => null,
+            'eventId' => $event->id,
+            'date' => Carbon::parse($event->date)->toDateString(),
+            'departureTime' => $event->time,
+            'tripName' => $event->tripName,
+            'operatorName' => optional(Operator::find($event->operatorId))->operatorName,
+            'operatorId' => $event->operatorId,
+            'booked' => (bool) $event->booked,
+            'linkToBook' => null,
+            'waiver' => null,
+            'tags' => '',
+            'cancelled' => true,
+        ];
     }
 }
