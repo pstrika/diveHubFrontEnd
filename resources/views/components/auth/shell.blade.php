@@ -17,6 +17,15 @@
     2026-09-18: "the all blue logo has to be removed on top of the login
     window") - the round logo inside the card is the only one now.
 
+    Background is the "Ken Burns crossfade + caustics + desktop-only
+    parallax" treatment from the Sign-In Lab study (Pablo, 2026-09-19: "Use
+    the artifact Sign Up Lab, and implement your recommendation") - three of
+    Pablo's own reef photos slowly cross-fading and scaling, a drifting
+    caustic-light overlay on top, and a subtle pointer-parallax nudge on
+    devices with a real mouse (gated off entirely on touch, and on
+    prefers-reduced-motion, where it's just the first photo held still).
+    Replaces a single static 17MB JPEG with three ~700KB ones.
+
     The forms themselves are passed in by each page and are unchanged: same
     field names, same @error blocks, same routes, same captcha. Only the wrapper
     around them is new.
@@ -27,7 +36,28 @@
 @props(['title', 'subtitle' => null])
 
 <div class="dh-auth">
-    <div class="dh-auth-bg" aria-hidden="true"></div>
+    <div class="dh-auth-bg" id="dhAuthBg" aria-hidden="true">
+        <div class="dh-auth-parallax" id="dhAuthParallax">
+            <div class="dh-auth-kb" style="background-image:url('{{ asset('assets') }}/img/auth/reef-fans-1.jpg')"></div>
+            <div class="dh-auth-kb" style="background-image:url('{{ asset('assets') }}/img/auth/reef-fans-2.jpg')"></div>
+            <div class="dh-auth-kb" style="background-image:url('{{ asset('assets') }}/img/auth/reef-fans-3.jpg')"></div>
+        </div>
+        <div class="dh-auth-caustic"></div>
+    </div>
+    <script>
+        (function () {
+            var wrap = document.getElementById('dhAuthParallax');
+            if (!wrap) return;
+            var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var canParallax = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+            if (reduce || !canParallax) return;
+            window.addEventListener('pointermove', function (e) {
+                var x = e.clientX / window.innerWidth - 0.5;
+                var y = e.clientY / window.innerHeight - 0.5;
+                wrap.style.transform = 'translate3d(' + (x * -16) + 'px,' + (y * -12) + 'px,0)';
+            });
+        })();
+    </script>
 
     <main class="dh-auth-main">
         <div class="dh-auth-card">

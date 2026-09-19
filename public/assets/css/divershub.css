@@ -1308,9 +1308,50 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 /* ------------------------------------------------------------------ */
 body.dh-auth-body { background: var(--dh-ink); }
 .dh-auth { position: relative; min-height: 100vh; display: flex; flex-direction: column; }
-.dh-auth-bg { position: fixed; inset: 0; z-index: 0; background: url('/assets/img/diveHub-login.jpg') center/cover no-repeat; }
-/* The dive photo with the brand wash over it, instead of the template's grey gradient. */
+.dh-auth-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: var(--dh-ink); }
+/* The brand wash over the photo layers below, instead of the template's
+   grey gradient - a plain ::after so it always paints on top of the
+   Ken Burns slides and the caustic overlay without needing its own
+   z-index (default paint order: a pseudo-element paints after its
+   element's real children). */
 .dh-auth-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,42,58,.78) 0%, rgba(14,77,104,.82) 100%); }
+
+/* Ken Burns crossfade (Sign-In Lab study, Pablo 2026-09-19: "implement
+   your recommendation") - three photos slowly cross-fading and scaling.
+   The parallax wrapper is oversized (inset:-6%) and JS-translated on
+   pointermove, so nudging it never reveals an edge; kept separate from
+   the slides' own scale/opacity animation so the two transforms don't
+   fight on the same element. */
+.dh-auth-parallax { position: absolute; inset: -6%; transition: transform .6s cubic-bezier(.18,.7,.28,1); }
+.dh-auth-kb { position: absolute; inset: 0; background-size: cover; background-position: center 45%; opacity: 0; animation: dhAuthKb 21s infinite; will-change: transform, opacity; }
+.dh-auth-kb:nth-child(1) { animation-delay: 0s; }
+.dh-auth-kb:nth-child(2) { animation-delay: 7s; }
+.dh-auth-kb:nth-child(3) { animation-delay: 14s; }
+@keyframes dhAuthKb {
+  0% { opacity: 0; transform: scale(1.02); }
+  4% { opacity: 1; }
+  33% { opacity: 1; transform: scale(1.09); }
+  38% { opacity: 0; transform: scale(1.10); }
+  100% { opacity: 0; }
+}
+/* Drifting caustic-light texture layered on top of the photos, under the
+   ink wash - the shimmer real sunlight makes through moving water. */
+.dh-auth-caustic { position: absolute; inset: -20%; opacity: .38; mix-blend-mode: screen; pointer-events: none;
+  background:
+    repeating-linear-gradient(104deg, rgba(150,230,255,0) 0 22px, rgba(150,230,255,.5) 24px, rgba(150,230,255,0) 44px),
+    repeating-linear-gradient(72deg, rgba(120,220,245,0) 0 34px, rgba(120,220,245,.34) 37px, rgba(120,220,245,0) 66px);
+  filter: blur(7px);
+  animation: dhAuthSway 14s ease-in-out infinite alternate;
+}
+@keyframes dhAuthSway {
+  0% { transform: translate3d(-3%,-2%,0) rotate(-1.2deg) scale(1.04); }
+  100% { transform: translate3d(4%,3%,0) rotate(1.6deg) scale(1.12); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dh-auth-kb, .dh-auth-caustic { animation: none !important; }
+  .dh-auth-kb:first-child { opacity: 1; }
+  .dh-auth-parallax { transition: none !important; }
+}
 .dh-auth-main { position: relative; z-index: 1; flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 16px calc(40px + env(safe-area-inset-bottom)); }
 .dh-auth-card { width: 100%; max-width: 420px; background: var(--dh-paper); border-radius: 18px; padding: 28px 24px 24px; box-shadow: 0 18px 50px rgba(5,25,35,.35); text-align: center; }
 .dh-auth-logo { display: block; margin: 0 auto 14px; }
