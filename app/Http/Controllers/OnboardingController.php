@@ -31,7 +31,7 @@ class OnboardingController extends Controller
     private const SKIP_DAYS = 14;
 
     /** Steps in order; the view renders one at a time. */
-    public const STEPS = ['welcome', 'level', 'places', 'operators', 'phone', 'comms', 'done'];
+    public const STEPS = ['welcome', 'level', 'places', 'operators', 'phone', 'comms', 'social', 'done'];
 
     /**
      * True when this member has never been through the wizard. Used to be a

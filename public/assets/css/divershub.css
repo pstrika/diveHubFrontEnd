@@ -1051,6 +1051,13 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 /* Photo-source choice on the welcome step's Google-avatar offer - a
    thumbnail/icon beside the label instead of stacked (Pablo, 2026-09-16). */
 .dh-choice-body-row { flex-direction: row; align-items: center; gap: 10px; }
+/* Follow-us wizard step: .dh-choice has no :hover of its own (only the
+   radio/checkbox :checked state does), so a plain link needs one added -
+   same border-color cue the checked state uses elsewhere. */
+.dh-wizard-social-link:hover .dh-choice-body, .dh-wizard-social-link:focus-visible .dh-choice-body { border-color: var(--dh-sea); }
+.dh-social-icon { width: 40px; height: 40px; border-radius: 50%; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 1.15rem; }
+.dh-social-icon-ig { background: radial-gradient(circle at 30% 110%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
+.dh-social-icon-fb { background: #1877f2; }
 .dh-radio { display: flex; align-items: center; gap: 8px; font-size: .95rem; color: var(--dh-ink); }
 .dh-radio input { width: 18px; height: 18px; accent-color: var(--dh-deep); }
 .dh-wizard-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }

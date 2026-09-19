@@ -295,6 +295,38 @@
                         @endif
                         <x-comms-preferences :user="$user" :ids="false" :showPhone="false" :forceUnchecked="true" />
                         <div class="dh-wizard-actions">
+                            <button type="submit" class="dh-btn dh-btn-primary">Next</button>
+                            <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl('social') }}">Skip this</a>
+                        </div>
+                    </form>
+
+                @elseif($step === 'social')
+                    <h1 class="dh-wizard-title">Follow Divers Hub</h1>
+                    <p class="dh-wizard-lead">Site updates, new features, and the best of what divers are seeing out there.</p>
+                    <div class="dh-wizard-choices dh-wizard-choices-compact">
+                        <a class="dh-choice dh-wizard-social-link" href="https://www.instagram.com/divers.hub" target="_blank" rel="noopener">
+                            <span class="dh-choice-body dh-choice-body-row">
+                                <span class="dh-social-icon dh-social-icon-ig" aria-hidden="true"><i class="fa-brands fa-instagram"></i></span>
+                                <span>
+                                    <span class="dh-choice-title">Instagram</span>
+                                    <span class="dh-choice-sub">@divers.hub</span>
+                                </span>
+                            </span>
+                        </a>
+                        <a class="dh-choice dh-wizard-social-link" href="https://www.facebook.com/profile.php?id=61562890298123" target="_blank" rel="noopener">
+                            <span class="dh-choice-body dh-choice-body-row">
+                                <span class="dh-social-icon dh-social-icon-fb" aria-hidden="true"><i class="fa-brands fa-facebook-f"></i></span>
+                                <span>
+                                    <span class="dh-choice-title">Facebook</span>
+                                    <span class="dh-choice-sub">Divers Hub</span>
+                                </span>
+                            </span>
+                        </a>
+                    </div>
+                    <form method="POST" action="{{ route('welcome.save') }}" class="dh-wizard-form">
+                        @csrf
+                        <input type="hidden" name="step" value="social">
+                        <div class="dh-wizard-actions">
                             <button type="submit" class="dh-btn dh-btn-primary">Finish</button>
                             <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl('done') }}">Skip this</a>
                         </div>
