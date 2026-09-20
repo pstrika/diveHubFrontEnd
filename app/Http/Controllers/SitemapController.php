@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Operator;
+use App\Models\Post;
 use App\Models\Site;
 use App\Models\WeatherLocation;
 use Illuminate\Support\Facades\Cache;
@@ -62,6 +63,20 @@ class SitemapController extends Controller
                     }
                 });
 
+            Post::published()
+                ->select('slug', 'updated_at')
+                ->orderBy('id')
+                ->chunk(200, function ($posts) use ($sitemap) {
+                    foreach ($posts as $post) {
+                        $sitemap->add(
+                            Url::create(route('Blog.show', $post->slug))
+                                ->setLastModificationDate($post->updated_at ?? now())
+                                ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
+                                ->setPriority(0.6)
+                        );
+                    }
+                });
+
             WeatherLocation::select('location', 'country')
                 ->orderBy('location')
                 ->chunk(200, function ($locations) use ($sitemap) {
@@ -91,6 +106,9 @@ class SitemapController extends Controller
             'WreckSites' => ['priority' => 0.9, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'BeachDiving' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'Operators' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            // SEO content marketing (Pablo, 2026-09-17 - see routes/web.php);
+            // was never added when the Blog shipped.
+            'Blog' => ['priority' => 0.6, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             // Both real planning tools, not marketing pages - bumped from
             // the previous 0.5/missing (Pablo, 2026-09-19: "Deco Planner
             // and Best Gases are VERY important pages...a HUGE asset to

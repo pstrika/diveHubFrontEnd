@@ -77,11 +77,11 @@
 
                 <img class="dh-blog-hero-img" src="{{ $coverOr($post) }}" alt="" style="{{ $focusOf($post) }}">
 
-                {{-- Quill Delta rendered client-side, same pattern as
-                     sites.desc/route/typicalConditions/history (see
-                     edit-site.blade.php) - not a server-side Delta renderer,
-                     which isn't a dependency this app has anywhere. --}}
-                <div class="dh-blog-body" id="dhPostBody"></div>
+                {{-- Server-rendered plain text first (Google's copy), same
+                     pattern as sites.desc/route/typicalConditions/history -
+                     the script below overwrites it with the fully formatted
+                     rich HTML for real visitors immediately on load. --}}
+                <div class="dh-blog-body" id="dhPostBody" style="white-space: pre-wrap;">{{ $post->getPlainTextBody() }}</div>
                 <div id="dhPostBodyRenderer" style="display: none;"></div>
 
                 @if($rankedSites->isNotEmpty())
@@ -162,8 +162,11 @@
                 var renderer = new Quill(document.getElementById('dhPostBodyRenderer'));
                 renderer.setContents(JSON.parse(raw));
                 target.innerHTML = renderer.root.innerHTML;
+                target.style.whiteSpace = '';
             } catch (e) {
-                target.textContent = '';
+                // Leave the server-rendered plain text in place rather than
+                // clearing it - a parse failure should degrade to plain
+                // text, not an empty article.
             }
         })();
     </script>

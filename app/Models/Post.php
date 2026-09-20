@@ -109,16 +109,32 @@ class Post extends Model
     /** Rough estimate from the Delta's plain text, same convention the mock posts used with hand-picked readMinutes. */
     public function getReadMinutesAttribute(): int
     {
-        $text = '';
+        return max(1, (int) ceil(str_word_count($this->getPlainTextBody()) / 200));
+    }
+
+    /**
+     * The article body's words with no formatting, same pattern as
+     * Site::getPlainTextDesc() and friends: body is a Quill Delta rendered
+     * entirely client-side (Blog/Show.blade.php), so a crawler that
+     * doesn't run that JS sees an empty article - server-rendering this
+     * into the same container fixes that without changing what a real
+     * visitor sees (Pablo, 2026-09-19: found while reviewing the earlier
+     * site-description SEO fix - blog posts have the identical gap).
+     */
+    public function getPlainTextBody(): string
+    {
         $delta = json_decode($this->body ?? '', true);
-        if (is_array($delta['ops'] ?? null)) {
-            foreach ($delta['ops'] as $op) {
-                if (is_string($op['insert'] ?? null)) {
-                    $text .= ' ' . $op['insert'];
-                }
+        if (!is_array($delta['ops'] ?? null)) {
+            return '';
+        }
+
+        $text = '';
+        foreach ($delta['ops'] as $op) {
+            if (is_string($op['insert'] ?? null)) {
+                $text .= $op['insert'];
             }
         }
 
-        return max(1, (int) ceil(str_word_count($text) / 200));
+        return $text;
     }
 }
