@@ -20923,13 +20923,28 @@ Docs & License: https://fullcalendar.io/
     font-size: 0.875rem; }
 
 .fc .fc-button-primary {
+  /* This block (not the earlier var()-based one further up this file) is
+     the one FullCalendar actually renders with, and it hardcoded the
+     template's stock Material pink with no reference to the theme's
+     --fc-button-* custom properties at all - silently undoing
+     divershub.css's :root override on every page except the two that
+     later got calendar-buttons.css's !important patch (Dashboard,
+     OperatorDetails). Deferring to the same variables here fixes every
+     other calendar (group calendars included) with no per-page CSS,
+     while the pink fallback keeps pages that never load divershub.css
+     (the frozen Hydrotherapy calendar) looking exactly as before
+     (Pablo, 2026-09-19: "these ones are still pink"). */
   background-color: #e91e63;
-  border-color: #e91e63; }
+  background-color: var(--fc-button-bg-color, #e91e63);
+  border-color: #e91e63;
+  border-color: var(--fc-button-border-color, #e91e63); }
   .fc .fc-button-primary:hover, .fc .fc-button-primary:focus, .fc .fc-button-primary:not(:disabled):active, .fc .fc-button-primary:not(:disabled):active:focus {
     transform: none;
     box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.09), 0 2px 3px -1px rgba(0, 0, 0, 0.07);
     background-color: #e91e63;
-    border-color: #e91e63; }
+    background-color: var(--fc-button-hover-bg-color, var(--fc-button-bg-color, #e91e63));
+    border-color: #e91e63;
+    border-color: var(--fc-button-hover-border-color, var(--fc-button-border-color, #e91e63)); }
 
 .fc-event.fc-daygrid-event {
   border-radius: 0.35rem; }
