@@ -116,6 +116,13 @@
             style: 'mapbox://styles/pstrika/clwqz4fds03gv01qo9d4w3g21',
             center: features.length ? features[0].geometry.coordinates : [-80.19, 26.12],
             zoom: features.length > 1 ? 8 : 11,
+            // A handful of sites live far outside Florida (e.g. Argentina) -
+            // fitBounds() below has no lower bound of its own, so one of
+            // those mixed into an unfiltered result set was zooming the
+            // whole map out to fit both regions at once, i.e. the entire
+            // globe. minZoom keeps the default view regional regardless of
+            // what's in the current result set (Pablo, 2026-09-20).
+            minZoom: 5,
             projection: 'albers'
         });
         ['reef', 'wreck', 'other'].forEach(t => map.loadImage('{{ asset('assets') }}/img/icons/marker_' + t + '.png', (e, img) => { if (!e) map.addImage('icon_' + t, img); }));
