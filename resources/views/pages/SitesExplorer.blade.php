@@ -111,18 +111,17 @@
         // Coordinates come pre converted from the controller (sites store DMS text).
         mapboxgl.accessToken = @json($mapboxToken);
         const features = @json($mapFeatures);
+        // Fort Lauderdale - the map's home base regardless of what's in the
+        // current result set (Pablo, 2026-09-20: fitBounds alone drifted the
+        // center to South America once an Argentina outlier was mixed in).
+        const DEFAULT_CENTER = [-80.19, 26.12];
+        const DEFAULT_ZOOM = 5;
+
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/pstrika/clwqz4fds03gv01qo9d4w3g21',
-            center: features.length ? features[0].geometry.coordinates : [-80.19, 26.12],
-            zoom: features.length > 1 ? 8 : 11,
-            // A handful of sites live far outside Florida (e.g. Argentina) -
-            // fitBounds() below has no lower bound of its own, so one of
-            // those mixed into an unfiltered result set was zooming the
-            // whole map out to fit both regions at once, i.e. the entire
-            // globe. minZoom keeps the default view regional regardless of
-            // what's in the current result set (Pablo, 2026-09-20).
-            minZoom: 5,
+            center: DEFAULT_CENTER,
+            zoom: DEFAULT_ZOOM,
             projection: 'albers'
         });
         ['reef', 'wreck', 'other'].forEach(t => map.loadImage('{{ asset('assets') }}/img/icons/marker_' + t + '.png', (e, img) => { if (!e) map.addImage('icon_' + t, img); }));
@@ -135,9 +134,22 @@
                 paint: { 'text-color': 'white' }
             });
             if (features.length > 1) {
+                // A handful of sites live far outside Florida (e.g. an
+                // Argentina wreck) - fitBounds() would otherwise stretch to
+                // fit whichever of those happen to be in the current result
+                // set alongside everything else, which can drag both the
+                // zoom and the center way off Florida. Only fit to bounds
+                // that are still a plausibly regional size; anything wider
+                // than that falls back to the Fort Lauderdale default
+                // instead of chasing an outlier's coordinates.
                 const b = new mapboxgl.LngLatBounds();
                 features.forEach(f => b.extend(f.geometry.coordinates));
-                map.fitBounds(b, { padding: 40, maxZoom: 12 });
+                const spansRegion = (b.getNorth() - b.getSouth() < 10) && (b.getEast() - b.getWest() < 10);
+                if (spansRegion) {
+                    map.fitBounds(b, { padding: 40, maxZoom: 12 });
+                } else {
+                    map.jumpTo({ center: DEFAULT_CENTER, zoom: DEFAULT_ZOOM });
+                }
             }
             map.on('click', 'sites', e => { window.location.href = e.features[0].properties.url; });
             map.on('mouseenter', 'sites', () => map.getCanvas().style.cursor = 'pointer');
