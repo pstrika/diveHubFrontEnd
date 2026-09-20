@@ -174,12 +174,18 @@ class BlogAdminController extends Controller
         return response()->json($sites);
     }
 
-    /** Known categories plus whatever's actually in use, so the field can autocomplete without being a rigid enum. */
+    /**
+     * Known categories plus whatever's actually in use, so the field can
+     * autocomplete without being a rigid enum. Kept deliberately small
+     * (Pablo, 2026-09-20: "let's keep the categories of the articles
+     * reduced") - site guides and itinerary guides both fall under Guides
+     * rather than splitting hairs over what kind of guide a post is.
+     */
     private function categories(): array
     {
         $inUse = Post::query()->whereNotNull('category')->distinct()->pluck('category');
 
-        return $inUse->merge(['Site Guides', 'Gear & Tips', 'News'])->unique()->sort()->values()->all();
+        return $inUse->merge(['Guides', 'News', 'Gear & Tips', 'Conservation'])->unique()->sort()->values()->all();
     }
 
     private function storeCoverImage(Request $request): string
