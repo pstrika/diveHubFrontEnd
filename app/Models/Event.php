@@ -66,7 +66,16 @@ class Event extends Model
         return $this->cancelled_at !== null;
     }
 
-    public static function alreadyInCalendar($tripId) {
+    /**
+     * The signed-in user's own calendar entry for this trip, if any - used
+     * both to detect "already saved" and to link a "Remove" action straight
+     * at the real event id, rather than re-running the add action and
+     * relying on it to no-op (Pablo, 2026-09-20: the "In my calendar"
+     * button kept pointing at AddEventToCalendar, so clicking it twice
+     * created a duplicate).
+     */
+    public static function findInCalendar($tripId): ?self
+    {
         $trip = Trip::findOrFail($tripId);
 
         return Event::where([
@@ -75,8 +84,12 @@ class Event extends Model
             [ 'time', '=', $trip->departureTime],
             [ 'operatorId', '=', $trip->operatorId],
             [ 'tripName', '=', $trip->tripName]
-        ])->exists();
+        ])->first();
+    }
 
+    public static function alreadyInCalendar($tripId): bool
+    {
+        return self::findInCalendar($tripId) !== null;
     }
 
 }

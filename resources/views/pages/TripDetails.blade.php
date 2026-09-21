@@ -182,9 +182,15 @@
                             <a class="dh-btn dh-btn-primary" href="tel:{{ preg_replace('/[^0-9+]/', '', $operator->phone) }}">Call to book</a>
                         @endif
                         @if($isMember)
-                            <a class="dh-btn dh-btn-ghost-dark" href="{{ route('AddEventToCalendar', ['tripId' => $tripDetails->id]) }}" title="{{ $alreadyInCalendar ? 'This trip is already in your calendar' : 'Add this trip to your calendar' }}">
-                                <span class="material-icons-round">{{ $alreadyInCalendar ? 'event_available' : 'event' }}</span>{{ $alreadyInCalendar ? 'In my calendar' : 'Add to my calendar' }}
-                            </a>
+                            @if($alreadyInCalendar)
+                                <a class="dh-btn dh-btn-ghost-dark" href="{{ route('RemoveFromCalendar', $myCalendarEvent->id) }}" title="Remove this trip from your calendar">
+                                    <span class="material-icons-round">event_busy</span>Remove from my calendar
+                                </a>
+                            @else
+                                <a class="dh-btn dh-btn-ghost-dark" href="{{ route('AddEventToCalendar', ['tripId' => $tripDetails->id]) }}" title="Add this trip to your calendar">
+                                    <span class="material-icons-round">event</span>Add to my calendar
+                                </a>
+                            @endif
                             <button class="dh-btn dh-btn-ghost-dark" type="button" data-bs-toggle="modal" data-bs-target="#modalAddToGroup">
                                 <span class="material-icons-round">groups</span>Add to a group
                             </button>

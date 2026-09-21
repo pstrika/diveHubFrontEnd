@@ -20,18 +20,24 @@ class EventController extends Controller
         $user = User::findorFail(auth()->user()->id);
         $trip = Trip::findorFail($tripId);
 
-        $newEvent = Event::create([
-            'userId' => $user->id,
-            'operatorId' => $trip->operatorId,
-            'date' => $trip->date,
-            'time' => $trip->departureTime,
-            'tripName' => $trip->tripName,
-            'booked' => false,
-        ]);
+        // The button that links here is only supposed to render when the
+        // trip isn't already saved (TripDetails.blade.php switches to a
+        // Remove link once it is), but this guard is what actually stops a
+        // duplicate - a stale page, a double click or a revisited URL would
+        // otherwise still hit this route and create a second event
+        // (Pablo, 2026-09-20).
+        if (!Event::findInCalendar($tripId)) {
+            Event::create([
+                'userId' => $user->id,
+                'operatorId' => $trip->operatorId,
+                'date' => $trip->date,
+                'time' => $trip->departureTime,
+                'tripName' => $trip->tripName,
+                'booked' => false,
+            ]);
+        }
 
         return redirect()->back()->with('alreadyInCalendar', true);
-
-
     }
 
 

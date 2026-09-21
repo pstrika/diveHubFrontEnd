@@ -76,8 +76,11 @@ class TripDetailsController extends Controller
         }
         #return view('pages.TripDetails', compact('tripDetails', 'operator', 'location', 'boats', 'sites', 'sitePhoto'));
 
-        // check if for this user this trip is on his calendar
-        $alreadyInCalendar = Event::alreadyInCalendar($tripId);
+        // check if for this user this trip is on his calendar - the id (not
+        // just the boolean) lets the view link "Remove" straight at the
+        // real event instead of back at the add action.
+        $myCalendarEvent = Event::findInCalendar($tripId);
+        $alreadyInCalendar = $myCalendarEvent !== null;
 
         // Groups this user can add the trip to (real users only - the shared
         // guest account has no groups and shouldn't see the option anyway).
@@ -107,7 +110,7 @@ class TripDetailsController extends Controller
             "robots" => "noindex, follow",
         );
 
-        return view('pages.TripDetails', compact('tripDetails', 'operator', 'location', 'boats', 'sites', 'alreadyInCalendar', 'myGroups', 'SEO'));
+        return view('pages.TripDetails', compact('tripDetails', 'operator', 'location', 'boats', 'sites', 'alreadyInCalendar', 'myCalendarEvent', 'myGroups', 'SEO'));
 
     }
 }
