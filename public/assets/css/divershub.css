@@ -1169,11 +1169,9 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-dash-headlink:hover { text-decoration: underline; }
 
 /* ------------------------------------------------------------------ */
-/* Tab bar: the diver's avatar as the Me icon, unread badge on Groups.  */
+/* Tab bar: unread badge on Groups.                                     */
 /* ------------------------------------------------------------------ */
 .dh-tab-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 24px; }
-.dh-tab-avatar img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 2px solid transparent; }
-.dh-tab.is-active .dh-tab-avatar img { border-color: var(--dh-sea); }
 .dh-tab-badge { position: absolute; top: -6px; right: -8px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: var(--dh-radius-pill); background: var(--dh-poor); color: #fff; font-size: .65rem; font-weight: 700; line-height: 18px; text-align: center; }
 .dh-topnav-link .dh-tab-badge { position: static; display: inline-block; margin-left: 6px; vertical-align: 2px; }
 

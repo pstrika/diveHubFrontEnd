@@ -10,7 +10,7 @@
         Sites    -> the site explorer          (route DiveSites)
         Weather  -> the marine forecast        (route Weather)
         Groups   -> my groups, unread badge    (route MyGroups; guests get the account prompt)
-        Me       -> my dashboard, avatar icon  (route MyDashboard; guests get the account prompt and menu)
+        More     -> the drawer menu            (settings, admin tools, sign out - same for guest and signed-in)
 
     Weather has the slot Operators used to have. In South Florida the go or no go
     call is sea state, so a diver checks conditions the night before every trip;
@@ -18,10 +18,12 @@
     every real path to an operator is a trip card, a site page or the finder's
     operator filter. Operators stays one tap away in the drawer.
 
-    Me is a real page, not a pop out. The drawer (shell/menu.blade.php) still
-    exists for everything else, opened from the avatar in the top bar on every
-    screen size, and for a guest it is what the Me tab opens, since a guest has
-    no dashboard yet. Nothing was removed, it was regrouped.
+    More always opens the drawer (shell/menu.blade.php), for guest and
+    signed-in alike (Pablo, 2026-09-21: "same logic...icon at the bottom
+    right should be a more" - previously this tab showed the diver's own
+    avatar and linked straight to My Dashboard, which is now instead the
+    top bar's avatar button's job). The drawer itself still carries the
+    "My Dashboard" link for anyone who reaches it from here.
 
     Desktop (lg and up): a sticky top bar with the four links and the avatar
     button. Phones: the top bar shrinks to brand plus avatar and the fixed bottom
@@ -101,13 +103,22 @@
                 </a>
             @endif
 
-            <button type="button" class="dh-avatar-btn {{ $active === 'me' ? 'is-active' : '' }}" data-bs-toggle="offcanvas" data-bs-target="#dh-me" aria-controls="dh-me" aria-label="Open your menu">
-                @if($avatar)
-                    <img src="{{ $avatar }}" alt="" onerror="this.remove()">
-                @else
-                    <span class="material-icons-round" aria-hidden="true">{{ $isGuest ? 'menu' : 'account_circle' }}</span>
-                @endif
-            </button>
+            @if($isGuest)
+                <button type="button" class="dh-avatar-btn {{ $active === 'me' ? 'is-active' : '' }}" data-bs-toggle="offcanvas" data-bs-target="#dh-me" aria-controls="dh-me" aria-label="Open your menu">
+                    <span class="material-icons-round" aria-hidden="true">menu</span>
+                </button>
+            @else
+                {{-- Direct link to the dashboard now (Pablo, 2026-09-21) - the
+                     drawer's other links (settings, admin tools, sign out) are
+                     still reachable from the bottom bar's More tab. --}}
+                <a href="{{ route('MyDashboard') }}" class="dh-avatar-btn {{ $active === 'me' ? 'is-active' : '' }}" aria-label="Go to My Dashboard">
+                    @if($avatar)
+                        <img src="{{ $avatar }}" alt="" onerror="this.remove()">
+                    @else
+                        <span class="material-icons-round" aria-hidden="true">account_circle</span>
+                    @endif
+                </a>
+            @endif
         </div>
     </div>
 </header>
@@ -142,25 +153,15 @@
             <span>{{ $tab['short'] }}</span>
         </a>
     @endforeach
-    @if($isGuest)
-        {{-- No dashboard yet: the account prompt and the menu. --}}
-        <button type="button" class="dh-tab {{ $active === 'me' ? 'is-active' : '' }}" data-dh-tab="me" data-bs-toggle="offcanvas" data-bs-target="#dh-me" aria-controls="dh-me">
-            <span class="dh-tab-icon"><span class="material-icons-round" aria-hidden="true">person</span></span>
-            <span>Me</span>
-        </button>
-    @else
-        <a href="{{ route('MyDashboard') }}" class="dh-tab {{ $active === 'me' ? 'is-active' : '' }}" data-dh-tab="me" @if($active === 'me') aria-current="page" @endif>
-            <span class="dh-tab-icon {{ $avatar ? 'dh-tab-avatar' : '' }}">
-                @if($avatar)
-                    {{-- If the file is missing, fall back to the icon rather than a broken image. --}}
-                    <img src="{{ $avatar }}" alt="" onerror="this.parentNode.classList.remove('dh-tab-avatar');this.outerHTML='<span class=\'material-icons-round\' aria-hidden=\'true\'>person</span>'">
-                @else
-                    <span class="material-icons-round" aria-hidden="true">person</span>
-                @endif
-            </span>
-            <span>Me</span>
-        </a>
-    @endif
+    {{-- Same tab for guest and signed-in alike (Pablo, 2026-09-21: "same
+         logic...icon at the bottom right should be a more") - opens the
+         drawer, which for a signed-in diver now also carries the My
+         Dashboard link (the avatar in the top bar is the direct shortcut
+         to it). --}}
+    <button type="button" class="dh-tab {{ $active === 'me' ? 'is-active' : '' }}" data-dh-tab="me" data-bs-toggle="offcanvas" data-bs-target="#dh-me" aria-controls="dh-me">
+        <span class="dh-tab-icon"><span class="material-icons-round" aria-hidden="true">more_horiz</span></span>
+        <span>More</span>
+    </button>
 </nav>
 
 {{-- The "Me" drawer. Shared by the avatar button and the Me tab. --}}
