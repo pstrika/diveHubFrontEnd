@@ -2558,18 +2558,6 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-mini-carousel-dot { width: 7px; height: 7px; border-radius: 50%; border: 0; background: var(--dh-line); padding: 0; cursor: pointer; transition: width .15s, border-radius .15s; }
 .dh-mini-carousel-dot.is-active { background: var(--dh-sea); width: 18px; border-radius: 4px; }
 
-/* Featured post: one wide card, image beside the text on desktop, stacked on phones. */
-.dh-blog-featured {
-  display: grid; grid-template-columns: 1fr; gap: 0; background: var(--dh-paper); border: 1px solid var(--dh-line);
-  border-radius: 16px; overflow: hidden; text-decoration: none; color: inherit; box-shadow: 0 2px 10px rgba(11,42,58,.06);
-}
-@media (min-width: 768px) { .dh-blog-featured { grid-template-columns: 1.1fr 1fr; } }
-.dh-blog-featured-img { display: block; aspect-ratio: 16/9; overflow: hidden; background: var(--dh-foam); }
-.dh-blog-featured-img img { width: 100%; height: 100%; object-fit: cover; }
-.dh-blog-featured-body { display: flex; flex-direction: column; justify-content: center; padding: var(--dh-space-4) var(--dh-space-6); }
-.dh-blog-featured-title { font-family: 'Roboto Slab', serif; font-size: 1.5rem; font-weight: 700; color: var(--dh-ink); line-height: 1.25; margin-bottom: 8px; }
-@media (min-width: 768px) { .dh-blog-featured-title { font-size: 1.85rem; } }
-
 .dh-blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--dh-space-4); margin: var(--dh-space-4) 0 var(--dh-space-6); }
 .dh-blog-card {
   display: flex; flex-direction: column; background: var(--dh-paper); border: 1px solid var(--dh-line);

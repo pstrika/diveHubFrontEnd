@@ -12,21 +12,11 @@
             </section>
 
             @php
-                // Posts already come newest-first (BlogController) - the
-                // newest published post is the featured one, no separate
-                // "featured" flag for a Creator to remember to set. This
-                // has to hold true PER FILTER too (Pablo, 2026-09-18: "I
-                // was referring to the wide article if the user clicks
-                // Site Guides or Gear & Tips or News...always show the
-                // last article wide, and the rest below in 3 cols") - a
-                // plain show/hide filter can't do that since the featured
-                // slot is fixed to whichever post was newest overall, so
-                // the filtered set is rendered client-side instead, same
-                // markup either way.
-                $featured = $posts->first();
-                $rest = $posts->slice(1)->values();
+                // Every post renders through the same card markup - no
+                // "featured" post gets a wider hero treatment (Pablo,
+                // 2026-09-20: "we want all those cards to look the same").
+                // Posts already come newest-first (BlogController).
                 $coverOr = fn ($post) => $post->cover_image ? asset($post->cover_image) : asset('assets/img/illustrations/dive-site.webp');
-                $roleLabel = fn ($post) => $post->author && $post->author->isAdmin() ? 'Admin' : 'Creator';
                 // Which part of the photo survives the object-fit: cover crop -
                 // a Creator-set field, not always dead center (Pablo, 2026-09-18).
                 $focusOf = fn ($post) => 'object-position: center ' . ($post->cover_focus ?: 'center') . ';';
@@ -38,7 +28,7 @@
                 // this page, caught 2026-09-18 while testing the filter rewrite).
                 // Building the plain array first and handing @json() a bare
                 // variable below sidesteps that.
-                $dhAllPostsData = $posts->map(function ($p) use ($coverOr, $roleLabel) {
+                $dhAllPostsData = $posts->map(function ($p) use ($coverOr) {
                     return [
                         'slug' => $p->slug,
                         'title' => $p->title,
@@ -49,8 +39,6 @@
                         'tags' => $p->tags ?? [],
                         'authorInitial' => (string) Str::of($p->author->name ?? '?')->substr(0, 1),
                         'authorName' => $p->author->name ?? 'Divers Hub',
-                        'authorRole' => $roleLabel($p),
-                        'publishedAt' => optional($p->published_at)->format('M j, Y'),
                         'readMinutes' => $p->readMinutes,
                     ];
                 });
@@ -63,39 +51,11 @@
                 @endforeach
             </div>
 
-            <div id="dhBlogFeaturedSlot">
-                @if($featured)
-                    <a href="{{ route('Blog.show', $featured->slug) }}" class="dh-blog-featured">
-                        <span class="dh-blog-featured-img">
-                            <img src="{{ $coverOr($featured) }}" alt="" loading="lazy" style="{{ $focusOf($featured) }}">
-                        </span>
-                        <span class="dh-blog-featured-body">
-                            <span class="dh-blog-eyebrow">{{ $featured->category }}</span>
-                            <span class="dh-blog-featured-title">{{ $featured->title }}</span>
-                            <span class="dh-blog-excerpt">{{ $featured->excerpt }}</span>
-                            @if(!empty($featured->tags))
-                                <span class="dh-blog-tags">
-                                    @foreach($featured->tags as $tag)<span class="dh-blog-tag">{{ $tag }}</span>@endforeach
-                                </span>
-                            @endif
-                            <span class="dh-blog-byline">
-                                <span class="dh-blog-avatar">{{ Str::of($featured->author->name ?? '?')->substr(0, 1) }}</span>
-                                <span><strong>{{ $featured->author->name ?? 'Divers Hub' }}</strong> <span class="chip chip-static dh-blog-role">{{ $roleLabel($featured) }}</span></span>
-                                <span class="dh-blog-dot">&middot;</span>
-                                <span>{{ optional($featured->published_at)->format('M j, Y') }}</span>
-                                <span class="dh-blog-dot">&middot;</span>
-                                <span>{{ $featured->readMinutes }} min read</span>
-                            </span>
-                        </span>
-                    </a>
-                @endif
-            </div>
-
             {{-- .dh-blog-grid-3col: exactly 3 columns on desktop, 1 on
                  mobile (Pablo, 2026-09-18), rather than however many
                  260px-minimum cards the container's width happens to fit. --}}
             <div class="dh-blog-grid dh-blog-grid-3col" id="dhBlogGridSlot">
-                @foreach($rest as $post)
+                @foreach($posts as $post)
                     <a href="{{ route('Blog.show', $post->slug) }}" class="dh-blog-card">
                         <span class="dh-blog-card-img">
                             <img src="{{ $coverOr($post) }}" alt="" loading="lazy" style="{{ $focusOf($post) }}">
@@ -147,22 +107,6 @@
                 }).join('') + '</span>';
             }
 
-            function featuredHtml(p) {
-                return '<a href="/Blog/' + esc(p.slug) + '" class="dh-blog-featured">'
-                    + '<span class="dh-blog-featured-img"><img src="' + esc(p.image) + '" alt="" loading="lazy" style="object-position: center ' + esc(p.focus || 'center') + ';"></span>'
-                    + '<span class="dh-blog-featured-body">'
-                    + '<span class="dh-blog-eyebrow">' + esc(p.category) + '</span>'
-                    + '<span class="dh-blog-featured-title">' + esc(p.title) + '</span>'
-                    + '<span class="dh-blog-excerpt">' + esc(p.excerpt) + '</span>'
-                    + tagsHtml(p.tags)
-                    + '<span class="dh-blog-byline">'
-                    + '<span class="dh-blog-avatar">' + esc(p.authorInitial) + '</span>'
-                    + '<span><strong>' + esc(p.authorName) + '</strong> <span class="chip chip-static dh-blog-role">' + esc(p.authorRole) + '</span></span>'
-                    + '<span class="dh-blog-dot">&middot;</span><span>' + esc(p.publishedAt) + '</span>'
-                    + '<span class="dh-blog-dot">&middot;</span><span>' + esc(p.readMinutes) + ' min read</span>'
-                    + '</span></span></a>';
-            }
-
             function cardHtml(p) {
                 return '<a href="/Blog/' + esc(p.slug) + '" class="dh-blog-card">'
                     + '<span class="dh-blog-card-img"><img src="' + esc(p.image) + '" alt="" loading="lazy" style="object-position: center ' + esc(p.focus || 'center') + ';"><span class="chip chip-static dh-blog-cat-chip">' + esc(p.category) + '</span></span>'
@@ -179,12 +123,10 @@
 
             function renderBlog(category) {
                 var filtered = dhAllPosts.filter(function (p) { return category === 'all' || p.category === category; });
-                var featuredSlot = document.getElementById('dhBlogFeaturedSlot');
                 var gridSlot = document.getElementById('dhBlogGridSlot');
                 var empty = document.getElementById('dhBlogEmpty');
 
                 if (!filtered.length) {
-                    featuredSlot.innerHTML = '';
                     gridSlot.innerHTML = '';
                     document.getElementById('dhBlogEmptyText').textContent = 'No articles in this category yet.';
                     empty.hidden = false;
@@ -192,8 +134,7 @@
                 }
 
                 empty.hidden = true;
-                featuredSlot.innerHTML = featuredHtml(filtered[0]);
-                gridSlot.innerHTML = filtered.slice(1).map(cardHtml).join('');
+                gridSlot.innerHTML = filtered.map(cardHtml).join('');
             }
 
             document.querySelectorAll('[data-dh-blog-filter]').forEach(function (btn) {
