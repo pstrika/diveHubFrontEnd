@@ -324,6 +324,17 @@ class UserController extends Controller
             $user->whatsapp_notifications = 0;
         }
 
+        // Newsletter, same shape - this one defaults ON (opt-out, not
+        // opt-in) since it's a plain marketing digest, not a consent-gated
+        // channel, so an absent checkbox here still means "untick it".
+        if($request->has('newsletter_subscribed')) {
+            Log::info("Got newsletter_subscribed. Updating to: 1");
+            $user->newsletter_subscribed = 1;
+        } else {
+            Log::info("Didn't get newsletter_subscribed. Updating to: 0");
+            $user->newsletter_subscribed = 0;
+        }
+
         if($request->has('show_visited')) {
             Log::info("Got show_visited. Updating to: 1");
             $user->show_visited = 1;

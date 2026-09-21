@@ -295,6 +295,26 @@
                             </div>
                             <div class="dh-profile-card-body">
                                 <x-comms-preferences :user="$user" />
+
+                                {{-- Separate from the channel consent checkboxes above - this is a
+                                     plain marketing digest (opt-out, not a consent-gated channel like
+                                     SMS/WhatsApp), so it doesn't carry the same legal wording or
+                                     "Agreed <date>" tracking. Its own .dh-comms wrapper so the checkbox
+                                     picks up the same checked-state styling as the rows above. --}}
+                                <div class="dh-comms" style="margin-top: var(--dh-space-3);">
+                                    <div class="dh-comms-row">
+                                        <label class="dh-comms-label">
+                                            <input class="form-check-input" type="checkbox" id="newsletter_subscribed"
+                                                   name="newsletter_subscribed" value="1"
+                                                   {{ $user->newsletter_subscribed ? 'checked' : '' }}>
+                                            <span>
+                                                <strong>The Weekly Dive newsletter</strong>
+                                                Get our weekly email digest of trip picks, dive site guides, and news.
+                                            </span>
+                                        </label>
+                                        <p class="dh-comms-note">You can also unsubscribe from the link in any newsletter email.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -692,7 +712,7 @@
     <script>
         [
             'prefersLocation', 'firstDayOfWeek', 'email_notifications', 'sms_notifications',
-            'whatsapp_notifications', 'show_visited', 'deco_unit', 'pinch_zoom_enabled',
+            'whatsapp_notifications', 'newsletter_subscribed', 'show_visited', 'deco_unit', 'pinch_zoom_enabled',
         ].forEach(function (id) {
             var el = document.getElementById(id);
             if (el) el.addEventListener('click', revealSave);
