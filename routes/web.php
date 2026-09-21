@@ -295,6 +295,21 @@ Route::middleware('auth')->group(function () {
     Route::delete('Blog/manage/{post}', 'App\Http\Controllers\BlogAdminController@destroy')->name('Blog.manage.destroy');
 });
 
+// On-demand newsletter composer (2026-09-21) - reaches every subscribed
+// user at once, so 'admin' (role_id == 1) rather than the Blog's
+// Creator/Admin split.
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('Newsletter/manage', 'App\Http\Controllers\NewsletterAdminController@index')->name('Newsletter.manage.index');
+    Route::get('Newsletter/manage/create', 'App\Http\Controllers\NewsletterAdminController@create')->name('Newsletter.manage.create');
+    Route::post('Newsletter/manage', 'App\Http\Controllers\NewsletterAdminController@store')->name('Newsletter.manage.store');
+    Route::get('Newsletter/manage/{issue}/edit', 'App\Http\Controllers\NewsletterAdminController@edit')->name('Newsletter.manage.edit');
+    Route::put('Newsletter/manage/{issue}', 'App\Http\Controllers\NewsletterAdminController@update')->name('Newsletter.manage.update');
+    Route::delete('Newsletter/manage/{issue}', 'App\Http\Controllers\NewsletterAdminController@destroy')->name('Newsletter.manage.destroy');
+    Route::get('Newsletter/manage/{issue}/preview', 'App\Http\Controllers\NewsletterAdminController@preview')->name('Newsletter.manage.preview');
+    Route::post('Newsletter/manage/{issue}/send-test', 'App\Http\Controllers\NewsletterAdminController@sendTest')->name('Newsletter.manage.sendTest');
+    Route::post('Newsletter/manage/{issue}/send', 'App\Http\Controllers\NewsletterAdminController@send')->name('Newsletter.manage.send');
+});
+
 Route::get('Blog/{slug}', 'App\Http\Controllers\BlogController@show')->middleware('guest')->name('Blog.show');
 // Redesign W4: Search and Map became views of the Dive Sites explorer. Both
 // pages were noindex, so the 301s cost nothing. Listed in docs/seo/redirect-map.md.

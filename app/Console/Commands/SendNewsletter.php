@@ -2,20 +2,14 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
+use App\Services\NewsletterService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\URL;
-use Mailgun\Mailgun;
 
 /**
- * Renders resources/views/emails/newsletter-document.blade.php per
- * recipient (the unsubscribe link is signed per-user) into one complete
- * HTML email, then sends it through Mailgun's "2026 new dh template"
- * template, which holds nothing but a single {{{body}}} placeholder - see
- * docs/newsletter-mailgun-shell.html. Recipients come straight from
- * users.newsletter_subscribed, not a Mailgun-side mailing list (Pablo,
- * 2026-09-21: "so we manage the recipients").
+ * The weekly digest path - reads its content from CLI flags/files. For an
+ * ad hoc, platform-wide send authored through a form instead, see
+ * NewsletterAdminController, which uses the same NewsletterService this
+ * command does.
  */
 class SendNewsletter extends Command
 {
@@ -46,11 +40,8 @@ class SendNewsletter extends Command
         $body = file_get_contents($bodyPath);
         $conditions = $this->option('conditions') ?: '';
 
-        $recipients = User::where('newsletter_subscribed', true)
-            ->where('email_notifications', true)
-            ->whereNotNull('email')
-            ->when($this->option('only'), fn ($q, $only) => $q->whereIn('id', explode(',', $only)))
-            ->get();
+        $onlyIds = $this->option('only') ? explode(',', $this->option('only')) : null;
+        $recipients = NewsletterService::subscribedRecipients($onlyIds);
 
         $this->info('Recipients: ' . $recipients->count());
 
@@ -59,32 +50,8 @@ class SendNewsletter extends Command
             return self::SUCCESS;
         }
 
-        $mg = Mailgun::create(env('MAILGUN_KEY'));
-        $sent = 0;
-
-        foreach ($recipients as $user) {
-            $document = view('emails.newsletter-document', [
-                'preheader' => $preheader,
-                'date' => $date,
-                'headline' => $headline,
-                'body' => $body,
-                'conditions' => $conditions,
-                'unsubscribeUrl' => URL::signedRoute('Newsletter.unsubscribe', ['user' => $user->id]),
-            ])->render();
-
-            try {
-                $mg->messages()->send('mail.divers-hub.com', [
-                    'from' => 'Divers-Hub <postmaster@mail.divers-hub.com>',
-                    'to' => $user->name . ' <' . $user->email . '>',
-                    'subject' => $subject,
-                    'template' => '2026 new dh template',
-                    'h:X-Mailgun-Variables' => json_encode(['body' => $document]),
-                ]);
-                $sent++;
-            } catch (\Throwable $e) {
-                Log::error('Newsletter send failed for user ' . $user->id . ': ' . $e->getMessage());
-            }
-        }
+        $content = compact('preheader', 'date', 'headline', 'body', 'conditions');
+        $sent = $recipients->filter(fn ($user) => NewsletterService::sendToUser($user, $subject, $content))->count();
 
         $this->info("Sent: {$sent} / {$recipients->count()}");
         return self::SUCCESS;
