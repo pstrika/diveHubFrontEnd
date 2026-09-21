@@ -6,7 +6,6 @@ use App\Models\Post;
 use App\Models\Site;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 /**
  * Creator/Admin authoring screen (Pablo, 2026-09-17/18). Creators publish
@@ -243,22 +242,9 @@ class BlogAdminController extends Controller
             // picks one from the title - the same alpha_dash/unique shape an
             // Admin's manual slug would have to satisfy, just computed here
             // instead of validated from input.
-            $data['slug'] = $post->exists ? $post->slug : $this->uniqueSlugFrom($data['title']);
+            $data['slug'] = $post->exists ? $post->slug : Post::uniqueSlugFrom($data['title']);
         }
 
         return $data;
-    }
-
-    /** Slugifies a title and appends -2, -3... until it's not already taken - the same uniqueness an Admin's manual slug is validated against. */
-    private function uniqueSlugFrom(string $title): string
-    {
-        $base = Str::slug($title) ?: 'article';
-        $slug = $base;
-        $i = 2;
-        while (Post::where('slug', $slug)->exists()) {
-            $slug = $base . '-' . $i++;
-        }
-
-        return $slug;
     }
 }

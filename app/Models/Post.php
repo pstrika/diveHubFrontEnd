@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 /**
  * A blog post. Body is Quill Delta JSON, rendered client-side the same way
@@ -136,5 +137,23 @@ class Post extends Model
         }
 
         return $text;
+    }
+
+    /**
+     * Slugifies a title and appends -2, -3... until it's not already taken.
+     * Shared by the admin form (BlogAdminController) and the blog API
+     * (Api\BlogArticleController) so both pick a slug the same way instead
+     * of keeping two copies of this in sync.
+     */
+    public static function uniqueSlugFrom(string $title): string
+    {
+        $base = Str::slug($title) ?: 'article';
+        $slug = $base;
+        $i = 2;
+        while (self::where('slug', $slug)->exists()) {
+            $slug = $base . '-' . $i++;
+        }
+
+        return $slug;
     }
 }
