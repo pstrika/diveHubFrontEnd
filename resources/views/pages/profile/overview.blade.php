@@ -318,16 +318,15 @@
                                 <p class="dh-hint" style="margin-top: 6px;">Divers Hub will use your "Favorite Operators" to prioritize what trips to show. You can choose to use "Favorite Locations" as your main filter criteria instead.</p>
                             </div>
                             <div class="dh-profile-card-body">
-                                <ul class="list-group">
-                                    <li class="list-group-item border-0 px-0">
-                                        <div class="form-check form-switch ps-0">
-                                            <input name="prefersLocation" class="form-check-input ms-auto" type="checkbox"
+                                <div class="dh-comms">
+                                    <div class="dh-comms-row">
+                                        <label class="dh-comms-label">
+                                            <input name="prefersLocation" class="form-check-input" type="checkbox"
                                                 id="prefersLocation" {{ $user->prefersLocation ? "checked" : ""}} value="1">
-                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                for="prefersLocation">Use "Favorite Locations" to show me dive trips</label>
-                                        </div>
-                                    </li>
-                                </ul>
+                                            <span>Use "Favorite Locations" to show me dive trips</span>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -395,32 +394,29 @@
                                 <h6 class="dh-panel-title">Preferences</h6>
                             </div>
                             <div class="dh-profile-card-body">
-                                <ul class="list-group">
-                                    <li class="list-group-item border-0 px-0">
-                                        <div class="form-check form-switch ps-0">
-                                            <input name="firstDayOfWeek" class="form-check-input ms-auto" type="checkbox"
+                                <div class="dh-comms">
+                                    <div class="dh-comms-row">
+                                        <label class="dh-comms-label">
+                                            <input name="firstDayOfWeek" class="form-check-input" type="checkbox"
                                                 id="firstDayOfWeek" {{ $user->firstDayOfWeek ? "checked" : ""}} value="1">
-                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                for="firstDayOfWeek">Set Monday as the first day of the week</label>
-                                        </div>
-                                    </li>
-                                    <li class="list-group-item border-0 px-0">
-                                        <div class="form-check form-switch ps-0">
-                                            <input name="show_visited" class="form-check-input ms-auto" type="checkbox"
+                                            <span>Set Monday as the first day of the week</span>
+                                        </label>
+                                    </div>
+                                    <div class="dh-comms-row">
+                                        <label class="dh-comms-label">
+                                            <input name="show_visited" class="form-check-input" type="checkbox"
                                                 id="show_visited" {{ $user->show_visited ? "checked" : ""}} value="1">
-                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                for="show_visited">Highlight sites already visited in upcoming trips</label>
-                                        </div>
-                                    </li>
-                                    <li class="list-group-item border-0 px-0">
-                                        <div class="form-check form-switch ps-0">
-                                            <input name="deco_unit" class="form-check-input ms-auto" type="checkbox"
+                                            <span>Highlight sites already visited in upcoming trips</span>
+                                        </label>
+                                    </div>
+                                    <div class="dh-comms-row">
+                                        <label class="dh-comms-label">
+                                            <input name="deco_unit" class="form-check-input" type="checkbox"
                                                 id="deco_unit" {{ $user->deco_unit ? "checked" : ""}} value="1">
-                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                for="deco_unit">Use metric units for deco planning (default imperial)</label>
-                                        </div>
-                                    </li>
-                                </ul>
+                                            <span>Use metric units for deco planning (default imperial)</span>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -430,16 +426,15 @@
                                 <h6 class="dh-panel-title">Accessibility</h6>
                             </div>
                             <div class="dh-profile-card-body">
-                                <ul class="list-group">
-                                    <li class="list-group-item border-0 px-0">
-                                        <div class="form-check form-switch ps-0">
-                                            <input name="pinch_zoom_enabled" class="form-check-input ms-auto" type="checkbox"
+                                <div class="dh-comms">
+                                    <div class="dh-comms-row">
+                                        <label class="dh-comms-label">
+                                            <input name="pinch_zoom_enabled" class="form-check-input" type="checkbox"
                                                 id="pinch_zoom_enabled" {{ $user->pinch_zoom_enabled ? "checked" : ""}} value="1">
-                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                for="pinch_zoom_enabled">Allow pinch-to-zoom in the installed app</label>
-                                        </div>
-                                    </li>
-                                </ul>
+                                            <span>Allow pinch-to-zoom in the installed app</span>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
