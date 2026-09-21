@@ -6,9 +6,10 @@
             </div>
             <div style="padding:32px 28px; text-align:center;">
                 <h1 style="margin:0 0 12px; font-family:Georgia, 'Times New Roman', serif; font-size:22px; color:#0b2a3a;">You're back in</h1>
-                <p style="margin:0; font-size:14px; line-height:21px; color:#5a6b78;">
+                <p style="margin:0 0 20px; font-size:14px; line-height:21px; color:#5a6b78;">
                     {{ $user->name }}, you'll get The Weekly Dive newsletter again starting with the next issue.
                 </p>
+                <a href="{{ route('/') }}" class="dh-btn dh-btn-primary" style="display:inline-flex;">Go to Divers Hub</a>
             </div>
         </div>
     </div>

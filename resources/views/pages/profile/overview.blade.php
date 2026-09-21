@@ -159,11 +159,17 @@
             @php
                 $favOperatorIds = $favOperators->pluck('id')->all();
                 $favLocationIds = $favLocations->pluck('id')->all();
-                $groupedLocations = $locations->map(fn ($l) => [
-                    'id' => $l->id,
-                    'name' => ucwords($l->location),
-                    'coast' => \App\Support\Coast::label(\App\Support\Coast::forCode($l->short)),
-                ])->groupBy('coast');
+                // Argentina locations (MDQ/LGR/PMY/USH) exist for the trips
+                // scraper's data, not as a real choice for divers picking a
+                // home base - excluded here the same way the Sites Explorer
+                // map already excludes that outlier data from its default view.
+                $groupedLocations = $locations
+                    ->reject(fn ($l) => \App\Support\Coast::forCode($l->short) === 'argentina')
+                    ->map(fn ($l) => [
+                        'id' => $l->id,
+                        'name' => ucwords($l->location),
+                        'coast' => \App\Support\Coast::label(\App\Support\Coast::forCode($l->short)),
+                    ])->groupBy('coast');
             @endphp
 
             <form id="myForm" action="{{ route('overview') }}" method="POST" enctype="multipart/form-data">

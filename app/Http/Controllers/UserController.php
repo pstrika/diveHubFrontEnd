@@ -164,7 +164,7 @@ class UserController extends Controller
     public function getProfile() {
         $user = User::findorFail(auth()->user()->id);
 
-        $operators = Operator::all();
+        $operators = Operator::orderBy('operatorName')->get();
         $favOperatorsIndex = explode(',', $user->favOperators);
         $favOperators = Operator::whereIn('id', $favOperatorsIndex)->get();
 
