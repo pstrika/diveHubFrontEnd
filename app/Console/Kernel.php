@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         Commands\SendGroupDiveReminders::class,
         Commands\SendGroupActivityDigest::class,
         Commands\DetectCancelledTrips::class,
+        Commands\SendNewsletter::class,
     ];
 
     /**

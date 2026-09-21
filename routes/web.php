@@ -52,6 +52,15 @@ Route::get('cron/send-group-reminders', [\App\Http\Controllers\CronController::c
 Route::get('cron/send-group-activity-digest', [\App\Http\Controllers\CronController::class, 'sendGroupActivityDigest']);
 Route::get('cron/detect-cancelled-trips', [\App\Http\Controllers\CronController::class, 'detectCancelledTrips']);
 
+// Newsletter one-click unsubscribe/resubscribe - reached from a signed link
+// in the email itself, not a logged-in session (the diver may be reading
+// mail on a device they've never signed into), so this must stay outside
+// 'auth'. 'signed' (Illuminate\Routing\Middleware\ValidateSignature) checks
+// the URL::signedRoute() signature rather than a session - see
+// NewsletterController.
+Route::get('newsletter/unsubscribe/{user}', [\App\Http\Controllers\NewsletterController::class, 'unsubscribe'])->name('Newsletter.unsubscribe')->middleware('signed');
+Route::get('newsletter/resubscribe/{user}', [\App\Http\Controllers\NewsletterController::class, 'resubscribe'])->name('Newsletter.resubscribe')->middleware('signed');
+
 // Twilio's own webhook - configured against the Twilio number in the
 // Twilio Console (Messaging configuration), not something a diver visits.
 // No auth (Twilio isn't a logged-in user) and CSRF-exempt (see

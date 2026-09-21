@@ -1,0 +1,16 @@
+<!--
+  This is the ENTIRE content of the "2026 new dh template" Mailgun
+  template (Sending > Templates) - nothing else. Every real design
+  decision (doctype, head, style, header, headline, body, button,
+  conditions strip, footer, unsubscribe link) lives in
+  resources/views/emails/newsletter-document.blade.php in this repo
+  instead, rendered server-side into the single {{{body}}} placeholder
+  below by app/Console/Commands/SendNewsletter.php - Mailgun never sees
+  anything but the one already-finished HTML string.
+
+  {{{body}}} MUST stay triple-braced (raw/unescaped) - Mailgun's template
+  engine (Handlebars) HTML-escapes a double-braced {{body}}, which would
+  show literal <table>/<p> tags in the sent email instead of rendering
+  them.
+-->
+{{{body}}}

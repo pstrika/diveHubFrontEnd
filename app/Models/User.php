@@ -41,6 +41,7 @@ class User extends Authenticatable
         'last_seen_at' => 'datetime',
         'phone_verified_at' => 'datetime',
         'phone_verification_sent_at' => 'datetime',
+        'newsletter_subscribed' => 'boolean',
     ];
 
     /**
