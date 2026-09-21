@@ -182,6 +182,8 @@ body.dh-shell .sidenav, body.dh-shell #sidenav-main { display: none !important; 
 }
 .dh-topnav-link:hover { color: #fff; background: rgba(255,255,255,.08); }
 .dh-topnav-link.is-active { color: var(--dh-ink); background: #fff; }
+button.dh-topnav-link { background: none; border: 0; cursor: pointer; font: inherit; }
+button.dh-topnav-link:hover { background: rgba(255,255,255,.08); }
 
 .dh-topbar-actions { margin-left: auto; display: flex; align-items: center; gap: var(--dh-space-2); flex: 0 0 auto; }
 .dh-search { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.12); border-radius: var(--dh-radius-pill); padding: 4px 12px; }

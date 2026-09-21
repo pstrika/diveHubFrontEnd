@@ -78,6 +78,12 @@
             @foreach($tabs as $key => $tab)
                 <a href="{{ $tab['href'] }}" class="dh-topnav-link {{ $active === $key ? 'is-active' : '' }}" data-dh-tab="{{ $key }}" @if($active === $key) aria-current="page" @endif @if(!empty($tab['gated'])) onclick="event.preventDefault();showModalGuest();" @endif>{{ $tab['label'] }}@if($key === 'groups' && $unreadGroups > 0)<span class="dh-tab-badge" aria-label="{{ $unreadGroups }} unread">{{ $unreadGroups > 99 ? '99+' : $unreadGroups }}</span>@endif</a>
             @endforeach
+            {{-- Desktop-only way back into the drawer now that the avatar
+                 button links straight to My Dashboard (Pablo, 2026-09-21:
+                 "on desktop I lost access to the drawer"). The bottom tab
+                 bar's own More tab (mobile only) already opens the same
+                 drawer, unchanged. --}}
+            <button type="button" class="dh-topnav-link {{ $active === 'me' ? 'is-active' : '' }}" data-dh-tab="me" data-bs-toggle="offcanvas" data-bs-target="#dh-me" aria-controls="dh-me" @if($active === 'me') aria-current="page" @endif>More</button>
         </nav>
 
         <div class="dh-topbar-actions">
