@@ -233,9 +233,17 @@ class MyDashboardController extends Controller
                 return $t->departureTime !== '00:00' && $t->departureTime < $now->format('H:i');
             })
             ->values();
-        // Keep this weekend while it still has boats to catch, otherwise next weekend.
+        // Keep this weekend while it still has a FAVORITE-matching boat to
+        // catch, otherwise next weekend. Checking for "this weekend has any
+        // trips at all" (as this used to) never actually falls through -
+        // some operator always has boats running - so a diver whose
+        // favorited operators/level only line up with next weekend saw an
+        // empty Recommended card instead (Pablo, 2026-09-21: "I'm not
+        // getting recommended dives...even though I have selected several
+        // fav operators").
         $thisWeekend = $favTrips->filter(fn ($t) => $t->date <= now()->startOfWeek()->addDays(6)->toDateString());
-        $favTrips = $thisWeekend->isNotEmpty() ? $thisWeekend : $favTrips->filter(fn ($t) => $t->date > now()->startOfWeek()->addDays(6)->toDateString());
+        $thisWeekendFavs = $thisWeekend->filter(fn ($t) => !empty($t->fav));
+        $favTrips = $thisWeekendFavs->isNotEmpty() ? $thisWeekend : $favTrips->filter(fn ($t) => $t->date > now()->startOfWeek()->addDays(6)->toDateString());
         $weekendStart = $favTrips->min('date') ?: $thisSaturday;
         $favTrips = $favTrips
             ->sortBy([
