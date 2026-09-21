@@ -232,92 +232,6 @@
                             </div>
                         </div>
 
-                        {{-- Preferences --}}
-                        <div class="dh-profile-card">
-                            <div class="dh-profile-card-head">
-                                <h6 class="dh-panel-title">Preferences</h6>
-                            </div>
-                            <div class="dh-profile-card-body">
-                                <ul class="list-group">
-                                    <li class="list-group-item border-0 px-0">
-                                        <div class="form-check form-switch ps-0">
-                                            <input name="firstDayOfWeek" class="form-check-input ms-auto" type="checkbox"
-                                                id="firstDayOfWeek" {{ $user->firstDayOfWeek ? "checked" : ""}} value="1">
-                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                for="firstDayOfWeek">Set Monday as the first day of the week</label>
-                                        </div>
-                                    </li>
-                                    <li class="list-group-item border-0 px-0">
-                                        <div class="form-check form-switch ps-0">
-                                            <input name="show_visited" class="form-check-input ms-auto" type="checkbox"
-                                                id="show_visited" {{ $user->show_visited ? "checked" : ""}} value="1">
-                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                for="show_visited">Highlight sites already visited in upcoming trips</label>
-                                        </div>
-                                    </li>
-                                    <li class="list-group-item border-0 px-0">
-                                        <div class="form-check form-switch ps-0">
-                                            <input name="deco_unit" class="form-check-input ms-auto" type="checkbox"
-                                                id="deco_unit" {{ $user->deco_unit ? "checked" : ""}} value="1">
-                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                for="deco_unit">Use metric units for deco planning (default imperial)</label>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        {{-- Accessibility --}}
-                        <div class="dh-profile-card">
-                            <div class="dh-profile-card-head">
-                                <h6 class="dh-panel-title">Accessibility</h6>
-                            </div>
-                            <div class="dh-profile-card-body">
-                                <ul class="list-group">
-                                    <li class="list-group-item border-0 px-0">
-                                        <div class="form-check form-switch ps-0">
-                                            <input name="pinch_zoom_enabled" class="form-check-input ms-auto" type="checkbox"
-                                                id="pinch_zoom_enabled" {{ $user->pinch_zoom_enabled ? "checked" : ""}} value="1">
-                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
-                                                for="pinch_zoom_enabled">Allow pinch-to-zoom in the installed app</label>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        {{-- Communication preferences: unchanged from the wizard's wording/component. --}}
-                        <div class="dh-profile-card">
-                            <div class="dh-profile-card-head">
-                                <h6 class="dh-panel-title">Communication preferences</h6>
-                            </div>
-                            <div class="dh-profile-card-body">
-                                <x-comms-preferences :user="$user" />
-
-                                {{-- Separate from the channel consent checkboxes above - this is a
-                                     plain marketing digest (opt-out, not a consent-gated channel like
-                                     SMS/WhatsApp), so it doesn't carry the same legal wording or
-                                     "Agreed <date>" tracking. Its own .dh-comms wrapper so the checkbox
-                                     picks up the same checked-state styling as the rows above. --}}
-                                <div class="dh-comms" style="margin-top: var(--dh-space-3);">
-                                    <div class="dh-comms-row">
-                                        <label class="dh-comms-label">
-                                            <input class="form-check-input" type="checkbox" id="newsletter_subscribed"
-                                                   name="newsletter_subscribed" value="1"
-                                                   {{ $user->newsletter_subscribed ? 'checked' : '' }}>
-                                            <span>
-                                                <strong>The Weekly Dive newsletter</strong>
-                                                Get our weekly email digest of trip picks, dive site guides, and news.
-                                            </span>
-                                        </label>
-                                        <p class="dh-comms-note">You can also unsubscribe from the link in any newsletter email.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         {{-- Favorite Operators--}}
                         <div class="dh-profile-card">
                             <div class="dh-profile-card-head dh-panel-head-row">
@@ -440,6 +354,92 @@
                                         <x-dh-select name="levelHigh" :options="$rangeLevelOptions" :selected="$showLevelHigh" />
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        {{-- Communication preferences: unchanged from the wizard's wording/component. --}}
+                        <div class="dh-profile-card">
+                            <div class="dh-profile-card-head">
+                                <h6 class="dh-panel-title">Communication preferences</h6>
+                            </div>
+                            <div class="dh-profile-card-body">
+                                <x-comms-preferences :user="$user" />
+
+                                {{-- Separate from the channel consent checkboxes above - this is a
+                                     plain marketing digest (opt-out, not a consent-gated channel like
+                                     SMS/WhatsApp), so it doesn't carry the same legal wording or
+                                     "Agreed <date>" tracking. Its own .dh-comms wrapper so the checkbox
+                                     picks up the same checked-state styling as the rows above. --}}
+                                <div class="dh-comms" style="margin-top: var(--dh-space-3);">
+                                    <div class="dh-comms-row">
+                                        <label class="dh-comms-label">
+                                            <input class="form-check-input" type="checkbox" id="newsletter_subscribed"
+                                                   name="newsletter_subscribed" value="1"
+                                                   {{ $user->newsletter_subscribed ? 'checked' : '' }}>
+                                            <span>
+                                                <strong>The Weekly Dive newsletter</strong>
+                                                Get our weekly email digest of trip picks, dive site guides, and news.
+                                            </span>
+                                        </label>
+                                        <p class="dh-comms-note">You can also unsubscribe from the link in any newsletter email.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Preferences --}}
+                        <div class="dh-profile-card">
+                            <div class="dh-profile-card-head">
+                                <h6 class="dh-panel-title">Preferences</h6>
+                            </div>
+                            <div class="dh-profile-card-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item border-0 px-0">
+                                        <div class="form-check form-switch ps-0">
+                                            <input name="firstDayOfWeek" class="form-check-input ms-auto" type="checkbox"
+                                                id="firstDayOfWeek" {{ $user->firstDayOfWeek ? "checked" : ""}} value="1">
+                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
+                                                for="firstDayOfWeek">Set Monday as the first day of the week</label>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item border-0 px-0">
+                                        <div class="form-check form-switch ps-0">
+                                            <input name="show_visited" class="form-check-input ms-auto" type="checkbox"
+                                                id="show_visited" {{ $user->show_visited ? "checked" : ""}} value="1">
+                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
+                                                for="show_visited">Highlight sites already visited in upcoming trips</label>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item border-0 px-0">
+                                        <div class="form-check form-switch ps-0">
+                                            <input name="deco_unit" class="form-check-input ms-auto" type="checkbox"
+                                                id="deco_unit" {{ $user->deco_unit ? "checked" : ""}} value="1">
+                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
+                                                for="deco_unit">Use metric units for deco planning (default imperial)</label>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {{-- Accessibility --}}
+                        <div class="dh-profile-card">
+                            <div class="dh-profile-card-head">
+                                <h6 class="dh-panel-title">Accessibility</h6>
+                            </div>
+                            <div class="dh-profile-card-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item border-0 px-0">
+                                        <div class="form-check form-switch ps-0">
+                                            <input name="pinch_zoom_enabled" class="form-check-input ms-auto" type="checkbox"
+                                                id="pinch_zoom_enabled" {{ $user->pinch_zoom_enabled ? "checked" : ""}} value="1">
+                                            <label class="form-check-label text-body ms-3 text-wrap w-80 mb-0"
+                                                for="pinch_zoom_enabled">Allow pinch-to-zoom in the installed app</label>
+                                        </div>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                     </div>
