@@ -51,7 +51,10 @@ class SendNewsletter extends Command
         }
 
         $content = compact('preheader', 'date', 'headline', 'body', 'conditions');
-        $sent = $recipients->filter(fn ($user) => NewsletterService::sendToUser($user, $subject, $content))->count();
+        // sendToUser() returns true on success or the failure reason as a
+        // string - a non-empty string is truthy in PHP, so this must check
+        // === true explicitly or every failure would count as a success.
+        $sent = $recipients->filter(fn ($user) => NewsletterService::sendToUser($user, $subject, $content) === true)->count();
 
         $this->info("Sent: {$sent} / {$recipients->count()}");
         return self::SUCCESS;

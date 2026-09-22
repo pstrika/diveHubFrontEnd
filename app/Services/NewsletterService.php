@@ -30,13 +30,18 @@ class NewsletterService
 
     /**
      * Renders one recipient's copy (their own signed unsubscribe link) and
-     * sends it. Returns true/false rather than throwing - one bad address
-     * must not stop the rest of a run.
+     * sends it. Returns true on success or the failure reason as a string
+     * (never throws - one bad address must not stop the rest of a run).
+     * Mailgun's own exception message is often just "Too many requests."
+     * regardless of the real reason (rate limit vs. daily quota vs.
+     * something else) - the actual reason lives in the response body,
+     * which the SDK's own exception doesn't expose, so this reads it
+     * directly via a raw HTTP call instead of trusting $e->getMessage().
      *
      * $content: ['preheader', 'date', 'headline', 'body', 'conditions'] -
      * body/conditions are raw HTML (see App\Support\NewsletterMarkdown).
      */
-    public static function sendToUser(User $user, string $subject, array $content): bool
+    public static function sendToUser(User $user, string $subject, array $content)
     {
         $document = view('emails.newsletter-document', array_merge($content, [
             'unsubscribeUrl' => URL::signedRoute('Newsletter.unsubscribe', ['user' => $user->id]),
@@ -52,9 +57,26 @@ class NewsletterService
             ]);
             return true;
         } catch (\Throwable $e) {
-            Log::error('Newsletter send failed for user ' . $user->id . ': ' . $e->getMessage());
-            return false;
+            $reason = self::mailgunErrorReason($e) ?? $e->getMessage();
+            Log::error('Newsletter send failed for user ' . $user->id . ': ' . $reason);
+            return $reason;
         }
+    }
+
+    /**
+     * The real reason, when Mailgun's SDK gives one - e.g. tooManyRequests()
+     * always sets the exception's own message to the generic "Too many
+     * requests.", but its constructor separately parses the actual response
+     * body (e.g. "daily request limit (100) exceeded...") into
+     * getResponseBody() before anything else can consume that stream.
+     */
+    private static function mailgunErrorReason(\Throwable $e): ?string
+    {
+        if (!method_exists($e, 'getResponseBody')) {
+            return null;
+        }
+
+        return $e->getResponseBody()['message'] ?? null;
     }
 
     /** The $content array sendToUser() expects, built from a saved issue. */
@@ -83,7 +105,10 @@ class NewsletterService
 
         $recipients = self::subscribedRecipients();
         $content = self::contentFor($issue);
-        $sent = $recipients->filter(fn ($user) => self::sendToUser($user, $issue->subject, $content))->count();
+        // sendToUser() returns true on success or the failure reason as a
+        // string - a non-empty string is truthy in PHP, so this must check
+        // === true explicitly or every failure would count as a success.
+        $sent = $recipients->filter(fn ($user) => self::sendToUser($user, $issue->subject, $content) === true)->count();
 
         $issue->update([
             'status' => 'sent',

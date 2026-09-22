@@ -85,9 +85,11 @@ class NewsletterAdminController extends Controller
     /** Sends only to the current admin - fast, safe, repeatable while drafting. */
     public function sendTest(NewsletterIssue $issue)
     {
-        $ok = NewsletterService::sendToUser(auth()->user(), '[TEST] ' . $issue->subject, NewsletterService::contentFor($issue));
+        $result = NewsletterService::sendToUser(auth()->user(), '[TEST] ' . $issue->subject, NewsletterService::contentFor($issue));
 
-        return back()->with($ok ? 'success' : 'error', $ok ? 'Test sent to ' . auth()->user()->email . '.' : 'Test send failed - check the logs.');
+        return $result === true
+            ? back()->with('success', 'Test sent to ' . auth()->user()->email . '.')
+            : back()->with('error', 'Test send failed: ' . $result);
     }
 
     /** The real, platform-wide send, right now - see NewsletterService::sendIssueToAllSubscribers() for why this is synchronous. */
