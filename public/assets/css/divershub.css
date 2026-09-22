@@ -2576,8 +2576,13 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
   border-radius: 14px; overflow: hidden; text-decoration: none; color: inherit; transition: box-shadow .15s, transform .15s;
 }
 .dh-blog-card:hover { box-shadow: 0 8px 20px rgba(11,42,58,.14); transform: translateY(-2px); }
-.dh-blog-card-img { position: relative; display: block; flex: none; aspect-ratio: 16/10; background: var(--dh-foam); }
-.dh-blog-card-img img { width: 100%; height: 100%; object-fit: cover; }
+/* padding-top percentage trick, not aspect-ratio+flex: a card whose flex
+   sibling (.dh-blog-card-body) grows taller because of a longer excerpt
+   was still stretching this element's height along with it in some
+   browsers - this ties the height purely to the element's own width via
+   padding, which flex-grow has nothing to distribute against. */
+.dh-blog-card-img { position: relative; display: block; height: 0; padding-top: 62.5%; overflow: hidden; background: var(--dh-foam); }
+.dh-blog-card-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .dh-blog-cat-chip { position: absolute; top: 10px; left: 10px; }
 .dh-blog-card-body { padding: var(--dh-space-3) var(--dh-space-4) var(--dh-space-4); display: flex; flex-direction: column; flex: 1; }
 .dh-blog-card-title { font-family: 'Roboto Slab', serif; font-size: 1.08rem; font-weight: 700; color: var(--dh-ink); line-height: 1.3; }
