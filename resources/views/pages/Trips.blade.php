@@ -35,9 +35,13 @@
             </div>
 
             @php
+                // cleared=1 tells the filter-memory script below not to
+                // restore the diver's saved filters onto this link - an
+                // explicit "clear filters" click means they want none,
+                // not last time's picks reapplied (Pablo, 2026-09-22).
                 $clearUrl = $mode === 'day'
-                    ? route('Trips') . '/' . $date
-                    : route('Trips') . '?' . http_build_query($rangeKey ? ['range' => $rangeKey] : ['from' => $from, 'to' => $to]);
+                    ? route('Trips') . '/' . $date . '?cleared=1'
+                    : route('Trips') . '?' . http_build_query(($rangeKey ? ['range' => $rangeKey] : ['from' => $from, 'to' => $to]) + ['cleared' => 1]);
             @endphp
             <p class="dh-board-count">
                 @if($board['shown'] === $board['total'])
@@ -56,7 +60,7 @@
                         <span class="material-icons-round" aria-hidden="true">directions_boat</span>
                         <p>No trips match on this day.</p>
                         @if($board['total'] > 0)
-                            <a class="dh-btn dh-btn-primary" href="{{ route('Trips') }}/{{ $date }}">Clear filters</a>
+                            <a class="dh-btn dh-btn-primary" href="{{ $clearUrl }}">Clear filters</a>
                         @else
                             <a class="dh-btn dh-btn-primary" href="{{ route('Trips') }}/{{ $nextDay }}">Try the next day</a>
                         @endif
@@ -109,18 +113,36 @@
     @push('js')
     <script>
         (function () {
-            // Remember the finder's filter chips (region/level/type/seats/op) for
-            // the session, so landing here fresh (e.g. from the bottom nav) reapplies
-            // the diver's last picks. Any URL that already carries a filter is a
-            // deliberate/shared link and is left alone; it just becomes the new memory.
+            // Remember the finder's filter chips (region/level/type/seats/op)
+            // in localStorage - not sessionStorage - so they survive a new
+            // tab or a closed browser too, not just staying inside the same
+            // tab's session (Pablo, 2026-09-22: "I used to store the data
+            // locally so the filters don't reset every time the page is
+            // loaded"). Landing here fresh (e.g. from the bottom nav)
+            // reapplies the diver's last picks. Any URL that already
+            // carries a filter is a deliberate/shared link and is left
+            // alone; it just becomes the new memory.
             var KEY = 'dh-trips-filters';
             var FIELDS = ['region', 'level', 'type', 'seats', 'op'];
             var params = new URLSearchParams(window.location.search);
             var hasAny = FIELDS.some(function (f) { return params.has(f); });
 
-            if (!hasAny) {
+            // An explicit "Clear filters" click carries this - without it,
+            // the restore below would just reapply the very filters the
+            // diver clicked to clear (Pablo, 2026-09-22, found while
+            // fixing the above: this is the intended way to lose a
+            // saved filter set at all).
+            if (params.has('cleared')) {
+                try { localStorage.removeItem(KEY); } catch (e) {}
+                params.delete('cleared');
+                var cleanUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+                if (cleanUrl !== window.location.pathname + window.location.search) {
+                    window.location.replace(cleanUrl);
+                    return;
+                }
+            } else if (!hasAny) {
                 var saved = null;
-                try { saved = sessionStorage.getItem(KEY); } catch (e) {}
+                try { saved = localStorage.getItem(KEY); } catch (e) {}
                 if (saved) {
                     var restored = false;
                     new URLSearchParams(saved).forEach(function (v, k) {
@@ -137,7 +159,7 @@
             FIELDS.forEach(function (f) {
                 if (params.has(f)) current.set(f, params.get(f));
             });
-            try { sessionStorage.setItem(KEY, current.toString()); } catch (e) {}
+            try { localStorage.setItem(KEY, current.toString()); } catch (e) {}
         })();
     </script>
     @endpush
