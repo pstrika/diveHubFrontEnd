@@ -207,7 +207,9 @@ class BlogAdminController extends Controller
             'min_level' => 'nullable|integer|min:0|max:4',
             'excerpt' => 'nullable|string|max:500',
             'body' => 'nullable|string',
-            'cover_image' => 'nullable|image|max:8192',
+            // 30720 KB (30M) matches public/.user.ini's upload_max_filesize -
+            // no point allowing more here than PHP itself will accept.
+            'cover_image' => 'nullable|image|max:30720',
             'cover_focus' => 'nullable|in:top,center,bottom',
             'related_sites' => 'nullable|string',
             'status' => 'required|in:draft,published',
