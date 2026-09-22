@@ -296,6 +296,34 @@
                 </div>
             </div>
 
+            {{-- How to overlay a real dive log (Pablo, 2026-09-22), opened from
+                 the small "?" next to "Overlay your actual dive log" below the
+                 profile chart. Static instructions, no JS state needed beyond
+                 Bootstrap's own data-bs-toggle. --}}
+            <div class="modal fade" id="uddfHelpModal" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h6 class="modal-title font-weight-normal">Overlay your actual dive</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>You can now overlay your actual dive with the plan:</p>
+                            <ol class="ps-3 mb-3">
+                                <li class="mb-1">Go to your Shearwater Cloud Desktop or MacDive</li>
+                                <li class="mb-1">Export the dive as a UDDF</li>
+                                <li>Click on "Overlay your actual dive log"</li>
+                            </ol>
+                            <p class="mb-3">You can now compare how the actual dive went against what you planned.</p>
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="{{ asset('assets') }}/img/shearwater-cloud-logo.png" alt="Shearwater Cloud" style="width: 36px; height: 36px; border-radius: 8px;">
+                                <img src="{{ asset('assets') }}/img/macdive-logo.webp" alt="MacDive" style="width: 36px; height: 36px; border-radius: 8px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- "Open a dive" (Pablo, 2026-09-19): lists every plan the diver
                  has saved so one can be reloaded (all inputs restored + the
                  calculation re-run) or removed. --}}
@@ -1384,10 +1412,13 @@
                                              every tick, growing it without bound (confirmed - this
                                              broke the chart in exactly that way before it was moved
                                              out here). --}}
-                                        <div class="px-1 pb-2">
+                                        <div class="px-1 pb-2 d-flex align-items-center">
                                             <input type="file" id="uddfFileInput" accept=".xml,.uddf" class="d-none">
                                             <button type="button" id="uddfUploadBtn" class="dh-btn dh-btn-ghost-dark" style="padding: 6px 14px; font-size: .82rem;">
                                                 <span class="material-icons-round" aria-hidden="true" style="font-size: 18px;">upload_file</span>Overlay your actual dive log
+                                            </button>
+                                            <button type="button" class="dh-uddf-help-btn" data-bs-toggle="modal" data-bs-target="#uddfHelpModal" aria-label="How to overlay your actual dive log" title="How do I get a UDDF file?">
+                                                <span class="material-icons-round" aria-hidden="true">help_outline</span>
                                             </button>
                                             <span id="uddfStatus" style="font-size: .78rem; margin-left: 8px;"></span>
                                         </div>
@@ -4989,6 +5020,14 @@
             if (profileChartInstance) {
                 profileChartInstance.destroy();
             }
+
+            // A fresh calculation means a fresh chart with no overlay on it
+            // yet - drop any UDDF overlay from a previous run along with its
+            // "Overlaying: ..." status line, so it doesn't keep describing a
+            // dataset that's no longer on screen (Pablo, 2026-09-22).
+            uddfOverlayDataset = null;
+            var uddfStatusEl = document.getElementById('uddfStatus');
+            if (uddfStatusEl) uddfStatusEl.textContent = '';
 
             // Create Chart.js Scatter Plot (correctly scaled x-axis)
             profileChartInstance = new Chart(ctx, {

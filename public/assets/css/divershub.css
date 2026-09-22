@@ -350,6 +350,17 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-btn-ghost-dark { background: #fff; color: var(--dh-ink); border-color: var(--dh-line); }
 .dh-btn-ghost-dark:hover { border-color: var(--dh-ink); color: var(--dh-ink); }
 .dh-btn-danger { background: var(--dh-poor); color: #fff; border-color: var(--dh-poor); }
+
+/* Small round "?" next to "Overlay your actual dive log" (Pablo,
+   2026-09-22), opens uddfHelpModal explaining where to get a UDDF export. */
+.dh-uddf-help-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; margin-left: 6px; padding: 0;
+  border-radius: 50%; border: 1.5px solid var(--dh-line);
+  background: #fff; color: var(--dh-ink); cursor: pointer;
+}
+.dh-uddf-help-btn .material-icons-round { font-size: 16px; }
+.dh-uddf-help-btn:hover { border-color: var(--dh-ink); }
 .dh-btn-danger:hover { background: var(--dh-poor); border-color: var(--dh-poor); filter: brightness(.92); color: #fff; }
 .dh-btn[disabled] { opacity: .5; pointer-events: none; cursor: default; }
 .dh-link-danger { border: 0; background: none; padding: 0; color: var(--dh-poor); font-weight: 600; font-size: .85rem; text-decoration: underline; cursor: pointer; }
@@ -1748,11 +1759,15 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    circle+pill version didn't land (Pablo, 2026-09-17: "let's avoid the
    circle and do only a pill"). */
 .dh-whatif-fab {
-  /* top was 10px - level with Chart.js's own "Deco profile" legend row at
-     the top of the canvas, so the pill sat right on top of it (Pablo,
-     2026-09-17: "push the what if bubble down a little...overlapping with
-     the chart title"). Cleared below it. */
-  position: absolute; top: 40px; right: 10px; z-index: 20;
+  /* top was 10px, then 40px - level with Chart.js's own "Deco profile"
+     legend row at the top of the canvas, so the pill sat right on top of
+     it (Pablo, 2026-09-17: "push the what if bubble down a little...
+     overlapping with the chart title"). Moved again once the UDDF upload
+     button (Pablo, 2026-09-22) sat above the chart and the pill was back
+     to blocking the top of the profile line - vertically centered on the
+     chart instead, out of the way of both (Pablo: "sit it in the middle
+     to the right of the chart"). */
+  position: absolute; top: 50%; right: 10px; transform: translateY(-50%); z-index: 20;
   display: flex; align-items: center; gap: 8px;
   border: 0; background: var(--dh-sea); color: #fff;
   padding: 10px 16px; border-radius: var(--dh-radius-pill);
