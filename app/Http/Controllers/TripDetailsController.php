@@ -82,22 +82,40 @@ class TripDetailsController extends Controller
         $myCalendarEvent = Event::findInCalendar($tripId);
         $alreadyInCalendar = $myCalendarEvent !== null;
 
-        // Groups this user can add the trip to (real users only - the shared
-        // guest account has no groups and shouldn't see the option anyway).
-        $myGroups = auth()->user()->isNotGuest()
+        // Every active group this user belongs to (real users only - the
+        // shared guest account has no groups and shouldn't see the option
+        // anyway) - used only to tell "not in any group" apart from "in
+        // groups, just none you can add a dive to" in the view below.
+        $allMyGroups = auth()->user()->isNotGuest()
             ? Group::whereHas('members', function ($q) {
                 $q->where('user_id', auth()->user()->id)->where('status', 'active');
             })->get()
             : collect();
 
-        foreach ($myGroups as $myGroup) {
-            $myGroup->alreadyAdded = $myGroup->dives()
+        // Computed on every group the user belongs to (not just the
+        // add-permission-narrowed $myGroups below) so the "Already in X, Y"
+        // line further down the page - unrelated to who can add a dive,
+        // just "which of my groups already have this" - keeps seeing the
+        // full picture.
+        foreach ($allMyGroups as $group_) {
+            $group_->alreadyAdded = $group_->dives()
                 ->where('operatorId', $tripDetails->operatorId)
                 ->where('date', $tripDetails->date)
                 ->where('time', $tripDetails->departureTime)
                 ->where('tripName', $tripDetails->tripName)
                 ->exists();
         }
+
+        // Narrowed to groups this user can actually add a dive to - a group
+        // admin, or any group that lets all members add dives (Pablo,
+        // 2026-09-22: "showing me all the groups I'm in - regardless if I'm
+        // able to add dives to that group...we only need to show the
+        // groups that the use is able to add trips"). A regular member of
+        // a group that doesn't allow it has no business seeing it here at
+        // all, since Groups.dives.store would 403 them anyway. Shares the
+        // same Group instances as $allMyGroups, so alreadyAdded above
+        // still applies to each.
+        $myGroups = $allMyGroups->filter(fn ($g) => $g->canAddDives(auth()->user()->id))->values();
 
         /*Provide SEO metadata */
         // Trips are single-day, high-volume, expiring content (thousands generated daily) -
@@ -110,7 +128,7 @@ class TripDetailsController extends Controller
             "robots" => "noindex, follow",
         );
 
-        return view('pages.TripDetails', compact('tripDetails', 'operator', 'location', 'boats', 'sites', 'alreadyInCalendar', 'myCalendarEvent', 'myGroups', 'SEO'));
+        return view('pages.TripDetails', compact('tripDetails', 'operator', 'location', 'boats', 'sites', 'alreadyInCalendar', 'myCalendarEvent', 'myGroups', 'allMyGroups', 'SEO'));
 
     }
 }

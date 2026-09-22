@@ -12,9 +12,13 @@
                     <h5 class="modal-title font-weight-normal">Add this trip to a group</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                @if($myGroups->isEmpty())
+                @if($allMyGroups->isEmpty())
                     <div class="modal-body">
                         <p class="text-secondary mb-0">You're not in any groups yet. <a href="{{ route('MyGroups') }}">Create or join one</a> first.</p>
+                    </div>
+                @elseif($myGroups->isEmpty())
+                    <div class="modal-body">
+                        <p class="text-secondary mb-0">None of your groups let you add trips - only a group admin, or a group that allows any member to add dives, can do this.</p>
                     </div>
                 @elseif($myGroups->every(fn($g) => $g->alreadyAdded))
                     <div class="modal-body">
@@ -32,15 +36,21 @@
                                 </button>
                                 <ul class="dropdown-menu w-100" aria-labelledby="groupPickerBtn">
                                     @foreach($myGroups as $myGroup)
-                                        @if(!$myGroup->alreadyAdded)
-                                            <li>
+                                        <li>
+                                            @if($myGroup->alreadyAdded)
+                                                <span class="dropdown-item d-flex align-items-center text-muted" style="opacity: .55; cursor: not-allowed;" title="Already on this group's calendar">
+                                                    <img src="{{ asset('assets/' . $myGroup->avatar) }}" class="rounded-circle border-info me-2" style="width: 28px; height: 28px; object-fit: cover; border-width: 2px; border-style: solid; filter: grayscale(1);">
+                                                    {{ $myGroup->name }}
+                                                    <span class="text-xs ms-auto">Already added</span>
+                                                </span>
+                                            @else
                                                 <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"
                                                    onclick="selectGroupForTrip('{{ route('Groups.dives.store', ['group' => $myGroup->slug]) }}', '{{ addslashes($myGroup->name) }}', '{{ asset('assets/' . $myGroup->avatar) }}')">
                                                     <img src="{{ asset('assets/' . $myGroup->avatar) }}" class="rounded-circle border-info me-2" style="width: 28px; height: 28px; object-fit: cover; border-width: 2px; border-style: solid;">
                                                     {{ $myGroup->name }}
                                                 </a>
-                                            </li>
-                                        @endif
+                                            @endif
+                                        </li>
                                     @endforeach
                                 </ul>
                             </div>
@@ -147,8 +157,9 @@
                 Trip details, re-skinned with the redesign (companion to the trip
                 board and the site page, W2/W3). Same controller data as before:
                 $tripDetails, $operator, $location, $boats, $sites, $alreadyInCalendar,
-                $myGroups. The add-to-group modal above and its script below are
-                unchanged.
+                $myGroups ($allMyGroups filtered to ones this user can add a dive
+                to, added 2026-09-22). The add-to-group modal above and its script
+                below are unchanged.
             --}}
             @php
                 $card = \App\Support\TripBoard::card($tripDetails, now(), [$operator->id => $operator]);
@@ -200,7 +211,7 @@
                         @endif
                     </div>
                     @if($isMember)
-                        @php $groupsWithTrip = $myGroups->filter(fn($g) => $g->alreadyAdded); @endphp
+                        @php $groupsWithTrip = $allMyGroups->filter(fn($g) => $g->alreadyAdded); @endphp
                         @if($groupsWithTrip->isNotEmpty())
                             <span class="text-xs text-muted">Already in {{ $groupsWithTrip->pluck('name')->implode(', ') }}</span>
                         @endif
