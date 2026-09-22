@@ -1361,28 +1361,38 @@
                                     </div>
 
                                     <div class="col-lg-6 col-12" id="profileChartContainer">
+                                        {{-- Overlay a real dive computer log on top of the calculated
+                                             profile (Pablo, 2026-09-22: "overlay a real dive profile
+                                             coming from a shearwater computer...over the calculated
+                                             chart"). UDDF is a standard XML export format (Shearwater
+                                             Cloud, Subsurface, and others all produce it), so this
+                                             isn't Shearwater-specific despite the request naming that
+                                             brand. Parsed entirely client-side (DOMParser) - the file
+                                             never leaves the browser, and the existing profileChart
+                                             Chart.js instance just gets a second dataset pushed onto
+                                             it in the same {x: minutes, y: -depth} shape
+                                             renderProfileChart() already uses, so it overlays exactly
+                                             on the same axes.
+
+                                             This sits OUTSIDE the canvas's own wrapper below on
+                                             purpose: that wrapper is the div Chart.js measures for
+                                             responsive:true/maintainAspectRatio:false sizing, and it
+                                             has no fixed height of its own - it's sized purely by its
+                                             content, which must stay JUST the canvas. Any sibling
+                                             content inside it adds fixed extra height that Chart.js's
+                                             resize observer then folds into the canvas's height on
+                                             every tick, growing it without bound (confirmed - this
+                                             broke the chart in exactly that way before it was moved
+                                             out here). --}}
+                                        <div class="px-1 pb-2">
+                                            <input type="file" id="uddfFileInput" accept=".xml,.uddf" class="d-none">
+                                            <button type="button" id="uddfUploadBtn" class="dh-btn dh-btn-ghost-dark" style="padding: 6px 14px; font-size: .82rem;">
+                                                <span class="material-icons-round" aria-hidden="true" style="font-size: 18px;">upload_file</span>Overlay your actual dive log
+                                            </button>
+                                            <span id="uddfStatus" style="font-size: .78rem; margin-left: 8px;"></span>
+                                        </div>
                                         <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1" style="position: relative;">
                                             <canvas id="profileChart" class="chart-canvas border-radius-lg" height="500px"></canvas>
-
-                                            {{-- Overlay a real dive computer log on top of the calculated
-                                                 profile (Pablo, 2026-09-22: "overlay a real dive profile
-                                                 coming from a shearwater computer...over the calculated
-                                                 chart"). UDDF is a standard XML export format (Shearwater
-                                                 Cloud, Subsurface, and others all produce it), so this
-                                                 isn't Shearwater-specific despite the request naming that
-                                                 brand. Parsed entirely client-side (DOMParser) - the file
-                                                 never leaves the browser, and the existing profileChart
-                                                 Chart.js instance just gets a second dataset pushed onto
-                                                 it in the same {x: minutes, y: -depth} shape
-                                                 renderProfileChart() already uses, so it overlays exactly
-                                                 on the same axes. --}}
-                                            <div class="px-3 pt-2" style="position: relative; z-index: 2;">
-                                                <input type="file" id="uddfFileInput" accept=".xml,.uddf" class="d-none">
-                                                <button type="button" id="uddfUploadBtn" class="dh-btn dh-btn-ghost-dark" style="padding: 6px 14px; font-size: .82rem;">
-                                                    <span class="material-icons-round" aria-hidden="true" style="font-size: 18px;">upload_file</span>Overlay your actual dive log
-                                                </button>
-                                                <span id="uddfStatus" class="text-white" style="font-size: .78rem; margin-left: 8px;"></span>
-                                            </div>
 
                                             <!-- "What if...?" floating bubble (Pablo, 2026-09-19:
                                                  "show a floating bubble...open a modal and let the
@@ -5092,7 +5102,7 @@
 
             btn.addEventListener('click', function () {
                 if (!profileChartInstance) {
-                    status.style.color = '#ffd7d7';
+                    status.style.color = 'var(--dh-danger)';
                     status.textContent = 'Calculate a plan first, then overlay your log.';
                     return;
                 }
@@ -5108,16 +5118,16 @@
                     try {
                         var parsed = parseUddf(reader.result);
                         overlayRealDive(parsed);
-                        status.style.color = '#d7ffd9';
+                        status.style.color = 'var(--dh-good)';
                         status.textContent = 'Overlaying: ' + (parsed.label || file.name) + ' (' + parsed.points.length + ' points)';
                     } catch (e) {
                         console.error(e);
-                        status.style.color = '#ffd7d7';
+                        status.style.color = 'var(--dh-danger)';
                         status.textContent = 'Could not read that file - is it a UDDF dive log export?';
                     }
                 };
                 reader.onerror = function () {
-                    status.style.color = '#ffd7d7';
+                    status.style.color = 'var(--dh-danger)';
                     status.textContent = 'Could not read that file.';
                 };
                 reader.readAsText(file);
