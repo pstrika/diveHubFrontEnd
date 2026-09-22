@@ -67,7 +67,11 @@ return [
     |
     */
 
-    'timezone' => 'EST',
+    // 'America/New_York', not fixed 'EST' - the app is Florida-based and
+    // 'EST' never observes daylight saving, so it silently ran an hour
+    // behind real local time for most of the year (Pablo, 2026-09-22,
+    // found via a newsletter scheduled for a time that never "arrived").
+    'timezone' => 'America/New_York',
 
     /*
     |--------------------------------------------------------------------------

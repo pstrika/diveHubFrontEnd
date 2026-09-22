@@ -1,8 +1,13 @@
 name: Send group dive reminder emails
 
+# The schedule trigger was retired 2026-09-22 (Pablo: "we need to change the
+# dependency on Github for the cron") - GitHub Actions' `schedule` trigger
+# is unreliable, especially at high frequency, and a newsletter send missed
+# its window because of it. An Azure Logic App (divehub-group-dive-reminders,
+# resource group DiveHub) now hits the same endpoint daily at 9am Eastern
+# instead. workflow_dispatch stays for a manual "run now" from the Actions
+# tab.
 on:
-  schedule:
-    - cron: '0 13 * * *' # 9am Eastern (13:00 UTC / 12:00 UTC during EST)
   workflow_dispatch: {}
 
 jobs:

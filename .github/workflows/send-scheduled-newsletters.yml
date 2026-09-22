@@ -1,8 +1,14 @@
 name: Send scheduled newsletters
 
+# The schedule trigger was retired 2026-09-22 (Pablo: "we need to change the
+# dependency on Github for the cron") - GitHub Actions only fired this twice
+# in 17 hours despite the every-15-minutes cron, a known unreliability with
+# high-frequency `schedule` triggers, and it silently missed a real
+# scheduled newsletter send. An Azure Logic App
+# (divehub-send-scheduled-newsletters, resource group DiveHub) now hits the
+# same endpoint on the same 15-minute recurrence instead. workflow_dispatch
+# stays for a manual "run now" from the Actions tab.
 on:
-  schedule:
-    - cron: '*/15 * * * *' # every 15 minutes
   workflow_dispatch: {}
 
 jobs:
