@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\NewsletterIssue;
 use App\Models\User;
+use App\Support\NewsletterMarkdown;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Mailgun\Mailgun;
@@ -53,5 +55,43 @@ class NewsletterService
             Log::error('Newsletter send failed for user ' . $user->id . ': ' . $e->getMessage());
             return false;
         }
+    }
+
+    /** The $content array sendToUser() expects, built from a saved issue. */
+    public static function contentFor(NewsletterIssue $issue): array
+    {
+        return [
+            'preheader' => $issue->preheader ?: $issue->headline,
+            'date' => now()->format('F j, Y'),
+            'headline' => $issue->headline,
+            'body' => NewsletterMarkdown::toHtml($issue->body_markdown),
+            'conditions' => $issue->conditions ?: '',
+        ];
+    }
+
+    /**
+     * The real, platform-wide send - used by both the admin's "Send to all
+     * subscribers" button and the scheduled-send cron path
+     * (Console\Commands\SendScheduledNewsletters), so a fix to one fixes
+     * both. Synchronous - there is no queue worker in this app (every
+     * other bulk send is CLI/cron-driven, not a web request). Fine at
+     * today's subscriber count; revisit if that changes.
+     */
+    public static function sendIssueToAllSubscribers(NewsletterIssue $issue): int
+    {
+        set_time_limit(300);
+
+        $recipients = self::subscribedRecipients();
+        $content = self::contentFor($issue);
+        $sent = $recipients->filter(fn ($user) => self::sendToUser($user, $issue->subject, $content))->count();
+
+        $issue->update([
+            'status' => 'sent',
+            'sent_at' => now(),
+            'sent_count' => $sent,
+            'scheduled_at' => null,
+        ]);
+
+        return $sent;
     }
 }

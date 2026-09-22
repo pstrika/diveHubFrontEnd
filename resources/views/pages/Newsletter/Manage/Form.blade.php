@@ -79,7 +79,10 @@
                                 <div class="dh-field">
                                     <label for="conditions">"This weekend on the water" line (optional)</label>
                                     <input type="text" id="conditions" name="conditions" value="{{ old('conditions', $issue->conditions) }}" maxlength="255">
-                                    <p class="dh-hint">Shown in the light-blue conditions strip near the bottom. Leave blank to omit that section's text (the strip still renders).</p>
+                                    <button type="button" id="generateConditionsBtn" class="dh-btn dh-btn-ghost-dark" style="margin-top:8px; padding:6px 12px; font-size:.82rem;">
+                                        <span class="material-icons-round" aria-hidden="true" style="font-size:16px;">auto_awesome</span>Generate from this weekend's forecast
+                                    </button>
+                                    <p class="dh-hint">Shown in the light-blue conditions strip near the bottom. Leave blank to omit that section's text (the strip still renders). The generate button drafts a line from real forecast data - review it before sending.</p>
                                 </div>
                             </div>
                         </div>
@@ -107,12 +110,34 @@
 
                                     <hr style="border-color: var(--dh-line); width:100%;">
 
-                                    <form method="POST" action="{{ route('Newsletter.manage.send', $issue) }}" onsubmit="return confirm('Send this to every subscribed user right now? This can\'t be undone.');">
-                                        @csrf
-                                        <button type="submit" class="dh-btn" style="justify-content:center; width:100%; background: var(--dh-danger); color:#fff; border-color: var(--dh-danger);">
-                                            <span class="material-icons-round" aria-hidden="true">campaign</span>Send to all subscribers
-                                        </button>
-                                    </form>
+                                    @if($issue->isScheduled())
+                                        <p class="dh-comms-note dh-comms-warn" style="background: var(--dh-good-bg); color: var(--dh-good); margin:0;">
+                                            <span class="material-icons-round" aria-hidden="true">schedule_send</span>
+                                            Scheduled for {{ $issue->scheduled_at->format('M j, Y \a\t g:i A') }}
+                                        </p>
+                                        <form method="POST" action="{{ route('Newsletter.manage.unschedule', $issue) }}">
+                                            @csrf
+                                            <button type="submit" class="dh-btn dh-btn-ghost-dark" style="justify-content:center; width:100%;">
+                                                <span class="material-icons-round" aria-hidden="true">close</span>Cancel scheduled send
+                                            </button>
+                                        </form>
+                                    @else
+                                        <form method="POST" action="{{ route('Newsletter.manage.schedule', $issue) }}" style="display:flex; flex-direction:column; gap:8px;">
+                                            @csrf
+                                            <label for="scheduled_at" style="font-size:.78rem; font-weight:700; color: var(--dh-muted); text-transform:uppercase; letter-spacing:.04em;">Schedule for later</label>
+                                            <input type="datetime-local" id="scheduled_at" name="scheduled_at" required style="width:100%; padding:10px 12px; border:1px solid var(--dh-line); border-radius:10px;">
+                                            <button type="submit" class="dh-btn dh-btn-ghost-dark" style="justify-content:center; width:100%;">
+                                                <span class="material-icons-round" aria-hidden="true">schedule_send</span>Schedule send
+                                            </button>
+                                        </form>
+
+                                        <form method="POST" action="{{ route('Newsletter.manage.send', $issue) }}" onsubmit="return confirm('Send this to every subscribed user right now? This can\'t be undone.');">
+                                            @csrf
+                                            <button type="submit" class="dh-btn" style="justify-content:center; width:100%; background: var(--dh-danger); color:#fff; border-color: var(--dh-danger);">
+                                                <span class="material-icons-round" aria-hidden="true">campaign</span>Send to all subscribers now
+                                            </button>
+                                        </form>
+                                    @endif
                                     <p class="dh-hint" style="margin:0;">Only divers with the newsletter enabled and email notifications on will receive it.</p>
                                 @elseif(!$issue->exists)
                                     <p class="dh-hint" style="margin:0;">Save the draft first to preview it or send a test.</p>
@@ -207,6 +232,37 @@
                         insertBlock('![' + alt + '](' + imgUrl + ')');
                         break;
                 }
+            });
+        })();
+
+        (function () {
+            var btn = document.getElementById('generateConditionsBtn');
+            var input = document.getElementById('conditions');
+            if (!btn || !input) return;
+
+            btn.addEventListener('click', function () {
+                var token = document.querySelector('#issueForm input[name="_token"]').value;
+                btn.disabled = true;
+                var originalText = btn.innerHTML;
+                btn.innerHTML = 'Generating…';
+
+                fetch('{{ route('Newsletter.manage.generateConditions') }}', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.summary) {
+                            input.value = data.summary;
+                        } else {
+                            alert('No forecast data available for this weekend yet.');
+                        }
+                    })
+                    .catch(function () { alert('Could not generate a summary - try again.'); })
+                    .finally(function () {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    });
             });
         })();
     </script>

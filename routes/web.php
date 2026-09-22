@@ -51,6 +51,7 @@ Route::get('sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'inde
 Route::get('cron/send-group-reminders', [\App\Http\Controllers\CronController::class, 'sendGroupReminders']);
 Route::get('cron/send-group-activity-digest', [\App\Http\Controllers\CronController::class, 'sendGroupActivityDigest']);
 Route::get('cron/detect-cancelled-trips', [\App\Http\Controllers\CronController::class, 'detectCancelledTrips']);
+Route::get('cron/send-scheduled-newsletters', [\App\Http\Controllers\CronController::class, 'sendScheduledNewsletters']);
 
 // Newsletter one-click unsubscribe/resubscribe - reached from a signed link
 // in the email itself, not a logged-in session (the diver may be reading
@@ -308,6 +309,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('Newsletter/manage/{issue}/preview', 'App\Http\Controllers\NewsletterAdminController@preview')->name('Newsletter.manage.preview');
     Route::post('Newsletter/manage/{issue}/send-test', 'App\Http\Controllers\NewsletterAdminController@sendTest')->name('Newsletter.manage.sendTest');
     Route::post('Newsletter/manage/{issue}/send', 'App\Http\Controllers\NewsletterAdminController@send')->name('Newsletter.manage.send');
+    Route::post('Newsletter/manage/{issue}/schedule', 'App\Http\Controllers\NewsletterAdminController@schedule')->name('Newsletter.manage.schedule');
+    Route::post('Newsletter/manage/{issue}/unschedule', 'App\Http\Controllers\NewsletterAdminController@unschedule')->name('Newsletter.manage.unschedule');
+    Route::post('Newsletter/manage/generate-conditions', 'App\Http\Controllers\NewsletterAdminController@generateConditions')->name('Newsletter.manage.generateConditions');
 });
 
 Route::get('Blog/{slug}', 'App\Http\Controllers\BlogController@show')->middleware('guest')->name('Blog.show');

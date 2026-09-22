@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\NewsletterIssue;
 use App\Services\NewsletterService;
-use App\Support\NewsletterMarkdown;
+use App\Support\WeekendConditions;
 use Illuminate\Http\Request;
 
 /**
@@ -71,7 +71,7 @@ class NewsletterAdminController extends Controller
     /** Renders the actual email HTML from the saved issue, opened in a new tab - same idea as BlogAdminController::preview(). */
     public function preview(NewsletterIssue $issue)
     {
-        $document = view('emails.newsletter-document', array_merge($this->content($issue), [
+        $document = view('emails.newsletter-document', array_merge(NewsletterService::contentFor($issue), [
             // A real signed link would work fine here too, but a preview
             // isn't addressed to anyone in particular - a dead-looking
             // link makes that obvious rather than implying this preview
@@ -85,43 +85,46 @@ class NewsletterAdminController extends Controller
     /** Sends only to the current admin - fast, safe, repeatable while drafting. */
     public function sendTest(NewsletterIssue $issue)
     {
-        $ok = NewsletterService::sendToUser(auth()->user(), '[TEST] ' . $issue->subject, $this->content($issue));
+        $ok = NewsletterService::sendToUser(auth()->user(), '[TEST] ' . $issue->subject, NewsletterService::contentFor($issue));
 
         return back()->with($ok ? 'success' : 'error', $ok ? 'Test sent to ' . auth()->user()->email . '.' : 'Test send failed - check the logs.');
     }
 
-    /**
-     * The real, platform-wide send. Synchronous - there is no queue
-     * worker in this app (every other bulk send runs from a CLI/cron
-     * path, not a web request - see SendGroupDiveReminders,
-     * DetectCancelledTrips). Fine at today's subscriber count; if that
-     * grows enough to risk a request timeout, this needs to move to a
-     * queued job instead of the raised time limit below.
-     */
+    /** The real, platform-wide send, right now - see NewsletterService::sendIssueToAllSubscribers() for why this is synchronous. */
     public function send(NewsletterIssue $issue)
     {
         abort_if($issue->isSent(), 403, 'This issue was already sent.');
 
-        set_time_limit(300);
+        $recipientCount = NewsletterService::subscribedRecipients()->count();
+        $sent = NewsletterService::sendIssueToAllSubscribers($issue);
 
-        $recipients = NewsletterService::subscribedRecipients();
-        $content = $this->content($issue);
-        $sent = $recipients->filter(fn ($user) => NewsletterService::sendToUser($user, $issue->subject, $content))->count();
-
-        $issue->update(['status' => 'sent', 'sent_at' => now(), 'sent_count' => $sent]);
-
-        return redirect()->route('Newsletter.manage.index')->with('success', "Sent to {$sent} of {$recipients->count()} subscribers.");
+        return redirect()->route('Newsletter.manage.index')->with('success', "Sent to {$sent} of {$recipientCount} subscribers.");
     }
 
-    private function content(NewsletterIssue $issue): array
+    /** Sets a future send time - the scheduled-send cron path (SendScheduledNewsletters) picks it up once it arrives. */
+    public function schedule(Request $request, NewsletterIssue $issue)
     {
-        return [
-            'preheader' => $issue->preheader ?: $issue->headline,
-            'date' => now()->format('F j, Y'),
-            'headline' => $issue->headline,
-            'body' => NewsletterMarkdown::toHtml($issue->body_markdown),
-            'conditions' => $issue->conditions ?: '',
-        ];
+        abort_if($issue->isSent(), 403, 'This issue was already sent.');
+
+        $data = $request->validate(['scheduled_at' => 'required|date|after:now']);
+        $issue->update(['scheduled_at' => $data['scheduled_at']]);
+
+        return back()->with('success', 'Scheduled for ' . $issue->fresh()->scheduled_at->format('M j, Y \a\t g:i A') . '.');
+    }
+
+    public function unschedule(NewsletterIssue $issue)
+    {
+        abort_if($issue->isSent(), 403, 'This issue was already sent.');
+
+        $issue->update(['scheduled_at' => null]);
+
+        return back()->with('success', 'Scheduled send cancelled.');
+    }
+
+    /** AJAX: a starting-point sentence for the conditions field, from real forecast data - see App\Support\WeekendConditions. */
+    public function generateConditions()
+    {
+        return response()->json(['summary' => WeekendConditions::summary()]);
     }
 
     private function validated(Request $request): array

@@ -54,4 +54,22 @@ class CronController extends Controller
 
         return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
     }
+
+    /**
+     * Every 15 minutes, per .github/workflows/send-scheduled-newsletters.yml
+     * - which has to live on the repo's default branch (main) to actually
+     * fire on schedule, even though the newsletter composer itself is
+     * redesign-only right now (GitHub only evaluates `schedule` triggers
+     * from the default branch).
+     */
+    public function sendScheduledNewsletters(Request $request)
+    {
+        if (!hash_equals((string) env('CRON_SECRET'), (string) $request->query('secret'))) {
+            abort(403);
+        }
+
+        Artisan::call('newsletter:send-scheduled');
+
+        return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
+    }
 }
