@@ -731,6 +731,8 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-panel-toggle { display: flex; align-items: center; gap: 6px; }
 .dh-panel-toggle .form-check-label { color: var(--dh-muted); font-size: .85rem; font-weight: 600; }
 .dh-panel-cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--dh-space-4); }
+/* Wider content column for a form whose main field is a long body of text (the newsletter composer) - still collapses to one column below, same as the plain .dh-panel-cols. */
+.dh-panel-cols-wide { grid-template-columns: 2.4fr 1fr; }
 .dh-panel-subtitle { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--dh-muted); margin: 0 0 8px; }
 @media (max-width: 767.98px) { .dh-panel-cols { grid-template-columns: 1fr; } }
 .dh-site-details { display: grid; grid-template-columns: 200px 1fr; gap: var(--dh-space-4); align-items: center; }
@@ -1370,6 +1372,16 @@ body.dh-auth-body { background: var(--dh-ink); }
 .dh-field label { display: block; font-size: .78rem; font-weight: 700; color: var(--dh-muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; }
 .dh-field input { width: 100%; padding: 12px 14px; font-size: 1rem; color: var(--dh-ink); background: #fff; border: 1px solid var(--dh-line); border-radius: 12px; }
 .dh-field input:focus { outline: none; border-color: var(--dh-sea); box-shadow: 0 0 0 3px rgba(14,124,158,.15); }
+.dh-field textarea { width: 100%; padding: 12px 14px; font-size: 1rem; color: var(--dh-ink); background: #fff; border: 1px solid var(--dh-line); border-radius: 12px; resize: vertical; }
+.dh-field textarea:focus { outline: none; border-color: var(--dh-sea); box-shadow: 0 0 0 3px rgba(14,124,158,.15); }
+.dh-editor-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.dh-editor-toolbar button {
+  display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px;
+  border: 1px solid var(--dh-line); background: #fff; border-radius: 8px; color: var(--dh-muted); cursor: pointer;
+}
+.dh-editor-toolbar button:hover { background: var(--dh-foam); color: var(--dh-ink); border-color: var(--dh-sea); }
+.dh-editor-toolbar button .material-icons-round { font-size: 19px; }
+.dh-editor-toolbar .dh-editor-sep { width: 1px; background: var(--dh-line); margin: 4px 4px; }
 .dh-field-error { margin: -8px 0 12px; font-size: .8rem; color: #b0322b; }
 .dh-note { padding: 10px 14px; border-radius: 12px; font-size: .85rem; margin-bottom: 14px; }
 .dh-note.is-good { background: #eaf5ee; color: #2e7d4f; }

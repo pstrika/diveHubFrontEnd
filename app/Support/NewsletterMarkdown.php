@@ -5,14 +5,19 @@ namespace App\Support;
 /**
  * The same small Markdown subset App\Support\QuillMarkdown uses (##
  * heading, - bullet, > blockquote, blank line = paragraph break,
- * **bold**, [text](url) link) - but converted to real HTML instead of
- * Quill Delta, since a newsletter issue's body is sent as raw HTML in an
- * email rather than stored as a Post's Delta body.
+ * **bold**, [text](url) link), plus ![alt](url) for an image (QuillMarkdown
+ * has no equivalent - a Post's cover image is a separate field, but a
+ * newsletter has no such field, so an inline image needs its own syntax)
+ * - converted to real HTML instead of Quill Delta, since a newsletter
+ * issue's body is sent as raw HTML in an email rather than stored as a
+ * Post's Delta body.
  *
  * Inline text is escaped BEFORE bold/link markers are turned into real
  * tags, so anything the admin types is neutralized first and only the
  * small set of tags this class inserts itself ever reaches the output -
- * see inline().
+ * see inline(). ![alt](url) is matched as its own block (not through
+ * inline()) since an <img> isn't inline text - its src/alt are escaped
+ * directly instead.
  */
 class NewsletterMarkdown
 {
@@ -55,6 +60,12 @@ class NewsletterMarkdown
             if (preg_match('/^>\s+(.*)$/', $trimmed, $m)) {
                 $closeList();
                 $html[] = '<blockquote style="margin:0 0 14px;padding-left:14px;border-left:3px solid #0e7c9e;color:#5a6b78;">' . self::inline($m[1]) . '</blockquote>';
+                continue;
+            }
+
+            if (preg_match('/^!\[(.*?)\]\((\S+)\)$/', $trimmed, $m)) {
+                $closeList();
+                $html[] = '<img src="' . e($m[2]) . '" alt="' . e($m[1]) . '" style="max-width:100%;height:auto;border-radius:8px;display:block;margin:0 0 14px;">';
                 continue;
             }
 

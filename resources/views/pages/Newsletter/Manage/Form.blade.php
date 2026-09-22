@@ -37,7 +37,7 @@
                 @if($issue->exists) @method('PUT') @endif
                 <fieldset @if($issue->isSent()) disabled @endif style="border:0; padding:0; margin:0;">
 
-                <div class="dh-panel-cols">
+                <div class="dh-panel-cols dh-panel-cols-wide">
                     <div>
                         <div class="dh-profile-card">
                             <div class="dh-profile-card-head"><h6 class="dh-panel-title">Content</h6></div>
@@ -59,10 +59,21 @@
                                 </div>
                                 <div class="dh-field">
                                     <label for="body_markdown">Body</label>
-                                    <textarea id="body_markdown" name="body_markdown" rows="16" required style="font-family: 'JetBrains Mono', monospace; font-size: .86rem;">{{ old('body_markdown', $issue->body_markdown) }}</textarea>
+                                    <div class="dh-editor-toolbar" role="toolbar" aria-label="Formatting" id="bodyToolbar">
+                                        <button type="button" data-action="bold" title="Bold"><span class="material-icons-round" aria-hidden="true">format_bold</span></button>
+                                        <button type="button" data-action="heading" title="Heading"><span class="material-icons-round" aria-hidden="true">title</span></button>
+                                        <span class="dh-editor-sep"></span>
+                                        <button type="button" data-action="bullet" title="Bullet list"><span class="material-icons-round" aria-hidden="true">format_list_bulleted</span></button>
+                                        <button type="button" data-action="quote" title="Quote"><span class="material-icons-round" aria-hidden="true">format_quote</span></button>
+                                        <span class="dh-editor-sep"></span>
+                                        <button type="button" data-action="link" title="Add link"><span class="material-icons-round" aria-hidden="true">link</span></button>
+                                        <button type="button" data-action="image" title="Add picture"><span class="material-icons-round" aria-hidden="true">image</span></button>
+                                    </div>
+                                    <textarea id="body_markdown" name="body_markdown" rows="24" required style="font-family: 'JetBrains Mono', monospace; font-size: .86rem;">{{ old('body_markdown', $issue->body_markdown) }}</textarea>
                                     <p class="dh-hint">
                                         A small Markdown subset: <code>## heading</code>, <code>- bullet</code>, <code>&gt; quote</code>,
-                                        <code>**bold**</code>, <code>[text](url)</code> for a link, and a blank line for a new paragraph.
+                                        <code>**bold**</code>, <code>[text](url)</code> for a link, <code>![alt](url)</code> for a picture,
+                                        and a blank line for a new paragraph. The toolbar above inserts these for you.
                                     </p>
                                 </div>
                                 <div class="dh-field">
@@ -117,4 +128,87 @@
         </div>
         <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
     </main>
+
+    @push('js')
+    <script>
+        (function () {
+            var textarea = document.getElementById('body_markdown');
+            var toolbar = document.getElementById('bodyToolbar');
+            if (!textarea || !toolbar) return;
+
+            function setSelection(start, end) {
+                textarea.focus();
+                textarea.setSelectionRange(start, end);
+            }
+
+            // Wraps the current selection in prefix/suffix (**bold**, [text](url) with
+            // the URL already known). With nothing selected, inserts a placeholder and
+            // selects it so typing straight over it just works.
+            function wrapSelection(prefix, suffix, placeholder) {
+                var start = textarea.selectionStart, end = textarea.selectionEnd;
+                var selected = textarea.value.slice(start, end) || placeholder;
+                var before = textarea.value.slice(0, start);
+                var after = textarea.value.slice(end);
+                textarea.value = before + prefix + selected + suffix + after;
+                setSelection(start + prefix.length, start + prefix.length + selected.length);
+            }
+
+            // Prefixes the start of the current line (heading/bullet/quote) - or every
+            // line the selection spans, for a multi-line bullet list.
+            function prefixLines(prefix) {
+                var start = textarea.selectionStart, end = textarea.selectionEnd;
+                var lineStart = textarea.value.lastIndexOf('\n', start - 1) + 1;
+                var lineEnd = textarea.value.indexOf('\n', end);
+                if (lineEnd === -1) lineEnd = textarea.value.length;
+                var block = textarea.value.slice(lineStart, lineEnd);
+                var withPrefix = block.split('\n').map(function (line) { return prefix + line; }).join('\n');
+                textarea.value = textarea.value.slice(0, lineStart) + withPrefix + textarea.value.slice(lineEnd);
+                setSelection(lineStart, lineStart + withPrefix.length);
+            }
+
+            // Images/inline HTML need their own paragraph - insert on a fresh line
+            // with a blank line on each side, wherever the cursor is.
+            function insertBlock(text) {
+                var start = textarea.selectionStart;
+                var before = textarea.value.slice(0, start);
+                var after = textarea.value.slice(start);
+                var needsLeadingBreak = before.length > 0 && !before.endsWith('\n\n') ? (before.endsWith('\n') ? '\n' : '\n\n') : '';
+                var insert = needsLeadingBreak + text + '\n\n';
+                textarea.value = before + insert + after;
+                var pos = (before + insert).length;
+                setSelection(pos, pos);
+            }
+
+            toolbar.addEventListener('click', function (e) {
+                var btn = e.target.closest('button[data-action]');
+                if (!btn) return;
+
+                switch (btn.dataset.action) {
+                    case 'bold':
+                        wrapSelection('**', '**', 'bold text');
+                        break;
+                    case 'heading':
+                        prefixLines('## ');
+                        break;
+                    case 'bullet':
+                        prefixLines('- ');
+                        break;
+                    case 'quote':
+                        prefixLines('> ');
+                        break;
+                    case 'link':
+                        var url = prompt('Link URL:', 'https://');
+                        if (url) wrapSelection('[', '](' + url + ')', 'link text');
+                        break;
+                    case 'image':
+                        var imgUrl = prompt('Image URL:', 'https://');
+                        if (!imgUrl) break;
+                        var alt = prompt('Alt text (describe the image):', '') || '';
+                        insertBlock('![' + alt + '](' + imgUrl + ')');
+                        break;
+                }
+            });
+        })();
+    </script>
+    @endpush
 </x-page-template>
