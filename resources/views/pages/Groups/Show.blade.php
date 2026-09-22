@@ -81,38 +81,26 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" name="reminders_enabled" value="1" id="remindersEnabledInput" {{ $group->reminders_enabled ? 'checked' : '' }}>
-                            <label class="form-check-label" for="remindersEnabledInput">
-                                Email trip reminders (3 days and 1 day before an upcoming dive)
-                            </label>
-                        </div>
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" name="digest_enabled" value="1" id="digestEnabledInput" {{ $group->digest_enabled ? 'checked' : '' }}>
-                            <label class="form-check-label" for="digestEnabledInput">
-                                Email activity digest (Wednesdays, Fridays and Sundays - new members, chat, trips)
-                            </label>
-                        </div>
-                        <div class="form-check form-switch mb-4">
-                            <input class="form-check-input" type="checkbox" name="allow_members_add_dives" value="1" id="allowMembersAddDivesInput" {{ $group->allow_members_add_dives ? 'checked' : '' }}>
-                            <label class="form-check-label" for="allowMembersAddDivesInput">
-                                Allow any member to add dives (otherwise only admins can)
-                            </label>
-                        </div>
-                        <div class="form-check form-switch mb-1">
-                            <input class="form-check-input" type="checkbox" name="is_public" value="1" id="isPublicInput" {{ $group->is_public ? 'checked' : '' }}>
-                            <label class="form-check-label" for="isPublicInput">
-                                Public group - anyone can find and join, no invitation needed
-                            </label>
-                        </div>
-                        <p class="text-xs text-secondary mt-n2 mb-4">Everything else about the group (who can add dives, notifications) stays exactly as configured above. You can only be an admin of one public group at a time.</p>
-                        <div class="form-check form-switch mb-4">
-                            <input class="form-check-input" type="checkbox" name="notifications_muted" value="1" id="notificationsMutedInput" {{ $group->notifications_muted ? 'checked' : '' }}>
-                            <label class="form-check-label" for="notificationsMutedInput">
-                                Mute all notifications for every member (overrides everyone's own bell toggle)
-                            </label>
-                        </div>
-                        <label class="form-label">Favorite operators</label>
+                        <label class="form-label">Email trip reminders</label>
+                        <p class="text-xs text-secondary mt-n2">3 days and 1 day before an upcoming dive.</p>
+                        <x-dh-select name="reminders_enabled" :options="['1' => 'On', '0' => 'Off']" :selected="$group->reminders_enabled ? '1' : '0'" :disabled="false" />
+
+                        <label class="form-label mt-3">Email activity digest</label>
+                        <p class="text-xs text-secondary mt-n2">Wednesdays, Fridays and Sundays - new members, chat, trips.</p>
+                        <x-dh-select name="digest_enabled" :options="['1' => 'On', '0' => 'Off']" :selected="$group->digest_enabled ? '1' : '0'" :disabled="false" />
+
+                        <label class="form-label mt-3">Who can add dives</label>
+                        <x-dh-select name="allow_members_add_dives" :options="['0' => 'Admins only', '1' => 'Any member']" :selected="$group->allow_members_add_dives ? '1' : '0'" :disabled="false" />
+
+                        <label class="form-label mt-3">Group visibility</label>
+                        <x-dh-select name="is_public" :options="['0' => 'Private - invitation only', '1' => 'Public - anyone can find and join']" :selected="$group->is_public ? '1' : '0'" :disabled="false" />
+                        <p class="text-xs text-secondary mt-n2 mb-3">You can only be an admin of one public group at a time.</p>
+
+                        <label class="form-label">Notifications for everyone</label>
+                        <p class="text-xs text-secondary mt-n2">Muting overrides everyone's own bell toggle.</p>
+                        <x-dh-select name="notifications_muted" :options="['0' => 'On', '1' => 'Muted']" :selected="$group->notifications_muted ? '1' : '0'" :disabled="false" />
+
+                        <label class="form-label mt-4">Favorite operators</label>
                         <p class="text-xs text-secondary mt-n2">Used to keep the group updated on upcoming trips from these operators.</p>
                         <div style="max-height: 250px; overflow-y: auto;" class="border rounded p-2">
                             @foreach($operators as $operator)
@@ -582,6 +570,7 @@
     </main>
 
     @push('js')
+    <script src="{{ asset('assets') }}/js/dh-select.js"></script>
     @if($isAdmin)
     <script>
         let inviteSearchTimeout;
