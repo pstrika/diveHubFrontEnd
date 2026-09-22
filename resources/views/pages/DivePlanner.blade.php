@@ -5032,6 +5032,7 @@
             // Create Chart.js Scatter Plot (correctly scaled x-axis)
             profileChartInstance = new Chart(ctx, {
                 type: 'scatter', // Scatter ensures proportional spacing of points
+                plugins: [uddfOverlayFrontPlugin],
                 data: {
                     datasets: [{
                             label: 'Deco profile',
@@ -5122,6 +5123,27 @@
         // wholesale - can call reapplyUddfOverlay() to put it back rather
         // than silently losing the diver's uploaded log on every toggle.
         var uddfOverlayDataset = null;
+
+        // Chart.js draws datasets in array order, so a What If? scenario
+        // added AFTER the overlay (its own fill area painted on top) hides
+        // the actual-dive line behind it, regardless of where in the array
+        // reapplyUddfOverlay() re-inserts it (Pablo, 2026-09-22: "always
+        // show the actual dive overlay at the front...the overlay gets
+        // hidden in the back layer"). Redrawing just that one dataset in
+        // afterDatasetsDraw - which fires once every other dataset has
+        // already painted - guarantees it's always the last thing on the
+        // canvas, independent of array order or dataset "order" values.
+        var uddfOverlayFrontPlugin = {
+            id: 'uddfOverlayFront',
+            afterDatasetsDraw: function (chart) {
+                var idx = chart.data.datasets.findIndex(function (d) {
+                    return d.isActualDiveOverlay;
+                });
+                if (idx === -1) return;
+                var meta = chart.getDatasetMeta(idx);
+                if (meta && meta.controller) meta.controller.draw();
+            }
+        };
 
         function reapplyUddfOverlay() {
             if (!uddfOverlayDataset || !profileChartInstance) return;
