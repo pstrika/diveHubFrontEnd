@@ -101,12 +101,15 @@
                                         <span class="material-icons-round" aria-hidden="true">visibility</span>Preview
                                     </a>
 
-                                    <form method="POST" action="{{ route('Newsletter.manage.sendTest', $issue) }}">
-                                        @csrf
-                                        <button type="submit" class="dh-btn dh-btn-ghost-dark" style="justify-content:center; width:100%;">
-                                            <span class="material-icons-round" aria-hidden="true">send</span>Send test to me
-                                        </button>
-                                    </form>
+                                    {{-- form="sendTestForm" etc: these submit their OWN standalone forms
+                                         (declared as siblings after #issueForm closes below) rather than
+                                         #issueForm itself - a <form> can't nest inside another <form>, and
+                                         a browser silently drops the inner tag and submits the outer one
+                                         instead, which is exactly why this used to save the draft ("Draft
+                                         saved") instead of sending a test (Pablo, 2026-09-22). --}}
+                                    <button type="submit" form="sendTestForm" class="dh-btn dh-btn-ghost-dark" style="justify-content:center; width:100%;">
+                                        <span class="material-icons-round" aria-hidden="true">send</span>Send test to me
+                                    </button>
 
                                     <hr style="border-color: var(--dh-line); width:100%;">
 
@@ -115,28 +118,21 @@
                                             <span class="material-icons-round" aria-hidden="true">schedule_send</span>
                                             Scheduled for {{ $issue->scheduled_at->format('M j, Y \a\t g:i A') }}
                                         </p>
-                                        <form method="POST" action="{{ route('Newsletter.manage.unschedule', $issue) }}">
-                                            @csrf
-                                            <button type="submit" class="dh-btn dh-btn-ghost-dark" style="justify-content:center; width:100%;">
-                                                <span class="material-icons-round" aria-hidden="true">close</span>Cancel scheduled send
-                                            </button>
-                                        </form>
+                                        <button type="submit" form="unscheduleForm" class="dh-btn dh-btn-ghost-dark" style="justify-content:center; width:100%;">
+                                            <span class="material-icons-round" aria-hidden="true">close</span>Cancel scheduled send
+                                        </button>
                                     @else
-                                        <form method="POST" action="{{ route('Newsletter.manage.schedule', $issue) }}" style="display:flex; flex-direction:column; gap:8px;">
-                                            @csrf
+                                        <div style="display:flex; flex-direction:column; gap:8px;">
                                             <label for="scheduled_at" style="font-size:.78rem; font-weight:700; color: var(--dh-muted); text-transform:uppercase; letter-spacing:.04em;">Schedule for later</label>
-                                            <input type="datetime-local" id="scheduled_at" name="scheduled_at" required style="width:100%; padding:10px 12px; border:1px solid var(--dh-line); border-radius:10px;">
-                                            <button type="submit" class="dh-btn dh-btn-ghost-dark" style="justify-content:center; width:100%;">
+                                            <input type="datetime-local" id="scheduled_at" name="scheduled_at" form="scheduleForm" required style="width:100%; padding:10px 12px; border:1px solid var(--dh-line); border-radius:10px;">
+                                            <button type="submit" form="scheduleForm" class="dh-btn dh-btn-ghost-dark" style="justify-content:center; width:100%;">
                                                 <span class="material-icons-round" aria-hidden="true">schedule_send</span>Schedule send
                                             </button>
-                                        </form>
+                                        </div>
 
-                                        <form method="POST" action="{{ route('Newsletter.manage.send', $issue) }}" onsubmit="return confirm('Send this to every subscribed user right now? This can\'t be undone.');">
-                                            @csrf
-                                            <button type="submit" class="dh-btn" style="justify-content:center; width:100%; background: var(--dh-danger); color:#fff; border-color: var(--dh-danger);">
-                                                <span class="material-icons-round" aria-hidden="true">campaign</span>Send to all subscribers now
-                                            </button>
-                                        </form>
+                                        <button type="submit" form="sendAllForm" class="dh-btn" style="justify-content:center; width:100%; background: var(--dh-danger); color:#fff; border-color: var(--dh-danger);">
+                                            <span class="material-icons-round" aria-hidden="true">campaign</span>Send to all subscribers now
+                                        </button>
                                     @endif
                                     <p class="dh-hint" style="margin:0;">Only divers with the newsletter enabled and email notifications on will receive it.</p>
                                 @elseif(!$issue->exists)
@@ -149,6 +145,19 @@
 
                 </fieldset>
             </form>
+
+            {{-- Standalone sibling forms for the buttons above that use form="..." -
+                 see the comment by the Send test button for why these can't just be
+                 nested inside #issueForm. --}}
+            @if($issue->exists && !$issue->isSent())
+                <form method="POST" action="{{ route('Newsletter.manage.sendTest', $issue) }}" id="sendTestForm" class="d-none">@csrf</form>
+                @if($issue->isScheduled())
+                    <form method="POST" action="{{ route('Newsletter.manage.unschedule', $issue) }}" id="unscheduleForm" class="d-none">@csrf</form>
+                @else
+                    <form method="POST" action="{{ route('Newsletter.manage.schedule', $issue) }}" id="scheduleForm" class="d-none">@csrf</form>
+                    <form method="POST" action="{{ route('Newsletter.manage.send', $issue) }}" id="sendAllForm" onsubmit="return confirm('Send this to every subscribed user right now? This can\'t be undone.');" class="d-none">@csrf</form>
+                @endif
+            @endif
 
         </div>
         <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
