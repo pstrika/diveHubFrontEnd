@@ -52,6 +52,7 @@ Route::get('cron/send-group-reminders', [\App\Http\Controllers\CronController::c
 Route::get('cron/send-group-activity-digest', [\App\Http\Controllers\CronController::class, 'sendGroupActivityDigest']);
 Route::get('cron/detect-cancelled-trips', [\App\Http\Controllers\CronController::class, 'detectCancelledTrips']);
 Route::get('cron/send-scheduled-newsletters', [\App\Http\Controllers\CronController::class, 'sendScheduledNewsletters']);
+Route::get('cron/sync-support-inbox', [\App\Http\Controllers\CronController::class, 'syncSupportInbox']);
 
 // Newsletter one-click unsubscribe/resubscribe - reached from a signed link
 // in the email itself, not a logged-in session (the diver may be reading

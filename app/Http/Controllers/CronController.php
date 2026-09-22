@@ -56,11 +56,11 @@ class CronController extends Controller
     }
 
     /**
-     * Every 15 minutes, per .github/workflows/send-scheduled-newsletters.yml
-     * - which has to live on the repo's default branch (main) to actually
-     * fire on schedule, even though the newsletter composer itself is
-     * redesign-only right now (GitHub only evaluates `schedule` triggers
-     * from the default branch).
+     * Every 15 minutes, triggered by an Azure Logic App
+     * (divehub-send-scheduled-newsletters) - moved off GitHub Actions
+     * 2026-09-22 after its `schedule` trigger proved unreliable at this
+     * frequency (fired twice in 17 hours) and silently missed a real
+     * scheduled send.
      */
     public function sendScheduledNewsletters(Request $request)
     {
@@ -69,6 +69,23 @@ class CronController extends Controller
         }
 
         Artisan::call('newsletter:send-scheduled');
+
+        return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
+    }
+
+    /**
+     * Every 5 minutes, triggered by an Azure Logic App
+     * (divehub-sync-support-inbox) - pulls new mail from the real
+     * support@divers-hub.com mailbox into the admin Message Management
+     * console (Pablo, 2026-09-22). See SyncSupportInbox / GraphMailService.
+     */
+    public function syncSupportInbox(Request $request)
+    {
+        if (!hash_equals((string) env('CRON_SECRET'), (string) $request->query('secret'))) {
+            abort(403);
+        }
+
+        Artisan::call('support:sync-inbox');
 
         return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
     }

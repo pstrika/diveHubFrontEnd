@@ -4,13 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\ConversationMessage;
 use App\Models\User;
+use App\Services\GraphMailService;
 use App\Services\SmsService;
 use App\Services\WhatsAppService;
 use App\Support\ConversationLog;
 use App\Support\UserAvatar;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Mailgun\Mailgun;
 
 /**
  * Admin Message Management console (Pablo, 2026-09-14): "I'm expecting I
@@ -20,15 +19,17 @@ use Mailgun\Mailgun;
  * Everything reads/writes conversation_messages, one row per SMS/WhatsApp/
  * email in either direction - see that migration and App\Support\
  * ConversationLog for how a row gets there (the inbound Twilio webhook,
- * the "Chat with us" widget, or this controller's own send()) - that same
- * ConversationLog::log() is also where every admin gets notified the
- * moment a new inbound message lands, so this controller doesn't need to
- * poll for that itself.
+ * the "Chat with us" widget, this controller's own send(), or
+ * SyncSupportInbox for inbound email) - that same ConversationLog::log()
+ * is also where every admin gets notified the moment a new inbound
+ * message lands, so this controller doesn't need to poll for that itself.
  *
- * Email is outbound-only here - there's no inbound email webhook (that's
- * a Mailgun-side routing/DNS setup, its own separate piece of work), so a
- * diver's email reply lands in their inbox and Pablo's, same as any other
- * email, not in this console.
+ * Email is real, two-way support@divers-hub.com traffic via Microsoft
+ * Graph as of 2026-09-22 (Pablo: "use this email address inside the
+ * conversation...a legit both way communication channel") - see
+ * GraphMailService (sending, here in sendVia()) and SyncSupportInbox
+ * (receiving, on a cron). Previously outbound-only through a different
+ * Mailgun address, with no way to see a reply at all.
  */
 class AdminMessagesController extends Controller
 {
@@ -213,20 +214,11 @@ class AdminMessagesController extends Controller
             return WhatsAppService::sendText($contact, $body);
         }
 
-        // email
-        try {
-            $mg = Mailgun::create(env('MAILGUN_KEY'));
-            $mg->messages()->send('mail.divers-hub.com', [
-                'from' => 'Divers-Hub <postmaster@mail.divers-hub.com>',
-                'to' => $contact,
-                'subject' => $subject ?: 'A message from Divers Hub',
-                'html' => nl2br(e($body)),
-            ]);
-            return true;
-        } catch (\Throwable $e) {
-            Log::error("Admin email send failed (to {$contact}): " . $e->getMessage());
-            return false;
-        }
+        // email - sent from the real support@divers-hub.com mailbox via
+        // Microsoft Graph (Pablo, 2026-09-22), not Mailgun's postmaster@
+        // address - replies now land back in this same console instead of
+        // going nowhere. See GraphMailService / SyncSupportInbox.
+        return GraphMailService::send($contact, $subject ?: 'A message from Divers Hub', $body);
     }
 
     private function avatarUrl(?User $user): ?string

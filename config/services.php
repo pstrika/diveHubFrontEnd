@@ -42,6 +42,23 @@ return [
         'redirect' => env('FACEBOOK_REDIRECT_URI'),
     ],
 
+    /**
+     * The real support@divers-hub.com mailbox (Microsoft 365 via GoDaddy),
+     * accessed app-only via Microsoft Graph - client credentials, no
+     * interactive sign-in or mailbox password (Pablo, 2026-09-22: "use
+     * this email address inside the conversation...a legit both way
+     * communication channel"). App registration lives in divers-hub.com's
+     * own tenant (Entra ID), NOT the tenant behind this Azure subscription
+     * - those are two separate tenants, confirmed the hard way when the
+     * first app registration attempt landed in the wrong one.
+     */
+    'graph' => [
+        'tenant_id' => env('MS_GRAPH_TENANT_ID'),
+        'client_id' => env('MS_GRAPH_CLIENT_ID'),
+        'client_secret' => env('MS_GRAPH_CLIENT_SECRET'),
+        'mailbox' => env('SUPPORT_MAILBOX'),
+    ],
+
     'webpush' => [
         'public_key' => env('VAPID_PUBLIC_KEY'),
         'private_key' => env('VAPID_PRIVATE_KEY'),
