@@ -388,7 +388,16 @@
                             <span class="material-icons-round" aria-hidden="true">{{ $iAmMuted ? 'notifications_off' : 'notifications_active' }}</span>{{ $iAmMuted ? 'Muted' : 'Notifications on' }}
                         </button>
                     </form>
-                    @if(auth()->user()->isAdmin())
+                    {{-- Temporarily also gated behind platform-admin, on top of
+                         the usual per-group admin check ($isAdmin), while the
+                         app's Meta App Review for these Facebook permissions is
+                         still pending (Pablo, 2026-09-22: "Only show the Connect
+                         to FB groups button to Platform admins for now...After
+                         that, we will show the Connect to FB group to all users
+                         that are admins for that particular group"). Once
+                         review clears, drop the auth()->user()->isAdmin() &&
+                         half of this condition so it's just $isAdmin again. --}}
+                    @if(auth()->user()->isAdmin() && $isAdmin)
                         @if($group->isFacebookConnected())
                             <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-toggle="modal" data-bs-target="#modalGroupSettings">
                                 <i class="fa-brands fa-facebook" aria-hidden="true"></i>Connected: {{ $group->fb_page_name }}

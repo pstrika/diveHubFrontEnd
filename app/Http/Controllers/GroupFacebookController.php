@@ -72,6 +72,16 @@ class GroupFacebookController extends Controller
             abort(403);
         }
 
+        // Temporary, on top of the group-admin check above, while Meta App
+        // Review for these permissions is still pending (Pablo, 2026-09-22:
+        // "Only show the Connect to FB groups button to Platform admins for
+        // now...After that, we will show the Connect to FB group to all
+        // users that are admins for that particular group"). Remove once
+        // review clears.
+        if (!auth()->user()->isAdmin()) {
+            abort(403);
+        }
+
         session(['fb_connect_group_id' => $group->id]);
 
         // auth_type=rerequest forces Facebook to show the consent screen
@@ -98,6 +108,11 @@ class GroupFacebookController extends Controller
         $group = Group::findOrFail($groupId);
 
         if (!$group->isAdmin(auth()->user()->id)) {
+            abort(403);
+        }
+
+        // Temporary, see connect() above - remove once Meta App Review clears.
+        if (!auth()->user()->isAdmin()) {
             abort(403);
         }
 
@@ -148,6 +163,11 @@ class GroupFacebookController extends Controller
         $group = Group::where('slug', $groupSlug)->firstOrFail();
 
         if (!$group->isAdmin(auth()->user()->id)) {
+            abort(403);
+        }
+
+        // Temporary, see connect() above - remove once Meta App Review clears.
+        if (!auth()->user()->isAdmin()) {
             abort(403);
         }
 
