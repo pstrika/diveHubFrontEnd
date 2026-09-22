@@ -5246,8 +5246,8 @@
                 uddfOverlayDataset = {
                     label: 'Actual dive' + (parsed.label ? ' (' + parsed.label + ')' : ''),
                     data: parsed.points,
-                    borderColor: '#ff8a00',
-                    backgroundColor: 'rgba(255, 138, 0, 0.15)',
+                    borderColor: '#ffd600', // Yellow line, fill stays transparent (Pablo, 2026-09-22)
+                    backgroundColor: 'rgba(255, 214, 0, 0.15)',
                     borderWidth: 2,
                     showLine: true,
                     fill: false,
@@ -5743,7 +5743,7 @@
                     {
                         label: 'Extend bottom time 5 min',
                         data: formattedData1,
-                        borderColor: '#1A73E8',
+                        borderColor: '#8c1c13', // Darker red than the fill, so the line reads against it (Pablo, 2026-09-22)
                         backgroundColor: '#f44335',
                         borderWidth: 2,
                         showLine: true,
@@ -5831,7 +5831,7 @@
                     {
                         label: 'Increase max depth 10ft/3m',
                         data: formattedData2,
-                        borderColor: '#1A73E8',
+                        borderColor: '#8c1c13', // Darker red than the fill, so the line reads against it (Pablo, 2026-09-22)
                         backgroundColor: '#f44335',
                         borderWidth: 2,
                         showLine: true,
@@ -5920,7 +5920,7 @@
                     {
                         label: 'Lost deco gases',
                         data: formattedData3,
-                        borderColor: '#1A73E8',
+                        borderColor: '#8c1c13', // Darker red than the fill, so the line reads against it (Pablo, 2026-09-22)
                         backgroundColor: '#f44335',
                         borderWidth: 2,
                         showLine: true,
@@ -6004,7 +6004,7 @@
                     {
                         label: 'Shorten bottom time 5 min',
                         data: formattedData4,
-                        borderColor: '#1A73E8',
+                        borderColor: '#1b5e20', // Darker green than the fill, so the line reads against it (Pablo, 2026-09-22)
                         backgroundColor: '#4caf50',
                         borderWidth: 2,
                         showLine: true,
@@ -6094,7 +6094,7 @@
                     {
                         label: 'Reduce max depth 10ft/3m',
                         data: formattedData5,
-                        borderColor: '#1A73E8',
+                        borderColor: '#1b5e20', // Darker green than the fill, so the line reads against it (Pablo, 2026-09-22)
                         backgroundColor: '#4caf50',
                         borderWidth: 2,
                         showLine: true,
@@ -6185,7 +6185,7 @@
                     {
                         label: 'Minimum deco (GFs=100%)',
                         data: formattedData6,
-                        borderColor: '#1A73E8',
+                        borderColor: '#1b5e20', // Darker green than the fill, so the line reads against it (Pablo, 2026-09-22)
                         backgroundColor: '#4caf50',
                         borderWidth: 2,
                         showLine: true,
@@ -6294,7 +6294,7 @@
                     {
                         label: 'Bailout to OC',
                         data: formattedData7,
-                        borderColor: '#1A73E8',
+                        borderColor: '#8c1c13', // Darker red than the fill, so the line reads against it (Pablo, 2026-09-22)
                         backgroundColor: '#f44335',
                         borderWidth: 2,
                         showLine: true,
