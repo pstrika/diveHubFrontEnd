@@ -164,7 +164,12 @@ class UserController extends Controller
     public function getProfile() {
         $user = User::findorFail(auth()->user()->id);
 
-        $operators = Operator::orderBy('operatorName')->get();
+        // Deco Divers (id 4) isn't running anymore (Pablo, 2026-09-22) -
+        // there's no "active"/status column on operators to filter by
+        // generically, so this excludes it by id specifically, same as the
+        // Argentina locations exclusion below. Not deleted: historical
+        // trips and any diver who already favorited it still reference it.
+        $operators = Operator::where('id', '!=', 4)->orderBy('operatorName')->get();
         $favOperatorsIndex = explode(',', $user->favOperators);
         $favOperators = Operator::whereIn('id', $favOperatorsIndex)->get();
 

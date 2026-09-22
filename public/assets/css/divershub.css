@@ -1912,6 +1912,28 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-range-row .dh-field { flex: 1; margin-bottom: 0; }
 .dh-chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .dh-fav-empty { font-size: .85rem; color: var(--dh-muted); font-style: italic; margin: 0; }
+
+.dh-tag-input-row { display: flex; gap: 8px; }
+.dh-tag-input-row input { flex: 1 1 auto; }
+.dh-tag-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 12px;
+  border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill);
+  background: var(--dh-paper); color: var(--dh-muted); font-size: .8rem; font-weight: 600;
+}
+.dh-tag-chip button {
+  display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;
+  border: 0; border-radius: 50%; background: var(--dh-line); color: var(--dh-ink); padding: 0;
+  font-size: .85rem; line-height: 1; cursor: pointer;
+}
+.dh-tag-chip button:hover { background: var(--dh-poor); color: #fff; }
+
+/* Themed replacement for a native <input type="file"> (Pablo, 2026-09-22:
+   "retheme...the button to upload a picture") - the real input stays in
+   the DOM (still what the form submits), just visually hidden; this button
+   triggers it and shows the chosen filename. */
+.dh-file-picker { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dh-file-picker input[type="file"] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+.dh-file-picker-name { font-size: .85rem; color: var(--dh-muted); }
 .dh-choice-toolbar { margin-bottom: 10px; }
 .dh-choice-toolbar input {
   width: 100%; padding: 10px 12px; border: 1px solid var(--dh-line); border-radius: 10px;

@@ -454,6 +454,7 @@
         <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
     </main>
     @push('js')
+    <script src="{{ asset('assets') }}/js/dh-select.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/perfect-scrollbar.min.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     <script src="{{ asset('assets') }}/js/core/bootstrap.min.js" type="text/javascript"></script>
@@ -629,41 +630,15 @@
                 revealSave();
             });
         })();
-    </script>
 
-    {{-- x-dh-select behavior: open/close the menu, pick an option. --}}
-    <script>
-        function closeAllDhSelects() {
-            document.querySelectorAll('.dh-select-menu').forEach(function (m) { m.hidden = true; });
-        }
-
-        document.querySelectorAll('.dh-select').forEach(function (wrap) {
-            var btn = wrap.querySelector('.dh-select-btn');
-            var menu = wrap.querySelector('.dh-select-menu');
-            var hidden = wrap.querySelector('input[type="hidden"]');
-            var valueSpan = wrap.querySelector('.dh-select-value');
-
-            btn.addEventListener('click', function (e) {
-                e.stopPropagation();
-                if (btn.disabled) return;
-                var wasOpen = !menu.hidden;
-                closeAllDhSelects();
-                menu.hidden = wasOpen;
-            });
-
-            menu.querySelectorAll('li').forEach(function (li) {
-                li.addEventListener('click', function () {
-                    hidden.value = li.dataset.value;
-                    valueSpan.textContent = li.textContent;
-                    menu.querySelectorAll('li').forEach(function (o) { o.classList.remove('is-selected'); });
-                    li.classList.add('is-selected');
-                    menu.hidden = true;
-                    revealSave();
-                });
-            });
+        // The shared dh-select.js (open/close/pick) fires a real 'change'
+        // event on each hidden input once picked - this page's own concern
+        // is just "reveal Save", so it listens rather than dh-select.js
+        // knowing anything about this page.
+        ['level', 'levelLow', 'levelHigh'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.addEventListener('change', revealSave);
         });
-
-        document.addEventListener('click', closeAllDhSelects);
     </script>
 
     {{-- Favorite operators / locations: read-view chips swap for a
