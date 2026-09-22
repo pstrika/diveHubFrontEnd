@@ -114,10 +114,13 @@
                     <span class="material-icons-round" aria-hidden="true">menu</span>
                 </button>
             @else
-                {{-- Direct link to the dashboard now (Pablo, 2026-09-21) - the
-                     drawer's other links (settings, admin tools, sign out) are
-                     still reachable from the bottom bar's More tab. --}}
-                <a href="{{ route('MyDashboard') }}" class="dh-avatar-btn {{ $active === 'me' ? 'is-active' : '' }}" aria-label="Go to My Dashboard">
+                {{-- Direct link to the diver's own profile overview (Pablo,
+                     2026-09-22: "instead of opening the dashboard, let's open
+                     the user overview") - was My Dashboard until now. The
+                     drawer's other links (My Dashboard, settings, admin
+                     tools, sign out) are still reachable from the bottom
+                     bar's More tab. --}}
+                <a href="{{ route('overview') }}" class="dh-avatar-btn {{ $active === 'me' ? 'is-active' : '' }}" aria-label="Go to your profile">
                     @if($avatar)
                         <img src="{{ $avatar }}" alt="" onerror="this.remove()">
                     @else
@@ -162,7 +165,8 @@
     {{-- Same tab for guest and signed-in alike (Pablo, 2026-09-21: "same
          logic...icon at the bottom right should be a more") - opens the
          drawer, which for a signed-in diver now also carries the My
-         Dashboard link (the avatar in the top bar is the direct shortcut
+         Dashboard link (the avatar in the top bar is a direct shortcut to
+         the profile overview instead, since 2026-09-22 - see above)
          to it). --}}
     <button type="button" class="dh-tab {{ $active === 'me' ? 'is-active' : '' }}" data-dh-tab="me" data-bs-toggle="offcanvas" data-bs-target="#dh-me" aria-controls="dh-me">
         <span class="dh-tab-icon"><span class="material-icons-round" aria-hidden="true">more_horiz</span></span>

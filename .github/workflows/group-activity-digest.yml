@@ -1,8 +1,13 @@
 name: Send group activity digest emails
 
+# The schedule trigger was retired 2026-09-22 (Pablo: "we need to change the
+# dependency on Github for the cron") - it also never actually fired from
+# here in the first place, since GitHub only evaluates `schedule` triggers
+# on a repo's default branch (main), not redesign. An Azure Logic App
+# (divehub-group-activity-digest, resource group DiveHub) now hits the same
+# endpoint Sun/Wed/Fri at 9am Eastern instead. workflow_dispatch stays for a
+# manual "run now" from the Actions tab.
 on:
-  schedule:
-    - cron: '0 13 * * 0,3,5' # 9am Eastern (13:00 UTC / 12:00 UTC during EST), Sun/Wed/Fri
   workflow_dispatch: {}
 
 jobs:
