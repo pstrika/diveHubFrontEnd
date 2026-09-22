@@ -1,0 +1,14 @@
+name: Send scheduled newsletters
+
+on:
+  schedule:
+    - cron: '*/15 * * * *' # every 15 minutes
+  workflow_dispatch: {}
+
+jobs:
+  send-scheduled:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger newsletter:send-scheduled
+        run: |
+          curl -sf "https://divehub-redesign.azurewebsites.net/cron/send-scheduled-newsletters?secret=${{ secrets.CRON_SECRET }}"
