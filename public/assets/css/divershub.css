@@ -742,6 +742,21 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-panel-toggle { display: flex; align-items: center; gap: 6px; }
 .dh-panel-toggle .form-check-label { color: var(--dh-muted); font-size: .85rem; font-weight: 600; }
 .dh-panel-cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--dh-space-4); }
+
+/* Two dh-panel cards sitting side by side on desktop (Groups page: Members
+   next to Upcoming dives, or Facebook feed) - Bootstrap's row already
+   makes the two columns equal height, but each .dh-panel section inside
+   only takes its own content's height, so whichever card has less
+   content (fewer members than dives, say) ends up visibly shorter and
+   the pair looks misaligned (Pablo, 2026-09-22: "not exactly the same
+   length...they look slightly off"). Stretching the panel and its
+   scrollable content area to fill the column fixes that; on mobile the
+   columns stack (Bootstrap collapses to 100% width, no row to match
+   height against) so this has no visible effect there, matching Pablo's
+   own observation. */
+.dh-equal-card-col { display: flex; }
+.dh-equal-card-col > .dh-panel { flex: 1 1 auto; display: flex; flex-direction: column; }
+.dh-equal-card-col .dh-equal-card-scroll { flex: 1 1 auto; }
 /* Wider content column for a form whose main field is a long body of text (the newsletter composer) - still collapses to one column below, same as the plain .dh-panel-cols. */
 .dh-panel-cols-wide { grid-template-columns: 2.4fr 1fr; }
 .dh-panel-subtitle { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--dh-muted); margin: 0 0 8px; }

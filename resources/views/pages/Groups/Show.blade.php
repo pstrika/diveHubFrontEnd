@@ -482,9 +482,9 @@
                 $hasFbFeed = $group->isFacebookConnected() && !empty($fbFeed);
             @endphp
 
-            <div class="row">
+            <div class="row dh-equal-card-row">
                 {{-- Members --}}
-                <div class="col-md-6">
+                <div class="col-md-6 dh-equal-card-col">
                     <section class="dh-panel">
                         <div class="dh-panel-head-row">
                             <h2 class="dh-panel-title mb-0">Members</h2>
@@ -494,7 +494,7 @@
                                 </button>
                             @endif
                         </div>
-                        <div style="max-height: 350px; overflow-y: auto;">
+                        <div class="dh-equal-card-scroll" style="max-height: 350px; overflow-y: auto;">
                             <ul class="list-group">
                                 @foreach($members as $member)
                                     <li class="list-group-item border-0 d-flex justify-content-between align-items-center px-0">
@@ -537,7 +537,7 @@
                     </section>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 dh-equal-card-col">
                     @if($hasFbFeed)
                         @include('pages.Groups.partials.FacebookFeedCard')
                     @else

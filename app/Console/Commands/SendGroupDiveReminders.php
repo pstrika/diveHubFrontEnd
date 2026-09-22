@@ -94,17 +94,23 @@ class SendGroupDiveReminders extends Command
         $dateFormatted = Carbon::parse($dive->date)->format('l, F j');
         $timeFormatted = $dive->time ? Carbon::parse($dive->time)->format('g:i A') : 'TBD';
 
-        // No opening greeting or sign-off here - the "tripreminder" Mailgun
-        // template supplies "Dear {{name}}:" and "Kind regards, Divers Hub."
-        // around this body already.
-        $html = '<p>This is a reminder that <b>' . e($group->name) . '</b> has a dive coming up in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '') . ':</p>'
-            . '<p><b>' . e($dive->tripName) . '</b><br>'
-            . e($dateFormatted) . ' at ' . e($timeFormatted) . '<br>'
-            . ($operator ? 'Operator: ' . e($operator->operatorName) . '<br>' : '')
-            . '</p>'
-            . ($operator && $operator->waiverLink ? '<p><a href="' . e($operator->waiverLink) . '">Sign the operator\'s waiver</a></p>' : '')
-            . '<p><b>Who\'s going so far:</b> ' . e($goingNames) . '</p>'
-            . '<p><a href="' . route('Groups.show', ['group' => $group->slug]) . '">View the group calendar</a></p>';
+        // Same document for every recipient - render it once. Uses the
+        // blank Mailgun template ("2026 new dh template"), same as the
+        // newsletter, instead of the old dedicated "tripreminder" template
+        // (Pablo, 2026-09-22: "we need to start using the blank template
+        // in mailgun - the same one we have with newsletters" - approved
+        // after reviewing a sample render of this exact document).
+        $document = view('emails.trip-reminder-document', [
+            'preheader' => $dive->tripName . ' is in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '') . ' - here\'s what you need to know.',
+            'tripName' => $dive->tripName,
+            'daysAhead' => $daysAhead,
+            'dateFormatted' => $dateFormatted,
+            'timeFormatted' => $timeFormatted,
+            'operatorName' => $operator->operatorName ?? null,
+            'waiverLink' => $operator->waiverLink ?? null,
+            'goingNames' => $goingNames,
+            'groupUrl' => route('Groups.show', ['group' => $group->slug]),
+        ])->render();
 
         try {
             $mg = Mailgun::create(env('MAILGUN_KEY'));
@@ -123,10 +129,8 @@ class SendGroupDiveReminders extends Command
                     'from' => 'Divers-Hub <postmaster@mail.divers-hub.com>',
                     'to' => $member->user->name . ' <' . $member->user->email . '>',
                     'subject' => 'Reminder: ' . $dive->tripName . ' in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : ''),
-                    'template' => 'tripreminder',
-                    // {{body}} must be {{{body}}} (triple-brace, unescaped) in the
-                    // Mailgun template - see SendGroupDiveReminders history for why.
-                    'h:X-Mailgun-Variables' => json_encode(['body' => $html, 'name' => $member->user->name]),
+                    'template' => '2026 new dh template',
+                    'h:X-Mailgun-Variables' => json_encode(['body' => $document]),
                 ]);
             }
         } catch (\Throwable $e) {

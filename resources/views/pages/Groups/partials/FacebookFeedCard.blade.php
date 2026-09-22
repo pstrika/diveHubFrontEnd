@@ -5,7 +5,7 @@
             <span class="material-icons-round" aria-hidden="true">open_in_new</span>View Page
         </a>
     </div>
-    <div style="max-height: 320px; overflow-y: auto;">
+    <div class="dh-equal-card-scroll" style="max-height: 320px; overflow-y: auto;">
         @foreach($fbFeed as $post)
             <div class="dh-fb-post">
                 @if(!empty($post['full_picture']))
