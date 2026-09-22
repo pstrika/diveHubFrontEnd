@@ -1364,6 +1364,26 @@
                                         <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1" style="position: relative;">
                                             <canvas id="profileChart" class="chart-canvas border-radius-lg" height="500px"></canvas>
 
+                                            {{-- Overlay a real dive computer log on top of the calculated
+                                                 profile (Pablo, 2026-09-22: "overlay a real dive profile
+                                                 coming from a shearwater computer...over the calculated
+                                                 chart"). UDDF is a standard XML export format (Shearwater
+                                                 Cloud, Subsurface, and others all produce it), so this
+                                                 isn't Shearwater-specific despite the request naming that
+                                                 brand. Parsed entirely client-side (DOMParser) - the file
+                                                 never leaves the browser, and the existing profileChart
+                                                 Chart.js instance just gets a second dataset pushed onto
+                                                 it in the same {x: minutes, y: -depth} shape
+                                                 renderProfileChart() already uses, so it overlays exactly
+                                                 on the same axes. --}}
+                                            <div class="px-3 pt-2" style="position: relative; z-index: 2;">
+                                                <input type="file" id="uddfFileInput" accept=".xml,.uddf" class="d-none">
+                                                <button type="button" id="uddfUploadBtn" class="dh-btn dh-btn-ghost-dark" style="padding: 6px 14px; font-size: .82rem;">
+                                                    <span class="material-icons-round" aria-hidden="true" style="font-size: 18px;">upload_file</span>Overlay your actual dive log
+                                                </button>
+                                                <span id="uddfStatus" class="text-white" style="font-size: .78rem; margin-left: 8px;"></span>
+                                            </div>
+
                                             <!-- "What if...?" floating bubble (Pablo, 2026-09-19:
                                                  "show a floating bubble...open a modal and let the
                                                  user select the What if scenario"). One pill - icon
@@ -5036,7 +5056,140 @@
             });
         }
     </script>
-    
+
+    {{-- Overlay a real dive computer log (UDDF export) on the calculated
+         profile chart above (Pablo, 2026-09-22). UDDF is a standard XML
+         format several dive computer platforms export (Shearwater Cloud,
+         Subsurface, MacDive...), not proprietary to one brand. Parsed
+         entirely client-side - the file never reaches the server - and
+         merged into the SAME profileChartInstance renderProfileChart()
+         already built, using the identical {x: minutes, y: -depth} point
+         shape, so it draws on the same axes and reuses that chart's
+         existing tooltip/legend formatting for free. --}}
+    <script>
+        // Last successfully parsed overlay, kept at top level (not inside
+        // the IIFE below) so the "What If?" checkbox handlers further down
+        // the page - which each rebuild profileChartInstance.data.datasets
+        // wholesale - can call reapplyUddfOverlay() to put it back rather
+        // than silently losing the diver's uploaded log on every toggle.
+        var uddfOverlayDataset = null;
+
+        function reapplyUddfOverlay() {
+            if (!uddfOverlayDataset || !profileChartInstance) return;
+            var alreadyThere = profileChartInstance.data.datasets.some(function (d) {
+                return d.isActualDiveOverlay;
+            });
+            if (!alreadyThere) {
+                profileChartInstance.data.datasets.push(uddfOverlayDataset);
+            }
+        }
+
+        (function () {
+            var input = document.getElementById('uddfFileInput');
+            var btn = document.getElementById('uddfUploadBtn');
+            var status = document.getElementById('uddfStatus');
+            if (!btn || !input) return;
+
+            btn.addEventListener('click', function () {
+                if (!profileChartInstance) {
+                    status.style.color = '#ffd7d7';
+                    status.textContent = 'Calculate a plan first, then overlay your log.';
+                    return;
+                }
+                input.click();
+            });
+
+            input.addEventListener('change', function () {
+                var file = input.files && input.files[0];
+                if (!file) return;
+
+                var reader = new FileReader();
+                reader.onload = function () {
+                    try {
+                        var parsed = parseUddf(reader.result);
+                        overlayRealDive(parsed);
+                        status.style.color = '#d7ffd9';
+                        status.textContent = 'Overlaying: ' + (parsed.label || file.name) + ' (' + parsed.points.length + ' points)';
+                    } catch (e) {
+                        console.error(e);
+                        status.style.color = '#ffd7d7';
+                        status.textContent = 'Could not read that file - is it a UDDF dive log export?';
+                    }
+                };
+                reader.onerror = function () {
+                    status.style.color = '#ffd7d7';
+                    status.textContent = 'Could not read that file.';
+                };
+                reader.readAsText(file);
+                input.value = ''; // allow re-selecting the same file again later
+            });
+
+            // UDDF's default xmlns makes plain getElementsByTagName miss every
+            // element in most browsers unless the lookup is namespace-aware -
+            // stripping the xmlns declaration before parsing is the standard,
+            // simple workaround (element names in a UDDF export are never
+            // namespace-prefixed, so nothing else needs to change).
+            function parseUddf(xmlText) {
+                var cleaned = xmlText.replace(/\sxmlns="[^"]*"/, '');
+                var doc = new DOMParser().parseFromString(cleaned, 'application/xml');
+                if (doc.querySelector('parsererror')) {
+                    throw new Error('XML parse error');
+                }
+
+                var waypoints = doc.getElementsByTagName('waypoint');
+                if (!waypoints.length) {
+                    throw new Error('No waypoints found - not a UDDF dive log?');
+                }
+
+                var points = [];
+                for (var i = 0; i < waypoints.length; i++) {
+                    var wp = waypoints[i];
+                    var depthEl = wp.getElementsByTagName('depth')[0];
+                    var timeEl = wp.getElementsByTagName('divetime')[0];
+                    if (!depthEl || !timeEl) continue;
+
+                    var depthMeters = parseFloat(depthEl.textContent);
+                    var timeSeconds = parseFloat(timeEl.textContent);
+                    if (isNaN(depthMeters) || isNaN(timeSeconds)) continue;
+
+                    // The calculated line's y is already in the planner's
+                    // current unit (ft or m, see unitConversion in
+                    // renderProfileChart above) - UDDF depth is always
+                    // meters, so convert to match when in imperial mode.
+                    var depthInUnit = modeImpOrMetric === 'imp' ? depthMeters * 3.28084 : depthMeters;
+                    points.push({ x: timeSeconds / 60, y: -depthInUnit });
+                }
+
+                var siteName = doc.getElementsByTagName('name')[0];
+                return { points: points, label: siteName ? siteName.textContent : null };
+            }
+
+            function overlayRealDive(parsed) {
+                // Drop a previous overlay before adding the new one, so
+                // re-uploading (a different dive, or a correction) doesn't
+                // stack duplicate lines on the chart.
+                profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(function (d) {
+                    return !d.isActualDiveOverlay;
+                });
+
+                uddfOverlayDataset = {
+                    label: 'Actual dive' + (parsed.label ? ' (' + parsed.label + ')' : ''),
+                    data: parsed.points,
+                    borderColor: '#ff8a00',
+                    backgroundColor: 'rgba(255, 138, 0, 0.15)',
+                    borderWidth: 2,
+                    showLine: true,
+                    fill: false,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    isActualDiveOverlay: true,
+                };
+                profileChartInstance.data.datasets.push(uddfOverlayDataset);
+                profileChartInstance.update();
+            }
+        })();
+    </script>
+
     {{-- Script to show decompression table --}}
     <script>
 
@@ -5561,6 +5714,7 @@
                 labelDTDiff.classList.toggle("is-ideal", difference < 0);
             }
 
+            reapplyUddfOverlay(); // keep an uploaded real-dive log visible across What If? toggles
             profileChartInstance.update(); // Refresh chart
 
             document.querySelectorAll(".form-check-input").forEach(cb => {
@@ -5648,6 +5802,7 @@
                 labelDTDiff.classList.toggle("is-ideal", difference < 0);
             }
 
+            reapplyUddfOverlay(); // keep an uploaded real-dive log visible across What If? toggles
             profileChartInstance.update(); // Refresh chart
 
             document.querySelectorAll(".form-check-input").forEach(cb => {
@@ -5744,6 +5899,7 @@
                 labelDTDiff.classList.toggle("is-ideal", difference < 0);
             }
 
+            reapplyUddfOverlay(); // keep an uploaded real-dive log visible across What If? toggles
             profileChartInstance.update(); // Refresh chart
 
             document.querySelectorAll(".form-check-input").forEach(cb => {
@@ -5831,6 +5987,7 @@
                 labelDTDiff.classList.toggle("is-ideal", difference < 0);
             }
 
+            reapplyUddfOverlay(); // keep an uploaded real-dive log visible across What If? toggles
             profileChartInstance.update(); // Refresh chart
 
             document.querySelectorAll(".form-check-input").forEach(cb => {
@@ -5920,6 +6077,7 @@
                 labelDTDiff.classList.toggle("is-ideal", difference < 0);
             }
 
+            reapplyUddfOverlay(); // keep an uploaded real-dive log visible across What If? toggles
             profileChartInstance.update(); // Refresh chart
 
             document.querySelectorAll(".form-check-input").forEach(cb => {
@@ -6010,6 +6168,7 @@
                 labelDTDiff.classList.toggle("is-ideal", difference < 0);
             }
 
+            reapplyUddfOverlay(); // keep an uploaded real-dive log visible across What If? toggles
             profileChartInstance.update(); // Refresh chart
 
             document.querySelectorAll(".form-check-input").forEach(cb => {
@@ -6118,6 +6277,7 @@
                 labelDTDiff.classList.toggle("is-ideal", difference < 0);
             }
 
+            reapplyUddfOverlay(); // keep an uploaded real-dive log visible across What If? toggles
             profileChartInstance.update(); // Refresh chart
 
             // update gas consumption
