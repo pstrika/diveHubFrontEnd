@@ -1173,6 +1173,26 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
   opacity: .6;
 }
 
+/* Same themed checkbox as .dh-comms above (dark checked state instead of
+   Material Dashboard's default pink, visible border), reusable anywhere
+   a plain on/off checkbox is wanted instead of the pill-shaped
+   .form-switch toggle (Pablo, 2026-09-22, group settings modal: "Use the
+   same checkbox you used in the image attached and eliminate the
+   toggles"). Add .dh-check to the input and drop .form-switch from its
+   wrapping .form-check div. */
+.dh-check.form-check-input {
+  border: 1px solid var(--dh-muted) !important;
+}
+.dh-check.form-check-input:checked {
+  background-color: var(--dh-deep) !important;
+  background-image: none !important;
+  border-color: var(--dh-deep) !important;
+}
+.dh-check.form-check-input:disabled {
+  border-color: var(--dh-line) !important;
+  opacity: .6;
+}
+
 /* Guest prompt: create an account or sign in, side by side and stacking on phones. */
 .dh-guest-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: var(--dh-space-3); }
 

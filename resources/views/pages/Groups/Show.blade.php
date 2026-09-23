@@ -81,33 +81,33 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" name="reminders_enabled" value="1" id="remindersEnabledInput" {{ $group->reminders_enabled ? 'checked' : '' }}>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input dh-check" type="checkbox" name="reminders_enabled" value="1" id="remindersEnabledInput" {{ $group->reminders_enabled ? 'checked' : '' }}>
                             <label class="form-check-label" for="remindersEnabledInput">
                                 Email trip reminders (3 days and 1 day before an upcoming dive)
                             </label>
                         </div>
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" name="digest_enabled" value="1" id="digestEnabledInput" {{ $group->digest_enabled ? 'checked' : '' }}>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input dh-check" type="checkbox" name="digest_enabled" value="1" id="digestEnabledInput" {{ $group->digest_enabled ? 'checked' : '' }}>
                             <label class="form-check-label" for="digestEnabledInput">
                                 Email activity digest (Wednesdays, Fridays and Sundays - new members, chat, trips)
                             </label>
                         </div>
-                        <div class="form-check form-switch mb-4">
-                            <input class="form-check-input" type="checkbox" name="allow_members_add_dives" value="1" id="allowMembersAddDivesInput" {{ $group->allow_members_add_dives ? 'checked' : '' }}>
+                        <div class="form-check mb-4">
+                            <input class="form-check-input dh-check" type="checkbox" name="allow_members_add_dives" value="1" id="allowMembersAddDivesInput" {{ $group->allow_members_add_dives ? 'checked' : '' }}>
                             <label class="form-check-label" for="allowMembersAddDivesInput">
                                 Allow any member to add dives (otherwise only admins can)
                             </label>
                         </div>
-                        <div class="form-check form-switch mb-1">
-                            <input class="form-check-input" type="checkbox" name="is_public" value="1" id="isPublicInput" {{ $group->is_public ? 'checked' : '' }}>
+                        <div class="form-check mb-1">
+                            <input class="form-check-input dh-check" type="checkbox" name="is_public" value="1" id="isPublicInput" {{ $group->is_public ? 'checked' : '' }}>
                             <label class="form-check-label" for="isPublicInput">
                                 Public group - anyone can find and join, no invitation needed
                             </label>
                         </div>
                         <p class="text-xs text-secondary mt-n2 mb-4">Everything else about the group (who can add dives, notifications) stays exactly as configured above. You can only be an admin of one public group at a time.</p>
-                        <div class="form-check form-switch mb-4">
-                            <input class="form-check-input" type="checkbox" name="notifications_muted" value="1" id="notificationsMutedInput" {{ $group->notifications_muted ? 'checked' : '' }}>
+                        <div class="form-check mb-4">
+                            <input class="form-check-input dh-check" type="checkbox" name="notifications_muted" value="1" id="notificationsMutedInput" {{ $group->notifications_muted ? 'checked' : '' }}>
                             <label class="form-check-label" for="notificationsMutedInput">
                                 Mute all notifications for every member (overrides everyone's own bell toggle)
                             </label>
