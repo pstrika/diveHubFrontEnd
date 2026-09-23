@@ -231,7 +231,10 @@
                                                     @endif
                                                 </span>
                                                 <span class="dh-group-text">
-                                                    <span class="dh-group-name do-not-translate">{{ $group->name }}</span>
+                                                    <span class="d-flex align-items-center gap-2" style="min-width: 0;">
+                                                        <span class="dh-group-name do-not-translate" style="min-width: 0;">{{ $group->name }}</span>
+                                                        <span style="flex: 0 0 auto;">@include('pages.Groups.partials.VisibilityPill')</span>
+                                                    </span>
                                                     <span class="dh-group-meta">
                                                         {{ $group->active_members_count }} {{ $group->active_members_count === 1 ? 'member' : 'members' }}
                                                         @if($next)
