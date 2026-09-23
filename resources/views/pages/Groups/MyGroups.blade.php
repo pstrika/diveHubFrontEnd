@@ -61,7 +61,10 @@
                                         @endif
                                     </span>
                                     <span class="dh-group-info">
-                                        <span class="dh-group-name">{{ $group->name }}</span>
+                                        <span class="d-flex align-items-center gap-2" style="min-width: 0;">
+                                            <span class="dh-group-name" style="min-width: 0;">{{ $group->name }}</span>
+                                            <span style="flex: 0 0 auto;">@include('pages.Groups.partials.VisibilityPill')</span>
+                                        </span>
                                         <span class="dh-group-meta">{{ $groupMemberCount }} {{ Str::plural('member', $groupMemberCount) }}</span>
                                     </span>
                                     <span class="dh-group-avatars">

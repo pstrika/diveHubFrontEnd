@@ -382,9 +382,14 @@
             <section class="dh-group-facts">
                 <div class="dh-group-facts-main">
                     @if($group->avatar)
-                        <a href="javascript:;" data-bs-toggle="modal" data-bs-target="#modalCallingCardFull" class="dh-group-facts-avatar">
-                            <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}">
-                        </a>
+                        <div>
+                            <a href="javascript:;" data-bs-toggle="modal" data-bs-target="#modalCallingCardFull" class="dh-group-facts-avatar">
+                                <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}">
+                            </a>
+                            <div class="text-center mt-2">
+                                @include('pages.Groups.partials.VisibilityPill')
+                            </div>
+                        </div>
                     @endif
                     <div>
                         <h1 class="dh-group-facts-title">
