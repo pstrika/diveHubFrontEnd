@@ -53,6 +53,7 @@ Route::get('cron/send-group-activity-digest', [\App\Http\Controllers\CronControl
 Route::get('cron/detect-cancelled-trips', [\App\Http\Controllers\CronController::class, 'detectCancelledTrips']);
 Route::get('cron/send-scheduled-newsletters', [\App\Http\Controllers\CronController::class, 'sendScheduledNewsletters']);
 Route::get('cron/sync-support-inbox', [\App\Http\Controllers\CronController::class, 'syncSupportInbox']);
+Route::get('cron/apply-group-auto-add-rules', [\App\Http\Controllers\CronController::class, 'applyGroupAutoAddRules']);
 
 // Newsletter one-click unsubscribe/resubscribe - reached from a signed link
 // in the email itself, not a logged-in session (the diver may be reading
@@ -683,6 +684,7 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::post('Groups/{group}/messages', 'App\Http\Controllers\GroupMessageController@store')->name('Groups.messages.store');
 	Route::get('Groups/{group}/messages/poll', 'App\Http\Controllers\GroupMessageController@poll')->name('Groups.messages.poll');
 	Route::post('Groups/{group}/settings', 'App\Http\Controllers\GroupController@updateSettings')->name('Groups.updateSettings');
+	Route::post('Groups/{group}/auto-add-rule', 'App\Http\Controllers\GroupAutoAddRuleController@update')->name('Groups.autoAddRule.update');
 	Route::post('Groups/{group}/info', 'App\Http\Controllers\GroupController@updateInfo')->name('Groups.updateInfo');
 	Route::get('Groups/{group}/sites/search', 'App\Http\Controllers\GroupController@searchSites')->name('Groups.sites.search');
 

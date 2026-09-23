@@ -229,7 +229,16 @@ class GroupController extends Controller
             ? app(GroupFacebookController::class)->getRecentPosts($group)
             : [];
 
-        return view('pages.Groups.Show', compact('group', 'isAdmin', 'myMembership', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'addDiveSite', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'operators', 'favoriteOperatorIds', 'fbFeed', 'SEO'));
+        // Auto-add rule (Pablo, 2026-09-22) - admin-only, same as the
+        // settings modal's favorite operators. $ruleSites resolves the
+        // rule's saved site_ids to names for the chip picker's initial
+        // state; operator names come from $operators, already loaded above.
+        $autoAddRule = $isAdmin ? $group->autoAddRule : null;
+        $ruleSites = $isAdmin && !empty($autoAddRule?->site_ids)
+            ? \App\Models\Site::whereIn('id', $autoAddRule->site_ids)->get(['id', 'name'])
+            : collect();
+
+        return view('pages.Groups.Show', compact('group', 'isAdmin', 'myMembership', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'addDiveSite', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'operators', 'favoriteOperatorIds', 'fbFeed', 'autoAddRule', 'ruleSites', 'SEO'));
     }
 
     /**

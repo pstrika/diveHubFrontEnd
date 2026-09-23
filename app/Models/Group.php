@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Group extends Model
 {
@@ -100,6 +101,11 @@ class Group extends Model
     public function dives(): HasMany
     {
         return $this->hasMany(GroupDive::class, 'group_id');
+    }
+
+    public function autoAddRule(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(GroupAutoAddRule::class, 'group_id');
     }
 
     public function messages(): HasMany

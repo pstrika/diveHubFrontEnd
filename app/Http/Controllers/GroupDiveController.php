@@ -6,9 +6,8 @@ use App\Models\Event;
 use App\Models\Group;
 use App\Models\GroupDive;
 use App\Models\GroupDiveRsvp;
-use App\Models\Photo;
 use App\Models\Trip;
-use App\Services\NotificationService;
+use App\Services\GroupDiveService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -41,21 +40,10 @@ class GroupDiveController extends Controller
             return redirect()->back()->with('msg', 'That trip is already on this group\'s calendar.');
         }
 
-        $dive = GroupDive::create([
-            'group_id' => $group->id,
-            'created_by' => auth()->user()->id,
-            'operatorId' => $trip->operatorId,
-            'date' => $trip->date,
-            'time' => $trip->departureTime,
-            'tripName' => $trip->tripName,
-            'siteId' => !empty($trip->site[0]) ? $trip->site[0]->id : null,
-            'notes' => $request->notes,
-        ]);
+        $dive = (new GroupDiveService())->createFromTrip($group, $trip, auth()->user()->id, $request->notes);
 
         // The person who added the dive is automatically going.
         $this->addRsvp($dive, auth()->user()->id);
-        $this->postDiveToFacebook($group, $dive);
-        $this->notifyNewDive($group, $dive);
 
         return redirect()->route('Groups.show', ['group' => $group->slug])
             ->with('msg', 'Dive added to the group calendar!');
@@ -102,8 +90,9 @@ class GroupDiveController extends Controller
         ]);
 
         $this->addRsvp($dive, auth()->user()->id);
-        $this->postDiveToFacebook($group, $dive);
-        $this->notifyNewDive($group, $dive);
+        $diveService = new GroupDiveService();
+        $diveService->postDiveToFacebook($group, $dive);
+        $diveService->notifyNewDive($group, $dive, auth()->user()->id);
 
         return redirect()->route('Groups.show', ['group' => $group->slug])
             ->with('msg', 'Custom dive added to the group calendar!');
@@ -201,75 +190,6 @@ class GroupDiveController extends Controller
     }
 
     /**
-     * Best-effort announcement to the group's linked Facebook Page, if any.
-     * Must never block adding the dive - a broken/revoked Page token or a
-     * Graph API hiccup just gets logged. Posts as a photo (site photo, then
-     * operator logo) when one is available, since photo posts get more
-     * reach/engagement; falls back to a plain text post otherwise (e.g. a
-     * custom dive with neither a known site nor operator).
-     */
-    private function postDiveToFacebook(Group $group, GroupDive $dive)
-    {
-        if (!$group->isFacebookConnected() || !$group->fb_auto_post) {
-            return;
-        }
-
-        try {
-            $when = \Carbon\Carbon::parse($dive->date)->format('l, F j') . ($dive->time ? ' at ' . $dive->time : '');
-            $message = "New dive added to \"{$group->name}\": {$dive->tripName}\n{$when}\n\n"
-                . route('Groups.show', ['group' => $group->slug]);
-
-            $imageUrl = $this->resolveDiveImageUrl($dive);
-
-            if ($imageUrl) {
-                $response = Http::post('https://graph.facebook.com/' . GroupFacebookController::GRAPH_VERSION . '/' . $group->fb_page_id . '/photos', [
-                    'url' => $imageUrl,
-                    'caption' => $message,
-                    'access_token' => $group->fb_page_access_token,
-                ]);
-            } else {
-                $response = Http::post('https://graph.facebook.com/' . GroupFacebookController::GRAPH_VERSION . '/' . $group->fb_page_id . '/feed', [
-                    'message' => $message,
-                    'access_token' => $group->fb_page_access_token,
-                ]);
-            }
-
-            if ($response->failed()) {
-                Log::error('Facebook post failed for group ' . $group->id . ': ' . $response->body());
-                return;
-            }
-
-            $postId = $response->json('post_id') ?? $response->json('id');
-            if ($postId) {
-                $dive->update(['fb_post_id' => $postId]);
-            }
-        } catch (\Throwable $e) {
-            Log::error('Facebook post exception for group ' . $group->id . ': ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Picks the most relevant public image URL for a dive's Facebook post:
-     * a photo of the dive site, then the operator's logo, or null (post
-     * plain text) when neither is available - e.g. a custom dive.
-     */
-    private function resolveDiveImageUrl(GroupDive $dive): ?string
-    {
-        if ($dive->siteId) {
-            $sitePhoto = Photo::where('siteId', $dive->siteId)->first();
-            if ($sitePhoto) {
-                return asset('assets') . '/img/sites/' . $sitePhoto->file;
-            }
-        }
-
-        if ($dive->operator && $dive->operator->logoUrl) {
-            return asset('assets') . $dive->operator->logoUrl;
-        }
-
-        return null;
-    }
-
-    /**
      * Best-effort removal of the Facebook post when its dive is deleted.
      * Same non-blocking contract as postDiveToFacebook().
      */
@@ -290,26 +210,6 @@ class GroupDiveController extends Controller
         } catch (\Throwable $e) {
             Log::error('Facebook post delete exception for dive ' . $dive->id . ': ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Notifies every other active member of the group - both the in-app
-     * notification center and a browser push. Best-effort -
-     * NotificationService swallows its own failures.
-     */
-    private function notifyNewDive(Group $group, GroupDive $dive)
-    {
-        $when = \Carbon\Carbon::parse($dive->date)->format('D, M j') . ($dive->time ? ' at ' . $dive->time : '');
-
-        NotificationService::notify(
-            $group->activeMembers()->pluck('user_id'),
-            $group->name,
-            'New dive added: ' . $dive->tripName . ' - ' . $when,
-            route('Groups.show', ['group' => $group->slug]),
-            auth()->user()->id,
-            auth()->user()->id,
-            $group->id
-        );
     }
 
     /**

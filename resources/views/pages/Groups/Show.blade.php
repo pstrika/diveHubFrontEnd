@@ -160,6 +160,11 @@
     </div>
     @endif
 
+    {{--auto-add rule modal--}}
+    @if($isAdmin)
+        @include('pages.Groups.partials.AutoAddRuleModal')
+    @endif
+
     {{--add dive modal--}}
     <div class="modal fade" id="modalAddDive" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -422,6 +427,9 @@
                     @if($isAdmin)
                     <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-toggle="modal" data-bs-target="#modalGroupSettings">
                         <span class="material-icons-round" aria-hidden="true">settings</span>Settings
+                    </button>
+                    <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-toggle="modal" data-bs-target="#modalAutoAddRule">
+                        <span class="material-icons-round" aria-hidden="true">rule</span>Auto-add rule
                     </button>
                     <form method="POST" action="{{ route('Groups.destroy', ['group' => $group->slug]) }}" class="d-inline"
                         onsubmit="return confirm('Delete &quot;{{ $group->name }}&quot; permanently? This removes all dives, RSVPs and chat history for every member. This cannot be undone.');">

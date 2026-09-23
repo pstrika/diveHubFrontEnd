@@ -89,4 +89,22 @@ class CronController extends Controller
 
         return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
     }
+
+    /**
+     * Every 30 minutes, triggered by an Azure Logic App
+     * (divehub-apply-group-auto-add-rules) - trips are scraped continuously
+     * throughout the day by a process outside this repo, so this is a
+     * periodic scan rather than a live hook (Pablo, 2026-09-22). See
+     * ApplyGroupAutoAddRules / GroupAutoAddRule::matches().
+     */
+    public function applyGroupAutoAddRules(Request $request)
+    {
+        if (!hash_equals((string) env('CRON_SECRET'), (string) $request->query('secret'))) {
+            abort(403);
+        }
+
+        Artisan::call('groups:apply-auto-rules');
+
+        return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
+    }
 }
