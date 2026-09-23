@@ -46,17 +46,18 @@ class ApplyGroupAutoAddRules extends Command
         // a location code, and without this that's a lazy-loaded query
         // per trip - a real N+1 across a couple thousand upcoming trips.
         //
-        // siteIdStatus 'suggested' trips are included alongside 'confirmed'
-        // ones (Pablo, 2026-09-23: "there are suggested sites for a given
-        // trip. If the levels for those suggested sites comply with the
-        // rule, I want them added") - GroupAutoAddRule::tripHasLevel() and
-        // tripSiteIds() already read trips.siteId directly regardless of
-        // status, so this is the only change needed for that data to reach
-        // the matcher. Blank/null-status trips stay excluded: confirmed via
-        // tinker that every one of them has an empty siteId - there's no
-        // site data to match against yet, unlike 'suggested' ones.
+        // No siteIdStatus filter, on purpose (Pablo, 2026-09-24: "the group
+        // for lobster is still not picking up the trips" - every real
+        // lobster trip from a real rule's operators turned out to have a
+        // BLANK siteIdStatus and no siteId at all, so the previous
+        // 'confirmed'/'suggested' filter here excluded them before
+        // GroupAutoAddRule::matches() - specifically its LEVEL_ALL bypass,
+        // which needs no site data at all - ever got a chance to run).
+        // Safe to include every status: for a rule using real levels/sites,
+        // tripHasLevel()/tripSiteIds() already return false on a trip with
+        // no site data, so nothing new incorrectly matches - only LEVEL_ALL
+        // rules actually gain reach from this.
         $trips = Trip::where('date', '>=', now()->toDateString())
-            ->whereIn('siteIdStatus', ['confirmed', 'suggested'])
             ->with('operator')
             ->get();
 
