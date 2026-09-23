@@ -695,6 +695,51 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-photo-modal img { width: 100%; height: auto; max-height: 85vh; object-fit: contain; border-radius: var(--dh-radius); }
 .dh-photo-modal-close { position: absolute; top: -12px; right: -12px; background: #fff; border-radius: 50%; opacity: 1; padding: 8px; z-index: 1; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
 
+/* Diver-uploaded site pictures (Pablo, 2026-09-23) - a 2x2 mosaic, paged
+   4-at-a-time via horizontal scroll-snap when there are more than 4
+   ("a carrousel of 4 pictures swiping right"). */
+.dh-diver-carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: var(--dh-space-3); -webkit-overflow-scrolling: touch; }
+.dh-diver-carousel::-webkit-scrollbar { display: none; }
+.dh-diver-page { flex: 0 0 100%; scroll-snap-align: start; display: grid; grid-template-columns: 1fr 1fr; gap: var(--dh-space-2); }
+.dh-diver-tile-figure { margin: 0; }
+.dh-diver-tile { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
+.dh-diver-tile img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--dh-radius); display: block; }
+.dh-diver-tile-caption { display: flex; justify-content: space-between; gap: 6px; font-size: .72rem; color: var(--dh-muted); margin-top: 4px; }
+.dh-diver-tile-name { font-weight: 700; color: var(--dh-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dh-diver-carousel-hint { display: flex; align-items: center; gap: 4px; justify-content: center; font-size: .72rem; color: var(--dh-muted); margin: 8px 0 0; }
+.dh-diver-carousel-hint .material-icons-round { font-size: 16px; }
+
+/* Full-size diver photo modal - overlay credit bar over the picture
+   (Pablo, 2026-09-23: "Overlay name, avatar and date over the picture"). */
+.dh-diver-modal-frame { position: relative; }
+.dh-diver-modal-overlay { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 0 0 var(--dh-radius) var(--dh-radius); background: linear-gradient(0deg, rgba(0,0,0,.75), rgba(0,0,0,0)); }
+.dh-diver-modal-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; flex: 0 0 auto; }
+.dh-diver-modal-text { display: flex; flex-direction: column; min-width: 0; }
+.dh-diver-modal-name { color: #fff; font-weight: 700; font-size: .9rem; }
+.dh-diver-modal-date { color: rgba(255,255,255,.85); font-size: .72rem; }
+
+/* Bottom banner nudging a contribution on sites with few pictures yet
+   (Pablo, 2026-09-23: "a pop up banner coming from the bottom"). */
+.dh-bottom-banner { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 1050; display: flex; align-items: center; gap: 10px; background: var(--dh-deep); color: #fff; border-radius: var(--dh-radius); padding: 12px 14px; box-shadow: 0 8px 24px rgba(0,0,0,.25); animation: dh-banner-up .3s ease; }
+.dh-bottom-banner-text { flex: 1 1 auto; font-size: .85rem; font-weight: 600; }
+.dh-bottom-banner-dismiss { background: none; border: 0; color: rgba(255,255,255,.8); padding: 4px; cursor: pointer; flex: 0 0 auto; }
+.dh-bottom-banner-dismiss:hover { color: #fff; }
+@keyframes dh-banner-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@media (max-width: 576px) { .dh-bottom-banner { flex-wrap: wrap; } .dh-bottom-banner-text { width: 100%; } }
+
+/* "My uploaded pictures" on the profile overview page. */
+.dh-my-photos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--dh-space-3); }
+.dh-my-photo { margin: 0; position: relative; }
+.dh-my-photo img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--dh-radius); display: block; }
+.dh-my-photo figcaption { display: flex; flex-direction: column; font-size: .72rem; color: var(--dh-muted); margin-top: 4px; }
+.dh-my-photo figcaption a { color: var(--dh-ink); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dh-my-photo-date { color: var(--dh-muted); }
+.dh-my-photo-status { position: absolute; top: 6px; left: 6px; }
+.dh-my-photo-remove { position: absolute; top: 6px; right: 6px; margin: 0; }
+.dh-my-photo-remove button { background: rgba(0,0,0,.55); border: 0; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.dh-my-photo-remove button:hover { background: var(--dh-poor); }
+.dh-my-photo-remove .material-icons-round { font-size: 16px; }
+
 /* Platform Health (admin). */
 .dh-health-table-wrap { overflow-x: auto; padding: 0; }
 .dh-health-table { width: 100%; border-collapse: collapse; font-size: .85rem; white-space: nowrap; }

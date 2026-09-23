@@ -272,6 +272,11 @@ Route::post('UpdateVisited', 'App\Http\Controllers\SiteController@updateVisited'
 Route::get('UpdateWished/{siteId}', 'App\Http\Controllers\SiteController@updateWished')->middleware('auth')->name('UpdateWished');
 Route::post('AddSiteReview/{siteId}', 'App\Http\Controllers\SiteController@addReview')->middleware('auth')->name('AddSiteReview');
 
+// Diver-uploaded site pictures (Pablo, 2026-09-23) - upload/remove need a
+// real account, not the guest shim SiteDetails itself uses.
+Route::post('DiverPhotos/{siteId}', 'App\Http\Controllers\DiverPhotoController@store')->middleware('auth')->name('DiverPhotos.store');
+Route::delete('DiverPhotos/{diverPhoto}', 'App\Http\Controllers\DiverPhotoController@destroy')->middleware('auth')->name('DiverPhotos.destroy');
+
 Route::get('DiveSites', 'App\Http\Controllers\SiteController@showTopRated')->middleware('guest')->name('DiveSites');
 
 // Blog (2026-09-17): visual design pass only, mock content in
@@ -328,6 +333,13 @@ Route::get('DiveSitesMap', fn () => redirect()->route('DiveSites', ['view' => 'm
 // "Show me all sites" was a plain table of the catalog; the explorer sorted A to Z is that list. Noindex before, so a 301 costs nothing.
 Route::get('DiveSitesAll', fn () => redirect()->route('DiveSites', ['sort' => 'name'] + request()->query(), 301))->name('DiveSitesAll');
 Route::get('DiveSitesAdmin', 'App\Http\Controllers\SiteController@showAllAdmin')->middleware('auth')->name('DiveSitesAdmin');
+
+// Picture Management admin console (Pablo, 2026-09-23) - approve/reject
+// diver-uploaded site pictures, and a history to remove any of them later.
+Route::get('DiverPhotos-Admin', 'App\Http\Controllers\DiverPhotoAdminController@index')->middleware('auth')->name('DiverPhotos.manage.index');
+Route::post('DiverPhotos-Admin/{photo}/approve', 'App\Http\Controllers\DiverPhotoAdminController@approve')->middleware('auth')->name('DiverPhotos.manage.approve');
+Route::post('DiverPhotos-Admin/{photo}/reject', 'App\Http\Controllers\DiverPhotoAdminController@reject')->middleware('auth')->name('DiverPhotos.manage.reject');
+Route::delete('DiverPhotos-Admin/{photo}', 'App\Http\Controllers\DiverPhotoAdminController@destroy')->middleware('auth')->name('DiverPhotos.manage.destroy');
 Route::post('Calculate-ndl', 'App\Http\Controllers\NDLController@calculateNDL')->middleware('guest')->name('Calculate-ndl');
 Route::post('calculateDecoProfile', 'App\Http\Controllers\NDLController@calculateDecoProfile')->middleware('guest')->name('calculateDecoProfile');
 

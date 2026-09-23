@@ -386,6 +386,40 @@
                     @endif
                 </div>
 
+                {{-- Diver-uploaded picture full-size modal - separate from
+                     #dh-photo-modal above because this one overlays the
+                     uploader's name, avatar and date on the picture itself
+                     (Pablo, 2026-09-23: "show the full size picture on a
+                     modal with the name and avatar of the member that
+                     uploaded... Overlay name, avatar and date over the
+                     picture"). --}}
+                <div class="modal fade dh-photo-modal" id="dh-diver-photo-modal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content">
+                            <button type="button" class="btn-close dh-photo-modal-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <div class="dh-diver-modal-frame">
+                                <img id="dh-diver-photo-modal-img" src="" alt="">
+                                <div class="dh-diver-modal-overlay">
+                                    <img id="dh-diver-photo-modal-avatar" class="dh-diver-modal-avatar" src="" alt="">
+                                    <span class="dh-diver-modal-text">
+                                        <span id="dh-diver-photo-modal-name" class="dh-diver-modal-name do-not-translate"></span>
+                                        <span id="dh-diver-photo-modal-date" class="dh-diver-modal-date"></span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    document.getElementById('dh-diver-photo-modal')?.addEventListener('show.bs.modal', function (e) {
+                        var t = e.relatedTarget;
+                        document.getElementById('dh-diver-photo-modal-img').src = t.getAttribute('data-photo-src');
+                        document.getElementById('dh-diver-photo-modal-avatar').src = t.getAttribute('data-uploader-avatar');
+                        document.getElementById('dh-diver-photo-modal-name').textContent = t.getAttribute('data-uploader-name');
+                        document.getElementById('dh-diver-photo-modal-date').textContent = t.getAttribute('data-uploaded-date');
+                    });
+                </script>
+
                 <div class="col-lg-4 px-0">
                     <section class="dh-panel">
                         <h2 class="dh-panel-title">Where it is</h2>
@@ -1075,10 +1109,123 @@
 
             <div class="row mx-0">
                 <div class="col-md-6 px-0 pe-md-2">
-                    <section class="dh-panel">
-                        <h2 class="dh-panel-title">Divers' uploaded pictures</h2>
-                        Coming soon!
+                    <section class="dh-panel" id="diver-photos">
+                        <div class="dh-panel-head-row">
+                            <h2 class="dh-panel-title mb-0">Divers' uploaded pictures</h2>
+                            @if(auth()->user()->isNotGuest())
+                                <button type="button" class="dh-btn dh-btn-primary" data-bs-toggle="modal" data-bs-target="#dh-upload-diver-photo-modal">
+                                    <span class="material-icons-round" aria-hidden="true">add_a_photo</span>Add a picture
+                                </button>
+                            @endif
+                        </div>
+
+                        @if($diverPhotos->isEmpty())
+                            <p class="text-secondary text-sm mb-0">
+                                No diver pictures yet.
+                                @if(auth()->user()->isNotGuest())
+                                    Be the first to add one!
+                                @endif
+                            </p>
+                        @else
+                            <div class="dh-diver-carousel" id="dh-diver-carousel">
+                                @foreach($diverPhotos->chunk(4) as $page)
+                                    <div class="dh-diver-page">
+                                        @foreach($page as $p)
+                                            @php
+                                                $uploaderName = $p->user->name ?? 'A diver';
+                                                $uploaderAvatar = ($p->user && $p->user->picture)
+                                                    ? asset('assets') . '/img/users/' . $p->user->picture
+                                                    : asset('assets') . '/img/default-avatar.png';
+                                                $uploadedDate = $p->created_at->format('M j, Y');
+                                            @endphp
+                                            <figure class="dh-diver-tile-figure">
+                                                <button type="button" class="dh-diver-tile" data-bs-toggle="modal" data-bs-target="#dh-diver-photo-modal"
+                                                    data-photo-src="{{ \App\Support\SitePhoto::web($p->file) }}"
+                                                    data-uploader-name="{{ $uploaderName }}"
+                                                    data-uploader-avatar="{{ $uploaderAvatar }}"
+                                                    data-uploaded-date="{{ $uploadedDate }}">
+                                                    <img src="{{ \App\Support\SitePhoto::thumb($p->file) }}" alt="{{ $site->name }} - photo by {{ $uploaderName }}" loading="lazy">
+                                                </button>
+                                                <figcaption class="dh-diver-tile-caption">
+                                                    <span class="dh-diver-tile-name do-not-translate">{{ $uploaderName }}</span>
+                                                    <span class="dh-diver-tile-date">{{ $uploadedDate }}</span>
+                                                </figcaption>
+                                            </figure>
+                                        @endforeach
+                                    </div>
+                                @endforeach
+                            </div>
+                            @if($diverPhotos->count() > 4)
+                                <p class="dh-diver-carousel-hint">
+                                    <span class="material-icons-round" aria-hidden="true">swipe</span>Swipe for more
+                                </p>
+                            @endif
+                        @endif
                     </section>
+
+                    {{-- Upload note (Pablo, 2026-09-23: "Before submitting the picture,
+                         add a note that pictures will be public. Warn about
+                         inappropriate content"). --}}
+                    @if(auth()->user()->isNotGuest())
+                        <div class="modal fade" id="dh-upload-diver-photo-modal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title font-weight-normal">Add a picture of {{ $site->name }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form method="POST" action="{{ route('DiverPhotos.store', ['siteId' => $site->id]) }}" enctype="multipart/form-data">
+                                        @csrf
+                                        <div class="modal-body">
+                                            <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required class="form-control">
+                                            <p class="text-xs text-secondary mt-2 mb-0">JPG, PNG or WebP, up to 8 MB.</p>
+                                            <p class="dh-comms-note dh-comms-warn mt-3">
+                                                <span class="material-icons-round" aria-hidden="true">info</span>
+                                                Your picture will be shown publicly on this site's page once approved. Inappropriate content will be rejected or removed.
+                                            </p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="dh-btn dh-btn-primary">Submit for review</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Bottom banner nudging a contribution when this site has few
+                             pictures yet (Pablo, 2026-09-23: "if a site has less than 4
+                             diver's uploaded pictures, invite the user to contribute...
+                             a pop up banner coming from the bottom"). Dismiss is
+                             remembered per site so it doesn't nag every visit. --}}
+                        @if($diverPhotos->count() < 4)
+                            <div class="dh-bottom-banner" id="dh-diver-photo-banner" hidden>
+                                <span class="material-icons-round" aria-hidden="true">add_a_photo</span>
+                                <span class="dh-bottom-banner-text">Been to {{ $site->name }}? Share your photos with other divers!</span>
+                                <button type="button" class="dh-btn dh-btn-primary" data-bs-toggle="modal" data-bs-target="#dh-upload-diver-photo-modal">Add a picture</button>
+                                <button type="button" class="dh-bottom-banner-dismiss" id="dh-diver-photo-banner-dismiss" aria-label="Dismiss">
+                                    <span class="material-icons-round" aria-hidden="true">close</span>
+                                </button>
+                            </div>
+                            <script>
+                                (function () {
+                                    var key = 'dhDiverPhotoBannerDismissed_{{ $site->id }}';
+                                    var banner = document.getElementById('dh-diver-photo-banner');
+                                    var dismiss = document.getElementById('dh-diver-photo-banner-dismiss');
+                                    if (!banner || !dismiss) return;
+                                    var alreadyDismissed = false;
+                                    try { alreadyDismissed = localStorage.getItem(key) === '1'; } catch (e) {}
+                                    if (!alreadyDismissed) {
+                                        setTimeout(function () { banner.hidden = false; }, 1500);
+                                    }
+                                    dismiss.addEventListener('click', function () {
+                                        banner.hidden = true;
+                                        try { localStorage.setItem(key, '1'); } catch (e) {}
+                                    });
+                                })();
+                            </script>
+                        @endif
+                    @endif
                 </div>
 
                 <div class="col-md-6 px-0 ps-md-2">

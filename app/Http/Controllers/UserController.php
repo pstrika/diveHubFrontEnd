@@ -186,7 +186,14 @@ class UserController extends Controller
         $showLevelLow = intval($favoriteLevels[0] ?? 0);
         $showLevelHigh = intval($favoriteLevels[1] ?? 4);
 
-        return view('pages.profile.overview', compact('user', 'operators', 'favOperators', 'locations', 'favLocations', 'showLevelLow', 'showLevelHigh'));
+        // Own diver-uploaded site pictures, any status, so a still-pending
+        // or rejected one is visible here too, not just approved ones
+        // (Pablo, 2026-09-23: "members should also be able to remove their
+        // own pictures... show the mosaics of the pictures, the date and
+        // the site where they were uploaded").
+        $myDiverPhotos = \App\Models\DiverPhoto::where('userId', $user->id)->with('site')->latest()->get();
+
+        return view('pages.profile.overview', compact('user', 'operators', 'favOperators', 'locations', 'favLocations', 'showLevelLow', 'showLevelHigh', 'myDiverPhotos'));
     }
 
     public function updateProfile(Request $request) {

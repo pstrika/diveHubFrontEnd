@@ -219,6 +219,9 @@ class SiteController extends Controller
         Log::debug("This site has upcoming trips:" . count($site->upcomingTrips));
 
         $photos = Photo::where('siteId', $id)->get();
+        // Registered divers' own pictures of this site, approved ones only
+        // (Pablo, 2026-09-23) - see App\Models\DiverPhoto.
+        $diverPhotos = \App\Models\DiverPhoto::where('siteId', $id)->approved()->with('user')->latest()->get();
         $location = WeatherLocation::where('short', $site->location)->first();
 
         $ids = explode(',', $site->visitingOperators);
@@ -263,7 +266,7 @@ class SiteController extends Controller
         $operatorsById = Operator::select('id', 'location', 'phone')->get()->keyBy('id')->all();
         $nextTrips = $trips->take(8)->map(fn ($t) => \App\Support\TripBoard::card($t, $now, $operatorsById))->values()->all();
 
-        return view('pages.SiteDetails', compact('site','photos', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'sites', 'gasMixes', 'forecast', 'nextTrips'));
+        return view('pages.SiteDetails', compact('site','photos', 'diverPhotos', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'sites', 'gasMixes', 'forecast', 'nextTrips'));
 
     }
     public function getMyVisitedSites() {

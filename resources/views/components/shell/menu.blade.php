@@ -131,6 +131,7 @@
         {!! $link('Message management', route('admin.messages.index'), 'forum') !!}
         {!! $link('Article management', route('Blog.manage.index'), 'edit_note') !!}
         {!! $link('Site management', route('DiveSitesAdmin'), 'edit_location_alt') !!}
+        {!! $link('Picture management', route('DiverPhotos.manage.index'), 'photo_camera') !!}
         {!! $link('Newsletter management', route('Newsletter.manage.index'), 'mail') !!}
     </div>
     @endcan
