@@ -122,10 +122,22 @@
             // reapplies the diver's last picks. Any URL that already
             // carries a filter is a deliberate/shared link and is left
             // alone; it just becomes the new memory.
+            //
+            // Date wasn't part of this at all (Pablo, 2026-09-24: "if I set
+            // a date filter, it's not persistent"): range/from/to are query
+            // params like the other filters, so they just needed adding to
+            // FIELDS below - but the single-day picker lives in the URL
+            // PATH (/Trips/{date}), not a query param, so it needs its own
+            // small key and its own redirect-with-path-segment restore.
             var KEY = 'dh-trips-filters';
-            var FIELDS = ['region', 'level', 'type', 'seats', 'op'];
+            var DATE_KEY = 'dh-trips-date';
+            var FIELDS = ['region', 'level', 'type', 'seats', 'op', 'range', 'from', 'to'];
             var params = new URLSearchParams(window.location.search);
             var hasAny = FIELDS.some(function (f) { return params.has(f); });
+
+            var basePath = (new URL(@json(route('Trips')), window.location.origin)).pathname.replace(/\/+$/, '');
+            var currentPath = window.location.pathname.replace(/\/+$/, '');
+            var isBareDay = currentPath === basePath;
 
             // An explicit "Clear filters" click carries this - without it,
             // the restore below would just reapply the very filters the
@@ -133,25 +145,38 @@
             // fixing the above: this is the intended way to lose a
             // saved filter set at all).
             if (params.has('cleared')) {
-                try { localStorage.removeItem(KEY); } catch (e) {}
+                try { localStorage.removeItem(KEY); localStorage.removeItem(DATE_KEY); } catch (e) {}
                 params.delete('cleared');
                 var cleanUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
                 if (cleanUrl !== window.location.pathname + window.location.search) {
                     window.location.replace(cleanUrl);
                     return;
                 }
-            } else if (!hasAny) {
-                var saved = null;
-                try { saved = localStorage.getItem(KEY); } catch (e) {}
+            } else if (!hasAny && isBareDay) {
+                var saved = null, savedDate = null;
+                try {
+                    saved = localStorage.getItem(KEY);
+                    savedDate = localStorage.getItem(DATE_KEY);
+                } catch (e) {}
                 if (saved) {
-                    var restored = false;
                     new URLSearchParams(saved).forEach(function (v, k) {
-                        if (FIELDS.indexOf(k) !== -1) { params.set(k, v); restored = true; }
+                        if (FIELDS.indexOf(k) !== -1) { params.set(k, v); }
                     });
-                    if (restored) {
-                        window.location.replace(window.location.pathname + '?' + params.toString());
-                        return;
-                    }
+                }
+                // A saved range/custom range wins over a saved single day -
+                // they're mutually exclusive modes, and picking a range was
+                // the more recent, more deliberate choice.
+                if (params.has('range') || params.has('from') || params.has('to')) {
+                    window.location.replace(basePath + '?' + params.toString());
+                    return;
+                }
+                if (savedDate) {
+                    window.location.replace(basePath + '/' + savedDate + (params.toString() ? '?' + params.toString() : ''));
+                    return;
+                }
+                if (params.toString()) {
+                    window.location.replace(window.location.pathname + '?' + params.toString());
+                    return;
                 }
             }
 
@@ -160,6 +185,22 @@
                 if (params.has(f)) current.set(f, params.get(f));
             });
             try { localStorage.setItem(KEY, current.toString()); } catch (e) {}
+
+            // Day-mode date is only ever a path segment - save it separately
+            // whenever we're not in range mode (range/from/to already
+            // covered above via FIELDS). Bare (today) always clears any
+            // stale saved date, regardless of whether other filters are
+            // active - otherwise clicking "Today" while a region/level
+            // filter is still on wouldn't stop a later bare landing from
+            // jumping back to the old date.
+            if (!params.has('range') && !params.has('from') && !params.has('to')) {
+                if (isBareDay) {
+                    try { localStorage.removeItem(DATE_KEY); } catch (e) {}
+                } else {
+                    var seg = currentPath.slice(basePath.length).replace(/^\/+/, '');
+                    if (seg) { try { localStorage.setItem(DATE_KEY, seg); } catch (e) {} }
+                }
+            }
         })();
     </script>
     @endpush
