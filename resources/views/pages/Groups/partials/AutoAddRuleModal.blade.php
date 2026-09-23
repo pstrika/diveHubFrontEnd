@@ -40,20 +40,24 @@
                  of the collapsable section (visible even when collapsed)"
                  - kept as a sibling of the collapse-toggle area (not
                  nested inside it), so clicking the checkbox doesn't also
-                 toggle the collapse. --}}
-            <div class="d-flex align-items-center gap-2 {{ $autoAddRule ? '' : 'collapsed' }}" style="cursor: pointer; min-width: 0;" data-bs-toggle="collapse" data-bs-target="#autoAddRuleBody" role="button" aria-expanded="{{ $autoAddRule ? 'true' : 'false' }}" aria-controls="autoAddRuleBody">
-                <span class="material-icons-round dh-collapse-chevron" aria-hidden="true">expand_more</span>
-                <div>
-                    <label class="form-label mb-0" style="cursor: pointer;">Auto-add rule</label>
-                    <p class="text-xs text-secondary mt-n1 mb-0">
-                        A trip is added automatically when it has one of the trip types, AND matches
-                        an operator or location, AND matches a level or site. Checked every 30 minutes.
-                    </p>
-                </div>
+                 toggle the collapse. The chevron is its own second
+                 trigger for the same target, at the far right of the row
+                 (Pablo: "the collapsing buttons (>) put the both aligned
+                 to the right in both collapsable sections") - Bootstrap
+                 supports more than one trigger per collapse target. --}}
+            <div style="cursor: pointer; min-width: 0;" data-bs-toggle="collapse" data-bs-target="#autoAddRuleBody" role="button" aria-expanded="{{ $autoAddRule ? 'true' : 'false' }}" aria-controls="autoAddRuleBody">
+                <label class="dh-settings-section-title mb-0" style="cursor: pointer;">Auto-add rule</label>
+                <p class="text-xs text-secondary mt-n1 mb-0">
+                    A trip is added automatically when it has one of the trip types, AND matches
+                    an operator or location, AND matches a level or site. Checked every 30 minutes.
+                </p>
             </div>
-            <div class="form-check mb-0" style="flex: 0 0 auto;">
-                <input class="form-check-input dh-check" type="checkbox" name="enabled" value="1" id="autoAddRuleEnabledInput" {{ ($autoAddRule->enabled ?? false) ? 'checked' : '' }}>
-                <label class="form-check-label" for="autoAddRuleEnabledInput">Rule enabled</label>
+            <div class="d-flex align-items-center gap-3" style="flex: 0 0 auto;">
+                <div class="form-check mb-0">
+                    <input class="form-check-input dh-check" type="checkbox" name="enabled" value="1" id="autoAddRuleEnabledInput" {{ ($autoAddRule->enabled ?? false) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="autoAddRuleEnabledInput">Rule enabled</label>
+                </div>
+                <span class="material-icons-round dh-collapse-chevron {{ $autoAddRule ? '' : 'collapsed' }}" aria-hidden="true" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#autoAddRuleBody" role="button" aria-expanded="{{ $autoAddRule ? 'true' : 'false' }}" aria-controls="autoAddRuleBody">expand_more</span>
             </div>
         </div>
 
@@ -61,7 +65,7 @@
             <div class="pt-3">
                 {{-- Trip type --}}
                 <div class="dh-rule-box dh-rule-outer">
-                    <label class="form-label">Trip type</label>
+                    <label class="dh-rule-field-label">Trip type</label>
                     <div class="d-flex flex-wrap gap-2" id="ruleTripTypeChips">
                         @foreach(\App\Models\GroupAutoAddRule::TRIP_TYPES as $type)
                             <button type="button" class="chip {{ in_array($type, $selectedTypes, true) ? 'chip-on' : '' }}" data-rule-type="{{ $type }}">{{ ucfirst(strtolower($type)) }}</button>
@@ -76,7 +80,7 @@
                 <div class="dh-rule-box dh-rule-outer">
                     <div class="dh-rule-or-row">
                         <div class="dh-rule-box">
-                            <label class="form-label">Operators <span class="text-xs text-secondary">(up to {{ \App\Models\GroupAutoAddRule::MAX_OPERATORS }})</span></label>
+                            <label class="dh-rule-field-label">Operators <span class="text-xs text-secondary">(up to {{ \App\Models\GroupAutoAddRule::MAX_OPERATORS }})</span></label>
                             <div class="dh-choice-toolbar" style="position: relative;">
                                 <input type="text" id="ruleOperatorInput" placeholder="Search operators..." autocomplete="off">
                                 <div id="ruleOperatorResults" class="dh-search-list dh-related-site-results" hidden></div>
@@ -86,7 +90,7 @@
                         </div>
                         <div class="dh-rule-or-pill-col"><span class="dh-rule-pill dh-rule-pill-or">OR</span></div>
                         <div class="dh-rule-box">
-                            <label class="form-label">Locations <span class="text-xs text-secondary">(up to {{ \App\Models\GroupAutoAddRule::MAX_LOCATIONS }})</span></label>
+                            <label class="dh-rule-field-label">Locations <span class="text-xs text-secondary">(up to {{ \App\Models\GroupAutoAddRule::MAX_LOCATIONS }})</span></label>
                             <div class="d-flex flex-wrap gap-2" id="ruleLocationChips">
                                 @foreach($locationNames as $code => $name)
                                     <button type="button" class="chip {{ in_array($code, $selectedLocations, true) ? 'chip-on' : '' }}" data-rule-location="{{ $code }}">{{ $name }}</button>
@@ -103,7 +107,7 @@
                 <div class="dh-rule-box dh-rule-outer">
                     <div class="dh-rule-or-row">
                         <div class="dh-rule-box">
-                            <label class="form-label">Levels</label>
+                            <label class="dh-rule-field-label">Levels</label>
                             <div class="d-flex flex-wrap gap-2" id="ruleLevelChips">
                                 @foreach(\App\Support\DiveLevel::all() as $level)
                                     <button type="button" class="chip {{ in_array($level['value'], $selectedLevels, true) ? 'chip-on' : '' }}" data-rule-level="{{ $level['value'] }}">{{ $level['short'] }}</button>
@@ -113,7 +117,7 @@
                         </div>
                         <div class="dh-rule-or-pill-col"><span class="dh-rule-pill dh-rule-pill-or">OR</span></div>
                         <div class="dh-rule-box">
-                            <label class="form-label">Sites <span class="text-xs text-secondary">(up to {{ \App\Models\GroupAutoAddRule::MAX_SITES }})</span></label>
+                            <label class="dh-rule-field-label">Sites <span class="text-xs text-secondary">(up to {{ \App\Models\GroupAutoAddRule::MAX_SITES }})</span></label>
                             <div class="dh-choice-toolbar" style="position: relative;">
                                 <input type="text" id="ruleSiteInput" placeholder="Search dive sites..." autocomplete="off">
                                 <div id="ruleSiteResults" class="dh-search-list dh-related-site-results" hidden></div>

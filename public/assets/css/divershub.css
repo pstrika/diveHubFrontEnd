@@ -2003,20 +2003,37 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-rule-or-row { display: flex; align-items: stretch; gap: 12px; }
 .dh-rule-or-row > .dh-rule-box { flex: 1 1 0; min-width: 0; }
 .dh-rule-or-pill-col { display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
-/* Pablo, 2026-09-23: "make all the pills of the rule sections smaller -
-   right now they take a lot of space" / "only keep at the same size the
-   ANDs and ORs" - AND and OR share this one size (only their background
-   color differs), independent of any other pill/chip size on the page. */
-.dh-rule-pill { display: inline-flex; align-items: center; justify-content: center; padding: 1px 8px; border-radius: var(--dh-radius-pill); font-size: .62rem; font-weight: 800; letter-spacing: .4px; color: #fff; white-space: nowrap; line-height: 1.6; }
+/* Reverted to this size after a shorter-lived smaller version (Pablo,
+   2026-09-23: "revert the ANDs and ORs pills to the previous size"). */
+.dh-rule-pill { display: inline-flex; align-items: center; justify-content: center; padding: 4px 14px; border-radius: var(--dh-radius-pill); font-size: .72rem; font-weight: 800; letter-spacing: .5px; color: #fff; white-space: nowrap; }
 .dh-rule-pill-and { background: var(--dh-good); }
 .dh-rule-pill-or { background: var(--dh-sea); }
-.dh-rule-and-row { display: flex; justify-content: center; margin: 6px 0; }
+.dh-rule-and-row { display: flex; justify-content: center; margin: 12px 0; }
 @media (max-width: 576px) {
   .dh-rule-or-row { flex-direction: column; }
   .dh-rule-or-pill-col { margin: 4px 0; }
 }
 .dh-collapse-chevron { transition: transform .2s ease; color: var(--dh-muted); }
-[data-bs-toggle="collapse"].collapsed .dh-collapse-chevron { transform: rotate(-90deg); }
+/* Two shapes: the chevron nested inside a bigger clickable toggle area
+   (Notification preferences), or the chevron itself as its own second
+   trigger for the same collapse target, sitting at the row's far right
+   (auto-add rule, so it lines up with the other section's chevron
+   position - Pablo, 2026-09-23: "put the both aligned to the right in
+   both collapsable sections"). */
+[data-bs-toggle="collapse"].collapsed .dh-collapse-chevron,
+.dh-collapse-chevron.collapsed { transform: rotate(-90deg); }
+
+/* Collapsible section headers (Notification preferences, Auto-add rule)
+   and the Facebook sub-section - smaller and bold rather than the
+   default .form-label size/weight (Pablo, 2026-09-23: "make the titles
+   of the section in a smaller and bold font"). */
+.dh-settings-section-title { font-size: .82rem; font-weight: 800; color: var(--dh-ink); }
+
+/* Field labels inside an auto-add rule box (Trip type, Operators,
+   Locations, Levels, Sites) - smaller than the default .form-label,
+   scoped to this component only (Pablo, 2026-09-23: "Reduce all the
+   text labels in dive type, locations, operators, levels and site"). */
+.dh-rule-field-label { display: block; font-size: .78rem; font-weight: 700; color: var(--dh-ink); margin-bottom: 4px; }
 .dh-profile-savebar { position: sticky; bottom: 12px; }
 
 /* Verify-phone modal. */

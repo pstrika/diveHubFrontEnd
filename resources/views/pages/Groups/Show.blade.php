@@ -77,7 +77,7 @@
                 <form method="POST" action="{{ route('Groups.updateSettings', ['group' => $group->slug]) }}">
                     @csrf
                     <div class="modal-header">
-                        <h5 class="modal-title font-weight-normal">{{ $group->name }} Settings</h5>
+                        <h5 class="modal-title font-weight-normal"><span class="material-icons-round align-middle" aria-hidden="true">settings</span> {{ $group->name }} Settings</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -101,7 +101,7 @@
                              - collapsed by default, same Bootstrap collapse
                              pattern as the auto-add rule section below. --}}
                         <div class="d-flex justify-content-between align-items-center collapsed" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#notificationPrefsBody" role="button" aria-expanded="false" aria-controls="notificationPrefsBody">
-                            <label class="form-label mb-0" style="cursor: pointer;">Notification preferences</label>
+                            <label class="dh-settings-section-title mb-0" style="cursor: pointer;">Notification preferences</label>
                             <span class="material-icons-round dh-collapse-chevron" aria-hidden="true">expand_more</span>
                         </div>
                         <div class="collapse" id="notificationPrefsBody">
@@ -138,21 +138,23 @@
                 @include('pages.Groups.partials.AutoAddRuleModal')
 
                 <div class="modal-body border-top pt-3">
-                    <label class="form-label mb-0">Facebook</label>
+                    <label class="dh-settings-section-title mb-0"><i class="fa-brands fa-facebook" aria-hidden="true"></i> Facebook</label>
                     @if($group->isFacebookConnected())
                         <p class="text-sm mb-2">
                             <i class="material-icons-round text-success text-sm align-middle">check_circle</i>
                             Connected to <b>{{ $group->fb_page_name }}</b>.
                         </p>
-                        <form method="POST" action="{{ route('Groups.facebook.toggleAutoPost', ['group' => $group->slug]) }}" class="form-check form-switch mb-2">
-                            @csrf
-                            <input class="form-check-input" type="checkbox" name="fb_auto_post" value="1" id="fbAutoPostInput" {{ $group->fb_auto_post ? 'checked' : '' }} onchange="this.form.submit()">
-                            <label class="form-check-label" for="fbAutoPostInput">Automatically post new dives to Facebook</label>
-                        </form>
-                        <form method="POST" action="{{ route('Groups.facebook.disconnect', ['group' => $group->slug]) }}" onsubmit="return confirm('Disconnect this Facebook Page? New dives will stop posting there.');">
-                            @csrf
-                            <button type="submit" class="dh-btn dh-btn-ghost-dark">Disconnect</button>
-                        </form>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <form method="POST" action="{{ route('Groups.facebook.toggleAutoPost', ['group' => $group->slug]) }}" class="form-check mb-0">
+                                @csrf
+                                <input class="form-check-input dh-check" type="checkbox" name="fb_auto_post" value="1" id="fbAutoPostInput" {{ $group->fb_auto_post ? 'checked' : '' }} onchange="this.form.submit()">
+                                <label class="form-check-label" for="fbAutoPostInput">Automatically post new dives to Facebook</label>
+                            </form>
+                            <form method="POST" action="{{ route('Groups.facebook.disconnect', ['group' => $group->slug]) }}" onsubmit="return confirm('Disconnect this Facebook Page? New dives will stop posting there.');">
+                                @csrf
+                                <button type="submit" class="dh-btn dh-btn-ghost-dark">Disconnect</button>
+                            </form>
+                        </div>
                     @elseif(auth()->user()->isAdmin())
                         <p class="text-xs text-secondary mt-n1">Use the "Connect FB Page" button at the top of this page to link a Facebook Page.</p>
                     @else
