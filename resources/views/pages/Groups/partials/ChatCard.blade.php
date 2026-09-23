@@ -1,6 +1,6 @@
 <section class="dh-panel">
     <h2 class="dh-panel-title">Group chat</h2>
-    <div id="groupChatMessages" data-count="{{ $messages->count() }}" style="max-height: 400px; overflow-y: auto;">
+    <div id="groupChatMessages" class="dh-equal-card-scroll" data-count="{{ $messages->count() }}" style="max-height: 400px; overflow-y: auto;">
         @include('pages.Groups.partials.messages')
     </div>
 

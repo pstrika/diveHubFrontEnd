@@ -543,10 +543,10 @@
 
             <div class="row">
                 @if($hasFbFeed)
-                    <div class="col-md-6">
+                    <div class="col-md-6 dh-equal-card-col">
                         @include('pages.Groups.partials.ChatCard')
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6 dh-equal-card-col">
                         @include('pages.Groups.partials.UpcomingDivesCard')
                     </div>
                 @else

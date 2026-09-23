@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Group;
 use App\Models\GroupAutoAddRule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 
 /**
  * One auto-add rule per group, admin-only (Pablo, 2026-09-22). See
@@ -90,5 +91,30 @@ class GroupAutoAddRuleController extends Controller
         // deliberate reliability-over-instant-feedback tradeoff.
         return redirect()->route('Groups.show', ['group' => $group->slug])
             ->with('msg', $rule->enabled ? 'Auto-add rule saved - matching trips will be added within 30 minutes.' : 'Auto-add rule saved.');
+    }
+
+    /**
+     * Testing only (Pablo, 2026-09-23: "Add the button for testing
+     * purposes for now") - runs the same check the 30-minute cron does,
+     * on demand, against whatever rule is currently saved for this group.
+     * A broad rule scans every upcoming trip and can take a while
+     * (confirmed over a minute in testing), hence the raised time limit
+     * and the JSON response instead of a page redirect - the modal's
+     * "Run now" button shows a spinner and waits rather than navigating
+     * away.
+     */
+    public function runNow($groupSlug)
+    {
+        $group = Group::where('slug', $groupSlug)->firstOrFail();
+
+        if (!$group->isAdmin(auth()->user()->id)) {
+            abort(403);
+        }
+
+        set_time_limit(300);
+
+        Artisan::call('groups:apply-auto-rules', ['--group' => $group->slug]);
+
+        return response()->json(['summary' => trim(Artisan::output())]);
     }
 }

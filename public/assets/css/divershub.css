@@ -1991,6 +1991,26 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 }
 .dh-choice-toolbar input:focus { outline: none; border-color: var(--dh-sea); box-shadow: 0 0 0 3px rgba(14,124,158,.15); }
 .dh-choice-scroll { max-height: 360px; overflow-y: auto; padding-right: 4px; }
+
+/* Auto-add rule (Pablo, 2026-09-23): the three AND-ed criteria groups as
+   nested framed boxes with AND/OR pills between them, so the rule's own
+   boolean shape ("trip type AND (operator OR location) AND (level OR
+   site)") reads visually instead of just being implied by field order. */
+.dh-rule-box { border: 1px solid var(--dh-line); border-radius: var(--dh-radius); padding: 14px; background: var(--dh-paper); }
+.dh-rule-outer { background: var(--dh-foam); }
+.dh-rule-or-row { display: flex; align-items: stretch; gap: 12px; }
+.dh-rule-or-row > .dh-rule-box { flex: 1 1 0; min-width: 0; }
+.dh-rule-or-pill-col { display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+.dh-rule-pill { display: inline-flex; align-items: center; justify-content: center; padding: 4px 14px; border-radius: var(--dh-radius-pill); font-size: .72rem; font-weight: 800; letter-spacing: .5px; color: #fff; white-space: nowrap; }
+.dh-rule-pill-and { background: var(--dh-good); }
+.dh-rule-pill-or { background: var(--dh-sea); }
+.dh-rule-and-row { display: flex; justify-content: center; margin: 12px 0; }
+@media (max-width: 576px) {
+  .dh-rule-or-row { flex-direction: column; }
+  .dh-rule-or-pill-col { margin: 4px 0; }
+}
+.dh-collapse-chevron { transition: transform .2s ease; color: var(--dh-muted); }
+[data-bs-toggle="collapse"].collapsed .dh-collapse-chevron { transform: rotate(-90deg); }
 .dh-profile-savebar { position: sticky; bottom: 12px; }
 
 /* Verify-phone modal. */
