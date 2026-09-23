@@ -51,7 +51,7 @@ class GroupAutoAddRuleController extends Controller
             'locations' => 'nullable|array|max:' . GroupAutoAddRule::MAX_LOCATIONS,
             'locations.*' => 'string|max:5',
             'levels' => 'nullable|array',
-            'levels.*' => 'integer|between:0,4',
+            'levels.*' => 'integer|in:' . GroupAutoAddRule::LEVEL_ALL . ',0,1,2,3,4',
             'site_ids' => 'nullable|array|max:' . GroupAutoAddRule::MAX_SITES,
             'site_ids.*' => 'integer|exists:mysql_trips.sites,id',
         ]);

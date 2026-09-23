@@ -109,6 +109,12 @@
                         <div class="dh-rule-box">
                             <label class="dh-rule-field-label">Levels</label>
                             <div class="d-flex flex-wrap gap-2" id="ruleLevelChips">
+                                {{-- Sentinel "All levels" pick (Pablo, 2026-09-23) - bypasses
+                                     level filtering entirely, including trips with no site/
+                                     level data at all (e.g. lobster trips, which almost never
+                                     get a site assigned). Mutually exclusive with the real
+                                     levels below - see the JS further down. --}}
+                                <button type="button" class="chip {{ in_array(\App\Models\GroupAutoAddRule::LEVEL_ALL, $selectedLevels, true) ? 'chip-on' : '' }}" data-rule-level="{{ \App\Models\GroupAutoAddRule::LEVEL_ALL }}" data-rule-level-all="1">All levels</button>
                                 @foreach(\App\Support\DiveLevel::all() as $level)
                                     <button type="button" class="chip {{ in_array($level['value'], $selectedLevels, true) ? 'chip-on' : '' }}" data-rule-level="{{ $level['value'] }}">{{ $level['short'] }}</button>
                                 @endforeach
@@ -173,7 +179,42 @@
 
         wireChipToggle('ruleTripTypeChips', 'ruleTripTypesInput', 'data-rule-type', null);
         wireChipToggle('ruleLocationChips', 'ruleLocationsInput', 'data-rule-location', MAX_LOCATIONS);
-        wireChipToggle('ruleLevelChips', 'ruleLevelsInput', 'data-rule-level', null);
+
+        // Levels get their own wiring, not wireChipToggle: "All levels" is
+        // mutually exclusive with every real level (Pablo, 2026-09-23) -
+        // picking it clears the others, and picking any real level clears it.
+        (function () {
+            var container = document.getElementById('ruleLevelChips');
+            var hidden = document.getElementById('ruleLevelsInput');
+            var allBtn = container.querySelector('[data-rule-level-all]');
+
+            container.querySelectorAll('[data-rule-level]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var current = hidden.value ? hidden.value.split(',') : [];
+                    var value = btn.getAttribute('data-rule-level');
+                    var isAll = btn.hasAttribute('data-rule-level-all');
+                    var idx = current.indexOf(value);
+
+                    if (idx !== -1) {
+                        current.splice(idx, 1);
+                        btn.classList.remove('chip-on');
+                    } else if (isAll) {
+                        current = [value];
+                        container.querySelectorAll('[data-rule-level]').forEach(function (b) { b.classList.remove('chip-on'); });
+                        btn.classList.add('chip-on');
+                    } else {
+                        var allIdx = current.indexOf(allBtn.getAttribute('data-rule-level'));
+                        if (allIdx !== -1) {
+                            current.splice(allIdx, 1);
+                            allBtn.classList.remove('chip-on');
+                        }
+                        current.push(value);
+                        btn.classList.add('chip-on');
+                    }
+                    hidden.value = current.join(',');
+                });
+            });
+        })();
 
         // --- Operators / sites: search-then-add chip picker, each chip
         // carrying a real id (not just a label), capped. ---

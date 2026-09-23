@@ -46,6 +46,17 @@ class GroupAutoAddRule extends Model
 
     public const TRIP_TYPES = ['SHARK', 'LOBSTER', 'REC', 'TEC'];
 
+    /**
+     * Sentinel "All levels" pick, distinct from the real 0-4 DiveLevel
+     * values (Pablo, 2026-09-23: lobster trips almost never get a site
+     * assigned - confirmed zero of 22 upcoming lobster trips from a real
+     * rule's operators had any siteId at all - so requiring a level match
+     * meant the level-or-site clause could never be satisfied). Selecting
+     * it bypasses level filtering entirely, matching trips with no site/
+     * level data too - mutually exclusive with real levels in the UI.
+     */
+    public const LEVEL_ALL = -1;
+
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class, 'group_id');
@@ -76,6 +87,10 @@ class GroupAutoAddRule extends Model
         $levels = $this->levels ?? [];
         $siteIds = $this->site_ids ?? [];
         $tripSiteIds = $this->tripSiteIds($trip);
+
+        if (in_array(self::LEVEL_ALL, $levels, true)) {
+            return true;
+        }
 
         $matchesLevelOrSite = (!empty($levels) && $this->tripHasLevel($trip, $levels))
             || (!empty($siteIds) && !empty(array_intersect($tripSiteIds, $siteIds)));
