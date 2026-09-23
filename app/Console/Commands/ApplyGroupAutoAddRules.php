@@ -12,11 +12,14 @@ use Illuminate\Console\Command;
  * Scans upcoming trips against every enabled group auto-add rule and adds
  * whatever matches to that group's calendar (Pablo, 2026-09-22). Triggered
  * every 30 minutes by an Azure Logic App (divehub-apply-group-auto-add-rules)
- * via CronController::applyGroupAutoAddRules, and also run synchronously
- * for a single group right after its rule is saved
- * (GroupAutoAddRuleController::update, --group=<slug>) so widening or
- * enabling a rule reflects against trips that already exist immediately,
- * not just newly-scraped ones going forward.
+ * via CronController::applyGroupAutoAddRules - deliberately NOT also run
+ * synchronously when a rule is saved, even though the --group option here
+ * would allow it: a broad rule can match hundreds of upcoming trips at
+ * once (confirmed while testing), and creating that many dives plus a
+ * member notification for each inside an HTTP request risks timing out
+ * the request or hanging the admin's browser for minutes. A newly saved
+ * or widened rule takes up to 30 minutes to reflect against trips that
+ * already exist, same as it does for newly-scraped ones.
  */
 class ApplyGroupAutoAddRules extends Command
 {

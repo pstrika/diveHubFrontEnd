@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Group;
 use App\Models\GroupAutoAddRule;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 
 /**
  * One auto-add rule per group, admin-only (Pablo, 2026-09-22). See
@@ -20,6 +19,27 @@ class GroupAutoAddRuleController extends Controller
 
         if (!$group->isAdmin(auth()->user()->id)) {
             abort(403);
+        }
+
+        // The modal's chip pickers each post one comma-separated string
+        // (matching the Blog admin's tag-chip pattern) into a single
+        // hidden input, not real array fields - re-split into arrays
+        // before validating, or every save fails 'array' validation and
+        // silently redirects back with nothing ever persisted (found
+        // 2026-09-22: "I created a valid rule and it did not work").
+        // "0" (Open Water) is a real level value, so filter on '' rather
+        // than falsiness. operator_ids/levels/site_ids are cast to int -
+        // GroupAutoAddRule::matches() compares them with strict in_array(),
+        // which a string "31" would never match against int 31.
+        foreach (['trip_types', 'locations'] as $field) {
+            $request->merge([
+                $field => array_values(array_filter(explode(',', (string) $request->input($field, '')), fn ($v) => $v !== '')),
+            ]);
+        }
+        foreach (['operator_ids', 'levels', 'site_ids'] as $field) {
+            $request->merge([
+                $field => array_values(array_map('intval', array_filter(explode(',', (string) $request->input($field, '')), fn ($v) => $v !== ''))),
+            ]);
         }
 
         $data = $request->validate([
@@ -61,12 +81,14 @@ class GroupAutoAddRuleController extends Controller
             ]
         );
 
-        // Reflects immediately against trips that already exist, not just
-        // newly-scraped ones going forward (Pablo, 2026-09-22).
-        if ($rule->enabled) {
-            Artisan::call('groups:apply-auto-rules', ['--group' => $group->slug]);
-        }
-
-        return redirect()->route('Groups.show', ['group' => $group->slug])->with('msg', 'Auto-add rule updated!');
+        // NOT applied synchronously here on purpose: a broad rule can match
+        // hundreds of upcoming trips (confirmed while testing - one operator
+        // alone had 200+), and creating that many dives plus a member
+        // notification for each, in the middle of an HTTP request, risks
+        // timing out the request or hanging the admin's browser for
+        // minutes. The cron picks it up within 30 minutes instead - a
+        // deliberate reliability-over-instant-feedback tradeoff.
+        return redirect()->route('Groups.show', ['group' => $group->slug])
+            ->with('msg', $rule->enabled ? 'Auto-add rule saved - matching trips will be added within 30 minutes.' : 'Auto-add rule saved.');
     }
 }

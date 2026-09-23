@@ -1,16 +1,21 @@
 {{--
     One auto-add rule per group (Pablo, 2026-09-22): "add trips
     automatically to the group if [tripType] AND (operators OR location)
-    AND (trip level OR trip sites)". Admin-only, same gate as the Settings
-    modal. See App\Models\GroupAutoAddRule::matches() for the exact
-    matching logic this mirrors, and ApplyGroupAutoAddRules for how a
-    saved rule actually adds trips (a cron every 30 min, plus immediately
-    on save).
+    AND (trip level OR trip sites)". A section inside the group Settings
+    modal (Pablo, 2026-09-22: "put the auto add rules inside the setting
+    modal") - its own <form>, since forms can't nest and the Settings
+    checkboxes above already have their own, same pattern as the
+    Facebook section's own small forms further down this same modal.
+    Admin-only, same gate as the rest of Settings. See
+    App\Models\GroupAutoAddRule::matches() for the exact matching logic
+    this mirrors, and ApplyGroupAutoAddRules for how a saved rule
+    actually adds trips (a cron every 30 min - not synchronously on save,
+    since a broad rule can match hundreds of trips at once).
 
     $autoAddRule  the group's rule, or null if never configured
-    $operators    id => operatorName, already loaded for the Settings
-                   modal's favorite-operators list - reused here so this
-                   partial doesn't run its own query
+    $operators    id => operatorName, already loaded above for this same
+                   view - reused here so this partial doesn't run its own
+                   query
     $ruleSites    the rule's saved site_ids resolved to {id, name}, for
                    the site chip picker's initial state
 --}}
@@ -27,89 +32,79 @@
     $selectedSiteIds = $autoAddRule->site_ids ?? [];
 @endphp
 
-<div class="modal fade" id="modalAutoAddRule" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-        <div class="modal-content">
-            <form method="POST" action="{{ route('Groups.autoAddRule.update', ['group' => $group->slug]) }}" id="autoAddRuleForm">
-                @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title font-weight-normal">Auto-add rule for {{ $group->name }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-xs text-secondary mt-n2">
-                        A trip is added to this group's calendar automatically when it has one of the trip
-                        types below, AND matches an operator or location, AND matches a level or site.
-                        Checked every 30 minutes, and right away when you save.
-                    </p>
+<form method="POST" action="{{ route('Groups.autoAddRule.update', ['group' => $group->slug]) }}" id="autoAddRuleForm">
+    @csrf
+    <div class="modal-body border-top pt-3">
+        <label class="form-label mb-0">Auto-add rule</label>
+        <p class="text-xs text-secondary mt-n1">
+            A trip is added to this group's calendar automatically when it has one of the trip
+            types below, AND matches an operator or location, AND matches a level or site.
+            Checked every 30 minutes.
+        </p>
 
-                    <div class="form-check form-switch mb-4">
-                        <input class="form-check-input" type="checkbox" name="enabled" value="1" id="autoAddRuleEnabledInput" {{ ($autoAddRule->enabled ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="autoAddRuleEnabledInput">Rule enabled</label>
-                    </div>
-
-                    <label class="form-label">Trip type</label>
-                    <div class="d-flex flex-wrap gap-2 mb-4" id="ruleTripTypeChips">
-                        @foreach(\App\Models\GroupAutoAddRule::TRIP_TYPES as $type)
-                            <button type="button" class="chip {{ in_array($type, $selectedTypes, true) ? 'chip-on' : '' }}" data-rule-type="{{ $type }}">{{ ucfirst(strtolower($type)) }}</button>
-                        @endforeach
-                    </div>
-                    <input type="hidden" name="trip_types" id="ruleTripTypesInput" value="{{ implode(',', $selectedTypes) }}">
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label">Operators <span class="text-xs text-secondary">(up to {{ \App\Models\GroupAutoAddRule::MAX_OPERATORS }})</span></label>
-                            <div class="dh-choice-toolbar" style="position: relative;">
-                                <input type="text" id="ruleOperatorInput" placeholder="Search operators..." autocomplete="off">
-                                <div id="ruleOperatorResults" class="dh-search-list dh-related-site-results" hidden></div>
-                            </div>
-                            <div id="ruleOperatorChips" class="dh-chip-row" style="margin-top: 8px;"></div>
-                            <input type="hidden" name="operator_ids" id="ruleOperatorIdsInput" value="{{ implode(',', $selectedOperatorIds) }}">
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label">Locations <span class="text-xs text-secondary">(up to {{ \App\Models\GroupAutoAddRule::MAX_LOCATIONS }})</span></label>
-                            <div class="d-flex flex-wrap gap-2" id="ruleLocationChips">
-                                @foreach($locationNames as $code => $name)
-                                    <button type="button" class="chip {{ in_array($code, $selectedLocations, true) ? 'chip-on' : '' }}" data-rule-location="{{ $code }}">{{ $name }}</button>
-                                @endforeach
-                            </div>
-                            <input type="hidden" name="locations" id="ruleLocationsInput" value="{{ implode(',', $selectedLocations) }}">
-                        </div>
-                    </div>
-
-                    <div class="row mt-4">
-                        <div class="col-md-6">
-                            <label class="form-label">Levels</label>
-                            <div class="d-flex flex-wrap gap-2" id="ruleLevelChips">
-                                @foreach(\App\Support\DiveLevel::all() as $level)
-                                    <button type="button" class="chip {{ in_array($level['value'], $selectedLevels, true) ? 'chip-on' : '' }}" data-rule-level="{{ $level['value'] }}">{{ $level['short'] }}</button>
-                                @endforeach
-                            </div>
-                            <input type="hidden" name="levels" id="ruleLevelsInput" value="{{ implode(',', $selectedLevels) }}">
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label">Sites <span class="text-xs text-secondary">(up to {{ \App\Models\GroupAutoAddRule::MAX_SITES }})</span></label>
-                            <div class="dh-choice-toolbar" style="position: relative;">
-                                <input type="text" id="ruleSiteInput" placeholder="Search dive sites..." autocomplete="off">
-                                <div id="ruleSiteResults" class="dh-search-list dh-related-site-results" hidden></div>
-                            </div>
-                            <div id="ruleSiteChips" class="dh-chip-row" style="margin-top: 8px;"></div>
-                            <input type="hidden" name="site_ids" id="ruleSiteIdsInput" value="{{ implode(',', $selectedSiteIds) }}">
-                        </div>
-                    </div>
-
-                    <p class="text-danger text-xs mt-4 mb-0" id="autoAddRuleError" hidden></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="dh-btn dh-btn-primary">Save rule</button>
-                </div>
-            </form>
+        <div class="form-check mb-4">
+            <input class="form-check-input dh-check" type="checkbox" name="enabled" value="1" id="autoAddRuleEnabledInput" {{ ($autoAddRule->enabled ?? false) ? 'checked' : '' }}>
+            <label class="form-check-label" for="autoAddRuleEnabledInput">Rule enabled</label>
         </div>
+
+        <label class="form-label">Trip type</label>
+        <div class="d-flex flex-wrap gap-2 mb-4" id="ruleTripTypeChips">
+            @foreach(\App\Models\GroupAutoAddRule::TRIP_TYPES as $type)
+                <button type="button" class="chip {{ in_array($type, $selectedTypes, true) ? 'chip-on' : '' }}" data-rule-type="{{ $type }}">{{ ucfirst(strtolower($type)) }}</button>
+            @endforeach
+        </div>
+        <input type="hidden" name="trip_types" id="ruleTripTypesInput" value="{{ implode(',', $selectedTypes) }}">
+
+        <div class="row">
+            <div class="col-md-6">
+                <label class="form-label">Operators <span class="text-xs text-secondary">(up to {{ \App\Models\GroupAutoAddRule::MAX_OPERATORS }})</span></label>
+                <div class="dh-choice-toolbar" style="position: relative;">
+                    <input type="text" id="ruleOperatorInput" placeholder="Search operators..." autocomplete="off">
+                    <div id="ruleOperatorResults" class="dh-search-list dh-related-site-results" hidden></div>
+                </div>
+                <div id="ruleOperatorChips" class="dh-chip-row" style="margin-top: 8px;"></div>
+                <input type="hidden" name="operator_ids" id="ruleOperatorIdsInput" value="{{ implode(',', $selectedOperatorIds) }}">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Locations <span class="text-xs text-secondary">(up to {{ \App\Models\GroupAutoAddRule::MAX_LOCATIONS }})</span></label>
+                <div class="d-flex flex-wrap gap-2" id="ruleLocationChips">
+                    @foreach($locationNames as $code => $name)
+                        <button type="button" class="chip {{ in_array($code, $selectedLocations, true) ? 'chip-on' : '' }}" data-rule-location="{{ $code }}">{{ $name }}</button>
+                    @endforeach
+                </div>
+                <input type="hidden" name="locations" id="ruleLocationsInput" value="{{ implode(',', $selectedLocations) }}">
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <label class="form-label">Levels</label>
+                <div class="d-flex flex-wrap gap-2" id="ruleLevelChips">
+                    @foreach(\App\Support\DiveLevel::all() as $level)
+                        <button type="button" class="chip {{ in_array($level['value'], $selectedLevels, true) ? 'chip-on' : '' }}" data-rule-level="{{ $level['value'] }}">{{ $level['short'] }}</button>
+                    @endforeach
+                </div>
+                <input type="hidden" name="levels" id="ruleLevelsInput" value="{{ implode(',', $selectedLevels) }}">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Sites <span class="text-xs text-secondary">(up to {{ \App\Models\GroupAutoAddRule::MAX_SITES }})</span></label>
+                <div class="dh-choice-toolbar" style="position: relative;">
+                    <input type="text" id="ruleSiteInput" placeholder="Search dive sites..." autocomplete="off">
+                    <div id="ruleSiteResults" class="dh-search-list dh-related-site-results" hidden></div>
+                </div>
+                <div id="ruleSiteChips" class="dh-chip-row" style="margin-top: 8px;"></div>
+                <input type="hidden" name="site_ids" id="ruleSiteIdsInput" value="{{ implode(',', $selectedSiteIds) }}">
+            </div>
+        </div>
+
+        <p class="text-danger text-xs mt-4 mb-0" id="autoAddRuleError" hidden></p>
     </div>
-</div>
+    <div class="modal-footer border-top-0 pt-0">
+        <button type="submit" class="dh-btn dh-btn-primary">Save rule</button>
+    </div>
+</form>
 
 <script>
     (function () {

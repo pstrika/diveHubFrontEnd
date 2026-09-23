@@ -215,9 +215,9 @@ class GroupController extends Controller
         $calendarFeedUrl = route('Groups.feed', ['group' => $group->slug, 'token' => $group->ensureCalendarToken()]);
 
         // All members (not just admins) need the operators list for the
-        // Custom Dive form's operator picker.
+        // Custom Dive form's operator picker (and, for admins, the
+        // auto-add rule's operator chip picker further below).
         $operators = \App\Models\Operator::orderBy('operatorName')->get(['id', 'operatorName']);
-        $favoriteOperatorIds = $isAdmin ? $group->favoriteOperators()->pluck('operators.id')->toArray() : [];
 
         $SEO = [
             "robots" => "noindex, nofollow",
@@ -238,7 +238,7 @@ class GroupController extends Controller
             ? \App\Models\Site::whereIn('id', $autoAddRule->site_ids)->get(['id', 'name'])
             : collect();
 
-        return view('pages.Groups.Show', compact('group', 'isAdmin', 'myMembership', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'addDiveSite', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'operators', 'favoriteOperatorIds', 'fbFeed', 'autoAddRule', 'ruleSites', 'SEO'));
+        return view('pages.Groups.Show', compact('group', 'isAdmin', 'myMembership', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'addDiveSite', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'operators', 'fbFeed', 'autoAddRule', 'ruleSites', 'SEO'));
     }
 
     /**
@@ -501,8 +501,6 @@ class GroupController extends Controller
             'notifications_muted' => 'nullable|boolean',
             'allow_members_add_dives' => 'nullable|boolean',
             'is_public' => 'nullable|boolean',
-            'favorite_operators' => 'nullable|array',
-            'favorite_operators.*' => 'integer|exists:mysql_trips.operators,id',
         ]);
 
         $wantsPublic = $request->boolean('is_public');
@@ -522,8 +520,6 @@ class GroupController extends Controller
         $group->allow_members_add_dives = $request->boolean('allow_members_add_dives');
         $group->is_public = $wantsPublic;
         $group->save();
-
-        $group->favoriteOperators()->sync($request->input('favorite_operators', []));
 
         return redirect()->route('Groups.show', ['group' => $group->slug])->with('msg', 'Group settings updated!');
     }

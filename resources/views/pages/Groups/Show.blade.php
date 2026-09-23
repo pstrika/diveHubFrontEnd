@@ -112,21 +112,16 @@
                                 Mute all notifications for every member (overrides everyone's own bell toggle)
                             </label>
                         </div>
-                        <label class="form-label">Favorite operators</label>
-                        <p class="text-xs text-secondary mt-n2">Used to keep the group updated on upcoming trips from these operators.</p>
-                        <div style="max-height: 250px; overflow-y: auto;" class="border rounded p-2">
-                            @foreach($operators as $operator)
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="favorite_operators[]" value="{{ $operator->id }}" id="favOp{{ $operator->id }}" {{ in_array($operator->id, $favoriteOperatorIds) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="favOp{{ $operator->id }}">{{ $operator->operatorName }}</label>
-                                </div>
-                            @endforeach
-                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="dh-btn dh-btn-primary">Save Settings</button>
                     </div>
                 </form>
+
+                {{-- Auto-add rule (Pablo, 2026-09-22: "put the auto add rules
+                     inside the setting modal") - its own form, same reason
+                     the Facebook section below has its own small forms. --}}
+                @include('pages.Groups.partials.AutoAddRuleModal')
 
                 <div class="modal-body border-top pt-3">
                     <label class="form-label mb-0">Facebook</label>
@@ -158,11 +153,6 @@
             </div>
         </div>
     </div>
-    @endif
-
-    {{--auto-add rule modal--}}
-    @if($isAdmin)
-        @include('pages.Groups.partials.AutoAddRuleModal')
     @endif
 
     {{--add dive modal--}}
@@ -427,9 +417,6 @@
                     @if($isAdmin)
                     <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-toggle="modal" data-bs-target="#modalGroupSettings">
                         <span class="material-icons-round" aria-hidden="true">settings</span>Settings
-                    </button>
-                    <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-toggle="modal" data-bs-target="#modalAutoAddRule">
-                        <span class="material-icons-round" aria-hidden="true">rule</span>Auto-add rule
                     </button>
                     <form method="POST" action="{{ route('Groups.destroy', ['group' => $group->slug]) }}" class="d-inline"
                         onsubmit="return confirm('Delete &quot;{{ $group->name }}&quot; permanently? This removes all dives, RSVPs and chat history for every member. This cannot be undone.');">
