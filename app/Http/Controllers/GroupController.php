@@ -68,12 +68,20 @@ class GroupController extends Controller
 
         $alreadyInGroupIds = GroupMember::where('user_id', $userId)->pluck('group_id');
 
+        // ->select() has to come BEFORE ->withCount(), not as an argument to
+        // ->get(): withCount() sets its own select(['*']) internally if none
+        // is set yet, and once the query already has a select, Eloquent's
+        // get($columns) silently ignores the columns it's passed - found
+        // 2026-09-23 while chasing a search bug: this endpoint was leaking
+        // every column, including fb_page_access_token and calendar_token,
+        // to any user who searched public groups.
         $groups = Group::where('is_public', true)
             ->where('name', 'LIKE', "%$q%")
             ->whereNotIn('id', $alreadyInGroupIds)
+            ->select(['id', 'name', 'slug', 'description', 'avatar'])
             ->withCount(['activeMembers'])
             ->take(10)
-            ->get(['id', 'name', 'slug', 'description', 'avatar']);
+            ->get();
 
         return response()->json($groups);
     }

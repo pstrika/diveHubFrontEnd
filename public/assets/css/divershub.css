@@ -1083,6 +1083,10 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-wizard-photo-row .material-icons-round { font-size: 56px; color: var(--dh-line); }
 .dh-wizard-group { font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--dh-muted); font-weight: 700; margin: var(--dh-space-2) 0 0; }
 .dh-wizard-choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+/* The "Follow Divers Hub" step is the one place these choice cards sit
+   outside the form (Pablo, 2026-09-23) - everywhere else they're a form
+   child and already get spacing from .dh-wizard-form's flex gap. */
+.dh-wizard-choices + .dh-wizard-form { margin-top: var(--dh-space-4); }
 .dh-wizard-choices-compact { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
 .dh-choice { position: relative; display: block; cursor: pointer; }
 .dh-choice input { position: absolute; opacity: 0; pointer-events: none; }

@@ -92,6 +92,12 @@
             <script>
                 (function () {
                     let searchTimeout;
+                    // Bumped on every new keystroke so a slow response for an
+                    // earlier, shorter query can't land after a faster one
+                    // for what's since been typed and overwrite it with
+                    // stale results (Pablo, 2026-09-23: "the discovery
+                    // public groups search is not working fine").
+                    let requestToken = 0;
                     const input = document.getElementById('publicGroupSearchInput');
                     const resultsEl = document.getElementById('publicGroupResults');
                     if (!input || !resultsEl) return;
@@ -99,6 +105,7 @@
                     input.addEventListener('input', function () {
                         const q = this.value;
                         clearTimeout(searchTimeout);
+                        const myToken = ++requestToken;
                         if (q.length < 2) {
                             resultsEl.innerHTML = '';
                             return;
@@ -107,6 +114,7 @@
                             fetch("{{ route('Groups.public.search') }}?q=" + encodeURIComponent(q))
                                 .then(r => r.json())
                                 .then(function (groups) {
+                                    if (myToken !== requestToken) return;
                                     resultsEl.innerHTML = groups.map(function (g) {
                                         const avatarSrc = g.avatar
                                             ? "{{ asset('assets') }}/" + g.avatar
