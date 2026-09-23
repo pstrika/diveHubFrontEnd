@@ -685,7 +685,6 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::get('Groups/{group}/messages/poll', 'App\Http\Controllers\GroupMessageController@poll')->name('Groups.messages.poll');
 	Route::post('Groups/{group}/settings', 'App\Http\Controllers\GroupController@updateSettings')->name('Groups.updateSettings');
 	Route::post('Groups/{group}/auto-add-rule', 'App\Http\Controllers\GroupAutoAddRuleController@update')->name('Groups.autoAddRule.update');
-	Route::post('Groups/{group}/auto-add-rule/run-now', 'App\Http\Controllers\GroupAutoAddRuleController@runNow')->name('Groups.autoAddRule.runNow');
 	Route::post('Groups/{group}/info', 'App\Http\Controllers\GroupController@updateInfo')->name('Groups.updateInfo');
 	Route::get('Groups/{group}/sites/search', 'App\Http\Controllers\GroupController@searchSites')->name('Groups.sites.search');
 

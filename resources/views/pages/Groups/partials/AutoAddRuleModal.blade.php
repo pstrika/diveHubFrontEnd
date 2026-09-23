@@ -133,13 +133,6 @@
         </div>
     </div>
     <div class="modal-footer border-top-0 pt-0">
-        {{-- Testing only (Pablo, 2026-09-23) - the real trigger is the
-             30-minute cron; this just runs the same check on demand
-             instead of waiting, for trying a rule out right now. Can take
-             a while for a broad rule (it's scanning every upcoming trip),
-             hence the spinner/disable rather than a silent wait. --}}
-        <button type="button" class="dh-btn dh-btn-ghost-dark" id="autoAddRuleRunNowBtn">Run now (testing)</button>
-        <span class="text-xs text-secondary" id="autoAddRuleRunNowStatus"></span>
         <button type="submit" class="dh-btn dh-btn-primary">Save rule</button>
     </div>
 </form>
@@ -298,35 +291,6 @@
                 errorEl.textContent = 'To turn the rule on, pick at least one trip type, one operator or location, and one level or site.';
                 errorEl.hidden = false;
             }
-        });
-
-        // "Run now" - testing only. Scans every upcoming trip against
-        // whatever rule is currently SAVED (not whatever's unsaved in the
-        // form right now), so save first if you just changed something.
-        // Can take a while for a broad rule - disable + spinner rather
-        // than leaving the button looking unresponsive.
-        document.getElementById('autoAddRuleRunNowBtn').addEventListener('click', function () {
-            var btn = this;
-            var status = document.getElementById('autoAddRuleRunNowStatus');
-            btn.disabled = true;
-            status.textContent = 'Running - this can take a minute for a broad rule...';
-
-            fetch("{{ route('Groups.autoAddRule.runNow', ['group' => $group->slug]) }}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
-                    'Accept': 'application/json',
-                },
-            })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    status.textContent = data.summary || 'Done.';
-                    btn.disabled = false;
-                })
-                .catch(function () {
-                    status.textContent = 'Something went wrong - check the logs.';
-                    btn.disabled = false;
-                });
         });
     })();
 </script>
