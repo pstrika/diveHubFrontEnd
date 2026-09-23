@@ -849,6 +849,13 @@
                         btn.classList.add('chip-on');
                         hidden.value = btn.getAttribute('data-nav-slot-option');
                         refreshNavSlots();
+                        // Same direct-call pattern as this page's other chip
+                        // pickers (favorite operators/locations) - clicking
+                        // a chip doesn't fire a native 'change' event on the
+                        // hidden input, so the Save bar never appeared
+                        // without this (Pablo, 2026-09-24: "how do I submit
+                        // the changes... there's no save or anything").
+                        revealSave();
                     });
                 });
             }
