@@ -5,7 +5,7 @@
             <span class="material-icons-round" aria-hidden="true">event</span>Subscribe
         </button>
     </div>
-    <div class="dh-equal-card-scroll" style="max-height: 350px; overflow-y: auto;">
+    <div style="max-height: 350px; overflow-y: auto;">
         @if($group->canAddDives(auth()->user()->id))
         <div class="d-flex justify-content-end mb-2">
             <button type="button" class="dh-btn dh-btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddDive">

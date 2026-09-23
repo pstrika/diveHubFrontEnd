@@ -743,28 +743,17 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-panel-toggle .form-check-label { color: var(--dh-muted); font-size: .85rem; font-weight: 600; }
 .dh-panel-cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--dh-space-4); }
 
-/* Two dh-panel cards sitting side by side on desktop (Groups page: Members
-   next to Upcoming dives, or Facebook feed) - Bootstrap's row already
-   makes the two columns equal height, but each .dh-panel section inside
-   only takes its own content's height, so whichever card has less
-   content (fewer members than dives, say) ends up visibly shorter and
-   the pair looks misaligned (Pablo, 2026-09-22: "not exactly the same
-   length...they look slightly off"). Stretching the panel and its
-   scrollable content area to fill the column fixes that; on mobile the
-   columns stack (Bootstrap collapses to 100% width, no row to match
-   height against) so this has no visible effect there, matching Pablo's
-   own observation. */
-.dh-equal-card-col { display: flex; }
-.dh-equal-card-col > .dh-panel { flex: 1 1 auto; display: flex; flex-direction: column; }
-/* max-height: none !important overrides each card's own inline
-   max-height (350px/400px, meant to cap it when it's the only card in
-   the row) - flex-grow alone can't win against that cap, so the taller
-   card's extra height just left blank space in the shorter one's scroll
-   area instead of the list actually filling it (Pablo, 2026-09-23: "the
-   scroll inside the card is not going all the way down"). overflow-y
-   stays auto regardless of height, so a genuinely long list still
-   scrolls - only the ceiling changes. */
-.dh-equal-card-col .dh-equal-card-scroll { flex: 1 1 auto; min-height: 0; max-height: none !important; overflow-y: auto; }
+/* Members/Upcoming-dives/Facebook-feed/Chat (Groups page) all share the
+   same 350px scroll cap (each card's own inline max-height/overflow-y)
+   instead of stretching to match a row sibling - a flex-stretch approach
+   was tried first and reverted (Pablo, 2026-09-23: "If the whole content
+   fits in less than the max length, I'm ok to make the card shorter...
+   If the content is longer, keep a fix length and then allow scroll" -
+   a shorter card being shorter is fine, it's the four caps disagreeing
+   with each other, not row-mate mismatches, that needed fixing). Kept
+   this comment as a pointer for why there's no shared CSS class here:
+   the fix was making the numbers agree, not adding a mechanism.
+*/
 /* Wider content column for a form whose main field is a long body of text (the newsletter composer) - still collapses to one column below, same as the plain .dh-panel-cols. */
 .dh-panel-cols-wide { grid-template-columns: 2.4fr 1fr; }
 .dh-panel-subtitle { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--dh-muted); margin: 0 0 8px; }
