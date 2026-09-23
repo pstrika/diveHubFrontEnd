@@ -382,11 +382,20 @@
             <section class="dh-group-facts">
                 <div class="dh-group-facts-main">
                     @if($group->avatar)
-                        <div>
+                        {{-- Centered as a flex column, not text-align:center - the
+                             avatar link is a fixed-width block element, so
+                             text-align (which only centers inline content)
+                             left it hugging the left edge whenever the pill
+                             below was wider than the 64px avatar (Pablo,
+                             2026-09-23: "centered aligned with the calling
+                             card above"). dh-group-facts-pill scopes the
+                             smaller size to just this spot, not the shared
+                             pill used in My Groups too. --}}
+                        <div class="d-flex flex-column align-items-center" style="gap: 4px;">
                             <a href="javascript:;" data-bs-toggle="modal" data-bs-target="#modalCallingCardFull" class="dh-group-facts-avatar">
                                 <img src="{{ asset('assets/' . $group->avatar) }}" alt="{{ $group->name }}">
                             </a>
-                            <div class="text-center mt-2">
+                            <div class="dh-group-facts-pill">
                                 @include('pages.Groups.partials.VisibilityPill')
                             </div>
                         </div>
