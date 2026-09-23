@@ -713,19 +713,20 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
    (Pablo, 2026-09-23: "Overlay name, avatar and date over the picture"). */
 .dh-diver-modal-frame { position: relative; }
 .dh-diver-modal-overlay { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 0 0 var(--dh-radius) var(--dh-radius); background: linear-gradient(0deg, rgba(0,0,0,.75), rgba(0,0,0,0)); }
-.dh-diver-modal-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; flex: 0 0 auto; }
 .dh-diver-modal-text { display: flex; flex-direction: column; min-width: 0; }
 .dh-diver-modal-name { color: #fff; font-weight: 700; font-size: .9rem; }
 .dh-diver-modal-date { color: rgba(255,255,255,.85); font-size: .72rem; }
 
-/* Bottom banner nudging a contribution on sites with few pictures yet
-   (Pablo, 2026-09-23: "a pop up banner coming from the bottom"). */
-.dh-bottom-banner { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 1050; display: flex; align-items: center; gap: 10px; background: var(--dh-deep); color: #fff; border-radius: var(--dh-radius); padding: 12px 14px; box-shadow: 0 8px 24px rgba(0,0,0,.25); animation: dh-banner-up .3s ease; }
-.dh-bottom-banner-text { flex: 1 1 auto; font-size: .85rem; font-weight: 600; }
-.dh-bottom-banner-dismiss { background: none; border: 0; color: rgba(255,255,255,.8); padding: 4px; cursor: pointer; flex: 0 0 auto; }
-.dh-bottom-banner-dismiss:hover { color: #fff; }
-@keyframes dh-banner-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-@media (max-width: 576px) { .dh-bottom-banner { flex-wrap: wrap; } .dh-bottom-banner-text { width: 100%; } }
+/* Contribute-a-picture nudge, a slim in-flow bar at the top of the site
+   page (Pablo, 2026-09-24: moved off a fixed bottom popup that "covered
+   the navigation bar" - "without taking too much space"). */
+.dh-photo-cta-bar { display: flex; align-items: center; gap: 8px; background: var(--dh-foam); border: 1px solid var(--dh-sea); border-radius: var(--dh-radius); padding: 8px 12px; margin-bottom: var(--dh-space-3); color: var(--dh-deep); }
+.dh-photo-cta-bar > .material-icons-round { font-size: 18px; flex: 0 0 auto; }
+.dh-photo-cta-text { flex: 1 1 auto; font-size: .82rem; font-weight: 600; }
+.dh-photo-cta-btn { flex: 0 0 auto; background: var(--dh-deep); color: #fff; border: 0; border-radius: var(--dh-radius-pill); padding: 4px 14px; font-size: .78rem; font-weight: 700; cursor: pointer; }
+.dh-photo-cta-dismiss { background: none; border: 0; color: var(--dh-muted); padding: 2px; cursor: pointer; flex: 0 0 auto; display: flex; }
+.dh-photo-cta-dismiss:hover { color: var(--dh-ink); }
+@media (max-width: 576px) { .dh-photo-cta-text { display: none; } }
 
 /* "My uploaded pictures" on the profile overview page. */
 .dh-my-photos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--dh-space-3); }

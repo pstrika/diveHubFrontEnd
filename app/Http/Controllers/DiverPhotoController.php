@@ -33,8 +33,17 @@ class DiverPhotoController extends Controller
         $file = $request->file('photo');
         $filename = 'diver_' . $site->id . '_' . time() . '_' . uniqid() . '.' . $file->extension();
         Storage::disk('siteAssets')->putFileAs('img/sites', $file, $filename);
-        // Best effort, same as the admin upload path - a resize failure must not fail the upload.
-        SitePhoto::makeCopies($filename);
+        // Unlike admin-uploaded site photos, the original camera file is
+        // never kept - divers upload from phones, originals run several MB
+        // each, and there was no admin curation step trimming the library
+        // (Pablo, 2026-09-24: "we will be taking a lot of server space
+        // otherwise"). Only delete it once the small WebP copies actually
+        // exist - SitePhoto::web()/thumb() fall back to the original when
+        // no copy exists, so keeping it on a resize failure means the
+        // picture still shows instead of breaking silently.
+        if (SitePhoto::makeCopies($filename) !== false) {
+            Storage::disk('siteAssets')->delete('img/sites/' . $filename);
+        }
 
         DiverPhoto::create([
             'siteId' => $site->id,

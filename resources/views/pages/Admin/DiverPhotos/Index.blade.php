@@ -6,6 +6,20 @@
 
         <div class="container-fluid py-0 dh-board">
 
+            {{-- Full-size preview modal - a plain new-tab link left mobile
+                 admins stuck with no way back (Pablo, 2026-09-24: "if I
+                 click on the picture I get trapped and can never close
+                 it... put it on a modal"). Same #dh-photo-modal pattern the
+                 site page itself uses, with the close X. --}}
+            <div class="modal fade dh-photo-modal" id="dh-photo-modal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <button type="button" class="btn-close dh-photo-modal-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <img id="dh-photo-modal-img" src="" alt="">
+                    </div>
+                </div>
+            </div>
+
             {{-- Reject/remove confirm modal - one shared modal, its form action
                  swapped per row, same pattern as Blog Manage's delete confirm. --}}
             <div class="modal fade" id="modal-diver-photo-confirm" tabindex="-1">
@@ -59,9 +73,10 @@
                             @forelse($pending as $photo)
                                 <tr>
                                     <td>
-                                        <a href="{{ \App\Support\SitePhoto::web($photo->file) }}" target="_blank" rel="noopener">
+                                        <button type="button" style="padding:0;border:0;background:none;cursor:pointer;" data-bs-toggle="modal" data-bs-target="#dh-photo-modal"
+                                            data-photo-src="{{ \App\Support\SitePhoto::web($photo->file) }}" data-photo-alt="Picture of {{ $photo->site->name ?? 'a site' }}">
                                             <img src="{{ \App\Support\SitePhoto::thumb($photo->file) }}" alt="" style="width:64px;height:48px;object-fit:cover;border-radius:6px;">
-                                        </a>
+                                        </button>
                                     </td>
                                     <td>
                                         @if($photo->site)
@@ -117,9 +132,10 @@
                             @forelse($history as $photo)
                                 <tr>
                                     <td>
-                                        <a href="{{ \App\Support\SitePhoto::web($photo->file) }}" target="_blank" rel="noopener">
+                                        <button type="button" style="padding:0;border:0;background:none;cursor:pointer;" data-bs-toggle="modal" data-bs-target="#dh-photo-modal"
+                                            data-photo-src="{{ \App\Support\SitePhoto::web($photo->file) }}" data-photo-alt="Picture of {{ $photo->site->name ?? 'a site' }}">
                                             <img src="{{ \App\Support\SitePhoto::thumb($photo->file) }}" alt="" style="width:64px;height:48px;object-fit:cover;border-radius:6px;">
-                                        </a>
+                                        </button>
                                     </td>
                                     <td>
                                         @if($photo->site)
@@ -157,6 +173,12 @@
 
     @push('js')
     <script>
+        document.getElementById('dh-photo-modal')?.addEventListener('show.bs.modal', function (e) {
+            var img = document.getElementById('dh-photo-modal-img');
+            img.src = e.relatedTarget.getAttribute('data-photo-src');
+            img.alt = e.relatedTarget.getAttribute('data-photo-alt') || '';
+        });
+
         function confirmDiverPhotoAction(url, method, title, text, submitLabel) {
             document.getElementById('diverPhotoConfirmTitle').textContent = title;
             document.getElementById('diverPhotoConfirmText').textContent = text;

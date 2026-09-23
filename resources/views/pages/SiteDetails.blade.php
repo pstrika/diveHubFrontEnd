@@ -241,6 +241,55 @@
                 $forecastText = $forecast ? ($hour < 12 ? $forecast->conditionsAM_text : $forecast->conditionsPM_text) : null;
             @endphp
 
+            {{-- Contribute-a-picture nudge, moved from a bottom popup to a
+                 slim bar at the very top of the page (Pablo, 2026-09-24:
+                 "the pop up at the bottom is annoying... covering the
+                 navigation bar. Maybe we replace it at the very top...
+                 without taking too much space"). Same <4-pictures
+                 criterion. Frequency is reduced two ways in the script
+                 below: dismissing suppresses it site-wide (not just this
+                 site) for 14 days, and even without dismissing it won't
+                 show again for 24h once shown once - "reduce the frequency
+                 we show this". --}}
+            @if(auth()->user()->isNotGuest() && $diverPhotos->count() < 4)
+                <div class="dh-photo-cta-bar" id="dh-diver-photo-cta" hidden>
+                    <span class="material-icons-round" aria-hidden="true">add_a_photo</span>
+                    <span class="dh-photo-cta-text">Been to {{ $site->name }}? Share your photos with other divers!</span>
+                    <button type="button" class="dh-photo-cta-btn" data-bs-toggle="modal" data-bs-target="#dh-upload-diver-photo-modal">Add a picture</button>
+                    <button type="button" class="dh-photo-cta-dismiss" id="dh-diver-photo-cta-dismiss" aria-label="Dismiss">
+                        <span class="material-icons-round" aria-hidden="true">close</span>
+                    </button>
+                </div>
+                <script>
+                    (function () {
+                        var dismissKey = 'dhDiverPhotoCtaDismissedUntil';
+                        var shownKey = 'dhDiverPhotoCtaShownAt';
+                        var bar = document.getElementById('dh-diver-photo-cta');
+                        var dismiss = document.getElementById('dh-diver-photo-cta-dismiss');
+                        if (!bar || !dismiss) return;
+
+                        var now = Date.now();
+                        var suppressed = false;
+                        try {
+                            var dismissedUntil = parseInt(localStorage.getItem(dismissKey) || '0', 10);
+                            var shownAt = parseInt(localStorage.getItem(shownKey) || '0', 10);
+                            suppressed = now < dismissedUntil || (now - shownAt) < 24 * 60 * 60 * 1000;
+                        } catch (e) {}
+
+                        if (!suppressed) {
+                            setTimeout(function () {
+                                bar.hidden = false;
+                                try { localStorage.setItem(shownKey, String(Date.now())); } catch (e) {}
+                            }, 1000);
+                        }
+                        dismiss.addEventListener('click', function () {
+                            bar.hidden = true;
+                            try { localStorage.setItem(dismissKey, String(Date.now() + 14 * 24 * 60 * 60 * 1000)); } catch (e) {}
+                        });
+                    })();
+                </script>
+            @endif
+
             {{-- Gallery header (W3 note 1). Main photo plus two thumbnails; all link to the full gallery below. --}}
             <section class="dh-site-hero">
                 <a class="dh-site-hero-main" href="#pictures" style="background-image:url('{{ $heroUrl }}')" aria-label="Photos of {{ $site->name }}"></a>
@@ -388,11 +437,12 @@
 
                 {{-- Diver-uploaded picture full-size modal - separate from
                      #dh-photo-modal above because this one overlays the
-                     uploader's name, avatar and date on the picture itself
-                     (Pablo, 2026-09-23: "show the full size picture on a
-                     modal with the name and avatar of the member that
-                     uploaded... Overlay name, avatar and date over the
-                     picture"). --}}
+                     uploader's name and date on the picture itself. No
+                     avatar (Pablo, 2026-09-24: it "overlaid at full size
+                     over the picture" - a real bug, .dh-photo-modal img's
+                     descendant selector outranked the avatar's own class
+                     and stretched it to fill the modal - "remove the
+                     avatar and only keep the name... and the date"). --}}
                 <div class="modal fade dh-photo-modal" id="dh-diver-photo-modal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-lg">
                         <div class="modal-content">
@@ -400,7 +450,6 @@
                             <div class="dh-diver-modal-frame">
                                 <img id="dh-diver-photo-modal-img" src="" alt="">
                                 <div class="dh-diver-modal-overlay">
-                                    <img id="dh-diver-photo-modal-avatar" class="dh-diver-modal-avatar" src="" alt="">
                                     <span class="dh-diver-modal-text">
                                         <span id="dh-diver-photo-modal-name" class="dh-diver-modal-name do-not-translate"></span>
                                         <span id="dh-diver-photo-modal-date" class="dh-diver-modal-date"></span>
@@ -414,7 +463,6 @@
                     document.getElementById('dh-diver-photo-modal')?.addEventListener('show.bs.modal', function (e) {
                         var t = e.relatedTarget;
                         document.getElementById('dh-diver-photo-modal-img').src = t.getAttribute('data-photo-src');
-                        document.getElementById('dh-diver-photo-modal-avatar').src = t.getAttribute('data-uploader-avatar');
                         document.getElementById('dh-diver-photo-modal-name').textContent = t.getAttribute('data-uploader-name');
                         document.getElementById('dh-diver-photo-modal-date').textContent = t.getAttribute('data-uploaded-date');
                     });
@@ -1133,16 +1181,12 @@
                                         @foreach($page as $p)
                                             @php
                                                 $uploaderName = $p->user->name ?? 'A diver';
-                                                $uploaderAvatar = ($p->user && $p->user->picture)
-                                                    ? asset('assets') . '/img/users/' . $p->user->picture
-                                                    : asset('assets') . '/img/default-avatar.png';
                                                 $uploadedDate = $p->created_at->format('M j, Y');
                                             @endphp
                                             <figure class="dh-diver-tile-figure">
                                                 <button type="button" class="dh-diver-tile" data-bs-toggle="modal" data-bs-target="#dh-diver-photo-modal"
                                                     data-photo-src="{{ \App\Support\SitePhoto::web($p->file) }}"
                                                     data-uploader-name="{{ $uploaderName }}"
-                                                    data-uploader-avatar="{{ $uploaderAvatar }}"
                                                     data-uploaded-date="{{ $uploadedDate }}">
                                                     <img src="{{ \App\Support\SitePhoto::thumb($p->file) }}" alt="{{ $site->name }} - photo by {{ $uploaderName }}" loading="lazy">
                                                 </button>
@@ -1193,38 +1237,6 @@
                             </div>
                         </div>
 
-                        {{-- Bottom banner nudging a contribution when this site has few
-                             pictures yet (Pablo, 2026-09-23: "if a site has less than 4
-                             diver's uploaded pictures, invite the user to contribute...
-                             a pop up banner coming from the bottom"). Dismiss is
-                             remembered per site so it doesn't nag every visit. --}}
-                        @if($diverPhotos->count() < 4)
-                            <div class="dh-bottom-banner" id="dh-diver-photo-banner" hidden>
-                                <span class="material-icons-round" aria-hidden="true">add_a_photo</span>
-                                <span class="dh-bottom-banner-text">Been to {{ $site->name }}? Share your photos with other divers!</span>
-                                <button type="button" class="dh-btn dh-btn-primary" data-bs-toggle="modal" data-bs-target="#dh-upload-diver-photo-modal">Add a picture</button>
-                                <button type="button" class="dh-bottom-banner-dismiss" id="dh-diver-photo-banner-dismiss" aria-label="Dismiss">
-                                    <span class="material-icons-round" aria-hidden="true">close</span>
-                                </button>
-                            </div>
-                            <script>
-                                (function () {
-                                    var key = 'dhDiverPhotoBannerDismissed_{{ $site->id }}';
-                                    var banner = document.getElementById('dh-diver-photo-banner');
-                                    var dismiss = document.getElementById('dh-diver-photo-banner-dismiss');
-                                    if (!banner || !dismiss) return;
-                                    var alreadyDismissed = false;
-                                    try { alreadyDismissed = localStorage.getItem(key) === '1'; } catch (e) {}
-                                    if (!alreadyDismissed) {
-                                        setTimeout(function () { banner.hidden = false; }, 1500);
-                                    }
-                                    dismiss.addEventListener('click', function () {
-                                        banner.hidden = true;
-                                        try { localStorage.setItem(key, '1'); } catch (e) {}
-                                    });
-                                })();
-                            </script>
-                        @endif
                     @endif
                 </div>
 
