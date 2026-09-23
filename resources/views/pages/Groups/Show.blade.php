@@ -82,35 +82,49 @@
                     </div>
                     <div class="modal-body">
                         <div class="form-check mb-3">
-                            <input class="form-check-input dh-check" type="checkbox" name="reminders_enabled" value="1" id="remindersEnabledInput" {{ $group->reminders_enabled ? 'checked' : '' }}>
-                            <label class="form-check-label" for="remindersEnabledInput">
-                                Email trip reminders (3 days and 1 day before an upcoming dive)
+                            <input class="form-check-input dh-check" type="checkbox" name="is_public" value="1" id="isPublicInput" {{ $group->is_public ? 'checked' : '' }}>
+                            <label class="form-check-label" for="isPublicInput">
+                                Public group - anyone can find and join, no invitation needed
                             </label>
                         </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input dh-check" type="checkbox" name="digest_enabled" value="1" id="digestEnabledInput" {{ $group->digest_enabled ? 'checked' : '' }}>
-                            <label class="form-check-label" for="digestEnabledInput">
-                                Email activity digest (Wednesdays, Fridays and Sundays - new members, chat, trips)
-                            </label>
-                        </div>
+                        <p class="text-xs text-secondary mt-n2 mb-3">You can only be an admin of one public group at a time.</p>
                         <div class="form-check mb-4">
                             <input class="form-check-input dh-check" type="checkbox" name="allow_members_add_dives" value="1" id="allowMembersAddDivesInput" {{ $group->allow_members_add_dives ? 'checked' : '' }}>
                             <label class="form-check-label" for="allowMembersAddDivesInput">
                                 Allow any member to add dives (otherwise only admins can)
                             </label>
                         </div>
-                        <div class="form-check mb-1">
-                            <input class="form-check-input dh-check" type="checkbox" name="is_public" value="1" id="isPublicInput" {{ $group->is_public ? 'checked' : '' }}>
-                            <label class="form-check-label" for="isPublicInput">
-                                Public group - anyone can find and join, no invitation needed
-                            </label>
+
+                        {{-- Notification preferences (Pablo, 2026-09-23: "Group
+                             Email trips reminders, Email activity digest and
+                             Mute all notification into a collapsable section")
+                             - collapsed by default, same Bootstrap collapse
+                             pattern as the auto-add rule section below. --}}
+                        <div class="d-flex justify-content-between align-items-center collapsed" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#notificationPrefsBody" role="button" aria-expanded="false" aria-controls="notificationPrefsBody">
+                            <label class="form-label mb-0" style="cursor: pointer;">Notification preferences</label>
+                            <span class="material-icons-round dh-collapse-chevron" aria-hidden="true">expand_more</span>
                         </div>
-                        <p class="text-xs text-secondary mt-n2 mb-4">Everything else about the group (who can add dives, notifications) stays exactly as configured above. You can only be an admin of one public group at a time.</p>
-                        <div class="form-check mb-4">
-                            <input class="form-check-input dh-check" type="checkbox" name="notifications_muted" value="1" id="notificationsMutedInput" {{ $group->notifications_muted ? 'checked' : '' }}>
-                            <label class="form-check-label" for="notificationsMutedInput">
-                                Mute all notifications for every member (overrides everyone's own bell toggle)
-                            </label>
+                        <div class="collapse" id="notificationPrefsBody">
+                            <div class="pt-3">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input dh-check" type="checkbox" name="reminders_enabled" value="1" id="remindersEnabledInput" {{ $group->reminders_enabled ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="remindersEnabledInput">
+                                        Email trip reminders (3 days and 1 day before an upcoming dive)
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input dh-check" type="checkbox" name="digest_enabled" value="1" id="digestEnabledInput" {{ $group->digest_enabled ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="digestEnabledInput">
+                                        Email activity digest (Wednesdays, Fridays and Sundays - new members, chat, trips)
+                                    </label>
+                                </div>
+                                <div class="form-check mb-1">
+                                    <input class="form-check-input dh-check" type="checkbox" name="notifications_muted" value="1" id="notificationsMutedInput" {{ $group->notifications_muted ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="notificationsMutedInput">
+                                        Mute all notifications for every member (overrides everyone's own bell toggle)
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -479,7 +493,7 @@
 
             <div class="row">
                 {{-- Members --}}
-                <div class="col-md-6">
+                <div class="col-md-6 dh-equal-card-col">
                     <section class="dh-panel">
                         <div class="dh-panel-head-row">
                             <h2 class="dh-panel-title mb-0">Members</h2>
@@ -489,7 +503,7 @@
                                 </button>
                             @endif
                         </div>
-                        <div style="max-height: 350px; overflow-y: auto;">
+                        <div class="dh-equal-card-scroll" style="max-height: 350px; overflow-y: auto;">
                             <ul class="list-group">
                                 @foreach($members as $member)
                                     <li class="list-group-item border-0 d-flex justify-content-between align-items-center px-0">
@@ -532,7 +546,7 @@
                     </section>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 dh-equal-card-col">
                     @if($hasFbFeed)
                         @include('pages.Groups.partials.FacebookFeedCard')
                     @else
@@ -543,10 +557,10 @@
 
             <div class="row">
                 @if($hasFbFeed)
-                    <div class="col-md-6">
+                    <div class="col-md-6 dh-equal-card-col">
                         @include('pages.Groups.partials.ChatCard')
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6 dh-equal-card-col">
                         @include('pages.Groups.partials.UpcomingDivesCard')
                     </div>
                 @else

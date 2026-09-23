@@ -35,26 +35,32 @@
 <form method="POST" action="{{ route('Groups.autoAddRule.update', ['group' => $group->slug]) }}" id="autoAddRuleForm">
     @csrf
     <div class="modal-body border-top pt-3">
-        <div class="d-flex justify-content-between align-items-center {{ $autoAddRule ? '' : 'collapsed' }}" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#autoAddRuleBody" role="button" aria-expanded="{{ $autoAddRule ? 'true' : 'false' }}" aria-controls="autoAddRuleBody">
-            <div>
-                <label class="form-label mb-0" style="cursor: pointer;">Auto-add rule</label>
-                <p class="text-xs text-secondary mt-n1 mb-0">
-                    A trip is added automatically when it has one of the trip types, AND matches
-                    an operator or location, AND matches a level or site. Checked every 30 minutes.
-                </p>
+        <div class="d-flex justify-content-between align-items-center gap-3">
+            {{-- Pablo, 2026-09-23: "Rule enabled should be in the header
+                 of the collapsable section (visible even when collapsed)"
+                 - kept as a sibling of the collapse-toggle area (not
+                 nested inside it), so clicking the checkbox doesn't also
+                 toggle the collapse. --}}
+            <div class="d-flex align-items-center gap-2 {{ $autoAddRule ? '' : 'collapsed' }}" style="cursor: pointer; min-width: 0;" data-bs-toggle="collapse" data-bs-target="#autoAddRuleBody" role="button" aria-expanded="{{ $autoAddRule ? 'true' : 'false' }}" aria-controls="autoAddRuleBody">
+                <span class="material-icons-round dh-collapse-chevron" aria-hidden="true">expand_more</span>
+                <div>
+                    <label class="form-label mb-0" style="cursor: pointer;">Auto-add rule</label>
+                    <p class="text-xs text-secondary mt-n1 mb-0">
+                        A trip is added automatically when it has one of the trip types, AND matches
+                        an operator or location, AND matches a level or site. Checked every 30 minutes.
+                    </p>
+                </div>
             </div>
-            <span class="material-icons-round dh-collapse-chevron" aria-hidden="true">expand_more</span>
+            <div class="form-check mb-0" style="flex: 0 0 auto;">
+                <input class="form-check-input dh-check" type="checkbox" name="enabled" value="1" id="autoAddRuleEnabledInput" {{ ($autoAddRule->enabled ?? false) ? 'checked' : '' }}>
+                <label class="form-check-label" for="autoAddRuleEnabledInput">Rule enabled</label>
+            </div>
         </div>
 
         <div class="collapse {{ $autoAddRule ? 'show' : '' }}" id="autoAddRuleBody">
             <div class="pt-3">
-                <div class="form-check mb-4">
-                    <input class="form-check-input dh-check" type="checkbox" name="enabled" value="1" id="autoAddRuleEnabledInput" {{ ($autoAddRule->enabled ?? false) ? 'checked' : '' }}>
-                    <label class="form-check-label" for="autoAddRuleEnabledInput">Rule enabled</label>
-                </div>
-
                 {{-- Trip type --}}
-                <div class="dh-rule-box">
+                <div class="dh-rule-box dh-rule-outer">
                     <label class="form-label">Trip type</label>
                     <div class="d-flex flex-wrap gap-2" id="ruleTripTypeChips">
                         @foreach(\App\Models\GroupAutoAddRule::TRIP_TYPES as $type)

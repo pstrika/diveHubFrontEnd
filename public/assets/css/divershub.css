@@ -743,17 +743,22 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-panel-toggle .form-check-label { color: var(--dh-muted); font-size: .85rem; font-weight: 600; }
 .dh-panel-cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--dh-space-4); }
 
-/* Members/Upcoming-dives/Facebook-feed/Chat (Groups page) all share the
-   same 350px scroll cap (each card's own inline max-height/overflow-y)
-   instead of stretching to match a row sibling - a flex-stretch approach
-   was tried first and reverted (Pablo, 2026-09-23: "If the whole content
-   fits in less than the max length, I'm ok to make the card shorter...
-   If the content is longer, keep a fix length and then allow scroll" -
-   a shorter card being shorter is fine, it's the four caps disagreeing
-   with each other, not row-mate mismatches, that needed fixing). Kept
-   this comment as a pointer for why there's no shared CSS class here:
-   the fix was making the numbers agree, not adding a mechanism.
-*/
+/* Members/Upcoming-dives/Facebook-feed/Chat (Groups page): all four share
+   the same 350px scroll cap (each card's own inline max-height/
+   overflow-y), AND the column/panel/scroll-area all stretch to fill
+   whatever height Bootstrap's row already equalizes the pair to
+   (Pablo, 2026-09-23, after the two prior attempts: unifying the caps
+   alone left a gap under a short card's content whenever its row
+   sibling's OWN total height - e.g. Chat's compose box below its
+   message list - made the row taller than that card's own content;
+   "Make the Upcoming dives card longer...make sure the content takes
+   all the height of the card"). Since every card's cap already agrees
+   at 350px, letting the scroll area flex-grow can never ask for more
+   than that cap allows either way, so this doesn't reintroduce the
+   unbounded-growth risk the first flex attempt had no cap against. */
+.dh-equal-card-col { display: flex; }
+.dh-equal-card-col > .dh-panel { flex: 1 1 auto; display: flex; flex-direction: column; }
+.dh-equal-card-col .dh-equal-card-scroll { flex: 1 1 auto; min-height: 0; }
 /* Wider content column for a form whose main field is a long body of text (the newsletter composer) - still collapses to one column below, same as the plain .dh-panel-cols. */
 .dh-panel-cols-wide { grid-template-columns: 2.4fr 1fr; }
 .dh-panel-subtitle { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--dh-muted); margin: 0 0 8px; }
@@ -1998,10 +2003,14 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-rule-or-row { display: flex; align-items: stretch; gap: 12px; }
 .dh-rule-or-row > .dh-rule-box { flex: 1 1 0; min-width: 0; }
 .dh-rule-or-pill-col { display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
-.dh-rule-pill { display: inline-flex; align-items: center; justify-content: center; padding: 4px 14px; border-radius: var(--dh-radius-pill); font-size: .72rem; font-weight: 800; letter-spacing: .5px; color: #fff; white-space: nowrap; }
+/* Pablo, 2026-09-23: "make all the pills of the rule sections smaller -
+   right now they take a lot of space" / "only keep at the same size the
+   ANDs and ORs" - AND and OR share this one size (only their background
+   color differs), independent of any other pill/chip size on the page. */
+.dh-rule-pill { display: inline-flex; align-items: center; justify-content: center; padding: 1px 8px; border-radius: var(--dh-radius-pill); font-size: .62rem; font-weight: 800; letter-spacing: .4px; color: #fff; white-space: nowrap; line-height: 1.6; }
 .dh-rule-pill-and { background: var(--dh-good); }
 .dh-rule-pill-or { background: var(--dh-sea); }
-.dh-rule-and-row { display: flex; justify-content: center; margin: 12px 0; }
+.dh-rule-and-row { display: flex; justify-content: center; margin: 6px 0; }
 @media (max-width: 576px) {
   .dh-rule-or-row { flex-direction: column; }
   .dh-rule-or-pill-col { margin: 4px 0; }
