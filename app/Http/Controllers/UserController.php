@@ -193,7 +193,13 @@ class UserController extends Controller
         // the site where they were uploaded").
         $myDiverPhotos = \App\Models\DiverPhoto::where('userId', $user->id)->with('site')->latest()->get();
 
-        return view('pages.profile.overview', compact('user', 'operators', 'favOperators', 'locations', 'favLocations', 'showLevelLow', 'showLevelHigh', 'myDiverPhotos'));
+        // Customizable mobile nav bar (Pablo, 2026-09-24) - resolved to a
+        // real key here so the picker always shows something selected,
+        // same fallback the nav bar itself uses.
+        $navSlot1 = \App\Support\NavTabs::resolveSlot($user->nav_slot_1, \App\Support\NavTabs::DEFAULT_SLOT_1);
+        $navSlot2 = \App\Support\NavTabs::resolveSlot($user->nav_slot_2, \App\Support\NavTabs::DEFAULT_SLOT_2);
+
+        return view('pages.profile.overview', compact('user', 'operators', 'favOperators', 'locations', 'favLocations', 'showLevelLow', 'showLevelHigh', 'myDiverPhotos', 'navSlot1', 'navSlot2'));
     }
 
     public function updateProfile(Request $request) {
@@ -369,6 +375,16 @@ class UserController extends Controller
             $user->pinch_zoom_enabled = 0;
         }
 
+        // Customizable mobile nav bar slots (Pablo, 2026-09-24) - null falls
+        // back to the default (Weather / Groups) in App\Support\NavTabs, so
+        // an invalid/blank pick is just left unset rather than rejecting
+        // the whole profile save over it.
+        if ($request->has('nav_slot_1')) {
+            $user->nav_slot_1 = \App\Support\NavTabs::isValid($request->input('nav_slot_1')) ? $request->input('nav_slot_1') : null;
+        }
+        if ($request->has('nav_slot_2')) {
+            $user->nav_slot_2 = \App\Support\NavTabs::isValid($request->input('nav_slot_2')) ? $request->input('nav_slot_2') : null;
+        }
 
         // A submitted form should never be trusted alone for this - the
         // checkboxes are already disabled client-side, but SMS/WhatsApp

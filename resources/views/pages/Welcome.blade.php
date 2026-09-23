@@ -296,9 +296,77 @@
                         <x-comms-preferences :user="$user" :ids="false" :showPhone="false" :forceUnchecked="true" />
                         <div class="dh-wizard-actions">
                             <button type="submit" class="dh-btn dh-btn-primary">Next</button>
+                            <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl('navbar') }}">Skip this</a>
+                        </div>
+                    </form>
+
+                @elseif($step === 'navbar')
+                    <h1 class="dh-wizard-title">Make the app yours</h1>
+                    <p class="dh-wizard-lead">Trips, Dashboard and More always stay put on your phone's bottom bar. Pick what goes in the other two spots.</p>
+                    <form method="POST" action="{{ route('welcome.save') }}" class="dh-wizard-form">
+                        @csrf
+                        <input type="hidden" name="step" value="navbar">
+                        @php
+                            $wizardNavIconHtml = function (string $icon) {
+                                if (str_starts_with($icon, 'svg:')) {
+                                    $path = public_path('assets/img/icons/' . substr($icon, 4));
+                                    $svg = is_file($path) ? file_get_contents($path) : '';
+                                    $svg = preg_replace('/<defs>.*?<\/defs>/s', '', $svg);
+                                    $svg = str_replace(' class="cls-1"', '', $svg);
+                                    $svg = preg_replace('/<svg /', '<svg fill="currentColor" ', $svg, 1);
+                                    return '<span class="dh-nav-chip-icon-svg" aria-hidden="true">' . $svg . '</span>';
+                                }
+                                return '<span class="material-icons-round" aria-hidden="true">' . $icon . '</span>';
+                            };
+                        @endphp
+                        @foreach([1 => $navSlot1, 2 => $navSlot2] as $slotNum => $slotValue)
+                            <div class="mb-3">
+                                <label class="dh-comms-label d-block mb-2">{{ $slotNum === 1 ? 'First spot' : 'Second spot' }}</label>
+                                <div class="d-flex flex-wrap gap-2" id="wizardNavSlot{{ $slotNum }}Chips">
+                                    @foreach(\App\Support\NavTabs::OPTIONS as $key => $opt)
+                                        <button type="button" class="chip {{ $slotValue === $key ? 'chip-on' : '' }}" data-nav-slot-option="{{ $key }}">{!! $wizardNavIconHtml($opt['icon']) !!} {{ $opt['short'] }}</button>
+                                    @endforeach
+                                </div>
+                                <input type="hidden" name="nav_slot_{{ $slotNum }}" id="wizardNavSlot{{ $slotNum }}Input" value="{{ $slotValue }}">
+                            </div>
+                        @endforeach
+                        <div class="dh-wizard-actions">
+                            <button type="submit" class="dh-btn dh-btn-primary">Next</button>
                             <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl('social') }}">Skip this</a>
                         </div>
                     </form>
+                    <script>
+                        (function () {
+                            function refresh() {
+                                var v1 = document.getElementById('wizardNavSlot1Input')?.value;
+                                var v2 = document.getElementById('wizardNavSlot2Input')?.value;
+                                if (v1 === undefined) return;
+                                document.querySelectorAll('#wizardNavSlot1Chips [data-nav-slot-option]').forEach(function (b) {
+                                    b.classList.toggle('is-taken', b.getAttribute('data-nav-slot-option') === v2);
+                                });
+                                document.querySelectorAll('#wizardNavSlot2Chips [data-nav-slot-option]').forEach(function (b) {
+                                    b.classList.toggle('is-taken', b.getAttribute('data-nav-slot-option') === v1);
+                                });
+                            }
+                            function wire(containerId, hiddenId) {
+                                var container = document.getElementById(containerId);
+                                var hidden = document.getElementById(hiddenId);
+                                if (!container || !hidden) return;
+                                container.querySelectorAll('[data-nav-slot-option]').forEach(function (btn) {
+                                    btn.addEventListener('click', function () {
+                                        if (btn.classList.contains('is-taken')) return;
+                                        container.querySelectorAll('[data-nav-slot-option]').forEach(function (b) { b.classList.remove('chip-on'); });
+                                        btn.classList.add('chip-on');
+                                        hidden.value = btn.getAttribute('data-nav-slot-option');
+                                        refresh();
+                                    });
+                                });
+                            }
+                            wire('wizardNavSlot1Chips', 'wizardNavSlot1Input');
+                            wire('wizardNavSlot2Chips', 'wizardNavSlot2Input');
+                            refresh();
+                        })();
+                    </script>
 
                 @elseif($step === 'social')
                     <h1 class="dh-wizard-title">Follow Divers Hub</h1>

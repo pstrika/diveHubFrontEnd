@@ -443,6 +443,50 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Customizable mobile nav bar (Pablo, 2026-09-24:
+                             "give them the chance to customize which icons
+                             they see in the bar... Trips, Dashboard and
+                             More need to stay always in the same position").
+                             Collapsed by default like the other
+                             lower-priority sections on this page. --}}
+                        <div class="dh-profile-card">
+                            <div class="d-flex justify-content-between align-items-center collapsed" style="cursor: pointer;"
+                                 data-bs-toggle="collapse" data-bs-target="#navCustomizeBody" role="button"
+                                 aria-expanded="false" aria-controls="navCustomizeBody">
+                                <h6 class="dh-panel-title mb-0">Customize your navigation bar</h6>
+                                <span class="material-icons-round dh-collapse-chevron collapsed" aria-hidden="true">expand_more</span>
+                            </div>
+                            <div class="collapse" id="navCustomizeBody">
+                                <div class="dh-profile-card-body pt-3">
+                                    <p class="text-secondary text-sm mt-n2 mb-3">Trips, Dashboard and More always stay put on your phone's bottom bar. Pick what goes in the other two spots.</p>
+                                    @php
+                                        $navIconHtml = function (string $icon) {
+                                            if (str_starts_with($icon, 'svg:')) {
+                                                $path = public_path('assets/img/icons/' . substr($icon, 4));
+                                                $svg = is_file($path) ? file_get_contents($path) : '';
+                                                $svg = preg_replace('/<defs>.*?<\/defs>/s', '', $svg);
+                                                $svg = str_replace(' class="cls-1"', '', $svg);
+                                                $svg = preg_replace('/<svg /', '<svg fill="currentColor" ', $svg, 1);
+                                                return '<span class="dh-nav-chip-icon-svg" aria-hidden="true">' . $svg . '</span>';
+                                            }
+                                            return '<span class="material-icons-round" aria-hidden="true">' . $icon . '</span>';
+                                        };
+                                    @endphp
+                                    @foreach([1 => $navSlot1, 2 => $navSlot2] as $slotNum => $slotValue)
+                                        <div class="mb-3">
+                                            <label class="dh-comms-label d-block mb-2">{{ $slotNum === 1 ? 'First spot' : 'Second spot' }}</label>
+                                            <div class="d-flex flex-wrap gap-2" id="navSlot{{ $slotNum }}Chips">
+                                                @foreach(\App\Support\NavTabs::OPTIONS as $key => $opt)
+                                                    <button type="button" class="chip {{ $slotValue === $key ? 'chip-on' : '' }}" data-nav-slot-option="{{ $key }}">{!! $navIconHtml($opt['icon']) !!} {{ $opt['short'] }}</button>
+                                                @endforeach
+                                            </div>
+                                            <input type="hidden" name="nav_slot_{{ $slotNum }}" id="navSlot{{ $slotNum }}Input" value="{{ $slotValue }}">
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -777,6 +821,42 @@
         });
     </script>
     @endif
+
+    <script>
+        (function () {
+            // Nav bar customization: two independent single-select chip
+            // groups that can't both hold the same option (Pablo,
+            // 2026-09-24) - picking one greys it out in the other slot.
+            function refreshNavSlots() {
+                var v1 = document.getElementById('navSlot1Input')?.value;
+                var v2 = document.getElementById('navSlot2Input')?.value;
+                if (v1 === undefined) return;
+                document.querySelectorAll('#navSlot1Chips [data-nav-slot-option]').forEach(function (b) {
+                    b.classList.toggle('is-taken', b.getAttribute('data-nav-slot-option') === v2);
+                });
+                document.querySelectorAll('#navSlot2Chips [data-nav-slot-option]').forEach(function (b) {
+                    b.classList.toggle('is-taken', b.getAttribute('data-nav-slot-option') === v1);
+                });
+            }
+            function wireNavSlot(containerId, hiddenId) {
+                var container = document.getElementById(containerId);
+                var hidden = document.getElementById(hiddenId);
+                if (!container || !hidden) return;
+                container.querySelectorAll('[data-nav-slot-option]').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        if (btn.classList.contains('is-taken')) return;
+                        container.querySelectorAll('[data-nav-slot-option]').forEach(function (b) { b.classList.remove('chip-on'); });
+                        btn.classList.add('chip-on');
+                        hidden.value = btn.getAttribute('data-nav-slot-option');
+                        refreshNavSlots();
+                    });
+                });
+            }
+            wireNavSlot('navSlot1Chips', 'navSlot1Input');
+            wireNavSlot('navSlot2Chips', 'navSlot2Input');
+            refreshNavSlots();
+        })();
+    </script>
 
     @endpush
 </x-page-template>

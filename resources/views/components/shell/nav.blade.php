@@ -1,35 +1,36 @@
 {{--
     Site shell navigation.
 
-    One bar, five tabs, the same whether you are signed in or not (decided with
-    Zach and Pablo, 2026-09-10). A bottom bar is a map, not a menu: its value is
-    that a diver stops reading it after two sessions and just reaches, so it
-    never rearranges itself at sign up.
+    Desktop (lg and up) keeps the original fixed bar decided with Zach and
+    Pablo on 2026-09-10 - Dives, Sites, Weather, Groups, plus a More link
+    that opens the drawer (shell/menu.blade.php). $tabs below, unchanged.
 
-        Dives    -> the trip finder            (route Trips)
-        Sites    -> the site explorer          (route DiveSites)
-        Weather  -> the marine forecast        (route Weather)
-        Groups   -> my groups, unread badge    (route MyGroups; guests get the account prompt)
-        More     -> the drawer menu            (settings, admin tools, sign out - same for guest and signed-in)
+    Phones get their own $mobileTabs bar, customizable per diver since
+    2026-09-24 (Pablo: "give them the chance to customize which icons they
+    see in the bar"):
 
-    Weather has the slot Operators used to have. In South Florida the go or no go
-    call is sea state, so a diver checks conditions the night before every trip;
-    the operator list is a directory people read once when they are new, and
-    every real path to an operator is a trip card, a site page or the finder's
-    operator filter. Operators stays one tap away in the drawer.
+        Trips      -> the trip finder, fixed 1st         (route Trips)
+        [slot 1]   -> nav_slot_1, defaults to Weather     (App\Support\NavTabs)
+        Dashboard  -> fixed 3rd, enlarged                 (route MyDashboard)
+        [slot 2]   -> nav_slot_2, defaults to Groups       (App\Support\NavTabs)
+        More       -> fixed 5th, opens the drawer
 
-    More always opens the drawer (shell/menu.blade.php), for guest and
-    signed-in alike (Pablo, 2026-09-21: "same logic...icon at the bottom
-    right should be a more" - previously this tab showed the diver's own
-    avatar and linked straight to My Dashboard, which is now instead the
-    top bar's avatar button's job). The drawer itself still carries the
-    "My Dashboard" link for anyone who reaches it from here.
+    Trips, Dashboard and More can't be moved or swapped out - only the two
+    slot values are pickable, from App\Support\NavTabs::OPTIONS (Weather,
+    Groups, Sites, Operators, Deco Planner, Blog, Beach Diving, or one of
+    the themed calendars), edited from the profile overview page or the
+    welcome wizard. Guests get their own fixed 5 instead, no Dashboard (they
+    have none) and no customization: Trips, Sites, Weather, Operators, More.
 
-    Desktop (lg and up): a sticky top bar with the four links and the avatar
-    button. Phones: the top bar shrinks to brand plus avatar and the fixed bottom
-    tab bar gives thumb reach to the whole product.
+    Weather earlier took the desktop slot Operators used to have. In South
+    Florida the go or no go call is sea state, so a diver checks conditions
+    the night before every trip; the operator list is a directory people
+    read once when they are new, and every real path to an operator is a
+    trip card, a site page or the finder's operator filter. Operators stays
+    one tap away in the drawer (and is a nav_slot option on mobile).
 
-    $active is one of: today, sites, weather, groups, me, or empty.
+    $active is one of: today, sites, weather, groups, dashboard, me, or
+    empty (plus, on mobile, whatever NavTabs key a diver has in a slot).
 --}}
 @props(['active' => ''])
 
@@ -38,6 +39,8 @@
     $isGuest = !$user || !$user->isNotGuest();
     // Four linked destinations plus Me. "Dives" is the trip finder (day board plus
     // date ranges). "Groups" is personal, so for guests it opens the account prompt.
+    // Desktop only (see $mobileTabs below for the phone tab bar, which is
+    // customizable and has its own Dashboard tab - Pablo, 2026-09-24).
     $tabs = [
         'today'   => ['label' => 'Dives',      'short' => 'Dives',   'icon' => 'scuba_diving', 'href' => route('Trips')],
         'sites'   => ['label' => 'Dive Sites', 'short' => 'Sites',   'icon' => 'pin_drop',     'href' => route('DiveSites')],
@@ -51,6 +54,47 @@
     // not the bell's combined total (Pablo, 2026-09-17: "we want here the
     // message count for groups, not the entire unread inbox").
     $unreadGroups = $isGuest ? 0 : (int) $user->unreadGroupNotifications();
+
+    // Mobile tab bar (Pablo, 2026-09-24): "Trips, Dashboard and More need to
+    // stay always in the same position and cannot be swapped" - positions 1,
+    // 3 and 5 are fixed here; 2 and 4 come from the diver's own
+    // nav_slot_1/nav_slot_2 (App\Support\NavTabs), defaulting to Weather and
+    // Groups - "the standard configuration". Guests get their own fully
+    // fixed 5, no Dashboard (they have none) and no customization.
+    if ($isGuest) {
+        $mobileTabs = [
+            ['key' => 'today',     'short' => 'Dives',     'icon' => 'scuba_diving',       'href' => route('Trips')],
+            ['key' => 'sites',     'short' => 'Sites',     'icon' => 'pin_drop',           'href' => route('DiveSites')],
+            ['key' => 'weather',   'short' => 'Weather',   'icon' => 'cloud',              'href' => route('Weather')],
+            ['key' => 'operators', 'short' => 'Operators', 'icon' => 'directions_boat',    'href' => route('Operators')],
+        ];
+    } else {
+        $slot1Key = \App\Support\NavTabs::resolveSlot($user->nav_slot_1, \App\Support\NavTabs::DEFAULT_SLOT_1);
+        $slot2Key = \App\Support\NavTabs::resolveSlot($user->nav_slot_2, \App\Support\NavTabs::DEFAULT_SLOT_2);
+        $slot1 = \App\Support\NavTabs::OPTIONS[$slot1Key];
+        $slot2 = \App\Support\NavTabs::OPTIONS[$slot2Key];
+        $mobileTabs = [
+            ['key' => 'today', 'short' => 'Dives', 'icon' => 'scuba_diving', 'href' => route('Trips')],
+            ['key' => $slot1Key, 'short' => $slot1['short'], 'icon' => $slot1['icon'], 'href' => \App\Support\NavTabs::href($slot1Key), 'badge' => $slot1Key === 'groups' ? $unreadGroups : 0],
+            ['key' => 'dashboard', 'short' => 'Dashboard', 'icon' => 'dashboard', 'href' => route('MyDashboard'), 'big' => true],
+            ['key' => $slot2Key, 'short' => $slot2['short'], 'icon' => $slot2['icon'], 'href' => \App\Support\NavTabs::href($slot2Key), 'badge' => $slot2Key === 'groups' ? $unreadGroups : 0],
+        ];
+    }
+
+    // Renders a mobile tab's icon - a bare name is a Material icon, "svg:<file>"
+    // is one of the themed calendar SVGs, same convention and recoloring as
+    // shell/menu.blade.php's own $iconHtml.
+    $tabIconHtml = function (string $icon) {
+        if (str_starts_with($icon, 'svg:')) {
+            $path = public_path('assets/img/icons/' . substr($icon, 4));
+            $svg = is_file($path) ? file_get_contents($path) : '';
+            $svg = preg_replace('/<defs>.*?<\/defs>/s', '', $svg);
+            $svg = str_replace(' class="cls-1"', '', $svg);
+            $svg = preg_replace('/<svg /', '<svg fill="currentColor" ', $svg, 1);
+            return '<span class="dh-tab-icon-svg" aria-hidden="true">' . $svg . '</span>';
+        }
+        return '<span class="material-icons-round" aria-hidden="true">' . $icon . '</span>';
+    };
 
     // The Me icon is the diver's own picture when they have one. users.picture is a
     // bare file name under public/assets/img/users (UserController::updateProfilePic);
@@ -151,13 +195,15 @@
     </div>
 </div>
 
-{{-- Bottom tab bar, phones only (hidden from lg up in CSS). --}}
+{{-- Bottom tab bar, phones only (hidden from lg up in CSS). Trips (1st),
+     Dashboard (3rd, enlarged) and More (5th) are fixed; 2nd and 4th are
+     $mobileTabs' customizable slots (Pablo, 2026-09-24). --}}
 <nav class="dh-tabbar" aria-label="Main, mobile">
-    @foreach($tabs as $key => $tab)
-        <a href="{{ $tab['href'] }}" class="dh-tab {{ $active === $key ? 'is-active' : '' }}" data-dh-tab="{{ $key }}" @if($active === $key) aria-current="page" @endif @if(!empty($tab['gated'])) onclick="event.preventDefault();showModalGuest();" @endif>
-            <span class="dh-tab-icon">
-                <span class="material-icons-round" aria-hidden="true">{{ $tab['icon'] }}</span>
-                @if($key === 'groups' && $unreadGroups > 0)<span class="dh-tab-badge" aria-label="{{ $unreadGroups }} unread">{{ $unreadGroups > 99 ? '99+' : $unreadGroups }}</span>@endif
+    @foreach($mobileTabs as $tab)
+        <a href="{{ $tab['href'] }}" class="dh-tab {{ !empty($tab['big']) ? 'dh-tab-dashboard' : '' }} {{ $active === $tab['key'] ? 'is-active' : '' }}" data-dh-tab="{{ $tab['key'] }}" @if($active === $tab['key']) aria-current="page" @endif @if(!empty($tab['gated'])) onclick="event.preventDefault();showModalGuest();" @endif>
+            <span class="dh-tab-icon {{ !empty($tab['big']) ? 'dh-tab-icon-big' : '' }}">
+                {!! $tabIconHtml($tab['icon']) !!}
+                @if(!empty($tab['badge']))<span class="dh-tab-badge" aria-label="{{ $tab['badge'] }} unread">{{ $tab['badge'] > 99 ? '99+' : $tab['badge'] }}</span>@endif
             </span>
             <span>{{ $tab['short'] }}</span>
         </a>
