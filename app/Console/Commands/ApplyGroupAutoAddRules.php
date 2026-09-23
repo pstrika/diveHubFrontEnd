@@ -45,8 +45,18 @@ class ApplyGroupAutoAddRules extends Command
         // $trip->operator->location for trips whose tags don't start with
         // a location code, and without this that's a lazy-loaded query
         // per trip - a real N+1 across a couple thousand upcoming trips.
+        //
+        // siteIdStatus 'suggested' trips are included alongside 'confirmed'
+        // ones (Pablo, 2026-09-23: "there are suggested sites for a given
+        // trip. If the levels for those suggested sites comply with the
+        // rule, I want them added") - GroupAutoAddRule::tripHasLevel() and
+        // tripSiteIds() already read trips.siteId directly regardless of
+        // status, so this is the only change needed for that data to reach
+        // the matcher. Blank/null-status trips stay excluded: confirmed via
+        // tinker that every one of them has an empty siteId - there's no
+        // site data to match against yet, unlike 'suggested' ones.
         $trips = Trip::where('date', '>=', now()->toDateString())
-            ->where('siteIdStatus', 'confirmed')
+            ->whereIn('siteIdStatus', ['confirmed', 'suggested'])
             ->with('operator')
             ->get();
 
