@@ -107,4 +107,32 @@ class CronController extends Controller
 
         return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
     }
+
+    /**
+     * Manual-trigger only (Pablo, 2026-09-24) - not on a recurring Logic
+     * App schedule like the others in this file. photos:web-copies
+     * (App\Console\Commands\MakeSitePhotoCopies) scans the whole
+     * public/assets/img/sites directory for any original missing its WebP
+     * copies - both admin-uploaded (Photo) and diver-uploaded (DiverPhoto)
+     * files land in that same directory, so this backfills either kind.
+     * New uploads already make their own copies at upload time; this is
+     * only for a backlog photo, or one whose resize failed at upload time
+     * (a diver's real 20MP/8MB JPEG turned out to need this - webhook
+     * timing or a transient resource limit, not yet root-caused, but
+     * running this again against a specific file is a one-line fix either
+     * way). Has to actually run on this server: the resize reads/writes
+     * public/assets/img/sites, not the shared database, so it can't be
+     * done from a local artisan session like every other admin task this
+     * session has run directly against the shared DB.
+     */
+    public function photosWebCopies(Request $request)
+    {
+        if (!hash_equals((string) env('CRON_SECRET'), (string) $request->query('secret'))) {
+            abort(403);
+        }
+
+        Artisan::call('photos:web-copies', ['--force' => $request->boolean('force')]);
+
+        return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
+    }
 }

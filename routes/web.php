@@ -54,6 +54,8 @@ Route::get('cron/detect-cancelled-trips', [\App\Http\Controllers\CronController:
 Route::get('cron/send-scheduled-newsletters', [\App\Http\Controllers\CronController::class, 'sendScheduledNewsletters']);
 Route::get('cron/sync-support-inbox', [\App\Http\Controllers\CronController::class, 'syncSupportInbox']);
 Route::get('cron/apply-group-auto-add-rules', [\App\Http\Controllers\CronController::class, 'applyGroupAutoAddRules']);
+// Manual-trigger only, not on a schedule - see CronController::photosWebCopies().
+Route::get('cron/photos-web-copies', [\App\Http\Controllers\CronController::class, 'photosWebCopies']);
 
 // Newsletter one-click unsubscribe/resubscribe - reached from a signed link
 // in the email itself, not a logged-in session (the diver may be reading
