@@ -1218,21 +1218,56 @@
                                         <h5 class="modal-title font-weight-normal">Add a picture of {{ $site->name }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
-                                    <form method="POST" action="{{ route('DiverPhotos.store', ['siteId' => $site->id]) }}" enctype="multipart/form-data">
+                                    <form method="POST" action="{{ route('DiverPhotos.store', ['siteId' => $site->id]) }}" enctype="multipart/form-data" id="dh-diver-upload-form">
                                         @csrf
                                         <div class="modal-body">
-                                            <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required class="form-control">
+                                            {{-- Themed trigger over a hidden native input (Pablo, 2026-09-24:
+                                                 "the choose file button needs to be themed to the site - right
+                                                 now it's a system button"). --}}
+                                            <label class="dh-file-picker" for="dh-diver-photo-input">
+                                                <span class="material-icons-round" aria-hidden="true">add_photo_alternate</span>
+                                                <span id="dh-diver-photo-filename">Choose a picture&hellip;</span>
+                                            </label>
+                                            <input type="file" id="dh-diver-photo-input" name="photo" accept="image/jpeg,image/png,image/webp" required hidden>
                                             <p class="text-xs text-secondary mt-2 mb-0">JPG, PNG or WebP, up to 8 MB.</p>
                                             <p class="dh-comms-note dh-comms-warn mt-3">
                                                 <span class="material-icons-round" aria-hidden="true">info</span>
                                                 Your picture will be shown publicly on this site's page once approved. Inappropriate content will be rejected or removed.
                                             </p>
+                                            <p class="dh-upload-progress" id="dh-diver-upload-progress" hidden>
+                                                <span class="dh-spinner" aria-hidden="true"></span>
+                                                Uploading your picture&hellip;
+                                            </p>
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="dh-btn dh-btn-primary">Submit for review</button>
+                                            <button type="submit" class="dh-btn dh-btn-primary" id="dh-diver-upload-submit">Submit for review</button>
                                         </div>
                                     </form>
+                                    <script>
+                                        (function () {
+                                            var input = document.getElementById('dh-diver-photo-input');
+                                            var filename = document.getElementById('dh-diver-photo-filename');
+                                            var form = document.getElementById('dh-diver-upload-form');
+                                            var submitBtn = document.getElementById('dh-diver-upload-submit');
+                                            var progress = document.getElementById('dh-diver-upload-progress');
+                                            if (!input || !form) return;
+                                            input.addEventListener('change', function () {
+                                                filename.textContent = input.files[0] ? input.files[0].name : 'Choose a picture…';
+                                            });
+                                            // A spinner, not a true upload progress bar (Pablo, 2026-09-24:
+                                            // "a spinner or progress bar while the picture is uploading") -
+                                            // this is a plain form POST/redirect, not an XHR with real
+                                            // upload progress events, but the "it's working" feedback is
+                                            // the actual ask.
+                                            form.addEventListener('submit', function () {
+                                                if (submitBtn.disabled) return;
+                                                submitBtn.disabled = true;
+                                                submitBtn.textContent = 'Uploading…';
+                                                progress.hidden = false;
+                                            });
+                                        })();
+                                    </script>
                                 </div>
                             </div>
                         </div>

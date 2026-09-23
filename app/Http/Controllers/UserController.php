@@ -377,14 +377,13 @@ class UserController extends Controller
 
         // Customizable mobile nav bar slots (Pablo, 2026-09-24) - null falls
         // back to the default (Weather / Groups) in App\Support\NavTabs, so
-        // an invalid/blank pick is just left unset rather than rejecting
-        // the whole profile save over it.
-        if ($request->has('nav_slot_1')) {
-            $user->nav_slot_1 = \App\Support\NavTabs::isValid($request->input('nav_slot_1')) ? $request->input('nav_slot_1') : null;
-        }
-        if ($request->has('nav_slot_2')) {
-            $user->nav_slot_2 = \App\Support\NavTabs::isValid($request->input('nav_slot_2')) ? $request->input('nav_slot_2') : null;
-        }
+        // Nav bar slots have their own small form/endpoint now (Pablo,
+        // 2026-09-24: needed a standalone form so the section could sit in
+        // a col-6 next to "My uploaded pictures" - see
+        // UserController::updateNavSlots()). This method's checkboxes
+        // above all reset to 0/false when their field is simply absent
+        // from the request, which a form that only sends nav_slot_1/2
+        // would have wiped out.
 
         // A submitted form should never be trusted alone for this - the
         // checkboxes are already disabled client-side, but SMS/WhatsApp
@@ -441,9 +440,31 @@ class UserController extends Controller
 
         $filename = time() . '_' . $request->file('img_file')->getClientOriginalName();
         Storage::disk('siteAssets')->putFileAs('img/users', $request->file('img_file'), $filename);
-        
+
         $user->picture = $filename;
         $user->save();
         return redirect()->back();
+    }
+
+    /**
+     * Its own small endpoint, deliberately not folded into updateProfile()
+     * (Pablo, 2026-09-24) - that method's checkboxes (email/sms/whatsapp
+     * notifications, newsletter, firstDayOfWeek, show_visited, deco_unit,
+     * pinch_zoom_enabled) all reset to 0/false whenever their field is
+     * simply absent from the request, which a standalone nav-slots form
+     * would trigger on every one of them. Needed its own form in the first
+     * place so "Customize your navigation bar" could sit in a col-6 next
+     * to "My uploaded pictures" (also outside the big preferences form).
+     */
+    public function updateNavSlots(Request $request) {
+        $user = User::findOrFail(auth()->user()->id);
+
+        // An invalid/blank pick is just left unset (falls back to the
+        // default in App\Support\NavTabs) rather than rejecting the save.
+        $user->nav_slot_1 = \App\Support\NavTabs::isValid($request->input('nav_slot_1')) ? $request->input('nav_slot_1') : null;
+        $user->nav_slot_2 = \App\Support\NavTabs::isValid($request->input('nav_slot_2')) ? $request->input('nav_slot_2') : null;
+        $user->save();
+
+        return redirect()->route('overview')->with('msg', 'Navigation bar updated.');
     }
 }

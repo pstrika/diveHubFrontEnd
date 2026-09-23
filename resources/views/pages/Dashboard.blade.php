@@ -223,11 +223,18 @@
                                         @php $next = $group->dives->first(); @endphp
                                         <li>
                                             <a class="dh-group-row" href="{{ route('Groups.show', $group->slug) }}">
-                                                <span class="dh-group-avatar">
-                                                    @if($group->avatar)
-                                                        <img src="{{ str_starts_with($group->avatar, 'http') ? $group->avatar : asset('assets/' . ltrim($group->avatar, '/')) }}" alt="" onerror="this.remove()">
-                                                    @else
-                                                        <span class="material-icons-round" aria-hidden="true">groups</span>
+                                                <span class="dh-group-avatar-wrap">
+                                                    <span class="dh-group-avatar">
+                                                        @if($group->avatar)
+                                                            <img src="{{ str_starts_with($group->avatar, 'http') ? $group->avatar : asset('assets/' . ltrim($group->avatar, '/')) }}" alt="" onerror="this.remove()">
+                                                        @else
+                                                            <span class="material-icons-round" aria-hidden="true">groups</span>
+                                                        @endif
+                                                    </span>
+                                                    @if($group->isAdmin(auth()->id()))
+                                                        <span class="dh-group-admin-badge" title="You're an admin of this group">
+                                                            <span class="material-icons-round" aria-hidden="true">shield</span>
+                                                        </span>
                                                     @endif
                                                 </span>
                                                 <span class="dh-group-text">

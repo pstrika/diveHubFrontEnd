@@ -528,6 +528,12 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-group-row:hover { background: var(--dh-foam); color: var(--dh-ink); }
 .dh-group-avatar { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; flex: 0 0 auto; background: var(--dh-sea); color: #fff; display: flex; align-items: center; justify-content: center; }
 .dh-group-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Admin badge over the calling card's bottom-right corner (Pablo,
+   2026-09-24) - a wrapper because .dh-group-avatar itself clips
+   (overflow: hidden), which would cut the badge off at the edge. */
+.dh-group-avatar-wrap { position: relative; flex: 0 0 auto; display: inline-flex; }
+.dh-group-admin-badge { position: absolute; bottom: -2px; right: -2px; width: 18px; height: 18px; border-radius: 50%; background: var(--dh-deep); color: #fff; display: flex; align-items: center; justify-content: center; border: 2px solid var(--dh-paper); }
+.dh-group-admin-badge .material-icons-round { font-size: 11px; }
 .dh-group-info { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
 .dh-group-name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dh-group-meta { font-size: .8rem; color: var(--dh-muted); }
@@ -699,7 +705,11 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 /* Full-size photo modal, replacing the old open-in-a-new-tab gallery links. */
 .dh-photo-modal .modal-content { background: transparent; border: 0; box-shadow: none; }
 .dh-photo-modal img { width: 100%; height: auto; max-height: 85vh; object-fit: contain; border-radius: var(--dh-radius); }
-.dh-photo-modal-close { position: absolute; top: -12px; right: -12px; background: #fff; border-radius: 50%; opacity: 1; padding: 8px; z-index: 1; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+/* background-color, not the background shorthand (Pablo, 2026-09-24: "the
+   close button is just a white circle...add an X") - the shorthand was
+   resetting Bootstrap's .btn-close background-image (its inline X SVG) to
+   none, leaving a blank white circle. */
+.dh-photo-modal-close { position: absolute; top: -12px; right: -12px; background-color: #fff; border-radius: 50%; opacity: 1; padding: 8px; z-index: 1; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
 
 /* Diver-uploaded site pictures (Pablo, 2026-09-23) - a 2x2 mosaic, paged
    4-at-a-time via horizontal scroll-snap when there are more than 4
@@ -1209,6 +1219,19 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-comms-warn { display: flex; align-items: flex-start; gap: 6px; margin-left: 0; color: var(--dh-avg); background: var(--dh-avg-bg); border-radius: var(--dh-radius); padding: 8px 10px; }
 .dh-comms-warn .material-icons-round { font-size: 16px; }
 .dh-comms-legal { font-size: .78rem; color: var(--dh-muted); margin: 0; }
+
+/* Themed file picker (Pablo, 2026-09-24: "the choose file button needs to
+   be themed to the site") - a styled label over a hidden native input. */
+.dh-file-picker { display: flex; align-items: center; gap: 8px; border: 1.5px dashed var(--dh-line); border-radius: var(--dh-radius); padding: 12px 14px; cursor: pointer; color: var(--dh-deep); font-weight: 600; font-size: .9rem; background: var(--dh-foam); transition: border-color .12s ease, background-color .12s ease; }
+.dh-file-picker:hover { border-color: var(--dh-sea); background: #fff; }
+.dh-file-picker .material-icons-round { color: var(--dh-sea); }
+
+/* Upload spinner - feedback while a form POST is in flight, not a real
+   byte-progress bar (Pablo, 2026-09-24: "a spinner or progress bar while
+   the picture is uploading"). */
+.dh-upload-progress { display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--dh-muted); margin: 10px 0 0; }
+.dh-spinner { width: 16px; height: 16px; border: 2px solid var(--dh-line); border-top-color: var(--dh-sea); border-radius: 50%; animation: dh-spin .7s linear infinite; flex: 0 0 auto; }
+@keyframes dh-spin { to { transform: rotate(360deg); } }
 .dh-comms-since { color: var(--dh-good); font-weight: 700; margin-top: 2px; }
 /* Material Dashboard's base checkbox styling (`.form-check-input { appearance:
    none }`) draws its own checked state with a hardcoded pink/magenta
@@ -2003,6 +2026,11 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-profile-card-head { padding: 14px 16px 0; }
 .dh-profile-card-head .dh-panel-title { text-transform: uppercase; font-size: .72rem; letter-spacing: .04em; color: var(--dh-muted); }
 .dh-profile-card-body { padding: 16px; }
+/* A collapsible card's header has no body-below to supply the bottom
+   space .dh-profile-card-head's own padding (14px 16px 0) assumes - left
+   as-is it read "too thin" when collapsed (Pablo, 2026-09-24). Full
+   padding on all sides instead. */
+.dh-profile-card-head-collapsible { padding: 14px 16px; }
 .dh-profile-edit-btn { display: inline-flex; color: var(--dh-sea); cursor: pointer; }
 .dh-profile-edit-btn .material-icons-round { font-size: 18px; }
 .dh-profile-edit-btn:hover { color: var(--dh-deep); }

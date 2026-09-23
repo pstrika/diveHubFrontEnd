@@ -349,6 +349,9 @@ Route::get('WreckSites', 'App\Http\Controllers\SiteController@showWrecks')->midd
 
 Route::get('overview', 'App\Http\Controllers\UserController@getProfile')->middleware('auth')->name('overview');
 Route::post('overview', 'App\Http\Controllers\UserController@updateProfile')->middleware('auth')->name('overview');
+// Own endpoint, not folded into the above (Pablo, 2026-09-24) - see
+// UserController::updateNavSlots()'s docblock for why.
+Route::post('overview/nav-slots', 'App\Http\Controllers\UserController@updateNavSlots')->middleware('auth')->name('overview.navSlots');
 Route::post('upload-profile-pic', 'App\Http\Controllers\UserController@updateProfilePic')->middleware('auth')->name('upload-profile-pic');
 Route::post('profile/verify-phone', 'App\Http\Controllers\UserController@verifyPhone')->middleware('auth')->name('profile.verifyPhone');
 Route::post('profile/resend-phone-code', 'App\Http\Controllers\UserController@resendPhoneCode')->middleware('auth')->name('profile.resendPhoneCode');

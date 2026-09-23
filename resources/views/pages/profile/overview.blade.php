@@ -444,22 +444,45 @@
                             </div>
                         </div>
 
-                        {{-- Customizable mobile nav bar (Pablo, 2026-09-24:
-                             "give them the chance to customize which icons
-                             they see in the bar... Trips, Dashboard and
-                             More need to stay always in the same position").
-                             Collapsed by default like the other
-                             lower-priority sections on this page. --}}
-                        <div class="dh-profile-card">
-                            <div class="d-flex justify-content-between align-items-center collapsed" style="cursor: pointer;"
-                                 data-bs-toggle="collapse" data-bs-target="#navCustomizeBody" role="button"
-                                 aria-expanded="false" aria-controls="navCustomizeBody">
-                                <h6 class="dh-panel-title mb-0">Customize your navigation bar</h6>
-                                <span class="material-icons-round dh-collapse-chevron collapsed" aria-hidden="true">expand_more</span>
-                            </div>
-                            <div class="collapse" id="navCustomizeBody">
-                                <div class="dh-profile-card-body pt-3">
-                                    <p class="text-secondary text-sm mt-n2 mb-3">Trips, Dashboard and More always stay put on your phone's bottom bar. Pick what goes in the other two spots.</p>
+                    </div>
+                </div>
+
+                <div class="text-end mt-4 dh-profile-savebar" id="divButton" style="display: none;">
+                    <button class="dh-btn dh-btn-primary" id="submit-all" type="submit" title="Save changes">Save changes</button>
+                </div>
+            </form>
+
+            {{-- Customize nav bar + My uploaded pictures, side by side on
+                 desktop (Pablo, 2026-09-24: "they need to be sitting one
+                 next to each other using col-6 each one"). Both kept
+                 outside the big preferences form above: "My uploaded
+                 pictures" has its own per-photo delete forms that can't
+                 nest inside another form, and giving "Customize your
+                 navigation bar" its own form here (rather than folding its
+                 hidden inputs into the big one) is what makes the col-6
+                 pairing possible in the first place. Both header rows use
+                 dh-profile-card-head-collapsible (padding: 14px 16px) - a
+                 collapsed section otherwise has only its inline styles for
+                 height, and dh-profile-card-head alone is 14px 16px 0,
+                 which read as "too thin" once nothing was below it to
+                 supply the missing bottom space. dh-profile-card-head also
+                 carries the shared muted-uppercase title treatment (the
+                 titles previously used the plain default .dh-panel-title
+                 style, not matching "Show dives within level" etc.). --}}
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="dh-profile-card">
+                        <div class="dh-profile-card-head dh-profile-card-head-collapsible d-flex justify-content-between align-items-center collapsed" style="cursor: pointer;"
+                             data-bs-toggle="collapse" data-bs-target="#navCustomizeBody" role="button"
+                             aria-expanded="false" aria-controls="navCustomizeBody">
+                            <h6 class="dh-panel-title mb-0">Customize your navigation bar</h6>
+                            <span class="material-icons-round dh-collapse-chevron collapsed" aria-hidden="true">expand_more</span>
+                        </div>
+                        <div class="collapse" id="navCustomizeBody">
+                            <div class="dh-profile-card-body pt-3">
+                                <p class="text-secondary text-sm mt-n2 mb-3">Trips, Dashboard and More always stay put on your phone's bottom bar. Pick what goes in the other two spots.</p>
+                                <form method="POST" action="{{ route('overview.navSlots') }}">
+                                    @csrf
                                     @php
                                         $navIconHtml = function (string $icon) {
                                             if (str_starts_with($icon, 'svg:')) {
@@ -484,61 +507,60 @@
                                             <input type="hidden" name="nav_slot_{{ $slotNum }}" id="navSlot{{ $slotNum }}Input" value="{{ $slotValue }}">
                                         </div>
                                     @endforeach
-                                </div>
+                                    <button type="submit" class="dh-btn dh-btn-primary">Save</button>
+                                </form>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="text-end mt-4 dh-profile-savebar" id="divButton" style="display: none;">
-                    <button class="dh-btn dh-btn-primary" id="submit-all" type="submit" title="Save changes">Save changes</button>
-                </div>
-            </form>
-
-            {{-- My uploaded pictures - own delete forms, kept outside the big
-                 preferences form above rather than nested inside it (Pablo,
-                 2026-09-23: "members should also be able to remove their own
-                 pictures... Probably a collapsable [section]. Show in there
-                 the mosaics of the pictures, the date and the site"). --}}
-            <div class="dh-profile-card">
-                <div class="d-flex justify-content-between align-items-center collapsed" style="cursor: pointer;"
-                     data-bs-toggle="collapse" data-bs-target="#myDiverPhotosBody" role="button"
-                     aria-expanded="false" aria-controls="myDiverPhotosBody">
-                    <h6 class="dh-panel-title mb-0">My uploaded pictures <span class="dh-region-count">{{ $myDiverPhotos->count() }}</span></h6>
-                    <span class="material-icons-round dh-collapse-chevron collapsed" aria-hidden="true">expand_more</span>
-                </div>
-                <div class="collapse" id="myDiverPhotosBody">
-                    <div class="dh-profile-card-body pt-3">
-                        @if($myDiverPhotos->isEmpty())
-                            <p class="text-secondary text-sm mb-0">You haven't uploaded any site pictures yet. Find a site you've dived and add one from its page.</p>
-                        @else
-                            <div class="dh-my-photos-grid">
-                                @foreach($myDiverPhotos as $photo)
-                                    <figure class="dh-my-photo">
-                                        <a href="{{ \App\Support\SitePhoto::web($photo->file) }}" target="_blank" rel="noopener">
-                                            <img src="{{ \App\Support\SitePhoto::thumb($photo->file) }}" alt="" loading="lazy">
-                                        </a>
-                                        @if($photo->status !== 'approved')
-                                            <span class="chip {{ $photo->status === 'pending' ? 'chip-static' : 'chip-poor' }} dh-my-photo-status">{{ ucfirst($photo->status) }}</span>
-                                        @endif
-                                        <figcaption>
-                                            @if($photo->site)
-                                                <a href="{{ route('SiteDetails', $photo->site->slug ?? $photo->site->id) }}" class="do-not-translate">{{ $photo->site->name }}</a>
-                                            @else
-                                                <span class="text-secondary">Deleted site</span>
-                                            @endif
-                                            <span class="dh-my-photo-date">{{ $photo->created_at->format('M j, Y') }}</span>
-                                        </figcaption>
-                                        <form method="POST" action="{{ route('DiverPhotos.destroy', $photo) }}" class="dh-my-photo-remove"
-                                              onsubmit="return confirm('Remove this picture?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" title="Remove"><span class="material-icons-round" aria-hidden="true">delete</span></button>
-                                        </form>
-                                    </figure>
-                                @endforeach
+                <div class="col-md-6">
+                    {{-- My uploaded pictures - own delete forms, kept outside the big
+                         preferences form above rather than nested inside it (Pablo,
+                         2026-09-23: "members should also be able to remove their own
+                         pictures... Probably a collapsable [section]. Show in there
+                         the mosaics of the pictures, the date and the site"). --}}
+                    <div class="dh-profile-card">
+                        <div class="dh-profile-card-head dh-profile-card-head-collapsible d-flex justify-content-between align-items-center collapsed" style="cursor: pointer;"
+                             data-bs-toggle="collapse" data-bs-target="#myDiverPhotosBody" role="button"
+                             aria-expanded="false" aria-controls="myDiverPhotosBody">
+                            <h6 class="dh-panel-title mb-0">My uploaded pictures <span class="dh-region-count">{{ $myDiverPhotos->count() }}</span></h6>
+                            <span class="material-icons-round dh-collapse-chevron collapsed" aria-hidden="true">expand_more</span>
+                        </div>
+                        <div class="collapse" id="myDiverPhotosBody">
+                            <div class="dh-profile-card-body pt-3">
+                                @if($myDiverPhotos->isEmpty())
+                                    <p class="text-secondary text-sm mb-0">You haven't uploaded any site pictures yet. Find a site you've dived and add one from its page.</p>
+                                @else
+                                    <div class="dh-my-photos-grid">
+                                        @foreach($myDiverPhotos as $photo)
+                                            <figure class="dh-my-photo">
+                                                <a href="{{ \App\Support\SitePhoto::web($photo->file) }}" target="_blank" rel="noopener">
+                                                    <img src="{{ \App\Support\SitePhoto::thumb($photo->file) }}" alt="" loading="lazy">
+                                                </a>
+                                                @if($photo->status !== 'approved')
+                                                    <span class="chip {{ $photo->status === 'pending' ? 'chip-static' : 'chip-poor' }} dh-my-photo-status">{{ ucfirst($photo->status) }}</span>
+                                                @endif
+                                                <figcaption>
+                                                    @if($photo->site)
+                                                        <a href="{{ route('SiteDetails', $photo->site->slug ?? $photo->site->id) }}" class="do-not-translate">{{ $photo->site->name }}</a>
+                                                    @else
+                                                        <span class="text-secondary">Deleted site</span>
+                                                    @endif
+                                                    <span class="dh-my-photo-date">{{ $photo->created_at->format('M j, Y') }}</span>
+                                                </figcaption>
+                                                <form method="POST" action="{{ route('DiverPhotos.destroy', $photo) }}" class="dh-my-photo-remove"
+                                                      onsubmit="return confirm('Remove this picture?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" title="Remove"><span class="material-icons-round" aria-hidden="true">delete</span></button>
+                                                </form>
+                                            </figure>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
-                        @endif
+                        </div>
                     </div>
                 </div>
             </div>
@@ -849,13 +871,6 @@
                         btn.classList.add('chip-on');
                         hidden.value = btn.getAttribute('data-nav-slot-option');
                         refreshNavSlots();
-                        // Same direct-call pattern as this page's other chip
-                        // pickers (favorite operators/locations) - clicking
-                        // a chip doesn't fire a native 'change' event on the
-                        // hidden input, so the Save bar never appeared
-                        // without this (Pablo, 2026-09-24: "how do I submit
-                        // the changes... there's no save or anything").
-                        revealSave();
                     });
                 });
             }

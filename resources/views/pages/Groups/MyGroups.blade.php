@@ -53,11 +53,18 @@
                             @endphp
                             <li>
                                 <a href="{{ route('Groups.show', ['group' => $group->slug]) }}" class="dh-group-row">
-                                    <span class="dh-group-avatar">
-                                        @if($group->avatar)
-                                            <img src="{{ asset('assets/' . $group->avatar) }}" alt="">
-                                        @else
-                                            <span class="material-icons-round" aria-hidden="true">groups</span>
+                                    <span class="dh-group-avatar-wrap">
+                                        <span class="dh-group-avatar">
+                                            @if($group->avatar)
+                                                <img src="{{ asset('assets/' . $group->avatar) }}" alt="">
+                                            @else
+                                                <span class="material-icons-round" aria-hidden="true">groups</span>
+                                            @endif
+                                        </span>
+                                        @if($group->isAdmin(auth()->id()))
+                                            <span class="dh-group-admin-badge" title="You're an admin of this group">
+                                                <span class="material-icons-round" aria-hidden="true">shield</span>
+                                            </span>
                                         @endif
                                     </span>
                                     <span class="dh-group-info">
