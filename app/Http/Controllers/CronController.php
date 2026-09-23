@@ -125,6 +125,32 @@ class CronController extends Controller
      * done from a local artisan session like every other admin task this
      * session has run directly against the shared DB.
      */
+    /**
+     * Temporary diagnostic (Pablo, 2026-09-24) - photosWebCopies() below
+     * reported "PHP GD with WebP support is required" on this server, so
+     * checking whether Imagick is a usable fallback before deciding how to
+     * fix SitePhoto. Remove once that's settled.
+     */
+    public function photoEnvDiag(Request $request)
+    {
+        if (!hash_equals((string) env('CRON_SECRET'), (string) $request->query('secret'))) {
+            abort(403);
+        }
+
+        $lines = [];
+        $lines[] = 'PHP version: ' . PHP_VERSION;
+        $lines[] = 'GD loaded: ' . (extension_loaded('gd') ? 'yes' : 'no');
+        $lines[] = 'GD info: ' . json_encode(function_exists('gd_info') ? gd_info() : null);
+        $lines[] = 'Imagick loaded: ' . (extension_loaded('imagick') ? 'yes' : 'no');
+        if (extension_loaded('imagick')) {
+            $lines[] = 'Imagick version: ' . json_encode(\Imagick::getVersion());
+            $formats = (new \Imagick())->queryFormats('WEBP*');
+            $lines[] = 'Imagick WEBP formats: ' . json_encode($formats);
+        }
+
+        return response(implode("\n", $lines), 200, ['Content-Type' => 'text/plain']);
+    }
+
     public function photosWebCopies(Request $request)
     {
         if (!hash_equals((string) env('CRON_SECRET'), (string) $request->query('secret'))) {

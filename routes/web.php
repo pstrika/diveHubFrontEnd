@@ -56,6 +56,8 @@ Route::get('cron/sync-support-inbox', [\App\Http\Controllers\CronController::cla
 Route::get('cron/apply-group-auto-add-rules', [\App\Http\Controllers\CronController::class, 'applyGroupAutoAddRules']);
 // Manual-trigger only, not on a schedule - see CronController::photosWebCopies().
 Route::get('cron/photos-web-copies', [\App\Http\Controllers\CronController::class, 'photosWebCopies']);
+// Temporary, see CronController::photoEnvDiag()'s docblock.
+Route::get('cron/photo-env-diag', [\App\Http\Controllers\CronController::class, 'photoEnvDiag']);
 
 // Newsletter one-click unsubscribe/resubscribe - reached from a signed link
 // in the email itself, not a logged-in session (the diver may be reading
