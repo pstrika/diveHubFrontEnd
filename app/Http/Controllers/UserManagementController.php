@@ -12,7 +12,26 @@ class UserManagementController extends Controller
 
         $this->authorize('manage-users', User::class);
 
-        return view('laravel-examples.users.index', ['users' => User::with('role')->get()]);
+        // Real accounts only - role_id 4 is the single shared "Guest" account
+        // every anonymous visitor gets auto-logged-in as (App\Http\Middleware\
+        // AuthenticateAsGuest), so it would otherwise count as "1 user" no
+        // matter how much anonymous traffic actually happened, and would
+        // always show up as "active" the moment anyone browses the site
+        // signed out (Pablo, 2026-09-24: "how many user are total in the
+        // platform... visited the platform in the last 25 hours").
+        $realUsers = User::where('role_id', '!=', 4);
+        $totalUsers = (clone $realUsers)->count();
+        $googleUsers = (clone $realUsers)->whereNotNull('google_id')->count();
+        $directUsers = $totalUsers - $googleUsers;
+        $activeRecently = (clone $realUsers)->where('last_seen_at', '>=', now()->subHours(25))->count();
+
+        return view('laravel-examples.users.index', [
+            'users' => User::with('role')->get(),
+            'totalUsers' => $totalUsers,
+            'googleUsers' => $googleUsers,
+            'directUsers' => $directUsers,
+            'activeRecently' => $activeRecently,
+        ]);
     }
 
     public function create(){

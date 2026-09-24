@@ -11,6 +11,40 @@
                 <span class="dh-board-count" id="userCount"></span>
             </div>
 
+            {{-- Mini dashboard (Pablo, 2026-09-24: "how many users are total
+                 in the platform, how many are registered with google and
+                 how many directly with DH...quick stat of how many users
+                 visited the platform in the last 25 hours"). Real accounts
+                 only - see UserManagementController::index()'s docblock for
+                 why the shared Guest account is excluded from every count
+                 here. Reuses Platform Health's stat-tile pattern. --}}
+            <section class="dh-card dh-health-summary mb-3">
+                <div class="dh-card-body">
+                    <div class="dh-health-stats">
+                        <div class="dh-health-stat is-run">
+                            <span class="material-icons-round" aria-hidden="true">group</span>
+                            <span class="dh-health-stat-n">{{ $totalUsers }}</span>
+                            <span class="dh-health-stat-label">Total users</span>
+                        </div>
+                        <div class="dh-health-stat is-good">
+                            <span class="material-icons-round" aria-hidden="true">travel_explore</span>
+                            <span class="dh-health-stat-n">{{ $googleUsers }}</span>
+                            <span class="dh-health-stat-label">Signed up with Google</span>
+                        </div>
+                        <div class="dh-health-stat is-wait">
+                            <span class="material-icons-round" aria-hidden="true">how_to_reg</span>
+                            <span class="dh-health-stat-n">{{ $directUsers }}</span>
+                            <span class="dh-health-stat-label">Registered on Divers Hub</span>
+                        </div>
+                        <div class="dh-health-stat is-none">
+                            <span class="material-icons-round" aria-hidden="true">bolt</span>
+                            <span class="dh-health-stat-n">{{ $activeRecently }}</span>
+                            <span class="dh-health-stat-label">Active, last 25h</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             @if (Session::has('status'))
             <div class="alert alert-success alert-dismissible text-white" role="alert">
                 <span class="text-sm">{{ Session::get('status') }}</span>
