@@ -341,7 +341,7 @@
                                                     style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
 
                                                 <img id="unblendable_sign_CCR" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image"
-                                                    style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
+                                                    style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: auto; z-index: 10;">
 
                                                 <!-- Fixed-size chart canvas. Wrapper height matches the canvas's
                                                      own height exactly (Pablo, 2026-09-18: same fix as the Deco
@@ -518,7 +518,7 @@
                                                         style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
 
                                                     <img id="unblendable_sign" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image"
-                                                        style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
+                                                        style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: auto; z-index: 10;">
 
                                                     <!-- Fixed-size chart canvas -->
                                                     <div style="width: 210px; height: 210px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
