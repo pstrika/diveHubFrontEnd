@@ -14,7 +14,7 @@
             <div class="modal fade dh-photo-modal" id="dh-photo-modal" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered modal-lg">
                     <div class="modal-content">
-                        <button type="button" class="btn-close dh-photo-modal-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="dh-photo-modal-close" data-bs-dismiss="modal" aria-label="Close"><span class="material-icons-round" aria-hidden="true">close</span></button>
                         <img id="dh-photo-modal-img" src="" alt="">
                     </div>
                 </div>

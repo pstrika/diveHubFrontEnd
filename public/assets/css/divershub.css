@@ -705,11 +705,13 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 /* Full-size photo modal, replacing the old open-in-a-new-tab gallery links. */
 .dh-photo-modal .modal-content { background: transparent; border: 0; box-shadow: none; }
 .dh-photo-modal img { width: 100%; height: auto; max-height: 85vh; object-fit: contain; border-radius: var(--dh-radius); }
-/* background-color, not the background shorthand (Pablo, 2026-09-24: "the
-   close button is just a white circle...add an X") - the shorthand was
-   resetting Bootstrap's .btn-close background-image (its inline X SVG) to
-   none, leaving a blank white circle. */
-.dh-photo-modal-close { position: absolute; top: -12px; right: -12px; background-color: #fff; border-radius: 50%; opacity: 1; padding: 8px; z-index: 1; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+/* A real Material icon, not Bootstrap's .btn-close (Pablo, 2026-09-24,
+   round two: still "just a white circle" after fixing the background
+   shorthand that was erasing it - turned out Bootstrap's close SVG is a
+   hardcoded WHITE X, invisible against this white circle regardless of
+   the shorthand bug. Explicit dark icon sidesteps that entirely. */
+.dh-photo-modal-close { position: absolute; top: -12px; right: -12px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background-color: #fff; border: 0; border-radius: 50%; padding: 0; z-index: 1; box-shadow: 0 2px 8px rgba(0,0,0,.3); cursor: pointer; }
+.dh-photo-modal-close .material-icons-round { font-size: 20px; color: var(--dh-ink); }
 
 /* Diver-uploaded site pictures (Pablo, 2026-09-23) - a 2x2 mosaic, paged
    4-at-a-time via horizontal scroll-snap when there are more than 4
