@@ -1819,6 +1819,8 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
   background: var(--dh-ink); color: #fff; border-radius: 14px 14px 0 0;
 }
 .dh-deco-section-head .material-icons-round { color: #fff; opacity: .85; }
+.dh-deco-section-head-icon-svg { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: #fff; opacity: .85; flex: 0 0 auto; }
+.dh-deco-section-head-icon-svg svg { width: 24px; height: 24px; }
 .dh-deco-section-head h3, .dh-deco-section-head h4 { flex: 1 1 auto; margin: 0; font-size: 1rem; font-weight: 800; color: #fff; }
 /* Title + Model/GFs stacked instead of sharing the title's own line, so
    Export PDF/Save Plan on a narrow card don't get squeezed against a long
@@ -1831,6 +1833,37 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-deco-section-head-chevron { transition: transform .15s; }
 .dh-deco-section-head.is-collapsed .dh-deco-section-head-chevron { transform: rotate(-90deg); }
 .dh-deco-section-body { border: 1px solid var(--dh-line); border-top: none; border-radius: 0 0 14px 14px; padding: 16px; background: var(--dh-paper); }
+
+/* Per-gas SAC rate control inline in the Gas consumption table (Pablo,
+   2026-09-24: "typically you consume more gas depending on the mix...put
+   them inline with the gas table"; then: "user can type the numbers for
+   the SACs, specially useful on mobile view where moving a slider is
+   tricky"). A real editable .dh-gas-input (same pencil-icon affordance as
+   every other slider-paired value on this page) plus a slider below it -
+   stacked, not side-by-side, since this column shares a row with the Gas
+   split pill and Volume figure and phone-width tables don't have room to
+   spare. */
+.dh-gasconsumption-sac { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 90px; }
+.dh-gasconsumption-sac .dh-gas-input { width: 52px; height: 26px; font-size: .76rem; padding: 0 10px 0 4px; }
+.dh-gasconsumption-sac .dh-gas-edit-icon { font-size: 13px; }
+.dh-gasconsumption-sac-unit { font-size: .68rem; color: var(--dh-muted); font-weight: 600; }
+.dh-gasconsumption-sac-slider { width: 100%; max-width: 100px; accent-color: var(--dh-sea); height: 16px; margin: 0; }
+
+/* O2 toxicity card (Pablo, 2026-09-24) - CNS gets a gauge bar since the
+   API's own field is already a 0-100(+)% of a hard limit; OTU has no such
+   ceiling so it's just a pill + caption, not a bar with a fabricated
+   endpoint. */
+.dh-o2tox-row { display: flex; align-items: center; gap: 12px; }
+.dh-o2tox-row + .dh-o2tox-row { margin-top: 14px; }
+.dh-o2tox-label { flex: 0 0 40px; font-weight: 800; font-size: .8rem; color: var(--dh-ink); }
+.dh-o2tox-track { flex: 1 1 auto; height: 12px; border-radius: 99px; background: var(--dh-sand); border: 1px solid var(--dh-line); overflow: hidden; }
+.dh-o2tox-fill { height: 100%; border-radius: 99px; background: var(--dh-good); transition: width .3s ease; }
+.dh-o2tox-fill.is-warn { background: var(--dh-warn); }
+.dh-o2tox-fill.is-danger { background: var(--dh-danger); }
+.dh-o2tox-value { flex: 0 0 auto; min-width: 44px; text-align: right; font-weight: 800; font-size: .85rem; color: var(--dh-ink); font-variant-numeric: tabular-nums; }
+.dh-o2tox-otu-caption { font-size: .76rem; color: var(--dh-muted); }
+.dh-o2tox-sub { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--dh-line); font-size: .82rem; color: var(--dh-muted); text-align: center; }
+.dh-o2tox-sub .dh-gas-result-pill { margin: 0 2px; }
 
 /* Decompression plan's summary strip - one compact line instead of a
    two-column table (Pablo, 2026-09-16: "smaller and more sleek...one

@@ -1646,44 +1646,127 @@
                                     </div>
                                 </div>
 
-                                
+                                {{-- O2 toxicity (CNS%/OTU) - new o2Exposure block on the
+                                     DecoPlanner API response (Pablo, 2026-09-24). Computed
+                                     only from the baseline/conveyor profile per the API's own
+                                     docs, so this always reflects the primary plan, not
+                                     whichever what-if scenario is currently highlighted on
+                                     the chart above. CNS gets a gauge (0-100% of the NOAA
+                                     single-exposure limit, can run over); OTU is shown as a
+                                     plain number since the API has no fixed OTU ceiling -
+                                     it's meant to be tracked against a diver's own daily
+                                     budget, not this dive alone. --}}
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <div class="dh-deco-section-head">
+                                            <span class="material-icons-round" aria-hidden="true">warning</span>
+                                            <h4>O&#8322; toxicity</h4>
+                                        </div>
+                                        <div class="dh-deco-section-body">
+                                            <div class="dh-o2tox-row">
+                                                <div class="dh-o2tox-label">CNS</div>
+                                                <div class="dh-o2tox-track"><div class="dh-o2tox-fill" id="o2ToxCnsFill"></div></div>
+                                                <div class="dh-o2tox-value" id="o2ToxCnsValue">-</div>
+                                            </div>
+                                            <div class="dh-o2tox-row">
+                                                <div class="dh-o2tox-label">OTU</div>
+                                                <label class="dh-gas-result-pill is-compact" id="o2ToxOtuValue">-</label>
+                                                <span class="dh-o2tox-otu-caption">cumulative pulmonary O&#8322; units - no fixed limit, track against your own daily budget</span>
+                                            </div>
+                                            <div class="dh-o2tox-sub" id="o2ToxSurfaceNote" hidden>
+                                                After <span id="o2ToxSurfaceMinutes">-</span> min at the surface: CNS decays to <label class="dh-gas-result-pill is-compact" id="o2ToxResidualCns">-</label> &middot; OTU carries forward at <label class="dh-gas-result-pill is-compact" id="o2ToxCarriedOtu">-</label> (not decayed by surface time)
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <script>
+                                    // Populates the O2 toxicity card above from the DecoPlanner
+                                    // API response's o2Exposure block (Pablo, 2026-09-24) - see
+                                    // https://claude.ai/artifact/T2K7STtvwK4osq49DoXv7G for the
+                                    // field reference this is built against. Called from the
+                                    // main $.ajax success handler right after `conveyor` is set.
+                                    function renderO2Toxicity(o2Exposure) {
+                                        var cnsFill = document.getElementById('o2ToxCnsFill');
+                                        var cnsValue = document.getElementById('o2ToxCnsValue');
+                                        var otuValue = document.getElementById('o2ToxOtuValue');
+                                        var note = document.getElementById('o2ToxSurfaceNote');
+
+                                        if (!o2Exposure) {
+                                            cnsFill.style.width = '0%';
+                                            cnsFill.classList.remove('is-warn', 'is-danger');
+                                            cnsValue.textContent = '-';
+                                            otuValue.textContent = '-';
+                                            note.hidden = true;
+                                            return;
+                                        }
+
+                                        var cns = o2Exposure.cnsPercent;
+                                        var otu = o2Exposure.otu;
+
+                                        // Cap the bar's width at 100% - cnsPercent can exceed it
+                                        // (that's the whole point, it's a warning), but the track
+                                        // itself has nowhere to go past full.
+                                        cnsFill.style.width = Math.min(cns, 100) + '%';
+                                        cnsFill.classList.remove('is-warn', 'is-danger');
+                                        if (cns > 100) {
+                                            cnsFill.classList.add('is-danger');
+                                        } else if (cns >= 80) {
+                                            cnsFill.classList.add('is-warn');
+                                        }
+                                        cnsValue.textContent = Math.round(cns) + '%';
+                                        otuValue.textContent = Math.round(otu);
+
+                                        // Only present when the surfaceTime input is > 0.
+                                        var afterSI = o2Exposure.afterSurfaceInterval;
+                                        if (afterSI) {
+                                            document.getElementById('o2ToxSurfaceMinutes').textContent = afterSI.surfaceTimeMinutes;
+                                            document.getElementById('o2ToxResidualCns').textContent = Math.round(afterSI.residualCnsPercent) + '%';
+                                            document.getElementById('o2ToxCarriedOtu').textContent = Math.round(afterSI.otuCarriedForward);
+                                            note.hidden = false;
+                                        } else {
+                                            note.hidden = true;
+                                        }
+                                    }
+                                </script>
+
+                                {{-- Same single-tank icon as the Recreational calendar's own
+                                     drawer link (Pablo, 2026-09-24), not the generic gas-pump
+                                     Material icon this used to be. --}}
+                                @php $gasConsumptionTankSvg = \App\Support\IconSvg::themed('assets/img/icons/icons_calendar_rec.svg'); @endphp
                                 <!-- Row for gas consumption -->
                                 <div id="gasConsumptionRow" class="row mt-2">
                                     <div class="col-lg-12 col-12">
                                         <div class="dh-deco-section-head">
-                                            <span class="material-icons-round" aria-hidden="true">local_gas_station</span>
+                                            @if($gasConsumptionTankSvg)
+                                                <span class="dh-deco-section-head-icon-svg" aria-hidden="true">{!! $gasConsumptionTankSvg !!}</span>
+                                            @else
+                                                <span class="material-icons-round" aria-hidden="true">local_gas_station</span>
+                                            @endif
                                             <h4 id="gasConsumptionHeader">Gas consumption</h4>
                                         </div>
 
                                         <div class="dh-deco-section-body">
 
-                                            <div class="row mt-6" style="padding:10px;">
+                                            {{-- Was mt-6 (4rem) - made sense with the bulk SAC slider
+                                                 block that used to sit above "Bottom gas"/"Bailout
+                                                 gases", but leaves a big empty gap under the header now
+                                                 that block is gone (Pablo, 2026-09-24: "remove the space
+                                                 between the legend...and the top of the card"). --}}
+                                            <div class="row mt-2" style="padding:10px;">
                                                 <div id="gasConsumptionBottomCol" class="col-lg-6 col-12">
                                                     <table class="table align-items-center mb-0 mt-1">
                                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Bottom gas</td> </tr>
                                                     </table>
-                                                    <label class="dh-gas-label">SAC rate</label>
-                                                    <div class="dh-gas-row">
-                                                        <div id="labelSACBottomGasLitersWrap" class="dh-gas-input-wrap">
-                                                            <div class="dh-gas-editable">
-                                                                <input type="text" inputmode="decimal" class="dh-gas-input" id="labelSACBottomGasLiters" value="23">
-                                                                <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
-                                                            </div>
-                                                            <span class="dh-gas-unit">liters/min</span>
-                                                        </div>
-                                                        <div id="labelSACBottomGasWrap" class="dh-gas-input-wrap">
-                                                            <div class="dh-gas-editable">
-                                                                <input type="text" inputmode="decimal" class="dh-gas-input" id="labelSACBottomGas" value="0.8">
-                                                                <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
-                                                            </div>
-                                                            <span class="dh-gas-unit">cuft/min</span>
-                                                        </div>
-                                                        <div class="slider-styled" id="sliderSACBottomGas" data-dh-num-mirror="1"></div>
-                                                    </div>
-
-                                                    <div class="label-container d-flex justify-content-center align-items-center" style="margin-top:20px;">
-                                                        <label class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center">Gas Consumption</label>
-                                                    </div>
+                                                    {{-- The bulk "SAC rate" slider that used to sit here is gone -
+                                                         each gas below now gets its own inline slider instead
+                                                         (Pablo, 2026-09-24: "one slider per gas...get rid of the
+                                                         main sliders"). These hidden inputs stay only so
+                                                         dhGetSacRateForGas() has somewhere to fall back to for a
+                                                         gas with no per-gas override yet, mirroring the values
+                                                         those sliders used to default to. --}}
+                                                    <input type="hidden" id="labelSACBottomGas" value="0.8">
+                                                    <input type="hidden" id="labelSACBottomGasLiters" value="23">
                                                     <div id="bottomGasConsumptionTableContainer"></div>
                                                 </div>
 
@@ -1691,28 +1774,8 @@
                                                     <table class="table align-items-center mb-0 mt-1">
                                                         <tr><td id="gasConsumptionDecoOrBOHeader" class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Decompression gases</td> </tr>
                                                     </table>
-                                                    <label class="dh-gas-label">SAC rate</label>
-                                                    <div class="dh-gas-row">
-                                                        <div id="labelSACDecoGasLitersWrap" class="dh-gas-input-wrap">
-                                                            <div class="dh-gas-editable">
-                                                                <input type="text" inputmode="decimal" class="dh-gas-input" id="labelSACDecoGasLiters" value="14">
-                                                                <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
-                                                            </div>
-                                                            <span class="dh-gas-unit">liters/min</span>
-                                                        </div>
-                                                        <div id="labelSACDecoGasWrap" class="dh-gas-input-wrap">
-                                                            <div class="dh-gas-editable">
-                                                                <input type="text" inputmode="decimal" class="dh-gas-input" id="labelSACDecoGas" value="0.5">
-                                                                <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
-                                                            </div>
-                                                            <span class="dh-gas-unit">cuft/min</span>
-                                                        </div>
-                                                        <div class="slider-styled" id="sliderSACDecoGas" data-dh-num-mirror="1"></div>
-                                                    </div>
-
-                                                    <div class="label-container d-flex justify-content-center align-items-center" style="margin-top:20px;">
-                                                        <label class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" id="decoTableTitle">Gas Consumption</label>
-                                                    </div>
+                                                    <input type="hidden" id="labelSACDecoGas" value="0.5">
+                                                    <input type="hidden" id="labelSACDecoGasLiters" value="14">
                                                     <div id="decoGasConsumptionTableContainer"></div>
                                                 </div>
                                             </div>
@@ -1842,11 +1905,6 @@
             document.getElementById("desRateContainerImp").style.display = "flex";
             document.getElementById("maxDepthContainerImp").style.setProperty("display", "flex", "important");
 
-            document.getElementById("labelSACBottomGasLitersWrap").style.display = "none";
-            document.getElementById("labelSACDecoGasLitersWrap").style.display = "none";
-            document.getElementById("labelSACBottomGasWrap").style.display = "flex";
-            document.getElementById("labelSACDecoGasWrap").style.display = "flex";
-
         } else {
             document.getElementById("maxDepthSliderTitle").innerText = "Max Depth (m)";
             //document.getElementById("maxDepthInputLabel").innerText = "m";
@@ -1866,11 +1924,6 @@
             document.getElementById("ascRateContainerImp").style.display = "none";
             document.getElementById("desRateContainerImp").style.display = "none";
             document.getElementById("maxDepthContainerImp").style.setProperty("display", "none", "important");
-
-            document.getElementById("labelSACBottomGasLitersWrap").style.display = "flex";
-            document.getElementById("labelSACDecoGasLitersWrap").style.display = "flex";
-            document.getElementById("labelSACBottomGasWrap").style.display = "none";
-            document.getElementById("labelSACDecoGasWrap").style.display = "none";
 
         }
         
@@ -2050,6 +2103,8 @@
                     // update timeLapse tissue data
                     conveyor = response['conveyor'];
                     console.log(conveyor.length);
+
+                    renderO2Toxicity(response['o2Exposure']);
                     timeLapseSlider.noUiSlider.updateOptions({
                         range: {
                             'min': 0,
@@ -2058,13 +2113,16 @@
                     });
 
                     // calculate Gas consumption
-                    sliderSACDecoGas.noUiSlider.set(0.5);
-                    sliderSACBottomGas.noUiSlider.set(0.8);
+                    // Clear any per-gas SAC overrides - they belonged to
+                    // whatever profile was just replaced by this fresh
+                    // Calculate (Pablo, 2026-09-24). Each gas re-falls-back
+                    // to its type default (0.8/0.5) until tuned again.
+                    window.dhGasSacRates = {};
                     if (modeOCOrCC == "OC") {
                         document.getElementById("gasConsumptionRow").style.display="block";
                         gasConsumption = calculateGasConsumption(response['baseline']);
-                        renderGasConsumptionTable(gasConsumption, "bottom");
-                        renderGasConsumptionTable(gasConsumption, "deco");
+                        renderGasConsumptionTable(gasConsumption, "bottom", response['baseline']);
+                        renderGasConsumptionTable(gasConsumption, "deco", response['baseline']);
                         document.getElementById("gasConsumptionHeader").innerText = "Gas consumption (Baseline OC)";
                         document.getElementById("gasConsumptionBottomCol").style.display = "block";
                         document.getElementById("gasConsumptionDecoCol").style.display = "block";
@@ -2104,17 +2162,6 @@
                         document.getElementById('filter7Container').style.display = "block";
                     }
 
-                    @if($deco_unit)
-                        document.getElementById('labelSACBottomGasWrap').style.display="none";
-                        document.getElementById('labelSACBottomGasLitersWrap').style.display="flex";
-                        document.getElementById('labelSACDecoGasWrap').style.display="none";
-                        document.getElementById('labelSACDecoGasLitersWrap').style.display="flex";
-                    @else
-                        document.getElementById('labelSACBottomGasWrap').style.display="flex";
-                        document.getElementById('labelSACBottomGasLitersWrap').style.display="none";
-                        document.getElementById('labelSACDecoGasWrap').style.display="flex";
-                        document.getElementById('labelSACDecoGasLitersWrap').style.display="none";
-                    @endif
                 },
                 error: function (xhr, status, error) {
                     console.error('Error:', error);
@@ -5515,7 +5562,7 @@
                         <thead>
                             <tr>
                                 <th class="phase-column" style="width: 6%;"></th>
-                                <th class="text-xs" style="width: 7%; padding-left: 0px;">M</th>
+                                <th class="text-xs" style="width: 7%; padding-left: 0px; text-align:center;">Mode</th>
                                 <th class="depth-column text-sm" style="width: 11%; padding-left: 0px; padding-right:0px;">Depth</th>
                                 <th class="text-sm" style="width: 8%; padding-left: 0px; padding-right:0px;">Time</th>
                                 <th class="text-sm" style="width: 8%; padding-left: 0px; padding-right:0px;">RT</th>
@@ -6355,7 +6402,7 @@
             document.getElementById("gasConsumptionRow").style.display="block";
             gasConsumption = calculateGasConsumption(globalResponse['bailout']);
             // no need to render bottom gas (it's on CC)
-            renderGasConsumptionTable(gasConsumption, "deco");
+            renderGasConsumptionTable(gasConsumption, "deco", globalResponse['bailout']);
             
 
 
@@ -6910,10 +6957,26 @@
 
     {{-- Scripts to manage gas consumption --}}
     <script>
-        function calculateGasConsumption(diveData) {
-            const sacBottomGas = parseFloat(document.getElementById('labelSACBottomGas').value);
-            const sacDecoGas = parseFloat(document.getElementById('labelSACDecoGas').value);
+        // Per-gas SAC rate overrides, keyed by the same gas-mix string
+        // calculateGasConsumption already groups by ("32%", "21/35", ...) -
+        // persists across recalculations for the rest of the page session
+        // (Pablo, 2026-09-24: "typically you consume more gas depending on
+        // the mix"). A gas with no override yet falls back to whichever of
+        // the two bulk Bottom/Deco gas sliders in the Inputs card matches
+        // its type - those still work exactly as before for any gas that
+        // hasn't been individually tuned.
+        window.dhGasSacRates = window.dhGasSacRates || {};
 
+        function dhGetSacRateForGas(gasMix, type) {
+            if (window.dhGasSacRates.hasOwnProperty(gasMix)) {
+                return window.dhGasSacRates[gasMix];
+            }
+            var fallbackEl = document.getElementById(type === 'deco' ? 'labelSACDecoGas' : 'labelSACBottomGas');
+            var fallback = fallbackEl ? parseFloat(fallbackEl.value) : NaN;
+            return isNaN(fallback) ? (type === 'deco' ? 0.5 : 0.8) : fallback;
+        }
+
+        function calculateGasConsumption(diveData) {
             const gasVolume = {};
             let bottomGasMix; // Store bottom gas mix from descent/constant phases
 
@@ -6936,8 +6999,8 @@
 
                 // Determine correct SAC rate & gas type
                 const isDecoGas = segment.phase !== "descent" && segment.phase !== "const" && gasMix !== bottomGasMix;
-                const sacRate = isDecoGas ? sacDecoGas : sacBottomGas;
                 const gasType = isDecoGas ? "deco" : "bottom";
+                const sacRate = dhGetSacRateForGas(gasMix, gasType);
 
                 // Calculate gas volume needed for this phase
                 const volumeNeeded = sacRate * absPressure * phaseTime;
@@ -6956,8 +7019,19 @@
                 type: entry.type
             }));
         }
-        
-        function renderGasConsumptionTable(gasConsumption, filterType) {
+
+        // Re-derives gas consumption from the same diveData a table was
+        // last built from and re-renders both tables - used after a bulk
+        // Bottom/Deco SAC slider changes (per-gas sliders update their own
+        // row in place instead, see renderGasConsumptionTable below).
+        function dhRecalculateGasConsumption(diveData) {
+            if (!diveData) return;
+            var gasConsumption = calculateGasConsumption(diveData);
+            renderGasConsumptionTable(gasConsumption, "bottom", diveData);
+            renderGasConsumptionTable(gasConsumption, "deco", diveData);
+        }
+
+        function renderGasConsumptionTable(gasConsumption, filterType, diveData) {
             const containerId = filterType === "deco" ? "decoGasConsumptionTableContainer" : "bottomGasConsumptionTableContainer";
             const container = document.getElementById(containerId);
             container.innerHTML = ""; // Clear previous content
@@ -6975,6 +7049,7 @@
             thead.innerHTML = `
                 <tr>
                     <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Gas</th>
+                    <th class="text-sm text-center" style="padding-left: 0px; padding-right:0px;">SAC rate</th>
                     <th class="text-sm" style="padding-left: 0px; padding-right:0px;">Volume {{ $deco_unit ? "(liters)" : "(cuft)" }}</th>
                 </tr>
             `;
@@ -6982,6 +7057,8 @@
 
             // Create table body with filtering logic
             const tbody = document.createElement("tbody");
+            var isMetric = (typeof modeImpOrMetric !== 'undefined' && modeImpOrMetric === 'met');
+            var unitLabel = isMetric ? 'L/min' : 'cuft/min';
             gasConsumption.forEach(entry => {
                 if (filterType === "bottom" && entry.type !== "bottom") return;
                 if (filterType === "deco" && entry.type !== "deco") return;
@@ -6992,12 +7069,69 @@
                 // pills in the gas consumption...same criteria we do for
                 // everywhere else").
                 var mix = dhParseGasMixString(entry.gas);
+                var sacRate = dhGetSacRateForGas(entry.gas, entry.type);
+                var displayRate = isMetric ? (sacRate * 28.3168).toFixed(0) : sacRate.toFixed(1);
+
                 const row = document.createElement("tr");
                 row.innerHTML = `
                     <td>${dhBuildGasSplitPillHtml(mix.o2, mix.he, true)}</td>
-                    <td>${(entry.volume * ({{ $deco_unit ? 28.3168 : 1 }})).toFixed(2)}</td>
+                    <td>
+                        <div class="dh-gasconsumption-sac">
+                            <div class="dh-gas-editable">
+                                <input type="text" inputmode="decimal" class="dh-gas-input dh-gasconsumption-sac-input" value="${displayRate}" aria-label="SAC rate for ${entry.gas}">
+                                <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                            </div>
+                            <span class="dh-gasconsumption-sac-unit">${unitLabel}</span>
+                            <input type="range" class="dh-gasconsumption-sac-slider" min="0.3" max="4" step="0.1" value="${sacRate}" aria-label="SAC rate slider for ${entry.gas}">
+                        </div>
+                    </td>
+                    <td class="dh-gasconsumption-volume">${(entry.volume * ({{ $deco_unit ? 28.3168 : 1 }})).toFixed(2)}</td>
                 `;
                 tbody.appendChild(row);
+
+                // Dragging this gas's own slider (or typing in its number
+                // field - Pablo, 2026-09-24: "user can type the numbers for
+                // the SACs, specially useful on mobile...moving a slider is
+                // tricky") only ever changes this gas's own volume (each
+                // gas accumulates independently in calculateGasConsumption)
+                // - update these cells in place instead of rebuilding the
+                // table, which would tear down the slider/input mid-drag or
+                // mid-edit.
+                var numberInput = row.querySelector('.dh-gasconsumption-sac-input');
+                var slider = row.querySelector('.dh-gasconsumption-sac-slider');
+                var volumeCell = row.querySelector('.dh-gasconsumption-volume');
+
+                function applyRate(canonicalRate) {
+                    canonicalRate = Math.min(4, Math.max(0.3, canonicalRate));
+                    window.dhGasSacRates[entry.gas] = canonicalRate;
+                    slider.value = canonicalRate;
+                    numberInput.value = isMetric ? (canonicalRate * 28.3168).toFixed(0) : canonicalRate.toFixed(1);
+
+                    if (diveData) {
+                        var updated = calculateGasConsumption(diveData).find(function (u) { return u.gas === entry.gas; });
+                        if (updated) {
+                            volumeCell.textContent = (updated.volume * ({{ $deco_unit ? 28.3168 : 1 }})).toFixed(2);
+                        }
+                    }
+                }
+
+                slider.addEventListener('input', function () {
+                    applyRate(parseFloat(slider.value));
+                });
+
+                numberInput.addEventListener('change', function () {
+                    var typed = parseFloat(numberInput.value);
+                    if (isNaN(typed)) {
+                        // Revert to the last valid rate, not this row's
+                        // initial one - the slider always tracks the
+                        // current value even though this closure's own
+                        // `sacRate` doesn't.
+                        var current = parseFloat(slider.value);
+                        numberInput.value = isMetric ? (current * 28.3168).toFixed(0) : current.toFixed(1);
+                        return;
+                    }
+                    applyRate(isMetric ? (typed / 28.3168) : typed);
+                });
             });
             table.appendChild(tbody);
 
@@ -7005,114 +7139,6 @@
             tableWrapper.appendChild(table);
             container.appendChild(tableWrapper);
         }
-    </script>
-
-    {{-- Scripts to manage SAC sliders --}}
-    <script>
-        var sliderSACBottomGas = document.getElementById('sliderSACBottomGas');
-        var labelSACBottomGas = document.getElementById('labelSACBottomGas');
-        var labelSACBottomGasLiters = document.getElementById('labelSACBottomGasLiters');
-        
-
-
-        noUiSlider.create(sliderSACBottomGas, {
-            start: 0.8,
-            connect: [true, false],
-            range: {
-                'min': 0.3,
-                'max': 4
-            },
-            step: 0.1,
-            
-
-        });
-
-        // Hide the tick mark labels
-        var sliderSACBottomGasTicks = sliderSACBottomGas.querySelectorAll('.noUi-value-sub');
-        sliderSACBottomGasTicks.forEach(function (sliderSACBottomGas) {
-            sliderSACBottomGas.style.display = 'none';
-        });
-
-        sliderSACBottomGas.noUiSlider.on('update', function (values, handle) {
-            var sliderSACBottomGasValue = values[handle];
-            labelSACBottomGas.value = parseFloat(sliderSACBottomGasValue).toFixed(1);
-            labelSACBottomGasLiters.value = parseFloat(sliderSACBottomGasValue * 28.3168).toFixed(0);
-
-            // update gas consumption table
-            if(globalResponse != null) {
-                if(modeOCOrCC === "OC") {
-                    gasConsumption = calculateGasConsumption(globalResponse['baseline']);
-                    renderGasConsumptionTable(gasConsumption, "bottom");
-                }
-            }
-
-        });
-
-        labelSACBottomGas.addEventListener('change', function () {
-            var typed = parseFloat(labelSACBottomGas.value);
-            if (isNaN(typed)) { labelSACBottomGas.value = parseFloat(sliderSACBottomGas.noUiSlider.get()).toFixed(1); return; }
-            sliderSACBottomGas.noUiSlider.set(typed);
-        });
-        labelSACBottomGasLiters.addEventListener('change', function () {
-            var typed = parseFloat(labelSACBottomGasLiters.value);
-            if (isNaN(typed)) { labelSACBottomGasLiters.value = parseFloat(sliderSACBottomGas.noUiSlider.get() * 28.3168).toFixed(0); return; }
-            sliderSACBottomGas.noUiSlider.set(typed / 28.3168);
-        });
-
-        var sliderSACDecoGas = document.getElementById('sliderSACDecoGas');
-        var labelSACDecoGas = document.getElementById('labelSACDecoGas');
-        var labelSACDecoGasLiters = document.getElementById('labelSACDecoGasLiters');
-
-
-        noUiSlider.create(sliderSACDecoGas, {
-            start: 0.5,
-            connect: [true, false],
-            range: {
-                'min': 0.3,
-                'max': 4
-            },
-            step: 0.1,
-            
-
-        });
-
-        // Hide the tick mark labels
-        var sliderSACDecoGasTicks = sliderSACDecoGas.querySelectorAll('.noUi-value-sub');
-        sliderSACDecoGasTicks.forEach(function (sliderSACDecoGas) {
-            sliderSACDecoGas.style.display = 'none';
-        });
-
-        sliderSACDecoGas.noUiSlider.on('update', function (values, handle) {
-            console.log("paso");
-            var sliderSACDecoGasValue = values[handle];
-            labelSACDecoGas.value = parseFloat(sliderSACDecoGasValue).toFixed(1);
-            labelSACDecoGasLiters.value = parseFloat(sliderSACDecoGasValue * 28.3168).toFixed(0);
-
-            // update gas consumption table
-            if (globalResponse != null) {
-                if(modeOCOrCC === "OC") {
-                    gasConsumption = calculateGasConsumption(globalResponse['baseline']);
-                    renderGasConsumptionTable(gasConsumption, "deco");
-                } else {
-                    gasConsumption = calculateGasConsumption(globalResponse['bailout']);
-                    renderGasConsumptionTable(gasConsumption, "deco");
-                }
-
-            }
-
-
-        });
-
-        labelSACDecoGas.addEventListener('change', function () {
-            var typed = parseFloat(labelSACDecoGas.value);
-            if (isNaN(typed)) { labelSACDecoGas.value = parseFloat(sliderSACDecoGas.noUiSlider.get()).toFixed(1); return; }
-            sliderSACDecoGas.noUiSlider.set(typed);
-        });
-        labelSACDecoGasLiters.addEventListener('change', function () {
-            var typed = parseFloat(labelSACDecoGasLiters.value);
-            if (isNaN(typed)) { labelSACDecoGasLiters.value = parseFloat(sliderSACDecoGas.noUiSlider.get() * 28.3168).toFixed(0); return; }
-            sliderSACDecoGas.noUiSlider.set(typed / 28.3168);
-        });
     </script>
 
     {{-- "Export to PDF" and "Save Plan" on the Decompression plan card
@@ -7377,24 +7403,6 @@
             return h;
         }
 
-        // A note under a gas-consumption table recording the SAC rate(s) it
-        // was computed with (Pablo, 2026-09-24: "make sure you add the SAC
-        // rate that was configured in there...as a note below the gas
-        // consumption table"), for both the OC table and the new CC bailout
-        // one below. Reads whichever pair of inputs is currently visible
-        // (modeImpOrMetric flips between the cuft/min and liters/min ones).
-        function dhBuildPdfSacNote() {
-            var isMetric = (typeof modeImpOrMetric !== 'undefined' && modeImpOrMetric === 'met');
-            var unit = isMetric ? 'L/min' : 'cuft/min';
-            var bottomEl = document.getElementById(isMetric ? 'labelSACBottomGasLiters' : 'labelSACBottomGas');
-            var decoEl = document.getElementById(isMetric ? 'labelSACDecoGasLiters' : 'labelSACDecoGas');
-            var note = document.createElement('div');
-            note.style.cssText = 'margin-top:10px; font-size:11px; color:#5a6b78; font-style:italic;';
-            note.textContent = 'SAC rate used - bottom gas: ' + (bottomEl ? bottomEl.value : '?') + ' ' + unit
-                + ', deco gas: ' + (decoEl ? decoEl.value : '?') + ' ' + unit + '.';
-            return note;
-        }
-
         // Clones an already-rendered table container verbatim - same
         // classes (table-striped, the phase icons via Material Icons
         // ligatures), so html2canvas rasterizes it exactly as it already
@@ -7438,14 +7446,22 @@
             thead.innerHTML =
                 '<tr>' +
                 '<th style="text-align:left; padding:4px 4px 8px; font-weight:700; color:#5a6b78; font-size:10px; text-transform:uppercase; letter-spacing:.03em;">Gas</th>' +
+                '<th style="text-align:right; padding:4px 4px 8px; font-weight:700; color:#5a6b78; font-size:10px; text-transform:uppercase; letter-spacing:.03em;">SAC rate</th>' +
                 '<th style="text-align:right; padding:4px 4px 8px; font-weight:700; color:#5a6b78; font-size:10px; text-transform:uppercase; letter-spacing:.03em;">' + volumeHeaderText + '</th>' +
                 '</tr>';
             table.appendChild(thead);
 
             var tbody = document.createElement('tbody');
             sourceRows.forEach(function (sourceRow) {
-                var cells = sourceRow.querySelectorAll('td');
-                if (cells.length < 2) return;
+                var gasCell = sourceRow.querySelector('td');
+                // Read the Volume/SAC cells by class, not position - each
+                // gas gets its own editable SAC rate now (Pablo,
+                // 2026-09-24), so the old "2nd <td> is the volume"
+                // assumption no longer holds.
+                var volumeCell = sourceRow.querySelector('.dh-gasconsumption-volume');
+                var sacInput = sourceRow.querySelector('.dh-gasconsumption-sac-input');
+                var sacUnit = sourceRow.querySelector('.dh-gasconsumption-sac-unit');
+                if (!gasCell || !volumeCell) return;
                 // The source cell holds a real split pill now (Pablo,
                 // 2026-09-19: "in the app view, we can use the gas split
                 // pills in the gas consumption"), not the plain "18/55"
@@ -7454,8 +7470,8 @@
                 // instead of "18/55", found from Pablo: "the gas was 18/55
                 // and I see in the pdf 1855% in a green pill"). Read the O2/
                 // He labels directly instead.
-                var o2Label = cells[0].querySelector('.is-o2');
-                var heLabel = cells[0].querySelector('.is-he');
+                var o2Label = gasCell.querySelector('.is-o2');
+                var heLabel = gasCell.querySelector('.is-he');
                 var mix = {
                     o2: o2Label ? parseInt(o2Label.textContent, 10) || 0 : 0,
                     he: heLabel ? parseInt(heLabel.textContent, 10) || 0 : 0,
@@ -7464,10 +7480,14 @@
                 var tdGas = document.createElement('td');
                 tdGas.style.cssText = 'padding:6px 4px; text-align:left; background:#fff;';
                 tdGas.appendChild(dhBuildPdfSplitPill(mix.o2, mix.he, true));
+                var tdSac = document.createElement('td');
+                tdSac.style.cssText = 'padding:6px 4px; text-align:right; background:#fff; color:#5a6b78; white-space:nowrap;';
+                tdSac.textContent = (sacInput ? sacInput.value : '?') + ' ' + (sacUnit ? sacUnit.textContent : '');
                 var tdVolume = document.createElement('td');
                 tdVolume.style.cssText = 'padding:6px 4px; text-align:right; background:#fff; font-weight:700; color:#0b2a3a;';
-                tdVolume.textContent = cells[1].textContent.trim();
+                tdVolume.textContent = volumeCell.textContent.trim();
                 tr.appendChild(tdGas);
+                tr.appendChild(tdSac);
                 tr.appendChild(tdVolume);
                 tbody.appendChild(tr);
             });
@@ -7516,7 +7536,7 @@
                 // the RT/Depth already printed next to them.
                 var tdRT = document.createElement('td');
                 tdRT.style.cssText = 'padding:5px 4px; text-align:left; background:#fff; font-weight:600; color:#0b2a3a;';
-                tdRT.textContent = Math.ceil(point.time) + ' m';
+                tdRT.textContent = Math.ceil(point.time) + ' min';
                 var tdDepth = document.createElement('td');
                 tdDepth.style.cssText = 'padding:5px 4px; text-align:left; background:#fff; font-weight:600; color:#0b2a3a;';
                 tdDepth.textContent = absPressureToDepthDeco(point.abs_p) + ' ' + dhFormatDepthUnit();
@@ -7657,15 +7677,14 @@
                 // written into them before being read.
                 if (bailout) {
                     var bailoutGasConsumption = calculateGasConsumption(bailout);
-                    renderGasConsumptionTable(bailoutGasConsumption, "bottom");
                     renderGasConsumptionTable(bailoutGasConsumption, "deco");
 
-                    var boSub1 = document.createElement('div');
-                    boSub1.style.cssText = 'font-weight:700; font-size:12px; color:#5a6b78; text-transform:uppercase; letter-spacing:.03em; margin:12px 0 6px;';
-                    boSub1.textContent = 'Bailout gas';
-                    col3.appendChild(boSub1);
-                    col3.appendChild(dhBuildPdfGasConsumptionTable('bottomGasConsumptionTableContainer'));
-
+                    // "Bailout gas" (the diluent) deliberately isn't shown here -
+                    // it's part of the calculation, but the diver is still
+                    // breathing CC/the loop at that point, not the diluent
+                    // itself, so a bailout-gas consumption figure would be
+                    // misleading (Pablo, 2026-09-24). Only the deco gases a
+                    // bailout-to-OC ascent would actually consume matter here.
                     if (bailoutGasConsumption.some(function (g) { return g.type === 'deco'; })) {
                         var boSub2 = document.createElement('div');
                         boSub2.style.cssText = 'font-weight:700; font-size:12px; color:#5a6b78; text-transform:uppercase; letter-spacing:.03em; margin:12px 0 6px;';
@@ -7673,8 +7692,6 @@
                         col3.appendChild(boSub2);
                         col3.appendChild(dhBuildPdfGasConsumptionTable('decoGasConsumptionTableContainer'));
                     }
-
-                    col3.appendChild(dhBuildPdfSacNote());
                 }
             } else {
                 col3.appendChild(dhBuildPdfColumnHeader('Gas Consumption'));
@@ -7695,9 +7712,6 @@
                     col3.appendChild(sub2);
                     col3.appendChild(dhBuildPdfGasConsumptionTable('decoGasConsumptionTableContainer'));
                 }
-                // SAC note (Pablo, 2026-09-24: "the SAC rate note also needs
-                // to go in the Gas consumption table when we print pdf in OC").
-                col3.appendChild(dhBuildPdfSacNote());
             }
             row.appendChild(col3);
 
