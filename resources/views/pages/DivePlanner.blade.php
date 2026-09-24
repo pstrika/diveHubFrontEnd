@@ -7377,6 +7377,24 @@
             return h;
         }
 
+        // A note under a gas-consumption table recording the SAC rate(s) it
+        // was computed with (Pablo, 2026-09-24: "make sure you add the SAC
+        // rate that was configured in there...as a note below the gas
+        // consumption table"), for both the OC table and the new CC bailout
+        // one below. Reads whichever pair of inputs is currently visible
+        // (modeImpOrMetric flips between the cuft/min and liters/min ones).
+        function dhBuildPdfSacNote() {
+            var isMetric = (typeof modeImpOrMetric !== 'undefined' && modeImpOrMetric === 'met');
+            var unit = isMetric ? 'L/min' : 'cuft/min';
+            var bottomEl = document.getElementById(isMetric ? 'labelSACBottomGasLiters' : 'labelSACBottomGas');
+            var decoEl = document.getElementById(isMetric ? 'labelSACDecoGasLiters' : 'labelSACDecoGas');
+            var note = document.createElement('div');
+            note.style.cssText = 'margin-top:10px; font-size:11px; color:#5a6b78; font-style:italic;';
+            note.textContent = 'SAC rate used - bottom gas: ' + (bottomEl ? bottomEl.value : '?') + ' ' + unit
+                + ', deco gas: ' + (decoEl ? decoEl.value : '?') + ' ' + unit + '.';
+            return note;
+        }
+
         // Clones an already-rendered table container verbatim - same
         // classes (table-striped, the phase icons via Material Icons
         // ligatures), so html2canvas rasterizes it exactly as it already
@@ -7628,12 +7646,36 @@
             if (isCC) {
                 col3.appendChild(dhBuildPdfColumnHeader('Bailout Table'));
                 col3.appendChild(dhBuildPdfTableClone('BOTableContainer'));
-                // Same gas-switch table OC gets under its own chart, just
-                // built from the bailout profile instead of the baseline
-                // one (Pablo, 2026-09-19: "for CC bailout section...also
-                // include at the bottom the Gas Switch table - like you did
-                // in OC").
-                if (bailout) col3.appendChild(dhBuildPdfGasSwitchTable(bailout, true));
+                // Gas consumption for the bailout profile, not the gas-switch
+                // table this used to show (Pablo, 2026-09-24: "replace the
+                // gas switches by the gas consumption table for bailout -
+                // ONLY on CC"). Populated fresh from the bailout profile
+                // right here rather than depending on the "Bailout to OC"
+                // what-if checkbox having been ticked first - the on-screen
+                // containers this reuses (dhBuildPdfGasConsumptionTable) are
+                // shared with OC's own table, so they need bailout data
+                // written into them before being read.
+                if (bailout) {
+                    var bailoutGasConsumption = calculateGasConsumption(bailout);
+                    renderGasConsumptionTable(bailoutGasConsumption, "bottom");
+                    renderGasConsumptionTable(bailoutGasConsumption, "deco");
+
+                    var boSub1 = document.createElement('div');
+                    boSub1.style.cssText = 'font-weight:700; font-size:12px; color:#5a6b78; text-transform:uppercase; letter-spacing:.03em; margin:12px 0 6px;';
+                    boSub1.textContent = 'Bailout gas';
+                    col3.appendChild(boSub1);
+                    col3.appendChild(dhBuildPdfGasConsumptionTable('bottomGasConsumptionTableContainer'));
+
+                    if (bailoutGasConsumption.some(function (g) { return g.type === 'deco'; })) {
+                        var boSub2 = document.createElement('div');
+                        boSub2.style.cssText = 'font-weight:700; font-size:12px; color:#5a6b78; text-transform:uppercase; letter-spacing:.03em; margin:12px 0 6px;';
+                        boSub2.textContent = 'Bailout deco gases';
+                        col3.appendChild(boSub2);
+                        col3.appendChild(dhBuildPdfGasConsumptionTable('decoGasConsumptionTableContainer'));
+                    }
+
+                    col3.appendChild(dhBuildPdfSacNote());
+                }
             } else {
                 col3.appendChild(dhBuildPdfColumnHeader('Gas Consumption'));
                 var sub1 = document.createElement('div');
@@ -7653,6 +7695,9 @@
                     col3.appendChild(sub2);
                     col3.appendChild(dhBuildPdfGasConsumptionTable('decoGasConsumptionTableContainer'));
                 }
+                // SAC note (Pablo, 2026-09-24: "the SAC rate note also needs
+                // to go in the Gas consumption table when we print pdf in OC").
+                col3.appendChild(dhBuildPdfSacNote());
             }
             row.appendChild(col3);
 
