@@ -167,15 +167,22 @@
                      the full Me drawer, reachable from the bottom bar's More
                      tab - this is deliberately just the two things people
                      actually want from clicking their own picture. --}}
-                <div class="dropdown">
-                    <button type="button" class="dh-avatar-btn {{ $active === 'me' ? 'is-active' : '' }}" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Your account">
+                {{-- Plain manual toggle rather than data-bs-toggle="dropdown"
+                     (Pablo, 2026-09-24: "if I'm already in My Profile page,
+                     the dropdown does not show") - Bootstrap's own Dropdown
+                     component wasn't reliably adding its "show" class on
+                     every page here, for reasons not worth chasing further
+                     given how small this menu is. This owns its own open/
+                     close state instead of depending on that. --}}
+                <div class="dropdown dh-account-menu">
+                    <button type="button" id="dhAccountMenuBtn" class="dh-avatar-btn {{ $active === 'me' ? 'is-active' : '' }}" aria-haspopup="true" aria-expanded="false" aria-label="Your account">
                         @if($avatar)
                             <img src="{{ $avatar }}" alt="" onerror="this.remove()">
                         @else
                             <span class="material-icons-round" aria-hidden="true">account_circle</span>
                         @endif
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-animation border-radius-xl p-2 mt-2">
+                    <ul class="dropdown-menu dropdown-menu-end border-radius-xl p-2 mt-2" id="dhAccountMenuList">
                         <li>
                             <a class="dropdown-item border-radius-md d-flex align-items-center" href="{{ route('overview') }}">
                                 <span class="material-icons-round opacity-6 me-2" aria-hidden="true">person</span>
@@ -277,3 +284,37 @@
         <x-shell.menu />
     </div>
 </div>
+
+@auth
+@if(!$isGuest)
+<script>
+    (function () {
+        var btn = document.getElementById('dhAccountMenuBtn');
+        var menu = document.getElementById('dhAccountMenuList');
+        if (!btn || !menu) return;
+
+        function closeMenu() {
+            menu.classList.remove('show');
+            btn.setAttribute('aria-expanded', 'false');
+        }
+        function openMenu() {
+            menu.classList.add('show');
+            btn.setAttribute('aria-expanded', 'true');
+        }
+
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            menu.classList.contains('show') ? closeMenu() : openMenu();
+        });
+        document.addEventListener('click', function (e) {
+            if (menu.classList.contains('show') && e.target !== btn && !menu.contains(e.target)) {
+                closeMenu();
+            }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeMenu();
+        });
+    })();
+</script>
+@endif
+@endauth
