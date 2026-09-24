@@ -158,19 +158,38 @@
                     <span class="material-icons-round" aria-hidden="true">menu</span>
                 </button>
             @else
-                {{-- Direct link to the diver's own profile overview (Pablo,
-                     2026-09-22: "instead of opening the dashboard, let's open
-                     the user overview") - was My Dashboard until now. The
-                     drawer's other links (My Dashboard, settings, admin
-                     tools, sign out) are still reachable from the bottom
-                     bar's More tab. --}}
-                <a href="{{ route('overview') }}" class="dh-avatar-btn {{ $active === 'me' ? 'is-active' : '' }}" aria-label="Go to your profile">
-                    @if($avatar)
-                        <img src="{{ $avatar }}" alt="" onerror="this.remove()">
-                    @else
-                        <span class="material-icons-round" aria-hidden="true">account_circle</span>
-                    @endif
-                </a>
+                {{-- A small "My Profile" / "Log Out" menu on the avatar itself
+                     (Pablo, 2026-09-24: "when we click on the user avatar top
+                     right...show a small dialog...My Profile and Log Out"),
+                     replacing the direct-link-to-overview behaviour from
+                     2026-09-22. Everything else that used to live behind the
+                     avatar (My Dashboard, settings, admin tools) is still in
+                     the full Me drawer, reachable from the bottom bar's More
+                     tab - this is deliberately just the two things people
+                     actually want from clicking their own picture. --}}
+                <div class="dropdown">
+                    <button type="button" class="dh-avatar-btn {{ $active === 'me' ? 'is-active' : '' }}" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Your account">
+                        @if($avatar)
+                            <img src="{{ $avatar }}" alt="" onerror="this.remove()">
+                        @else
+                            <span class="material-icons-round" aria-hidden="true">account_circle</span>
+                        @endif
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-animation border-radius-xl p-2 mt-2">
+                        <li>
+                            <a class="dropdown-item border-radius-md d-flex align-items-center" href="{{ route('overview') }}">
+                                <span class="material-icons-round opacity-6 me-2" aria-hidden="true">person</span>
+                                My Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item border-radius-md d-flex align-items-center" href="{{ route('logout') }}" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
+                                <span class="material-icons-round opacity-6 me-2" aria-hidden="true">logout</span>
+                                Log Out
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             @endif
         </div>
     </div>
