@@ -66,13 +66,32 @@
             <ul class="navbar-nav  align-items-center">
                 @auth
                     @if(auth()->user()->isNotGuest())
-                    <li class="nav-item">
-                        <a href="{{ route('overview') }}" class="nav-link text-body p-0 position-relative">
-                            
+                    <form method="POST" action="{{ route('logout') }}" class="d-none" id="profile-logout-form">
+                        @csrf
+                    </form>
+                    <li class="nav-item dropdown">
+                        <a role="button" href="javascript:;" class="nav-link text-body p-0 position-relative"
+                            id="dropdownMenuProfile" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="material-icons me-sm-1">
                                 account_circle
                             </i>
                         </a>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-animation border-radius-xl p-2 mt-2"
+                            aria-labelledby="dropdownMenuProfile">
+                            <li>
+                                <a class="dropdown-item border-radius-md d-flex align-items-center" href="{{ route('overview') }}">
+                                    <i class="material-icons opacity-6 me-2 text-md">person</i>
+                                    My Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item border-radius-md d-flex align-items-center" href="{{ route('logout') }}"
+                                    onclick="event.preventDefault();document.getElementById('profile-logout-form').submit();">
+                                    <i class="material-icons opacity-6 me-2 text-md">logout</i>
+                                    Log Out
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
                     <li class="nav-item">
