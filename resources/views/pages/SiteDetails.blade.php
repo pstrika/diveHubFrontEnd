@@ -219,6 +219,19 @@
             .noUi-tick {
                 display: none;
             }
+
+            {{-- divershub.js adds a plain number input next to every slider
+                 site-wide (2026-09-13) so divers who find dragging fiddly
+                 can type a value instead - useful on Best Gases/Deco
+                 Planner where the diver picks their own depth. On this
+                 page the site's depth is fixed and these boxes only ever
+                 mirror the slider (Pablo, 2026-09-24: "hide the text boxes
+                 where the value of the sliders are coming"), so hide them
+                 here without touching the shared script other pages rely
+                 on. --}}
+            .dh-slider-num {
+                display: none;
+            }
         </style>
 
         <!-- Navbar -->
@@ -618,7 +631,9 @@
                     <section class="dh-panel">
                         <div class="dh-panel-head-row">
                             <h2 class="dh-panel-title" id="bestGasTitle">Best Gas</h2>
-                            <button type="button" id="showGasDetailsBtn" class="dh-btn dh-btn-ghost-dark">Show details</button>
+                            <button type="button" id="showGasDetailsBtn" class="dh-btn dh-btn-ghost-dark" aria-label="Show details" aria-expanded="false">
+                                <span class="material-icons-round" id="showGasDetailsIcon" aria-hidden="true">chevron_right</span>
+                            </button>
                         </div>
                         <div id="gasesCardBody">
 
@@ -715,10 +730,15 @@
                                         <div class="text-center align-items-center mb-2" id="txhypoxicCCR" style="display: flex; justify-content: center; align-items: center;">
                                             <label class="text-danger text-sm font-weight-bolder">Hypoxic at surface</label>
                                         </div>
-                                        <div class="text-center">
-                                            <div class="dh-gas-btn-row">
-                                                <a type="button" class="btn btn-info flex-fill" id="buttonBestDiluent">
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-11">
+                                                <a type="button" class="btn btn-info w-100 mb-0" id="buttonBestDiluent">
                                                     Calculate Best Diluent
+                                                </a>
+                                            </div>
+                                            <div class="col-1">
+                                                <a type="button" class="btn w-100 mb-0 dh-gas-deco-btn" href="{{ route('DecoPlanner') }}/{{ $site->id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Calculate decompression">
+                                                    <span class="material-icons-round" aria-hidden="true">timer</span>
                                                 </a>
                                             </div>
                                         </div>
@@ -728,7 +748,14 @@
                                 <div class="col-12 col-lg-6 col-sm-12 col-md-6" id="cc-tank-col">
                                     <div class="dh-gas-tank-layout">
                                         <div class="dh-gas-tank-graphic">
-                                            <div class="dh-gas-tank-img-wrap" style="position: relative; width: 105px; height: 210px;">
+                                            {{-- Scaled to 80% of the original 105x210/210x124 sizing (Pablo,
+                                                 2026-09-24: "make the tank and rebreather template...smaller
+                                                 because the Gas price frame is not looking good") - every
+                                                 pixel value here (wrap, chart wrapper/canvas, layout padding
+                                                 in the CCR chart's JS options above) scaled by the same
+                                                 factor together, since the tank art's transparent window is
+                                                 pixel-calibrated against the chart canvas's exact size. --}}
+                                            <div class="dh-gas-tank-img-wrap" style="position: relative; width: 84px; height: 168px;">
                                                 <!-- Overlaying image -->
                                                 <img id="tankCCR" src="{{ asset("assets") }}/img/ccr.png" alt="Overlay Image"
                                                     style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
@@ -737,9 +764,9 @@
                                                     style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); width: 95%; height: 80%; z-index: 10;">
 
                                                 <!-- Fixed-size chart canvas -->
-                                                <div style="width: 210px; height: 124px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
+                                                <div style="width: 168px; height: 99px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
                                                     <canvas id="stackedBarChartCCR"
-                                                            style="width: 90%; height: 124px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
+                                                            style="width: 90%; height: 99px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
                                                 </div>
                                             </div>
 
@@ -779,12 +806,59 @@
                             </div>
                             <div class="row" id="OC">
 
-                                @if( $site->maxDepth < 180)
-                                    @if( $site->maxDepth > 150)
-                                        <div class="col-md-4" id="oc-nitrox-col">
-                                    @else
-                                        <div class="col-md-8" id="oc-nitrox-col">
-                                    @endif
+                                {{-- Sites between 150-180 ft get both a nitrox and a trimix
+                                     recommendation - used to render both stacked on top of
+                                     each other at once (col-md-4 each), which looked fine
+                                     side-by-side on desktop but showed as duplicate PPO2
+                                     sliders on mobile ("all the text boxes...are supposed
+                                     to be hidden", Pablo, 2026-09-24). Now toggled the same
+                                     way Best Gases' own Nitrox/Trimix chips work, so only
+                                     one shows at a time. --}}
+                                @php
+                                    $showNitroxCol = $site->maxDepth < 180;
+                                    $showTrimixCol = $site->maxDepth > 150;
+                                    $showFuelToggle = $showNitroxCol && $showTrimixCol;
+                                @endphp
+
+                                @if($showFuelToggle)
+                                    <div class="col-12">
+                                        <div class="dh-channel-picker dh-gas-picker" id="oc-fuel-picker">
+                                            <button type="button" class="dh-channel-chip is-active" data-fuel="nitrox">Nitrox</button>
+                                            <button type="button" class="dh-channel-chip" data-fuel="trimix">Trimix</button>
+                                        </div>
+                                    </div>
+                                    <script>
+                                        (function () {
+                                            var picker = document.getElementById('oc-fuel-picker');
+                                            function dhSelectGasFuel(fuel) {
+                                                document.getElementById('oc-nitrox-col').hidden = fuel !== 'nitrox';
+                                                document.getElementById('oc-trimix-col').hidden = fuel !== 'trimix';
+                                                picker.querySelectorAll('.dh-channel-chip').forEach(function (chip) {
+                                                    chip.classList.toggle('is-active', chip.getAttribute('data-fuel') === fuel);
+                                                });
+                                                // The tank image (single/double), gas price label and mix
+                                                // pills below the tank aren't owned by this toggle - they're
+                                                // set by whichever of the nitrox/trimix sliders' own 'update'
+                                                // handler last ran, so re-fire the one matching the
+                                                // now-visible column to pull them back in sync (Pablo,
+                                                // 2026-09-24: "the tank template for nitrox is the single
+                                                // tank, the tank for trimix is the double tank").
+                                                if (fuel === 'nitrox' && typeof slider !== 'undefined' && slider.noUiSlider) {
+                                                    slider.noUiSlider.set(slider.noUiSlider.get());
+                                                } else if (fuel === 'trimix' && typeof txslider !== 'undefined' && txslider.noUiSlider) {
+                                                    txslider.noUiSlider.set(txslider.noUiSlider.get());
+                                                }
+                                            }
+                                            picker.querySelectorAll('.dh-channel-chip').forEach(function (chip) {
+                                                chip.addEventListener('click', function () { dhSelectGasFuel(chip.getAttribute('data-fuel')); });
+                                            });
+                                            window.dhSelectGasFuel = dhSelectGasFuel;
+                                        })();
+                                    </script>
+                                @endif
+
+                                @if($showNitroxCol)
+                                    <div class="col-md-6" id="oc-nitrox-col">
 
                                         <div class="mt-n2">
                                             <input type="hidden" id="sliderPPO2-value" name="sliderPPO2">
@@ -809,16 +883,25 @@
                                             <div class="text-center">
                                                 <label class="dh-gas-result-pill is-o2" id="bestNitrox">32%</label>
                                             </div>
-                                            <div class="text-center pt-3">
-                                                <div class="dh-gas-btn-row">
-                                                    <a type="button" class="btn btn-secondary flex-fill" id="buttonBestNitrox">
-                                                        Calculate Best Nitrox
-                                                    </a>
-                                                    @if( $site->maxDepth <= 140)
-                                                    <a type="button" class="btn btn-info btn-sm flex-fill" id="calculateNDLButton">
-                                                        Calculate NDL
-                                                    </a>
-                                                    @endif
+                                            <div class="pt-3">
+                                                <div class="row g-2 align-items-center">
+                                                    <div class="col-11">
+                                                        <div class="d-flex gap-2">
+                                                            <a type="button" class="btn btn-secondary flex-fill mb-0" id="buttonBestNitrox">
+                                                                Calculate Best Nitrox
+                                                            </a>
+                                                            @if( $site->maxDepth <= 140)
+                                                            <a type="button" class="btn btn-info btn-sm flex-fill mb-0" id="calculateNDLButton">
+                                                                Calculate NDL
+                                                            </a>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-1">
+                                                        <a type="button" class="btn w-100 mb-0 dh-gas-deco-btn" href="{{ route('DecoPlanner') }}/{{ $site->id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Calculate decompression">
+                                                            <span class="material-icons-round" aria-hidden="true">timer</span>
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -826,12 +909,8 @@
                                     </div>
                                 @endif
 
-                                @if( $site->maxDepth > 150)
-                                    @if( $site->maxDepth < 180)
-                                        <div class="col-md-4" id="oc-trimix-col">
-                                    @else
-                                        <div class="col-md-8" id="oc-trimix-col">
-                                    @endif
+                                @if($showTrimixCol)
+                                    <div class="col-md-6" id="oc-trimix-col" @if($showFuelToggle) hidden @endif>
                                         <div class="mt-n2">
                                             <input type="hidden" id="sliderPPO2-value" name="txsliderPPO2">
 
@@ -893,10 +972,15 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="text-center">
-                                                <div class="dh-gas-btn-row">
-                                                    <a type="button" class="btn btn-info flex-fill" id="txbuttonBestNitrox">
+                                            <div class="row g-2 align-items-center">
+                                                <div class="col-11">
+                                                    <a type="button" class="btn btn-info w-100 mb-0" id="txbuttonBestNitrox">
                                                         Calculate Best Trimix
+                                                    </a>
+                                                </div>
+                                                <div class="col-1">
+                                                    <a type="button" class="btn w-100 mb-0 dh-gas-deco-btn" href="{{ route('DecoPlanner') }}/{{ $site->id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Calculate decompression">
+                                                        <span class="material-icons-round" aria-hidden="true">timer</span>
                                                     </a>
                                                 </div>
                                             </div>
@@ -905,10 +989,11 @@
                                     </div>
                                 @endif
 
-                                <div class="col-12 col-lg-4 col-sm-12 col-md-4" id="oc-tank-col">
+                                <div class="col-12 col-lg-6 col-sm-12 col-md-6" id="oc-tank-col">
                                     <div class="dh-gas-tank-layout">
                                         <div class="dh-gas-tank-graphic">
-                                            <div class="dh-gas-tank-img-wrap" style="position: relative; width: 105px; height: 210px;">
+                                            {{-- Scaled to 80%, same reason/ratio as the CCR block above. --}}
+                                            <div class="dh-gas-tank-img-wrap" style="position: relative; width: 84px; height: 168px;">
                                                 <!-- Overlaying image -->
                                                 <img id="tank_single" src="{{ asset("assets") }}/img/tank_single.png" hidden alt="Overlay Image"
                                                     style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
@@ -919,10 +1004,18 @@
                                                 <img id="unblendable_sign" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image"
                                                     style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); width: 95%; height: 80%; z-index: 10;">
 
-                                                <!-- Fixed-size chart canvas -->
-                                                <div style="width: 210px; height: 210px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
+                                                <!-- Fixed-size chart canvas. Chart.js's responsive mode
+                                                     resizes the canvas to match THIS WRAPPER's own height,
+                                                     not whatever height is declared on the <canvas> tag
+                                                     itself (confirmed via getBoundingClientRect() - the
+                                                     canvas's own 113px never actually took effect while
+                                                     this wrapper stayed 168px, Pablo, 2026-09-24). Wrapper
+                                                     height is therefore the real control for lining the
+                                                     bar's top up with tank_single.png/tank_double.png's
+                                                     window. -->
+                                                <div style="width: 168px; height: 113px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
                                                     <canvas id="stackedBarChart"
-                                                            style="width: 100%; height: 141px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
+                                                            style="width: 100%; height: 113px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
                                                 </div>
                                             </div>
 
@@ -978,16 +1071,6 @@
                                     </div>
                                 </div>
 
-                            </div>
-
-                            <div class="row mt-2">
-                                <div class="col-lg-4 col-md-4 col-sm-12">
-                                    <div class="text-center mx-2" style="border: none;">
-                                        <a type="button" class="btn btn-info mt-0" id="decoPlanningButton" href="{{ route('DecoPlanner')}}/{{ $site->id }}">
-                                            Decompression planning
-                                        </a>
-                                    </div>
-                                </div>
                             </div>
 
                         </div>
@@ -1410,6 +1493,12 @@
                     document.getElementById("OC").setAttribute("hidden", "true");
                     document.getElementById("CC").removeAttribute("hidden"); // Show the row
                 }
+                // Restyle (v10.38.0) swapped these tabs to dh-channel-chip pills,
+                // but never taught this handler about the is-active class the new
+                // CSS keys off - so the highlight stayed stuck on OC (Pablo, 2026-09-24).
+                document.querySelectorAll('#nav-tabs a').forEach(chip => {
+                    chip.classList.toggle('is-active', chip === this);
+                });
                 console.log('Clicked on:', tag); // Example action
             });
         });
@@ -1561,7 +1650,7 @@
 
     <script>
 
-    let labelHorizontalOffset = -40; // Initial offset value
+    let labelHorizontalOffset = -20; // Initial offset value - shifted onto the left cylinder, not off tank_double.png's left edge (Pablo, 2026-09-24: "push the % label slightly to the right so they can be visible through the template")
 
     // Get the canvas element
     const ctx = document.getElementById('stackedBarChart').getContext('2d');
@@ -1597,6 +1686,12 @@
         },
         options: {
             responsive: true, // Makes the chart responsive
+            // Same fix as the CCR chart below (Pablo, 2026-09-24) - without
+            // this, Chart.js derives the canvas height from its parent's
+            // width and a default aspect ratio instead of the canvas's own
+            // declared 141px height ("the bar chart for the OC tank is
+            // coming slightly shorter").
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: false, // Hide legend
@@ -1613,10 +1708,22 @@
                 }
             },
             layout: {
+                // tank_single.png/tank_double.png's transparent window starts
+                // at y=57/300 of the source image (measured the same way as
+                // ccr.png below, scanning for the first non-opaque pixel from
+                // the top). Rendered at this wrap's 75%-height image (126px),
+                // the window's top sits 102px up from the tank's bottom - so
+                // with this 113px-tall canvas, 11px of top padding puts a
+                // 100%-full bar exactly at the window's top edge (Pablo,
+                // 2026-09-24: "the top of the bar chart need to be up to the
+                // first transparent point you find in the template"). Was
+                // 16px, a leftover from an earlier 80%-of-GasPlanning scale
+                // that never got updated after GasPlanning's own padding
+                // (top:14, once 20) changed.
                 padding: {
                     left: 0,
                     right: 0,
-                    top: 20,
+                    top: 11,
                     bottom: 0
                 }
             }
@@ -1631,7 +1738,7 @@
                         meta.data.forEach((bar, index) => {
                             const data = dataset.data[index];
                             if (data) {
-                                ctx.font = '14px Roboto';
+                                ctx.font = '12px Roboto'; // was 14px (Pablo, 2026-09-24: "slightly smaller")
                                 ctx.fillStyle = '#FFF'; // Label color
                                 ctx.textAlign = 'center';
                                 ctx.textBaseline = 'middle'; // Centers text vertically
@@ -1670,17 +1777,17 @@
             {
                 label: 'Oxygen',
                 data: [oxygen],
-                backgroundColor: 'rgb(76, 175, 80, 1.0)'
+                backgroundColor: '#2e7d4f'
             },
             {
                 label: 'Helium',
                 data: [helium],
-                backgroundColor: 'rgb(26, 115, 232, 1.0)'
+                backgroundColor: '#0e7c9e'
             },
             {
                 label: 'Nitrogen',
                 data: [nitrogen],
-                backgroundColor: '#7b809a'
+                backgroundColor: '#5a6b78'
             }
         ];
 
@@ -1975,7 +2082,7 @@
             //const ndl = calculateNDL({{ $site->maxDepth }}, gasMix);
             //labelNDL = document.getElementById('labelNDL');
             //labelNDL.textContent = ndl;
-            updateLabelHorizontalOffset(-40);
+            updateLabelHorizontalOffset(-20);
             // JavaScript code to toggle visibility of images
             document.getElementById("tank_double").removeAttribute("hidden"); // Removes 'hidden' attribute from the first image
             document.getElementById("tank_single").setAttribute("hidden", "true"); // Adds 'hidden' attribute to the second image
@@ -2093,7 +2200,7 @@
             //const ndl = calculateNDL({{ $site->maxDepth }}, gasMix);
             //labelNDL = document.getElementById('labelNDL');
             //labelNDL.textContent = ndl;
-            updateLabelHorizontalOffset(-40);
+            updateLabelHorizontalOffset(-20);
             // JavaScript code to toggle visibility of images
             document.getElementById("tank_double").removeAttribute("hidden"); // Removes 'hidden' attribute from the first image
             document.getElementById("tank_single").setAttribute("hidden", "true"); // Adds 'hidden' attribute to the second image
@@ -2118,7 +2225,7 @@
             //labelNDL = document.getElementById('labelNDL');
             //labelNDL.textContent = ndl;
 
-            updateLabelHorizontalOffset(-40);
+            updateLabelHorizontalOffset(-20);
             // JavaScript code to toggle visibility of images
             document.getElementById("tank_double").removeAttribute("hidden"); // Removes 'hidden' attribute from the first image
             document.getElementById("tank_single").setAttribute("hidden", "true"); // Adds 'hidden' attribute to the second image
@@ -2147,8 +2254,27 @@
             txsliderHe.noUiSlider.set(txsliderHe.noUiSlider.get()); // Force an update with the current value
         });
 
-
-      
+        // Both the nitrox and trimix sliders above just ran their own
+        // initial 'update' as soon as they were created, each claiming the
+        // shared tank image/gas price label/mix pills for itself - trimix
+        // runs last so it always wins regardless of which tab is actually
+        // shown by default (nitrox). Re-syncing right here isn't enough
+        // though: divershub.js's global "number box next to every slider"
+        // feature (mirrorAll(), 2026-09-13) re-registers its own 'update'
+        // listener on every .slider-styled element on window 'load' -
+        // which noUiSlider answers by re-firing ALL of that slider's
+        // listeners (not just the new one), so trimix's tank/price/pill
+        // logic runs a third time and wins again right after 'load'. Defer
+        // this resync with setTimeout so it always runs strictly after
+        // every 'load' listener - including that one - has finished,
+        // regardless of which registered first.
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                if (typeof window.dhSelectGasFuel === 'function') {
+                    window.dhSelectGasFuel('nitrox');
+                }
+            }, 0);
+        });
 
  </script>
 
@@ -2253,6 +2379,12 @@
             },
             options: {
                 responsive: true, // Makes the chart responsive
+                // Without this, Chart.js derives the canvas height from its
+                // parent's width and a default aspect ratio instead of the
+                // canvas's own CSS height - same fix already applied to
+                // GasPlanning's CCR chart (Pablo, 2026-09-18), ported here
+                // 2026-09-24 ("the chart for the CC is way shorter").
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         display: false, // Hide legend
@@ -2269,11 +2401,15 @@
                     }
                 },
                 layout: {
+                    // Scaled 80% along with the canvas's own 168x99 size
+                    // above (was 14/14/6/3 at GasPlanning's 210x124) - the
+                    // tank art's transparent window is pixel-calibrated
+                    // against this canvas's exact rendered size.
                     padding: {
-                        left: 20,
-                        right: 20,
-                        top: 20,
-                        bottom: 4
+                        left: 11,
+                        right: 11,
+                        top: 5,
+                        bottom: 2
                     }
                 }
             },
@@ -2287,14 +2423,14 @@
                             meta.data.forEach((bar, index) => {
                                 const data = dataset.data[index];
                                 if (data != 100 && data != 0) {
-                                    ctx.font = '12px Roboto';
+                                    ctx.font = '11px Roboto'; // was 12px (Pablo, 2026-09-24: "slightly smaller")
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
                                     ctx.fillText(data + '%', bar.x + 12, bar.y + 10); // Position label slightly above the bar
                                     
                                 } else if (data == 100) {
-                                    ctx.font = '12px Roboto';
+                                    ctx.font = '11px Roboto'; // was 12px (Pablo, 2026-09-24: "slightly smaller")
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
@@ -2443,17 +2579,17 @@
                 {
                     label: 'Oxygen',
                     data: [oxygen, 100],
-                    backgroundColor: 'rgb(76, 175, 80, 1.0)'
+                    backgroundColor: '#2e7d4f'
                 },
                 {
                     label: 'Helium',
                     data: [helium, 0],
-                    backgroundColor: 'rgb(26, 115, 232, 1.0)'
+                    backgroundColor: '#0e7c9e'
                 },
                 {
                     label: 'Nitrogen',
                     data: [nitrogen, 0],
-                    backgroundColor: '#7b809a'
+                    backgroundColor: '#5a6b78'
                 }
             ];
 
@@ -3162,15 +3298,20 @@
         document.addEventListener("DOMContentLoaded", function () {
             // A plain show/hide button, not a toggle switch - no other card
             // on this page uses a switch input, so Best Gas shouldn't either
-            // (2026-09-11). Collapsed by default, same as before.
+            // (2026-09-11). Collapsed by default, same as before. Swapped the
+            // "Show details"/"Hide details" text for a chevron that points
+            // right when collapsed and down when expanded (Pablo, 2026-09-24).
             const btn = document.getElementById("showGasDetailsBtn");
+            const icon = document.getElementById("showGasDetailsIcon");
             const gasesCardBody = document.getElementById("gasesCardBody");
             gasesCardBody.style.display = "none";
 
             btn.addEventListener("click", function () {
                 const showing = gasesCardBody.style.display !== "none";
                 gasesCardBody.style.display = showing ? "none" : "block";
-                btn.textContent = showing ? "Show details" : "Hide details";
+                icon.textContent = showing ? "chevron_right" : "expand_more";
+                btn.setAttribute("aria-label", showing ? "Show details" : "Hide details");
+                btn.setAttribute("aria-expanded", showing ? "false" : "true");
             });
         });
     </script>

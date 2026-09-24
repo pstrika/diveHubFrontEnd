@@ -2671,6 +2671,28 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-gas-preset-row .dh-btn-icon:hover { color: var(--dh-ink); border-color: var(--dh-ink); }
 .dh-gas-preset-row .dh-btn-icon.is-success { background: var(--dh-good); color: #fff; border-color: var(--dh-good); }
 .dh-gas-preset-row .dh-btn-icon.is-error { background: var(--dh-danger); color: #fff; border-color: var(--dh-danger); }
+.dh-gas-btn-row { align-items: center; }
+/* Deco Planner shortcut next to Calculate Best Nitrox/Trimix/Diluent
+   (Pablo, 2026-09-24: replaced the full-width "Decompression planning"
+   button with a small icon-only button, same material-icons-round "timer"
+   glyph the nav menu/header use for Deco Planner, + tooltip). A real .btn
+   like its col-11 sibling, sized to the row via g-2/align-items rather
+   than the round .dh-btn-icon used elsewhere on this card. Grey with a
+   white icon - not Bootstrap's stock .btn-secondary, whose text/icon color
+   here is black. */
+.dh-gas-deco-btn {
+  padding-left: 0; padding-right: 0;
+  background: var(--dh-muted); border-color: var(--dh-muted); color: #fff;
+}
+.dh-gas-deco-btn:hover { background: var(--dh-ink); border-color: var(--dh-ink); color: #fff; }
+.dh-gas-deco-btn .material-icons-round {
+  /* Under the button's own 17.4px line-height (12px font x 1.45) so the
+     icon's line box doesn't force this button taller than its col-11
+     sibling (Pablo, 2026-09-24: "same height...perfectly aligned"). */
+  font-size: 15px;
+  line-height: 1;
+  vertical-align: middle;
+}
 /* "My Gases" reuses the standard preset chip look but pinned to the far
    right of its row, since it opens a picker rather than setting a value
    directly like its siblings. */

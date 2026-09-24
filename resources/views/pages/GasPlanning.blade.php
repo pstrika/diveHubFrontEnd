@@ -520,8 +520,17 @@
                                                     <img id="unblendable_sign" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image"
                                                         style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); width: 95%; height: 80%; z-index: 10;">
 
-                                                    <!-- Fixed-size chart canvas -->
-                                                    <div style="width: 210px; height: 210px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
+                                                    <!-- Fixed-size chart canvas. Chart.js's responsive mode
+                                                         resizes the canvas to match THIS WRAPPER's own
+                                                         height, not whatever height is declared on the
+                                                         <canvas> tag itself - confirmed via
+                                                         getBoundingClientRect(), the canvas rendered at
+                                                         210px (matching this wrapper) even though its own
+                                                         style said 141px (Pablo, 2026-09-24, same bug as
+                                                         Site Details' tank chart). Wrapper height is
+                                                         therefore the real control for lining the bar's top
+                                                         up with tank_single.png/tank_double.png's window. -->
+                                                    <div style="width: 210px; height: 141px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
                                                         <canvas id="stackedBarChart"
                                                                 style="width: 100%; height: 141px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
                                                     </div>
@@ -913,6 +922,11 @@
         },
         options: {
             responsive: true, // Makes the chart responsive
+            // Same fix as the CCR chart below (Pablo, 2026-09-24) - never
+            // applied here, which is why this one still ran "slightly
+            // shorter" than its declared 141px canvas height even after
+            // the CCR chart was fixed.
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: false, // Hide legend
