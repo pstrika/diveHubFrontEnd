@@ -51,7 +51,16 @@ class MyDashboardController extends Controller
             })
             ->withCount('activeMembers')
             ->with(['dives' => function ($q) {
-                $q->whereDate('date', '>=', Carbon::today())->orderBy('date')->orderBy('time')->limit(1);
+                // No ->limit(1) here (Pablo, 2026-09-24: "most of the groups
+                // say there's no dive planned, while several groups have
+                // dives on it") - Eloquent eager loading runs ONE query for
+                // every parent group combined (WHERE group_id IN (...)), so
+                // a limit here caps the total rows across ALL groups, not
+                // per group - only the single globally-earliest dive came
+                // back, leaving every other group's dives empty. The view
+                // (Dashboard.blade.php) already does $group->dives->first()
+                // to get each group's own soonest dive from this ordering.
+                $q->whereDate('date', '>=', Carbon::today())->orderBy('date')->orderBy('time');
             }])
             ->orderBy('name')->get();
         $groupInvites = \App\Models\GroupMember::where('user_id', $user->id)->where('status', 'invited')->count();
