@@ -1230,6 +1230,17 @@
                                             </label>
                                             <input type="file" id="dh-diver-photo-input" name="photo" accept="image/jpeg,image/png,image/webp" required hidden>
                                             <p class="text-xs text-secondary mt-2 mb-0">JPG, PNG or WebP, up to 8 MB.</p>
+                                            {{-- Server rejects an oversized file too (validation below), but
+                                                 silently - it redirects back with no error shown anywhere on
+                                                 this modal, which read as "nothing happened" (Pablo, 2026-09-24:
+                                                 "it will try to upload it with no error... reject the file
+                                                 saying file too large"). This is the immediate, before-submit
+                                                 check; the @error below is the fallback for whatever this
+                                                 can't catch client-side (wrong type despite accept=, etc.). --}}
+                                            <p class="text-danger text-xs mt-2 mb-0" id="dh-diver-photo-error" hidden></p>
+                                            @error('photo')
+                                                <p class="text-danger text-xs mt-2 mb-0">{{ $message }}</p>
+                                            @enderror
                                             <p class="dh-comms-note dh-comms-warn mt-3">
                                                 <span class="material-icons-round" aria-hidden="true">info</span>
                                                 Your picture will be shown publicly on this site's page once approved. Inappropriate content will be rejected or removed.
@@ -1246,28 +1257,64 @@
                                     </form>
                                     <script>
                                         (function () {
+                                            var MAX_BYTES = 8 * 1024 * 1024; // matches DiverPhotoController's max:8192 (KB)
                                             var input = document.getElementById('dh-diver-photo-input');
                                             var filename = document.getElementById('dh-diver-photo-filename');
                                             var form = document.getElementById('dh-diver-upload-form');
                                             var submitBtn = document.getElementById('dh-diver-upload-submit');
                                             var progress = document.getElementById('dh-diver-upload-progress');
+                                            var errorEl = document.getElementById('dh-diver-photo-error');
                                             if (!input || !form) return;
+
                                             input.addEventListener('change', function () {
-                                                filename.textContent = input.files[0] ? input.files[0].name : 'Choose a picture…';
+                                                var file = input.files[0];
+                                                errorEl.hidden = true;
+                                                if (!file) {
+                                                    filename.textContent = 'Choose a picture…';
+                                                    return;
+                                                }
+                                                if (file.size > MAX_BYTES) {
+                                                    input.value = '';
+                                                    filename.textContent = 'Choose a picture…';
+                                                    errorEl.textContent = 'That picture is ' + (file.size / (1024 * 1024)).toFixed(1) + ' MB - the limit is 8 MB. Pick a smaller one.';
+                                                    errorEl.hidden = false;
+                                                    return;
+                                                }
+                                                filename.textContent = file.name;
                                             });
                                             // A spinner, not a true upload progress bar (Pablo, 2026-09-24:
                                             // "a spinner or progress bar while the picture is uploading") -
                                             // this is a plain form POST/redirect, not an XHR with real
                                             // upload progress events, but the "it's working" feedback is
                                             // the actual ask.
-                                            form.addEventListener('submit', function () {
+                                            form.addEventListener('submit', function (e) {
                                                 if (submitBtn.disabled) return;
+                                                var file = input.files[0];
+                                                if (file && file.size > MAX_BYTES) {
+                                                    e.preventDefault();
+                                                    errorEl.textContent = 'That picture is ' + (file.size / (1024 * 1024)).toFixed(1) + ' MB - the limit is 8 MB. Pick a smaller one.';
+                                                    errorEl.hidden = false;
+                                                    return;
+                                                }
                                                 submitBtn.disabled = true;
                                                 submitBtn.textContent = 'Uploading…';
                                                 progress.hidden = false;
                                             });
                                         })();
                                     </script>
+                                    @error('photo')
+                                        {{-- The modal opens fresh each click (data-bs-toggle), so a
+                                             validation failure needs its own reopen - Bootstrap doesn't
+                                             know this page reloaded because THIS modal's submit failed. --}}
+                                        <script>
+                                            document.addEventListener('DOMContentLoaded', function () {
+                                                var modalEl = document.getElementById('dh-upload-diver-photo-modal');
+                                                if (modalEl && window.bootstrap) {
+                                                    new bootstrap.Modal(modalEl).show();
+                                                }
+                                            });
+                                        </script>
+                                    @enderror
                                 </div>
                             </div>
                         </div>
