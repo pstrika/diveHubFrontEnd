@@ -682,7 +682,7 @@
                                             <label class="dh-gas-toggle" for="O2NarcoticCCR">
                                                 <input name="O2narcoticCCR" type="checkbox" id="O2NarcoticCCR" checked value="1">
                                                 <span class="dh-gas-toggle-track"><span class="dh-gas-toggle-thumb"></span></span>
-                                                <span class="dh-gas-toggle-label">O2 narcotic?</span>
+                                                <span class="dh-gas-toggle-label">O&#8322; narcotic?</span>
                                             </label>
                                         </div>
                                         <div class="dh-gas-row">
@@ -717,18 +717,20 @@
                                     <div class="mt-3">
                                         <div class="text-center mb-2">
                                             <div class="dh-gas-split-pill-row">
-                                                <div class="dh-gas-split-pill">
-                                                    <label class="dh-gas-result-pill is-o2" id="txBestO2CCR">32</label>
-                                                    <label class="dh-gas-result-pill is-he" id="txBestHeCCR">45</label>
-                                                </div>
+                                                <span class="dh-gas-o2-badge-wrap">
+                                                    <div class="dh-gas-split-pill">
+                                                        <label class="dh-gas-result-pill is-o2" id="txBestO2CCR">32</label>
+                                                        <label class="dh-gas-result-pill is-he" id="txBestHeCCR">45</label>
+                                                    </div>
+                                                    <span class="dh-gas-hypoxic-badge" id="txhypoxicCCR" style="display: none;" data-bs-toggle="tooltip" data-bs-placement="top" title="Hypoxic at surface" aria-label="Hypoxic at surface">
+                                                        <span class="material-icons-round" aria-hidden="true">warning</span>
+                                                    </span>
+                                                </span>
                                                 <div class="dh-gas-density-col">
                                                     <label class="text-info right-label-normal custom-label" id="gasDensityCCR"></label>
                                                     <div class="dh-gas-density-caption" id="denisityCCR">Gas density</div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="text-center align-items-center mb-2" id="txhypoxicCCR" style="display: flex; justify-content: center; align-items: center;">
-                                            <label class="text-danger text-sm font-weight-bolder">Hypoxic at surface</label>
                                         </div>
                                         <div class="row g-2 align-items-center">
                                             <div class="col-11">
@@ -737,7 +739,7 @@
                                                 </a>
                                             </div>
                                             <div class="col-1">
-                                                <a type="button" class="btn w-100 mb-0 dh-gas-deco-btn" href="{{ route('DecoPlanner') }}/{{ $site->id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Calculate decompression">
+                                                <a type="button" class="btn btn-info w-100 mb-0 dh-gas-deco-btn" href="{{ route('DecoPlanner') }}/{{ $site->id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Calculate decompression">
                                                     <span class="material-icons-round" aria-hidden="true">timer</span>
                                                 </a>
                                             </div>
@@ -886,19 +888,19 @@
                                             <div class="pt-3">
                                                 <div class="row g-2 align-items-center">
                                                     <div class="col-11">
-                                                        <div class="d-flex gap-2">
-                                                            <a type="button" class="btn btn-secondary flex-fill mb-0" id="buttonBestNitrox">
+                                                        <div class="d-flex gap-2 align-items-center">
+                                                            <a type="button" class="btn btn-info flex-fill mb-0" id="buttonBestNitrox">
                                                                 Calculate Best Nitrox
                                                             </a>
                                                             @if( $site->maxDepth <= 140)
-                                                            <a type="button" class="btn btn-info btn-sm flex-fill mb-0" id="calculateNDLButton">
+                                                            <a type="button" class="btn btn-info flex-fill mb-0" id="calculateNDLButton">
                                                                 Calculate NDL
                                                             </a>
                                                             @endif
                                                         </div>
                                                     </div>
                                                     <div class="col-1">
-                                                        <a type="button" class="btn w-100 mb-0 dh-gas-deco-btn" href="{{ route('DecoPlanner') }}/{{ $site->id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Calculate decompression">
+                                                        <a type="button" class="btn btn-info w-100 mb-0 dh-gas-deco-btn" href="{{ route('DecoPlanner') }}/{{ $site->id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Calculate decompression">
                                                             <span class="material-icons-round" aria-hidden="true">timer</span>
                                                         </a>
                                                     </div>
@@ -938,7 +940,7 @@
                                                 <label class="dh-gas-toggle" for="O2Narcotic">
                                                     <input name="O2narcotic" type="checkbox" id="O2Narcotic" checked value="1">
                                                     <span class="dh-gas-toggle-track"><span class="dh-gas-toggle-thumb"></span></span>
-                                                    <span class="dh-gas-toggle-label">O2 narcotic?</span>
+                                                    <span class="dh-gas-toggle-label">O&#8322; narcotic?</span>
                                                 </label>
                                             </div>
                                             <div class="dh-gas-row">
@@ -957,15 +959,17 @@
                                             </div>
                                         </div>
                                         <div class="mt-3">
-                                            <div class="text-center align-items-center mb-2" id="txhypoxic" style="display: flex; justify-content: center; align-items: center;">
-                                                <label class="text-danger text-sm font-weight-bolder">Hypoxic at surface</label>
-                                            </div>
                                             <div class="text-center mb-2">
                                                 <div class="dh-gas-split-pill-row">
-                                                    <div class="dh-gas-split-pill">
-                                                        <label class="dh-gas-result-pill is-o2" id="txbestNitrox">32</label>
-                                                        <label class="dh-gas-result-pill is-he" id="txbestHe">32</label>
-                                                    </div>
+                                                    <span class="dh-gas-o2-badge-wrap">
+                                                        <div class="dh-gas-split-pill">
+                                                            <label class="dh-gas-result-pill is-o2" id="txbestNitrox">32</label>
+                                                            <label class="dh-gas-result-pill is-he" id="txbestHe">32</label>
+                                                        </div>
+                                                        <span class="dh-gas-hypoxic-badge" id="txhypoxic" style="display: none;" data-bs-toggle="tooltip" data-bs-placement="top" title="Hypoxic at surface" aria-label="Hypoxic at surface">
+                                                            <span class="material-icons-round" aria-hidden="true">warning</span>
+                                                        </span>
+                                                    </span>
                                                     <div class="dh-gas-density-col">
                                                         <label class="text-info right-label-normal custom-label" id="gasDensity"></label>
                                                         <div class="dh-gas-density-caption" id="denisity">Gas density</div>
@@ -979,7 +983,7 @@
                                                     </a>
                                                 </div>
                                                 <div class="col-1">
-                                                    <a type="button" class="btn w-100 mb-0 dh-gas-deco-btn" href="{{ route('DecoPlanner') }}/{{ $site->id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Calculate decompression">
+                                                    <a type="button" class="btn btn-info w-100 mb-0 dh-gas-deco-btn" href="{{ route('DecoPlanner') }}/{{ $site->id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Calculate decompression">
                                                         <span class="material-icons-round" aria-hidden="true">timer</span>
                                                     </a>
                                                 </div>
@@ -1055,18 +1059,18 @@
                                             </details>
 
                                             @if( $site->maxDepth <= 140)
-                                            <div class="dh-wx-more dh-gas-ndl-card mt-2">
+                                            <div class="dh-wx-more dh-gas-ndl-card mt-2" id="ndlResultCard" hidden>
                                                 <div class="dh-gas-ndl-body">
                                                     <div class="dh-gas-ndl-result">
                                                         NDL at <label class="dh-gas-result-pill is-compact">{{ $site->maxDepth }} ft</label> is <label class="dh-gas-result-pill is-compact is-ndl" id="ndlResult">-</label>
                                                     </div>
                                                     <div class="dh-gas-ndl-sub">24 hr min surface interval</div>
+                                                    <div class="text-center mt-2">
+                                                        <span class="dh-gas-result-pill is-compact is-danger">Always use a dive computer <span class="material-icons-round" aria-hidden="true">watch</span></span>
+                                                    </div>
                                                 </div>
                                             </div>
                                             @endif
-                                            <div class="text-center mt-2">
-                                                <label class="text-center text-danger text-xs mb-0">Always use a dive computer</label>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1907,6 +1911,12 @@
             }
             updateGasMix(labelBestNitrox.textContent, 0);
             $('#ndlResult').text("-");
+            // A moved slider invalidates whatever NDL was last calculated
+            // for the previous mix (Pablo, 2026-09-24: "hide the NDL results -
+            // they are not applicable anymore"). Uses jQuery, not
+            // getElementById, since #ndlResultCard only exists on sites
+            // shallow enough for the maxDepth <= 140 NDL card further up.
+            $('#ndlResultCard').prop("hidden", true);
             //calculateNDL({{ $site->maxDepth }}, labelMixO2.textContent.slice(0, -1)/100, labelMixN2.textContent.slice(0, -1)/100, labelMixHe.textContent.slice(0, -1)/100);
 
             updateLabelHorizontalOffset(0);
@@ -2077,6 +2087,12 @@
            updateGasDensity();
            updateGasMix(txlabelBestNitrox.textContent, txlabelBestHe.textContent);
            $('#ndlResult').text("-");
+            // A moved slider invalidates whatever NDL was last calculated
+            // for the previous mix (Pablo, 2026-09-24: "hide the NDL results -
+            // they are not applicable anymore"). Uses jQuery, not
+            // getElementById, since #ndlResultCard only exists on sites
+            // shallow enough for the maxDepth <= 140 NDL card further up.
+            $('#ndlResultCard').prop("hidden", true);
             //update NDL
             //const gasMix = {O2: txlabelBestNitrox.textContent / 100, N2: (100 - txlabelBestNitrox.textContent - txlabelBestHe.textContent)/100, He: txlabelBestHe.textContent/100};
             //const ndl = calculateNDL({{ $site->maxDepth }}, gasMix);
@@ -2195,6 +2211,12 @@
             updateGasDensity();
             updateGasMix(txlabelBestNitrox.textContent, txlabelBestHe.textContent);
             $('#ndlResult').text("-");
+            // A moved slider invalidates whatever NDL was last calculated
+            // for the previous mix (Pablo, 2026-09-24: "hide the NDL results -
+            // they are not applicable anymore"). Uses jQuery, not
+            // getElementById, since #ndlResultCard only exists on sites
+            // shallow enough for the maxDepth <= 140 NDL card further up.
+            $('#ndlResultCard').prop("hidden", true);
             //update NDL
             //const gasMix = {O2: txlabelBestNitrox.textContent / 100, N2: (100 - txlabelBestNitrox.textContent - txlabelBestHe.textContent)/100, He: txlabelBestHe.textContent/100};
             //const ndl = calculateNDL({{ $site->maxDepth }}, gasMix);
@@ -2218,6 +2240,12 @@
             updateGasDensity();
             updateGasMix(txlabelBestNitrox.textContent, txlabelBestHe.textContent);
             $('#ndlResult').text("-");
+            // A moved slider invalidates whatever NDL was last calculated
+            // for the previous mix (Pablo, 2026-09-24: "hide the NDL results -
+            // they are not applicable anymore"). Uses jQuery, not
+            // getElementById, since #ndlResultCard only exists on sites
+            // shallow enough for the maxDepth <= 140 NDL card further up.
+            $('#ndlResultCard').prop("hidden", true);
 
             //update NDL
             //const gasMix = {O2: txlabelBestNitrox.textContent / 100, N2: (100 - txlabelBestNitrox.textContent - txlabelBestHe.textContent)/100, He: txlabelBestHe.textContent/100};
@@ -2309,13 +2337,17 @@
                 success: function (response) {
                     // Update the result in the HTML
                     $('#ndlResult').text(response.ndl);
+                    // Hidden until there's an actual result to show (Pablo,
+                    // 2026-09-24: "hide the NDL result frame at the
+                    // start...only show it once the user has clicked").
+                    document.getElementById('ndlResultCard').hidden = false;
                 },
                 error: function (xhr, status, error) {
                     console.error('Error:', error);
                 }
             });
 
-            
+
         });
 
         function calculateNDL(depth, oxygen, nitrogen, helium) {
@@ -2423,14 +2455,14 @@
                             meta.data.forEach((bar, index) => {
                                 const data = dataset.data[index];
                                 if (data != 100 && data != 0) {
-                                    ctx.font = '11px Roboto'; // was 12px (Pablo, 2026-09-24: "slightly smaller")
+                                    ctx.font = '7px Roboto'; // was 11px, then 12px (Pablo, 2026-09-24: "can't read them well...need to be smaller")
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
                                     ctx.fillText(data + '%', bar.x + 12, bar.y + 10); // Position label slightly above the bar
                                     
                                 } else if (data == 100) {
-                                    ctx.font = '11px Roboto'; // was 12px (Pablo, 2026-09-24: "slightly smaller")
+                                    ctx.font = '7px Roboto'; // was 11px, then 12px (Pablo, 2026-09-24: "can't read them well...need to be smaller")
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically

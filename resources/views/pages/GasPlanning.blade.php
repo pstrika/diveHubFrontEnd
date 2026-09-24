@@ -309,18 +309,20 @@
                                     <div class="mt-3">
                                         <div class="text-center mb-2">
                                             <div class="dh-gas-split-pill-row">
-                                                <div class="dh-gas-split-pill">
-                                                    <label class="dh-gas-result-pill is-o2" id="txBestO2CCR">32</label>
-                                                    <label class="dh-gas-result-pill is-he" id="txBestHeCCR">45</label>
-                                                </div>
+                                                <span class="dh-gas-o2-badge-wrap">
+                                                    <div class="dh-gas-split-pill">
+                                                        <label class="dh-gas-result-pill is-o2" id="txBestO2CCR">32</label>
+                                                        <label class="dh-gas-result-pill is-he" id="txBestHeCCR">45</label>
+                                                    </div>
+                                                    <span class="dh-gas-hypoxic-badge" id="txhypoxicCCR" style="display: none;" data-bs-toggle="tooltip" data-bs-placement="top" title="Hypoxic at surface" aria-label="Hypoxic at surface">
+                                                        <span class="material-icons-round" aria-hidden="true">warning</span>
+                                                    </span>
+                                                </span>
                                                 <div class="dh-gas-density-col">
                                                     <label class="dh-gas-result-pill is-compact is-density" id="gasDensityCCR">0.00</label>
                                                     <div class="dh-gas-density-caption" id="denisityCCR">Gas density</div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="text-center align-items-center mb-2" id="txhypoxicCCR" style="display: flex; justify-content: center; align-items: center;">
-                                            <label class="text-danger text-sm font-weight-bolder" >Hypoxic at surface</label>
                                         </div>
                                         <div class="text-center">
                                             <div class="dh-gas-btn-row">
@@ -424,7 +426,7 @@
                                                             <button type="button" class="btn btn-secondary flex-fill" id="buttonBestNitrox">
                                                                 Calculate Best Nitrox
                                                             </button>
-                                                            <button type="button" class="btn btn-info btn-sm flex-fill" id="calculateNDLButton">
+                                                            <button type="button" class="btn btn-info flex-fill" id="calculateNDLButton">
                                                                 Calculate NDL
                                                             </button>
                                                         </div>
@@ -480,15 +482,17 @@
                                                 </div>
                                             </div>
                                             <div class="mt-3">
-                                                <div class="text-center align-items-center mb-2" id="txhypoxic" style="display: flex; justify-content: center; align-items: center;">
-                                                    <label class="text-danger text-sm font-weight-bolder" >Hypoxic at surface</label>
-                                                </div>
                                                 <div class="text-center mb-3">
                                                     <div class="dh-gas-split-pill-row">
-                                                        <div class="dh-gas-split-pill">
-                                                            <label class="dh-gas-result-pill is-o2" id="txbestNitrox">32</label>
-                                                            <label class="dh-gas-result-pill is-he" id="txbestHe">32</label>
-                                                        </div>
+                                                        <span class="dh-gas-o2-badge-wrap">
+                                                            <div class="dh-gas-split-pill">
+                                                                <label class="dh-gas-result-pill is-o2" id="txbestNitrox">32</label>
+                                                                <label class="dh-gas-result-pill is-he" id="txbestHe">32</label>
+                                                            </div>
+                                                            <span class="dh-gas-hypoxic-badge" id="txhypoxic" style="display: none;" data-bs-toggle="tooltip" data-bs-placement="top" title="Hypoxic at surface" aria-label="Hypoxic at surface">
+                                                                <span class="material-icons-round" aria-hidden="true">warning</span>
+                                                            </span>
+                                                        </span>
                                                         <div class="dh-gas-density-col">
                                                             <label class="dh-gas-result-pill is-compact is-density" id="gasDensity">0.00</label>
                                                             <div class="dh-gas-density-caption" id="denisity">Gas density</div>
@@ -576,7 +580,7 @@
                                                         </div>
                                                         <div class="dh-gas-ndl-sub">24 hr min surface interval</div>
                                                         <div class="text-center mt-1">
-                                                            <label class="text-center text-danger text-xs mb-0">Always use a dive computer</label>
+                                                            <span class="dh-gas-result-pill is-compact is-danger">Always use a dive computer <span class="material-icons-round" aria-hidden="true">watch</span></span>
                                                         </div>
                                                     </div>
                                                 </div>

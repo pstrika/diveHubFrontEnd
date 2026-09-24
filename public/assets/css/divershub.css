@@ -1737,6 +1737,14 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-wx-more > summary::-webkit-details-marker { display: none; }
 .dh-wx-more > summary:hover { color: var(--dh-deep); }
 .dh-wx-more > summary .material-icons-round { color: var(--dh-sea); font-size: 20px; }
+/* Chevron in the top-right corner marking these <details> as collapsible -
+   same chevron_right/expand_more pair as the Best Gas card's own Show/Hide
+   details toggle (Pablo, 2026-09-24: "all the gas price frames need to
+   have the arrow...to indicate they are collapsable"). Covers every
+   .dh-wx-more on the site (Gas Price/Gas prices, Weather's Live Webcam,
+   etc.) since they're all the same collapsible pattern. */
+.dh-wx-more > summary::after { content: 'chevron_right'; font-family: 'Material Icons Round'; font-size: 20px; color: var(--dh-muted); margin-left: auto; }
+.dh-wx-more[open] > summary::after { content: 'expand_more'; }
 .dh-wx-hint { margin-left: auto; font-weight: 400; font-size: .72rem; color: var(--dh-muted); }
 .dh-wx-more-body { padding: 0 15px 15px; }
 .dh-wx-tides { list-style: none; margin: 0; padding: 0; font-size: .84rem; }
@@ -2399,10 +2407,14 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    is-mix-he) already used, just extended to the plain is-o2/is-he pills. */
 .dh-gas-result-pill.is-o2 { background: var(--dh-good); }
 .dh-gas-result-pill.is-he { background: var(--dh-sea); }
-/* "Ideal" (matches best mix) still wins over the O2/He color mapping above -
+/* "Ideal" (matches best mix) still wins over the O2 color mapping above -
    both are single-class selectors so declaration order would otherwise
-   decide it; this two-class selector outranks either on its own. */
-.dh-gas-result-pill.is-he.is-ideal, .dh-gas-result-pill.is-o2.is-ideal { background: var(--dh-good); }
+   decide it; this two-class selector outranks either on its own. He stays
+   its own blue regardless of is-ideal (Pablo, 2026-09-24: "the split pill
+   for He...is not blue, it's green...it needs to be blue") - is-ideal
+   marking a match makes sense for O2 (the number the diver is dialing in)
+   but not for He, which isn't a "good/bad" target the same way. */
+.dh-gas-result-pill.is-o2.is-ideal { background: var(--dh-good); }
 
 /* Gas density: a calculation result like the others, but a supporting
    figure rather than the headline the split pill above it is - smaller,
@@ -2450,10 +2462,40 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    markup), so it visually overflows past the plain column gap. */
 .dh-gas-tank-layout { display: flex; gap: var(--dh-space-4); align-items: flex-start; padding-left: var(--dh-space-4); }
 .dh-gas-tank-graphic { flex: 0 0 auto; text-align: center; margin-top: -44px; }
-/* CC's tank column sits directly under #nav-tabs with no buffering picker row
-   above it (unlike OC's oc-fuel-picker row), so OC's -44px pulls it up into
-   the OC/CC picker and blocks clicks on "Open Circuit" - give it a safe value. */
-#cc-tank-col .dh-gas-tank-graphic { margin-top: 0; }
+/* Site Details' OC and CC used two different per-element hacks here (a
+   -44px margin on .dh-gas-tank-graphic for OC, a -42px margin on just
+   .dh-gas-tank-img-wrap for CC, plus a mobile-only padding-top on
+   #oc-tank-col) to line the tank art up with .dh-gas-tank-side and clear
+   the content above each column. Consolidated into one shared rule on
+   .dh-gas-tank-layout itself, scoped to these two ids so Best Gases'
+   own use of the shared classes above (a different, larger tank size)
+   is untouched (Pablo, 2026-09-24: "all dh-gas-tank-layout [should] have
+   the same padding top... more than the current OC[-44]... less than the
+   current CC[-42]"). */
+#oc-tank-col .dh-gas-tank-layout,
+#cc-tank-col .dh-gas-tank-layout {
+  margin-top: -43px;
+}
+/* -43px on the layout alone isn't enough on its own: it shifts
+   .dh-gas-tank-side up by the same amount as the graphic, so the two stay
+   42px apart just like before (the tank art's own image sits 42px into a
+   168px-tall wrap that's 75% image/25% blank on top) - the graphic still
+   needs its own extra pull-up to close that gap and land level with
+   .dh-gas-tank-side (both are now uniform between OC and CC, unlike the
+   graphic-vs-wrap split this used to need). */
+#oc-tank-col .dh-gas-tank-graphic,
+#cc-tank-col .dh-gas-tank-graphic {
+  margin-top: -42px;
+}
+/* Between the two shifts above, the tank art moves up 85px total (43+42) -
+   comfortably clear of whatever's beside it on desktop, but below the md
+   breakpoint both columns drop under the Calculate Best Nitrox/Trimix/
+   Diluent row instead, so that same 85px pull-up now reaches up into it.
+   Cancel it back out and add real breathing room, same fix as OC needed
+   on its own before this was unified (Pablo, 2026-09-24). */
+@media (max-width: 767.98px) {
+  #oc-tank-col, #cc-tank-col { padding-top: 97px; }
+}
 .dh-gas-tank-img-wrap { margin: 0 auto; }
 .dh-gas-tank-side { flex: 1 1 auto; min-width: 0; padding-left: var(--dh-space-3); }
 .dh-gas-tank-side .dh-wx-more { margin-top: 0; }
@@ -2611,6 +2653,22 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    than relying on :first-child/:last-child, which don't know about it. */
 .dh-gas-split-pill.is-solo .dh-gas-result-pill { border-radius: var(--dh-radius-pill); box-shadow: none; }
 
+/* Hypoxic-at-surface warning: was a separate "Hypoxic at surface" text
+   legend above the split pill - now a small red badge over the O2 pill's
+   corner instead (Pablo, 2026-09-24). The wrap wouldn't be needed but for
+   this: .dh-gas-split-pill's own :first-child/:last-child rules (above)
+   require the O2/He pills to actually BE the first/last child, so the
+   badge is a sibling of .dh-gas-split-pill, not a third child inside it. */
+.dh-gas-o2-badge-wrap { position: relative; display: inline-flex; vertical-align: middle; }
+.dh-gas-hypoxic-badge {
+  position: absolute; top: -6px; left: -6px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--dh-danger); color: #fff;
+  align-items: center; justify-content: center;
+  box-shadow: 0 0 0 2px #fff;
+}
+.dh-gas-hypoxic-badge .material-icons-round { font-size: 12px; }
+
 /* Slider fill/handle in the theme's blue instead of Material Dashboard's
    default purple (Pablo: "slider colors should follow theme") - applies
    to every slider on this page, not just the ones redone above, since
@@ -2677,14 +2735,12 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    button with a small icon-only button, same material-icons-round "timer"
    glyph the nav menu/header use for Deco Planner, + tooltip). A real .btn
    like its col-11 sibling, sized to the row via g-2/align-items rather
-   than the round .dh-btn-icon used elsewhere on this card. Grey with a
-   white icon - not Bootstrap's stock .btn-secondary, whose text/icon color
-   here is black. */
+   than the round .dh-btn-icon used elsewhere on this card. Uses .btn-info
+   for its color (blue, matching all the Calculate buttons - Pablo,
+   2026-09-24: "make them blue") rather than a custom background here. */
 .dh-gas-deco-btn {
   padding-left: 0; padding-right: 0;
-  background: var(--dh-muted); border-color: var(--dh-muted); color: #fff;
 }
-.dh-gas-deco-btn:hover { background: var(--dh-ink); border-color: var(--dh-ink); color: #fff; }
 .dh-gas-deco-btn .material-icons-round {
   /* Under the button's own 17.4px line-height (12px font x 1.45) so the
      icon's line box doesn't force this button taller than its col-11
