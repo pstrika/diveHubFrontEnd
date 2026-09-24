@@ -16,10 +16,15 @@ use Illuminate\Support\Facades\Log;
  *
  * Views ask this class for a URL and get the copy when it exists, or the
  * original when it does not, so a photo without copies still shows, just
- * slower. Copies are made on upload (SiteController::upload) and by the
- * `php artisan photos:web-copies` command for the backlog. Both use PHP's
- * GD extension, no extra package. tools/resize-site-photos.py produced the
- * first batch and writes the same names, so the two can be mixed.
+ * slower. Copies are made on upload (SiteController::upload,
+ * DiverPhotoController::store) and by the `php artisan photos:web-copies`
+ * command for the backlog. Prefers Imagick when it can encode WebP,
+ * falling back to GD - found live (Pablo, 2026-09-24) that this app's
+ * actual server has GD without WebP support at all, so every copy had
+ * been silently failing since this class existed; Imagick is loaded there
+ * and does support WEBP. tools/resize-site-photos.py produced the very
+ * first batch (before either backend ran here) and writes the same names,
+ * so all three can be mixed.
  *
  * Usage in Blade:
  *   <img src="{{ SitePhoto::thumb($photo->file) }}">
@@ -75,8 +80,33 @@ final class SitePhoto
         return pathinfo($file, PATHINFO_FILENAME);
     }
 
-    /** True when this PHP can decode JPEG/PNG and encode WebP. */
+    /**
+     * True when this PHP can encode WebP, via either backend (Pablo,
+     * 2026-09-24: found live, via a diagnostic endpoint, that this app's
+     * actual server has GD "bundled (2.1.0 compatible)" with WebP Support
+     * false - it decodes/encodes JPEG and PNG fine, just never could write
+     * WebP, so every makeCopies() call had been silently no-op-ing since
+     * this class existed. Imagick IS loaded there and does support WEBP,
+     * confirmed via queryFormats('WEBP*') - preferred below when present.
+     */
     public static function canMakeCopies(): bool
+    {
+        return self::canUseImagick() || self::canUseGd();
+    }
+
+    private static function canUseImagick(): bool
+    {
+        if (!extension_loaded('imagick')) {
+            return false;
+        }
+        try {
+            return in_array('WEBP', (new \Imagick())->queryFormats('WEBP*'), true);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    private static function canUseGd(): bool
     {
         if (!function_exists('imagewebp') || !function_exists('imagecreatefromstring')) {
             return false;
@@ -94,43 +124,93 @@ final class SitePhoto
      */
     public static function makeCopies(string $file, bool $force = false): ?bool
     {
+        $useImagick = self::canUseImagick();
+        if (!$useImagick && !self::canUseGd()) {
+            Log::warning("SitePhoto: no WebP-capable backend (GD or Imagick), no copies made for $file");
+            return false;
+        }
+
+        $src = public_path('assets/' . self::DIR . '/' . $file);
+        if (!is_file($src)) {
+            Log::warning("SitePhoto: original not found: $src");
+            return false;
+        }
+
+        $stem = self::stem($file);
+        $pending = [];
+        foreach (self::SIZES as $variant => $maxWidth) {
+            $dest = public_path('assets/' . self::DIR . '/' . $variant . '/' . $stem . '.webp');
+            if (!$force && is_file($dest) && filemtime($dest) >= filemtime($src)) {
+                continue;
+            }
+            $pending[$dest] = $maxWidth;
+        }
+        if (!$pending) {
+            return null;
+        }
+
+        $size = @getimagesize($src);
+        if (!$size) {
+            Log::warning("SitePhoto: not an image this PHP can read: $file");
+            return false;
+        }
+        if ($size[0] * $size[1] > self::MAX_PIXELS) {
+            Log::warning("SitePhoto: $file is {$size[0]}x{$size[1]}, too large to resize in PHP; skipped");
+            return false;
+        }
+
+        return $useImagick ? self::makeCopiesWithImagick($src, $file, $pending) : self::makeCopiesWithGd($src, $file, $size, $pending);
+    }
+
+    /** @param array<string,int> $pending dest path => max width */
+    private static function makeCopiesWithImagick(string $src, string $file, array $pending): bool
+    {
         try {
-            if (!self::canMakeCopies()) {
-                Log::warning("SitePhoto: GD without WebP support, no copies made for $file");
-                return false;
-            }
-            $src = public_path('assets/' . self::DIR . '/' . $file);
-            if (!is_file($src)) {
-                Log::warning("SitePhoto: original not found: $src");
-                return false;
-            }
+            $image = new \Imagick($src);
+            // Bakes in EXIF rotation for every orientation value, not just
+            // the three GD's own applyExifOrientation() below handles.
+            $image->autoOrientImage();
 
-            $stem = self::stem($file);
-            $pending = [];
-            foreach (self::SIZES as $variant => $maxWidth) {
-                $dest = public_path('assets/' . self::DIR . '/' . $variant . '/' . $stem . '.webp');
-                if (!$force && is_file($dest) && filemtime($dest) >= filemtime($src)) {
-                    continue;
+            foreach ($pending as $dest => $maxWidth) {
+                $copy = clone $image;
+                if ($copy->getImageWidth() > $maxWidth) {
+                    // Height 0 = proportional to the new width.
+                    $copy->resizeImage($maxWidth, 0, \Imagick::FILTER_LANCZOS, 1, false);
                 }
-                $pending[$dest] = $maxWidth;
+                $copy->setImageFormat('webp');
+                $copy->setImageCompressionQuality(self::WEBP_QUALITY);
+                if (!is_dir(dirname($dest))) {
+                    mkdir(dirname($dest), 0775, true);
+                }
+                $ok = $copy->writeImage($dest);
+                $copy->clear();
+                $copy->destroy();
+                if (!$ok) {
+                    Log::warning("SitePhoto (Imagick): could not write $dest");
+                    $image->clear();
+                    $image->destroy();
+                    return false;
+                }
             }
-            if (!$pending) {
-                return null;
-            }
+            $image->clear();
+            $image->destroy();
+            return true;
+        } catch (\Throwable $e) {
+            Log::warning("SitePhoto (Imagick): failed for $file: " . $e->getMessage());
+            return false;
+        }
+    }
 
-            $size = @getimagesize($src);
-            if (!$size) {
-                Log::warning("SitePhoto: not an image GD can read: $file");
-                return false;
-            }
-            if ($size[0] * $size[1] > self::MAX_PIXELS) {
-                Log::warning("SitePhoto: $file is {$size[0]}x{$size[1]}, too large to resize in PHP; skipped");
-                return false;
-            }
-
+    /**
+     * @param array{0:int,1:int,2:int} $size getimagesize()'s result
+     * @param array<string,int> $pending dest path => max width
+     */
+    private static function makeCopiesWithGd(string $src, string $file, array $size, array $pending): bool
+    {
+        try {
             $image = @imagecreatefromstring((string) file_get_contents($src));
             if (!$image) {
-                Log::warning("SitePhoto: GD could not decode $file");
+                Log::warning("SitePhoto (GD): could not decode $file");
                 return false;
             }
             $image = self::applyExifOrientation($image, $src, $size[2]);
@@ -145,7 +225,7 @@ final class SitePhoto
                     imagedestroy($copy);
                 }
                 if (!$ok) {
-                    Log::warning("SitePhoto: could not write $dest");
+                    Log::warning("SitePhoto (GD): could not write $dest");
                     imagedestroy($image);
                     return false;
                 }
@@ -153,7 +233,7 @@ final class SitePhoto
             imagedestroy($image);
             return true;
         } catch (\Throwable $e) {
-            Log::warning("SitePhoto: failed for $file: " . $e->getMessage());
+            Log::warning("SitePhoto (GD): failed for $file: " . $e->getMessage());
             return false;
         }
     }

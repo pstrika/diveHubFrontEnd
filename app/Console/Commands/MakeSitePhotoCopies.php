@@ -26,7 +26,7 @@ class MakeSitePhotoCopies extends Command
     public function handle(): int
     {
         if (!SitePhoto::canMakeCopies()) {
-            $this->error('PHP GD with WebP support is required (check gd_info()). Nothing done.');
+            $this->error('This PHP can\'t encode WebP - neither GD nor Imagick support it here. Nothing done.');
             return self::FAILURE;
         }
 

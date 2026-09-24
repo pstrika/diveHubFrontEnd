@@ -116,41 +116,16 @@ class CronController extends Controller
      * copies - both admin-uploaded (Photo) and diver-uploaded (DiverPhoto)
      * files land in that same directory, so this backfills either kind.
      * New uploads already make their own copies at upload time; this is
-     * only for a backlog photo, or one whose resize failed at upload time
-     * (a diver's real 20MP/8MB JPEG turned out to need this - webhook
-     * timing or a transient resource limit, not yet root-caused, but
-     * running this again against a specific file is a one-line fix either
-     * way). Has to actually run on this server: the resize reads/writes
+     * for the pre-2026-09 backlog, or the window before 2026-09-24 when
+     * this server's GD build turned out to have no WebP support at all
+     * (found chasing "the image is kept at full size" on a real diver
+     * upload) - SitePhoto now prefers Imagick, which does support WEBP
+     * here, but anything uploaded before that fix stayed original-only
+     * until backfilled. Has to actually run on this server: the resize reads/writes
      * public/assets/img/sites, not the shared database, so it can't be
      * done from a local artisan session like every other admin task this
      * session has run directly against the shared DB.
      */
-    /**
-     * Temporary diagnostic (Pablo, 2026-09-24) - photosWebCopies() below
-     * reported "PHP GD with WebP support is required" on this server, so
-     * checking whether Imagick is a usable fallback before deciding how to
-     * fix SitePhoto. Remove once that's settled.
-     */
-    public function photoEnvDiag(Request $request)
-    {
-        if (!hash_equals((string) env('CRON_SECRET'), (string) $request->query('secret'))) {
-            abort(403);
-        }
-
-        $lines = [];
-        $lines[] = 'PHP version: ' . PHP_VERSION;
-        $lines[] = 'GD loaded: ' . (extension_loaded('gd') ? 'yes' : 'no');
-        $lines[] = 'GD info: ' . json_encode(function_exists('gd_info') ? gd_info() : null);
-        $lines[] = 'Imagick loaded: ' . (extension_loaded('imagick') ? 'yes' : 'no');
-        if (extension_loaded('imagick')) {
-            $lines[] = 'Imagick version: ' . json_encode(\Imagick::getVersion());
-            $formats = (new \Imagick())->queryFormats('WEBP*');
-            $lines[] = 'Imagick WEBP formats: ' . json_encode($formats);
-        }
-
-        return response(implode("\n", $lines), 200, ['Content-Type' => 'text/plain']);
-    }
-
     public function photosWebCopies(Request $request)
     {
         if (!hash_equals((string) env('CRON_SECRET'), (string) $request->query('secret'))) {
