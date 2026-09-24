@@ -296,9 +296,49 @@
                         <x-comms-preferences :user="$user" :ids="false" :showPhone="false" :forceUnchecked="true" />
                         <div class="dh-wizard-actions">
                             <button type="submit" class="dh-btn dh-btn-primary">Next</button>
-                            <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl('navbar') }}">Skip this</a>
+                            <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl('push') }}">Skip this</a>
                         </div>
                     </form>
+
+                @elseif($step === 'push')
+                    <h1 class="dh-wizard-title">Don't miss a dive</h1>
+                    <p class="dh-wizard-lead">Turn on notifications to hear the moment a trip you saved fills up, a group posts a new dive, or someone replies - right on your phone, the instant it happens.</p>
+                    <div class="dh-wizard-actions">
+                        <button type="button" class="dh-btn dh-btn-primary" id="dhWizardEnablePush">
+                            <span class="material-icons-round" aria-hidden="true">notifications_active</span>Turn on notifications
+                        </button>
+                        <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl('navbar') }}" id="dhWizardPushSkip">Skip this</a>
+                    </div>
+                    <p class="text-danger text-xs mt-3 mb-0" id="dhWizardPushError" hidden></p>
+                    <script src="{{ asset('assets') }}/js/dh-push.js"></script>
+                    <script>
+                        (function () {
+                            var vapidPublicKey = @json(config('services.webpush.public_key'));
+                            var btn = document.getElementById('dhWizardEnablePush');
+                            var skip = document.getElementById('dhWizardPushSkip');
+                            var errorEl = document.getElementById('dhWizardPushError');
+                            if (!btn) return;
+                            // No push support (or VAPID unconfigured) in this browser -
+                            // nothing to turn on, so don't show a button that can't work.
+                            if (!window.DhPush || !window.DhPush.isSupported(vapidPublicKey)) {
+                                btn.hidden = true;
+                                return;
+                            }
+                            btn.addEventListener('click', function () {
+                                btn.disabled = true;
+                                errorEl.hidden = true;
+                                window.DhPush.subscribe(vapidPublicKey, @json(route('push.subscribe')), @json(csrf_token())).then(function (sub) {
+                                    if (sub) {
+                                        window.location.href = skip.href;
+                                        return;
+                                    }
+                                    btn.disabled = false;
+                                    errorEl.textContent = 'Notifications need to be allowed in your browser first - you can still turn this on later from the menu.';
+                                    errorEl.hidden = false;
+                                });
+                            });
+                        })();
+                    </script>
 
                 @elseif($step === 'navbar')
                     <h1 class="dh-wizard-title">Make the app yours</h1>

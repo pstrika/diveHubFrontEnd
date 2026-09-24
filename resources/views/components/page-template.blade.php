@@ -151,6 +151,8 @@
         <x-shell.me-rows />
     @endif
 @endauth
+{{-- "Turn on notifications" nag, every ~10 pages until enabled (Pablo, 2026-09-24). --}}
+<x-shell.push-reminder-banner />
 {{-- Every page builds its own <footer class="footer"> inside its own
      content, so it lands wherever that page put it - usually right after
      the cards, ahead of the Me rows above. Moving it here in the DOM (not

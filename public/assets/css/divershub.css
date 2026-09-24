@@ -746,6 +746,18 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-photo-cta-dismiss:hover { color: var(--dh-ink); }
 @media (max-width: 576px) { .dh-photo-cta-text { display: none; } }
 
+/* Site-wide "turn on notifications" nag (Pablo, 2026-09-24) - a bottom
+   popup on purpose ("as requested"), but resting just above the mobile
+   tab bar rather than over it like the diver-photo one used to. */
+.dh-bottom-popup { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 1040; display: flex; align-items: center; gap: 10px; background: var(--dh-deep); color: #fff; border-radius: var(--dh-radius); padding: 12px 14px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.dh-bottom-popup > .material-icons-round { flex: 0 0 auto; }
+.dh-bottom-popup-text { flex: 1 1 auto; font-size: .85rem; font-weight: 600; }
+.dh-bottom-popup-btn { flex: 0 0 auto; background: #fff; color: var(--dh-deep); border: 0; border-radius: var(--dh-radius-pill); padding: 6px 14px; font-size: .82rem; font-weight: 700; cursor: pointer; }
+.dh-bottom-popup-dismiss { background: none; border: 0; color: rgba(255,255,255,.8); padding: 4px; cursor: pointer; flex: 0 0 auto; display: flex; }
+.dh-bottom-popup-dismiss:hover { color: #fff; }
+@media (max-width: 991.98px) { .dh-bottom-popup { bottom: calc(var(--dh-tabbar-h) + env(safe-area-inset-bottom) + 12px); } }
+@media (max-width: 576px) { .dh-bottom-popup-text { display: none; } }
+
 /* "My uploaded pictures" on the profile overview page. */
 .dh-my-photos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--dh-space-3); }
 .dh-my-photo { margin: 0; position: relative; }
