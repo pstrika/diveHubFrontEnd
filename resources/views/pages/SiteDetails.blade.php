@@ -120,46 +120,100 @@
                 margin-right: auto;     /* Push it to the far left */
             }
 
-            .right-label-normal {
-                text-align: right;      /* Align text on the right */
-                border: 2px solid #49a3f1; /* Add box for the label */
-                padding: 5px;           /* Add padding inside the box */
-                font-weight: bold;      /* Make the text bold */
-                border-radius: 4px;     /* Optional: Round the corners */
-                margin-left: auto;      /* Push it to the far right */
+            {{--
+                Best Gas card restyle (Pablo, 2026-09-23): visually match the
+                standalone Best Gases page's dh-gas-result-pill look WITHOUT
+                renaming any of these classes - this page's own <script>
+                blocks still classList.add/remove these exact strings
+                (right-label-normal/warning/danger/success/secondary,
+                custom-label) to recolor PPO2/END/Set Point/gas density
+                labels live as the diver moves a slider, so the class NAMES
+                must stay put. Only their look changes here, aliased onto
+                Best Gases' pill: pill shape, solid color fill, white text.
+            --}}
+            .custom-label {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                height: 32px;
+                padding: 0 16px;
+                border-radius: var(--dh-radius-pill);
+                font-weight: 700;
+                font-size: .82rem;
+                color: #fff;
+                text-align: center;
+                vertical-align: middle;
+                border: none;
             }
 
-            .right-label-warning {
-                text-align: right;      /* Align text on the right */
-                border: 2px solid #fb8c00; /* Add box for the label */
-                padding: 5px;           /* Add padding inside the box */
-                font-weight: bold;      /* Make the text bold */
-                border-radius: 4px;     /* Optional: Round the corners */
-                margin-left: auto;      /* Push it to the far right */
+            /* These labels also carry a Bootstrap text-info/text-success/
+               text-warning/text-danger/text-secondary companion class
+               (toggled alongside the right-label-* one by the same JS) -
+               those utilities set their own !important text color, which
+               would otherwise fight the white pill text above. Force white
+               regardless of which companion class is currently applied. */
+            .custom-label.text-info,
+            .custom-label.text-success,
+            .custom-label.text-warning,
+            .custom-label.text-danger,
+            .custom-label.text-secondary {
+                color: #fff !important;
             }
-            .right-label-danger {
-                text-align: right;      /* Align text on the right */
-                border: 2px solid #f44335; /* Add box for the label */
-                padding: 5px;           /* Add padding inside the box */
-                font-weight: bold;      /* Make the text bold */
-                border-radius: 4px;     /* Optional: Round the corners */
-                margin-left: auto;      /* Push it to the far right */
+
+            .right-label-normal    { background: var(--dh-sea); }    {{-- alias of Best Gases' base/"is-safe" pill --}}
+            .right-label-warning   { background: var(--dh-warn); }   {{-- alias of Best Gases' .is-warn pill --}}
+            .right-label-danger    { background: var(--dh-danger); } {{-- alias of Best Gases' .is-danger pill --}}
+            .right-label-success   { background: var(--dh-good); }   {{-- alias of Best Gases' .is-ideal pill --}}
+            .right-label-secondary { background: var(--dh-muted); }  {{-- neutral pill; no direct Best Gases equivalent --}}
+
+            /* Gas density readouts: same pill treatment, sized down to match
+               Best Gases' compact ".is-compact.is-density" pill (its own
+               dh-gas-result-pill class can't be reused here since these
+               elements must keep the classes above for the JS toggle, so
+               the compact size + generated " g/L" suffix are recreated by
+               id instead). */
+            #gasDensity, #gasDensityCCR {
+                height: 24px;
+                padding: 0 10px;
+                font-size: .72rem;
             }
-            .right-label-success {
-                text-align: right;      /* Align text on the right */
-                border: 2px solid #4caf50; /* Add box for the label */
-                padding: 5px;           /* Add padding inside the box */
-                font-weight: bold;      /* Make the text bold */
-                border-radius: 4px;     /* Optional: Round the corners */
-                margin-left: auto;      /* Push it to the far right */
+            #gasDensity::after, #gasDensityCCR::after {
+                content: " g/L";
+                opacity: .8;
+                font-weight: 600;
+                font-size: .66rem;
             }
-            .right-label-secondary {
-                text-align: right;      /* Align text on the right */
-                border: 2px solid #7b809a; /* Add box for the label */
-                padding: 5px;           /* Add padding inside the box */
-                font-weight: bold;      /* Make the text bold */
-                border-radius: 4px;     /* Optional: Round the corners */
-                margin-left: auto;      /* Push it to the far right */
+
+            /* Best Gas's pure-display result pills (no right-label-* class
+               ever touches these - only .textContent, plus a text-info/
+               text-success toggle marking "matches the ideal mix") reuse
+               Best Gases' real dh-gas-result-pill/is-o2/is-he classes
+               directly. Same white-text-on-color-fill override as above,
+               scoped to just these ids so the text-success/text-info swap
+               never turns the pill's own text unreadable against its
+               green/blue background. */
+            #bestNitrox.text-info, #bestNitrox.text-success,
+            #txbestNitrox.text-info, #txbestNitrox.text-success,
+            #txbestHe.text-info, #txbestHe.text-success,
+            #txBestO2CCR.text-info, #txBestO2CCR.text-success,
+            #txBestHeCCR.text-info, #txBestHeCCR.text-success {
+                color: #fff !important;
+            }
+
+            /* The Helium leg of the Oxygen/Helium/Nitrogen split-pill mix
+               legend is shown/hidden as a whole (JS toggles this wrapper's
+               style.display, not a `hidden` attribute on the pill itself),
+               so it has to stay a real wrapper element around the pill
+               rather than a class on the pill directly. That breaks the
+               split-pill's own :first-child/:last-child CSS (the pill is
+               now its wrapper's only child, so it would render fully
+               rounded on both ends like a standalone pill instead of a
+               square middle segment) - restore the square-middle look
+               explicitly here. */
+            #label-container-mix-He .dh-gas-result-pill,
+            #label-container-mix-He-CCR .dh-gas-result-pill {
+                border-radius: 0;
+                box-shadow: inset 1px 0 0 rgba(255,255,255,.4);
             }
 
             .noUi-tick {
@@ -570,357 +624,203 @@
 
                             <div class="row">
                                 <div class="col-12">
-                                    
-                                    <div class="nav-wrapper position-relative end-0">
-                                        <ul class="nav nav-pills nav-fill p-1" role="tablist" id="nav-tabs">
-                                            <li class="nav-item">
-                                                <a class="nav-link mb-0 px-0 py-1 active" href="#" data-tag="OC">Open Circuit</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="CC">Closed Circuit</a>
-                                            </li>
-                                        </ul>
+                                    <div class="dh-channel-picker dh-gas-picker" id="nav-tabs">
+                                        <a href="#" class="dh-channel-chip is-active" data-tag="OC">Open Circuit</a>
+                                        <a href="#" class="dh-channel-chip" data-tag="CC">Closed Circuit</a>
                                     </div>
-                            
                                 </div>
                             </div>
                             <div class="row" id="CC" hidden>
 
-                                <div class="col-12 col-lg-4 col-sm-12 col-md-4" style="border-bottom: 1px solid #D3D3D3;">
-                                    <div class="row" style="display: flex; justify-content: center;">
-                                        <div class="mt-n6" style="position: relative; width: 150px; height: 300px;">
-                                            <!-- Overlaying image -->
-                                            <img id="tankCCR" src="{{ asset("assets") }}/img/ccr.png" alt="Overlay Image" 
-                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+                                <div class="col-md-6" id="cc-diluent-col">
+                                    <div class="mt-n2">
+                                        <input type="hidden" id="sliderPPO2CCR-value" name="txsliderPPO2CCR">
 
-                                            <img id="unblendable_sign_CCR" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image" 
-                                                style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
-
-                                            
-                                            <!-- Fixed-size chart canvas -->
-                                            <div style="width: 300px; heigth:300px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
-                                                <canvas id="stackedBarChartCCR" 
-                                                        style="width: 90%; height: 177px; position: absolute; bottom: 10px; left: 0; transform: none; z-index: 1;"></canvas>
+                                        <label class="dh-gas-label" id="mainLabelTx">Diluent PPO&#8322; at max depth ({{ $site->maxDepth }} ft)</label>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <label class="text-info right-label-normal custom-label" id="txlabelPPO2CCR">0.9</label>
+                                                <span class="dh-gas-unit">atm</span>
                                             </div>
-
-                                            <!-- <canvas id="stackedBarChart" 
-                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 161px; z-index: 1;"></canvas> -->
+                                            <div class="slider-styled" id="txsliderPPO2CCR"></div>
                                         </div>
                                     </div>
-                                    <div class="row mt-3">
-                                        <div class="col-5">
-                                            <table class="table align-items-center mb-0"> 
-                                                <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Diluent mix</td> </tr>
-                                            </table>
-                                            <div class="label-container">
-                                                <label class="left-label text-success" id="mainLabel">Oxygen</label>
-                                                <label class="text-success right-label-success custom-label" id="labelMixO2CCR">21%</label>
+
+                                    <div class="mt-3">
+                                        <input type="hidden" id="sliderSetPoint-value" name="sliderSetPoint-input">
+
+                                        <label class="dh-gas-label">Set Point</label>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <label class="text-info right-label-normal custom-label" id="labelSetPoint">1.2</label>
+                                                <span class="dh-gas-unit">atm</span>
                                             </div>
-                                            <div class="label-container" id="label-container-mix-He-CCR">
-                                                <label class="left-label text-info" id="mainLabel">Helium</label>
-                                                <label class="text-info right-label-normal custom-label" id="labelMixHeCCR">35%</label>
+                                            <div class="slider-styled" id="sliderSetPoint"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <input type="hidden" id="sliderHeCCR-value" name="sliderHeCCR">
+
+                                        <div class="dh-gas-label-row">
+                                            <label class="dh-gas-label mb-0" id="ENDLabelMax">END at max depth ({{ $site->maxDepth }} ft)</label>
+                                            <label class="dh-gas-toggle" for="O2NarcoticCCR">
+                                                <input name="O2narcoticCCR" type="checkbox" id="O2NarcoticCCR" checked value="1">
+                                                <span class="dh-gas-toggle-track"><span class="dh-gas-toggle-thumb"></span></span>
+                                                <span class="dh-gas-toggle-label">O2 narcotic?</span>
+                                            </label>
+                                        </div>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <label class="text-info right-label-normal custom-label" id="labelENDCCR"></label>
+                                                <span class="dh-gas-unit">ft</span>
                                             </div>
-                                            <div class="label-container">
-                                                <label class="left-label text-secondary" id="mainLabel">Nitrogen</label>
-                                                <label class="text-secondary right-label-secondary custom-label" id="labelMixN2CCR">47%</label>
+                                            <div class="slider-styled" id="sliderHeCCR"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <input type="hidden" id="sliderTempCCR-value" name="sliderTempCCR">
+
+                                        <div class="dh-gas-label-row">
+                                            <label class="dh-gas-label mb-0">Loop temperature at depth</label>
+                                            <label class="dh-gas-toggle" for="waterVapor">
+                                                <input name="waterVapor" type="checkbox" id="waterVapor" checked value="1">
+                                                <span class="dh-gas-toggle-track"><span class="dh-gas-toggle-thumb"></span></span>
+                                                <span class="dh-gas-toggle-label">Consider H&#8322;O vapor?</span>
+                                            </label>
+                                        </div>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <label class="text-info right-label-normal custom-label" id="labelTempCCR"></label>
+                                                <span class="dh-gas-unit">&deg;F/&deg;C</span>
+                                            </div>
+                                            <div class="slider-styled" id="sliderTempCCR"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <div class="text-center mb-2">
+                                            <div class="dh-gas-split-pill-row">
+                                                <div class="dh-gas-split-pill">
+                                                    <label class="dh-gas-result-pill is-o2" id="txBestO2CCR">32</label>
+                                                    <label class="dh-gas-result-pill is-he" id="txBestHeCCR">45</label>
+                                                </div>
+                                                <div class="dh-gas-density-col">
+                                                    <label class="text-info right-label-normal custom-label" id="gasDensityCCR"></label>
+                                                    <div class="dh-gas-density-caption" id="denisityCCR">Gas density</div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-7">
-                                            <table class="table align-items-center mb-0"> 
-                                                <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Gas prices</td> </tr>
-                                            </table>
-                                            <table class="table"> 
-                                                <tr>
-                                                    <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Diluent tank</td>
-                                                    <td id="diluentPrice" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$35.50</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">O2 tank</td>
-                                                    <td id="O2Price" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10.00</td>
-                                                </tr>
-                                                
-                                            </table>
-                                            <table class="table mt-n2">
-                                                <tr id="closeMixRowCCR" hidden style="border-top: 1px solid #D3D3D3;">
-                                                    <td class="text-info text-xs opacity-10 text-left" style="border: none;">Closest standard mix</td>
-                                                    <td id="closeMixCCR" class="text-info font-weight-bolder text-xs opacity-10 text-right" style="border: none; text-align: end;">-</td>
-                                                </tr>
-                                            </table>
+                                        <div class="text-center align-items-center mb-2" id="txhypoxicCCR" style="display: flex; justify-content: center; align-items: center;">
+                                            <label class="text-danger text-sm font-weight-bolder">Hypoxic at surface</label>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="dh-gas-btn-row">
+                                                <a type="button" class="btn btn-info flex-fill" id="buttonBestDiluent">
+                                                    Calculate Best Diluent
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="col-md-8">
-                                    <table class="table align-items-center mb-0"> 
-                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Diluent</td> </tr>
-                                    </table>
-                                    <div class="mt-n2">
-                                        <input type="hidden" id="sliderPPO2CCR-value" name="txsliderPPO2CCR">
-                                        
-                                        <!-- Flex container for label alignment -->
-                                        <div class="label-container">
-                                            <label class="left-label" id="mainLabelTx">Diluent PPO2 at max depth ({{ $site->maxDepth }} ft)</label>
-                                            <label class="text-info right-label-normal custom-label" id="txlabelPPO2CCR">0.9</label>
-                                            <label class="text-info">atm</label>
-                                        </div>
-                                        
-                                        <div class="slider-styled" id="txsliderPPO2CCR"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">O2 Content Diluent</div>
-                                    </div>
+                                <div class="col-12 col-lg-6 col-sm-12 col-md-6" id="cc-tank-col">
+                                    <div class="dh-gas-tank-layout">
+                                        <div class="dh-gas-tank-graphic">
+                                            <div class="dh-gas-tank-img-wrap" style="position: relative; width: 105px; height: 210px;">
+                                                <!-- Overlaying image -->
+                                                <img id="tankCCR" src="{{ asset("assets") }}/img/ccr.png" alt="Overlay Image"
+                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
 
-                                    <div class="mt-0">
-                                        <input type="hidden" id="sliderSetPoint-value" name="sliderSetPoint-input">
-                                        
-                                        <!-- Flex container for label alignment -->
-                                        <div class="label-container">
-                                            <label class="left-label" id="mainLabelTx">Set Point</label>
-                                            <label class="text-info right-label-normal custom-label" id="labelSetPoint">1.2</label>
-                                            <label class="text-info">atm</label>
-                                        </div>
-                                        
-                                        <div class="slider-styled" id="sliderSetPoint"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Set Point</div>
-                                    </div>
+                                                <img id="unblendable_sign_CCR" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image"
+                                                    style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: auto; z-index: 10;">
 
-                                    <div class="mt-2">
-                                        <input type="hidden" id="sliderHeCCR-value" name="sliderHeCCR">
-                                        
-                                        <!-- Flex container for label alignment -->
-                                        <div class="label-container">
-                                            <label class="left-label" id="ENDLabelMax">END at max depth ({{ $site->maxDepth }} ft)</label>
-                                            <label class="text-info right-label-normal custom-label" id="labelENDCCR"></label>
-                                            <label class="text-info">ft</label>
-                                        </div>
-                                        
-                                        
-                                        <div class="slider-styled" id="sliderHeCCR"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He Content Diluent</div>
-                                        <div class="form-container" style="display: flex; justify-content: space-between; align-items: center;">
-                                            <div class="form-check form-switch ps-0">
-                                                <input name="O2narcoticCCR" class="form-check-input ms-auto" type="checkbox"
-                                                    id="O2NarcoticCCR" checked value="1">
-                                                <label class="form-check-label text-body ms-3"
-                                                    for="O2NarcoticCCR">O2 narcotic?</label>
+                                                <!-- Fixed-size chart canvas -->
+                                                <div style="width: 210px; height: 124px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
+                                                    <canvas id="stackedBarChartCCR"
+                                                            style="width: 90%; height: 124px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
+                                                </div>
                                             </div>
-                                            
-                                        </div>
-                                    </div>
 
-                                    <div class="mt-n2">
-                                        <input type="hidden" id="sliderTempCCR-value" name="sliderTempCCR">
-                                        
-                                        <!-- Flex container for label alignment -->
-                                        <div class="label-container">
-                                            <label class="left-label">Loop temperature at depth</label>
-                                            <label class="text-info right-label-normal custom-label" id="labelTempCCR"></label>
-                                            <label class="text-info">°F/°C</label>
-                                        </div>
-                                        
-                                        
-                                        <div class="slider-styled" id="sliderTempCCR"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Loop temperature</div>
-                                        <div class="form-container" style="display: flex; justify-content: space-between; align-items: center;">
-                                            <div class="form-check form-switch ps-0">
-                                                <input name="waterVapor" class="form-check-input ms-auto" type="checkbox"
-                                                    id="waterVapor" checked value="1">
-                                                <label class="form-check-label text-body ms-3"
-                                                    for="waterVapor">Consider H2O vapor?</label>
-                                            </div>
-                                            <div class="label-container" style="text-align: right;">
-                                                <label class="left-label" id="denisityCCR" style="padding-right: 10px;">Gas density</label>
-                                                <label class="text-info right-label-normal custom-label" id="gasDensityCCR"></label>
-                                                <label class="text-info">g/L</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-2">
-                                        <table class="table mb-0" style="border: top; width: 100%;"> 
-                                            <tbody>
-                                                <tr class="mt-n4">
-                                                    <table style="width: 100%;">
-                                                        <tr>
-                                                            
-                                                            <td class="mt-n4" style="border: none; text-align: right; width: 49%;">
-                                                                <label class="text-info text-lg font-weight-bolder" id="txBestO2CCR">32</label>
-                                                            </td>
-                                                            <td class="mt-n4" style="border: none; width: 2%; text-align: center;">
-                                                                <label class="text-info text-lg font-weight-bolder">/</label>
-                                                            </td>
-                                                            <td class="mt-n4" style="border: none; text-align: left; width: 49%;">
-                                                                <label class="text-info text-lg font-weight-bolder" id="txBestHeCCR">45</label>
-                                                            </td>
-                                                        
-                                                        </tr>
-                                                        
-                                                    </table>
-                                                </tr>
-                                                <tr>
-                                                    <td style="border: none;">
-                                                    <div class="text-center align-items-center mt-n3 mb-n2" id="txhypoxicCCR" style="display: flex; justify-content: center; align-items: center;">
-                                                        <label class="text-danger text-sm font-weight-bolder" >Hypoxic at surface</label>
+                                            <div class="text-center mt-2">
+                                                <div class="dh-gas-split-pill">
+                                                    <label class="dh-gas-result-pill is-compact is-mix-o2" id="labelMixO2CCR">21%</label>
+                                                    <div id="label-container-mix-He-CCR" style="display: flex;">
+                                                        <label class="dh-gas-result-pill is-compact is-mix-he" id="labelMixHeCCR">35%</label>
                                                     </div>
+                                                    <label class="dh-gas-result-pill is-compact is-mix-n2" id="labelMixN2CCR">47%</label>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                                    </td>
-                                                </tr>
-                                                <tr class="text-center align-items-center">
-                                                    <td class="text-center align-items-center" style="border: none;"> <!-- Added text-center here -->
-                                                        <div class="text-center align-items-center mt-0">
-                                                            <a type="button" class="btn btn-info mt-0" id="buttonBestDiluent">
-                                                                Calculate Best Diluent
-                                                            </a>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                
-                                            </tbody> 
-                                        </table>
+                                        <div class="dh-gas-tank-side">
+                                            <details class="dh-wx-more">
+                                                <summary><span class="material-icons-round" aria-hidden="true">attach_money</span>Gas prices</summary>
+                                                <div class="dh-wx-more-body">
+                                                    <table class="table mb-0">
+                                                        <tr>
+                                                            <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Diluent tank</td>
+                                                            <td id="diluentPrice" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$35.50</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">O2 tank</td>
+                                                            <td id="O2Price" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10.00</td>
+                                                        </tr>
+                                                    </table>
+                                                    <div class="text-center dh-gas-closemix" id="closeMixRowCCR" hidden>
+                                                        <label class="dh-gas-result-pill is-compact is-closemix" id="closeMixCCR">-</label>
+                                                    </div>
+                                                </div>
+                                            </details>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="row" id="OC">
-                                <div class="col-12 col-lg-4 col-sm-12 col-md-4" style="border-bottom: 1px solid #D3D3D3;">
-                                    <div class="row" style="display: flex; justify-content: center;">
-                                        <div class="mt-n6" style="position: relative; width: 150px; height: 300px;">
-                                            <!-- Overlaying image -->
-                                            <img id="tank_single" src="{{ asset("assets") }}/img/tank_single.png"  hidden alt="Overlay Image" 
-                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
-
-                                            <img id="tank_double" src="{{ asset("assets") }}/img/tank_double.png"   alt="Overlay Image" 
-                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
-
-                                            <img id="unblendable_sign" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image" 
-                                                style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
-
-                                            
-                                            <!-- Fixed-size chart canvas -->
-                                            <div style="width: 300px; heigth:300px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
-                                                <canvas id="stackedBarChart" 
-                                                        style="width: 100%; height: 202px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
-                                            </div>
-
-                                            <!-- <canvas id="stackedBarChart" 
-                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 161px; z-index: 1;"></canvas> -->
-                                        </div>
-                                    </div>
-                                    <div class="row mt-3">
-                                        <div class="col-5">
-                                            <table class="table align-items-center mb-0"> 
-                                                <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Gas mix</td> </tr>
-                                            </table>
-                                            <div class="label-container">
-                                                <label class="left-label text-success" id="mainLabel">Oxygen</label>
-                                                <label class="text-success right-label-success custom-label" id="labelMixO2">Bottom PPO2</label>
-                                            </div>
-                                            <div class="label-container" id="label-container-mix-He">
-                                                <label class="left-label text-info" id="mainLabel">Helium</label>
-                                                <label class="text-info right-label-normal custom-label" id="labelMixHe">Bottom PPO2</label>
-                                            </div>
-                                            <div class="label-container">
-                                                <label class="left-label text-secondary" id="mainLabel">Nitrogen</label>
-                                                <label class="text-secondary right-label-secondary custom-label" id="labelMixN2">Bottom PPO2</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-7">
-                                            <table class="table align-items-center mb-0"> 
-                                                <tr><td id="tankConf" class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Gas prices</td> </tr>
-                                            </table>
-                                            <table class="table"> 
-                                                <tr>
-                                                    <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Aluminum 80</td>
-                                                    <td id="tank80" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Steel HP 100</td>
-                                                    <td id="tank100" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Steel LP 85</td>
-                                                    <td id="tank85" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10</td>
-                                                </tr>
-                                                
-                                            </table>
-                                            <table class="table mt-n2">
-                                                <tr id="closeMixRow" hidden style="border-top: 1px solid #D3D3D3;">
-                                                    <td class="text-info text-xs opacity-10 text-left" style="border: none;">Closest standard mix</td>
-                                                    <td id="closeMix" class="text-info font-weight-bolder text-xs opacity-10 text-right" style="border: none; text-align: end;">-</td>
-                                                </tr>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-12">
-                                            @if( $site->maxDepth <= 140)
-                                                <div class="label-container">
-                                                    <!-- Highlighted max depth -->
-                                                    <label class="left-label">NDL at <span class="text-info" style="font-weight: bold;">{{ $site->maxDepth }} ft</span> - 24 hr min surface interval</label>
-
-                                                    <!-- NDL result -->
-                                                    <label class="text-info right-label-normal custom-label" id="ndlResult">-</label>
-                                                    <label class="text-info">m</label>
-                                                </div>
-                                                <div class="text-center" style="border: none;"> <!-- Added text-center here -->
-                                                    <a type="button" class="btn btn-info mt-0" id="calculateNDLButton">
-                                                        Calculate NDL
-                                                    </a>
-                                                </div>
-                                            @endif
-                                            <!-- Legend directly below the first label -->
-                                            <div class="text-center mt-n2">
-                                                <label class="text-center text-danger text-xs">Always use a dive computer</label>
-                                            </div>
-                                                    
-                                        </div>
-                                    </div>
-                                </div>
-
 
                                 @if( $site->maxDepth < 180)
                                     @if( $site->maxDepth > 150)
-                                        <div class="col-md-4" style="border-bottom: 1px solid #D3D3D3;">
+                                        <div class="col-md-4" id="oc-nitrox-col">
                                     @else
-                                        <div class="col-md-8" style="border-bottom: 1px solid #D3D3D3;">
+                                        <div class="col-md-8" id="oc-nitrox-col">
                                     @endif
-                                
-                                    
-                                        <table class="table align-items-center mb-0"> 
-                                            <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Nitrox</td> </tr>
-                                        </table>
+
                                         <div class="mt-n2">
                                             <input type="hidden" id="sliderPPO2-value" name="sliderPPO2">
-                                            
-                                            <!-- Flex container for label alignment -->
-                                            <div class="label-container">
-                                                <label class="left-label" id="mainLabel">PPO2 at max depth ({{ $site->maxDepth }} ft)</label>
-                                                <label class="text-info right-label-normal custom-label" id="labelPPO2">Bottom PPO2</label>
-                                                <label class="text-info">atm</label>
+
+                                            <label class="dh-gas-label" id="mainLabel">PPO&#8322; at max depth ({{ $site->maxDepth }} ft)</label>
+                                            <div class="dh-gas-row">
+                                                <div class="dh-gas-input-wrap">
+                                                    <label class="text-info right-label-normal custom-label" id="labelPPO2">Bottom PPO2</label>
+                                                    <span class="dh-gas-unit">atm</span>
+                                                </div>
+                                                <div class="slider-styled" id="sliderPPO2"></div>
                                             </div>
-                                            <div class="label-container">
-                                                <label class="left-label" id="mainLabel2">PPO2 at average depth ({{ $site->avgDepth }} ft)</label>
-                                                <label class="text-info right-label-normal custom-label" id="labelPPO2Avg">Bottom PPO2</label>
-                                                <label class="text-info">atm</label>
+                                            <label class="dh-gas-label mt-2" id="mainLabel2">PPO&#8322; at average depth ({{ $site->avgDepth }} ft)</label>
+                                            <div class="dh-gas-row">
+                                                <div class="dh-gas-input-wrap">
+                                                    <label class="text-info right-label-normal custom-label" id="labelPPO2Avg">Bottom PPO2</label>
+                                                    <span class="dh-gas-unit">atm</span>
+                                                </div>
                                             </div>
-                                            
-                                            <div class="slider-styled" id="sliderPPO2"></div>
                                         </div>
-                                        <div class="mt-0">
-                                            <table class="table align-items-center mb-0" style="border: top;"> 
-                                                <tr>
-                                                    <td class="text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">O2 Content</td>
-                                                </tr>
-                                                <tr class="mt-n4">
-                                                    <td class="text-center mt-n4" style="border: none;">
-                                                        <label class="text-info text-lg font-weight-bolder" id="bestNitrox">32%</label>
-                                                    </td>
-                                                </tr>
-                                                <tr >
-                                                    <td class="text-center" style="border: none;"> <!-- Added text-center here -->
-                                                        <a type="button" class="btn btn-info mt-n4" id="buttonBestNitrox">
-                                                            Calculate Best Nitrox
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            </table>
+                                        <div class="mt-3">
+                                            <div class="text-center">
+                                                <label class="dh-gas-result-pill is-o2" id="bestNitrox">32%</label>
+                                            </div>
+                                            <div class="text-center pt-3">
+                                                <div class="dh-gas-btn-row">
+                                                    <a type="button" class="btn btn-secondary flex-fill" id="buttonBestNitrox">
+                                                        Calculate Best Nitrox
+                                                    </a>
+                                                    @if( $site->maxDepth <= 140)
+                                                    <a type="button" class="btn btn-info btn-sm flex-fill" id="calculateNDLButton">
+                                                        Calculate NDL
+                                                    </a>
+                                                    @endif
+                                                </div>
+                                            </div>
                                         </div>
 
                                     </div>
@@ -928,120 +828,165 @@
 
                                 @if( $site->maxDepth > 150)
                                     @if( $site->maxDepth < 180)
-                                        <div class="col-md-4">
+                                        <div class="col-md-4" id="oc-trimix-col">
                                     @else
-                                        <div class="col-md-8">
+                                        <div class="col-md-8" id="oc-trimix-col">
                                     @endif
-                                        <table class="table align-items-center mb-0"> 
-                                            <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Trimix</td> </tr>
-                                        </table>
                                         <div class="mt-n2">
                                             <input type="hidden" id="sliderPPO2-value" name="txsliderPPO2">
-                                            
-                                            <!-- Flex container for label alignment -->
-                                            <div class="label-container">
-                                                <label class="left-label" id="mainLabelTx">PPO2 at max depth ({{ $site->maxDepth }} ft)</label>
-                                                <label class="text-info right-label-normal custom-label" id="txlabelPPO2">Bottom PPO2</label>
-                                                <label class="text-info">atm</label>
-                                            </div>
-                                            <div class="label-container">
-                                                <label class="left-label" id="txmainLabel2">PPO2 at average depth ({{ $site->avgDepth }} ft)</label>
-                                                <label class="text-info right-label-normal custom-label" id="txlabelPPO2Avg">Bottom PPO2</label>
-                                                <label class="text-info">atm</label>
-                                            </div>
-                                            
-                                            <div class="slider-styled" id="txsliderPPO2"></div>
-                                            <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">O2 Content</div>
-                                        </div>
-                                        <div class="mt-2">
-                                            <input type="hidden" id="sliderPPO2-value" name="txsliderPPHe">
-                                            
-                                            <!-- Flex container for label alignment -->
-                                            <div class="label-container">
-                                                <label class="left-label" id="ENDLabelMax">END at max depth ({{ $site->maxDepth }} ft)</label>
-                                                <label class="text-info right-label-normal custom-label" id="txlabelEND"></label>
-                                                <label class="text-info">ft</label>
-                                            </div>
-                                            <div class="label-container">
-                                                <label class="left-label" id="ENDLabelAvg">END at average depth ({{ $site->avgDepth }} ft)</label>
-                                                <label class="text-info right-label-normal custom-label" id="txlabelENDAvg"></label>
-                                                <label class="text-info">ft</label>
-                                            </div>
-                                            
-                                            <div class="slider-styled" id="txsliderHe"></div>
-                                            <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He Content</div>
-                                            <div class="form-container" style="display: flex; justify-content: space-between; align-items: center;">
-                                                <div class="form-check form-switch ps-0">
-                                                    <input name="O2narcotic" class="form-check-input ms-auto" type="checkbox"
-                                                        id="O2Narcotic" checked value="1">
-                                                    <label class="form-check-label text-body ms-3"
-                                                        for="O2Narcotic">O2 narcotic?</label>
-                                                </div>
-                                                <div class="label-container" style="text-align: right;">
-                                                    <label class="left-label" id="denisity" style="padding-right: 10px;">Gas density</label>
-                                                    <label class="text-info right-label-normal custom-label" id="gasDensity"></label>
-                                                    <label class="text-info">g/L</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="mt-2">
-                                            <table class="table mb-0" style="border: top; width: 100%;"> 
-                                                <tbody>
-                                                    <tr class="mt-n4">
-                                                        <table style="width: 100%;">
-                                                            <tr>
-                                                                
-                                                                <td class="mt-n4" style="border: none; text-align: right; width: 49%;">
-                                                                    <label class="text-info text-lg font-weight-bolder" id="txbestNitrox">32%</label>
-                                                                </td>
-                                                                <td class="mt-n4" style="border: none; width: 2%; text-align: center;">
-                                                                    <label class="text-info text-lg font-weight-bolder">/</label>
-                                                                </td>
-                                                                <td class="mt-n4" style="border: none; text-align: left; width: 49%;">
-                                                                    <label class="text-info text-lg font-weight-bolder" id="txbestHe">32%</label>
-                                                                </td>
-                                                            
-                                                            </tr>
-                                                            
-                                                        </table>
-                                                    </tr>
-                                                    <tr>
-                                                        <td style="border: none;">
-                                                        <div class="text-center align-items-center mt-n3 mb-n2" id="txhypoxic" style="display: flex; justify-content: center; align-items: center;">
-                                                            <label class="text-danger text-sm font-weight-bolder" >Hypoxic at surface</label>
-                                                        </div>
 
-                                                        </td>
-                                                    </tr>
-                                                    <tr class="text-center align-items-center">
-                                                        <td class="text-center align-items-center" style="border: none;"> <!-- Added text-center here -->
-                                                            <div class="text-center align-items-center mt-0">
-                                                                <a type="button" class="btn btn-info mt-0" id="txbuttonBestNitrox">
-                                                                    Calculate Best Trimix
-                                                                </a>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                    
-                                                </tbody> 
-                                            </table>
+                                            <label class="dh-gas-label" id="mainLabelTx">PPO&#8322; at max depth ({{ $site->maxDepth }} ft)</label>
+                                            <div class="dh-gas-row">
+                                                <div class="dh-gas-input-wrap">
+                                                    <label class="text-info right-label-normal custom-label" id="txlabelPPO2">Bottom PPO2</label>
+                                                    <span class="dh-gas-unit">atm</span>
+                                                </div>
+                                                <div class="slider-styled" id="txsliderPPO2"></div>
+                                            </div>
+                                            <label class="dh-gas-label mt-2" id="txmainLabel2">PPO&#8322; at average depth ({{ $site->avgDepth }} ft)</label>
+                                            <div class="dh-gas-row">
+                                                <div class="dh-gas-input-wrap">
+                                                    <label class="text-info right-label-normal custom-label" id="txlabelPPO2Avg">Bottom PPO2</label>
+                                                    <span class="dh-gas-unit">atm</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <input type="hidden" id="sliderPPO2-value" name="txsliderPPHe">
+
+                                            <div class="dh-gas-label-row">
+                                                <label class="dh-gas-label mb-0" id="ENDLabelMax">END at max depth ({{ $site->maxDepth }} ft)</label>
+                                                <label class="dh-gas-toggle" for="O2Narcotic">
+                                                    <input name="O2narcotic" type="checkbox" id="O2Narcotic" checked value="1">
+                                                    <span class="dh-gas-toggle-track"><span class="dh-gas-toggle-thumb"></span></span>
+                                                    <span class="dh-gas-toggle-label">O2 narcotic?</span>
+                                                </label>
+                                            </div>
+                                            <div class="dh-gas-row">
+                                                <div class="dh-gas-input-wrap">
+                                                    <label class="text-info right-label-normal custom-label" id="txlabelEND"></label>
+                                                    <span class="dh-gas-unit">ft</span>
+                                                </div>
+                                                <div class="slider-styled" id="txsliderHe"></div>
+                                            </div>
+                                            <label class="dh-gas-label mt-2" id="ENDLabelAvg">END at average depth ({{ $site->avgDepth }} ft)</label>
+                                            <div class="dh-gas-row">
+                                                <div class="dh-gas-input-wrap">
+                                                    <label class="text-info right-label-normal custom-label" id="txlabelENDAvg"></label>
+                                                    <span class="dh-gas-unit">ft</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <div class="text-center align-items-center mb-2" id="txhypoxic" style="display: flex; justify-content: center; align-items: center;">
+                                                <label class="text-danger text-sm font-weight-bolder">Hypoxic at surface</label>
+                                            </div>
+                                            <div class="text-center mb-2">
+                                                <div class="dh-gas-split-pill-row">
+                                                    <div class="dh-gas-split-pill">
+                                                        <label class="dh-gas-result-pill is-o2" id="txbestNitrox">32</label>
+                                                        <label class="dh-gas-result-pill is-he" id="txbestHe">32</label>
+                                                    </div>
+                                                    <div class="dh-gas-density-col">
+                                                        <label class="text-info right-label-normal custom-label" id="gasDensity"></label>
+                                                        <div class="dh-gas-density-caption" id="denisity">Gas density</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="text-center">
+                                                <div class="dh-gas-btn-row">
+                                                    <a type="button" class="btn btn-info flex-fill" id="txbuttonBestNitrox">
+                                                        Calculate Best Trimix
+                                                    </a>
+                                                </div>
+                                            </div>
                                         </div>
 
                                     </div>
                                 @endif
 
-                            </div>  
-                            
-                        
-                    
+                                <div class="col-12 col-lg-4 col-sm-12 col-md-4" id="oc-tank-col">
+                                    <div class="dh-gas-tank-layout">
+                                        <div class="dh-gas-tank-graphic">
+                                            <div class="dh-gas-tank-img-wrap" style="position: relative; width: 105px; height: 210px;">
+                                                <!-- Overlaying image -->
+                                                <img id="tank_single" src="{{ asset("assets") }}/img/tank_single.png" hidden alt="Overlay Image"
+                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+
+                                                <img id="tank_double" src="{{ asset("assets") }}/img/tank_double.png" alt="Overlay Image"
+                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+
+                                                <img id="unblendable_sign" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image"
+                                                    style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: auto; z-index: 10;">
+
+                                                <!-- Fixed-size chart canvas -->
+                                                <div style="width: 210px; height: 210px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
+                                                    <canvas id="stackedBarChart"
+                                                            style="width: 100%; height: 141px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
+                                                </div>
+                                            </div>
+
+                                            <div class="text-center mt-2">
+                                                <div class="dh-gas-split-pill">
+                                                    <label class="dh-gas-result-pill is-compact is-mix-o2" id="labelMixO2">Bottom PPO2</label>
+                                                    <div id="label-container-mix-He" style="display: flex;">
+                                                        <label class="dh-gas-result-pill is-compact is-mix-he" id="labelMixHe">Bottom PPO2</label>
+                                                    </div>
+                                                    <label class="dh-gas-result-pill is-compact is-mix-n2" id="labelMixN2">Bottom PPO2</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="dh-gas-tank-side">
+                                            <details class="dh-wx-more">
+                                                <summary><span class="material-icons-round" aria-hidden="true">attach_money</span><span id="tankConf">Gas prices</span></summary>
+                                                <div class="dh-wx-more-body">
+                                                    <table class="table mb-0">
+                                                        <tr>
+                                                            <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Aluminum 80</td>
+                                                            <td id="tank80" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Steel HP 100</td>
+                                                            <td id="tank100" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Steel LP 85</td>
+                                                            <td id="tank85" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10</td>
+                                                        </tr>
+                                                    </table>
+                                                    <div class="text-center dh-gas-closemix" id="closeMixRow" hidden>
+                                                        <label class="dh-gas-result-pill is-compact is-closemix" id="closeMix">-</label>
+                                                    </div>
+                                                </div>
+                                            </details>
+
+                                            @if( $site->maxDepth <= 140)
+                                            <div class="dh-wx-more dh-gas-ndl-card mt-2">
+                                                <div class="dh-gas-ndl-body">
+                                                    <div class="dh-gas-ndl-result">
+                                                        NDL at <label class="dh-gas-result-pill is-compact">{{ $site->maxDepth }} ft</label> is <label class="dh-gas-result-pill is-compact is-ndl" id="ndlResult">-</label>
+                                                    </div>
+                                                    <div class="dh-gas-ndl-sub">24 hr min surface interval</div>
+                                                </div>
+                                            </div>
+                                            @endif
+                                            <div class="text-center mt-2">
+                                                <label class="text-center text-danger text-xs mb-0">Always use a dive computer</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
                             <div class="row mt-2">
                                 <div class="col-lg-4 col-md-4 col-sm-12">
-                                    <div class="text-center mx-2" style="border: none;"> <!-- Added text-center here -->
-                                        <!-- <a type="button" class="btn btn-info mt-0" id="decoPlanningButton" href="{{ route('DecoPlanner', ['id' => $site->id] )}}"> -->
+                                    <div class="text-center mx-2" style="border: none;">
                                         <a type="button" class="btn btn-info mt-0" id="decoPlanningButton" href="{{ route('DecoPlanner')}}/{{ $site->id }}">
                                             Decompression planning
                                         </a>
-                                    </div>    
+                                    </div>
                                 </div>
                             </div>
 

@@ -799,6 +799,9 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-health-stats { display: flex; flex-wrap: wrap; gap: 10px; }
 .dh-health-stat { flex: 1 1 120px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 10px; border-radius: var(--dh-radius); background: var(--dh-sand); }
 .dh-health-stat .material-icons-round { font-size: 22px; }
+/* Google/Divers Hub logos on the User Management mini dashboard (Pablo,
+   2026-09-24), same size as the icon-font stat tiles next to them. */
+.dh-health-stat-icon { width: 22px; height: 22px; object-fit: contain; }
 .dh-health-stat-n { font-size: 1.5rem; font-weight: 800; line-height: 1; }
 .dh-health-stat-label { font-size: .75rem; color: var(--dh-muted); text-align: center; }
 .dh-health-stat.is-run { color: var(--dh-sea); }

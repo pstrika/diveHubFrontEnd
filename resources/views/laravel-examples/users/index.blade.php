@@ -27,12 +27,12 @@
                             <span class="dh-health-stat-label">Total users</span>
                         </div>
                         <div class="dh-health-stat is-good">
-                            <span class="material-icons-round" aria-hidden="true">travel_explore</span>
+                            <img src="{{ asset('assets') }}/img/icons/google_icon.webp" alt="" class="dh-health-stat-icon">
                             <span class="dh-health-stat-n">{{ $googleUsers }}</span>
                             <span class="dh-health-stat-label">Signed up with Google</span>
                         </div>
                         <div class="dh-health-stat is-wait">
-                            <span class="material-icons-round" aria-hidden="true">how_to_reg</span>
+                            <img src="{{ asset('assets') }}/img/icons/favicon.png" alt="" class="dh-health-stat-icon">
                             <span class="dh-health-stat-n">{{ $directUsers }}</span>
                             <span class="dh-health-stat-label">Registered on Divers Hub</span>
                         </div>
