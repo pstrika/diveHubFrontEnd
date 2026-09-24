@@ -21,9 +21,16 @@ class Authenticate extends Middleware
 
      public function handle($request, Closure $next, ...$guards)
     {
-        // Save the intended URL before redirecting
-        Log::info("Saving intended URL: " . $request->url());
-        $request->session()->put('url.intended', $request->url());
+        // Only remember real page loads as the post-login redirect target.
+        // This used to run unconditionally, so a background AJAX poll (e.g.
+        // the group chat's /messages/poll, which passes through this same
+        // 'auth' middleware) would overwrite url.intended with its own raw
+        // JSON endpoint - every subsequent login then landed on that JSON
+        // response instead of the dashboard (found 2026-09-24: "every login
+        // is forcing to go to .../messages/poll").
+        if ($request->isMethod('GET') && !$request->expectsJson() && !$request->ajax()) {
+            $request->session()->put('url.intended', $request->url());
+        }
         if ($this->isGuest($request)) {
             //abort(403); // Unauthorized access
             

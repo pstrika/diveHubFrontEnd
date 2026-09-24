@@ -825,7 +825,7 @@
 
         function refreshChatMessages() {
             var messagesEl = document.getElementById('groupChatMessages');
-            return fetch("{{ route('Groups.messages.poll', ['group' => $group->slug]) }}")
+            return fetch("{{ route('Groups.messages.poll', ['group' => $group->slug]) }}", { headers: { 'Accept': 'application/json' } })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     var oldCount = parseInt(messagesEl.getAttribute('data-count'), 10);
