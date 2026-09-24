@@ -62,10 +62,27 @@ class SendGroupDiveReminders extends Command
         $this->info("Sent {$type} reminders for " . $dives->count() . ' dive(s).');
     }
 
+    /**
+     * Only members who actually RSVP'd "I'm going" to THIS dive - not the
+     * whole group (Pablo, 2026-09-24: "If the user is not coming to a
+     * certain trip, we don't want to send 1 day and 3 day reminders. Only
+     * to the ones that have said 'I'm coming'"). Ported from the redesign
+     * branch's remindableMembers() (v10.28.1), minus its unmutedActiveMembers()
+     * call - that per-member mute feature doesn't exist here yet.
+     */
+    private function remindableMembers(GroupDive $dive): \Illuminate\Support\Collection
+    {
+        $goingUserIds = $dive->rsvps->pluck('user_id');
+
+        return $dive->group->activeMembers
+            ->filter(fn ($member) => $goingUserIds->contains($member->user_id))
+            ->values();
+    }
+
     private function sendReminderEmail(GroupDive $dive, int $daysAhead)
     {
         $group = $dive->group;
-        $members = $group->activeMembers;
+        $members = $this->remindableMembers($dive);
 
         if ($members->isEmpty()) {
             return;
@@ -127,7 +144,7 @@ class SendGroupDiveReminders extends Command
         $timeFormatted = $dive->time ? Carbon::parse($dive->time)->format('g:i A') : 'TBD';
 
         NotificationService::notify(
-            $group->activeMembers()->pluck('user_id'),
+            $dive->rsvps->pluck('user_id'),
             $group->name,
             'Reminder: ' . $dive->tripName . ' in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '') . ' - ' . $dateFormatted . ' at ' . $timeFormatted,
             route('Groups.show', ['group' => $group->slug])
@@ -144,7 +161,7 @@ class SendGroupDiveReminders extends Command
     private function sendReminderSms(GroupDive $dive, int $daysAhead)
     {
         $group = $dive->group;
-        $members = $group->activeMembers;
+        $members = $this->remindableMembers($dive);
 
         if ($members->isEmpty()) {
             return;
