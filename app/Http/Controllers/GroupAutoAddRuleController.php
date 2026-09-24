@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Group;
 use App\Models\GroupAutoAddRule;
+use App\Models\Operator;
 use Illuminate\Http\Request;
 
 /**
@@ -46,9 +47,22 @@ class GroupAutoAddRuleController extends Controller
             'enabled' => 'nullable|boolean',
             'trip_types' => 'nullable|array',
             'trip_types.*' => 'in:' . implode(',', GroupAutoAddRule::TRIP_TYPES),
-            'operator_ids' => 'nullable|array|max:' . GroupAutoAddRule::MAX_OPERATORS,
-            'operator_ids.*' => 'integer|exists:mysql_trips.operators,id',
-            'locations' => 'nullable|array|max:' . GroupAutoAddRule::MAX_LOCATIONS,
+            'name_keyword' => 'nullable|string|max:100',
+            // No cap (Pablo, 2026-09-24: "remove the limitation of up to 7
+            // operators and up to 3 locations...otherwise we won't be able
+            // to effectively use these rules") - operator_ids.* accepts
+            // either a real operator id or the OPERATOR_ALL sentinel, which
+            // exists:... alone can't express.
+            'operator_ids' => 'nullable|array',
+            'operator_ids.*' => ['integer', function ($attribute, $value, $fail) {
+                if ((int) $value === GroupAutoAddRule::OPERATOR_ALL) {
+                    return;
+                }
+                if (!Operator::whereKey($value)->exists()) {
+                    $fail('The selected operator is invalid.');
+                }
+            }],
+            'locations' => 'nullable|array',
             'locations.*' => 'string|max:5',
             'levels' => 'nullable|array',
             'levels.*' => 'integer|in:' . GroupAutoAddRule::LEVEL_ALL . ',0,1,2,3,4',
@@ -57,13 +71,15 @@ class GroupAutoAddRuleController extends Controller
         ]);
 
         $enabled = $request->boolean('enabled');
+        $nameKeyword = trim((string) ($data['name_keyword'] ?? ''));
 
         if ($enabled) {
+            $hasTypeOrKeyword = !empty($data['trip_types']) || $nameKeyword !== '';
             $hasOperatorOrLocation = !empty($data['operator_ids']) || !empty($data['locations']);
             $hasLevelOrSite = !empty($data['levels']) || !empty($data['site_ids']);
 
-            if (empty($data['trip_types']) || !$hasOperatorOrLocation || !$hasLevelOrSite) {
-                return redirect()->back()->with('msg', 'To turn the rule on, pick at least one trip type, one operator or location, and one level or site.');
+            if (!$hasTypeOrKeyword || !$hasOperatorOrLocation || !$hasLevelOrSite) {
+                return redirect()->back()->with('msg', 'To turn the rule on, pick at least one trip type or name keyword, one operator or location, and one level or site.');
             }
         }
 
@@ -72,6 +88,7 @@ class GroupAutoAddRuleController extends Controller
             [
                 'enabled' => $enabled,
                 'trip_types' => $data['trip_types'] ?? [],
+                'name_keyword' => $nameKeyword !== '' ? $nameKeyword : null,
                 'operator_ids' => $data['operator_ids'] ?? [],
                 'locations' => $data['locations'] ?? [],
                 'levels' => $data['levels'] ?? [],
