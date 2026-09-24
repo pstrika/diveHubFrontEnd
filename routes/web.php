@@ -378,17 +378,27 @@ Route::get('AboutUs', function () {
 Route::get('sign-up', [RegisterController::class, 'create'])->middleware('guest')->name('register');
 Route::post('sign-up', [RegisterController::class, 'store'])->middleware('guest');
 
-Route::get('sign-in', [SessionsController::class, 'create'])->middleware('guest')->name('login');
-Route::post('sign-in', [SessionsController::class, 'store'])->middleware('guest');
+// No 'guest' (= AuthenticateAsGuest) middleware on these four routes on
+// purpose (Pablo, 2026-09-24: "when I sign-out...try to sign in again...it
+// usually sends me to the sign in page and I need to type the user and pwd
+// again"). That middleware silently Auth::loginUsingId()'s the shared guest
+// account whenever the visitor isn't authenticated, which migrates the
+// session (new id + new CSRF token) as a side effect - happening mid-flow
+// right as someone loads or submits the sign-in/sign-out forms, it could
+// invalidate the token a just-rendered form had already embedded before the
+// next submission reached the server, bouncing the login with a stale-CSRF
+// 419 that looked like "it didn't take, try again."
+Route::get('sign-in', [SessionsController::class, 'create'])->name('login');
+Route::post('sign-in', [SessionsController::class, 'store']);
 
-Route::post('sign-out', [SessionsController::class, 'destroy'])->middleware('guest')->name('logout');
+Route::post('sign-out', [SessionsController::class, 'destroy'])->name('logout');
 // Guest to sign up in one hop. Guests are logged in as the shared guest user, so
 // this logs them out first, then redirects to the register page. Every
 // "Create account" link should point here rather than at sign-out.
 Route::get('create-account', [SessionsController::class, 'createAccount'])->name('create-account');
 // "I already have an account" from the guest prompt: drops the shared guest session, then sign in.
 Route::get('sign-in-fresh', [SessionsController::class, 'signInFresh'])->name('sign-in-fresh');
-Route::get('sign-out', [SessionsController::class, 'create'])->middleware('guest');
+Route::get('sign-out', [SessionsController::class, 'create']);
 
 Route::post('verify', [SessionsController::class, 'show'])->middleware('guest');
 Route::post('reset-password', [SessionsController::class, 'update'])->middleware('guest')->name('password.update');

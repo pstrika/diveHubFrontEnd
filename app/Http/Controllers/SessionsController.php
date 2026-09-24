@@ -110,9 +110,11 @@ class SessionsController extends Controller
 
     public function destroy()
     {
-        // Remove the intended URL from the session
-        session()->forget('url.intended');
         auth()->logout();
+        // Standard secure-logout pattern - also drops url.intended and
+        // any other stale session data along with it.
+        session()->invalidate();
+        session()->regenerateToken();
 
         //return redirect('/sign-in');
 
