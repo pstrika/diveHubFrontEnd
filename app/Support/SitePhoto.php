@@ -167,9 +167,13 @@ final class SitePhoto
     {
         try {
             $image = new \Imagick($src);
-            // Bakes in EXIF rotation for every orientation value, not just
-            // the three GD's own applyExifOrientation() below handles.
-            $image->autoOrientImage();
+            // autoOrientImage() isn't available on every Imagick build -
+            // confirmed live (Pablo, 2026-09-24) it's undefined on this
+            // server's (PECL imagick predates its introduction), so this
+            // reads the EXIF orientation tag directly instead - getImage
+            // Orientation()/rotateImage() are wand-API-old and available
+            // everywhere.
+            self::applyImagickOrientation($image);
 
             foreach ($pending as $dest => $maxWidth) {
                 $copy = clone $image;
@@ -199,6 +203,26 @@ final class SitePhoto
             Log::warning("SitePhoto (Imagick): failed for $file: " . $e->getMessage());
             return false;
         }
+    }
+
+    /** Same 3 real-world cases GD's applyExifOrientation() below handles, via Imagick's own wand-API methods. */
+    private static function applyImagickOrientation(\Imagick $image): void
+    {
+        $orientation = $image->getImageOrientation();
+        switch ($orientation) {
+            case \Imagick::ORIENTATION_BOTTOMRIGHT: // 3
+                $image->rotateImage('#000', 180);
+                break;
+            case \Imagick::ORIENTATION_RIGHTTOP: // 6
+                $image->rotateImage('#000', 90);
+                break;
+            case \Imagick::ORIENTATION_LEFTBOTTOM: // 8
+                $image->rotateImage('#000', -90);
+                break;
+            default:
+                return;
+        }
+        $image->setImageOrientation(\Imagick::ORIENTATION_TOPLEFT);
     }
 
     /**
