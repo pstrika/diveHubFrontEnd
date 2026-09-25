@@ -648,16 +648,17 @@
                                  2026-09-25) and stack top-to-bottom in that same order on
                                  phones - both just fall out of plain DOM/source order, no CSS
                                  order utilities needed. --}}
-                            <div class="row mt-2" id="multiLevelRow" style="display: none;">
-                                <div class="col-12 d-flex align-items-center justify-content-between flex-wrap mb-2" style="gap: 8px;">
+                            {{-- --bs-gutter-x widened from Bootstrap's 1.5rem default (Pablo,
+                                 2026-09-25: "add some padding in between the levels frames") -
+                                 the bordered .dh-level-panel cards read as too tight together
+                                 at the default gutter. --}}
+                            <div class="row mt-2" id="multiLevelRow" style="display: none; --bs-gutter-x: 2rem;">
+                                <div class="col-12 mb-2">
                                     <span class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7">Set Levels</span>
-                                    <button type="button" class="dh-gas-accordion-add" id="levelBtnAdd">
-                                        <span class="material-icons-round" aria-hidden="true">add</span>
-                                        Add a level
-                                    </button>
                                 </div>
 
-                                <div class="col-lg-3 col-12 dh-level-panel" id="levelPanel1">
+                                <div class="col-lg-3 col-12" id="levelPanel1">
+                                  <div class="dh-level-panel">
                                     <table class="table align-items-center mb-0 mt-1">
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Level 1</td></tr>
                                     </table>
@@ -696,9 +697,11 @@
                                             <div class="slider-styled" id="bottomTimeSliderLevel1" data-dh-num-mirror="1"></div>
                                         </div>
                                     </div>
+                                  </div>
                                 </div>
 
-                                <div class="col-lg-3 col-12 dh-level-panel" id="levelPanel2" hidden>
+                                <div class="col-lg-3 col-12" id="levelPanel2" hidden>
+                                  <div class="dh-level-panel">
                                     <table class="table align-items-center mb-0 mt-1">
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Level 2</td></tr>
                                     </table>
@@ -744,9 +747,11 @@
                                             </a>
                                         </div>
                                     </div>
+                                  </div>
                                 </div>
 
-                                <div class="col-lg-3 col-12 dh-level-panel" id="levelPanel3" hidden>
+                                <div class="col-lg-3 col-12" id="levelPanel3" hidden>
+                                  <div class="dh-level-panel">
                                     <table class="table align-items-center mb-0 mt-1">
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Level 3</td></tr>
                                     </table>
@@ -792,9 +797,11 @@
                                             </a>
                                         </div>
                                     </div>
+                                  </div>
                                 </div>
 
-                                <div class="col-lg-3 col-12 dh-level-panel" id="levelPanel4" hidden>
+                                <div class="col-lg-3 col-12" id="levelPanel4" hidden>
+                                  <div class="dh-level-panel">
                                     <table class="table align-items-center mb-0 mt-1">
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Level 4</td></tr>
                                     </table>
@@ -840,6 +847,14 @@
                                             </a>
                                         </div>
                                     </div>
+                                  </div>
+                                </div>
+
+                                <div class="col-12 mt-2">
+                                    <button type="button" class="dh-gas-accordion-add" id="levelBtnAdd">
+                                        <span class="material-icons-round" aria-hidden="true">add</span>
+                                        Add a level
+                                    </button>
                                 </div>
                             </div>
 
@@ -6968,11 +6983,35 @@
         }
 
         function showLevel2() { document.getElementById('levelPanel2').hidden = false; dhUpdateAddLevelButtonVisibility(); }
-        function hideLevel2() { document.getElementById('levelPanel2').hidden = true; dhUpdateAddLevelButtonVisibility(); }
         function showLevel3() { document.getElementById('levelPanel3').hidden = false; dhUpdateAddLevelButtonVisibility(); }
-        function hideLevel3() { document.getElementById('levelPanel3').hidden = true; dhUpdateAddLevelButtonVisibility(); }
         function showLevel4() { document.getElementById('levelPanel4').hidden = false; dhUpdateAddLevelButtonVisibility(); }
-        function hideLevel4() { document.getElementById('levelPanel4').hidden = true; dhUpdateAddLevelButtonVisibility(); }
+
+        /**
+         * Deleting level N shifts every level AFTER it up by one slot,
+         * then drops the now-duplicate last slot - so deleting level 2 of
+         * a 3-level dive leaves 1, 2 (old level 3's numbers), not 1, [gap], 3
+         * (Pablo, 2026-09-25: "if I have 3 levels and delete #2, then the
+         * third now becomes #2"). Slot POSITIONS (and their headers,
+         * "Level 2" etc.) are fixed; only the depth/bottom-time VALUES
+         * move between slots via the sliders' own get/set, which also
+         * refreshes each slot's ft/m text inputs through its existing
+         * 'update' handler - no separate label-syncing needed here.
+         */
+        function dhDeleteLevel(n) {
+            var visibleCount = 1;
+            for (var i = 2; i <= 4; i++) {
+                if (!document.getElementById('levelPanel' + i).hidden) visibleCount = i;
+            }
+            for (var i = n; i < visibleCount; i++) {
+                dhLevelDepthSliders[i].noUiSlider.set(dhLevelDepthSliders[i + 1].noUiSlider.get());
+                dhLevelTimeSliders[i].noUiSlider.set(dhLevelTimeSliders[i + 1].noUiSlider.get());
+            }
+            document.getElementById('levelPanel' + visibleCount).hidden = true;
+            dhUpdateAddLevelButtonVisibility();
+        }
+        function hideLevel2() { dhDeleteLevel(2); }
+        function hideLevel3() { dhDeleteLevel(3); }
+        function hideLevel4() { dhDeleteLevel(4); }
 
         document.getElementById('levelBtnAdd').addEventListener('click', function () {
             var n = dhNextLevelSlot();
