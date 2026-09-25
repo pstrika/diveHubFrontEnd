@@ -113,7 +113,15 @@
 
 <header class="dh-topbar">
     <div class="dh-topbar-inner">
-        <a class="dh-brand" href="{{ route('/') }}" aria-label="Divers Hub home">
+        {{-- Registered users go straight to their dashboard; guests (and
+             anonymous visitors) get the marketing home page (Pablo,
+             2026-09-24: "for registered users, click on the logo...should
+             take you to My Dashboard. For guest take them to the home
+             page") - route('/') instead redirects a real login to
+             MyDashboard via a splash screen but sends the shared guest
+             account to the trip board, not the home page, which isn't
+             what a logo click should do. --}}
+        <a class="dh-brand" href="{{ $isGuest ? route('Landing') : route('MyDashboard') }}" aria-label="Divers Hub home">
             <img src="{{ asset('assets') }}/img/logos/logo_circle.png" alt="" width="34" height="34">
             <span>Divers Hub</span>
         </a>
