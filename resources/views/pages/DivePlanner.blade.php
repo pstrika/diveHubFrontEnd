@@ -643,10 +643,11 @@
                                  "hidden", same on-demand pattern as the gas accordion's Add gas
                                  (dhNextGasSlot/showDecoGasN) rather than cloning DOM at runtime.
                                  Level 1 is the always-present base level (no delete button),
-                                 matching the gas accordion's non-removable first slot. Order
-                                 utilities put new levels to the LEFT of Level 1 on desktop
-                                 (Pablo: "additional levels are added to the left in desktop")
-                                 while keeping natural top-to-bottom reading order on phones. --}}
+                                 matching the gas accordion's non-removable first slot. New
+                                 levels are added to the RIGHT of Level 1 on desktop (Pablo,
+                                 2026-09-25) and stack top-to-bottom in that same order on
+                                 phones - both just fall out of plain DOM/source order, no CSS
+                                 order utilities needed. --}}
                             <div class="row mt-2" id="multiLevelRow" style="display: none;">
                                 <div class="col-12 d-flex align-items-center justify-content-between flex-wrap mb-2" style="gap: 8px;">
                                     <span class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7">Set Levels</span>
@@ -656,7 +657,7 @@
                                     </button>
                                 </div>
 
-                                <div class="col-lg-3 col-12 dh-level-panel order-1 order-lg-4" id="levelPanel1">
+                                <div class="col-lg-3 col-12 dh-level-panel" id="levelPanel1">
                                     <table class="table align-items-center mb-0 mt-1">
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Level 1</td></tr>
                                     </table>
@@ -697,7 +698,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3 col-12 dh-level-panel order-2 order-lg-3" id="levelPanel2" hidden>
+                                <div class="col-lg-3 col-12 dh-level-panel" id="levelPanel2" hidden>
                                     <table class="table align-items-center mb-0 mt-1">
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Level 2</td></tr>
                                     </table>
@@ -745,7 +746,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3 col-12 dh-level-panel order-3 order-lg-2" id="levelPanel3" hidden>
+                                <div class="col-lg-3 col-12 dh-level-panel" id="levelPanel3" hidden>
                                     <table class="table align-items-center mb-0 mt-1">
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Level 3</td></tr>
                                     </table>
@@ -793,7 +794,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3 col-12 dh-level-panel order-4 order-lg-1" id="levelPanel4" hidden>
+                                <div class="col-lg-3 col-12 dh-level-panel" id="levelPanel4" hidden>
                                     <table class="table align-items-center mb-0 mt-1">
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Level 4</td></tr>
                                     </table>
