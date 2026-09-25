@@ -385,6 +385,20 @@
                                     @endif
                                 </div>
                             </div>
+                            {{-- Multi-level dive planning (Pablo, 2026-09-25): a second pill
+                                 row, independent of OC/CC, switching between the existing
+                                 single-depth planner (untouched) and up to 4 depth/time
+                                 levels. Front-end only for now - not wired to a
+                                 MultiLevelDivePlanner call yet, so Calculate still runs the
+                                 single-level flow regardless of this toggle. --}}
+                            <div class="row mt-2">
+                                <div class="col-12 d-flex align-items-center flex-wrap" style="gap: 8px;">
+                                    <div class="dh-channel-picker dh-gas-picker" id="nav-tabs-level" style="margin-bottom: 0;">
+                                        <button type="button" class="dh-channel-chip is-active" data-level-tag="single" id="singleLevelTab">Single Level</button>
+                                        <button type="button" class="dh-channel-chip" data-level-tag="multi" id="multiLevelTab">Multi Level</button>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="row mt-2">
                                 <div class="col-12 d-flex align-items-center flex-wrap" style="gap: 8px;">
                                     <div class="dropdown d-inline-flex align-items-center" id="decoSiteSearchWrap" style="gap: 8px;">
@@ -443,7 +457,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="row mt-3 dh-deco-input-divider" style="padding-bottom: 10px;">
+                            <div class="row mt-3 dh-deco-input-divider" style="padding-bottom: 10px;" id="singleLevelDepthRow">
                                 <div class="col-12">
                                     <label class="dh-gas-label" for="labelDepth" id="maxDepthSliderTitle">Max Depth (ft)</label>
                                     <div class="dh-gas-row">
@@ -619,6 +633,210 @@
                                             </div>
 
                                             <div class="slider-styled" id="ascSlider" data-dh-num-mirror="1"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Multi-level depth/time panels - hidden until "Multi Level" is
+                                 picked above. 4 fixed slots pre-rendered and shown/hidden with
+                                 "hidden", same on-demand pattern as the gas accordion's Add gas
+                                 (dhNextGasSlot/showDecoGasN) rather than cloning DOM at runtime.
+                                 Level 1 is the always-present base level (no delete button),
+                                 matching the gas accordion's non-removable first slot. Order
+                                 utilities put new levels to the LEFT of Level 1 on desktop
+                                 (Pablo: "additional levels are added to the left in desktop")
+                                 while keeping natural top-to-bottom reading order on phones. --}}
+                            <div class="row mt-2" id="multiLevelRow" style="display: none;">
+                                <div class="col-12 d-flex align-items-center justify-content-between flex-wrap mb-2" style="gap: 8px;">
+                                    <span class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7">Set Levels</span>
+                                    <button type="button" class="dh-gas-accordion-add" id="levelBtnAdd">
+                                        <span class="material-icons-round" aria-hidden="true">add</span>
+                                        Add a level
+                                    </button>
+                                </div>
+
+                                <div class="col-lg-3 col-12 dh-level-panel order-1 order-lg-4" id="levelPanel1">
+                                    <table class="table align-items-center mb-0 mt-1">
+                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Level 1</td></tr>
+                                    </table>
+                                    <div class="mt-0">
+                                        <label class="dh-gas-label" for="labelDepthLevel1" id="depthLevel1Title">Depth (ft)</label>
+                                        <div class="dh-gas-row">
+                                            <div id="maxDepthContainerImpLevel1" class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDepthLevel1" value="100">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">ft</span>
+                                            </div>
+                                            <div id="maxDepthContainerMetLevel1" class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDepthLevel1MET" value="30">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">m</span>
+                                            </div>
+                                            <input type="hidden" id="depthSliderLevel1-value" name="depthSliderLevel1-value">
+                                            <div class="slider-styled" id="depthSliderLevel1" data-dh-num-mirror="1"></div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 mb-2">
+                                        <label class="dh-gas-label" for="labelBottomTimeLevel1">Bottom time</label>
+                                        <input type="hidden" id="bottomTimeSliderLevel1-value" name="bottomTimeSliderLevel1-value">
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelBottomTimeLevel1" value="25">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">min</span>
+                                            </div>
+                                            <div class="slider-styled" id="bottomTimeSliderLevel1" data-dh-num-mirror="1"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3 col-12 dh-level-panel order-2 order-lg-3" id="levelPanel2" hidden>
+                                    <table class="table align-items-center mb-0 mt-1">
+                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Level 2</td></tr>
+                                    </table>
+                                    <div class="mt-0">
+                                        <label class="dh-gas-label" for="labelDepthLevel2" id="depthLevel2Title">Depth (ft)</label>
+                                        <div class="dh-gas-row">
+                                            <div id="maxDepthContainerImpLevel2" class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDepthLevel2" value="80">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">ft</span>
+                                            </div>
+                                            <div id="maxDepthContainerMetLevel2" class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDepthLevel2MET" value="24">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">m</span>
+                                            </div>
+                                            <input type="hidden" id="depthSliderLevel2-value" name="depthSliderLevel2-value">
+                                            <div class="slider-styled" id="depthSliderLevel2" data-dh-num-mirror="1"></div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 mb-2">
+                                        <label class="dh-gas-label" for="labelBottomTimeLevel2">Bottom time</label>
+                                        <input type="hidden" id="bottomTimeSliderLevel2-value" name="bottomTimeSliderLevel2-value">
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelBottomTimeLevel2" value="15">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">min</span>
+                                            </div>
+                                            <div class="slider-styled" id="bottomTimeSliderLevel2" data-dh-num-mirror="1"></div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="text-center" style="border: none;">
+                                            <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="level2DeleteButton" onclick="hideLevel2()">
+                                                Delete level
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3 col-12 dh-level-panel order-3 order-lg-2" id="levelPanel3" hidden>
+                                    <table class="table align-items-center mb-0 mt-1">
+                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Level 3</td></tr>
+                                    </table>
+                                    <div class="mt-0">
+                                        <label class="dh-gas-label" for="labelDepthLevel3" id="depthLevel3Title">Depth (ft)</label>
+                                        <div class="dh-gas-row">
+                                            <div id="maxDepthContainerImpLevel3" class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDepthLevel3" value="60">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">ft</span>
+                                            </div>
+                                            <div id="maxDepthContainerMetLevel3" class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDepthLevel3MET" value="18">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">m</span>
+                                            </div>
+                                            <input type="hidden" id="depthSliderLevel3-value" name="depthSliderLevel3-value">
+                                            <div class="slider-styled" id="depthSliderLevel3" data-dh-num-mirror="1"></div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 mb-2">
+                                        <label class="dh-gas-label" for="labelBottomTimeLevel3">Bottom time</label>
+                                        <input type="hidden" id="bottomTimeSliderLevel3-value" name="bottomTimeSliderLevel3-value">
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelBottomTimeLevel3" value="15">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">min</span>
+                                            </div>
+                                            <div class="slider-styled" id="bottomTimeSliderLevel3" data-dh-num-mirror="1"></div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="text-center" style="border: none;">
+                                            <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="level3DeleteButton" onclick="hideLevel3()">
+                                                Delete level
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3 col-12 dh-level-panel order-4 order-lg-1" id="levelPanel4" hidden>
+                                    <table class="table align-items-center mb-0 mt-1">
+                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Level 4</td></tr>
+                                    </table>
+                                    <div class="mt-0">
+                                        <label class="dh-gas-label" for="labelDepthLevel4" id="depthLevel4Title">Depth (ft)</label>
+                                        <div class="dh-gas-row">
+                                            <div id="maxDepthContainerImpLevel4" class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDepthLevel4" value="40">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">ft</span>
+                                            </div>
+                                            <div id="maxDepthContainerMetLevel4" class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelDepthLevel4MET" value="12">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">m</span>
+                                            </div>
+                                            <input type="hidden" id="depthSliderLevel4-value" name="depthSliderLevel4-value">
+                                            <div class="slider-styled" id="depthSliderLevel4" data-dh-num-mirror="1"></div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 mb-2">
+                                        <label class="dh-gas-label" for="labelBottomTimeLevel4">Bottom time</label>
+                                        <input type="hidden" id="bottomTimeSliderLevel4-value" name="bottomTimeSliderLevel4-value">
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <div class="dh-gas-editable">
+                                                    <input type="text" inputmode="numeric" class="dh-gas-input" id="labelBottomTimeLevel4" value="15">
+                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
+                                                </div>
+                                                <span class="dh-gas-unit">min</span>
+                                            </div>
+                                            <div class="slider-styled" id="bottomTimeSliderLevel4" data-dh-num-mirror="1"></div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="text-center" style="border: none;">
+                                            <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="level4DeleteButton" onclick="hideLevel4()">
+                                                Delete level
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -1899,7 +2117,11 @@
             document.getElementById("ascRateContainerMet").style.display = "none";
             document.getElementById("desRateContainerMet").style.display = "none";
             document.getElementById("maxDepthContainerMet").style.setProperty("display", "none", "important");
-            
+            for (var dhU = 1; dhU <= 4; dhU++) {
+                document.getElementById("depthLevel" + dhU + "Title").innerText = "Depth (ft)";
+                document.getElementById("maxDepthContainerMetLevel" + dhU).style.setProperty("display", "none", "important");
+                document.getElementById("maxDepthContainerImpLevel" + dhU).style.setProperty("display", "flex", "important");
+            }
 
             document.getElementById("ascRateContainerImp").style.display = "flex";
             document.getElementById("desRateContainerImp").style.display = "flex";
@@ -1920,6 +2142,11 @@
             document.getElementById("ascRateContainerMet").style.display = "flex";
             document.getElementById("desRateContainerMet").style.display = "flex";
             document.getElementById("maxDepthContainerMet").style.setProperty("display", "flex", "important");
+            for (var dhU = 1; dhU <= 4; dhU++) {
+                document.getElementById("depthLevel" + dhU + "Title").innerText = "Depth (m)";
+                document.getElementById("maxDepthContainerMetLevel" + dhU).style.setProperty("display", "flex", "important");
+                document.getElementById("maxDepthContainerImpLevel" + dhU).style.setProperty("display", "none", "important");
+            }
 
             document.getElementById("ascRateContainerImp").style.display = "none";
             document.getElementById("desRateContainerImp").style.display = "none";
@@ -2097,8 +2324,9 @@
 
                     // Reveal the What-if floating bubble - it only makes sense once a
                     // plan actually exists (Pablo, 2026-09-19: "once decompression was
-                    // calculated...show an icon bubble").
-                    if (document.getElementById('dhWhatIfFab')) document.getElementById('dhWhatIfFab').hidden = false;
+                    // calculated...show an icon bubble"). Not for multi-level yet
+                    // (Pablo, 2026-09-25: "expect no What if? in multi level for now").
+                    if (document.getElementById('dhWhatIfFab') && modeLevelSingleOrMulti !== 'multi') document.getElementById('dhWhatIfFab').hidden = false;
 
                     // update timeLapse tissue data
                     conveyor = response['conveyor'];
@@ -4343,6 +4571,81 @@
         });
     </script>
 
+    {{-- Multi-level: Depth + Bottom Time sliders for each of the 4 levels.
+         Same slider+input sync pattern as depthSlider/bottomTimeSlider
+         above, deliberately WITHOUT depthSlider's gas-composition side
+         effects (bottomGasO2/He, decoGas1 range updates) - those are
+         single-level-only for now, until this is wired to
+         MultiLevelDivePlanner (Pablo, 2026-09-25: front-end/layout only,
+         no backend call yet). Level 1 defaults to the selected site's max
+         depth exactly like the single-level slider does; levels 2-4 get
+         arbitrary shallower defaults since they don't exist until added. --}}
+    <script>
+        var dhLevelDepthSliders = {};
+        var dhLevelTimeSliders = {};
+        var dhLevelDefaultDepth = { 1: (currentSite ? currentSite.maxDepth : 100), 2: 80, 3: 60, 4: 40 };
+
+        for (var dhLevelN = 1; dhLevelN <= 4; dhLevelN++) {
+            (function (n) {
+                var depthEl = document.getElementById('depthSliderLevel' + n);
+                var labelImp = document.getElementById('labelDepthLevel' + n);
+                var labelMet = document.getElementById('labelDepthLevel' + n + 'MET');
+                if (!depthEl || !labelImp || !labelMet) return;
+
+                noUiSlider.create(depthEl, {
+                    start: dhLevelDefaultDepth[n] * FT2M,
+                    connect: [true, false],
+                    range: { 'min': 10 * FT2M, 'max': 450 * FT2M },
+                    step: 1,
+                });
+                depthEl.querySelectorAll('.noUi-value-sub').forEach(function (el) { el.style.display = 'none'; });
+
+                depthEl.noUiSlider.on('update', function (values, handle) {
+                    var v = values[handle];
+                    if (modeImpOrMetric === "imp") {
+                        labelImp.value = parseInt(v);
+                        labelMet.value = parseInt(v * 0.3948);
+                    } else {
+                        labelImp.value = parseInt(v * 3.281);
+                        labelMet.value = parseInt(v);
+                    }
+                });
+                labelImp.addEventListener('change', function () {
+                    var typed = parseInt(labelImp.value);
+                    if (isNaN(typed)) { labelImp.value = Math.round(depthEl.noUiSlider.get()); return; }
+                    depthEl.noUiSlider.set(modeImpOrMetric === "imp" ? typed : typed / 3.281);
+                });
+                labelMet.addEventListener('change', function () {
+                    var typed = parseInt(labelMet.value);
+                    if (isNaN(typed)) { labelMet.value = Math.round(depthEl.noUiSlider.get()); return; }
+                    depthEl.noUiSlider.set(modeImpOrMetric === "imp" ? typed / 0.3948 : typed);
+                });
+                dhLevelDepthSliders[n] = depthEl;
+
+                var timeEl = document.getElementById('bottomTimeSliderLevel' + n);
+                var timeLabel = document.getElementById('labelBottomTimeLevel' + n);
+                if (!timeEl || !timeLabel) return;
+
+                noUiSlider.create(timeEl, {
+                    start: parseInt(timeLabel.value) || 15,
+                    connect: [true, false],
+                    range: { 'min': 5, 'max': 120 },
+                    step: 1,
+                });
+                timeEl.querySelectorAll('.noUi-value-sub').forEach(function (el) { el.style.display = 'none'; });
+                timeEl.noUiSlider.on('update', function (values, handle) {
+                    timeLabel.value = parseInt(values[handle]);
+                });
+                timeLabel.addEventListener('change', function () {
+                    var typed = parseInt(timeLabel.value);
+                    if (isNaN(typed)) { timeLabel.value = Math.round(timeEl.noUiSlider.get()); return; }
+                    timeEl.noUiSlider.set(typed);
+                });
+                dhLevelTimeSliders[n] = timeEl;
+            })(dhLevelN);
+        }
+    </script>
+
     {{-- Scripts slider Deco gas 2 O2, He and switch depth --}}
     <script>
         
@@ -6454,6 +6757,13 @@
                     isSettingDepthFromSite = true;
                     dhSetSiteSearchButton(siteName, levelIcon, levelName);
                     depthSlider.noUiSlider.set(selectedDepth); // Updates slider value
+                    // Multi-level: Level 1 is the dive's starting depth, so a
+                    // site pick sets it the same way it sets the single-level
+                    // slider (Pablo, 2026-09-25: "we will set the depth for
+                    // the first level at the max depth for the site chosen").
+                    if (dhLevelDepthSliders && dhLevelDepthSliders[1]) {
+                        dhLevelDepthSliders[1].noUiSlider.set(selectedDepth);
+                    }
                     isSettingDepthFromSite = false;
                 }
             });
@@ -6606,6 +6916,67 @@
 
             // Initialize with Open Circuit visible
             showOpenCircuit();
+        });
+    </script>
+
+    {{-- Single Level / Multi Level toggle, independent of OC/CC above.
+         Same is-active pill pattern; showSingleLevel()/showMultiLevel()
+         just swap which depth-input block is visible - front-end only,
+         Calculate still always runs the single-level flow for now (Pablo,
+         2026-09-25). --}}
+    <script>
+        let modeLevelSingleOrMulti = "single";
+
+        function showSingleLevel() {
+            modeLevelSingleOrMulti = "single";
+            document.getElementById('singleLevelDepthRow').style.display = '';
+            document.getElementById('multiLevelRow').style.display = 'none';
+            document.getElementById('singleLevelTab').classList.add('is-active');
+            document.getElementById('multiLevelTab').classList.remove('is-active');
+        }
+
+        function showMultiLevel() {
+            modeLevelSingleOrMulti = "multi";
+            document.getElementById('singleLevelDepthRow').style.display = 'none';
+            document.getElementById('multiLevelRow').style.display = '';
+            document.getElementById('multiLevelTab').classList.add('is-active');
+            document.getElementById('singleLevelTab').classList.remove('is-active');
+            // No What if? in multi-level yet (Pablo, 2026-09-25).
+            var fab = document.getElementById('dhWhatIfFab');
+            if (fab) fab.hidden = true;
+        }
+
+        document.getElementById('singleLevelTab').addEventListener('click', showSingleLevel);
+        document.getElementById('multiLevelTab').addEventListener('click', showMultiLevel);
+
+        // On-demand level panels 2-4, same show/hide-a-pre-rendered-slot
+        // pattern as the gas accordion's Add gas (dhNextGasSlot/
+        // showDecoGasN/dhUpdateAddGasButtonVisibility) - Level 1 is
+        // always present and has no delete button.
+        function dhNextLevelSlot() {
+            for (var i = 2; i <= 4; i++) {
+                var panel = document.getElementById('levelPanel' + i);
+                if (panel && panel.hidden) return i;
+            }
+            return null;
+        }
+
+        function dhUpdateAddLevelButtonVisibility() {
+            var btn = document.getElementById('levelBtnAdd');
+            if (btn) btn.style.display = (dhNextLevelSlot() === null) ? 'none' : '';
+        }
+
+        function showLevel2() { document.getElementById('levelPanel2').hidden = false; dhUpdateAddLevelButtonVisibility(); }
+        function hideLevel2() { document.getElementById('levelPanel2').hidden = true; dhUpdateAddLevelButtonVisibility(); }
+        function showLevel3() { document.getElementById('levelPanel3').hidden = false; dhUpdateAddLevelButtonVisibility(); }
+        function hideLevel3() { document.getElementById('levelPanel3').hidden = true; dhUpdateAddLevelButtonVisibility(); }
+        function showLevel4() { document.getElementById('levelPanel4').hidden = false; dhUpdateAddLevelButtonVisibility(); }
+        function hideLevel4() { document.getElementById('levelPanel4').hidden = true; dhUpdateAddLevelButtonVisibility(); }
+
+        document.getElementById('levelBtnAdd').addEventListener('click', function () {
+            var n = dhNextLevelSlot();
+            if (n === null) return;
+            window['showLevel' + n]();
         });
     </script>
 

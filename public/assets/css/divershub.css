@@ -1921,6 +1921,13 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
   .dh-deco-input-divider { border-bottom: none; }
 }
 
+/* Multi-level dive planning (Pablo, 2026-09-25): each level needs to read
+   as its own distinct "frame" even on desktop, unlike
+   .dh-deco-input-divider above (a mobile-only bottom line, no border at
+   all once columned). A real bordered card instead. */
+.dh-level-panel { border: 1px solid var(--dh-line); border-radius: var(--dh-radius); padding: var(--dh-space-3); background: var(--dh-paper); margin-bottom: var(--dh-space-3); }
+@media (min-width: 992px) { .dh-level-panel { margin-bottom: 0; } }
+
 /* "What if...?" scenario toggles, restyled as pill chips instead of the
    old Bootstrap form-switch (Pablo, 2026-09-16: "make them pills, they
    look old"). The checkbox stays real and unstyled (hidden) so every
