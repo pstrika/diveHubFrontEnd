@@ -1928,27 +1928,21 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-level-panel { position: relative; border: 1px solid var(--dh-line); border-radius: var(--dh-radius); padding: var(--dh-space-3); background: var(--dh-paper); margin-bottom: var(--dh-space-3); }
 @media (min-width: 992px) { .dh-level-panel { margin-bottom: 0; } }
 
-/* Small red circular delete affordance in a card's top-right corner,
-   replacing the old full-width "Delete level"/"Delete gas" buttons to
-   save layout space (Pablo, 2026-09-25). Shared by .dh-level-panel
-   (levels 2-4) and .dh-gas-accordion-item (deco gases 2-4) - both are
-   position:relative so this positions against the card, not the page.
-   Kept fully inside the card (not a half-overlapping badge) since
-   .dh-gas-accordion-item clips overflow for its collapsible content. */
+/* Small red circular delete affordance, replacing the old full-width
+   "Delete level"/"Delete gas" buttons to save layout space (Pablo,
+   2026-09-25). Two contexts: inline in a .dh-level-panel's corner
+   (absolute, top-right of the card - levels 2-4), and inline in a gas
+   preset chip row right after "Save this gas to My Gases" (Pablo: "put
+   them to the right of the button 'Save this gas' for each gas" - flows
+   naturally as a chip-row sibling there, not absolutely positioned). */
 .dh-corner-delete {
-  position: absolute; top: 8px; right: 8px; z-index: 5;
-  width: 26px; height: 26px; border-radius: 50%; border: 0;
+  width: 26px; height: 26px; border-radius: 50%; border: 0; flex: 0 0 auto;
   background: var(--dh-danger); color: #fff;
   display: flex; align-items: center; justify-content: center;
   padding: 0; cursor: pointer;
 }
 .dh-corner-delete .material-icons-round { font-size: 15px; }
-.dh-gas-accordion-item { position: relative; }
-/* Extra right padding on the toggle bar only where a corner delete sits
-   over it, so the delete circle doesn't overlap the expand/collapse
-   chevron (Pablo: "first button starting from the right" - the delete
-   circle reads first, chevron just inside it). */
-.dh-gas-accordion-head.has-corner-delete { padding-right: 42px; }
+.dh-level-panel .dh-corner-delete { position: absolute; top: 8px; right: 8px; z-index: 5; }
 
 /* "What if...?" scenario toggles, restyled as pill chips instead of the
    old Bootstrap form-switch (Pablo, 2026-09-16: "make them pills, they
