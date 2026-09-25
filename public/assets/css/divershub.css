@@ -2933,6 +2933,17 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 @media (min-width: 768px) { .dh-blog-featured { grid-template-columns: 1.1fr 1fr; } }
 .dh-blog-featured-img { display: block; aspect-ratio: 16/9; overflow: hidden; background: var(--dh-foam); }
 .dh-blog-featured-img img { width: 100%; height: 100%; object-fit: cover; }
+/* aspect-ratio above only applies on phones, where the image and body
+   stack as separate grid rows and the image needs its own intrinsic
+   height. From 768px up they're side-by-side items IN THE SAME ROW, so
+   aspect-ratio was sizing the image off its own column width alone -
+   shorter than the row the text made, leaving blank space below it
+   (Pablo, 2026-09-25). Dropping it there lets the image stretch (grid's
+   default align-items) to match the row/card height instead. Must come
+   after the base rule above to win the cascade at this breakpoint. */
+@media (min-width: 768px) {
+  .dh-blog-featured-img { aspect-ratio: auto; height: 100%; }
+}
 .dh-blog-featured-body { display: flex; flex-direction: column; justify-content: center; padding: var(--dh-space-4) var(--dh-space-6); }
 .dh-blog-featured-title { font-family: 'Roboto Slab', serif; font-size: 1.5rem; font-weight: 700; color: var(--dh-ink); line-height: 1.25; margin-bottom: 8px; }
 @media (min-width: 768px) { .dh-blog-featured-title { font-size: 1.85rem; } }
