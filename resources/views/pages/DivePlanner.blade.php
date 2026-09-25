@@ -512,8 +512,8 @@
                             </div>
                             <!-- Row times, gradients and asc/des rates -->
                             <div class="row">
-                                <div class="col-lg-4 col-12 dh-deco-input-divider">
-                                    <table class="table align-items-center mb-0 mt-1"> 
+                                <div class="col-lg-4 col-12 dh-deco-input-divider" id="singleLevelTimingCol">
+                                    <table class="table align-items-center mb-0 mt-1">
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Set Bottom time</td> </tr>
                                     </table>
                                     <div class="mt-0">
@@ -548,8 +548,8 @@
                                     </div>
                                 </div>
 
-                                <!-- Col gradients -->                          
-                                <div class="col-lg-4 col-12 dh-deco-input-divider">
+                                <!-- Col gradients -->
+                                <div class="col-lg-4 col-12 dh-deco-input-divider" id="gfCol">
                                     <table class="table align-items-center mb-0 mt-1"> 
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Set Gradient Factors</td> </tr>
                                     </table>
@@ -586,8 +586,8 @@
                                     </div>
                                 </div>
 
-                                <!-- Col ascent descent -->                          
-                                <div class="col-lg-4 col-12 dh-deco-input-divider">
+                                <!-- Col ascent descent -->
+                                <div class="col-lg-4 col-12 dh-deco-input-divider" id="rateCol">
                                     <table class="table align-items-center mb-0 mt-1"> 
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Set des/asc rates</td> </tr>
                                     </table>
@@ -653,11 +653,7 @@
                                  2026-09-25) and stack top-to-bottom in that same order on
                                  phones - both just fall out of plain DOM/source order, no CSS
                                  order utilities needed. --}}
-                            {{-- --bs-gutter-x widened from Bootstrap's 1.5rem default (Pablo,
-                                 2026-09-25: "add some padding in between the levels frames") -
-                                 the bordered .dh-level-panel cards read as too tight together
-                                 at the default gutter. --}}
-                            <div class="row mt-2" id="multiLevelRow" style="display: none; --bs-gutter-x: 2rem;">
+                            <div class="row mt-2" id="multiLevelRow" style="display: none;">
                                 <div class="col-12 mb-2">
                                     <span class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7">Set Levels</span>
                                 </div>
@@ -707,6 +703,9 @@
 
                                 <div class="col-lg-3 col-12" id="levelPanel2" hidden>
                                   <div class="dh-level-panel">
+                                    <button type="button" class="dh-corner-delete" id="level2DeleteButton" onclick="hideLevel2()" aria-label="Delete level 2">
+                                        <span class="material-icons-round" aria-hidden="true">delete</span>
+                                    </button>
                                     <table class="table align-items-center mb-0 mt-1">
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Level 2</td></tr>
                                     </table>
@@ -745,18 +744,14 @@
                                             <div class="slider-styled" id="bottomTimeSliderLevel2" data-dh-num-mirror="1"></div>
                                         </div>
                                     </div>
-                                    <div class="row mt-3">
-                                        <div class="text-center" style="border: none;">
-                                            <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="level2DeleteButton" onclick="hideLevel2()">
-                                                Delete level
-                                            </a>
-                                        </div>
-                                    </div>
                                   </div>
                                 </div>
 
                                 <div class="col-lg-3 col-12" id="levelPanel3" hidden>
                                   <div class="dh-level-panel">
+                                    <button type="button" class="dh-corner-delete" id="level3DeleteButton" onclick="hideLevel3()" aria-label="Delete level 3">
+                                        <span class="material-icons-round" aria-hidden="true">delete</span>
+                                    </button>
                                     <table class="table align-items-center mb-0 mt-1">
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Level 3</td></tr>
                                     </table>
@@ -795,18 +790,14 @@
                                             <div class="slider-styled" id="bottomTimeSliderLevel3" data-dh-num-mirror="1"></div>
                                         </div>
                                     </div>
-                                    <div class="row mt-3">
-                                        <div class="text-center" style="border: none;">
-                                            <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="level3DeleteButton" onclick="hideLevel3()">
-                                                Delete level
-                                            </a>
-                                        </div>
-                                    </div>
                                   </div>
                                 </div>
 
                                 <div class="col-lg-3 col-12" id="levelPanel4" hidden>
                                   <div class="dh-level-panel">
+                                    <button type="button" class="dh-corner-delete" id="level4DeleteButton" onclick="hideLevel4()" aria-label="Delete level 4">
+                                        <span class="material-icons-round" aria-hidden="true">delete</span>
+                                    </button>
                                     <table class="table align-items-center mb-0 mt-1">
                                         <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Level 4</td></tr>
                                     </table>
@@ -843,13 +834,6 @@
                                                 <span class="dh-gas-unit">min</span>
                                             </div>
                                             <div class="slider-styled" id="bottomTimeSliderLevel4" data-dh-num-mirror="1"></div>
-                                        </div>
-                                    </div>
-                                    <div class="row mt-3">
-                                        <div class="text-center" style="border: none;">
-                                            <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="level4DeleteButton" onclick="hideLevel4()">
-                                                Delete level
-                                            </a>
                                         </div>
                                     </div>
                                   </div>
@@ -1002,9 +986,17 @@
 
                                     <!-- Deco 1 -->
                                     <div class="dh-gas-accordion-item" id="gasAccordionItemDeco1" hidden>
-                                        <button type="button" class="dh-gas-accordion-head" data-gas-tab="deco1" id="gasTabBtnDeco1">
+                                        <button type="button" class="dh-gas-accordion-head has-corner-delete" data-gas-tab="deco1" id="gasTabBtnDeco1">
                                             <span class="dh-gas-accordion-head-title">Deco 1</span>
                                             <span class="material-icons-round dh-gas-accordion-chevron" aria-hidden="true">expand_more</span>
+                                        </button>
+                                        {{-- id="containerDeco1OCButton" (not a fresh id) - this delete
+                                             action is OC-only per the existing showOpenCircuit/
+                                             showClosedCircuit toggle further down, which shows/hides
+                                             whatever element carries this id; CC's Deco 1 plays a
+                                             different, non-deletable role there. --}}
+                                        <button type="button" class="dh-corner-delete" id="containerDeco1OCButton" onclick="hideDecoGas1()" aria-label="Delete Deco 1 gas">
+                                            <span class="material-icons-round" aria-hidden="true">delete</span>
                                         </button>
                                         <div class="col-12 dh-gas-accordion-body" id="deco1">
                                             <!-- Slot 1 is Deco 1 in OC, mandatory Bailout in CC - two separate
@@ -1134,13 +1126,6 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="row mt-3" id="containerDeco1OCButton">
-                                                        <div class="text-center" style="border: none;">
-                                                            <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="deco1DeleteButton" onclick="hideDecoGas1()">
-                                                                Delete gas
-                                                            </a>
-                                                        </div>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1148,9 +1133,12 @@
 
                                     <!-- Deco 2 -->
                                     <div class="dh-gas-accordion-item" id="gasAccordionItemDeco2" hidden>
-                                        <button type="button" class="dh-gas-accordion-head" data-gas-tab="deco2" id="gasTabBtnDeco2">
+                                        <button type="button" class="dh-gas-accordion-head has-corner-delete" data-gas-tab="deco2" id="gasTabBtnDeco2">
                                             <span class="dh-gas-accordion-head-title">Deco 2</span>
                                             <span class="material-icons-round dh-gas-accordion-chevron" aria-hidden="true">expand_more</span>
+                                        </button>
+                                        <button type="button" class="dh-corner-delete" id="deco2DeleteButton" onclick="hideDecoGas2()" aria-label="Delete Deco 2 gas">
+                                            <span class="material-icons-round" aria-hidden="true">delete</span>
                                         </button>
                                         <div class="col-12 dh-gas-accordion-body" id="deco2">
                                             <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPreset2" data-slot="2">
@@ -1241,13 +1229,6 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="row mt-3">
-                                                        <div class="text-center" style="border: none;">
-                                                            <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="deco2DeleteButton" onclick="hideDecoGas2()">
-                                                                Delete gas
-                                                            </a>
-                                                        </div>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1255,9 +1236,12 @@
 
                                     <!-- Deco 3 -->
                                     <div class="dh-gas-accordion-item" id="gasAccordionItemDeco3" hidden>
-                                        <button type="button" class="dh-gas-accordion-head" data-gas-tab="deco3" id="gasTabBtnDeco3">
+                                        <button type="button" class="dh-gas-accordion-head has-corner-delete" data-gas-tab="deco3" id="gasTabBtnDeco3">
                                             <span class="dh-gas-accordion-head-title">Deco 3</span>
                                             <span class="material-icons-round dh-gas-accordion-chevron" aria-hidden="true">expand_more</span>
+                                        </button>
+                                        <button type="button" class="dh-corner-delete" id="deco3DeleteButton" onclick="hideDecoGas3()" aria-label="Delete Deco 3 gas">
+                                            <span class="material-icons-round" aria-hidden="true">delete</span>
                                         </button>
                                         <div class="col-12 dh-gas-accordion-body" id="deco3">
                                             <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPreset3" data-slot="3">
@@ -1348,13 +1332,6 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="row mt-3">
-                                                        <div class="text-center" style="border: none;">
-                                                            <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="deco3DeleteButton" onclick="hideDecoGas3()">
-                                                                Delete gas
-                                                            </a>
-                                                        </div>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1362,9 +1339,12 @@
 
                                     <!-- Deco 4 -->
                                     <div class="dh-gas-accordion-item" id="gasAccordionItemDeco4" hidden>
-                                        <button type="button" class="dh-gas-accordion-head" data-gas-tab="deco4" id="gasTabBtnDeco4">
+                                        <button type="button" class="dh-gas-accordion-head has-corner-delete" data-gas-tab="deco4" id="gasTabBtnDeco4">
                                             <span class="dh-gas-accordion-head-title">Deco 4</span>
                                             <span class="material-icons-round dh-gas-accordion-chevron" aria-hidden="true">expand_more</span>
+                                        </button>
+                                        <button type="button" class="dh-corner-delete" id="deco4DeleteButton" onclick="hideDecoGas4()" aria-label="Delete Deco 4 gas">
+                                            <span class="material-icons-round" aria-hidden="true">delete</span>
                                         </button>
                                         <div class="col-12 dh-gas-accordion-body" id="deco4">
                                             <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPreset4" data-slot="4">
@@ -1455,13 +1435,6 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="row mt-3">
-                                                        <div class="text-center" style="border: none;">
-                                                            <a type="button" class="btn btn-info mt-0 w-100 mb-0" id="deco4DeleteButton" onclick="hideDecoGas4()">
-                                                                Delete gas
-                                                            </a>
-                                                        </div>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -6856,7 +6829,9 @@
 
                 // hide CC Bailout and show elements from OC
                 containerDeco1OCInfo.style.display = "block";
-                containerDeco1OCButton.style.display = "block";
+                // "flex", not "block" - this is now the .dh-corner-delete circle
+                // (Pablo, 2026-09-25), which needs flex to center its icon.
+                containerDeco1OCButton.style.display = "flex";
                 containerDeco1CCInfo.style.display = "none";
                 // Diluent/Bailout presets don't apply to OC - swap slot 1
                 // back to the Deco 1 preset menu (Pablo, 2026-09-17); Bottom
@@ -6956,6 +6931,14 @@
             document.getElementById('multiLevelRow').style.display = 'none';
             document.getElementById('singleLevelTab').classList.add('is-active');
             document.getElementById('multiLevelTab').classList.remove('is-active');
+            // The overall Bottom time/Surface time column comes back, and
+            // GF/rate return to their original col-lg-4 width (Pablo,
+            // 2026-09-25).
+            document.getElementById('singleLevelTimingCol').style.display = '';
+            document.getElementById('gfCol').classList.remove('col-lg-6');
+            document.getElementById('gfCol').classList.add('col-lg-4');
+            document.getElementById('rateCol').classList.remove('col-lg-6');
+            document.getElementById('rateCol').classList.add('col-lg-4');
         }
 
         function showMultiLevel() {
@@ -6967,6 +6950,17 @@
             // No What if? in multi-level yet (Pablo, 2026-09-25).
             var fab = document.getElementById('dhWhatIfFab');
             if (fab) fab.hidden = true;
+            // The overall Bottom time/Surface time column doesn't apply
+            // once every level has its own bottom time (Pablo, 2026-09-25:
+            // "the bottom time slider at the top does not make sense
+            // because each level will have its own bottom time. The
+            // surface time slider is not needed either") - hide it and
+            // let GF/rate split the freed width evenly.
+            document.getElementById('singleLevelTimingCol').style.display = 'none';
+            document.getElementById('gfCol').classList.remove('col-lg-4');
+            document.getElementById('gfCol').classList.add('col-lg-6');
+            document.getElementById('rateCol').classList.remove('col-lg-4');
+            document.getElementById('rateCol').classList.add('col-lg-6');
         }
 
         document.getElementById('singleLevelTab').addEventListener('click', showSingleLevel);
