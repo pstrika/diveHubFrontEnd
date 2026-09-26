@@ -2647,6 +2647,32 @@
             }
         }
 
+        // Undoes a manual collapse - shared by the toggle button's own
+        // "show" click and by dhSetDecoTableCollapseBtnVisible(false) below.
+        // Without the latter, a table collapsed on a wide viewport (button
+        // visible) could get stranded hidden with no way back once the
+        // button itself disappears - e.g. the button is lg+-only, so
+        // rotating an iPad from landscape to portrait mid-session hides the
+        // button while the table stays collapsed (Pablo, 2026-09-26: "we
+        // risk not being able to see the table if the user collapsed and
+        // then change the viewport").
+        function dhForceShowDecoTable() {
+            var tableCol = document.getElementById('decoTableCol');
+            var chartCol = document.getElementById('profileChartContainer');
+            var icon = document.getElementById('dhToggleDecoTableIcon');
+            var btn = document.getElementById('dhToggleDecoTableBtn');
+            if (!tableCol || !chartCol) return;
+            chartCol.dataset.tableCollapsed = 'false';
+            tableCol.style.display = '';
+            chartCol.className = chartCol.dataset.naturalClass || 'col-lg-6 col-12';
+            if (icon) icon.textContent = 'left_panel_close';
+            if (btn) {
+                btn.title = 'Collapse the decompression table';
+                btn.setAttribute('aria-label', btn.title);
+            }
+            if (profileChartInstance) profileChartInstance.resize();
+        }
+
         // A pure-NDL dive has no table to collapse in the first place - the
         // chart is already col-12 via dhSetChartColClass above (Pablo,
         // 2026-09-25: "if there's no deco on the dive, we just show the
@@ -2658,7 +2684,12 @@
             var btn = document.getElementById('dhToggleDecoTableBtn');
             if (!btn) return;
             btn.classList.toggle('d-lg-inline-flex', visible);
-            if (!visible) btn.hidden = true; else btn.hidden = false;
+            if (!visible) {
+                btn.hidden = true;
+                dhForceShowDecoTable();
+            } else {
+                btn.hidden = false;
+            }
         }
 
         (function () {
@@ -2670,11 +2701,12 @@
             btn.addEventListener('click', function () {
                 var collapsed = chartCol.dataset.tableCollapsed === 'true';
                 collapsed = !collapsed;
-                chartCol.dataset.tableCollapsed = collapsed ? 'true' : 'false';
-                tableCol.style.display = collapsed ? 'none' : '';
-                chartCol.className = collapsed ? 'col-lg-12 col-12' : (chartCol.dataset.naturalClass || 'col-lg-6 col-12');
-                icon.textContent = collapsed ? 'left_panel_open' : 'left_panel_close';
-                btn.title = collapsed ? 'Show the decompression table' : 'Collapse the decompression table';
+                if (!collapsed) { dhForceShowDecoTable(); return; }
+                chartCol.dataset.tableCollapsed = 'true';
+                tableCol.style.display = 'none';
+                chartCol.className = 'col-lg-12 col-12';
+                icon.textContent = 'left_panel_open';
+                btn.title = 'Show the decompression table';
                 btn.setAttribute('aria-label', btn.title);
                 // The chart canvas is sized by its wrapper's width - it
                 // won't pick up the new, wider column on its own.
@@ -6702,6 +6734,11 @@
                 return modeImpOrMetric === 'imp' ? Math.round(depthFt) : Math.round(depthFt / 33 * 10);
             }
             function fmtTimeMin(minutes) { return Math.ceil(minutes); }
+            // PPO2 comes back from the API at whatever precision the engine
+            // computed it at (e.g. 1.3218) - always round to 2 decimals for
+            // display (Pablo, 2026-09-26: "all PPO2 should have only two
+            // decimals - you are showing 4 in the tables").
+            function fmtPpo2(ppo2) { return parseFloat(ppo2).toFixed(2); }
             function fmtGasCell(row) {
                 if (row.mode === 'CC' || !row.gas) {
                     return document.getElementById('labelSetpoint') ? document.getElementById('labelSetpoint').value : '-';
@@ -6715,27 +6752,47 @@
             // (every row already says so via its gas cell) - only a real
             // bailout table, where mode genuinely changes mid-table, needs it.
             var showModeColumn = hasMixedMode;
+            var showGasColumn = !isPureCC;
 
-            var theadCells = '<th class="phase-column" style="width: 6%;"></th>';
-            if (showModeColumn) theadCells += '<th class="text-xs" style="width: 7%; padding-left: 0px; text-align:center;">Mode</th>';
-            theadCells += '<th class="depth-column text-sm" style="padding-left: 0px; padding-right:0px;">Depth</th>';
-            theadCells += '<th class="text-sm" style="padding-left: 0px; padding-right:0px;">Time</th>';
-            theadCells += '<th class="text-sm" style="padding-left: 0px; padding-right:0px;">RT</th>';
-            if (!isPureCC) theadCells += '<th class="text-sm" style="padding-left: 0px; padding-right:0px; text-align:center;">Gas</th>';
-            theadCells += '<th class="text-sm hide-on-mobile" style="padding-left: 0px; padding-right:0px;">PPO&#8322;</th>';
-            theadCells += '<th class="text-sm hide-on-mobile" style="padding-left: 0px; padding-right:0px;">GF</th>';
+            // Column widths, narrowest for Time/RT/GF so Gas/PPO2 (the
+            // columns that actually carry the interesting content) get more
+            // room (Pablo, 2026-09-26: "narrow the cols time, RT, and GF to
+            // give more room to gas [and] PPO2") - one width set per column
+            // combination so the numbers always add up to 100%.
+            var w = showModeColumn
+                ? { phase: 6, mode: 7, depth: 10, time: 7, rt: 7, gas: 34, ppo2: 18, gf: 11 }
+                : showGasColumn
+                    ? { phase: 6, depth: 11, time: 8, rt: 8, gas: 36, ppo2: 19, gf: 12 }
+                    : { phase: 8, depth: 15, time: 10, rt: 10, ppo2: 33, gf: 24 };
+
+            // Every header shares the same font/size and is centered (Pablo,
+            // 2026-09-26: "center all the titles...make sure they all have
+            // the same font and size" - Mode used to be text-xs while every
+            // other header was text-sm).
+            function th(label, pct, extraClass) {
+                return '<th class="text-sm text-center' + (extraClass ? ' ' + extraClass : '') + '" style="width: ' + pct + '%; padding-left: 0px; padding-right: 0px;">' + label + '</th>';
+            }
+
+            var theadCells = '<th class="phase-column" style="width: ' + w.phase + '%;"></th>';
+            if (showModeColumn) theadCells += th('Mode', w.mode);
+            theadCells += th('Depth', w.depth, 'depth-column');
+            theadCells += th('Time', w.time);
+            theadCells += th('RT', w.rt);
+            if (showGasColumn) theadCells += th('Gas', w.gas);
+            theadCells += th('PPO&#8322;', w.ppo2, 'hide-on-mobile');
+            theadCells += th('GF', w.gf, 'hide-on-mobile');
 
             var tableHTML = '<div style="overflow: auto;"><table class="table table-striped table-sm" style="min-width:300px; width: 100%; table-layout: fixed;"><thead><tr>'
                 + theadCells + '</tr></thead><tbody>';
 
             rows.forEach(function (row) {
                 tableHTML += '<tr><td class="text-info">' + getPhaseIcon(row.phase) + '</td>';
-                if (showModeColumn) tableHTML += '<td class="text-xs" style="padding-left: 0px;">' + row.mode + '</td>';
+                if (showModeColumn) tableHTML += '<td class="text-sm" style="padding-left: 0px;">' + row.mode + '</td>';
                 tableHTML += '<td>' + fmtDepth(row.depth) + '</td>';
                 tableHTML += '<td class="text-sm text-left">' + fmtTimeMin(row.time) + '</td>';
                 tableHTML += '<td class="text-sm">' + fmtTimeMin(row.runtime) + '</td>';
-                if (!isPureCC) tableHTML += '<td class="text-xs">' + fmtGasCell(row) + '</td>';
-                tableHTML += '<td class="text-sm fw-bold hide-on-mobile">' + row.ppo2 + '</td>';
+                if (showGasColumn) tableHTML += '<td class="text-sm">' + fmtGasCell(row) + '</td>';
+                tableHTML += '<td class="text-sm fw-bold hide-on-mobile">' + fmtPpo2(row.ppo2) + '</td>';
                 tableHTML += '<td class="text-sm hide-on-mobile">' + (row.gf * 100).toFixed(0) + '%</td></tr>';
             });
             tableHTML += '</tbody></table></div>';
