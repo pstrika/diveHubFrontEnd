@@ -7036,15 +7036,21 @@
             return max;
         }
 
-        // Highest END reached anywhere in the dive. Deliberately NOT
-        // computed here - the backend is adding this per-point (Pablo,
-        // 2026-09-26: "probably its a good idea that the backend calculates
-        // the END for all points of the dive so we don't calculate ENDs on
-        // the front end"). Returns null (no END-based warning shown) until
-        // wired to whatever field/shape they ship - see the message to
-        // dh-back-end for the exact ask.
+        // Highest END (feet) reached anywhere in the dive - backend-computed
+        // now, per profile step, same "value at this point's ending state"
+        // convention ppo2/gf already use (Pablo, 2026-09-26: "probably its
+        // a good idea that the backend calculates the END for all points of
+        // the dive so we don't calculate ENDs on the front end"). Can be
+        // negative for a helium-rich mix near the surface - that's the
+        // formula's own behavior, not a bug, so no clamping here.
         function dhComputeMaxEnd(scenario) {
-            return null;
+            if (!scenario || !Array.isArray(scenario.profile)) return null;
+            var max = null;
+            scenario.profile.forEach(function (step) {
+                if (typeof step.end !== 'number') return;
+                if (max === null || step.end > max) max = step.end;
+            });
+            return max;
         }
 
         // Red/yellow safety pills below the Run time/Deco time pills -
