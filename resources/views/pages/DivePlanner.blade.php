@@ -163,6 +163,28 @@
                     .hide-on-mobile {
                         display: none;
                     }
+                    /* PPO2 used to be hide-on-mobile too, hiding it entirely on
+                       phones (Pablo, 2026-09-26: "the deco table is hiding the
+                       PPO2. You need to show it...squeeze the gas column to
+                       make it fit") - it's no longer given that class (see
+                       dhRenderDecoTableV2), and Gas gets narrower here, on
+                       phones only, to make room. Desktop widths (set inline
+                       per table) are untouched. */
+                    .dh-decotable-gas-col { width: 24% !important; }
+                    .dh-decotable-ppo2-col { width: 28% !important; }
+
+                    /* Safety warning pills (high PPO2/END) go full-width on
+                       phones instead of squeezing two into one row (Pablo,
+                       2026-09-26: "in mobile let them be col-12"). The
+                       container needs flex-wrap too - flex-basis:100% alone
+                       just shrinks every pill to fit one row instead of
+                       stacking them (nowrap is the flex default). */
+                    #dhSafetyWarningsContainer {
+                        flex-wrap: wrap;
+                    }
+                    #dhSafetyWarningsContainer .dh-deco-summary-pill {
+                        flex: 1 1 100%;
+                    }
                 }
 
                 #tissueChart {
@@ -6771,13 +6793,15 @@
             // display (Pablo, 2026-09-26: "all PPO2 should have only two
             // decimals - you are showing 4 in the tables").
             function fmtPpo2(ppo2) { return parseFloat(ppo2).toFixed(2); }
-            // A PPO2 over 1.6 ATA gets its own red pill right in the table,
+            // A PPO2 over 1.65 ATA gets its own red pill right in the table,
             // not just plain bold text (Pablo, 2026-09-26: "if any PPO2 is
-            // larger than 1.6, show it in the table as a red pill with
-            // white fonts").
+            // larger than 1.6, show it in the table as a red pill" - raised
+            // to 1.65 the same day once real dives showed normal deco-gas
+            // switches briefly touching 1.6 itself, which isn't unsafe on
+            // its own).
             function fmtPpo2Cell(ppo2) {
                 var val = fmtPpo2(ppo2);
-                if (parseFloat(val) <= 1.6) return val;
+                if (parseFloat(val) <= 1.65) return val;
                 return '<span class="dh-gas-result-pill is-compact is-danger">'
                     + '<span class="material-icons-round" aria-hidden="true" style="font-size: 13px;">warning</span> ' + val + '</span>';
             }
@@ -6827,8 +6851,8 @@
             theadCells += th('Depth', w.depth, 'depth-column');
             theadCells += th('Time', w.time);
             theadCells += th('RT', w.rt);
-            if (showGasColumn) theadCells += th('Gas', w.gas);
-            theadCells += th('PPO&#8322;', w.ppo2, 'hide-on-mobile');
+            if (showGasColumn) theadCells += th('Gas', w.gas, 'dh-decotable-gas-col');
+            theadCells += th('PPO&#8322;', w.ppo2, 'dh-decotable-ppo2-col');
             theadCells += th('GF', w.gf, 'hide-on-mobile');
 
             var tableHTML = '<div style="overflow: auto;"><table class="table table-striped table-sm" style="min-width:300px; width: 100%; table-layout: fixed;"><thead><tr>'
@@ -6841,7 +6865,7 @@
                 tableHTML += '<td class="text-sm text-left">' + fmtTimeMin(row.time) + '</td>';
                 tableHTML += '<td class="text-sm">' + fmtTimeMin(row.runtime) + '</td>';
                 if (showGasColumn) tableHTML += '<td class="text-sm">' + fmtGasCell(row) + '</td>';
-                tableHTML += '<td class="text-sm fw-bold hide-on-mobile">' + fmtPpo2Cell(row.ppo2) + '</td>';
+                tableHTML += '<td class="text-sm fw-bold">' + fmtPpo2Cell(row.ppo2) + '</td>';
                 tableHTML += '<td class="text-sm hide-on-mobile">' + (row.gf * 100).toFixed(0) + '%</td></tr>';
             });
             tableHTML += '</tbody></table></div>';
@@ -7068,7 +7092,10 @@
             var warnings = [];
 
             var maxPpo2 = dhComputeMaxPpo2(scenario.profile);
-            if (maxPpo2 > 1.6) {
+            // Raised from 1.6 to 1.65 the same day this shipped - real dives
+            // showed normal deco-gas switches briefly touching 1.6 itself,
+            // which isn't actually unsafe on its own (Pablo, 2026-09-26).
+            if (maxPpo2 > 1.65) {
                 warnings.push({ level: 'danger', text: 'PPO₂ above 1.6 (' + maxPpo2.toFixed(2) + ')' });
             }
 
