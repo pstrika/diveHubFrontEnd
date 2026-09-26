@@ -455,6 +455,13 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-pill-avg  { color: var(--dh-avg);  border-color: var(--dh-avg);  background: var(--dh-avg-bg); }
 .dh-pill-poor { color: var(--dh-poor); border-color: var(--dh-poor); background: var(--dh-poor-bg); }
 
+/* Saved-dive shape pills in the Deco Planner's "Open a dive" list (Pablo,
+   2026-09-25: "OC: theme dark blue - CC: light dark blue - Single Level:
+   theme dark blue - Multi Level: theme light blue"). */
+.dh-pill-oc, .dh-pill-single { color: #fff; border-color: var(--dh-deep); background: var(--dh-deep); }
+.dh-pill-cc                  { color: #fff; border-color: var(--dh-sea);  background: var(--dh-sea); }
+.dh-pill-multi                { color: #fff; border-color: var(--dh-shallow); background: var(--dh-shallow); }
+
 /* Group public/private visibility badge - dark blue for Public, light blue
    for Private (Pablo, 2026-09-23), reusing the same solid-fill pill look
    as the auto-add rule's AND/OR pills for a consistent "status badge" feel. */
@@ -1908,6 +1915,11 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-deco-header-btn.is-success { background: var(--dh-good); border-color: var(--dh-good); }
 .dh-deco-header-btn.is-error { background: var(--dh-danger); border-color: var(--dh-danger); }
 .dh-deco-header-btn[disabled] { opacity: .7; cursor: default; }
+/* Registered-account-only header action (Export PDF, Pablo, 2026-09-25) -
+   still clickable (opens the guest sign-up modal), just muted like the
+   disabled state above so it doesn't read as a normal, immediately-usable
+   action. */
+.dh-deco-header-btn.is-locked { opacity: .6; }
 
 /* The Inputs card's grey row separators only earn their keep on a phone,
    where each slider group is its own full-width block stacked vertically -
@@ -1927,6 +1939,12 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    all once columned). A real bordered card instead. */
 .dh-level-panel { position: relative; border: 1px solid var(--dh-line); border-radius: var(--dh-radius); padding: var(--dh-space-3); background: var(--dh-paper); margin-bottom: var(--dh-space-3); }
 @media (min-width: 992px) { .dh-level-panel { margin-bottom: 0; } }
+/* Mobile stacks these full-width (Pablo: "in Mobile they look great") -
+   only tighten the horizontal gap between panels at tablet/desktop
+   widths, where Bootstrap's default 1.5rem row gutter left them a bit
+   too far apart (Pablo, 2026-09-25: "in desktop and iPad I want them
+   slightly closer"). */
+@media (min-width: 768px) { #multiLevelRow { --bs-gutter-x: 1rem; } }
 
 /* Small red circular delete affordance, replacing the old full-width
    "Delete level"/"Delete gas" buttons to save layout space (Pablo,
@@ -2333,6 +2351,22 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-channel-chip.is-sms:hover:not(.is-active) { border-color: var(--dh-sea); color: var(--dh-sea); }
 .dh-channel-chip.is-whatsapp:hover:not(.is-active) { border-color: var(--dh-good); color: var(--dh-good); }
 .dh-channel-chip.is-email:hover:not(.is-active) { border-color: var(--dh-avg); color: var(--dh-avg); }
+/* Registered-account-only chip (Multi Level, Pablo, 2026-09-25) - visible
+   and clickable (opens the guest sign-up modal), just visually muted so
+   it doesn't read as a normal, immediately-usable option. */
+.dh-channel-chip.is-locked { background: var(--dh-foam); color: var(--dh-muted); }
+.dh-channel-chip.is-locked:hover { border-color: var(--dh-line); color: var(--dh-muted); }
+
+/* Advanced settings gear, next to "Open a dive" (Pablo, 2026-09-25) - a
+   round icon button on the light page background, same round-chip
+   footprint as .dh-corner-delete but blue (an action, not a delete). */
+.dh-gear-btn {
+  width: 30px; height: 30px; border-radius: 50%; border: 0; flex: 0 0 auto;
+  background: var(--dh-sea); color: #fff; display: inline-flex; align-items: center; justify-content: center;
+  padding: 0; cursor: pointer;
+}
+.dh-gear-btn:hover { background: var(--dh-deep); }
+.dh-gear-btn .material-icons-round { font-size: 17px; }
 
 /* Save GF/setpoint pill on the Search dive sites row (Pablo, 2026-09-19:
    "They need to be new pills. Put them at the line with search dive sites
@@ -2727,12 +2761,32 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 
 /* Slider fill/handle in the theme's blue instead of Material Dashboard's
    default purple (Pablo: "slider colors should follow theme") - applies
-   to every slider on this page, not just the ones redone above, since
-   it's a pure color swap with no layout risk. */
+   to every slider using this shared class across DivePlanner, GasPlanning
+   ("Best gases") and SiteDetails' own Best Gases section alike, since
+   it's a pure color swap with no layout risk. Handle stays a clearly
+   white circle at rest (Pablo, 2026-09-25: "mine [the SAC slider] have a
+   white color, yours are all the same theme blue") and turns a lighter
+   blue - not darker - while hovered or actively dragged ("they also
+   change to a lighter blue when you hold them"). */
 .slider-styled.noUi-target { background-color: var(--dh-line); }
 .slider-styled .noUi-connect { background: var(--dh-sea); }
-.slider-styled .noUi-handle { border-color: var(--dh-sea); }
-.slider-styled .noUi-handle:hover { border-color: var(--dh-deep); }
+/* .slider-styled.noUi-horizontal (both classes land on the same element -
+   ours from the markup, noUi-horizontal added by the JS lib), not just
+   .slider-styled, to unambiguously outrank material-dashboard.css's own
+   .noUi-horizontal .noUi-handle sizing rule. Kept at the original 14px
+   size (Pablo, 2026-09-25: "the handles are also bigger now, I don't
+   like this...revert to the smaller handles"). Solid theme blue fill,
+   not white - matching native accent-color range inputs turned out to
+   render inconsistently across browsers, so a plain solid-color handle
+   is the reliable choice (Pablo: "change the color of the handle to
+   blue?"). Lighter blue, not darker, while hovered/dragged. */
+.slider-styled.noUi-horizontal .noUi-handle {
+  background-color: var(--dh-sea); border: 1px solid var(--dh-sea);
+}
+.slider-styled.noUi-horizontal .noUi-handle:hover,
+.slider-styled.noUi-horizontal .noUi-handle.noUi-active {
+  background-color: var(--dh-shallow); border-color: var(--dh-shallow);
+}
 
 /* Deco Planner gas selector, v2: a vertical accordion instead of horizontal
    tabs (Pablo, 2026-09-16: tabs "go out of screen" with 4 gases and aren't
@@ -2779,6 +2833,11 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-btn-icon .material-icons-round { font-size: 18px; }
 .dh-btn-icon.is-success { background: var(--dh-good); color: #fff; }
 .dh-btn-icon.is-error { background: var(--dh-danger); color: #fff; }
+/* Same accent as the "What if...?" bubble on this same chart card (Pablo,
+   2026-09-25: "use the same bg color as the what if...? bubble") - the
+   collapse-the-deco-table toggle. */
+.dh-btn-icon-accent { background: var(--dh-sea); color: #fff; }
+.dh-btn-icon-accent:hover { background: var(--dh-deep); }
 /* Same icon button, but living on a light card body instead of the dark
    Inputs header - the gas cards' own save-this-gas button. */
 .dh-gas-preset-row .dh-btn-icon { background: var(--dh-paper); color: var(--dh-muted); border: 1px solid var(--dh-line); }

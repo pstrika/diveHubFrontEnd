@@ -173,10 +173,18 @@
                 
 
                 #tissueChart {
-                    background: linear-gradient(to right, 
-                                                green 0% 33%, 
-                                                yellow 33% 95%, 
-                                                red 95% 100%);
+                    /* Boundaries match the chart's own data scale exactly -
+                       100/300 (ambient) and 295/300 (M-value) - rather than
+                       the eyeballed 33%/95% this used to be (Pablo,
+                       2026-09-25: "extend the green/yellow boundary to that
+                       exact position...isn't that what the boundary is
+                       supposed to be?"). The separate dashed "Ambient" line
+                       annotation is gone now that the background itself
+                       marks the real boundary precisely. */
+                    background: linear-gradient(to right,
+                                                #72D550 0% 33.3333%,
+                                                #FBFF5F 33.3333% 98.3333%,
+                                                #B7211C 98.3333% 100%);
                     border-radius: 0px; /* Optional rounded corners */
                 }
 
@@ -296,6 +304,49 @@
                 </div>
             </div>
 
+            {{-- Advanced settings (Pablo, 2026-09-25) - registered users
+                 only (the gear button that opens this is itself hidden for
+                 guests). Both toggles always come back to their safe
+                 default (guardrails on) on a fresh page load - neither is
+                 persisted. --}}
+            @if(auth()->user()->isNotGuest())
+            <div class="modal fade" id="modalAdvancedSettings" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h6 class="modal-title font-weight-normal">Advanced settings</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-danger d-flex align-items-start" role="alert" style="gap: 8px; font-size: .82rem;">
+                                <span class="material-icons-round" aria-hidden="true">warning</span>
+                                <span>Turning off safety guardrails can let you configure dangerous diving conditions. Only change these if you understand the risk.</span>
+                            </div>
+
+                            <div class="form-check form-switch ps-0 mb-3">
+                                <input class="form-check-input ms-auto" type="checkbox" id="dhToggleRecommendGases" checked>
+                                <label class="form-check-label text-body ms-3 mb-0" for="dhToggleRecommendGases">
+                                    Recommend best gases
+                                    <div class="text-secondary text-xs">Auto-fill bottom gas, diluent and bailout as you move the depth sliders.</div>
+                                </label>
+                            </div>
+
+                            <div class="form-check form-switch ps-0">
+                                <input class="form-check-input ms-auto" type="checkbox" id="dhToggleRemoveGuards">
+                                <label class="form-check-label text-body ms-3 mb-0" for="dhToggleRemoveGuards">
+                                    Remove safety guards
+                                    <div class="text-secondary text-xs">Allow diluent PPO&#8322; up to 2.0 ATA and fully independent GF Low/High.</div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             {{-- How to overlay a real dive log (Pablo, 2026-09-22), opened from
                  the small "?" next to "Overlay your actual dive log" below the
                  profile chart. Static instructions, no JS state needed beyond
@@ -382,6 +433,16 @@
                                             <span class="material-icons-round" aria-hidden="true" style="font-size: 15px; vertical-align: -3px;">folder_open</span>
                                             Open a dive
                                         </button>
+                                        {{-- Advanced settings - registered users only, not even shown
+                                             to guests (Pablo, 2026-09-25: "This is ONLY available for
+                                             registered users. For guest, don't even show the gear
+                                             icon"), unlike the lock-badge treatment used for Multi
+                                             Level/Export PDF - these settings can create genuinely
+                                             dangerous configurations, so there's no upsell value in
+                                             advertising them to a guest. --}}
+                                        <button type="button" class="dh-gear-btn" id="dhAdvancedSettingsBtn" title="Advanced settings" aria-label="Advanced settings" style="margin-left: 6px;">
+                                            <span class="material-icons-round" aria-hidden="true">settings</span>
+                                        </button>
                                     @endif
                                 </div>
                             </div>
@@ -395,7 +456,18 @@
                                 <div class="col-12 d-flex align-items-center flex-wrap" style="gap: 8px;">
                                     <div class="dh-channel-picker dh-gas-picker" id="nav-tabs-level" style="margin-bottom: 0;">
                                         <button type="button" class="dh-channel-chip is-active" data-level-tag="single" id="singleLevelTab">Single Level</button>
-                                        <button type="button" class="dh-channel-chip" data-level-tag="multi" id="multiLevelTab">Multi Level</button>
+                                        {{-- Guests can plan single-level dives freely, but multi-level
+                                             (and PDF export, see the Export PDF button below) are
+                                             registered-account features - a visible lock badge rather
+                                             than hiding the tab outright, so guests discover it exists
+                                             (Pablo, 2026-09-25: "locking the multilevel to registered
+                                             users only...a small badge with a lock"). --}}
+                                        <button type="button" class="dh-channel-chip @if(auth()->user()->isGuest()) is-locked @endif" data-level-tag="multi" id="multiLevelTab">
+                                            Multi Level
+                                            @if(auth()->user()->isGuest())
+                                                <span class="material-icons-round" aria-label="Account required" style="font-size: 14px; margin-left: 4px; vertical-align: -2px;">lock</span>
+                                            @endif
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -539,7 +611,6 @@
                                             <div class="dh-gas-input-wrap">
                                                 <div class="dh-gas-editable">
                                                     <input type="text" inputmode="decimal" class="dh-gas-input" id="labelSurfaceTime" value="1">
-                                                    <span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>
                                                 </div>
                                                 <span class="dh-gas-unit">hrs</span>
                                             </div>
@@ -1518,8 +1589,18 @@
                                 <h3>Decompression plan</h3>
                                 <span class="dh-deco-section-head-meta">Model <span id="labelModel">ZL</span> &middot; GFs <span id="labelGFs">40/70</span></span>
                             </div>
-                            <button type="button" class="dh-deco-header-btn dh-deco-searchrow-pill" id="exportDecoPlanPdfBtn" title="Export this decompression plan to PDF">
+                            {{-- PDF export is a registered-account feature too (Pablo,
+                                 2026-09-25: "Same thing for the export to pdf...I don't
+                                 want anonymous users to be able to print plans from the
+                                 platform") - the PDF itself is now attributed to the
+                                 signed-in user (see dhBuildPdfPage's "created on...by"
+                                 line), so an anonymous export wouldn't have anyone to
+                                 attribute it to anyway. --}}
+                            <button type="button" class="dh-deco-header-btn dh-deco-searchrow-pill @if(auth()->user()->isGuest()) is-locked @endif" id="exportDecoPlanPdfBtn" title="Export this decompression plan to PDF">
                                 <span class="material-icons-round" aria-hidden="true">picture_as_pdf</span> Export PDF
+                                @if(auth()->user()->isGuest())
+                                    <span class="material-icons-round" aria-label="Account required" style="font-size: 14px; margin-left: 2px; vertical-align: -2px;">lock</span>
+                                @endif
                             </button>
                             @if(auth()->user()->isNotGuest())
                                 <button type="button" class="dh-deco-header-btn dh-deco-searchrow-pill" id="saveDecoPlanBtn" title="Save this plan's inputs so you can regenerate it later">
@@ -1603,15 +1684,6 @@
                                     </div>
 
                                     <div class="col-lg-6 col-12" id="profileChartContainer">
-                                        {{-- Collapse the table and let the chart take the full row width
-                                             on desktop (Pablo, 2026-09-25: "be able to collapse the deco
-                                             table (horizontally) and show the chart in col-12...add a
-                                             panel collapse or arrow to the top left of the chart"). Phone
-                                             widths already stack the two columns, where collapsing one
-                                             to widen the other makes no sense - hidden below lg. --}}
-                                        <button type="button" id="dhToggleDecoTableBtn" class="dh-btn-icon d-none d-lg-inline-flex" title="Collapse the decompression table" aria-label="Collapse the decompression table" style="margin-bottom: 8px;">
-                                            <span class="material-icons-round" aria-hidden="true" id="dhToggleDecoTableIcon">chevron_left</span>
-                                        </button>
                                         {{-- Overlay a real dive computer log on top of the calculated
                                              profile (Pablo, 2026-09-22: "overlay a real dive profile
                                              coming from a shearwater computer...over the calculated
@@ -1646,6 +1718,18 @@
                                             <span id="uddfStatus" style="font-size: .78rem; margin-left: 8px;"></span>
                                         </div>
                                         <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1" style="position: relative;">
+                                            {{-- Collapse the table and let the chart take the full row
+                                                 width on desktop (Pablo, 2026-09-25: "be able to
+                                                 collapse the deco table (horizontally) and show the
+                                                 chart in col-12...a panel collapse or arrow to the top
+                                                 left of the chart", later: "I want this inside the
+                                                 chart at the top left" + the Material Symbols
+                                                 left_panel_close/left_panel_open glyphs). Phone widths
+                                                 already stack the two columns, where collapsing one to
+                                                 widen the other makes no sense - hidden below lg. --}}
+                                            <button type="button" id="dhToggleDecoTableBtn" class="dh-btn-icon dh-btn-icon-accent d-none d-lg-inline-flex" title="Collapse the decompression table" aria-label="Collapse the decompression table" style="position: absolute; top: 10px; left: 10px; z-index: 5;">
+                                                <span class="material-symbols-rounded" aria-hidden="true" id="dhToggleDecoTableIcon">left_panel_close</span>
+                                            </button>
                                             <canvas id="profileChart" class="chart-canvas border-radius-lg" height="500px"></canvas>
 
                                             <!-- "What if...?" floating bubble (Pablo, 2026-09-19:
@@ -1687,12 +1771,12 @@
                                         <div class="dh-whatif-modal-body">
                                             <p class="dh-whatif-modal-hint">Pick one scenario to overlay on the baseline plan.</p>
                                             <div class="dh-whatif-chips">
-                                                <label class="dh-whatif-chip" for="filter1">
+                                                <label class="dh-whatif-chip" for="filter1" id="filter1Container">
                                                     <input class="form-check-input" type="checkbox" id="filter1">
                                                     <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="Extend the dive for 5 m, how's deco profile affected??">Extend bottom time 5 min</span>
                                                 </label>
 
-                                                <label class="dh-whatif-chip" for="filter2">
+                                                <label class="dh-whatif-chip" for="filter2" id="filter2Container">
                                                     <input class="form-check-input" type="checkbox" id="filter2">
                                                     <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="Dive 10 ft deeper, how is RT and DT changed?">Increase max depth by {{ $deco_unit ? "3 m" : "10 ft" }}</span>
                                                 </label>
@@ -1702,12 +1786,12 @@
                                                     <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="calculate RT and deco time using only backgas">Lost all deco gases</span>
                                                 </label>
 
-                                                <label class="dh-whatif-chip" for="filter4">
+                                                <label class="dh-whatif-chip" for="filter4" id="filter4Container">
                                                     <input class="form-check-input" type="checkbox" id="filter4">
                                                     <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="How's the RT affected if the dive is shorter?">Shorten bottom time 5 min</span>
                                                 </label>
 
-                                                <label class="dh-whatif-chip" for="filter5">
+                                                <label class="dh-whatif-chip" for="filter5" id="filter5Container">
                                                     <input class="form-check-input" type="checkbox" id="filter5">
                                                     <span class="dh-whatif-chip-body" data-bs-toggle="tooltip" data-bs-placement="top" title="What's the impact of diving 10 ft shallower than planned?">Reduce max depth by {{ $deco_unit ? "3 m" : "10 ft" }}</span>
                                                 </label>
@@ -2175,6 +2259,59 @@
 
         let globalResponse = null;
 
+        // Deco Table API v2 (Pablo, 2026-09-25 -
+        // https://claude.ai/code/artifact/40cb7622-7fd7-4c44-ab0d-5a8a223f25e2):
+        // the backend is moving to send a pre-consolidated `table` array (and
+        // a `gasSwitches` list, and `totals`) directly on every scenario,
+        // across all 3 endpoints (single-level, multi-level, and whichever
+        // what-if variant), so the frontend stops re-deriving table rows and
+        // gas-switch markers from the raw step array itself.
+        //
+        // dhNormalizeScenario() is the ONE place that shape difference is
+        // absorbed: a scenario value is either still the legacy flat step
+        // array, or the new {table, gasSwitches, profile, totals, ...}
+        // object - either way this returns {profile, table, gasSwitches,
+        // totals}, so every existing consumer that just wants the flat step
+        // array (renderProfileChart, calculateGasConsumption, the conveyor)
+        // keeps reading `.profile` unchanged, while generateDecoTable()/
+        // calculateDecoTime()/buildGasSwitchAnnotations() can look for
+        // `.table`/`.gasSwitches`/`.totals` to skip their legacy heuristics
+        // entirely once the backend actually sends them.
+        //
+        // Remove this whole indirection once every endpoint ships v2 and the
+        // legacy branches it's gating are deleted for good.
+        function dhNormalizeScenario(x) {
+            if (Array.isArray(x)) {
+                return { profile: x, table: null, gasSwitches: null, totals: null, conveyor: null, criticalPoint: null, o2Exposure: null, requiresDeco: null };
+            }
+            if (x && Array.isArray(x.table)) {
+                return {
+                    profile: Array.isArray(x.profile) ? x.profile : [],
+                    table: x.table,
+                    gasSwitches: Array.isArray(x.gasSwitches) ? x.gasSwitches : null,
+                    totals: x.totals || null,
+                    conveyor: Array.isArray(x.conveyor) ? x.conveyor : null,
+                    criticalPoint: x.criticalPoint || null,
+                    o2Exposure: x.o2Exposure || null,
+                    requiresDeco: (typeof x.requiresDeco === 'boolean') ? x.requiresDeco : null,
+                };
+            }
+            return {
+                profile: (x && Array.isArray(x.profile)) ? x.profile : [],
+                table: null, gasSwitches: null, totals: null,
+                conveyor: (x && Array.isArray(x.conveyor)) ? x.conveyor : null,
+                criticalPoint: (x && x.criticalPoint) || null,
+                o2Exposure: (x && x.o2Exposure) || null,
+                requiresDeco: (x && typeof x.requiresDeco === 'boolean') ? x.requiresDeco : null,
+            };
+        }
+
+        // Normalized {profile, table, gasSwitches, totals} per scenario name
+        // ('baseline', 'bailout', 'lostDecoGas', 'minDeco', and single-
+        // level's extra 'add5min'/'add10ft'/'short5min'/'short10ft'),
+        // populated fresh by both success handlers on every Calculate.
+        window.dhScenarios = {};
+
         // Set up the CSRF token for AJAX requests
         $.ajaxSetup({
             headers: {
@@ -2263,13 +2400,13 @@
             console.log(diveJSON);
 
             <?php
-                $DivePlannerKey = base64_decode(env('DIVE_PLANNING_API_KEY'));
-                // MultiLevelDivePlanner is a separate Azure Function with its
-                // own auto-generated key - DIVE_PLANNING_API_KEY above only
-                // works on DecoPlanner. This is the app's host key instead,
-                // valid across every function (Pablo, 2026-09-25 - see the
-                // auth section of https://claude.ai/artifact/6VxHGjo4WVgXxc2g1QZecM).
-                $DivePlanningHostKey = base64_decode(env('DIVE_PLANNING_HOST_KEY'));
+                // Deco Table API v2 (Pablo, 2026-09-25 -
+                // https://claude.ai/artifact/CQMT3MahLtqEgA68z7Fgta): all 3
+                // endpoints (DecoPlanner, MultiLevelDivePlanner,
+                // MultiDivePlanner) now live on the DecoPlanningApi function
+                // app - one host key covers all of them, so a route added
+                // later never needs a new key wired in here.
+                $DivePlanningApiV2HostKey = base64_decode(env('DIVE_PLANNING_API_V2_HOST_KEY'));
             ?>
 
             // Multi-level: a different endpoint (MultiLevelDivePlanner)
@@ -2310,7 +2447,7 @@
             // Make the AJAX POST request
             $.ajax({
                 LOCALurl: ` http://localhost:7071/api/DecoPlanner`,
-                url: `https://decoplanningapi.azurewebsites.net/api/DecoPlanner?code=<?php echo $DivePlannerKey; ?>`,
+                url: `https://decoplanningapi.azurewebsites.net/api/DecoPlanner?code=<?php echo $DivePlanningApiV2HostKey; ?>`,
                 method: 'POST',
                 contentType: 'application/json',  // Ensures JSON format
                 data: JSON.stringify({inputs: diveProfile}), // Converts data to JSON
@@ -2322,14 +2459,35 @@
                 },
                 success: function (response) {
                     console.log('Success:', response);
+
+                    // Deco Table API v2 wraps every scenario under
+                    // `scenarios` (Pablo, 2026-09-25 -
+                    // https://claude.ai/artifact/CQMT3MahLtqEgA68z7Fgta) -
+                    // `|| response` is a fallback to v1's bare top-level keys,
+                    // only in case an older response ever comes back.
+                    var scenarios = response.scenarios || response;
+
+                    // Normalize every scenario key in place: response[key]
+                    // keeps being the flat step array
+                    // (renderProfileChart/calculateGasConsumption below are
+                    // unchanged either way), while window.dhScenarios holds
+                    // each scenario's table/gasSwitches/totals/conveyor/
+                    // o2Exposure/criticalPoint for the functions that know
+                    // how to use them.
+                    ['baseline', 'add5min', 'add10ft', 'lostDecoGas', 'short5min', 'short10ft', 'minDeco', 'bailout'].forEach(function (key) {
+                        if (!(key in scenarios)) return;
+                        window.dhScenarios[key] = dhNormalizeScenario(scenarios[key]);
+                        response[key] = window.dhScenarios[key].profile;
+                    });
+
                     // make a copy of the basline response to have to calculate gas consumption
                     //baselineResponse = response['baseline'];
                     //bailoutResponse = response['bailout'];
                     globalResponse = response;
 
                     renderProfileChart(response);
-                    baselineRTDT = generateDecoTable(response['baseline']);
-                    
+                    baselineRTDT = generateDecoTable(window.dhScenarios.baseline);
+
                     // generate BO table
                     if (modeOCOrCC == "CC") {
                         // Captured for the PDF's red "+Xm" badges on the
@@ -2337,12 +2495,13 @@
                         // to OC would run vs the planned CC profile (Pablo,
                         // 2026-09-19: "add the red badges with the +xm over
                         // the Run Time and Deco time").
-                        window.lastBailoutTotals = generateDecoTable(response['bailout'], 1);
+                        window.lastBailoutTotals = generateDecoTable(window.dhScenarios.bailout, 1);
                     }
 
                     if(baselineRTDT[1] == 0){  //No deco, we hide the table and adjust the size of the chart to col-12
                         document.getElementById("decoTableContainer").style.display = "none";
                         dhSetChartColClass("col-lg-12 col-12");
+                        dhSetDecoTableCollapseBtnVisible(false);
                         // Nothing to export - a pure NDL dive has no
                         // decompression plan (Pablo, 2026-09-19: "if deco
                         // time is 0 for the case, just don't show the
@@ -2352,15 +2511,16 @@
                     } else {
                         document.getElementById("decoTableContainer").style.display ="block";
                         dhSetChartColClass("col-lg-6 col-12");
+                        dhSetDecoTableCollapseBtnVisible(true);
                         document.getElementById("exportDecoPlanPdfBtn").hidden = false;
                     }
-                    filter1RTDT = calculateDecoTime(response['add5min']);
-                    filter2RTDT = calculateDecoTime(response['add10ft']);
-                    filter3RTDT = calculateDecoTime(response['lostDecoGas']);
-                    filter4RTDT = calculateDecoTime(response['short5min']);
-                    filter5RTDT = calculateDecoTime(response['short10ft']);
-                    filter6RTDT = calculateDecoTime(response['minDeco']);
-                    filter7RTDT = calculateDecoTime(response['bailout']);
+                    filter1RTDT = calculateDecoTime(window.dhScenarios.add5min);
+                    filter2RTDT = calculateDecoTime(window.dhScenarios.add10ft);
+                    filter3RTDT = calculateDecoTime(window.dhScenarios.lostDecoGas);
+                    filter4RTDT = calculateDecoTime(window.dhScenarios.short5min);
+                    filter5RTDT = calculateDecoTime(window.dhScenarios.short10ft);
+                    filter6RTDT = calculateDecoTime(window.dhScenarios.minDeco);
+                    filter7RTDT = calculateDecoTime(window.dhScenarios.bailout);
 
                     // Reveal the What-if floating bubble - it only makes sense once a
                     // plan actually exists (Pablo, 2026-09-19: "once decompression was
@@ -2368,17 +2528,26 @@
                     // (Pablo, 2026-09-25: "expect no What if? in multi level for now").
                     if (document.getElementById('dhWhatIfFab') && modeLevelSingleOrMulti !== 'multi') document.getElementById('dhWhatIfFab').hidden = false;
 
-                    // update timeLapse tissue data
-                    conveyor = response['conveyor'];
+                    // update timeLapse tissue data - conveyor/o2Exposure now
+                    // live per-scenario (baseline's) under v2, not at the
+                    // response's own top level.
+                    conveyor = window.dhScenarios.baseline.conveyor || response['conveyor'];
                     console.log(conveyor.length);
 
-                    renderO2Toxicity(response['o2Exposure']);
+                    renderO2Toxicity(window.dhScenarios.baseline.o2Exposure || response['o2Exposure']);
                     timeLapseSlider.noUiSlider.updateOptions({
                         range: {
                             'min': 0,
                             'max': conveyor.length-1 // Set max dynamically
                         }
                     });
+                    // Every fresh calculation starts the tissue animation
+                    // over from the surface, rather than leaving it
+                    // wherever the diver last scrubbed to on a previous
+                    // plan (Pablo, 2026-09-25: "everytime we run a
+                    // decompression plan, reset the tissue animation to
+                    // start from the beginning").
+                    timeLapseSlider.noUiSlider.set(0);
 
                     // calculate Gas consumption
                     // Clear any per-gas SAC overrides - they belonged to
@@ -2388,9 +2557,9 @@
                     window.dhGasSacRates = {};
                     if (modeOCOrCC == "OC") {
                         document.getElementById("gasConsumptionRow").style.display="block";
-                        gasConsumption = calculateGasConsumption(response['baseline']);
-                        renderGasConsumptionTable(gasConsumption, "bottom", response['baseline']);
-                        renderGasConsumptionTable(gasConsumption, "deco", response['baseline']);
+                        gasConsumption = calculateGasConsumption(window.dhScenarios.baseline);
+                        renderGasConsumptionTable(gasConsumption, "bottom", window.dhScenarios.baseline);
+                        renderGasConsumptionTable(gasConsumption, "deco", window.dhScenarios.baseline);
                         document.getElementById("gasConsumptionHeader").innerText = "Gas consumption (Baseline OC)";
                         document.getElementById("gasConsumptionBottomCol").style.display = "block";
                         document.getElementById("gasConsumptionDecoCol").style.display = "block";
@@ -2415,6 +2584,14 @@
                             cb.checked = false; // Uncheck all other checkboxes
                     });
                     if (typeof window.dhUpdateWhatIfVisibility === 'function') window.dhUpdateWhatIfVisibility();
+
+                    // Restore the 4 chips multi-level hides (Pablo,
+                    // 2026-09-25) - this is single-level's own success
+                    // handler, so all 7 scenarios are available again.
+                    document.getElementById('filter1Container').style.display = "block";
+                    document.getElementById('filter2Container').style.display = "block";
+                    document.getElementById('filter4Container').style.display = "block";
+                    document.getElementById('filter5Container').style.display = "block";
 
                     console.log("modeOCCC = " + modeOCOrCC);
                     console.log("Length=" + (diveProfile['decoGases'].length));
@@ -2470,6 +2647,20 @@
             }
         }
 
+        // A pure-NDL dive has no table to collapse in the first place - the
+        // chart is already col-12 via dhSetChartColClass above (Pablo,
+        // 2026-09-25: "if there's no deco on the dive, we just show the
+        // graph chart in col-12 and hide the collapse button"). Toggling
+        // the d-lg-inline-flex class (not just [hidden]) because Bootstrap's
+        // responsive utility is !important and would otherwise keep
+        // overriding a plain [hidden] at lg+ widths.
+        function dhSetDecoTableCollapseBtnVisible(visible) {
+            var btn = document.getElementById('dhToggleDecoTableBtn');
+            if (!btn) return;
+            btn.classList.toggle('d-lg-inline-flex', visible);
+            if (!visible) btn.hidden = true; else btn.hidden = false;
+        }
+
         (function () {
             var btn = document.getElementById('dhToggleDecoTableBtn');
             var icon = document.getElementById('dhToggleDecoTableIcon');
@@ -2482,7 +2673,7 @@
                 chartCol.dataset.tableCollapsed = collapsed ? 'true' : 'false';
                 tableCol.style.display = collapsed ? 'none' : '';
                 chartCol.className = collapsed ? 'col-lg-12 col-12' : (chartCol.dataset.naturalClass || 'col-lg-6 col-12');
-                icon.textContent = collapsed ? 'chevron_right' : 'chevron_left';
+                icon.textContent = collapsed ? 'left_panel_open' : 'left_panel_close';
                 btn.title = collapsed ? 'Show the decompression table' : 'Collapse the decompression table';
                 btn.setAttribute('aria-label', btn.title);
                 // The chart canvas is sized by its wrapper's width - it
@@ -2537,11 +2728,22 @@
                 + criticalPoint.time.toFixed(1) + 'min &mdash; ' + criticalPoint.timeToSurface.toFixed(1)
                 + 'min to surface if bailed there'
                 + (criticalPoint.requiresDeco ? ' (' + criticalPoint.totalStopTime.toFixed(1) + 'min of stops)' : ' (NDL)');
-            el.className = criticalPoint.requiresDeco ? 'dh-gas-result-pill is-compact is-danger' : 'dh-gas-result-pill is-compact';
+            // Pablo, 2026-09-25: "the critical pill at the top, make it
+            // col-12" - full width instead of the compact pill's usual
+            // auto-sized, inline footprint.
+            el.className = 'col-12 ' + (criticalPoint.requiresDeco ? 'dh-gas-result-pill is-compact is-danger' : 'dh-gas-result-pill is-compact');
         }
 
         function dhCallMultiLevelDivePlanner(diveProfile, levels, dhCalcSplash) {
             var payload = {
+                // Deco Table API v2's own MultiLevelDivePlanner example
+                // includes a top-level "diveType" field (also present on
+                // MultiDivePlanner, absent from DecoPlanner's) that v1 never
+                // sent - the doc doesn't say what values it accepts or
+                // whether it's required, so this is a best guess ("technical"
+                // matches this app's own multi-level/CC-heavy use case) worth
+                // confirming with the backend rather than trusting blindly.
+                diveType: 'technical',
                 mode: diveProfile.mode,
                 gradientFactors: diveProfile.gradientFactors,
                 rate: diveProfile.rate,
@@ -2560,7 +2762,12 @@
             if (diveProfile.mode === 'CC') payload.setpoint = diveProfile.setpoint;
 
             $.ajax({
-                url: `https://decoplanning.azurewebsites.net/api/MultiLevelDivePlanner?code=<?php echo $DivePlanningHostKey; ?>`,
+                // Deco Table API v2 (Pablo, 2026-09-25 -
+                // https://claude.ai/artifact/CQMT3MahLtqEgA68z7Fgta) moved
+                // MultiLevelDivePlanner off decoplanning.azurewebsites.net
+                // (v1) onto decoplanningapi.azurewebsites.net, alongside
+                // DecoPlanner - same host key for both now.
+                url: `https://decoplanningapi.azurewebsites.net/api/MultiLevelDivePlanner?code=<?php echo $DivePlanningApiV2HostKey; ?>`,
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(payload),
@@ -2570,51 +2777,122 @@
                 },
                 success: function (response) {
                     console.log('MultiLevelDivePlanner success:', response);
-                    globalResponse = response;
+
+                    // Deco Table API v2 wraps everything - baseline included -
+                    // under `scenarios` now (Pablo, 2026-09-25 -
+                    // https://claude.ai/artifact/CQMT3MahLtqEgA68z7Fgta);
+                    // `|| response` falls back to v1's shape, where baseline's
+                    // profile/criticalPoint/o2Exposure lived at the response's
+                    // own top level and only the what-if scenarios nested
+                    // under their own {requiresDeco, profile} key.
+                    var scenarios = response.scenarios || {
+                        baseline: { profile: response.profile, criticalPoint: response.criticalPoint, o2Exposure: response.o2Exposure },
+                        lostDecoGas: response.lostDecoGas,
+                        minDeco: response.minDeco,
+                        bailout: response.bailout,
+                    };
+
+                    window.dhScenarios.baseline = dhNormalizeScenario(scenarios.baseline);
+                    window.dhScenarios.lostDecoGas = dhNormalizeScenario(scenarios.lostDecoGas);
+                    window.dhScenarios.minDeco = dhNormalizeScenario(scenarios.minDeco);
+                    window.dhScenarios.bailout = dhNormalizeScenario(scenarios.bailout);
+
+                    // Reshaped to the same flat-array convention every
+                    // downstream reader (filter3/6/7's change handlers, the
+                    // PDF export) already expects from single-level's own
+                    // globalResponse.
+                    globalResponse = {
+                        baseline: window.dhScenarios.baseline.profile,
+                        lostDecoGas: window.dhScenarios.lostDecoGas.profile,
+                        minDeco: window.dhScenarios.minDeco.profile,
+                        bailout: window.dhScenarios.bailout.profile,
+                    };
+
                     // Set before renderProfileChart() below so it can draw the
                     // marker in the same pass, rather than needing a second redraw.
-                    window.lastCriticalPoint = response.criticalPoint;
+                    window.lastCriticalPoint = window.dhScenarios.baseline.criticalPoint;
 
-                    // Same shape every downstream renderer already expects,
-                    // built from the one profile array this endpoint returns
-                    // (no what-if variants, no separate bailout scenario).
+                    // add5min/add10ft/short5min/short10ft have no multilevel
+                    // equivalent from this endpoint - their chips stay
+                    // hidden below, so aliasing them to the baseline profile
+                    // is just a harmless placeholder for renderProfileChart's
+                    // own unconditional field access.
                     var adapted = {
-                        baseline: response.profile,
-                        add5min: response.profile, add10ft: response.profile, lostDecoGas: response.profile,
-                        short5min: response.profile, short10ft: response.profile, minDeco: response.profile,
-                        bailout: response.profile
+                        baseline: globalResponse.baseline,
+                        add5min: globalResponse.baseline, add10ft: globalResponse.baseline,
+                        short5min: globalResponse.baseline, short10ft: globalResponse.baseline,
+                        lostDecoGas: globalResponse.lostDecoGas,
+                        minDeco: globalResponse.minDeco,
+                        bailout: globalResponse.bailout
                     };
 
                     renderProfileChart(adapted);
-                    baselineRTDT = generateDecoTable(adapted['baseline']);
+                    baselineRTDT = generateDecoTable(window.dhScenarios.baseline);
+
+                    // Bailout-to-OC table, same as single-level (Pablo,
+                    // 2026-09-25: "for multilevel, for CC, please include
+                    // the bailout table in the pdf, same we did for single
+                    // level") - populates #BOTableContainer (shown by
+                    // filter7's own toggle above) and window.lastBailoutTotals
+                    // (read by the PDF's dive-times section).
+                    if (modeOCOrCC == "CC") {
+                        window.lastBailoutTotals = generateDecoTable(window.dhScenarios.bailout, 1);
+                    }
 
                     if (baselineRTDT[1] == 0) {
                         document.getElementById("decoTableContainer").style.display = "none";
                         dhSetChartColClass("col-lg-12 col-12");
+                        dhSetDecoTableCollapseBtnVisible(false);
                         document.getElementById("exportDecoPlanPdfBtn").hidden = true;
                     } else {
                         document.getElementById("decoTableContainer").style.display = "block";
                         dhSetChartColClass("col-lg-6 col-12");
+                        dhSetDecoTableCollapseBtnVisible(true);
                         document.getElementById("exportDecoPlanPdfBtn").hidden = false;
                     }
 
-                    // No What if? in multi-level (Pablo, 2026-09-25) - FAB
-                    // stays hidden (showMultiLevel() already forces this),
-                    // so the filter1-7 RTDT values are never read; skip
-                    // computing them.
+                    // A trimmed-down What if...? for multi-level (Pablo,
+                    // 2026-09-25: "bringing back a few What if...? scenarios.
+                    // Same as in single level, but less scenarios") - only
+                    // the 3 this endpoint actually returns (bailout,
+                    // lostDecoGas, minDeco); the other 4 chips (extend/
+                    // shorten bottom time, +/-10ft) have no equivalent here
+                    // and stay hidden.
+                    filter3RTDT = calculateDecoTime(window.dhScenarios.lostDecoGas);
+                    filter6RTDT = calculateDecoTime(window.dhScenarios.minDeco);
+                    filter7RTDT = calculateDecoTime(window.dhScenarios.bailout);
+                    var fab = document.getElementById('dhWhatIfFab');
+                    if (fab) fab.hidden = false;
+                    document.getElementById('filter1Container').style.display = "none";
+                    document.getElementById('filter2Container').style.display = "none";
+                    document.getElementById('filter4Container').style.display = "none";
+                    document.getElementById('filter5Container').style.display = "none";
+                    // Same threshold single-level uses: "lost deco gases"
+                    // is only meaningful if there's a real staged gas to
+                    // lose - for CC, slot 1 is always the mandatory bailout
+                    // gas, so it takes 2+ entries before there's an actual
+                    // extra deco gas on top of that.
+                    document.getElementById('filter3Container').style.display =
+                        ((modeOCOrCC === "OC" && diveProfile.decoGases.length === 0) ||
+                         (modeOCOrCC === "CC" && diveProfile.decoGases.length < 2)) ? "none" : "block";
+                    document.getElementById('filter7Container').style.display =
+                        (modeOCOrCC === "OC") ? "none" : "block";
 
-                    conveyor = response.profile;
-                    renderO2Toxicity(response.o2Exposure);
+                    conveyor = window.dhScenarios.baseline.conveyor || window.dhScenarios.baseline.profile;
+                    renderO2Toxicity(window.dhScenarios.baseline.o2Exposure);
                     timeLapseSlider.noUiSlider.updateOptions({
                         range: { 'min': 0, 'max': conveyor.length - 1 }
                     });
+                    // Reset to the surface on every fresh calculation
+                    // (Pablo, 2026-09-25).
+                    timeLapseSlider.noUiSlider.set(0);
 
                     window.dhGasSacRates = {};
                     if (modeOCOrCC == "OC") {
                         document.getElementById("gasConsumptionRow").style.display = "block";
-                        gasConsumption = calculateGasConsumption(response.profile);
-                        renderGasConsumptionTable(gasConsumption, "bottom", response.profile);
-                        renderGasConsumptionTable(gasConsumption, "deco", response.profile);
+                        gasConsumption = calculateGasConsumption(window.dhScenarios.baseline);
+                        renderGasConsumptionTable(gasConsumption, "bottom", window.dhScenarios.baseline);
+                        renderGasConsumptionTable(gasConsumption, "deco", window.dhScenarios.baseline);
                         document.getElementById("gasConsumptionHeader").innerText = "Gas consumption (Baseline OC)";
                         document.getElementById("gasConsumptionBottomCol").style.display = "block";
                         document.getElementById("gasConsumptionDecoCol").style.display = "block";
@@ -2631,11 +2909,9 @@
                     }
 
                     document.querySelectorAll(".form-check-input").forEach(function (cb) { cb.checked = false; });
+                    if (typeof window.dhUpdateWhatIfVisibility === 'function') window.dhUpdateWhatIfVisibility();
 
-                    document.getElementById('filter3Container').style.display = "none";
-                    document.getElementById('filter7Container').style.display = "none";
-
-                    dhRenderCriticalPoint(response.criticalPoint);
+                    dhRenderCriticalPoint(window.dhScenarios.baseline.criticalPoint);
                 },
                 error: function (xhr, status, error) {
                     console.error('MultiLevelDivePlanner error:', error);
@@ -2665,6 +2941,16 @@
 
         let setPointOCOrCC = 1.4;
         let modeOCOrCC = "OC";
+
+        // Advanced settings, registered users only (Pablo, 2026-09-25) -
+        // always default to both guardrails ON on a fresh page load, never
+        // persisted, so a diver can't accidentally carry a relaxed
+        // configuration into a new session without noticing. Declared this
+        // early since sliders that read them (GF, setpoint, depth) fire
+        // their own 'update' synchronously during page load, before most
+        // other script blocks have run.
+        let dhRecommendBestGases = true;
+        let dhRemoveSafetyGuards = false;
 
         //var depth = parseInt(document.getElementById("labelDepth").textContent);
         @if( !is_null($currentSite))
@@ -3634,6 +3920,11 @@
         });
 
         surfaceTimeSlider.setAttribute('disabled', true);
+        // The slider was already disabled but the paired text box was
+        // still typeable, letting a user change the value through the
+        // one door left open (Pablo, 2026-09-25: "also disable the
+        // textbox so users cannot change the value").
+        labelSurfaceTime.setAttribute('disabled', true);
 
         labelSurfaceTime.addEventListener('change', function () {
             var typedSurface = parseFloat(labelSurfaceTime.value);
@@ -3706,18 +3997,28 @@
             var GFHSliderValue = parseInt(values[handle]);
             labelGFH.value = GFHSliderValue;
 
-            // Update GFL max range dynamically
-            GFLSlider.noUiSlider.updateOptions({
-                range: {
-                    'min': 10,
-                    'max': GFHSliderValue // Set max dynamically
-                }
-            });
+            // GF Low is normally kept at or below GF High (raising the
+            // ascent ceiling above the first-stop conservatism makes no
+            // sense) - "Remove safety guards" lets a registered user break
+            // that link entirely and pick any GFL/GFH combination (Pablo,
+            // 2026-09-25: "allow for GFH and GFL to be completely
+            // independent").
+            if (typeof dhRemoveSafetyGuards === 'undefined' || !dhRemoveSafetyGuards) {
+                // Update GFL max range dynamically
+                GFLSlider.noUiSlider.updateOptions({
+                    range: {
+                        'min': 10,
+                        'max': GFHSliderValue // Set max dynamically
+                    }
+                });
 
-            // Ensure GFL value stays within range
-            var GFLSliderValue = parseInt(GFLSlider.noUiSlider.get());
-            if (GFLSliderValue > GFHSliderValue) {
-                GFLSlider.noUiSlider.set(GFHSliderValue);
+                // Ensure GFL value stays within range
+                var GFLSliderValue = parseInt(GFLSlider.noUiSlider.get());
+                if (GFLSliderValue > GFHSliderValue) {
+                    GFLSlider.noUiSlider.set(GFHSliderValue);
+                }
+            } else {
+                GFLSlider.noUiSlider.updateOptions({ range: { 'min': 10, 'max': 100 } });
             }
 
             // reset calculation area
@@ -4292,6 +4593,70 @@
     <script>
         
 
+        // In multi-level mode the single "Max Depth" field is hidden and
+        // stale - the bottom gas card's PPO2/END/density warnings need the
+        // deepest of the currently visible levels instead (Pablo,
+        // 2026-09-25: "consider the max depth to be the deepest of all the
+        // levels"). Falls back to the single-level field otherwise, or on
+        // the very first noUiSlider 'update' firing during page load,
+        // before the level sliders (defined later in the file) exist yet.
+        function dhEffectiveMaxDepth() {
+            if (typeof modeLevelSingleOrMulti !== 'undefined' && modeLevelSingleOrMulti === 'multi'
+                && typeof dhLevelDepthSliders !== 'undefined' && dhLevelDepthSliders[1]) {
+                var deepest = 0;
+                for (var n = 1; n <= 4; n++) {
+                    var panel = document.getElementById('levelPanel' + n);
+                    if (panel && !panel.hidden && dhLevelDepthSliders[n]) {
+                        deepest = Math.max(deepest, parseFloat(dhLevelDepthSliders[n].noUiSlider.get()));
+                    }
+                }
+                if (deepest > 0) return deepest;
+            }
+            return parseInt(labelDepth.value);
+        }
+
+        // CC bailout's switch depth/PPO2/END aren't user-adjustable via a
+        // slider like the OC deco gases (see containerDeco1CCInfo - no
+        // slider there) - bailout always kicks in at the bottom, so the
+        // switch depth is pinned to whatever depth is "in force" (single-
+        // level's own field, or the deepest level in multi mode), while
+        // PPO2/END are readouts of the CURRENT bailout gas at that depth
+        // (Pablo, 2026-09-25: "switch depth...should show the max depth of
+        // the dive", "no matter what gas I choose, the switch depth does
+        // not update" - the depth wasn't tracking multi-level at all, and
+        // PPO2/END were using the stale single-level `depth` global).
+        function dhSyncBailoutSwitchInfo() {
+            var switchEl = document.getElementById('labelBailoutSwitch');
+            if (!switchEl) return;
+            var d = dhEffectiveMaxDepth();
+            switchEl.textContent = parseInt(d);
+
+            var o2El = document.getElementById('labelDecoGas1O2');
+            var ppo2El = document.getElementById('labelBailoutSwitchPPO2');
+            if (o2El && ppo2El) {
+                ppo2El.textContent = ((d / 33 + 1) * parseInt(o2El.value) / 100).toFixed(2);
+            }
+
+            var heEl = document.getElementById('labelDecoGas1He');
+            var endEl = document.getElementById('labelBailoutEND');
+            if (heEl && endEl) {
+                var ambientPressure = (d / 33 + 1);
+                var bailoutPPHe = ambientPressure * parseInt(heEl.value) / 100;
+                var bailoutEND = ((ambientPressure - bailoutPPHe) - 1) * 33;
+                endEl.textContent = Math.max(0, (bailoutEND / {{ $deco_unit ? 3.28084 : 1 }}).toFixed(0));
+                if (endEl.textContent > 130) {
+                    endEl.classList.remove("is-warn");
+                    endEl.classList.add("is-danger");
+                } else if (endEl.textContent > 100) {
+                    endEl.classList.remove("is-danger");
+                    endEl.classList.add("is-warn");
+                } else {
+                    endEl.classList.remove("is-warn", "is-danger");
+                    endEl.classList.add("is-safe");
+                }
+            }
+        }
+
         var bottomGasO2Slider = document.getElementById('bottomGasO2Slider');
         var labelBottomGasO2 = document.getElementById('labelBottomGasO2');
         var bestO2 =  Math.round((1.4 / (depth / 33 + 1) * 100));
@@ -4305,6 +4670,30 @@
         var labelBottomGasPPO2 = document.getElementById('labelBottomGasPPO2');
         var labelBottomGasEND = document.getElementById('labelBottomGasEND');
         var labelBottomGasDensity = document.getElementById('labelBottomGasDensity');
+
+        // Drops the ideal bottom gas/diluent (same PPO2/END targets the
+        // single-level depth slider already used) into the bottom gas
+        // card for whatever depth is currently in force - single-level's
+        // own field, or the deepest visible level in multi mode (Pablo,
+        // 2026-09-25: "put in the bottom gas or diluent the ideal gas as
+        // we move the depth sliders"). CC's Diluent shares these same O2/
+        // He fields (just relabeled), so this covers both modes.
+        function dhSyncIdealBottomGas() {
+            // Advanced setting, registered users only (Pablo, 2026-09-25:
+            // "Recommend best gases (on and off)...won't change the gases
+            // for bottom OC, diluent and bailout CC while the depth
+            // gauges are being moved").
+            if (typeof dhRecommendBestGases !== 'undefined' && !dhRecommendBestGases) return;
+            var d = dhEffectiveMaxDepth();
+            bottomGasO2Slider.noUiSlider.set(Math.round((setPointOCOrCC / (d / 33 + 1) * 100)));
+            // Below 131ft/40m the formula still nudges out a small (~15%
+            // at 100ft) He suggestion for a marginally shorter END, but
+            // convention is to leave trimix out entirely at recreational-
+            // ish depths - matches the page-load bestHe default's own
+            // clamp just below.
+            var idealHe = (d < 131) ? 0 : ((1 - ((80 / 33) + 1) / (d / 33 + 1)) * 100).toFixed(0);
+            bottomGasHeSlider.noUiSlider.set(idealHe);
+        }
 
 
         noUiSlider.create(bottomGasO2Slider, {
@@ -4338,7 +4727,7 @@
             labelBottomGasO2.value = parseInt(bottomGasO2SliderValue);
             document.getElementById('bottomGasSplitO2').textContent = labelBottomGasO2.value;
 
-            depth = parseInt(labelDepth.value);
+            depth = dhEffectiveMaxDepth();
 
             var bottomGasPPO2 = parseFloat((depth / 33 +1) * labelBottomGasO2.value / 100);
             labelBottomGasPPO2.textContent = ((depth / 33 +1) * labelBottomGasO2.value / 100).toFixed(1);
@@ -4394,7 +4783,7 @@
 
         bottomGasHeSlider.noUiSlider.on('update', function (values, handle) {
             var bottomGasHeSliderValue = values[handle];
-            depth = parseInt(labelDepth.value);
+            depth = dhEffectiveMaxDepth();
             labelBottomGasHe.value = parseInt(bottomGasHeSliderValue);
             document.getElementById('bottomGasSplitHe').textContent = labelBottomGasHe.value;
             dhUpdateSplitPillSolo('bottomGasSplitHe');
@@ -4460,10 +4849,23 @@
                 labelSetpoint.classList.add("is-safe");
             }
 
-            // update dil PPO2 slider
-            var O2At12 = 1.2 / (depth / 33 +1) * 100;
+            // update dil PPO2 slider - normally capped so the diluent
+            // alone (i.e. if O2 injection fails and the loop is breathing
+            // pure diluent) can't exceed 1.2 ATA PPO2, a standard CCR
+            // safety convention. "Remove safety guards" raises that ceiling
+            // to 2.0 (Pablo, 2026-09-25: "allow users to set the diluent
+            // PPO2 beyond 1.2, up to 2.0").
+            var dhGuardsOff = (typeof dhRemoveSafetyGuards !== 'undefined' && dhRemoveSafetyGuards);
+            var dilPpo2Cap = dhGuardsOff ? 2.0 : 1.2;
+            var O2At12 = dilPpo2Cap / (depth / 33 +1) * 100;
+            // O2AtSetpoint normally also caps diluent O2 at "no more than
+            // needed to reach setpoint via O2 injection" - a sensible bound
+            // under normal operation, but it also silently overrode the
+            // 1.2->2.0 relaxation above for anyone near a typical ~1.3
+            // setpoint. With guards off the diver is deliberately exploring
+            // beyond normal operation, so this cap is skipped too.
             var O2AtSetpoint = (parseFloat(setpointSliderValue) - 0.1) / (depth / 33 +1) * 100;
-            var O2SliderMaxValue = Math.min(O2At12, O2AtSetpoint)
+            var O2SliderMaxValue = dhGuardsOff ? O2At12 : Math.min(O2At12, O2AtSetpoint)
             bottomGasO2Slider.noUiSlider.updateOptions({
                 range: {
                     'min': 5,    // Keep the minimum value as is
@@ -4610,8 +5012,11 @@
             // reset calculation area
             resetCalculationArea();
 
-            // update the CC portion on the bailout
-            labelBailoutSwitchPPO2.textContent = ((depth / 33 +1) * parseInt(labelDecoGas1O2.value) /100).toFixed(2);
+            // update the CC portion on the bailout (switch depth/PPO2/END,
+            // uses dhEffectiveMaxDepth() so multi-level dives track the
+            // deepest level rather than the stale single-level `depth`
+            // global - Pablo, 2026-09-25)
+            dhSyncBailoutSwitchInfo();
 
         });
 
@@ -4642,26 +5047,8 @@
             // reset calculation area
             resetCalculationArea()
 
-            // change on CCvar ambientPressure = depth / 33 +1;
-            var ambientPressure = (depth /33 +1);
-            var bottomGasPPHe = ambientPressure * parseInt(labelDecoGas1He.value) / 100;
-            var bottomGasENDPressure = ambientPressure - bottomGasPPHe;
-            bottomGasEND = (bottomGasENDPressure - 1 ) * 33;
-
-            labelBailoutEND = document.getElementById("labelBailoutEND");
-            labelBailoutEND.textContent = Math.max(0,(bottomGasEND / {{ $deco_unit ? 3.28084 : 1}}).toFixed(0));
-
-
-            if (labelBailoutEND.textContent > 130) {
-                labelBailoutEND.classList.remove("is-warn");
-                labelBailoutEND.classList.add("is-danger");
-            } else if (labelBailoutEND.textContent > 100) {
-                labelBailoutEND.classList.remove("is-danger");
-                labelBailoutEND.classList.add("is-warn");
-            } else {
-                labelBailoutEND.classList.remove("is-warn", "is-danger");
-                labelBailoutEND.classList.add("is-safe");
-            }
+            // update the CC portion on the bailout (switch depth/PPO2/END)
+            dhSyncBailoutSwitchInfo();
 
         });
 
@@ -4758,45 +5145,44 @@
             if(modeImpOrMetric == "imp") {
                 labelDepth.value = parseInt(depthSliderValue);
                 labelDepthMET.value = parseInt(depthSliderValue * 0.3948);
-                labelBailoutSwitch.textContent = parseInt(depthSliderValue);    // update bailout switching depth
                 depthSliderValue = parseInt(depthSliderValue);
             } else {
                 labelDepth.value = parseInt(depthSliderValue * 3.281);
                 labelDepthMET.value = parseInt(depthSliderValue);
-                labelBailoutSwitch.textContent = parseInt(depthSliderValue);    // update bailout switching depth
                 depthSliderValue = parseInt(depthSliderValue * 3.281);
             }
 
-            
-            //bottomGasO2Slider.noUiSlider.set(bottomGasO2Slider.noUiSlider.get());
-            //bottomGasHeSlider.noUiSlider.set(bottomGasHeSlider.noUiSlider.get());
-            console.log("Setpoint: " + setPointOCOrCC);
-            bottomGasO2Slider.noUiSlider.set(Math.round((setPointOCOrCC / (depthSliderValue / 33 + 1) * 100)));
-            bottomGasHeSlider.noUiSlider.set(((1 - ((80 / 33) +1) / (depthSliderValue / 33 + 1)) * 100).toFixed(0));
+            dhSyncIdealBottomGas();
+            dhSyncBailoutSwitchInfo();    // update bailout switching depth/PPO2/END
 
+            // The range (max PPO2-driven O2% ceiling) is a depth-derived
+            // slider bound, not a recommendation - always kept current.
+            // The actual VALUE it jumps to (bailout O2/He) is the "Recommend
+            // best gases" behavior and is skipped when that's off (Pablo,
+            // 2026-09-25: "won't change the gases for...bailout CC while
+            // the depth gauges are being moved").
             if(modeOCOrCC == "CC") {
                 decoGas1O2Slider.noUiSlider.updateOptions({
-                    start: Math.min(100, 1.4 / (depth /33 +1) * 100),
                     range: {
                         'min': 5, //parseFloat(Math.max(5, (10 / 33 + 1) * Math.floor(decoGas1O2SliderValue / 100).toFixed(1))),    // Keep the minimum value as is
                         'max': Math.min(100, 1.6 / (depth /33 +1) * 100),
                     }
                 });
-                decoGas1HeSlider.noUiSlider.updateOptions({
-                    start: ((1 - ((80 / 33) +1) / (depthSliderValue / 33 + 1)) * 100).toFixed(0)
-                });
-
+                if (dhRecommendBestGases) {
+                    decoGas1O2Slider.noUiSlider.set(Math.min(100, 1.4 / (depth /33 +1) * 100));
+                    decoGas1HeSlider.noUiSlider.set(((1 - ((80 / 33) +1) / (depthSliderValue / 33 + 1)) * 100).toFixed(0));
+                }
             } else {
                 decoGas1O2Slider.noUiSlider.updateOptions({
-                    start: 50,
                     range: {
                         'min': 5, //parseFloat(Math.max(5, (10 / 33 + 1) * Math.floor(decoGas1O2SliderValue / 100).toFixed(1))),    // Keep the minimum value as is
                         'max': 100, //Math.min(100, 1.6 / (depth /33 +1) * 100),
                     }
-                });    
-                decoGas1HeSlider.noUiSlider.updateOptions({
-                    start: 0
                 });
+                if (dhRecommendBestGases) {
+                    decoGas1O2Slider.noUiSlider.set(50);
+                    decoGas1HeSlider.noUiSlider.set(0);
+                }
             }
 
             // reset calculation area
@@ -4857,6 +5243,22 @@
                     } else {
                         labelImp.value = parseInt(v * 3.281);
                         labelMet.value = parseInt(v);
+                    }
+                    // A level's depth just changed, which can change which
+                    // level is the deepest - drop in the ideal bottom gas/
+                    // diluent for the new deepest depth (Pablo, 2026-09-25:
+                    // "put in the bottom gas or diluent the ideal gas as we
+                    // move the depth sliders"). Guarded to multi mode only -
+                    // in single mode this slider isn't the one driving depth
+                    // and may still be mid-setup (dhLevelDepthSliders[n] not
+                    // assigned yet) when it first fires.
+                    if (typeof modeLevelSingleOrMulti !== 'undefined' && modeLevelSingleOrMulti === 'multi'
+                        && typeof bottomGasO2Slider !== 'undefined' && bottomGasO2Slider.noUiSlider) {
+                        dhSyncIdealBottomGas();
+                        // Bailout's switch depth is pinned to the deepest
+                        // level too - it never tracked multi-level depth
+                        // changes at all before this (Pablo, 2026-09-25).
+                        if (typeof dhSyncBailoutSwitchInfo === 'function') dhSyncBailoutSwitchInfo();
                     }
                 });
                 labelImp.addEventListener('change', function () {
@@ -5494,7 +5896,7 @@
         //     new (this entry's) depth (Pablo, 2026-09-19: "the switch
         //     happens at the beginning of the depth stop...take the RT from
         //     the previous stop...the current depth shown is correct").
-        function computeOCGasSwitchPoints(baseline, firstSwitchAtMaxDepth) {
+        function computeOCGasSwitchPoints(baseline, firstSwitchAtMaxDepth, onlyRealSwitches) {
             var points = [];
             var prevMix = null;
             var prevEntry = null;
@@ -5533,7 +5935,20 @@
             var sawFirstTaggedSwitch = false;
             for (var i = 0; i < ascentEnd; i++) {
                 var row = baseline[i];
-                if (row.phase !== 'ascent' && row.phase !== 'gas_switch') continue;
+                // A CC bailout's ascent legs still carry the loop's own
+                // continuously-recalculated diluent-equivalent mix (holding
+                // setpoint, not a real breathing gas change) - only a real
+                // 'gas_switch'-tagged row is a genuine switch there, so
+                // plain 'ascent' rows are excluded from consideration
+                // entirely (Pablo, 2026-09-25: "every other gas in there is
+                // related to the artificial gases the calculator uses to
+                // keep the setpoint...before the switch to OC we only
+                // should have CC" - without this, the CC loop's mix drift
+                // between multi-level's levels was plotting a bogus switch
+                // marker at the level boundary).
+                if (onlyRealSwitches) {
+                    if (row.phase !== 'gas_switch') continue;
+                } else if (row.phase !== 'ascent' && row.phase !== 'gas_switch') continue;
                 // Skip pass-through ascent waypoints whose gas hasn't
                 // actually changed yet - calling consider() on them would
                 // still advance prevEntry to that waypoint, which would
@@ -5561,9 +5976,22 @@
         // showed up. The documented way to caption a point is a second,
         // separate `type: 'label'` annotation anchored to the same
         // xValue/yValue.
-        function buildGasSwitchAnnotations(baseline, unitConversion, firstSwitchAtMaxDepth) {
+        // `scenarioKey` ('baseline'/'lostDecoGas'/'bailout'/...) - when that
+        // scenario's normalized object (window.dhScenarios[scenarioKey], see
+        // dhNormalizeScenario) already carries a `gasSwitches` list from the
+        // Deco Table API v2 backend, use it directly and skip
+        // computeOCGasSwitchPoints()'s heuristics entirely - the engine
+        // already knows exactly where the real switches are, feet-based
+        // depth same as every other chart coordinate here.
+        function buildGasSwitchAnnotations(baseline, unitConversion, firstSwitchAtMaxDepth, onlyRealSwitches, scenarioKey) {
             var annotations = {};
-            computeOCGasSwitchPoints(baseline, firstSwitchAtMaxDepth).forEach(function (point, idx) {
+            var v2 = scenarioKey && window.dhScenarios && window.dhScenarios[scenarioKey];
+            var points = (v2 && v2.gasSwitches)
+                ? v2.gasSwitches.map(function (s) {
+                    return { time: s.time, abs_p: 1 + s.depth / 33, gasLabel: formatGasLabel([null, s.gas.o2, null, s.gas.he]) };
+                })
+                : computeOCGasSwitchPoints(baseline, firstSwitchAtMaxDepth, onlyRealSwitches);
+            points.forEach(function (point, idx) {
                 annotations['gasSwitch' + idx] = {
                     type: 'point',
                     xValue: point.time,
@@ -5634,7 +6062,7 @@
             // Convert data into correct format for a scatter plot
             formattedData = response['baseline'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * unitConversion }));
 
-            var gasSwitchAnnotations = modeOCOrCC === "OC" ? buildGasSwitchAnnotations(response['baseline'], unitConversion) : {};
+            var gasSwitchAnnotations = modeOCOrCC === "OC" ? buildGasSwitchAnnotations(response['baseline'], unitConversion, undefined, undefined, 'baseline') : {};
             Object.assign(gasSwitchAnnotations, buildCriticalPointAnnotation(window.lastCriticalPoint, unitConversion));
             formattedData1 = response['add5min'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * unitConversion }));
             formattedData2 = response['add10ft'].map(item => ({ x: item.time, y: -(item.abs_p - 1) * unitConversion }));
@@ -5901,15 +6329,37 @@
 
         function getPhaseIcon(phase) {
             const icons = {
+                // Legacy raw-step phase names (still used by generateDecoTable's
+                // fallback Pass 1/2, until every endpoint is confirmed on v2).
                 "descent": "south", // Down arrow for descent
                 "const": "swap_horiz", // Stopwatch for bottom time
                 "ascent": "north", // Up arrow for ascent
                 "deco_stop": "pause_circle", // Pause for deco stops
+                // Deco Table API v2's own table row phase names (Pablo,
+                // 2026-09-25 - https://claude.ai/artifact/CQMT3MahLtqEgA68z7Fgta).
+                "descend": "south",
+                "level": "swap_horiz",
+                "ascend": "north",
+                "decoStop": "pause_circle",
+                "surfaceAscent": "north",
             };
             return `<span class="material-icons-round">${icons[phase] || "help"}</span>`; // Default to "help" if missing
         }
 
-        function generateDecoTable(response, BO=0) {
+        // `scenario` is the normalized {profile, table, gasSwitches, totals}
+        // shape from dhNormalizeScenario() - every call site now passes
+        // window.dhScenarios.<name> instead of a bare step array.
+        function generateDecoTable(scenario, BO=0) {
+            // Deco Table API v2 - once the backend sends a pre-consolidated
+            // `table` directly, skip every heuristic below entirely (run
+            // consolidation, CC-drift tolerance, crossedToOC, deco-stop
+            // folding - see https://claude.ai/code/artifact/40cb7622-7fd7-4c44-ab0d-5a8a223f25e2)
+            // and just render it.
+            if (scenario && Array.isArray(scenario.table)) {
+                return dhRenderDecoTableV2(scenario, BO);
+            }
+
+            let response = scenario ? scenario.profile : [];
             let tableData = []; // Store table rows
 
             // Gas column as the real green-O2/blue-He split pill instead of
@@ -5952,17 +6402,6 @@
                 return [totalRuntime, 0];
             }
 
-            let stepMode = modeOCOrCC;
-            if(BO && modeOCOrCC === "CC") {
-                stepMode = "OC";
-            }
-
-            // Locate the OC bailout gas (for CC's "what if I bailed" table,
-            // BO=1 - single-level only) - a marker entry, never its own row.
-            let BOGas = null;
-            for (let i = 0; i < response.length; i++) {
-                if (response[i].phase === "gas_switch" && BOGas == null) { BOGas = response[i].gas; break; }
-            }
 
             // Pass 1: consolidate consecutive steps into "runs". Single-level's
             // DecoPlanner coalesces each phase leg into one summary entry
@@ -5990,14 +6429,60 @@
                     let keyLevel = (step.levelIndex === undefined || step.levelIndex === null) ? null : step.levelIndex;
                     let keyPhase = step.phase;
                     let keyDepth = Math.round((step.abs_p - 1) * 33);
+                    let keyGas = Array.isArray(step.gas) ? step.gas[1] + '/' + step.gas[3] : null;
                     let j = i;
                     while (j + 1 < response.length) {
-                        let n = response[j + 1];
+                        // A gas_switch marker mid-transit doesn't necessarily
+                        // mean a real gas change - CC's own diluent/O2 ratio
+                        // recalculates continuously as ambient pressure
+                        // changes, so the API emits one of these at points
+                        // during a single continuous ascent even on a
+                        // single-level dive with no real bailout/deco gas
+                        // (Pablo, 2026-09-25: "we are seeing entries when
+                        // coming up for CC because the gas are artificially
+                        // changing...collapse all the ascent to the first
+                        // deco stop in one entry"). Peek past any run of
+                        // gas_switch markers to see if the SAME transit
+                        // continues after them, rather than letting them end
+                        // the run. Scoped to CC only - on OC a gas_switch mid-
+                        // ascent is always a real cylinder change (a travel/
+                        // deco gas) that should keep showing as its own row.
+                        // Stationary phases don't need this either way, since
+                        // ambient pressure (and so the CC artifact) is
+                        // constant while holding depth. Also excluded for a
+                        // CC dive's own bailout table (BO=1) - once bailed,
+                        // the diver is breathing OC-style staged gases, and
+                        // THOSE switches (e.g. diluent -> the first deco gas
+                        // at its own configured switch depth) are real,
+                        // meaningful events, not the loop's continuous O2%
+                        // recalculation (Pablo, 2026-09-25: "the table is
+                        // incorrect too" - a real bailout gas switch was
+                        // getting folded away by this same-page-mode check).
+                        let lookahead = j + 1;
+                        if (!dhIsStationaryPhase(keyPhase) && modeOCOrCC === 'CC' && !BO) {
+                            while (response[lookahead] && response[lookahead].phase === 'gas_switch') lookahead++;
+                        }
+                        if (lookahead >= response.length) break;
+                        let n = response[lookahead];
                         let nLevel = (n.levelIndex === undefined || n.levelIndex === null) ? null : n.levelIndex;
                         let nDepth = Math.round((n.abs_p - 1) * 33);
+                        let nGas = Array.isArray(n.gas) ? n.gas[1] + '/' + n.gas[3] : null;
+                        // A transit run also breaks on a real gas change -
+                        // without this, a genuine mid-ascent switch (e.g. a
+                        // CC bailout reaching a staged deco gas's own switch
+                        // depth) that happens to still be tagged with the
+                        // same levelIndex/phase as the leg before it got
+                        // silently merged into one row at the WRONG depth
+                        // (Pablo, 2026-09-25: "the table is incorrect too").
+                        // Skipped specifically in the CC-artifact-tolerant
+                        // case (modeOCOrCC==='CC' && !BO) - that's exactly
+                        // when gas SHOULD be ignored (the loop's own
+                        // continuous O2% recalculation, not a real switch).
+                        let dhToleratesGasDrift = !dhIsStationaryPhase(keyPhase) && modeOCOrCC === 'CC' && !BO;
                         let sameRun = nLevel === keyLevel && n.phase === keyPhase
-                            && (!dhIsStationaryPhase(keyPhase) || nDepth === keyDepth);
-                        if (sameRun) { j++; } else break;
+                            && (!dhIsStationaryPhase(keyPhase) || nDepth === keyDepth)
+                            && (dhIsStationaryPhase(keyPhase) || dhToleratesGasDrift || nGas === keyGas);
+                        if (sameRun) { j = lookahead; } else break;
                     }
                     runs.push({ phase: keyPhase, endStep: response[j] });
                     i = j + 1;
@@ -6006,17 +6491,25 @@
 
             let firstDecoRunIndex = runs.findIndex(r => r.phase === 'deco_stop');
 
-            // Pass 2: turn runs into table rows. isLastBeforeDeco is the one
-            // ascent/descent run immediately preceding the first deco stop -
-            // same "crossing into deco territory" row the old code tracked
-            // as lastAscentBeforeDeco, including its CC-bailout gas override.
+            // Pass 2: turn runs into table rows. crossedToOC tracks whether
+            // we've passed a REAL gas_switch marker yet - for a CC bailout
+            // table (BO=1), everything before that is still the CC loop
+            // (gas just drifting to hold setpoint, not a real breathing gas
+            // change), and everything from that marker on is genuinely OC,
+            // however many real switches the bailout stages through before
+            // the first deco stop (Pablo, 2026-09-25: "you need to be
+            // checking on when the first OC happens...before the switch to
+            // OC we only should have CC" - the old isLastBeforeDeco/BOGas
+            // approach only ever handled a single switch, mislabeling every
+            // genuinely-OC leg before that as CC and showing "-" for its gas).
+            let crossedToOC = false;
             let prevTime = 0;
             let totalDecoTime = 0;
             let totalRuntime = 0;
 
             for (let r = 0; r < runs.length; r++) {
                 let phase = runs[r].phase;
-                if (phase === 'gas_switch') continue; // marker only, not a row
+                if (phase === 'gas_switch') { crossedToOC = true; continue; } // marker only, not a row
 
                 let endStep = runs[r].endStep;
                 let isDecoStop = phase === 'deco_stop';
@@ -6024,10 +6517,30 @@
                 let isFinalAscentToSurface = firstDecoRunIndex !== -1 && r === runs.length - 1 && phase === 'ascent';
                 let useDecoRounding = firstDecoRunIndex !== -1 && r >= firstDecoRunIndex - 1;
 
-                let gas = endStep.gas;
-                if (isLastBeforeDeco && BO && modeOCOrCC === 'CC' && BOGas) gas = BOGas;
+                // Every ascent strictly between the first deco stop and the
+                // final ascent to the surface is just the diver leaving one
+                // stop for the next, shallower one - fold its time into the
+                // stop row it's leaving instead of showing it as its own
+                // "10ft ascend, 1 min" row (Pablo, 2026-09-25: "the only
+                // deco stop ascend I want to show is the last one to
+                // surface").
+                let isFoldableAscent = phase === 'ascent' && firstDecoRunIndex !== -1
+                    && r > firstDecoRunIndex && !isFinalAscentToSurface;
+                if (isFoldableAscent) {
+                    let lastRow = tableData[tableData.length - 1];
+                    if (lastRow) {
+                        lastRow.time += (endStep.time - prevTime);
+                        lastRow.runtime = endStep.time;
+                    }
+                    prevTime = endStep.time;
+                    totalRuntime = endStep.time;
+                    continue;
+                }
 
-                let showGas = modeOCOrCC === 'OC' || isDecoStop || isLastBeforeDeco || isFinalAscentToSurface;
+                let gas = endStep.gas;
+                let rowIsOC = modeOCOrCC === 'OC' || crossedToOC;
+
+                let showGas = rowIsOC || isDecoStop || isLastBeforeDeco || isFinalAscentToSurface;
                 let depth = useDecoRounding ? absPressureToDepthDeco(endStep.abs_p) : absPressureToDepth(endStep.abs_p);
                 if (isFinalAscentToSurface) depth = 0;
                 let ppo2AbsP = isFinalAscentToSurface ? 1 : endStep.abs_p;
@@ -6039,7 +6552,7 @@
                     runtime: endStep.time,
                     gas: showGas ? formatGas(gas) : "-",
                     gf: endStep.gf,
-                    mode: (isDecoStop || isLastBeforeDeco || isFinalAscentToSurface) ? stepMode : modeOCOrCC,
+                    mode: rowIsOC ? 'OC' : 'CC',
                     ppo2: parseFloat((gas[1]) / 100 * ppo2AbsP).toFixed(2)
                 });
 
@@ -6163,7 +6676,95 @@
             return [totalRuntime, totalDecoTime];
         }
 
-        function calculateDecoTime(response) {
+        // Deco Table API v2 row renderer - see
+        // https://claude.ai/code/artifact/40cb7622-7fd7-4c44-ab0d-5a8a223f25e2.
+        // `scenario.table` is already fully consolidated and already knows
+        // each row's own mode (CC/OC), so this is pure rendering: no run-
+        // merging, no gas-drift tolerance, no crossedToOC tracking. One row
+        // template, keyed off each row's own `mode` - a pure OC or pure CC
+        // table just never varies it, and a CC bailout table's real mid-
+        // table switch just falls out of the data.
+        //
+        // Row phase values reuse the SAME strings the raw step API already
+        // emits ("descent"/"const"/"ascent"/"deco_stop" - see
+        // getPhaseIcon() above), not new enum names - the backend doesn't
+        // need to invent a vocabulary the frontend doesn't already read.
+        function dhRenderDecoTableV2(scenario, BO) {
+            var rows = scenario.table;
+            var totals = scenario.totals;
+
+            function fmtDepth(depthFt) {
+                // Backend already picked the right rounding convention per
+                // leg (e.g. stops to the nearest 10ft) - this is a straight
+                // unit conversion for display, nothing else. Matches the
+                // existing 33ft-per-atm/10m-per-atm convention used
+                // everywhere else in this file (absPressureToDepth).
+                return modeImpOrMetric === 'imp' ? Math.round(depthFt) : Math.round(depthFt / 33 * 10);
+            }
+            function fmtTimeMin(minutes) { return Math.ceil(minutes); }
+            function fmtGasCell(row) {
+                if (row.mode === 'CC' || !row.gas) {
+                    return document.getElementById('labelSetpoint') ? document.getElementById('labelSetpoint').value : '-';
+                }
+                return dhBuildGasSplitPillHtml(row.gas.o2, row.gas.he, true);
+            }
+
+            var hasMixedMode = rows.length > 0 && rows.some(function (r) { return r.mode !== rows[0].mode; });
+            var isPureCC = rows.length > 0 && rows.every(function (r) { return r.mode === 'CC'; });
+            // A pure OC or pure CC table doesn't need a Mode column at all
+            // (every row already says so via its gas cell) - only a real
+            // bailout table, where mode genuinely changes mid-table, needs it.
+            var showModeColumn = hasMixedMode;
+
+            var theadCells = '<th class="phase-column" style="width: 6%;"></th>';
+            if (showModeColumn) theadCells += '<th class="text-xs" style="width: 7%; padding-left: 0px; text-align:center;">Mode</th>';
+            theadCells += '<th class="depth-column text-sm" style="padding-left: 0px; padding-right:0px;">Depth</th>';
+            theadCells += '<th class="text-sm" style="padding-left: 0px; padding-right:0px;">Time</th>';
+            theadCells += '<th class="text-sm" style="padding-left: 0px; padding-right:0px;">RT</th>';
+            if (!isPureCC) theadCells += '<th class="text-sm" style="padding-left: 0px; padding-right:0px; text-align:center;">Gas</th>';
+            theadCells += '<th class="text-sm hide-on-mobile" style="padding-left: 0px; padding-right:0px;">PPO&#8322;</th>';
+            theadCells += '<th class="text-sm hide-on-mobile" style="padding-left: 0px; padding-right:0px;">GF</th>';
+
+            var tableHTML = '<div style="overflow: auto;"><table class="table table-striped table-sm" style="min-width:300px; width: 100%; table-layout: fixed;"><thead><tr>'
+                + theadCells + '</tr></thead><tbody>';
+
+            rows.forEach(function (row) {
+                tableHTML += '<tr><td class="text-info">' + getPhaseIcon(row.phase) + '</td>';
+                if (showModeColumn) tableHTML += '<td class="text-xs" style="padding-left: 0px;">' + row.mode + '</td>';
+                tableHTML += '<td>' + fmtDepth(row.depth) + '</td>';
+                tableHTML += '<td class="text-sm text-left">' + fmtTimeMin(row.time) + '</td>';
+                tableHTML += '<td class="text-sm">' + fmtTimeMin(row.runtime) + '</td>';
+                if (!isPureCC) tableHTML += '<td class="text-xs">' + fmtGasCell(row) + '</td>';
+                tableHTML += '<td class="text-sm fw-bold hide-on-mobile">' + row.ppo2 + '</td>';
+                tableHTML += '<td class="text-sm hide-on-mobile">' + (row.gf * 100).toFixed(0) + '%</td></tr>';
+            });
+            tableHTML += '</tbody></table></div>';
+
+            var lastRow = rows[rows.length - 1];
+            var totalRuntime = totals ? totals.runtime : (lastRow ? lastRow.runtime : 0);
+            var totalDecoTime = totals ? totals.decoTime
+                : rows.filter(function (r) { return r.phase === 'decoStop'; }).reduce(function (sum, r) { return sum + r.time; }, 0);
+
+            if (BO) {
+                document.getElementById("BOTableContainer").innerHTML = tableHTML;
+            } else {
+                document.getElementById("decoTableContainer").innerHTML = tableHTML;
+                var gf = totals && totals.gf ? totals.gf : {
+                    low: document.getElementById("labelGFL").value,
+                    high: document.getElementById("labelGFH").value,
+                };
+                updateDecoSummary(totalDecoTime, totalRuntime, (totals && totals.model) || "ZH-L16C-GF", gf.high, gf.low);
+            }
+
+            return [totalRuntime, totalDecoTime];
+        }
+
+        function calculateDecoTime(scenario) {
+            // Deco Table API v2 - totals are already computed backend-side.
+            if (scenario && scenario.totals) {
+                return [scenario.totals.runtime, scenario.totals.decoTime];
+            }
+            let response = scenario ? scenario.profile : [];
             let tableData = []; // Store table rows
             let prevTime = 0; // Track cumulative runtime
 
@@ -6503,7 +7104,12 @@
 
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
-                profileChartInstance.options.plugins.annotation.annotations = {};
+                // Keep the critical point marker on screen when toggling
+                // this off, same as every other annotations reset below
+                // (Pablo, 2026-09-25: "once you click on what if and
+                // another overlay is shown, the critical point marker
+                // disappears...make it part of the baseline group").
+                profileChartInstance.options.plugins.annotation.annotations = buildCriticalPointAnnotation(window.lastCriticalPoint, modeImpOrMetric == "met" ? 10 : 33);
                 let labelRT = document.getElementById("labelWhatIfRunTime").innerText="-";
                 let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff").innerText="-";
                 let labelDT = document.getElementById("labelWhatIfDecoTime").innerText="-";
@@ -6540,7 +7146,10 @@
                 // naturally computes to zero switches (losing deco gases
                 // just means staying on bottom gas the whole way up).
                 var unitConversion3 = modeImpOrMetric == "met" ? 10 : 33;
-                profileChartInstance.options.plugins.annotation.annotations = buildGasSwitchAnnotations(globalResponse['lostDecoGas'], unitConversion3, true);
+                // Same multi-level exception as the bailout overlay below -
+                // no single "the bottom" to force the marker back to.
+                profileChartInstance.options.plugins.annotation.annotations = buildGasSwitchAnnotations(globalResponse['lostDecoGas'], unitConversion3, modeLevelSingleOrMulti !== 'multi', undefined, 'lostDecoGas');
+                Object.assign(profileChartInstance.options.plugins.annotation.annotations, buildCriticalPointAnnotation(window.lastCriticalPoint, unitConversion3));
 
                 // update new decoT and newRT
             
@@ -6866,8 +7475,10 @@
             if (!this.checked) {
                 profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(dataset => dataset.label === "Deco profile");
                 // Back to CC's baseline - no gas-switch markers (the CC
-                // diluent itself never changes mid-dive).
-                profileChartInstance.options.plugins.annotation.annotations = {};
+                // diluent itself never changes mid-dive), but keep the
+                // critical point marker (Pablo, 2026-09-25: "make it part
+                // of the baseline group").
+                profileChartInstance.options.plugins.annotation.annotations = buildCriticalPointAnnotation(window.lastCriticalPoint, modeImpOrMetric == "met" ? 10 : 33);
                 let labelRT = document.getElementById("labelWhatIfRunTime").innerText="-";
                 let labelRTDiff = document.getElementById("labelWhatIfRunTimeDiff").innerText="-";
                 let labelDT = document.getElementById("labelWhatIfDecoTime").innerText="-";
@@ -6913,7 +7524,25 @@
                 // what if case is 'Bail out to OC' you need to show the
                 // switching markers as in OC in the chart").
                 var unitConversion = modeImpOrMetric == "met" ? 10 : 33;
-                profileChartInstance.options.plugins.annotation.annotations = buildGasSwitchAnnotations(globalResponse['bailout'], unitConversion, true);
+                // "Force the first switch to max depth" is single-level's
+                // own "you bail right at the bottom" convention - there's
+                // one well-defined bottom to snap to. Multi-level has no
+                // single bottom (several levels, possibly at different
+                // depths), and forcing it there was landing the marker at
+                // Level 1's position instead of the real switch point,
+                // right after leaving the LAST level (Pablo, 2026-09-25:
+                // "the first gas switch is incorrectly marked...it should
+                // happen at the end of the last level") - the row's own
+                // real time/depth already IS that point for multi-level,
+                // so skip the forcing there.
+                var dhForceFirstSwitchToBottom = modeLevelSingleOrMulti !== 'multi';
+                // CC bailout only - restrict switch markers to real
+                // 'gas_switch'-tagged rows, ignoring the loop's own
+                // continuous setpoint-driven mix drift during plain ascent/
+                // const legs (Pablo, 2026-09-25: "before the switch to OC
+                // we only should have CC").
+                profileChartInstance.options.plugins.annotation.annotations = buildGasSwitchAnnotations(globalResponse['bailout'], unitConversion, dhForceFirstSwitchToBottom, true, 'bailout');
+                Object.assign(profileChartInstance.options.plugins.annotation.annotations, buildCriticalPointAnnotation(window.lastCriticalPoint, unitConversion));
 
                 // show BO table and change table title
                 decoTableContainer.style.display = "none";
@@ -6957,9 +7586,9 @@
 
             // update gas consumption
             document.getElementById("gasConsumptionRow").style.display="block";
-            gasConsumption = calculateGasConsumption(globalResponse['bailout']);
+            gasConsumption = calculateGasConsumption(window.dhScenarios.bailout);
             // no need to render bottom gas (it's on CC)
-            renderGasConsumptionTable(gasConsumption, "deco", globalResponse['bailout']);
+            renderGasConsumptionTable(gasConsumption, "deco", window.dhScenarios.bailout);
             
 
 
@@ -7186,6 +7815,11 @@
             document.getElementById('multiLevelRow').style.display = 'none';
             document.getElementById('singleLevelTab').classList.add('is-active');
             document.getElementById('multiLevelTab').classList.remove('is-active');
+            // Whichever depth is now "in force" just changed (was the
+            // deepest level, now the single-level field) - resync the
+            // ideal bottom gas/diluent to match (Pablo, 2026-09-25).
+            dhSyncIdealBottomGas();
+            if (typeof dhSyncBailoutSwitchInfo === 'function') dhSyncBailoutSwitchInfo();
             // The overall Bottom time/Surface time column comes back, and
             // GF/rate return to their original col-lg-4 width (Pablo,
             // 2026-09-25).
@@ -7202,6 +7836,8 @@
             document.getElementById('multiLevelRow').style.display = '';
             document.getElementById('multiLevelTab').classList.add('is-active');
             document.getElementById('singleLevelTab').classList.remove('is-active');
+            dhSyncIdealBottomGas();
+            if (typeof dhSyncBailoutSwitchInfo === 'function') dhSyncBailoutSwitchInfo();
             // No What if? in multi-level yet (Pablo, 2026-09-25).
             var fab = document.getElementById('dhWhatIfFab');
             if (fab) fab.hidden = true;
@@ -7219,7 +7855,14 @@
         }
 
         document.getElementById('singleLevelTab').addEventListener('click', showSingleLevel);
-        document.getElementById('multiLevelTab').addEventListener('click', showMultiLevel);
+        document.getElementById('multiLevelTab').addEventListener('click', function (e) {
+            @if(auth()->user()->isGuest())
+                e.preventDefault();
+                if (typeof showModalGuest === 'function') showModalGuest();
+                return;
+            @endif
+            showMultiLevel();
+        });
 
         // On-demand level panels 2-4, same show/hide-a-pre-rendered-slot
         // pattern as the gas accordion's Add gas (dhNextGasSlot/
@@ -7313,17 +7956,36 @@
                 plugins: {
                     legend: { display: false },
                     annotation: {
+                        // Matches the reference tissue bar graph (Peregrine
+                        // dive computer manual, Pablo, 2026-09-25): each
+                        // bar's own scale is already normalized so 100 is
+                        // always "at ambient pressure" and 295 is always
+                        // "at this compartment's own M-value ceiling". The
+                        // Ambient boundary itself is drawn by the chart's
+                        // own green/yellow CSS background split (see
+                        // #tissueChart above, aligned to the exact same
+                        // 100/300 position) rather than a separate dashed
+                        // line annotation on top of it (Pablo, 2026-09-25:
+                        // "extend the green/yellow boundary to that exact
+                        // position and remove the dotted line"). The
+                        // Inspired Inert Gas line sits to its left by the
+                        // gas's own inert-gas fraction and is depth-
+                        // independent BY DESIGN for a fixed gas (ambient
+                        // pressure cancels out of the ratio) - it only
+                        // moves at a real gas switch, same as the
+                        // reference device.
                         annotations: {
                             inspiredPressureInertGas: {
                                 type: "line",
-                                xMin: 30,
-                                xMax: 30,
+                                xMin: 79,
+                                xMax: 79,
                                 borderColor: "black",
                                 borderWidth: 2,
                                 label: {
                                     enabled: true,
-                                    content: "100%",
-                                    position: "top"
+                                    content: "Inspired Inert Gas 79%",
+                                    position: "top",
+                                    font: { size: 10 }
                                 }
                             }
                         }
@@ -7344,39 +8006,58 @@
             let secs = totalSeconds % 60;
             return `${mins}:${secs.toString().padStart(2, '0')}`; // Ensures two-digit seconds
         }
-        // Define M0 and dM values for ZHL-16C (16 compartments)
+        // Exact ZH-L16C-GF coefficients transcribed from the DecoPlanning
+        // backend's own engine (decotengu==0.14.1, decotengu/model.py) -
+        // Pablo, 2026-09-25, via https://claude.ai/artifact/WPWQLpPhiKPySYdWAmHhgL.
+        // Two earlier attempts here (a made-up dM table, then a "textbook"
+        // ZHL-16C table) both let a compartment's tissue tension read as
+        // exceeding the yellow/red boundary on a dive (Cayman Wall) whose
+        // actual decompression the backend computed as safe - this is the
+        // real table, not a re-derivation, and includes helium (He A/B)
+        // for trimix/CC dives, not just nitrogen.
         const MValues = [
-            { M0: 1.83, dM: 0.56 },
-            { M0: 1.81, dM: 0.55 },
-            { M0: 1.79, dM: 0.54 },
-            { M0: 1.75, dM: 0.52 },
-            { M0: 1.71, dM: 0.51 },
-            { M0: 1.68, dM: 0.50 },
-            { M0: 1.65, dM: 0.49 },
-            { M0: 1.62, dM: 0.48 },
-            { M0: 1.61, dM: 0.47 },
-            { M0: 1.60, dM: 0.46 },
-            { M0: 1.55, dM: 0.45 },
-            { M0: 1.50, dM: 0.44 },
-            { M0: 1.46, dM: 0.43 },
-            { M0: 1.41, dM: 0.42 },
-            { M0: 1.37, dM: 0.41 },
-            { M0: 1.33, dM: 0.40 }
+            { a_n2: 1.2599, b_n2: 0.5050, a_he: 1.7424, b_he: 0.4245 },
+            { a_n2: 1.0000, b_n2: 0.6514, a_he: 1.3830, b_he: 0.5747 },
+            { a_n2: 0.8618, b_n2: 0.7222, a_he: 1.1919, b_he: 0.6527 },
+            { a_n2: 0.7562, b_n2: 0.7825, a_he: 1.0458, b_he: 0.7223 },
+            { a_n2: 0.6200, b_n2: 0.8126, a_he: 0.9220, b_he: 0.7582 },
+            { a_n2: 0.5043, b_n2: 0.8434, a_he: 0.8205, b_he: 0.7957 },
+            { a_n2: 0.4410, b_n2: 0.8693, a_he: 0.7305, b_he: 0.8279 },
+            { a_n2: 0.4000, b_n2: 0.8910, a_he: 0.6502, b_he: 0.8553 },
+            { a_n2: 0.3750, b_n2: 0.9092, a_he: 0.5950, b_he: 0.8757 },
+            { a_n2: 0.3500, b_n2: 0.9222, a_he: 0.5545, b_he: 0.8903 },
+            { a_n2: 0.3295, b_n2: 0.9319, a_he: 0.5333, b_he: 0.8997 },
+            { a_n2: 0.3065, b_n2: 0.9403, a_he: 0.5189, b_he: 0.9073 },
+            { a_n2: 0.2835, b_n2: 0.9477, a_he: 0.5181, b_he: 0.9122 },
+            { a_n2: 0.2610, b_n2: 0.9544, a_he: 0.5176, b_he: 0.9171 },
+            { a_n2: 0.2480, b_n2: 0.9602, a_he: 0.5172, b_he: 0.9217 },
+            { a_n2: 0.2327, b_n2: 0.9653, a_he: 0.5119, b_he: 0.9267 }
         ];
 
         /**
-         * Calculate the maximum tolerable nitrogen pressure for a given compartment.
+         * Calculate the maximum tolerable inert gas pressure for a given
+         * compartment, weighting the N2/He coefficients by this
+         * compartment's own current N2/He tissue split - matching the
+         * backend's own ceiling formula (a = (a_n2*p_n2 + a_he*p_he)/p,
+         * same for b), which reduces to plain N2 coefficients when p_he=0.
+         * NOTE: this engine's M-value line is M(P) = a + P/b (divide by b),
+         * not the a + b*P form printed in most textbook Buhlmann summaries.
          * @param {number} compartment - Compartment number (1-16)
          * @param {number} ambientPressure - Absolute ambient pressure (ATA)
-         * @returns {number} - Maximum allowable nitrogen partial pressure in ATA
+         * @param {number} pN2 - This compartment's current N2 tissue tension (ATA)
+         * @param {number} pHe - This compartment's current He tissue tension (ATA)
+         * @returns {number} - Maximum allowable inert gas partial pressure (ATA)
          */
-        function calculateMValueN2(compartment, ambientPressure) {
+        function calculateMValue(compartment, ambientPressure, pN2, pHe) {
             if (compartment < 1 || compartment > 16) {
                 throw new Error("Invalid compartment number. Must be between 1 and 16.");
             }
 
-            const { M0, dM } = MValues[compartment - 1]; // Get M-values for the selected compartment
-            return M0 + (dM * ambientPressure); // Bühlmann M-value formula
+            const c = MValues[compartment - 1];
+            const pTotal = pN2 + pHe;
+            const a = pTotal > 0 ? (c.a_n2 * pN2 + c.a_he * pHe) / pTotal : c.a_n2;
+            const b = pTotal > 0 ? (c.b_n2 * pN2 + c.b_he * pHe) / pTotal : c.b_n2;
+            return a + (ambientPressure / b);
         }
 
 
@@ -7448,22 +8129,123 @@
             //console.log(conveyor[index].tissue_p);
             //console.log("index = " +(index) + " Abs_P = " + (conveyor[index].abs_p) + " time = " + conveyor[index].time + " N2 = " + conveyor[index].gas[2]);
 
+            // The API's own tissue_p is alveolar (inspired), not ambient -
+            // it already subtracts the standard respiratory water vapor
+            // pressure (~47mmHg/0.0627 bar at body temperature) before
+            // multiplying by gas fraction, the same way every Buhlmann-
+            // style computer does. Confirmed empirically: at t=0 (surface,
+            // fully air-equilibrated) tissue_p reads ~0.751, not 0.79*1.01325
+            // (~0.80) - it matches 0.79*(1.01325-0.0627) almost exactly
+            // (Pablo, 2026-09-25: "at t=0 the PPN2 should be 0.79 matching
+            // right on the bar"). The green/yellow (undersaturated) branch
+            // needs the same correction in its own denominator so "100" on
+            // the bar lines up with the Inspired N2 line's own 79% at the
+            // surface, instead of reading low. The M-value (yellow/red)
+            // branch is untouched - Buhlmann M-values are defined against
+            // raw ambient pressure, not alveolar pressure.
+            const WATER_VAPOR_PRESSURE_BAR = 0.0627;
+            let effAmbient = conveyor[index].abs_p - WATER_VAPOR_PRESSURE_BAR;
             let tissueValues = [];
             for(i=0; i<16; i++) {
-                if(conveyor[index].tissue_p[i][0] <= conveyor[index].abs_p)
-                    //const tissueValues = conveyor[index].tissue_p.map(tissue => (tissue[0]) / (conveyor[index].abs_p) * 100);
-                    tissueValues[i] = conveyor[index].tissue_p[i][0] / conveyor[index].abs_p * 100;
-                else
-                    tissueValues[i] = 100 + conveyor[index].tissue_p[i][0] / calculateMValueN2(i+1, conveyor[index].abs_p) * 195;
+                // tissue_p[i] is [N2 tension, He tension] (ATA) - the
+                // backend's own ceiling formula controls on their SUM, not
+                // N2 alone, weighting the M-value coefficients by this
+                // compartment's N2/He split (Pablo, 2026-09-25, per
+                // https://claude.ai/artifact/WPWQLpPhiKPySYdWAmHhgL's own
+                // "quick sanity checks": "Is tissue_p...read as the summed
+                // (p_n2+p_he)...matching what the ceiling formula's p
+                // represents?"). Using N2 alone made a trimix/CC compartment
+                // read as under its limit when it wasn't, or vice versa.
+                let pN2 = conveyor[index].tissue_p[i][0];
+                let pHe = conveyor[index].tissue_p[i][1];
+                let pTotal = pN2 + pHe;
+                if(pTotal <= effAmbient) {
+                    tissueValues[i] = pTotal / effAmbient * 100;
+                } else {
+                    // Position within the yellow zone as "% of the way from
+                    // ambient to this compartment's own M-value" rather than
+                    // a raw tissue_p/M_value ratio - continuous with the
+                    // green formula above (both give exactly 100 right at
+                    // the ambient crossover, so a bar's length never jumps
+                    // as it crosses from green into yellow), and still
+                    // reaches exactly 295 at the M-value/red boundary
+                    // (Pablo, 2026-09-25: smooth-crossover option).
+                    let mval = calculateMValue(i + 1, conveyor[index].abs_p, pN2, pHe);
+                    tissueValues[i] = 100 + (pTotal - effAmbient) / (mval - effAmbient) * 195;
+                }
             }
             //console.log(tissueValues); // Check the extracted values
 
             tissueChartInstance.data.datasets[0].data = tissueValues;
 
-            tissueChartInstance.options.plugins.annotation.annotations.inspiredPressureInertGas.xMin =  (100 - conveyor[index].gas[1] - conveyor[index].gas[3]);
-            tissueChartInstance.options.plugins.annotation.annotations.inspiredPressureInertGas.xMax =  (100 - conveyor[index].gas[1] - conveyor[index].gas[3]);
+            // This marks where a tissue exactly in equilibrium with the
+            // CURRENTLY INSPIRED gas would sit on the bars' own %-of-
+            // current-ambient scale - bars to its right are on-gassing
+            // relative to what's being breathed right now, bars to its
+            // left are off-gassing. That threshold is the gas's own N2
+            // fraction and is depth-independent for a fixed gas (ambient
+            // pressure cancels out of both sides of the comparison) - it
+            // only moves at a real gas switch (Pablo, 2026-09-25: "In OC
+            // it's easy because there is no change in the PPN2 unless
+            // there is a gas switch...at the start of the dive PPN2 is
+            // 0.79...at 79% of the green area").
+            //
+            // CC is different: PPO2 is held at the setpoint rather than a
+            // fixed gas fraction, so the loop's O2% (gas[1]) constantly
+            // shifts with depth to maintain it - using gas[1] directly (as
+            // OC does) would fold that shifting O2% into the N2 estimate
+            // and drift the line for no physiological reason. Pablo:
+            // "the PPO2 is fixed (at the setpoint), so we need to
+            // calculate the PPN2 (basically Ambient pressure - PPO2 -
+            // PPHe)". PPHe still comes from the loop's own He fraction
+            // (gas[3]) - diluent He isn't actively regulated, so its
+            // absolute partial pressure stays constant through a normal
+            // ascent and its reported fraction already reflects that.
+            // Bars now track TOTAL inert gas (N2+He, see above) rather
+            // than nitrogen alone, so this line needs to match: whatever
+            // isn't O2 is inert gas, so it's just "100 - O2%" - no need to
+            // separately subtract He% anymore, it's already included.
+            var inspiredInertPct;
+            if (index === 0 || index === conveyor.length - 1) {
+                // Every dive starts AND ends on the surface breathing
+                // ordinary air - the gas mix in the tank/loop is only
+                // relevant while actually submerged and breathing it
+                // (Pablo, 2026-09-25: "at the start of the dive, make sure
+                // the black vertical line is exactly at 79%...", then
+                // later: "at the VERY end of the dive, the black vertical
+                // line needs to come back to 0.79 (the diver is back on
+                // the surface)").
+                inspiredInertPct = 79;
+            } else if (modeOCOrCC === 'CC') {
+                var ccSetpoint = (window.lastDiveProfile && window.lastDiveProfile.setpoint) || parseFloat(labelSetpoint.value);
+                inspiredInertPct = 100 - (ccSetpoint / conveyor[index].abs_p * 100);
+                // At/near the surface the loop physically can't hit the
+                // setpoint (would need >100% O2) and the very first/last
+                // samples are really pre-/post-dive placeholders, not the
+                // loop actually running - clamp to the chart's own [0,100]
+                // green band rather than let those instants push the line
+                // to a nonsensical negative position.
+                inspiredInertPct = Math.max(0, Math.min(100, inspiredInertPct));
+            } else {
+                inspiredInertPct = 100 - conveyor[index].gas[1];
+            }
+            tissueChartInstance.options.plugins.annotation.annotations = {
+                inspiredPressureInertGas: {
+                    type: "line",
+                    xMin: inspiredInertPct,
+                    xMax: inspiredInertPct,
+                    borderColor: "black",
+                    borderWidth: 2,
+                    label: {
+                        enabled: true,
+                        content: "Inspired Inert Gas " + Math.round(inspiredInertPct) + "%",
+                        position: "top",
+                        font: { size: 10 }
+                    }
+                }
+            };
 
-            tissueChartInstance.update();           
+            tissueChartInstance.update();
             
             let unitConversion = 33;
             if(modeImpOrMetric == "met")
@@ -7643,7 +8425,58 @@
             return isNaN(fallback) ? (type === 'deco' ? 0.5 : 0.8) : fallback;
         }
 
-        function calculateGasConsumption(diveData) {
+        // `scenario` is a normalized {profile, table, ...} object (see
+        // dhNormalizeScenario) - a bare array is also accepted for whatever
+        // legacy call site hasn't been updated yet, treated as `.profile`.
+        function calculateGasConsumption(scenario) {
+            var hasV2Table = scenario && !Array.isArray(scenario) && Array.isArray(scenario.table);
+            if (hasV2Table) return dhCalculateGasConsumptionV2(scenario.table);
+            var diveData = Array.isArray(scenario) ? scenario : (scenario ? scenario.profile : []);
+            return dhCalculateGasConsumptionLegacy(diveData);
+        }
+
+        // Deco Table API v2 (Pablo, 2026-09-25 -
+        // https://claude.ai/artifact/CQMT3MahLtqEgA68z7Fgta): reads the
+        // backend's own consolidated `table` instead of the fine-grained
+        // `profile`. A CC leg's `gas` is already null there - there's no
+        // cylinder to report on for it at all - whereas the fine-grained
+        // profile's CC legs each carry their own continuously-recalculated
+        // loop-equivalent mix (holding setpoint, not a real gas), which is
+        // exactly what was leaking into this table as spurious entries like
+        // "23/46" (Pablo: "you will ONLY show gases that were either OC
+        // gases, bailout or deco...never something the user did not
+        // define"). Every row's own `time` is already that leg's own
+        // duration too - no more prevTime bookkeeping needed.
+        function dhCalculateGasConsumptionV2(rows) {
+            const gasVolume = {};
+            let bottomGasMix;
+
+            rows.forEach(function (row) {
+                if (!row.gas) return; // CC leg - no cylinder gas to report
+
+                const gasMix = row.gas.he === 0 ? `${row.gas.o2}%` : `${row.gas.o2}/${row.gas.he}`;
+                if (row.phase === "descend" || row.phase === "level") {
+                    bottomGasMix = gasMix;
+                }
+
+                const isDecoGas = row.phase !== "descend" && row.phase !== "level" && gasMix !== bottomGasMix;
+                const gasType = isDecoGas ? "deco" : "bottom";
+                const sacRate = dhGetSacRateForGas(gasMix, gasType);
+                const absPressure = 1 + row.depth / 33;
+                const volumeNeeded = sacRate * absPressure * row.time;
+
+                if (!gasVolume[gasMix]) gasVolume[gasMix] = { gas: gasMix, volume: 0, type: gasType };
+                gasVolume[gasMix].volume += volumeNeeded;
+            });
+
+            return Object.values(gasVolume).map(entry => ({
+                gas: entry.gas,
+                volume: entry.volume.toFixed(2),
+                type: entry.type,
+            }));
+        }
+
+        function dhCalculateGasConsumptionLegacy(diveData) {
             const gasVolume = {};
             let bottomGasMix; // Store bottom gas mix from descent/constant phases
 
@@ -7929,7 +8762,7 @@
             var model = document.getElementById('labelModel').textContent || 'ZH-L16C-GF';
             titleBlock.innerHTML =
                 '<div style="font-size:32px; font-weight:800; line-height:1.2;">Decompression Plan</div>' +
-                '<div style="font-size:15px; opacity:.8; margin-top:6px;">created on ' + new Date().toLocaleString() + '</div>' +
+                '<div style="font-size:15px; opacity:.8; margin-top:6px;">created on ' + new Date().toLocaleString() + ' by {{ addslashes(auth()->user()->name ?? "") }}</div>' +
                 '<div style="font-size:15px; opacity:.8;">Model: ' + model + '</div>';
             header.appendChild(titleBlock);
 
@@ -8343,15 +9176,16 @@
                 // shared with OC's own table, so they need bailout data
                 // written into them before being read.
                 if (bailout) {
-                    var bailoutGasConsumption = calculateGasConsumption(bailout);
+                    // Reads window.dhScenarios directly (not the `bailout`
+                    // parameter, still the flat profile array) so this gets
+                    // the v2 `table`-based calculation - real bailout/deco
+                    // gases only, never the diluent or a CC loop artifact
+                    // (Pablo, 2026-09-25: "you will ONLY show gases that
+                    // were either OC gases, bailout or deco...never
+                    // something the user did not define").
+                    var bailoutGasConsumption = calculateGasConsumption(window.dhScenarios.bailout);
                     renderGasConsumptionTable(bailoutGasConsumption, "deco");
 
-                    // "Bailout gas" (the diluent) deliberately isn't shown here -
-                    // it's part of the calculation, but the diver is still
-                    // breathing CC/the loop at that point, not the diluent
-                    // itself, so a bailout-gas consumption figure would be
-                    // misleading (Pablo, 2026-09-24). Only the deco gases a
-                    // bailout-to-OC ascent would actually consume matter here.
                     if (bailoutGasConsumption.some(function (g) { return g.type === 'deco'; })) {
                         var boSub2 = document.createElement('div');
                         boSub2.style.cssText = 'font-weight:700; font-size:12px; color:#5a6b78; text-transform:uppercase; letter-spacing:.03em; margin:12px 0 6px;';
@@ -8482,7 +9316,14 @@
             }
         }
 
-        document.getElementById('exportDecoPlanPdfBtn').addEventListener('click', dhExportDecoPlanToPDF);
+        document.getElementById('exportDecoPlanPdfBtn').addEventListener('click', function (e) {
+            @if(auth()->user()->isGuest())
+                e.preventDefault();
+                if (typeof showModalGuest === 'function') showModalGuest();
+                return;
+            @endif
+            dhExportDecoPlanToPDF();
+        });
 
         // "Save a dive" now opens a naming modal instead of a native
         // prompt() (Pablo, 2026-09-19: "open a modal to give the dive a
@@ -8526,6 +9367,30 @@
             });
         }
 
+        // Advanced settings (Pablo, 2026-09-25). Both toggles just flip the
+        // global dhRecommendBestGases/dhRemoveSafetyGuards flags declared
+        // near the top of the page - re-firing the sliders that actually
+        // enforce them (GF High, setpoint) applies a "remove guards" change
+        // immediately rather than only on the next depth/GF nudge.
+        (function () {
+            var btn = document.getElementById('dhAdvancedSettingsBtn');
+            var modalEl = document.getElementById('modalAdvancedSettings');
+            var modal = modalEl ? new bootstrap.Modal(modalEl) : null;
+            if (!btn || !modal) return;
+
+            btn.addEventListener('click', function () { modal.show(); });
+
+            document.getElementById('dhToggleRecommendGases').addEventListener('change', function (e) {
+                dhRecommendBestGases = e.target.checked;
+            });
+
+            document.getElementById('dhToggleRemoveGuards').addEventListener('change', function (e) {
+                dhRemoveSafetyGuards = e.target.checked;
+                GFHSlider.noUiSlider.set(GFHSlider.noUiSlider.get());
+                setpointSlider.noUiSlider.set(setpointSlider.noUiSlider.get());
+            });
+        })();
+
         // "Open a dive" (Pablo, 2026-09-19): reloads a saved plan's exact
         // inputs and re-runs the calculation. Fetched fresh each time the
         // modal opens (except right after this same session already loaded
@@ -8560,9 +9425,39 @@
                 var titleLine = document.createElement('span');
                 titleLine.style.cssText = 'font-weight: 700; font-size: .82rem;';
                 titleLine.textContent = plan.label || (plan.mode === 'CC' ? 'Untitled CC dive' : 'Untitled OC dive');
+
+                // Pills so a saved dive's shape is scannable at a glance
+                // (Pablo, 2026-09-25: "use small pills to indicate: OC vs
+                // CC - Single Level vs MultiLevel - the depth(s)"). Plans
+                // saved before multi-level existed have no levelsMode at
+                // all and are always treated as single-level.
+                var isMultiPlan = plan.inputs.levelsMode === 'multi' && Array.isArray(plan.inputs.levels) && plan.inputs.levels.length > 0;
                 var metaLine = document.createElement('span');
-                metaLine.style.cssText = 'font-size: .72rem; opacity: .75;';
-                metaLine.textContent = plan.mode + ' · ' + (plan.inputs.maxDepth || '?') + dhFormatDepthUnit() + ' · ' + dhFormatSavedPlanWhen(plan.created_at);
+                metaLine.style.cssText = 'display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: .72rem;';
+
+                var modePill = document.createElement('span');
+                modePill.className = 'dh-pill ' + (plan.mode === 'CC' ? 'dh-pill-cc' : 'dh-pill-oc');
+                modePill.textContent = plan.mode;
+
+                var levelPill = document.createElement('span');
+                levelPill.className = 'dh-pill ' + (isMultiPlan ? 'dh-pill-multi' : 'dh-pill-single');
+                levelPill.textContent = isMultiPlan ? 'Multi Level' : 'Single Level';
+
+                var depthText = document.createElement('span');
+                depthText.style.opacity = '.85';
+                depthText.textContent = isMultiPlan
+                    ? plan.inputs.levels.map(function (l) { return l.depth; }).join('/') + dhFormatDepthUnit()
+                    : (plan.inputs.maxDepth || '?') + dhFormatDepthUnit();
+
+                var whenText = document.createElement('span');
+                whenText.style.opacity = '.75';
+                whenText.textContent = dhFormatSavedPlanWhen(plan.created_at);
+
+                metaLine.appendChild(modePill);
+                metaLine.appendChild(levelPill);
+                metaLine.appendChild(depthText);
+                metaLine.appendChild(whenText);
+
                 pick.appendChild(titleLine);
                 pick.appendChild(metaLine);
                 pick.addEventListener('click', function () {
@@ -8572,12 +9467,13 @@
 
                 var del = document.createElement('button');
                 del.type = 'button';
-                del.className = 'dh-mygases-delete';
+                del.className = 'dh-corner-delete';
                 del.title = 'Delete this saved dive';
+                del.setAttribute('aria-label', 'Delete this saved dive');
                 var delIcon = document.createElement('span');
                 delIcon.className = 'material-icons-round';
                 delIcon.setAttribute('aria-hidden', 'true');
-                delIcon.textContent = 'delete_outline';
+                delIcon.textContent = 'delete';
                 del.appendChild(delIcon);
                 del.addEventListener('click', function () {
                     if (!confirm('Delete "' + titleLine.textContent + '"?')) return;
@@ -8620,15 +9516,40 @@
         function dhLoadSavedDecoPlan(plan) {
             var inputs = plan.inputs;
             var isCC = plan.mode === 'CC';
+            // Plans saved before multi-level existed have no levelsMode at
+            // all - treat those as single-level (Pablo, 2026-09-25: "For
+            // the dives that already exist in the db, assume they were all
+            // single level").
+            var isMulti = inputs.levelsMode === 'multi' && Array.isArray(inputs.levels) && inputs.levels.length > 0;
 
             // Always click the target tab, even if already active - its
             // handler (showOpenCircuit/showClosedCircuit) is what resets
             // every gas slot back to empty, which this load needs whether
             // or not the mode itself is actually changing.
             (isCC ? closedCircuitTab : openCircuitTab).click();
+            (isMulti ? multiLevelTab : singleLevelTab).click();
 
-            dhSetFieldValue('labelDepth', inputs.maxDepth);
-            dhSetFieldValue('labelBottomTime', inputs.bottomTime);
+            if (isMulti) {
+                // Collapse to level 1 first, then open exactly the slots
+                // this plan needs - a currently-open 4-level layout must
+                // not leak into a plan saved with only 2 levels, and vice
+                // versa.
+                for (var lv = 4; lv >= 2; lv--) {
+                    if (!document.getElementById('levelPanel' + lv).hidden) dhDeleteLevel(lv);
+                }
+                for (var lv2 = 2; lv2 <= inputs.levels.length; lv2++) {
+                    window['showLevel' + lv2]();
+                }
+                inputs.levels.forEach(function (level, idx) {
+                    var n = idx + 1;
+                    dhLevelDepthSliders[n].noUiSlider.set(level.depth);
+                    dhLevelTimeSliders[n].noUiSlider.set(level.bottomTime);
+                });
+            } else {
+                dhSetFieldValue('labelDepth', inputs.maxDepth);
+                dhSetFieldValue('labelBottomTime', inputs.bottomTime);
+            }
+
             if (inputs.gradientFactors) {
                 dhSetFieldValue('labelGFL', inputs.gradientFactors.low);
                 dhSetFieldValue('labelGFH', inputs.gradientFactors.high);
