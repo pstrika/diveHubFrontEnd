@@ -2506,6 +2506,18 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
    but not for He, which isn't a "good/bad" target the same way. */
 .dh-gas-result-pill.is-o2.is-ideal { background: var(--dh-good); }
 
+/* Pure air (21/0) and pure O2 (100/0) show a text label ("Air"/"Pure O2")
+   instead of the plain O2%, everywhere a gas split pill appears (Pablo,
+   2026-09-26). is-gas-label suppresses the is-o2 pill's own ::before "O2"/
+   ::after "%" content above - the label text already says everything, so
+   stacking "O2Air%" would be wrong. Pure O2 keeps the normal green is-o2
+   background; Air gets its own neutral grey. */
+.dh-gas-result-pill.is-gas-label::before,
+.dh-gas-result-pill.is-gas-label::after {
+  content: none;
+}
+.dh-gas-result-pill.is-air { background: var(--dh-muted); }
+
 /* Gas density: a calculation result like the others, but a supporting
    figure rather than the headline the split pill above it is - smaller,
    with its unit baked in the same way (Pablo, 2026-09-15: "put g/L

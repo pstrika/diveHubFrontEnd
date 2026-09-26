@@ -434,6 +434,18 @@
                         <div class="dh-calc-inputs-head" id="dh-deco-inputs-toggle" role="button" tabindex="0" aria-expanded="true" aria-controls="dh-deco-inputs-body">
                             <span class="material-icons-round" aria-hidden="true">tune</span>
                             <h3>Inputs</h3>
+                            {{-- Clears every input back to a fresh page load - depth, gases,
+                                 mode, everything - except a saved GF/setpoint preference, which
+                                 comes back the same way it does on a real refresh (Pablo,
+                                 2026-09-26: "reset all the inputs to standard...if the user has
+                                 saved its own setpoint and GFs we bring those up, but we clear
+                                 depth, gases, etc...like we just refresh the page"). A real
+                                 location.reload() - re-rendering from the server - is the only
+                                 way to guarantee that "like a refresh" promise instead of hand-
+                                 resetting dozens of sliders/toggles and risking missing one. --}}
+                            <button type="button" class="dh-btn-icon dh-btn-icon-accent" id="dhResetInputsBtn" title="Reset all inputs" aria-label="Reset all inputs" style="margin-left: auto;">
+                                <span class="material-icons-round" aria-hidden="true">restart_alt</span>
+                            </button>
                             <span class="dh-calc-inputs-hint" id="dh-deco-inputs-hint" hidden>Tap to edit</span>
                             <span class="material-icons-round dh-calc-inputs-chevron" id="dh-deco-inputs-chevron" aria-hidden="true">expand_less</span>
                         </div>
@@ -1599,6 +1611,21 @@
                     toggle.addEventListener('keydown', function (e) {
                         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(body.hidden); }
                     });
+
+                    // A real reload, not a hand-reset of every slider/toggle -
+                    // the only way to actually guarantee "like we just
+                    // refreshed the page" (Pablo, 2026-09-26), including a
+                    // saved GF/setpoint preference coming back the exact same
+                    // way it does on a real refresh (server-rendered from
+                    // decoPrefs), while depth/gases/mode/everything else goes
+                    // back to the page's own hardcoded defaults.
+                    var resetBtn = document.getElementById('dhResetInputsBtn');
+                    if (resetBtn) {
+                        resetBtn.addEventListener('click', function (e) {
+                            e.stopPropagation(); // don't also toggle collapse - it's inside the same header
+                            location.reload();
+                        });
+                    }
                 })();
             </script>
 
@@ -4701,6 +4728,38 @@
             return parseInt(labelDepth.value);
         }
 
+        // Pure air (21%O2/0%He) and pure O2 (100%O2/0%He) show a text label
+        // instead of a plain O2%, everywhere a gas's O2 pill appears (Pablo,
+        // 2026-09-26: "if we have 21%...put 'Air' in a grey pill...if you
+        // have a pill with 100% O2...'Pure O2' and keep the pill green").
+        // is-gas-label suppresses the is-o2 pill's own ::before/::after
+        // pseudo-content (see divershub.css) - the label text already says
+        // everything. Defined this early (not next to dhBuildGasSplitPillHtml
+        // further down) because every gas card's O2/He sliders call
+        // dhApplyGasPillO2Label() from their own 'update' handler, which
+        // noUiSlider fires synchronously the moment .create() runs below -
+        // referencing a function defined later in the file at that point is
+        // a ReferenceError, not a "runs once page finishes loading" case.
+        function dhGasPillO2Info(o2, he) {
+            var o2n = parseInt(o2, 10);
+            var hen = parseInt(he, 10);
+            if (hen === 0 && o2n === 21) return { text: 'Air', extraClass: 'is-gas-label is-air' };
+            if (hen === 0 && o2n === 100) return { text: 'Pure O2', extraClass: 'is-gas-label' };
+            return { text: String(o2n), extraClass: '' };
+        }
+
+        // Applies dhGasPillO2Info() to an existing O2 split-pill <label> -
+        // used by every gas card's own O2/He slider handlers (bottom gas/
+        // diluent, deco gas 1-4) to keep their static pill in sync.
+        function dhApplyGasPillO2Label(elId, o2, he) {
+            var el = document.getElementById(elId);
+            if (!el) return;
+            var info = dhGasPillO2Info(o2, he);
+            el.textContent = info.text;
+            el.classList.toggle('is-gas-label', info.extraClass.indexOf('is-gas-label') !== -1);
+            el.classList.toggle('is-air', info.extraClass.indexOf('is-air') !== -1);
+        }
+
         // CC bailout's switch depth/PPO2/END aren't user-adjustable via a
         // slider like the OC deco gases (see containerDeco1CCInfo - no
         // slider there) - bailout always kicks in at the bottom, so the
@@ -4811,7 +4870,7 @@
         bottomGasO2Slider.noUiSlider.on('update', function (values, handle) {
             var bottomGasO2SliderValue = values[handle];
             labelBottomGasO2.value = parseInt(bottomGasO2SliderValue);
-            document.getElementById('bottomGasSplitO2').textContent = labelBottomGasO2.value;
+            dhApplyGasPillO2Label('bottomGasSplitO2', labelBottomGasO2.value, labelBottomGasHe.value);
 
             depth = dhEffectiveMaxDepth();
 
@@ -4873,6 +4932,7 @@
             labelBottomGasHe.value = parseInt(bottomGasHeSliderValue);
             document.getElementById('bottomGasSplitHe').textContent = labelBottomGasHe.value;
             dhUpdateSplitPillSolo('bottomGasSplitHe');
+            dhApplyGasPillO2Label('bottomGasSplitO2', labelBottomGasO2.value, labelBottomGasHe.value);
 
             var oxygen = parseInt(labelBottomGasO2.value);
             var helium = parseInt(labelBottomGasHe.value);
@@ -5068,7 +5128,7 @@
         decoGas1O2Slider.noUiSlider.on('update', function (values, handle) {
             var decoGas1O2SliderValue = values[handle];
             labelDecoGas1O2.value = parseInt(decoGas1O2SliderValue);
-            document.getElementById('decoGas1SplitO2').textContent = labelDecoGas1O2.value;
+            dhApplyGasPillO2Label('decoGas1SplitO2', labelDecoGas1O2.value, labelDecoGas1He.value);
 
             // Update MAX on He slider
             decoGas1HeSlider.noUiSlider.updateOptions({
@@ -5123,6 +5183,7 @@
             labelDecoGas1He.value = parseInt(decoGas1HeSliderValue);
             document.getElementById('decoGas1SplitHe').textContent = labelDecoGas1He.value;
             dhUpdateSplitPillSolo('decoGas1SplitHe');
+            dhApplyGasPillO2Label('decoGas1SplitO2', labelDecoGas1O2.value, labelDecoGas1He.value);
 
             var oxygen = parseInt(labelDecoGas1O2.value);
             var helium = parseInt(labelDecoGas1He.value);
@@ -5439,7 +5500,7 @@
         decoGas2O2Slider.noUiSlider.on('update', function (values, handle) {
             var decoGas2O2SliderValue = values[handle];
             labelDecoGas2O2.value = parseInt(decoGas2O2SliderValue);
-            document.getElementById('decoGas2SplitO2').textContent = labelDecoGas2O2.value;
+            dhApplyGasPillO2Label('decoGas2SplitO2', labelDecoGas2O2.value, labelDecoGas2He.value);
 
             // Update MAX on He slider
             decoGas2HeSlider.noUiSlider.updateOptions({
@@ -5486,6 +5547,7 @@
             labelDecoGas2He.value = parseInt(decoGas2HeSliderValue);
             document.getElementById('decoGas2SplitHe').textContent = labelDecoGas2He.value;
             dhUpdateSplitPillSolo('decoGas2SplitHe');
+            dhApplyGasPillO2Label('decoGas2SplitO2', labelDecoGas2O2.value, labelDecoGas2He.value);
 
             var oxygen = parseInt(labelDecoGas2O2.value);
             var helium = parseInt(labelDecoGas2He.value);
@@ -5608,7 +5670,7 @@
         decoGas3O2Slider.noUiSlider.on('update', function (values, handle) {
             var decoGas3O2SliderValue = values[handle];
             labelDecoGas3O2.value = parseInt(decoGas3O2SliderValue);
-            document.getElementById('decoGas3SplitO2').textContent = labelDecoGas3O2.value;
+            dhApplyGasPillO2Label('decoGas3SplitO2', labelDecoGas3O2.value, labelDecoGas3He.value);
 
             // Update MAX on He slider
             decoGas3HeSlider.noUiSlider.updateOptions({
@@ -5655,6 +5717,7 @@
             labelDecoGas3He.value = parseInt(decoGas3HeSliderValue);
             document.getElementById('decoGas3SplitHe').textContent = labelDecoGas3He.value;
             dhUpdateSplitPillSolo('decoGas3SplitHe');
+            dhApplyGasPillO2Label('decoGas3SplitO2', labelDecoGas3O2.value, labelDecoGas3He.value);
 
             var oxygen = parseInt(labelDecoGas3O2.value);
             var helium = parseInt(labelDecoGas3He.value);
@@ -5776,7 +5839,7 @@
         decoGas4O2Slider.noUiSlider.on('update', function (values, handle) {
             var decoGas4O2SliderValue = values[handle];
             labelDecoGas4O2.value = parseInt(decoGas4O2SliderValue);
-            document.getElementById('decoGas4SplitO2').textContent = labelDecoGas4O2.value;
+            dhApplyGasPillO2Label('decoGas4SplitO2', labelDecoGas4O2.value, labelDecoGas4He.value);
 
             // Update MAX on He slider
             decoGas4HeSlider.noUiSlider.updateOptions({
@@ -5823,6 +5886,7 @@
             labelDecoGas4He.value = parseInt(decoGas4HeSliderValue);
             document.getElementById('decoGas4SplitHe').textContent = labelDecoGas4He.value;
             dhUpdateSplitPillSolo('decoGas4SplitHe');
+            dhApplyGasPillO2Label('decoGas4SplitO2', labelDecoGas4O2.value, labelDecoGas4He.value);
 
             var oxygen = parseInt(labelDecoGas4O2.value);
             var helium = parseInt(labelDecoGas4He.value);
@@ -8966,10 +9030,13 @@
         // the Gas Consumption tables below, so both stay in sync.
         function dhBuildGasSplitPillHtml(o2, he, compact) {
             var sizeClass = compact ? ' is-compact' : '';
+            var info = dhGasPillO2Info(o2, he);
+            var o2Class = 'dh-gas-result-pill is-o2' + sizeClass + (info.extraClass ? ' ' + info.extraClass : '');
+            var o2Html = '<label class="' + o2Class + '">' + info.text + '</label>';
             if (he == 0) {
-                return '<span class="dh-gas-split-pill is-solo"><label class="dh-gas-result-pill is-o2' + sizeClass + '">' + o2 + '</label></span>';
+                return '<span class="dh-gas-split-pill is-solo">' + o2Html + '</span>';
             }
-            return '<span class="dh-gas-split-pill"><label class="dh-gas-result-pill is-o2' + sizeClass + '">' + o2 + '</label><label class="dh-gas-result-pill is-he' + sizeClass + '">' + he + '</label></span>';
+            return '<span class="dh-gas-split-pill">' + o2Html + '<label class="dh-gas-result-pill is-he' + sizeClass + '">' + he + '</label></span>';
         }
 
         function dhBuildPdfHeader(profile, isCC) {
