@@ -318,8 +318,8 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <div class="alert alert-danger d-flex align-items-start" role="alert" style="gap: 8px; font-size: .82rem;">
-                                <span class="material-icons-round" aria-hidden="true">warning</span>
+                            <div class="alert d-flex align-items-start" role="alert" style="gap: 8px; font-size: .82rem; background: var(--dh-danger); color: #fff; border: none;">
+                                <span class="material-icons-round" aria-hidden="true" style="color: #fff;">warning</span>
                                 <span>Turning off safety guardrails can let you configure dangerous diving conditions. Only change these if you understand the risk.</span>
                             </div>
 
@@ -6740,8 +6740,15 @@
             // decimals - you are showing 4 in the tables").
             function fmtPpo2(ppo2) { return parseFloat(ppo2).toFixed(2); }
             function fmtGasCell(row) {
+                // A CC row's `gas` is null (there's no fixed cylinder mix on
+                // the loop) - show the diluent actually being breathed, not
+                // the setpoint (a PPO2 target, not a gas) (Pablo, 2026-09-26:
+                // "in the bailout table, in the CC stages, you are put the
+                // setpoint as gas. You need to put the diluent").
                 if (row.mode === 'CC' || !row.gas) {
-                    return document.getElementById('labelSetpoint') ? document.getElementById('labelSetpoint').value : '-';
+                    var dilO2 = document.getElementById('labelBottomGasO2');
+                    var dilHe = document.getElementById('labelBottomGasHe');
+                    return (dilO2 && dilHe) ? dhBuildGasSplitPillHtml(dilO2.value, dilHe.value, true) : '-';
                 }
                 return dhBuildGasSplitPillHtml(row.gas.o2, row.gas.he, true);
             }
