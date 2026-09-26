@@ -1644,6 +1644,16 @@
                                     </div>
                                 </div>
 
+                                <!-- Safety warnings - red/yellow pills for an unsafe plan
+                                     (PPO2 > 1.6, CNS% >= 100, END > 200ft red; END > 150ft
+                                     yellow), populated by dhRenderSafetyWarnings() (Pablo,
+                                     2026-09-26: "I want to flag when a dive plan is unsafe"). -->
+                                <div class="row mt-2" id="dhSafetyWarningsRow" hidden>
+                                    <div class="col-12">
+                                        <div class="dh-deco-summary" id="dhSafetyWarningsContainer"></div>
+                                    </div>
+                                </div>
+
                                 <!-- New RT / New Deco Time - a second pill row that only
                                      appears once a What-if scenario is picked from the bubble
                                      below, colored red/green by whether the delta is worse or
@@ -2535,6 +2545,7 @@
                     console.log(conveyor.length);
 
                     renderO2Toxicity(window.dhScenarios.baseline.o2Exposure || response['o2Exposure']);
+                    dhRenderSafetyWarnings(window.dhScenarios.baseline);
                     timeLapseSlider.noUiSlider.updateOptions({
                         range: {
                             'min': 0,
@@ -2712,6 +2723,26 @@
                 // won't pick up the new, wider column on its own.
                 if (profileChartInstance) profileChartInstance.resize();
             });
+        })();
+
+        // The toggle button's own markup is "d-none d-lg-inline-flex" - CSS
+        // hides it below Bootstrap's lg breakpoint (992px) no matter what
+        // dhSetDecoTableCollapseBtnVisible() last set, with no JS involved
+        // at all. dhForceShowDecoTable() covers the JS-driven case (a
+        // no-deco dive hiding the button) but not this one - a manually
+        // collapsed table on a wide screen would stay collapsed with no
+        // visible way to bring it back the moment the viewport narrows
+        // (Pablo, 2026-09-26: "when the deco table is collapsed...and the
+        // user changes to a view that makes the collapse icon be hidden, we
+        // need to show the deco table" - reported as still broken after the
+        // JS-only fix, which is why this separate viewport listener exists).
+        (function () {
+            var mq = window.matchMedia('(min-width: 992px)');
+            function onChange(e) {
+                if (!e.matches) dhForceShowDecoTable();
+            }
+            if (mq.addEventListener) mq.addEventListener('change', onChange);
+            else if (mq.addListener) mq.addListener(onChange); // Safari <14
         })();
 
         function dhCollectLevels() {
@@ -2912,6 +2943,7 @@
 
                     conveyor = window.dhScenarios.baseline.conveyor || window.dhScenarios.baseline.profile;
                     renderO2Toxicity(window.dhScenarios.baseline.o2Exposure);
+                    dhRenderSafetyWarnings(window.dhScenarios.baseline);
                     timeLapseSlider.noUiSlider.updateOptions({
                         range: { 'min': 0, 'max': conveyor.length - 1 }
                     });
@@ -6739,6 +6771,16 @@
             // display (Pablo, 2026-09-26: "all PPO2 should have only two
             // decimals - you are showing 4 in the tables").
             function fmtPpo2(ppo2) { return parseFloat(ppo2).toFixed(2); }
+            // A PPO2 over 1.6 ATA gets its own red pill right in the table,
+            // not just plain bold text (Pablo, 2026-09-26: "if any PPO2 is
+            // larger than 1.6, show it in the table as a red pill with
+            // white fonts").
+            function fmtPpo2Cell(ppo2) {
+                var val = fmtPpo2(ppo2);
+                if (parseFloat(val) <= 1.6) return val;
+                return '<span class="dh-gas-result-pill is-compact is-danger">'
+                    + '<span class="material-icons-round" aria-hidden="true" style="font-size: 13px;">warning</span> ' + val + '</span>';
+            }
             function fmtGasCell(row) {
                 // A CC row's `gas` is null (there's no fixed cylinder mix on
                 // the loop) - show the diluent actually being breathed, not
@@ -6799,7 +6841,7 @@
                 tableHTML += '<td class="text-sm text-left">' + fmtTimeMin(row.time) + '</td>';
                 tableHTML += '<td class="text-sm">' + fmtTimeMin(row.runtime) + '</td>';
                 if (showGasColumn) tableHTML += '<td class="text-sm">' + fmtGasCell(row) + '</td>';
-                tableHTML += '<td class="text-sm fw-bold hide-on-mobile">' + fmtPpo2(row.ppo2) + '</td>';
+                tableHTML += '<td class="text-sm fw-bold hide-on-mobile">' + fmtPpo2Cell(row.ppo2) + '</td>';
                 tableHTML += '<td class="text-sm hide-on-mobile">' + (row.gf * 100).toFixed(0) + '%</td></tr>';
             });
             tableHTML += '</tbody></table></div>';
@@ -6975,7 +7017,81 @@
 
             document.getElementById("labelModel").innerHTML = "<b>" + model + "</b>";
             document.getElementById("labelGFs").innerHTML = "<b>" + GFL + "/" + GFH +"</b>";
-            
+
+        }
+
+        // Highest PPO2 reached anywhere in the dive - walks the fine-grained
+        // profile (not the coarse table) since a momentary peak mid-leg can
+        // exceed 1.6 without ever being a row's own start/end value (Pablo,
+        // 2026-09-26: "if at any point of the dive any PPO2 is higher than
+        // 1.6").
+        function dhComputeMaxPpo2(profile) {
+            var max = 0;
+            if (!Array.isArray(profile)) return max;
+            profile.forEach(function (step) {
+                if (!Array.isArray(step.gas)) return;
+                var ppo2 = step.gas[1] / 100 * step.abs_p;
+                if (ppo2 > max) max = ppo2;
+            });
+            return max;
+        }
+
+        // Highest END reached anywhere in the dive. Deliberately NOT
+        // computed here - the backend is adding this per-point (Pablo,
+        // 2026-09-26: "probably its a good idea that the backend calculates
+        // the END for all points of the dive so we don't calculate ENDs on
+        // the front end"). Returns null (no END-based warning shown) until
+        // wired to whatever field/shape they ship - see the message to
+        // dh-back-end for the exact ask.
+        function dhComputeMaxEnd(scenario) {
+            return null;
+        }
+
+        // Red/yellow safety pills below the Run time/Deco time pills -
+        // PPO2 > 1.6 ATA, CNS% >= 100, END > 200ft all red; END > 150ft
+        // (and <= 200ft) yellow (Pablo, 2026-09-26: "I want to flag when a
+        // dive plan is unsafe"). Call with the scenario currently driving
+        // the main summary (today: baseline).
+        function dhRenderSafetyWarnings(scenario) {
+            var row = document.getElementById('dhSafetyWarningsRow');
+            var container = document.getElementById('dhSafetyWarningsContainer');
+            if (!row || !container) return;
+            container.innerHTML = '';
+            if (!scenario) { row.hidden = true; return; }
+
+            var warnings = [];
+
+            var maxPpo2 = dhComputeMaxPpo2(scenario.profile);
+            if (maxPpo2 > 1.6) {
+                warnings.push({ level: 'danger', text: 'PPO₂ above 1.6 (' + maxPpo2.toFixed(2) + ')' });
+            }
+
+            var cns = scenario.o2Exposure ? scenario.o2Exposure.cnsPercent : null;
+            if (cns !== null && cns !== undefined && cns >= 100) {
+                warnings.push({ level: 'danger', text: 'CNS ' + Math.round(cns) + '% (100%+)' });
+            }
+
+            var maxEnd = dhComputeMaxEnd(scenario);
+            if (maxEnd !== null && maxEnd !== undefined) {
+                var endUnit = modeImpOrMetric === 'imp' ? 'ft' : 'm';
+                var endDisplay = modeImpOrMetric === 'imp' ? Math.round(maxEnd) : Math.round(maxEnd * 0.3048);
+                var endDangerThreshold = modeImpOrMetric === 'imp' ? 200 : Math.round(200 * 0.3048);
+                var endWarnThreshold = modeImpOrMetric === 'imp' ? 150 : Math.round(150 * 0.3048);
+                if (endDisplay > endDangerThreshold) {
+                    warnings.push({ level: 'danger', text: 'END above ' + endDangerThreshold + endUnit + ' (' + endDisplay + endUnit + ')' });
+                } else if (endDisplay > endWarnThreshold) {
+                    warnings.push({ level: 'warn', text: 'END above ' + endWarnThreshold + endUnit + ' (' + endDisplay + endUnit + ')' });
+                }
+            }
+
+            warnings.forEach(function (w) {
+                var pill = document.createElement('span');
+                pill.className = 'dh-gas-result-pill dh-deco-summary-pill is-' + w.level;
+                pill.innerHTML = '<span class="material-icons-round" aria-hidden="true" style="font-size: 16px; vertical-align: -3px;">warning</span> ' + w.text;
+                container.appendChild(pill);
+            });
+
+            row.hidden = warnings.length === 0;
         }
     </script>
 
@@ -7606,7 +7722,18 @@
                 // const legs (Pablo, 2026-09-25: "before the switch to OC
                 // we only should have CC").
                 profileChartInstance.options.plugins.annotation.annotations = buildGasSwitchAnnotations(globalResponse['bailout'], unitConversion, dhForceFirstSwitchToBottom, true, 'bailout');
-                Object.assign(profileChartInstance.options.plugins.annotation.annotations, buildCriticalPointAnnotation(window.lastCriticalPoint, unitConversion));
+                // Multi-level's critical point usually sits right on top of
+                // the bailout's own first gas-switch marker (both mark the
+                // same "moment of maximum decompression obligation" this
+                // dive bails from) - showing both stacks two markers and
+                // hides the switch marker itself (Pablo, 2026-09-26: "hide
+                // the critical point marker...it's usually at a gas switch
+                // to OC and its preventing seeing on the chart the switch").
+                // Single-level's own bailout view keeps it, per "show it
+                // back in all other cases".
+                if (modeLevelSingleOrMulti !== 'multi') {
+                    Object.assign(profileChartInstance.options.plugins.annotation.annotations, buildCriticalPointAnnotation(window.lastCriticalPoint, unitConversion));
+                }
 
                 // show BO table and change table title
                 decoTableContainer.style.display = "none";
