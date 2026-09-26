@@ -2507,15 +2507,13 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-gas-result-pill.is-o2.is-ideal { background: var(--dh-good); }
 
 /* Pure air (21/0) and pure O2 (100/0) show a text label ("Air"/"Pure O2")
-   instead of the plain O2%, everywhere a gas split pill appears (Pablo,
-   2026-09-26). is-gas-label suppresses the is-o2 pill's own ::before "O2"/
-   ::after "%" content above - the label text already says everything, so
-   stacking "O2Air%" would be wrong. Pure O2 keeps the normal green is-o2
-   background; Air gets its own neutral grey. */
-.dh-gas-result-pill.is-gas-label::before,
-.dh-gas-result-pill.is-gas-label::after {
-  content: none;
-}
+   instead of the plain O2% - Air gets its own neutral grey, Pure O2 keeps
+   the normal green is-o2 background. The ::before "O2"/::after "%" content
+   suppression these need lives further down (see is-gas-label near the
+   ::before/::after rules themselves) - a bare .dh-gas-result-pill.is-gas-label
+   selector here loses to .dh-gas-split-pill .dh-gas-result-pill.is-o2::after's
+   higher specificity below, which is exactly the "Air%" bug this replaced
+   (Pablo, 2026-09-26: "it should be just 'Air'"). */
 .dh-gas-result-pill.is-air { background: var(--dh-muted); }
 
 /* Gas density: a calculation result like the others, but a supporting
@@ -2748,6 +2746,15 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 /* Trimix's raw .textContent has no "%" (unlike Nitrox's, which appends
    its own) - only here does the pill need one generated for display. */
 .dh-gas-split-pill .dh-gas-result-pill.is-o2::after, .dh-gas-split-pill .dh-gas-result-pill.is-he::after { content: "%"; }
+/* "Air"/"Pure O2" text labels (is-gas-label, see is-air above) need to beat
+   the same-specificity "%" rule directly above - the label text already
+   says everything, so "Air%"/"Pure O2%" would be wrong (Pablo, 2026-09-26:
+   "it should be just 'Air'"). Matches that selector's own specificity
+   (ancestor + 2 classes) and comes after it, so it wins the tie. */
+.dh-gas-split-pill .dh-gas-result-pill.is-gas-label::before,
+.dh-gas-split-pill .dh-gas-result-pill.is-gas-label::after {
+  content: none;
+}
 /* No He in the mix (Nitrox, not Trimix) - hide its half of the split pill
    and let the O2 half read as one normal, fully-rounded pill instead of
    half a pair (Pablo, 2026-09-16). The He pill keeps `hidden` (still
