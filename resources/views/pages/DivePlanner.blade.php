@@ -7851,10 +7851,10 @@
             var maxTime = Math.round(gl.bottomTime);
             var plannedTime = Math.round(gasLimit.plannedBottomTime);
             if (maxTime < plannedTime) {
-                return { level: 'danger', isGasLimit: true, text: 'Gas allows ' + maxTime + ' min (planned ' + plannedTime + ')' };
+                return { level: 'danger', isGasLimit: true, text: 'Gas allows up to ' + maxTime + ' min RT (planned ' + plannedTime + ')' };
             }
             if (maxTime > plannedTime) {
-                return { level: 'ideal', isGasLimit: true, text: 'Gas allows up to ' + maxTime + ' min (planned ' + plannedTime + ')' };
+                return { level: 'ideal', isGasLimit: true, text: 'Gas allows up to ' + maxTime + ' min RT (planned ' + plannedTime + ')' };
             }
             return null;
         }
@@ -7955,11 +7955,24 @@
                 var points = scenario.profile.map(function (item) {
                     return { x: item.time, y: -(item.abs_p - 1) * unitConversion };
                 });
+                // Green when the gas gives MORE runtime than planned, red
+                // when it gives less - same colors as the pill's own
+                // is-ideal/is-danger (--dh-good/--dh-danger) (Pablo,
+                // 2026-09-27). Read straight off the pill's own class
+                // rather than re-deriving the comparison here - that class
+                // was set by dhComputeGasLimitWarning from the exact same
+                // raw scenarios.gasLimited data, which window.dhScenarios.
+                // gasLimited (normalized) no longer carries a bottomTime
+                // field for by this point.
+                var eyeBtnEl = document.getElementById('dhGasLimitEyeBtn');
+                var pillEl = eyeBtnEl ? eyeBtnEl.closest('.dh-gas-result-pill') : null;
+                var isShortfall = !pillEl || !pillEl.classList.contains('is-ideal');
+                var overlayColor = isShortfall ? '#b0322b' : '#2e7d4f';
                 profileChartInstance.data.datasets.push({
                     label: 'Max allowed (gas)',
                     data: points,
-                    borderColor: '#ffb300',
-                    backgroundColor: 'rgba(255, 179, 0, 0.12)',
+                    borderColor: overlayColor,
+                    backgroundColor: overlayColor,
                     borderDash: [6, 4],
                     borderWidth: 2,
                     showLine: true,
