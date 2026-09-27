@@ -1,0 +1,95 @@
+<?php
+
+namespace App\Support;
+
+/**
+ * Groups the fourteen weather locations into five coasts for the trip board.
+ *
+ * Trips are tagged with a weather location short code (KEY, FLL, WPB and so
+ * on, the first token of trips.tags). Fourteen region headers are too many
+ * to scan on a phone, so the board groups them north to south into coasts.
+ * The location itself is still shown on each card and used for the sea
+ * state pill, so nothing is lost, only the grouping changes.
+ *
+ * Unknown codes fall into "Other" so a new crawler location never hides a
+ * trip. Argentina is its own group and only appears when it has trips.
+ */
+final class Coast
+{
+    /** Display order, north to south. key => [label, location short codes]. */
+    /*
+     * Codes are weatherlocations.short as stored in production (checked against
+     * the 2026-09-06 dump): KLA Key Largo, ISM Islamorada, MAR Marathon, KWE Key
+     * West, MIA Miami Beach, FLL Fort Lauderdale, POM Pompano, DEB Deerfield,
+     * BOY Boynton, WPB West Palm, JUP Jupiter, STU Stuart, PSL Port St Lucie,
+     * and MDQ, LGR, PMY, USH in Argentina.
+     */
+    private const COASTS = [
+        'treasure'  => ['label' => 'Treasure Coast',   'codes' => ['STU', 'PSL']],
+        'palm'      => ['label' => 'Palm Beach',       'codes' => ['JUP', 'WPB', 'BOY']],
+        'broward'   => ['label' => 'Fort Lauderdale',  'codes' => ['DEB', 'POM', 'FLL']],
+        'miami'     => ['label' => 'Miami',            'codes' => ['MIA']],
+        'keys'      => ['label' => 'Florida Keys',     'codes' => ['KLA', 'ISM', 'MAR', 'KWE']],
+        'argentina' => ['label' => 'Argentina',        'codes' => ['MDQ', 'LGR', 'PMY', 'USH']],
+        'other'     => ['label' => 'Other',            'codes' => []],
+    ];
+
+    /** @return array<string, array{label:string, codes:string[]}> */
+    public static function all(): array
+    {
+        return self::COASTS;
+    }
+
+    public static function isValid($key): bool
+    {
+        return is_string($key) && isset(self::COASTS[$key]);
+    }
+
+    public static function label(string $key): string
+    {
+        return self::COASTS[$key]['label'] ?? 'Other';
+    }
+
+    /** Coast key for a weather location short code such as "FLL". */
+    public static function forCode(?string $code): string
+    {
+        $code = strtoupper(trim((string) $code));
+        foreach (self::COASTS as $key => $coast) {
+            if (in_array($code, $coast['codes'], true)) {
+                return $key;
+            }
+        }
+        return 'other';
+    }
+
+    /** Region chip order requested for the finder: not the board's north-to-south order. */
+    private const CHIP_ORDER = ['broward', 'miami', 'keys', 'palm', 'treasure'];
+
+    /** Options for the region chips: key => label, only coasts that can have trips. */
+    public static function chipOptions(): array
+    {
+        $out = [];
+        foreach (self::CHIP_ORDER as $key) {
+            $out[$key] = self::COASTS[$key]['label'];
+        }
+        return $out;
+    }
+
+    /**
+     * Full display order for anywhere trips/operators are grouped by coast -
+     * the chip order above, then Argentina/Other appended (they're outside
+     * the chip picker but a group still needs to render if it has trips).
+     * TripBoard's own group order used to just walk COASTS' declaration
+     * order (Treasure Coast, then Palm Beach, ...), which drifted out of
+     * sync once the chips were re-sorted for the finder (Pablo, 2026-09-19:
+     * "we resorted the order of the region pills in Trips, but we are still
+     * showing Palm Beach first in the list of trips below...need to be
+     * consistent with the sort that we had with the pills").
+     *
+     * @return string[]
+     */
+    public static function boardOrder(): array
+    {
+        return array_merge(self::CHIP_ORDER, ['argentina', 'other']);
+    }
+}

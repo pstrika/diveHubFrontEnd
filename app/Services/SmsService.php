@@ -10,9 +10,12 @@ class SmsService
     /**
      * Sends a plain-text SMS via Twilio's REST API. Silently no-ops if
      * Twilio isn't configured yet or the phone number can't be normalized -
-     * this must never throw and block the caller's reminder loop.
+     * this must never throw and block the caller's reminder loop. Returns
+     * whether Twilio actually accepted it, for callers that need to know
+     * (the admin Message Management console) - background callers that
+     * fire-and-forget just ignore the return value, unchanged from before.
      */
-    public static function send(?string $rawPhone, string $body): void
+    public static function send(?string $rawPhone, string $body): bool
     {
         $accountSid = config('services.twilio.account_sid');
         $authUser = config('services.twilio.api_key_sid') ?: $accountSid;
@@ -20,12 +23,12 @@ class SmsService
         $from = config('services.twilio.from');
 
         if (!$accountSid || !$authUser || !$authPass || !$from) {
-            return;
+            return false;
         }
 
         $to = self::toE164($rawPhone);
         if (!$to) {
-            return;
+            return false;
         }
 
         try {
@@ -43,9 +46,13 @@ class SmsService
 
             if (!$response->successful()) {
                 Log::error('Twilio SMS failed (' . $response->status() . '): ' . $response->body());
+                return false;
             }
+
+            return true;
         } catch (\Throwable $e) {
             Log::error('Twilio SMS exception: ' . $e->getMessage());
+            return false;
         }
     }
 

@@ -42,13 +42,10 @@
         </div>
         @auth
             @if(auth()->user()->isGuest())
-                <form method="POST" action="{{ route('logout') }}" class="d-none" id="logout-form">
-                    @csrf
-                </form>
+                {{-- Same one hop as the sidebar link: create-account logs the guest out, then shows sign up. --}}
                 <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
                     <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-                    <a class="nav-link text-white " href="{{ route('logout') }}"
-                    onclick="event.preventDefault();document.getElementById('logout-form').submit();">
+                    <a class="nav-link text-white " href="{{ route('create-account') }}">
                         <span class="badge badge-lg badge-primary"> YOU ARE LOGGED IN AS A "GUEST". Click here to create an account</span>
                     </a>
                     </div>
@@ -69,13 +66,32 @@
             <ul class="navbar-nav  align-items-center">
                 @auth
                     @if(auth()->user()->isNotGuest())
-                    <li class="nav-item">
-                        <a href="{{ route('overview') }}" class="nav-link text-body p-0 position-relative">
-                            
+                    <form method="POST" action="{{ route('logout') }}" class="d-none" id="profile-logout-form">
+                        @csrf
+                    </form>
+                    <li class="nav-item dropdown">
+                        <a role="button" href="javascript:;" class="nav-link text-body p-0 position-relative"
+                            id="dropdownMenuProfile" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="material-icons me-sm-1">
                                 account_circle
                             </i>
                         </a>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-animation border-radius-xl p-2 mt-2"
+                            aria-labelledby="dropdownMenuProfile">
+                            <li>
+                                <a class="dropdown-item border-radius-md d-flex align-items-center" href="{{ route('overview') }}">
+                                    <i class="material-icons opacity-6 me-2 text-md">person</i>
+                                    My Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item border-radius-md d-flex align-items-center" href="{{ route('logout') }}"
+                                    onclick="event.preventDefault();document.getElementById('profile-logout-form').submit();">
+                                    <i class="material-icons opacity-6 me-2 text-md">logout</i>
+                                    Log Out
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
                     <li class="nav-item">

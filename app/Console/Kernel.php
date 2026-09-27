@@ -14,7 +14,12 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         Commands\SendGroupDiveReminders::class,
+        Commands\SendGroupActivityDigest::class,
+        Commands\DetectCancelledTrips::class,
         Commands\SendNewsletter::class,
+        Commands\SendScheduledNewsletters::class,
+        Commands\SyncSupportInbox::class,
+        Commands\ApplyGroupAutoAddRules::class,
     ];
 
     /**

@@ -20,6 +20,11 @@ class GroupMember extends Model
         'role',
         'status',
         'invited_by',
+        'notifications_muted',
+    ];
+
+    protected $casts = [
+        'notifications_muted' => 'boolean',
     ];
 
     public function group(): BelongsTo

@@ -1,12 +1,14 @@
-<footer class="footer py-4  ">
+{{-- Mobile has the bottom tab bar and the Me tab's menu rows for
+     navigation already, so this footer (nav links + copyright) is
+     desktop-only. --}}
+<footer class="footer py-4 d-none d-lg-block">
     <div class="container-fluid">
       <div class="row align-items-center justify-content-lg-between">
         <div class="col-lg-6 mb-lg-0 mb-4">
           <div class="copyright text-center text-sm text-muted text-lg-start">
-            © <script>
-              document.write(new Date().getFullYear())
-            </script>,
-            Divers Hub
+            {{-- Year rendered server side so it shows without JavaScript and for crawlers. --}}
+            © {{ date('Y') }} Divers Hub
+            <span class="mx-1 opacity-5">|</span> <x-version />
           </div>
         </div>
         <div class="col-lg-6">
@@ -16,9 +18,6 @@
             </li>
             <li class="nav-item">
               <a href="/AboutUs" class="nav-link text-muted">About us</a>
-            </li>
-            <li class="nav-item">
-              <a href="/AboutUs" class="nav-link text-muted">Contact</a>
             </li>
             <li class="nav-item">
               <a href="/TermsOfUse" class="nav-link text-muted">Terms of use</a>

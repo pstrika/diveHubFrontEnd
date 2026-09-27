@@ -17,8 +17,14 @@ use Illuminate\Support\Facades\Log;
 class MyDashboardController extends Controller
 {
     //
-    public function showDashboard() {
+    public function showDashboard(\Illuminate\Http\Request $request) {
         $user = User::findorFail(auth()->user()->id);
+
+        // New members (or old ones with an empty profile) get the welcome wizard
+        // first; it saves the fields the dashboard personalises on. Skippable.
+        if (\App\Http\Controllers\OnboardingController::shouldPrompt($request, $user)) {
+            return redirect()->route('welcome');
+        }
         // if we didn't receive $date, we just put today's
     
         // Get calendar in timeline --------------------
@@ -29,9 +35,35 @@ class MyDashboardController extends Controller
         
         $dateFrom = Carbon::parse($date)->format('Y-m-d');
         $dateTo = Carbon::parse($date)->addWeek(6)->format('Y-m-d');
+        // Everything the diver has saved from today on, soonest first. The upcoming
+        // list and the month grid on the page both draw from this one collection,
+        // so an event can never be on the grid without the row (and the modal data)
+        // behind it. A date window would hide a dive saved months ahead.
         $events = Event::whereDate('date', '>=', Carbon::today())
             ->where('userId', auth()->user()->id)
-            ->take(10)->get()->sortBy("date");
+            ->orderBy('date')->orderBy('time')->take(40)->get();
+
+        // Groups the diver is in, each with its next planned dive. This card is the
+        // slot the group feed will grow into; for now it answers "what is my group
+        // doing next" and shows pending invites.
+        $myGroups = \App\Models\Group::whereHas('members', function ($q) use ($user) {
+                $q->where('user_id', $user->id)->where('status', 'active');
+            })
+            ->withCount('activeMembers')
+            ->with(['dives' => function ($q) {
+                // No ->limit(1) here (Pablo, 2026-09-24: "most of the groups
+                // say there's no dive planned, while several groups have
+                // dives on it") - Eloquent eager loading runs ONE query for
+                // every parent group combined (WHERE group_id IN (...)), so
+                // a limit here caps the total rows across ALL groups, not
+                // per group - only the single globally-earliest dive came
+                // back, leaving every other group's dives empty. The view
+                // (Dashboard.blade.php) already does $group->dives->first()
+                // to get each group's own soonest dive from this ordering.
+                $q->whereDate('date', '>=', Carbon::today())->orderBy('date')->orderBy('time');
+            }])
+            ->orderBy('name')->get();
+        $groupInvites = \App\Models\GroupMember::where('user_id', $user->id)->where('status', 'invited')->count();
 
         Log::debug("Got " . str(count($events)) . " event for user " . $user->name);
         $trips = [];
@@ -40,10 +72,16 @@ class MyDashboardController extends Controller
             if($trip) {
                 $trip->booked = $event->booked;
                 $trip->eventId = $event->id;
+                $trip->cancelled = false;
                 // need to get the link to the waiver
                 $operator = Operator::where('id', $trip->operatorId)->first();
-                $trip->waiver = $operator->waiverLink;
+                $trip->waiver = optional($operator)->waiverLink;
                 $trips[] = $trip;
+            } elseif ($event->cancelled_at) {
+                // Confirmed cancelled (DetectCancelledTrips): keep it in the
+                // list, marked, until the diver removes it - not yet
+                // confirmed just behaves as before and drops out quietly.
+                $trips[] = $this->cancelledDashboardTrip($event);
             }
         }
         //---------------------------
@@ -54,17 +92,22 @@ class MyDashboardController extends Controller
             ->pluck('short')
             ->toArray();
 
+        // Which weekend? This week's Saturday and Sunday (weeks start Monday), or
+        // next weekend once every boat of this one has left, so a Sunday night
+        // visit is not an empty table. Both weekends are loaded here and the
+        // choice is made after departed trips are dropped (see the ranking below).
+        $thisSaturday = now()->startOfWeek()->addDays(5)->toDateString();
+        $nextSunday   = now()->startOfWeek()->addDays(13)->toDateString();
+
         // NEED TO OPTIMIZE THIS QUERY TO GET ONLY POTENTIAL FAVs BASED ON LOCATION AND OPERATORS
-        $favTrips =  Trip::whereBetween('date', [
-            now()->startOfWeek()->addDays(5), // Saturday
-            now()->startOfWeek()->addDays(6), // Sunday
-            ])
+        $favTrips =  Trip::whereBetween('date', [$thisSaturday, $nextSunday])
+            ->whereRaw('DAYOFWEEK(date) IN (1, 7)') // Sunday = 1, Saturday = 7 in MySQL
             ->get()
             ->sortBy('departureTime')
             ->sortBy('date');
             
         Log::debug("Size of fav trips is" . count($favTrips));
-        $sites = collect(Site::select('id', 'maxDepth', 'level')->get());
+        $sites = collect(Site::select('id', 'maxDepth', 'level', 'rate', 'votes')->get());
 
         foreach($favTrips as $i => $trip) {
             if($trip->siteId != null) {
@@ -122,9 +165,16 @@ class MyDashboardController extends Controller
                 //    ->pluck('short')
                 //    ->toArray();
 
-                $favoriteLevels = explode(',', $user->showLevel);
-                $showLevelLow = intval($favoriteLevels[0]);
-                $showLevelHigh = intval($favoriteLevels[1]);
+                // showLevel can be null - a diver who skipped the welcome
+                // wizard's level step, or (before that wizard existed) an
+                // old account that never went through any level-picking UI
+                // at all, never gets it set. Falls back to the full 0-4
+                // range ("show everything") rather than fataling on an
+                // undefined [1] key (Pablo hit this testing a fresh
+                // account, 2026-09-17).
+                $favoriteLevels = explode(',', $user->showLevel ?: '0,4');
+                $showLevelLow = intval($favoriteLevels[0] ?? 0);
+                $showLevelHigh = intval($favoriteLevels[1] ?? 4);
 
                 if(in_array(substr($trip->tags,0 ,3),  $favLocationShorts)) {
                     //Log::debug("Operator for this trip is in favorites!");
@@ -142,9 +192,16 @@ class MyDashboardController extends Controller
                 }
             } else {
                 $favoriteOperatorsIndex = explode(',', $user->favOperators);
-                $favoriteLevels = explode(',', $user->showLevel);
-                $showLevelLow = intval($favoriteLevels[0]);
-                $showLevelHigh = intval($favoriteLevels[1]);
+                // showLevel can be null - a diver who skipped the welcome
+                // wizard's level step, or (before that wizard existed) an
+                // old account that never went through any level-picking UI
+                // at all, never gets it set. Falls back to the full 0-4
+                // range ("show everything") rather than fataling on an
+                // undefined [1] key (Pablo hit this testing a fresh
+                // account, 2026-09-17).
+                $favoriteLevels = explode(',', $user->showLevel ?: '0,4');
+                $showLevelLow = intval($favoriteLevels[0] ?? 0);
+                $showLevelHigh = intval($favoriteLevels[1] ?? 4);
 
                 if(in_array($trip->operatorId, $favoriteOperatorsIndex)) {
                     //Log::debug("Operator for this trip is in favorites!");
@@ -162,6 +219,50 @@ class MyDashboardController extends Controller
             }
         }
         
+
+        // Rank the weekend list (redesign chunk 4). Before this the table was
+        // date then time, so a 7:30 open water reef led even for a tech diver.
+        // Order: favorites first, the top of the diver's level range first,
+        // better rated sites first, boats with seats before full ones, then
+        // date and time. Trips that already departed today drop off.
+        $now = now();
+        // Same blend as the home page and the explorer: trips to the site plus damped rating.
+        $ranked = \App\Support\SiteRank::apply(collect($sites->all()))->keyBy('id');
+        $siteScore = function ($trip) use ($ranked) {
+            $best = 0.0;
+            foreach ($trip->site ?? [] as $s) {
+                $best = max($best, (float) ($ranked->get($s->id)?->rankScore ?? 0));
+            }
+            return $best;
+        };
+        $favTrips = $favTrips
+            ->reject(function ($t) use ($now) {
+                if ($t->date > $now->toDateString()) return false;
+                if ($t->date < $now->toDateString()) return true;
+                return $t->departureTime !== '00:00' && $t->departureTime < $now->format('H:i');
+            })
+            ->values();
+        // Keep this weekend while it still has a FAVORITE-matching boat to
+        // catch, otherwise next weekend. Checking for "this weekend has any
+        // trips at all" (as this used to) never actually falls through -
+        // some operator always has boats running - so a diver whose
+        // favorited operators/level only line up with next weekend saw an
+        // empty Recommended card instead (Pablo, 2026-09-21: "I'm not
+        // getting recommended dives...even though I have selected several
+        // fav operators").
+        $thisWeekend = $favTrips->filter(fn ($t) => $t->date <= now()->startOfWeek()->addDays(6)->toDateString());
+        $thisWeekendFavs = $thisWeekend->filter(fn ($t) => !empty($t->fav));
+        $favTrips = $thisWeekendFavs->isNotEmpty() ? $thisWeekend : $favTrips->filter(fn ($t) => $t->date > now()->startOfWeek()->addDays(6)->toDateString());
+        $weekendStart = $favTrips->min('date') ?: $thisSaturday;
+        $favTrips = $favTrips
+            ->sortBy([
+                fn ($a, $b) => (int) ($b->fav ?? 0) <=> (int) ($a->fav ?? 0),
+                fn ($a, $b) => (int) ($b->level ?? -1) <=> (int) ($a->level ?? -1),
+                fn ($a, $b) => ($siteScore($b) <=> $siteScore($a)),
+                fn ($a, $b) => (int) ($b->tripFreeSpots > 0) <=> (int) ($a->tripFreeSpots > 0),
+                fn ($a, $b) => strcmp($a->date . $a->departureTime, $b->date . $b->departureTime),
+            ])
+            ->values();
 
         $favoriteLocationsIndex = explode(',', $user->favLocations);
         Log::debug("favor locations: " . str(count($favoriteLocationsIndex)));
@@ -215,6 +316,30 @@ class MyDashboardController extends Controller
             //Log::debug($favCalendars);
 
 
-        return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers', 'wished', 'favOperators', 'favCalendars'));
+        // "From the blog" carousel (Pablo, 2026-09-17): posts matching the
+        // diver's own certification level first - see
+        // App\Models\Post::forViewer() for the ranking, the real version of
+        // the tag-based targeting Pablo described.
+        $blogPosts = \App\Models\Post::forViewer($user->certLevel, 5);
+
+        return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers', 'wished', 'favOperators', 'favCalendars', 'weekendStart', 'myGroups', 'groupInvites', 'blogPosts'));
+    }
+
+    private function cancelledDashboardTrip(Event $event): object
+    {
+        return (object) [
+            'id' => null,
+            'eventId' => $event->id,
+            'date' => Carbon::parse($event->date)->toDateString(),
+            'departureTime' => $event->time,
+            'tripName' => $event->tripName,
+            'operatorName' => optional(Operator::find($event->operatorId))->operatorName,
+            'operatorId' => $event->operatorId,
+            'booked' => (bool) $event->booked,
+            'linkToBook' => null,
+            'waiver' => null,
+            'tags' => '',
+            'cancelled' => true,
+        ];
     }
 }

@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Weatherday;
+use App\Models\Operator;
+use App\Support\Coast;
+use App\Support\TripBoard;
 use Illuminate\Http\Request;
 
 
@@ -20,7 +23,7 @@ class TripsController extends Controller
     //
 
 
-    public function show($date = null)
+    public function show(Request $request, $date = null)
     {
         //$user = User::findorFail(auth()->user()->id);
         $user = User::find(auth()->user()->id);
@@ -30,11 +33,21 @@ class TripsController extends Controller
         if (!$date) {
             $date = Carbon::today()->toDateString();
         }
-        
 
-        $trips = Trip::where('date', $date)->get()->sortBy('departureTime');
+        // Trip finder (redesign): the same page serves one day (the default) or a
+        // date range. ?range=weekend|nextweekend|7d|30d picks a preset, ?from=&to=
+        // a custom range (capped at TripBoard::MAX_RANGE_DAYS). Day mode is from == to.
+        [$from, $to, $rangeKey] = $this->resolveRange($request, $date, Carbon::today());
+        $mode = $from === $to ? 'day' : 'range';
+        if ($mode === 'day') {
+            $date = $from;
+        }
 
-        $sites = collect(Site::select('id', 'maxDepth', 'level')->get());
+        $trips = Trip::whereBetween('date', [$from, $to])->get()->sortBy('departureTime');
+
+        // name, type and slug are needed by the trip cards (site link, wreck chip).
+        // Keyed by id: a range search enriches thousands of trips, and a scan per trip was the slow part.
+        $sites = Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get()->keyBy('id');
         //$trips = Trip::where('date', $date)->with(['site' => function ($query) {
         //    $query->select('id', 'maxDepth', 'level');
         //}])->get()->sortBy('departureTime');
@@ -49,7 +62,7 @@ class TripsController extends Controller
                 //Log::debug("trip->siteTd " . $trip->siteId);
                 $siteIds = explode(',', $trip->siteId);
                 //$relatedSites = Site::whereIn('id', $siteIds)->get();
-                $relatedSites = $sites->whereIn('id', $siteIds)->all();
+                $relatedSites = array_filter(array_map(fn ($id) => $sites->get((int) trim($id)), $siteIds));
                 //Log::debug("size of relatedSites: " . count($relatedSites));
                 //$trips[$i]->site = $relatedSites;
                 
@@ -106,9 +119,14 @@ class TripsController extends Controller
                     ->pluck('short')
                     ->toArray();
 
-                $favoriteLevels = explode(',', $user->showLevel);
-                $showLevelLow = intval($favoriteLevels[0]);
-                $showLevelHigh = intval($favoriteLevels[1]);
+                // showLevel can be null - see MyDashboardController for why
+                // (a diver who skipped the wizard's level step, or an old
+                // account predating any level-picking UI at all). Falls
+                // back to the full 0-4 range rather than fataling on an
+                // undefined [1] key.
+                $favoriteLevels = explode(',', $user->showLevel ?: '0,4');
+                $showLevelLow = intval($favoriteLevels[0] ?? 0);
+                $showLevelHigh = intval($favoriteLevels[1] ?? 4);
 
                 if(in_array(substr($trip->tags,0 ,3),  $favLocationShorts)) {
                     Log::debug("Operator for this trip is in favorites!");
@@ -131,9 +149,14 @@ class TripsController extends Controller
                 }
             } else {
                 $favoriteOperatorsIndex = explode(',', $user->favOperators);
-                $favoriteLevels = explode(',', $user->showLevel);
-                $showLevelLow = intval($favoriteLevels[0]);
-                $showLevelHigh = intval($favoriteLevels[1]);
+                // showLevel can be null - see MyDashboardController for why
+                // (a diver who skipped the wizard's level step, or an old
+                // account predating any level-picking UI at all). Falls
+                // back to the full 0-4 range rather than fataling on an
+                // undefined [1] key.
+                $favoriteLevels = explode(',', $user->showLevel ?: '0,4');
+                $showLevelLow = intval($favoriteLevels[0] ?? 0);
+                $showLevelHigh = intval($favoriteLevels[1] ?? 4);
 
                 if(in_array($trip->operatorId, $favoriteOperatorsIndex)) {
                     Log::debug("Operator for this trip is in favorites!");
@@ -181,10 +204,94 @@ class TripsController extends Controller
             "canonical" => route("Trips")
         );
 
-        return view('pages.Trips', compact('trips', 'weathers', 'today', 'previousDay', 'nextDay', 'controlNav', 'user', 'SEO'));
+        /*
+         * Trip board (redesign W2). The enriched $trips collection above is
+         * turned into plain card arrays grouped by coast. Conditions come from
+         * every location for the day, not only the user's favourites, because
+         * each region header shows its own sea state. $weathers (favourites
+         * only) is kept for anything else that still reads it.
+         */
+        $filters   = TripBoard::filtersFromRequest($request);
+        $locations = WeatherLocation::all();
+        $allWeather = Weatherday::whereBetween('date', [$from, $to])->get()->groupBy('date');
+        $operators = Operator::select('id', 'location', 'phone')->get()->keyBy('id')->all();
+
+        // Registered divers with favourite locations still see those coasts'
+        // groups first, ahead of the pill-matching order otherwise applied
+        // (Pablo, 2026-09-19: "we keep the rule that if the user is
+        // registered and have fav locations, we show those first").
+        $favoriteCoasts = [];
+        if ($user && $user->isNotGuest() && $user->favLocations) {
+            $favIds = array_values(array_filter(array_map('intval', explode(',', $user->favLocations))));
+            $favShorts = $favIds ? $locations->whereIn('id', $favIds)->pluck('short')->all() : [];
+            $favoriteCoasts = array_values(array_unique(array_map(fn ($short) => Coast::forCode($short), $favShorts)));
+        }
+
+        // One board per day in the range (a single day in day mode). Every date
+        // is present, even with no trips, so the day strip has a cell for each.
+        $byDate = $trips->groupBy('date');
+        $days = [];
+        for ($d = Carbon::parse($from); $d->lte(Carbon::parse($to)); $d->addDay()) {
+            $key = $d->toDateString();
+            $days[$key] = TripBoard::build($byDate->get($key, collect()), $allWeather->get($key, collect()), $locations, $filters, $operators, $favoriteCoasts);
+        }
+        $board = $mode === 'day' ? $days[$date] : TripBoard::merge($days);
+        $presets = TripBoard::rangePresets(Carbon::today());
+
+        // Query string to carry the active filters (not the dates) across the
+        // day stepper, the preset chips and the "full board" links.
+        $filterParams = array_filter($request->only(['region', 'level', 'type', 'seats']), fn ($v) => $v !== null && $v !== '');
+        if ($filters['ops']) {
+            $filterParams['op'] = implode(',', $filters['ops']); // one param, readable URL
+        }
+        $query = $filterParams ? '?' . http_build_query($filterParams) : '';
+
+        // The member's favourite operators (users.favOperators, comma list) for the "My favorites" shortcut.
+        $favOperatorIds = ($user && $user->isNotGuest() && $user->favOperators)
+            ? array_values(array_filter(array_map('intval', explode(',', $user->favOperators))))
+            : [];
+
+        if ($mode === 'range') {
+            // Range views are query string pages: useful, shareable, not indexed.
+            $SEO['title'] = 'Scuba diving trips in Florida, ' . Carbon::parse($from)->format('M j') . ' to ' . Carbon::parse($to)->format('M j');
+            $SEO['robots'] = 'noindex, follow';
+        }
+
+        return view('pages.Trips', compact('board', 'days', 'mode', 'from', 'to', 'rangeKey', 'presets', 'filterParams', 'favOperatorIds',
+            'date', 'today', 'previousDay', 'nextDay', 'controlNav', 'user', 'SEO', 'query'));
         //return view('pages.Trips', compact('trips', 'weathers', 'today', 'previousDay', 'nextDay', 'controlNav'));
 
     }
 
-    
+    /**
+     * Work out the dates the finder shows.
+     *
+     * @return array{0: string, 1: string, 2: ?string} [from, to, preset key or null]
+     */
+    private function resolveRange(Request $request, string $date, Carbon $today): array
+    {
+        $presets = TripBoard::rangePresets($today);
+        $key = $request->query('range');
+        if (is_string($key) && isset($presets[$key])) {
+            return [$presets[$key]['from'], $presets[$key]['to'], $key];
+        }
+        $valid = fn ($v) => is_string($v) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) && strtotime($v) !== false;
+        $from = $request->query('from');
+        $to   = $request->query('to');
+        if ($valid($from) || $valid($to)) {
+            $f = Carbon::parse($valid($from) ? $from : $to)->startOfDay();
+            $t = Carbon::parse($valid($to) ? $to : $from)->startOfDay();
+            if ($f->lt($today)) {
+                $f = $today->copy();
+            }
+            if ($t->lt($f)) {
+                $t = $f->copy();
+            }
+            if ($f->diffInDays($t) > TripBoard::MAX_RANGE_DAYS - 1) {
+                $t = $f->copy()->addDays(TripBoard::MAX_RANGE_DAYS - 1);
+            }
+            return [$f->toDateString(), $t->toDateString(), null];
+        }
+        return [$date, $date, null];
+    }
 }

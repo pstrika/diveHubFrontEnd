@@ -11,6 +11,7 @@ use App\Models\WeatherDay;
 use App\Models\VisitedSite;
 use App\Models\WishedSite;
 use App\Models\Site;
+use App\Support\DiveLevel;
 use App\Models\SiteComment;
 use App\Models\Photo;
 use App\Models\SiteRating;
@@ -38,43 +39,108 @@ class SiteController extends Controller
         return redirect()->back();
 
     }
+    /**
+     * The score cutoff for a shore-diving go/no-go, carried over from the
+     * pre-redesign "next 5 days" table. Kept as one constant and used
+     * everywhere on this page (the verdict headline, the AM/PM halves, and
+     * the days table) so they can never disagree the way the first redesign
+     * pass did - that version used the marine-forecast page's Good/Poor/etc
+     * text bucket for the headline while the days table used this score
+     * cutoff, and the two don't always agree on the same conditionsAM_score.
+     */
+    private const BEACH_GO_SCORE = 3.8;
+
+    /**
+     * Redesign (2026-09-12), modeled on the marine forecast page: a verdict
+     * card per beach (Fort Lauderdale, West Palm Beach) with today's
+     * conditions and, prominently, the next high tide - shore diving is
+     * usually best around high tide, so that's not something to bury in a
+     * details panel the way the main forecast page does. Same collapsible
+     * webcam, same site map and list, both now foldable.
+     */
     public function showBeach() {
-        $sitesFLL = Site::where('access', 'Beach Access')->where('location', 'FLL')->get();
-        //$sitesWPB = Site::where('access', 'Beach Access')->where('location', 'WPB')->get();
-        $sitesWPB = Site::where(function ($query) {
-            $query->where('location', 'BOY')
-                  ->orWhere('location', 'WPB');
-        })
-        ->where('access', 'Beach Access')
-        ->get();
-        $locations = WeatherLocation::all();
-        $weathersFLL = Weatherday::whereIn('location', ['fort lauderdale'])->orderBy('date')->take(5)->get();
-        $weathersWPB = Weatherday::whereIn('location', ['west palm beach'])->orderBy('date')->take(5)->get();
+        $beachConfigs = [
+            ['key' => 'fort lauderdale', 'label' => 'Fort Lauderdale', 'siteLocations' => ['FLL']],
+            ['key' => 'west palm beach', 'label' => 'West Palm Beach', 'siteLocations' => ['BOY', 'WPB']],
+        ];
 
-        $weathers[0] = $weathersFLL;
-        $weathers[1] = $weathersWPB;
+        $now = Carbon::now();
+        $today = Carbon::today()->toDateString();
+        $beaches = [];
 
-        $i=0;
-        if($sitesFLL->isNotEmpty()) {
-            Log::debug("Site found for FLL " . str(count($sitesFLL)));
-            $sites[$i] = $sitesFLL;
-            $i++;
-        }
-        if($sitesWPB->isNotEmpty()) {
-            Log::debug("Site found for WPB " . str(count($sitesWPB)));
-            $sites[$i] = $sitesWPB;
-            $i++;
+        foreach ($beachConfigs as $cfg) {
+            $location = WeatherLocation::where('location', $cfg['key'])->first();
+            $days = Weatherday::where('location', $cfg['key'])
+                ->where('date', '>=', $today)
+                ->orderBy('date')
+                ->take(5)
+                ->get();
+            $todayWeather = $days->first();
+
+            // Today's tides, oldest first - the row of pills always shows all of
+            // today's, regardless of whether any are still ahead of us.
+            $tides = collect();
+            if ($todayWeather && $todayWeather->tides) {
+                $tides = collect(json_decode($todayWeather->tides, true) ?: [])
+                    ->map(fn ($t) => [
+                        'type' => strtoupper($t['tide_type'] ?? ''),
+                        'time' => Carbon::parse($t['tide_time']),
+                    ])
+                    ->sortBy('time')
+                    ->values();
+            }
+
+            // The next HIGH tide specifically - not just the next tide of either
+            // type - searched across today and the next few days, not only
+            // today, so late at night (after today's last high has passed) this
+            // still points at tomorrow morning's high instead of showing
+            // nothing, which read as "the tides are missing" for whichever
+            // beach's last high happened to fall a few minutes earlier.
+            $allTides = collect();
+            foreach ($days as $d) {
+                if (!$d->tides) {
+                    continue;
+                }
+                foreach (json_decode($d->tides, true) ?: [] as $t) {
+                    $allTides->push(['type' => strtoupper($t['tide_type'] ?? ''), 'time' => Carbon::parse($t['tide_time'])]);
+                }
+            }
+            $nextHigh = $allTides->sortBy('time')->first(fn ($t) => $t['type'] === 'HIGH' && $t['time']->gt($now));
+            $nextHighIn = $nextHigh
+                ? $now->diffForHumans($nextHigh['time'], ['parts' => 1, 'syntax' => Carbon::DIFF_ABSOLUTE])
+                : null;
+            $nextHighIsToday = $nextHigh && $nextHigh['time']->isToday();
+            $nextTideIndex = $nextHighIsToday ? $tides->search(fn ($t) => $t['time']->eq($nextHigh['time'])) : false;
+
+            $sites = Site::where('access', 'Beach Access')
+                ->whereIn('location', $cfg['siteLocations'])
+                ->orderBy('name')
+                ->get();
+
+            $beaches[] = [
+                'key'          => $cfg['key'],
+                'label'        => $cfg['label'],
+                'location'     => $location,
+                'today'        => $todayWeather,
+                'days'         => $days,
+                'tides'        => $tides,
+                'nextTideIndex' => $nextTideIndex === false ? null : $nextTideIndex,
+                'nextHigh'     => $nextHigh,
+                'nextHighIn'   => $nextHighIn,
+                'nextHighIsToday' => $nextHighIsToday,
+                'sites'        => $sites,
+            ];
         }
 
         /*Provide SEO metadata */
         $SEO = array(
             "title" => "Beach diving in South Florida",
-            "desc" => "Find all the details for planning a successful beach diving in Fort Lauderdale or West Palm Beach",
-            "keywords" => "beach diving, fort lauderdale beach diving, palm beach beach diving, shore diving",
+            "desc" => "Shore diving conditions, tides and dive sites for Fort Lauderdale and West Palm Beach.",
+            "keywords" => "beach diving, fort lauderdale beach diving, palm beach beach diving, shore diving, tides",
             "canonical" => route("BeachDiving")
         );
 
-        return view('pages.BeachDiving', compact('sites', 'locations', 'weathers', 'SEO'));
+        return view('pages.BeachDiving', compact('beaches', 'SEO'));
     }
 
     /**
@@ -89,20 +155,10 @@ class SiteController extends Controller
      * reef dive", "advanced wreck dive") and, for wrecks specifically,
      * genuinely useful info a diver needs before choosing the site
      * (Pablo: "we need to add the minimum certification level to the
-     * wreck too"). Level names are duplicated here (not pulled from a
-     * shared class) - the redesign branch has an App\Support\DiveLevel
-     * that's the real single source of truth, but main predates it.
+     * wreck too").
      */
     private function buildSiteMetaDescription(Site $site, string $locationTitleCase): string
     {
-        $levelNames = [
-            0 => 'Open Water',
-            1 => 'Advanced Open Water',
-            2 => 'Technical Air',
-            3 => 'Technical Normoxic Trimix',
-            4 => 'Technical Hypoxic Trimix',
-        ];
-
         $desc = $site->name . " " . $site->type . " in " . $locationTitleCase . ". Max depth " . $site->maxDepth . " ft.";
 
         if ($site->type === "wreck" && $site->wreckData) {
@@ -117,8 +173,8 @@ class SiteController extends Controller
             }
         }
 
-        if (isset($levelNames[(int) $site->level]) && is_numeric($site->level)) {
-            $desc .= " Suitable for " . $levelNames[(int) $site->level] . " divers.";
+        if (DiveLevel::isValid($site->level)) {
+            $desc .= " Suitable for " . DiveLevel::name($site->level) . " divers.";
         }
 
         return $desc;
@@ -163,6 +219,9 @@ class SiteController extends Controller
         Log::debug("This site has upcoming trips:" . count($site->upcomingTrips));
 
         $photos = Photo::where('siteId', $id)->get();
+        // Registered divers' own pictures of this site, approved ones only
+        // (Pablo, 2026-09-23) - see App\Models\DiverPhoto.
+        $diverPhotos = \App\Models\DiverPhoto::where('siteId', $id)->approved()->with('user')->latest()->get();
         $location = WeatherLocation::where('short', $site->location)->first();
 
         $ids = explode(',', $site->visitingOperators);
@@ -198,7 +257,16 @@ class SiteController extends Controller
              ->get()
              ->sortBy('name');
 
-        return view('pages.SiteDetails', compact('site','photos', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'sites', 'gasMixes'));
+        // Redesign W3: live "diveable today" pill from this location's forecast,
+        // and the next boats to this site as trip cards (the board's card).
+        $forecast = $location
+            ? \App\Models\Weatherday::where('date', Carbon::today()->toDateString())->where('location', $location->location)->first()
+            : null;
+        $now = Carbon::now();
+        $operatorsById = Operator::select('id', 'location', 'phone')->get()->keyBy('id')->all();
+        $nextTrips = $trips->take(8)->map(fn ($t) => \App\Support\TripBoard::card($t, $now, $operatorsById))->values()->all();
+
+        return view('pages.SiteDetails', compact('site','photos', 'diverPhotos', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'sites', 'gasMixes', 'forecast', 'nextTrips'));
 
     }
     public function getMyVisitedSites() {
@@ -237,24 +305,41 @@ class SiteController extends Controller
     public function updateVisited(Request $request) {
         Log::debug($request);
 
+        // The shared guest user is "authenticated" by the guest middleware; it
+        // must never collect anybody's dived sites.
+        if (!auth()->user()->isNotGuest()) {
+            return $request->wantsJson() ? response()->json(['error' => 'account required'], 403) : redirect()->route('login');
+        }
+
         if(VisitedSite::where('siteId', $request->site)->where('userId', auth()->id())->exists()) {
             VisitedSite::where('siteId', $request->site)->where('userId', auth()->id())->delete();
+            $visited = false;
         } else {
             VisitedSite::create([
                 'siteId' => $request->site,
                 'userId' => auth()->id(),
                 // Add other relevant fields as needed
             ]);
+            $visited = true;
         }
 
+        // The explorer cards toggle over fetch and only need the new state.
+        if ($request->wantsJson()) {
+            return response()->json(['visited' => $visited]);
+        }
         return redirect()->back();
 
     }
-    public function updateWished($siteId) {
+    public function updateWished(Request $request, $siteId) {
         Log::debug($siteId);
+
+        if (!auth()->user()->isNotGuest()) {
+            return $request->wantsJson() ? response()->json(['error' => 'account required'], 403) : redirect()->route('login');
+        }
 
         if(WishedSite::where('siteId', $siteId)->where('userId', auth()->id())->exists()) {
             WishedSite::where('siteId', $siteId)->where('userId', auth()->id())->delete();
+            $wished = false;
         } else {
             WishedSite::create([
                 'siteId' => $siteId,
@@ -263,8 +348,12 @@ class SiteController extends Controller
                 'notified_sms' => 0,
                 // Add other relevant fields as needed
             ]);
+            $wished = true;
         }
 
+        if ($request->wantsJson()) {
+            return response()->json(['wished' => $wished]);
+        }
         return redirect()->back();
 
     }
@@ -518,21 +607,187 @@ class SiteController extends Controller
         return view('pages.DiveSitesSearch', compact('searchString', 'results'))->withStatus("show all");
     }
 
-    public function showTopRated() {
-        //$sites = Site::all()->sortByDesc("rate");
-        $sitesWrecks = Site::where('type', 'wreck')
-            ->where('_hidden', '<>', 1)
-            ->orderBy('rate', 'desc')
-            ->take(10)
-            ->get();
-        
-        $sitesReefs = Site::where('type', '!=', 'wreck')
-            ->where('_hidden', '<>', 1)
-            ->orderBy('rate', 'desc')
-            ->take(10)
-            ->get();
-        $locations = WeatherLocation::all();
+    /**
+     * Dive Sites explorer (redesign W4). Serves two indexed URLs:
+     *   /DiveSites   all sites, "Top Rated" intent, default sort by rating
+     *   /WreckSites  wreckWiki, the wreck collection, default A to Z
+     * Sites Map and Search redirect here; the map is ?view=map and search is ?q=.
+     *
+     * Every control is a query parameter (q, type, level, sort, view) and every
+     * value is validated against a fixed list, so a hand edited URL can never
+     * break the page or reach the database with junk.
+     */
+    private const EXPLORER_TYPES = ['wreck' => 'Wrecks', 'reef' => 'Reefs', 'other' => 'Other', 'shore' => 'Shore entry'];
+    private const EXPLORER_SORTS = ['popular' => 'Popular', 'rate' => 'Top rated', 'name' => 'A to Z', 'maxDepth' => 'Deepest'];
 
+    private function explorer(Request $request, array $explorer, array $SEO)
+    {
+        $q     = trim((string) $request->query('q', ''));
+        $type  = $explorer['fixedType'] ?? $request->query('type');
+        $type  = array_key_exists((string) $type, self::EXPLORER_TYPES) ? $type : null;
+        $level = $request->query('level');
+        $level = DiveLevel::isValid($level) ? (int) $level : null;
+        $sort  = $request->query('sort', $explorer['defaultSort']);
+        $sort  = array_key_exists((string) $sort, self::EXPLORER_SORTS) ? $sort : $explorer['defaultSort'];
+        $view  = $request->query('view') === 'map' ? 'map' : 'list';
+
+        // Explicit column list (2026-09-11, MAJOR perf fix): `sites` carries
+        // several big JSON/rich-text columns (desc, history, wreckData,
+        // videos, pics) that a plain `SELECT *` was pulling for all ~380
+        // rows on every explorer load even though the cards never touch
+        // them - that alone was most of this page's load time, and with
+        // sort=popular fetching every row (see below) it was paid in full
+        // on every "Top Rated" visit, not just once per page of results.
+        $base = Site::select(['id', 'slug', 'name', 'type', 'level', 'location', 'maxDepth', 'rate', 'votes', 'access', 'gpsLat', 'gpsLon'])
+            ->where('_hidden', '<>', 1);
+        if ($q !== '') {
+            $base->where(fn ($w) => $w->where('name', 'LIKE', "%$q%")->orWhere('aka', 'LIKE', "%$q%"));
+        }
+        $applyType = function ($query, $t) {
+            if ($t === 'shore') {
+                return $query->where('access', 'Beach Access');
+            }
+            return $t ? $query->where('type', $t) : $query;
+        };
+
+        // Counts for the level chips are computed with the level filter off, so
+        // each chip reads "how many if I picked this" (same idea as the board).
+        // select([]) clears $base's own column list first - selectRaw() adds
+        // to it rather than replacing it, which would otherwise put every
+        // unaggregated column from $base into this GROUP BY query too.
+        //
+        // Cached for the plain (no search text) case, 2026-09-11: every
+        // explorer load was paying a full remote round trip for this even
+        // though it only actually changes when a site is added or hidden.
+        // Skipped for an active search since counts should stay live then.
+        $levelCountsQuery = fn () => $applyType((clone $base), $type)
+            ->select([])->selectRaw('level, COUNT(*) c')->groupBy('level')->pluck('c', 'level')->all();
+        $levelCounts = $q === ''
+            ? \Illuminate\Support\Facades\Cache::remember('sites.levelCounts.' . ($type ?? 'all'), 300, $levelCountsQuery)
+            : $levelCountsQuery();
+        $levelCounts = array_replace(array_fill_keys(array_keys(DiveLevel::all()), 0), array_intersect_key($levelCounts, DiveLevel::all()));
+
+        $query = $applyType($base, $type);
+        if ($level !== null) {
+            $query->where('level', $level);
+        }
+        switch ($sort) {
+            case 'name':     $query->orderBy('name'); break;
+            case 'maxDepth': $query->orderBy('maxDepth', 'desc'); break;
+            case 'popular':  $query->orderBy('name'); break; // ordered below by SiteRank
+            default:         $query->orderByRaw('rate IS NULL, rate DESC')->orderBy('votes', 'desc')->orderBy('name');
+        }
+
+        // "Load more" (Zach/Pablo, 2026-09-11): the board used to fetch and render
+        // every matching site at once. $show caps the list view at a page size
+        // that grows via the ?show= link instead. Two cases can't take the
+        // shortcut of stopping the query early: Popular needs every candidate in
+        // the window before SiteRank can say which ones truly rank highest (a
+        // plain "first 50 by name, then re-sort those" would silently miss
+        // sites that are more popular but later alphabetically), and the map
+        // needs every matching pin regardless of how long the list would be.
+        // Cached only for the plain "no filters at all" case (the default
+        // Top Rated view): that count barely changes and is one more remote
+        // round trip otherwise paid on every single load (2026-09-11).
+        // Anything filtered (type, level or a search) counts live.
+        $totalMatching = ($type === null && $level === null && $q === '')
+            ? \Illuminate\Support\Facades\Cache::remember('sites.totalCount', 300, fn () => (clone $query)->count())
+            : (clone $query)->count();
+        $show = max(50, (int) $request->query('show', 50));
+
+        if ($sort === 'popular' || $view === 'map') {
+            $sites = $query->get();
+            $ranked = \App\Support\SiteRank::apply($sites);
+            if ($sort === 'popular') {
+                $sites = $ranked;
+            }
+            if ($view !== 'map') {
+                $sites = $sites->take($show)->values();
+            }
+        } else {
+            $sites = $query->take($show)->get();
+            // Trip counts are attached for every sort so cards can show "N trips
+            // this year" - only the reorder above needs the full candidate set.
+            \App\Support\SiteRank::apply($sites);
+        }
+
+        // First photo per site for the cards, one query for the whole page.
+        $firstPhotos = Photo::whereIn('siteId', $sites->pluck('id'))->orderBy('id')->get()->groupBy('siteId');
+        // Thirteen rows that change maybe once a year - cached like
+        // SiteRank::tripCounts() rather than paying a remote round trip for
+        // it on every single card-grid page load (2026-09-11).
+        $locationNames = \Illuminate\Support\Facades\Cache::remember('sites.locationNames', 3600, function () {
+            return WeatherLocation::all()->pluck('location', 'short')->map(fn ($n) => ucwords($n));
+        });
+
+        // Card actions (Zach, 2026-09-10): save to the wishlist and mark as dived
+        // from the card, so nobody opens 379 pages to do it. Two id lists for a
+        // member, nothing for the shared guest user (its wishlist is nobody's).
+        // Guests still see the buttons; the click asks for an account.
+        $viewer = auth()->user();
+        $isMember = $viewer && $viewer->isNotGuest();
+        $wishedIds  = $isMember ? WishedSite::where('userId', $viewer->id)->pluck('siteId')->flip()->all() : [];
+        $visitedIds = $isMember ? VisitedSite::where('userId', $viewer->id)->pluck('siteId')->flip()->all() : [];
+        // "Boat going this month": one cached pass, no per card cost.
+        $soon = \App\Support\SiteRank::tripsSoon();
+
+        foreach ($sites as $site) {
+            $site->photoFile = $firstPhotos->get($site->id)?->first()?->file;
+            $site->locationName = $locationNames[$site->location] ?? null;
+            $site->wished = isset($wishedIds[$site->id]);
+            $site->visited = isset($visitedIds[$site->id]);
+            $site->tripsSoon = $soon[$site->id] ?? 0;
+        }
+
+        // Map features: sites store GPS as DMS text ("26° 22.838' N"); convert here so the page ships plain numbers.
+        $mapFeatures = [];
+        if ($view === 'map') {
+            foreach ($sites as $site) {
+                $lat = self::dmsToDecimal($site->gpsLat);
+                $lon = self::dmsToDecimal($site->gpsLon);
+                if ($lat === null || $lon === null) {
+                    continue;
+                }
+                $mapFeatures[] = [
+                    'type' => 'Feature',
+                    'properties' => ['name' => $site->name, 'icon' => 'icon_' . (in_array($site->type, ['wreck', 'reef']) ? $site->type : 'other'), 'url' => route('SiteDetails') . '/' . ($site->slug ?? $site->id)],
+                    'geometry' => ['type' => 'Point', 'coordinates' => [$lon, $lat]],
+                ];
+            }
+        }
+
+        return view('pages.SitesExplorer', [
+            'explorer'      => $explorer,
+            'SEO'           => $SEO,
+            'sites'         => $sites,
+            'totalMatching' => $totalMatching,
+            'show'          => $show,
+            'isMember'    => $isMember,
+            'filters'     => ['q' => $q, 'type' => $type, 'level' => $level, 'sort' => $sort, 'view' => $view],
+            'typeOptions' => self::EXPLORER_TYPES,
+            'sortOptions' => self::EXPLORER_SORTS,
+            'levelCounts' => $levelCounts,
+            'mapFeatures' => $mapFeatures,
+            'mapboxToken' => 'pk.eyJ1IjoicHN0cmlrYSIsImEiOiJjbHZsc2p2bXcyY240MmtuMDcydHJzd2UxIn0.KBf79cvk47WseBc9rNu6gQ',
+        ]);
+    }
+
+    /** "26° 22.838' N" to 26.38063. Null when the text does not parse. */
+    public static function dmsToDecimal(?string $dms): ?float
+    {
+        if (!$dms) {
+            return null;
+        }
+        $parts = sscanf(str_replace('&#039;', "'", $dms), "%d° %f' %c");
+        if (!is_array($parts) || count(array_filter($parts, fn ($v) => $v !== null)) !== 3) {
+            return null;
+        }
+        [$deg, $min, $dir] = $parts;
+        $val = $deg + $min / 60;
+        return round(in_array($dir, ['S', 'W'], true) ? -$val : $val, 6);
+    }
+
+    public function showTopRated(Request $request) {
         /*Provide SEO metadata */
         $SEO = array(
             "title" => "Best Dive Sites in Florida | Top Rated Reefs & Wrecks",
@@ -540,19 +795,15 @@ class SiteController extends Controller
             "keywords" => "florida dive sites, best dive sites florida, top rated dive sites, florida reefs, florida wrecks, scuba diving florida",
             "canonical" => route("DiveSites")
         );
-
-        return view('pages.DiveSites', compact('sitesWrecks', 'sitesReefs', 'locations', 'SEO'));
+        return $this->explorer($request, [
+            'heading'     => 'Top rated sites',
+            'intro'       => 'Every reef, wreck and shore entry from Stuart to Key West, ordered by how often the boats go there and what divers rate them.',
+            'fixedType'   => null,
+            'defaultSort' => 'popular',
+        ], $SEO);
     }
 
-    public function showWrecks() {
-        //$sites = Site::all()->sortByDesc("rate");
-        $sitesWrecks = Site::where('type', 'wreck')
-            ->where('_hidden', '<>', 1)
-            ->orderBy('name', 'asc')
-            ->get();
-        
-        $locations = WeatherLocation::all();
-
+    public function showWrecks(Request $request) {
         /*Provide SEO metadata */
         $SEO = array(
             "title" => "Florida wreckwiki",
@@ -560,151 +811,106 @@ class SiteController extends Controller
             "keywords" => "diving, fort lauderdale beach diving, palm beach beach diving,dive sites,scuba diving sites,dive wrecks,dive reefs,wreck,reef",
             "canonical" => route("WreckSites")
         );
-
-        return view('pages.WreckSites', compact('sitesWrecks', 'locations', 'SEO'));
+        return $this->explorer($request, [
+            'heading'     => 'wreckWiki',
+            'intro'       => 'Powered by wreckwiki.com. Every artificial reef and shipwreck in Florida with depth, level, history and photos.',
+            'fixedType'   => 'wreck',
+            'defaultSort' => 'popular',
+        ], $SEO);
     }
-    public function searchSites(Request $request) {
 
-        Log::info('Request data:', $request->all());
+    /**
+     * Site-wide search (2026-09-11 restore): the redesign had narrowed this
+     * to a name-only filter on the Dive Sites explorer, but the old search
+     * reached much further - site name/aka, wreck type/vessel data, the
+     * description and history write-ups, and operator names - so bring
+     * that back rather than reinvent it. When every matching category
+     * agrees on a single site (and no operator also matched), that's
+     * unambiguous enough to skip the results page and go straight there.
+     */
+    public function searchSites(Request $request)
+    {
+        $searchString = trim((string) $request->input('searchString', ''));
 
-        $locations = WeatherLocation::all();
-
-        if ($request->has('searchString')) {
-            Log::debug("Got searchString in request");
-            $searchString = $request->searchString;
-            $results = Site::select('id', 'name', 'type', 'level', 'location')
-                ->where('name', 'LIKE', "%$searchString%")
-                ->orWhere('aka', 'LIKE', "%$searchString%")
-                //->orWhere('wreckData', 'LIKE', "%$searchString%")
-                ->take(10)
-                ->get();
-            Log::info("Got " . str(count($results)) . " matches in the search");
-
-            $resultsWreckType = Site::select('id', 'name', 'type', 'level', 'location')
-                ->where('wreckData', 'LIKE', "%$searchString%")
-                ->where('type', '=', 'wreck')
-                ->take(10)
-                ->get();
-            Log::info("Got " . str(count($resultsWreckType)) . " matches in the search for wreck type");
-
-            $resultsOperator = Operator::select('id', 'operatorName', 'cityAddress', 'stateAddress', 'logoUrl')
-                ->where('operatorName', 'LIKE', "%$searchString%")
-                ->take(10)
-                ->get();
-
-            $resultsDesc = Site::select('id', 'name', 'type', 'level', 'location', 'desc')
-                ->where('desc', 'LIKE', "%$searchString%")
-                ->take(10)
-                ->get();
-            Log::info("Got " . str(count($resultsDesc)) . " matches in the search for desc");
-
-            $resultsDescription = [];
-            $contextWords = 5; // Number of words before and after the match
-            foreach($resultsDesc as $resultDesc) {
-                //get the plain text from the quill json
-                $delta = json_decode($resultDesc->desc);
-                $desc = '';
-
-                foreach ($delta->ops as $op) {
-                    if (isset($op->insert) && is_string($op->insert)) {
-                        $desc .= $op->insert;
-                    }
-                }
-
-                // see where the search token is
-                $position = stripos($desc, $searchString);
-                Log::debug('position is: ' . $position);
-
-                // get pre a pos words
-                $preString = substr($desc, 0, $position);
-                $posString = substr($desc, $position + strlen($searchString));
-
-                $preWords = explode(' ', $preString);
-                $posWords = explode(' ', $posString);
-                //Log::debug('Pre words: ' . implode(' ', $preWords));
-                //Log::debug('Pos words: ' . implode(' ', $posWords));
-
-                $afterWords = array_slice($posWords, 0, $contextWords); // Get the first $contextWords elements
-                $beforeWords = array_slice($preWords, -$contextWords, $contextWords, true);
-                //Log::debug("Before words: " . implode(' ', $beforeWords));
-                //Log::debug("After words: " . implode(' ', $afterWords));
-
-                $beforeString = implode(' ', $beforeWords);
-                $afterString = implode(' ', $afterWords);
-
-                Log::debug($beforeString . $searchString . $afterString);
-                $temp = array(
-                    'beforeString' => $beforeString,
-                    'searchString' => $searchString,
-                    'afterString' => $afterString,
-                    'siteId' => $resultDesc->id,
-                    'siteName' => $resultDesc->name,
-                    'siteType' => $resultDesc->type,
-                );
-                
-                $resultsDescription[] = $temp;
-            }
-
-            $resultsHistory = Site::select('id', 'name', 'type', 'level', 'location', 'history')
-                ->where('history', 'LIKE', "%$searchString%")
-                ->take(10)
-                ->get();
-            Log::info("Got " . str(count($resultsHistory)) . " matches in the search for history");
-
-            //check on history
-            $resultsHistoryA = [];
-            $contextWords = 5; // Number of words before and after the match
-            foreach($resultsHistory as $resultHistory) {
-                //get the plain text from the quill json
-                $delta = json_decode($resultHistory->history);
-                $history = '';
-
-                foreach ($delta->ops as $op) {
-                    if (isset($op->insert) && is_string($op->insert)) {
-                        $history .= $op->insert;
-                    }
-                }
-
-                // see where the search token is (stripos makes it case insensitive)
-                $position = stripos($history, $searchString);
-                Log::debug('position is: ' . $position);
-
-                // get pre a pos words
-                $preString = substr($history, 0, $position);
-                $posString = substr($history, $position + strlen($searchString));
-
-                $preWords = explode(' ', $preString);
-                $posWords = explode(' ', $posString);
-
-                $afterWords = array_slice($posWords, 0, $contextWords); // Get the first $contextWords elements
-                $beforeWords = array_slice($preWords, -$contextWords, $contextWords, true);
-
-                $beforeString = implode(' ', $beforeWords);
-                $afterString = implode(' ', $afterWords);
-
-                Log::debug($beforeString . $searchString . $afterString);
-                $temp = array(
-                    'beforeString' => $beforeString,
-                    'searchString' => $searchString,
-                    'afterString' => $afterString,
-                    'siteId' => $resultHistory->id,
-                    'siteName' => $resultHistory->name,
-                    'siteType' => $resultHistory->type,
-                );
-                
-                $resultsHistoryA[] = $temp;
-                
-            }
-            Log::debug("Count history: " . count($resultsHistoryA));
-            
-
-            if(count($results) or count($resultsDescription) or count($resultsHistoryA) or count($resultsWreckType))
-                return view('pages.DiveSitesSearch', compact('searchString', 'results', 'locations', 'resultsDescription', 'resultsHistoryA', 'resultsWreckType', 'resultsOperator'))->withStatus("match");
-            else
-                return view('pages.DiveSitesSearch', compact('searchString', 'results'))->withStatus("no match");
+        if ($searchString === '') {
+            return redirect()->route('DiveSites');
         }
-        else
-            return view('pages.DiveSitesSearch');
+
+        $results = Site::select('id', 'slug', 'name', 'type', 'level', 'location')
+            ->where(fn ($w) => $w->where('name', 'LIKE', "%$searchString%")->orWhere('aka', 'LIKE', "%$searchString%"))
+            ->take(10)->get();
+
+        $resultsWreckType = Site::select('id', 'slug', 'name', 'type', 'level', 'location')
+            ->where('wreckData', 'LIKE', "%$searchString%")
+            ->where('type', 'wreck')
+            ->take(10)->get();
+
+        $resultsOperator = Operator::select('id', 'slug', 'operatorName', 'cityAddress', 'stateAddress', 'logoUrl')
+            ->where('operatorName', 'LIKE', "%$searchString%")
+            ->take(10)->get();
+
+        $resultsDesc = Site::select('id', 'slug', 'name', 'type', 'level', 'location', 'desc')
+            ->where('desc', 'LIKE', "%$searchString%")
+            ->take(10)->get();
+        $resultsDescription = $this->searchSnippets($resultsDesc, 'desc', $searchString);
+
+        $resultsHistory = Site::select('id', 'slug', 'name', 'type', 'level', 'location', 'history')
+            ->where('history', 'LIKE', "%$searchString%")
+            ->take(10)->get();
+        $resultsHistoryA = $this->searchSnippets($resultsHistory, 'history', $searchString);
+
+        $matchedSiteIds = collect([$results, $resultsWreckType, $resultsDesc, $resultsHistory])
+            ->flatten()->pluck('id')->unique();
+
+        if ($matchedSiteIds->count() === 1 && $resultsOperator->isEmpty()) {
+            $site = Site::find($matchedSiteIds->first());
+            return redirect(route('SiteDetails') . '/' . ($site->slug ?? $site->id));
+        }
+
+        $SEO = [
+            'title' => 'Search results for "' . $searchString . '" | Divers Hub',
+            'robots' => 'noindex, nofollow',
+        ];
+
+        return view('pages.DiveSitesSearch', compact(
+            'searchString', 'results', 'resultsDescription', 'resultsHistoryA', 'resultsWreckType', 'resultsOperator', 'SEO'
+        ));
+    }
+
+    /**
+     * Pull a short "...before [match] after..." snippet out of a Quill delta
+     * (JSON) rich-text field for each row where $field matched the search.
+     */
+    private function searchSnippets($rows, string $field, string $searchString): array
+    {
+        $contextWords = 5;
+        $snippets = [];
+
+        foreach ($rows as $row) {
+            $delta = json_decode($row->$field);
+            $plain = '';
+            foreach ($delta->ops ?? [] as $op) {
+                if (isset($op->insert) && is_string($op->insert)) {
+                    $plain .= $op->insert;
+                }
+            }
+
+            $position = stripos($plain, $searchString);
+            $preWords = explode(' ', substr($plain, 0, $position));
+            $posWords = explode(' ', substr($plain, $position + strlen($searchString)));
+
+            $snippets[] = [
+                'beforeString' => implode(' ', array_slice($preWords, -$contextWords)),
+                'searchString' => $searchString,
+                'afterString'  => implode(' ', array_slice($posWords, 0, $contextWords)),
+                'siteId'       => $row->id,
+                'siteSlug'     => $row->slug ?? $row->id,
+                'siteName'     => $row->name,
+                'siteType'     => $row->type,
+            ];
+        }
+
+        return $snippets;
     }
     public function showAllAdmin() {
         $this->authorize('manage-items', User::class);
@@ -877,6 +1083,9 @@ class SiteController extends Controller
                     'file'=> $filename,
                     'siteId'=> $request->input('siteId'),
                 ]);   
+                // Web sized copies for the redesigned pages. Best effort: a failure is logged
+                // and the upload still succeeds (pages fall back to the original).
+                \App\Support\SitePhoto::makeCopies($filename);
 
                 //agregar el id de la photo al Model del sitio (coma separated)
                 $site = Site::findOrFail($request->input('siteId'));
@@ -894,6 +1103,9 @@ class SiteController extends Controller
             'file'=> $filename,
             'siteId'=> $request->input('siteId'),
         ]);    
+        // Web sized copies for the redesigned pages. Best effort: a failure is logged
+        // and the upload still succeeds (pages fall back to the original).
+        \App\Support\SitePhoto::makeCopies($filename);
 
         //agregar el id de la photo al Model del sitio (coma separated)
         $site = Site::findOrFail($request->input('siteId'));

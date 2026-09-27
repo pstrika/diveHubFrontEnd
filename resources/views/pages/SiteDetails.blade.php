@@ -1,64 +1,8 @@
-<x-page-template bodyClass='g-sidenav-show  bg-gray-200' :SEO="$SEO">
+<x-page-template bodyClass='dh-shell bg-gray-200' :SEO="$SEO">
 
-    @php
-        try {
-            $jsonLdDesc = trim(strip_tags($site->getPlainTextDesc()));
-        } catch (\Throwable $e) {
-            $jsonLdDesc = trim(strip_tags($site->desc ?? ''));
-        }
-        if (mb_strlen($jsonLdDesc) > 300) {
-            $jsonLdDesc = mb_substr($jsonLdDesc, 0, 297) . '...';
-        }
+    <x-site-structured-data :site="$site" :photos="$photos" :SEO="$SEO" />
 
-        $jsonLdImages = collect($photos)->take(5)->map(function ($photo) {
-            return asset('assets') . '/img/sites/' . $photo->file;
-        })->values()->all();
-
-        $jsonLd = [
-            '@context' => 'https://schema.org',
-            '@type' => 'TouristAttraction',
-            'name' => $site->name,
-            'description' => $jsonLdDesc,
-            'url' => $SEO['canonical'] ?? url()->current(),
-        ];
-
-        if (!empty($jsonLdImages)) {
-            $jsonLd['image'] = $jsonLdImages;
-        }
-
-        if (!empty($site->gpsLat) && !empty($site->gpsLon)) {
-            $latParts = sscanf($site->gpsLat, "%d° %f' %c");
-            $lonParts = sscanf($site->gpsLon, "%d° %f' %c");
-            if (count(array_filter($latParts, fn($v) => $v !== null)) === 3 && count(array_filter($lonParts, fn($v) => $v !== null)) === 3) {
-                [$latDeg, $latMin, $latDir] = $latParts;
-                [$lonDeg, $lonMin, $lonDir] = $lonParts;
-                $jsonLd['geo'] = [
-                    '@type' => 'GeoCoordinates',
-                    'latitude' => round(($latDeg + $latMin / 60) * ($latDir === 'N' ? 1 : -1), 6),
-                    'longitude' => round(($lonDeg + $lonMin / 60) * ($lonDir === 'E' ? 1 : -1), 6),
-                ];
-            }
-        }
-
-        // Note: aggregateRating is intentionally omitted. Google's Rich Results
-        // system does not support the review/star-rating feature for
-        // TouristAttraction/Place types, so including it here would be flagged
-        // as an invalid field-type combination rather than produce a rich result.
-
-        $breadcrumbJsonLd = [
-            '@context' => 'https://schema.org',
-            '@type' => 'BreadcrumbList',
-            'itemListElement' => [
-                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => route('/')],
-                ['@type' => 'ListItem', 'position' => 2, 'name' => 'Dive Sites', 'item' => route('DiveSites')],
-                ['@type' => 'ListItem', 'position' => 3, 'name' => $site->name, 'item' => $SEO['canonical'] ?? url()->current()],
-            ],
-        ];
-    @endphp
-    <script type="application/ld+json">{!! json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
-    <script type="application/ld+json">{!! json_encode($breadcrumbJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
-
-    <x-auth.navbars.sidebar activePage="siteDetails" activeItem="siteDetails" activeSubitem=""></x-auth.navbars.sidebar>
+    <x-shell.nav active="sites" />
     
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
@@ -67,7 +11,7 @@
             /* ------ Default Style ---------- */
             .gauge-container {
             width: 150px;
-            height: 70px;
+            height: 65px;
             display: block;
             float: center;
             padding: 10px;
@@ -176,82 +120,124 @@
                 margin-right: auto;     /* Push it to the far left */
             }
 
-            .right-label-normal {
-                text-align: right;      /* Align text on the right */
-                border: 2px solid #49a3f1; /* Add box for the label */
-                padding: 5px;           /* Add padding inside the box */
-                font-weight: bold;      /* Make the text bold */
-                border-radius: 4px;     /* Optional: Round the corners */
-                margin-left: auto;      /* Push it to the far right */
+            {{--
+                Best Gas card restyle (Pablo, 2026-09-23): visually match the
+                standalone Best Gases page's dh-gas-result-pill look WITHOUT
+                renaming any of these classes - this page's own <script>
+                blocks still classList.add/remove these exact strings
+                (right-label-normal/warning/danger/success/secondary,
+                custom-label) to recolor PPO2/END/Set Point/gas density
+                labels live as the diver moves a slider, so the class NAMES
+                must stay put. Only their look changes here, aliased onto
+                Best Gases' pill: pill shape, solid color fill, white text.
+            --}}
+            .custom-label {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                height: 32px;
+                padding: 0 16px;
+                border-radius: var(--dh-radius-pill);
+                font-weight: 700;
+                font-size: .82rem;
+                color: #fff;
+                text-align: center;
+                vertical-align: middle;
+                border: none;
             }
 
-            .right-label-warning {
-                text-align: right;      /* Align text on the right */
-                border: 2px solid #fb8c00; /* Add box for the label */
-                padding: 5px;           /* Add padding inside the box */
-                font-weight: bold;      /* Make the text bold */
-                border-radius: 4px;     /* Optional: Round the corners */
-                margin-left: auto;      /* Push it to the far right */
+            /* These labels also carry a Bootstrap text-info/text-success/
+               text-warning/text-danger/text-secondary companion class
+               (toggled alongside the right-label-* one by the same JS) -
+               those utilities set their own !important text color, which
+               would otherwise fight the white pill text above. Force white
+               regardless of which companion class is currently applied. */
+            .custom-label.text-info,
+            .custom-label.text-success,
+            .custom-label.text-warning,
+            .custom-label.text-danger,
+            .custom-label.text-secondary {
+                color: #fff !important;
             }
-            .right-label-danger {
-                text-align: right;      /* Align text on the right */
-                border: 2px solid #f44335; /* Add box for the label */
-                padding: 5px;           /* Add padding inside the box */
-                font-weight: bold;      /* Make the text bold */
-                border-radius: 4px;     /* Optional: Round the corners */
-                margin-left: auto;      /* Push it to the far right */
+
+            .right-label-normal    { background: var(--dh-sea); }    {{-- alias of Best Gases' base/"is-safe" pill --}}
+            .right-label-warning   { background: var(--dh-warn); }   {{-- alias of Best Gases' .is-warn pill --}}
+            .right-label-danger    { background: var(--dh-danger); } {{-- alias of Best Gases' .is-danger pill --}}
+            .right-label-success   { background: var(--dh-good); }   {{-- alias of Best Gases' .is-ideal pill --}}
+            .right-label-secondary { background: var(--dh-muted); }  {{-- neutral pill; no direct Best Gases equivalent --}}
+
+            /* Gas density readouts: same pill treatment, sized down to match
+               Best Gases' compact ".is-compact.is-density" pill (its own
+               dh-gas-result-pill class can't be reused here since these
+               elements must keep the classes above for the JS toggle, so
+               the compact size + generated " g/L" suffix are recreated by
+               id instead). */
+            #gasDensity, #gasDensityCCR {
+                height: 24px;
+                padding: 0 10px;
+                font-size: .72rem;
             }
-            .right-label-success {
-                text-align: right;      /* Align text on the right */
-                border: 2px solid #4caf50; /* Add box for the label */
-                padding: 5px;           /* Add padding inside the box */
-                font-weight: bold;      /* Make the text bold */
-                border-radius: 4px;     /* Optional: Round the corners */
-                margin-left: auto;      /* Push it to the far right */
+            #gasDensity::after, #gasDensityCCR::after {
+                content: " g/L";
+                opacity: .8;
+                font-weight: 600;
+                font-size: .66rem;
             }
-            .right-label-secondary {
-                text-align: right;      /* Align text on the right */
-                border: 2px solid #7b809a; /* Add box for the label */
-                padding: 5px;           /* Add padding inside the box */
-                font-weight: bold;      /* Make the text bold */
-                border-radius: 4px;     /* Optional: Round the corners */
-                margin-left: auto;      /* Push it to the far right */
+
+            /* Best Gas's pure-display result pills (no right-label-* class
+               ever touches these - only .textContent, plus a text-info/
+               text-success toggle marking "matches the ideal mix") reuse
+               Best Gases' real dh-gas-result-pill/is-o2/is-he classes
+               directly. Same white-text-on-color-fill override as above,
+               scoped to just these ids so the text-success/text-info swap
+               never turns the pill's own text unreadable against its
+               green/blue background. */
+            #bestNitrox.text-info, #bestNitrox.text-success,
+            #txbestNitrox.text-info, #txbestNitrox.text-success,
+            #txbestHe.text-info, #txbestHe.text-success,
+            #txBestO2CCR.text-info, #txBestO2CCR.text-success,
+            #txBestHeCCR.text-info, #txBestHeCCR.text-success {
+                color: #fff !important;
+            }
+
+            /* The Helium leg of the Oxygen/Helium/Nitrogen split-pill mix
+               legend is shown/hidden as a whole (JS toggles this wrapper's
+               style.display, not a `hidden` attribute on the pill itself),
+               so it has to stay a real wrapper element around the pill
+               rather than a class on the pill directly. That breaks the
+               split-pill's own :first-child/:last-child CSS (the pill is
+               now its wrapper's only child, so it would render fully
+               rounded on both ends like a standalone pill instead of a
+               square middle segment) - restore the square-middle look
+               explicitly here. */
+            #label-container-mix-He .dh-gas-result-pill,
+            #label-container-mix-He-CCR .dh-gas-result-pill {
+                border-radius: 0;
+                box-shadow: inset 1px 0 0 rgba(255,255,255,.4);
             }
 
             .noUi-tick {
                 display: none;
             }
+
+            {{-- divershub.js adds a plain number input next to every slider
+                 site-wide (2026-09-13) so divers who find dragging fiddly
+                 can type a value instead - useful on Best Gases/Deco
+                 Planner where the diver picks their own depth. On this
+                 page the site's depth is fixed and these boxes only ever
+                 mirror the slider (Pablo, 2026-09-24: "hide the text boxes
+                 where the value of the sliders are coming"), so hide them
+                 here without touching the shared script other pages rely
+                 on. --}}
+            .dh-slider-num {
+                display: none;
+            }
         </style>
 
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Dive Sites"></x-auth.navbars.navs.auth>
+        <x-shell.header title="Dive Sites" :back="route('DiveSites')" />
         <!-- End Navbar -->
         <div class="container-fluid py-0">
-
-            {{--modal guest--}}
-            <div class="modal fade" id="modal_logged_as_guest" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="modal-notification" aria-hidden="true">
-                <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header text-center">
-                            <h6 class="modal-title font-weight-normal" id="modal-title-notification">Logged as a guest</h6>
-                            
-                        </div>
-                        <div class="modal-body">
-                            <div class="py-3 text-center">
-                            <i class="material-icons h1 text-primary">
-                                lock
-                            </i>
-                            <h4 class="text-gradient text-info text-md mt-4">Create an account to access all features. It's free - no credit cards, no payment methods EVER required.</h4>
-                            <a class="nav-link text-white " href="{{ route('logout') }} "
-                                    onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-                                    <span class="badge badge-lg badge-info"> Create an account</span>
-                                </a>
-                            <p>Press anywhere outside this dialog to continue</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <!-- Modal rating -->
             <div class="modal fade" id="modalRating" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -303,398 +289,292 @@
             </div>
             @endif
 
-            <?php
-                if(!is_null($site->historicImg))
-                    $bannerImg = '/assets/img/sites/' . $site->historicImg;
-                else
-                    $bannerImg = '/assets/img/illustrations/site_wreck.webp';
-            ?>
-            <div class="page-header min-height-200 max-height-300 border-radius-xl mt-4 mx-0" style="background-image: url('{{ $bannerImg }}');">
-                <span class="mask  bg-gradient-secondary  opacity-4"></span>
-            </div>
+            {{--
+                Redesign W3: photo led header, facts and live status in one glance,
+                then content on the left and map, next boats and operators on the
+                right. Element ids used by the scripts at the bottom of this file
+                are unchanged: gauge2, alreadyVisited, alreadyVisitedHiddenInput,
+                siteHiddenInput, updatedVisited-form, rateYoReadOnly, map, youtubeVideo.
+                Everything below the "3D-Model" card is the previous markup.
+            --}}
+            @php
+                $isMember = auth()->user() && auth()->user()->isNotGuest();
+                $gallery = collect($photos)->values();
+                $heroFile = $gallery->first()?->file;
+                $heroUrl = $heroFile ? \App\Support\SitePhoto::web($heroFile)
+                    : (!is_null($site->historicImg) ? asset('assets') . '/img/sites/' . $site->historicImg : asset('assets') . '/img/illustrations/site_wreck.webp');
+                $levelInfo = \App\Support\DiveLevel::get($site->level);
+                $hour = (int) now()->format('G');
+                $forecastText = $forecast ? ($hour < 12 ? $forecast->conditionsAM_text : $forecast->conditionsPM_text) : null;
+            @endphp
 
-            <div class="card p-0 position-relative mt-n5 mx-3 z-index-2 mb-4" style="background-color: rgba(255, 255, 255, 0.6);">
+            {{-- Contribute-a-picture nudge, moved from a bottom popup to a
+                 slim bar at the very top of the page (Pablo, 2026-09-24:
+                 "the pop up at the bottom is annoying... covering the
+                 navigation bar. Maybe we replace it at the very top...
+                 without taking too much space"). Same <4-pictures
+                 criterion. Frequency is reduced two ways in the script
+                 below: dismissing suppresses it site-wide (not just this
+                 site) for 14 days, and even without dismissing it won't
+                 show again for 24h once shown once - "reduce the frequency
+                 we show this". --}}
+            @if(auth()->user()->isNotGuest() && $diverPhotos->count() < 4)
+                <div class="dh-photo-cta-bar" id="dh-diver-photo-cta" hidden>
+                    <span class="material-icons-round" aria-hidden="true">add_a_photo</span>
+                    <span class="dh-photo-cta-text">Been to {{ $site->name }}? Share your photos with other divers!</span>
+                    <button type="button" class="dh-photo-cta-btn" data-bs-toggle="modal" data-bs-target="#dh-upload-diver-photo-modal">Add a picture</button>
+                    <button type="button" class="dh-photo-cta-dismiss" id="dh-diver-photo-cta-dismiss" aria-label="Dismiss">
+                        <span class="material-icons-round" aria-hidden="true">close</span>
+                    </button>
+                </div>
+                <script>
+                    (function () {
+                        var dismissKey = 'dhDiverPhotoCtaDismissedUntil';
+                        var shownKey = 'dhDiverPhotoCtaShownAt';
+                        var bar = document.getElementById('dh-diver-photo-cta');
+                        var dismiss = document.getElementById('dh-diver-photo-cta-dismiss');
+                        if (!bar || !dismiss) return;
 
-                    
-                    <div class="p-0 mt-0 mx-2  border-radius-lg py-3 pe-1">
-                        
-                        {{-- Div for site name and type--}}
-                        <div style="float: left;" class="mt-n4">
-                            <table> <tbody>
-                                <tr>
-                                    <td class="w-10"><img style="width: 70px; height: auto;" src="{{ asset('assets') }}/img/icons/{{ $site->type }}_icon.png" alt="{{ $site->type }}"></td>
-                                    <td><h1 class="card-title text-info mx-3 mt-3">{{ $site->name }}</h1>
-                                        <p class="align-middle text-left text-md text-info mx-3 mt-n3">{{ $site->type }} in {{ ucwords($location->location) }}</p>
-                                    </td> 
-                                </tr>
-                            </tbody></table>
-                            @if(auth()->user()->isNotGuest())
-                            <table> <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="mt-1" style="float: right;" data-bs-toggle="tooltip" data-bs-placement="top" title="Add/Remove from wishlist">
-                                            
-                                            <button class="btn btn-icon btn-3 btn-info" type="button" onclick="window.location.href='{{ route('UpdateWished', ['siteId' => $site->id]) }}';">
-                                                <span class="btn-inner--icon"><i class="material-icons">{{ !$wished ? "favorite" : "favorite_border"}}</i></span>
-                                                <span class="btn-inner--text"> {{ !$wished ? "Add to wishlist" : "Remove from wishlist"}}</span>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody></table>
-                            @endif
-                        </div>
-                        {{-- Div for star ratings--}}
-                        <div class="m-auto" style="float: right;">
-                            @php
-                                $productRating = $site->rate; // Replace with your actual product rating
-                            @endphp
+                        var now = Date.now();
+                        var suppressed = false;
+                        try {
+                            var dismissedUntil = parseInt(localStorage.getItem(dismissKey) || '0', 10);
+                            var shownAt = parseInt(localStorage.getItem(shownKey) || '0', 10);
+                            suppressed = now < dismissedUntil || (now - shownAt) < 24 * 60 * 60 * 1000;
+                        } catch (e) {}
 
-                            {{--@foreach(range(1, 5) as $i)
-                                <span class="fa-stack" style="width: 1em; font-size: 2em;">
-                                    <i class="far fa-star fa-stack-1x"></i>
-                                    @if($productRating > 0)
-                                        @if($productRating > 0.5)
-                                            <i class="fas fa-star fa-stack-1x" style="color: gold;"></i>
-                                        @else
-                                            <i class="fas fa-star-half fa-stack-1x" style="color: gold; "></i>
-                                        @endif
-                                    @endif
-                                    @php $productRating--; @endphp
-                                </span>
-                            @endforeach--}}
+                        if (!suppressed) {
+                            setTimeout(function () {
+                                bar.hidden = false;
+                                try { localStorage.setItem(shownKey, String(Date.now())); } catch (e) {}
+                            }, 1000);
+                        }
+                        dismiss.addEventListener('click', function () {
+                            bar.hidden = true;
+                            try { localStorage.setItem(dismissKey, String(Date.now() + 14 * 24 * 60 * 60 * 1000)); } catch (e) {}
+                        });
+                    })();
+                </script>
+            @endif
 
-                            <div class="d-flex justify-content-end"><div id="rateYoReadOnly"></div></div>
-                            
-                            <div class="mt-1">
-                                <p class="align-middle text-end text-md text-info mt-n2"><b>{{ $site->votes }} ratings</b></p>
-                            </div>
+            {{-- Gallery header (W3 note 1). Main photo plus two thumbnails; all link to the full gallery below. --}}
+            <section class="dh-site-hero">
+                <a class="dh-site-hero-main" href="#pictures" style="background-image:url('{{ $heroUrl }}')" aria-label="Photos of {{ $site->name }}"></a>
+                @if($gallery->count() > 1)
+                <div class="dh-site-hero-side">
+                    @foreach($gallery->slice(1, 2) as $p)
+                        <a href="#pictures" style="background-image:url('{{ \App\Support\SitePhoto::thumb($p->file) }}')" aria-label="{{ $p->desc ?: 'Photo of ' . $site->name }}"></a>
+                    @endforeach
+                    @if($gallery->count() > 3)<span class="dh-site-hero-more">+{{ $gallery->count() - 3 }} photos</span>@endif
+                </div>
+                @endif
+            </section>
 
-                            {{--Don't allow rating if guest--}}
-                            @if(auth()->user()->isNotGuest())
-                                @if(!$ratedAlready)
-                                <div class="mt-n1">
-                                    <p class="align-middle text-end text-xs text-decoration-underline text-info mt-0"><a href="#" data-bs-toggle="modal" data-bs-target="#modalRating"><b>rate this site</b></a></p>
-                                </div>
-                                @else
-                                <div class="mt-n1">
-                                    <p class="align-middle text-end text-xs text-info mt-0"><b>You already rated this site</b></p>
-                                </div>
-                                @endif
-                                <div class="form-check form-switch ps-0">
-                                    <form method="POST" action="{{ route('UpdateVisited') }}" id="updatedVisited-form">
-                                        @csrf
-                                        <input name="visited" type="text" hidden id="alreadyVisitedHiddenInput">
-                                        <input name="site" type="text" hidden id="siteHiddenInput" value="{{ $site->id }}">
-                                        <input class="form-check-input ms-auto" type="checkbox"
-                                            id="alreadyVisited" {{ $visited ? "checked" : ""}}>
-
-                                        <label class="form-check-label text-body ms-3 mt-0"
-                                            for="flexSwitchCheckDefault" data-bs-toggle="tooltip" data-bs-placement="top" title="Click to update">Already dove this site?</label>
-                                    </form>
-                                </div>
+            {{-- Facts and actions (W3 note 2). --}}
+            <section class="dh-site-facts">
+                <div class="dh-site-facts-main">
+                    <h1 class="dh-site-title">{{ $site->name }}</h1>
+                    <p class="dh-site-sub">
+                        <x-site-type-icon :type="$site->type" />
+                        {{ ucfirst($site->type) }} · {{ ucwords($location->location ?? '') }}
+                        @if($site->aka)
+                            <button type="button" class="dh-aka-toggle" onclick="var s=this.nextElementSibling; s.hidden=!s.hidden; this.textContent = s.hidden ? 'Also known as...' : 'Hide also known as';">Also known as...</button>
+                            <span class="text-muted" hidden> also known as {{ $site->aka }}</span>
+                        @endif
+                    </p>
+                    @if($site->gpsLat)<p class="dh-site-gps">{{ $site->gpsLat }} {{ $site->gpsLon }}</p>@endif
+                    <div class="dh-site-chips">
+                        @if($levelInfo)<span class="chip chip-static" title="Minimum recommended certification"><x-dive-level.icon :level="$site->level" height="16" /> {{ $levelInfo['name'] }}</span>@endif
+                        @if($site->maxDepth)<span class="chip chip-static">Max {{ $site->maxDepth }} ft</span>@endif
+                        @if($site->avgDepth)<span class="chip chip-static">Avg {{ $site->avgDepth }} ft</span>@endif
+                        @if($site->access)<span class="chip chip-static">{{ $site->access }}@if($site->access === 'Beach Access' && $site->distance_from_shore), {{ $site->distance_from_shore }} ft from shore @endif</span>@endif
+                        @if($forecastText)
+                            <x-conditions-pill :text="$forecastText" :label="'Today ' . ($hour < 12 ? 'AM' : 'PM')" />
+                        @endif
+                    </div>
+                </div>
+                <div class="dh-site-facts-side">
+                    <div class="dh-site-rating">
+                        <div id="rateYoReadOnly"></div>
+                        <span class="text-sm text-muted">{{ $site->votes ?: 0 }} {{ Str::plural('rating', $site->votes ?: 0) }}</span>
+                        @if($isMember)
+                            @if(!$ratedAlready)
+                                <a href="#" class="text-sm" data-bs-toggle="modal" data-bs-target="#modalRating">Rate this site</a>
                             @else
-                                <div class="mt-n1">
-                                <form method="POST" action="{{ route('logout') }}" class="d-none" id="logout-form">
-                                    @csrf
-                                    
-                                </form>
-                                <a class="nav-link text-white " href="{{ route('logout') }}"
-                                onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-                                    <p class="align-middle text-end text-xs text-info mt-0"><b>Register here to rate this site</b></p>
-                                </a>
-                                
-                                    
-                                </div>
+                                <span class="text-sm text-muted">You rated this site</span>
                             @endif
-
-                        </div>
-
+                        @else
+                            <a href="#" class="text-sm" onclick="event.preventDefault();showModalGuest();">Sign in to rate</a>
+                        @endif
                     </div>
-
-                    
+                    <div class="dh-page-actions">
+                        @if($isMember)
+                            <a class="dh-btn dh-btn-ghost-dark" href="{{ route('UpdateWished', ['siteId' => $site->id]) }}">
+                                <span class="material-icons-round">{{ $wished ? 'favorite' : 'favorite_border' }}</span>{{ $wished ? 'Saved' : 'Save' }}
+                            </a>
+                            <form method="POST" action="{{ route('UpdateVisited') }}" id="updatedVisited-form" class="dh-dived-toggle">
+                                @csrf
+                                <input name="visited" type="text" hidden id="alreadyVisitedHiddenInput">
+                                <input name="site" type="text" hidden id="siteHiddenInput" value="{{ $site->id }}">
+                                <label class="dh-btn dh-btn-ghost-dark {{ $visited ? 'is-on' : '' }}" for="alreadyVisited" title="Mark this site as dived">
+                                    <input class="form-check-input m-0" type="checkbox" id="alreadyVisited" {{ $visited ? 'checked' : '' }}>
+                                    <span class="material-icons-round">check_circle</span>{{ $visited ? 'Dived it' : 'Dived it?' }}
+                                </label>
+                            </form>
+                        @else
+                            {{-- Show, then gate (F-04): the actions are visible and ask for an account on click. --}}
+                            <a class="dh-btn dh-btn-ghost-dark" href="#" onclick="event.preventDefault();showModalGuest();"><span class="material-icons-round">favorite_border</span>Save</a>
+                            <a class="dh-btn dh-btn-ghost-dark" href="#" onclick="event.preventDefault();showModalGuest();"><span class="material-icons-round">check_circle</span>Dived it?</a>
+                        @endif
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="row mx-2">
-                
-                
-                {{-- Card Details --}}
-                <div class="col-md-12">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Details</h4>
-                                <div class="table-responsive"></div>
+            <div class="row mx-0 dh-site-columns">
+                <div class="col-lg-8 px-0 pe-lg-3">
+                    {{-- Details: certification gauge and the depth, access and GPS facts. --}}
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Details</h2>
+                        <div class="dh-site-details">
+                            <div class="dh-site-gauge">
+                                <div class="gauge-wrapper" style="position: relative; height: 78px;">
+                                    <div id="gauge2" class="gauge-container five" style="position:absolute; bottom:0; left:50%; transform:translateX(-50%);"></div>
+                                </div>
+                                <div class="text-center fw-bold">{{ $levelInfo['name'] ?? 'Level not set' }}</div>
+                                <div class="text-center text-xs text-muted">Minimum recommended certification</div>
+                            </div>
+                            <dl class="dh-facts-list">
+                                @if($site->maxDepth)<div><dt>Max depth</dt><dd>{{ $site->maxDepth }} ft</dd></div>@endif
+                                @if($site->avgDepth)<div><dt>Average depth</dt><dd>{{ $site->avgDepth }} ft</dd></div>@endif
+                                @if($site->access)<div><dt>Access</dt><dd>{{ $site->access }}@if($site->access === 'Beach Access' && $site->distance_from_shore) ({{ $site->distance_from_shore }} ft from shore)@endif</dd></div>@endif
+                                @if($site->relief)<div><dt>Relief</dt><dd>{{ $site->relief }}</dd></div>@endif
+                                @if($forecast)<div><dt>Sea state today</dt><dd class="d-flex gap-1"><x-conditions-pill :text="$forecast->conditionsAM_text" label="AM" /><x-conditions-pill :text="$forecast->conditionsPM_text" label="PM" /></dd></div>@endif
+                            </dl>
+                        </div>
+                    </section>
+
+                    @php $video = json_decode($site->videos); @endphp
+                    @if($video != null && !empty($video[0]->link))
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Video</h2>
+                        <iframe id="youtubeVideo" class="img-fluid border-radius-lg w-100" style="aspect-ratio:16/9" src="{{ $video[0]->link }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
+                        @if(!empty($video[0]->credit))<p class="text-center text-sm mt-2 mb-0"><b>🎥 {{ $video[0]->credit }}</b></p>@endif
+                    </section>
+                    @endif
+
+                    @if($gallery->count())
+                    {{-- Pictures: web sized copies, each opening the full size copy in a
+                         dismissable modal rather than a new tab - a PWA has no back
+                         button to return from a real new-tab navigation (2026-09-11). --}}
+                    <section class="dh-panel" id="pictures">
+                        <h2 class="dh-panel-title">Pictures <span class="dh-region-count">{{ $gallery->count() }}</span></h2>
+                        <div class="dh-gallery">
+                            @foreach($gallery as $p)
+                                <figure class="dh-gallery-item">
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#dh-photo-modal"
+                                       data-photo-src="{{ \App\Support\SitePhoto::web($p->file) }}"
+                                       data-photo-alt="{{ $site->name }}{{ $p->desc ? ' - ' . $p->desc : ' dive site photo' }}">
+                                        <img src="{{ \App\Support\SitePhoto::thumb($p->file) }}" alt="{{ $site->name }}{{ $p->desc ? ' - ' . $p->desc : ' dive site photo' }}" loading="lazy">
+                                    </a>
+                                    @if($p->desc || $p->credit)
+                                        <figcaption>{{ $p->desc }}@if($p->credit) <span class="text-muted">📸 {{ $p->credit }}</span>@endif</figcaption>
+                                    @endif
+                                </figure>
+                            @endforeach
+                        </div>
+                    </section>
+
+                    <div class="modal fade dh-photo-modal" id="dh-photo-modal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                            <div class="modal-content">
+                                <button type="button" class="dh-photo-modal-close" data-bs-dismiss="modal" aria-label="Close"><span class="material-icons-round" aria-hidden="true">close</span></button>
+                                <img id="dh-photo-modal-img" src="" alt="">
                             </div>
                         </div>
-                        <div class="card-body">
-                            
-                            <div class="row">
-                                <div class="col-md-3">
-                                   <!-- <div id="gauge2" class="gauge-container justify-content-center mx-auto five" style="margin-top:auto; width: 80%; height:auto;"> </div>-->
+                    </div>
+                    <script>
+                        document.getElementById('dh-photo-modal')?.addEventListener('show.bs.modal', function (e) {
+                            var img = document.getElementById('dh-photo-modal-img');
+                            img.src = e.relatedTarget.getAttribute('data-photo-src');
+                            img.alt = e.relatedTarget.getAttribute('data-photo-alt') || '';
+                        });
+                    </script>
+                    @endif
+                </div>
 
-                                    <div class="gauge-wrapper mt-n7" style="position: relative; height: 250px;">
-                                        <div id="gauge2" class="gauge-container five" style="
-                                            position: absolute;
-                                            bottom: 0;
-                                            left: 50%;
-                                            transform: translateX(-50%);
-                                            width: 300px;
-                                            height: 150px;">
-                                        </div>
-                                    </div>
-
-
-                                    @php
-                                        if($site->level == 0)
-                                            $level="Open Water";
-                                        elseif($site->level == 1)
-                                            $level="Advanced Open Water";
-                                        elseif($site->level == 2)
-                                            $level="Technical Air";
-                                        elseif($site->level == 3)
-                                            $level="Technical Normoxic Trimix";
-                                        elseif($site->level == 4)
-                                            $level="Technical Hypoxic Trimix";
-                                        
-                                    @endphp
-                                    <div class="align-middle text-center text-md"><b>{{ $level }}</b></div>
-                                    <div class="align-middle text-center text-xxs">Minimum Recommended Certification</div>    
-
-                                    <div class="table-responsive">                                   
-                                        <table class="table align-items-center mb-0"> 
-                                            <tbody>
-                                                <div> <td>
-                                                    <table class="table align-items-center mb-0">
-                                                        @if($site->maxDepth)
-                                                            <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">Max Depth</td>
-                                                            <td class="align-middle text-left text-md w-50"><b>{{ $site->maxDepth}} ft</b></td> </tr>
-                                                        @endif
-
-                                                        @if($site->avgDepth)
-                                                            <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7">Average Depth</td>
-                                                            <td class="align-middle text-left text-md"><b>{{ $site->avgDepth}} ft</a></b></td> </tr>
-                                                        @endif
-                                                    </table>
-                                                    <div class="table">
-                                                        @if($site->access)
-                                                            <div class="text-secondary text-center text-sm font-weight-bolder opacity-7">Access</div>
-                                                            <div class="align-middle text-center text-md text-wrap mt-n1">
-                                                                <b>{{ $site->access}}</b>
-                                                                <?php
-                                                                    if($site->access == "Beach Access")
-                                                                        echo "(" . $site->distance_from_shore . " ft from shore)";
-                                                                ?>
-                                                                
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                    <div class="text-secondary text-center text-sm font-weight-bolder opacity-7">GPS coordinates</div>
-                                                    <div class="align-middle text-center text-md text-wrap"><b>{{ $site->gpsLat}}<br>{{ $site->gpsLon}}</b></s> </div>
-                                                </td></tr>
-                                            </tbody>
-                                        </table>
-                                    </div>  
+                {{-- Diver-uploaded picture full-size modal - separate from
+                     #dh-photo-modal above because this one overlays the
+                     uploader's name and date on the picture itself. No
+                     avatar (Pablo, 2026-09-24: it "overlaid at full size
+                     over the picture" - a real bug, .dh-photo-modal img's
+                     descendant selector outranked the avatar's own class
+                     and stretched it to fill the modal - "remove the
+                     avatar and only keep the name... and the date"). --}}
+                <div class="modal fade dh-photo-modal" id="dh-diver-photo-modal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content">
+                            <button type="button" class="dh-photo-modal-close" data-bs-dismiss="modal" aria-label="Close"><span class="material-icons-round" aria-hidden="true">close</span></button>
+                            <div class="dh-diver-modal-frame">
+                                <img id="dh-diver-photo-modal-img" src="" alt="">
+                                <div class="dh-diver-modal-overlay">
+                                    <span class="dh-diver-modal-text">
+                                        <span id="dh-diver-photo-modal-name" class="dh-diver-modal-name do-not-translate"></span>
+                                        <span id="dh-diver-photo-modal-date" class="dh-diver-modal-date"></span>
+                                    </span>
                                 </div>
-
-                                <div class="col-md-6">
-                                    <div class="border-radius-xl">
-                                        <div id="map" style="border: 2px solid #2F88EC; width: 100%; height: 350px; border-radius: 1rem; background-color: #f0f0f0; padding: 1rem;"></div>
-                                    </div>
-                                    
-                                </div>
-
-                                @if(!empty($operators))
-                                <div class="col-md-3">
-                                    <div class="table-responsive">    
-                                        <table class="table align-items-center mb-0"> 
-                                            <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Frequently visiting operators</td> </tr>
-                                        </table>
-                                        <table class="table align-items-center mb-0"> 
-                                            <tbody>
-                                                @foreach($operators as $operator)
-                                                    <tr>
-                                                        <td class="w-20"><img src="{{ asset('assets') }}{{ $operator->logoUrl}}" alt="img-blur-shadow" class="img-fluid"></td>
-                                                        <td class="text-wrap"><a href="/OperatorDetails/{{ $operator->id }}"> {{ $operator->operatorName }}</a></td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                                @endif
-
-                            </div>  
-                            
+                            </div>
                         </div>
                     </div>
                 </div>
+                <script>
+                    document.getElementById('dh-diver-photo-modal')?.addEventListener('show.bs.modal', function (e) {
+                        var t = e.relatedTarget;
+                        document.getElementById('dh-diver-photo-modal-img').src = t.getAttribute('data-photo-src');
+                        document.getElementById('dh-diver-photo-modal-name').textContent = t.getAttribute('data-uploader-name');
+                        document.getElementById('dh-diver-photo-modal-date').textContent = t.getAttribute('data-uploaded-date');
+                    });
+                </script>
 
+                <div class="col-lg-4 px-0">
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Where it is</h2>
+                        <div id="map" class="dh-map dh-map-small"></div>
+                        @if($site->gpsLat)<p class="dh-site-gps dh-site-gps-map">{{ $site->gpsLat }} {{ $site->gpsLon }}</p>@endif
+                    </section>
+
+                    {{-- The cross sell loop (W3 note 4): next boats going to this site. --}}
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Next boats to this site <span class="dh-region-count">{{ count($site->upcomingTrips) }}</span></h2>
+                        @forelse($nextTrips as $trip)
+                            <x-trip-card :trip="$trip" :showDate="true" />
+                        @empty
+                            <p class="text-sm text-muted mb-0">No confirmed trips to this site are listed yet.</p>
+                        @endforelse
+                        @if(count($site->upcomingTrips) > count($nextTrips))
+                            <a class="dh-btn dh-btn-ghost-dark w-100 justify-content-center mt-2" href="{{ route('Trips') }}">See all departures</a>
+                        @endif
+                    </section>
+
+                    @if(!empty($operators) && count($operators))
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Operators that dive here</h2>
+                        <ul class="dh-operator-list">
+                            @foreach($operators as $operator)
+                                <li><a href="{{ route('OperatorDetails', ['id' => $operator->slug ?? $operator->id]) }}">
+                                    @if($operator->logoUrl)<img src="{{ asset('assets') }}{{ $operator->logoUrl }}" alt="" loading="lazy">@endif
+                                    <span>{{ $operator->operatorName }}</span></a></li>
+                            @endforeach
+                        </ul>
+                    </section>
+                    @endif
+                </div>
             </div>
 
-            
-            
-            
-            <div class="row mx-2">
-                @php
-                    $video = json_decode($site->videos);    
-                @endphp
-
-                @if(($video != null and $video[0]->link != null) or count($site->upcomingTrips))
-                    <div class="col-md-6">
-                        {{--Card for video---}}
-                        @if($video != null)
-                            @if($video[0]->link)
-                                <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
-                                    <div class="card-body mt-0">
-                                        <iframe id="youtubeVideo" class="img-fluid border-radius-lg" src="{{ $video[0]->link }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
-                                        @if($video[0]->credit)
-                                            <p class="align-middle text-center text-sm"><b>🎥 {{ $video[0]->credit }}</b></p>
-                                        @endif
-                                        
-                                    </div>
-                                </div>
-                            @endif
-                        @endif
-
-                        {{--Card for upcoming trips---}}
-                        @if(count($site->upcomingTrips))
-                            <div class="row mx-1 mt-3">
-                                <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                                    <div class="card-header p-0 mt-n4 mx-3">
-                                        <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                            <h2 class="card-title text-white mx-4">Upcoming trips ({{ count($site->upcomingTrips) }})</h2>
-                                            <div class="table-responsive"></div>
-                                        </div>
-                                    </div>
-                                    <div class="card-body mt-4">
-                                        <div class="table-responsive">
-                                            <table id="tableUpcomingTrips" style="display: block; max-height: 300px; overflow-y: scroll">
-                                                <thead class="text-info">
-                                                    <th class="align-top">Operator</th>
-                                                    <th class="px-4 align-top">Date</th> 
-                                                    <th class="px-4 align-top">Time</th>
-                                                    <th class="py-0 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the numbers below to go to trip booking page" data-container="body" data-animation="true">Availability<p class="text-xs mt-0 px-1">click-to-book</p></th>
-                                                    <th class="px-4 align-top" data-bs-toggle="tooltip" data-bs-placement="top" title="Click on the name of the trip to see full trip details" data-container="body" data-animation="true">Trip Name<p class="text-xs mt-0 px-1">click for details</p></th>
-                                                </thead>
-                                                <tbody> 
-                                                    @foreach($site->upcomingTrips as $trip)
-                                                        
-                                                        <tr style="border-bottom: 1px solid #D3D3D3;" class="justify-content-center align-middle" data-tag="{{ $trip->tags }}">
-                                                            
-                                                            <td class="px-0 py-2 text-sm text-wrap align-middle justify-content-center">{{ $trip->operatorName }}</td>
-                                                            <td class="px-4">{{ $trip->date }}</td>
-                                                            <td class="px-4">{{ $trip->departureTime }}</td>
-                                                            @if($trip->tripFreeSpots == 0)
-                                                                <td class="text-center">-</td>
-                                                            @else
-                                                                <td class="text-center"> <a href="{{ $trip->linkToBook }}" target="_blank">{{ $trip->tripFreeSpots == 1000 ? "Y" : $trip->tripFreeSpots }}</a></td>
-                                                            @endif
-                                                            <td class="px-4 text-sm"><a href="{{ route('TripDetails', ['tripId' => $trip->id]) }}">{{ $trip->tripName }}<a></td>
-                                                            
-                                                        </tr>
-                                                
-                                                    @endforeach          
-                                                </tbody>
-                                            </table>
-                                        </div>   
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                    
-                @endif
-                {{-- Card pictures --}}
-                @if($site->pics)
-                    <div class="col-md-6">             
-                        <div class="card p-0 position-relative mt-n2 mx-0 z-index-2 mb-4">
-                            {{--<div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Pictures</h2>
-                                    <div class="table-responsive"></div>
-                                </div>
-                            </div>--}}
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table align-items-center mb-0"> 
-                                        <tbody>
-                                            <tr><td>
-                                            <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
-                                                <div class="carousel-inner">
-                                                    @php 
-                                                        $first = true;
-                                                    @endphp
-                                                        
-                                                    @foreach ($photos as $photo)
-                                                        @php
-                                                            $isFirstPhoto = $first;
-                                                            $first = false;
-                                                        @endphp
-                                                        <div class="carousel-item {{ $isFirstPhoto ? "active" : "" }}">
-                                                            <div class="page-header min-vh-50 border-radius-xl position-relative overflow-hidden">
-                                                                <img src="{{ asset('assets') }}/img/sites/{{ $photo->file }}"
-                                                                    alt="{{ $site->name }}{{ $photo->desc ? ' - ' . $photo->desc : ' dive site photo' }}"
-                                                                    class="position-absolute top-0 start-0 w-100 h-100"
-                                                                    style="object-fit: cover;"
-                                                                    loading="{{ $isFirstPhoto ? 'eager' : 'lazy' }}">
-                                                                <div class="container">
-
-                                                                </div>
-                                                            </div>
-                                                            {{--<h4 class="text-info mb-0 fadeIn1 fadeInBottom align-bottom text-center"> {{ $boat->name }}</h4>--}}
-
-                                                            <table class="table align-items-center mb-0">
-                                                        
-                                                                @if($photo->desc)
-                                                                    <tr class="align-top">
-                                                                    <td class="align-middle text-center text-wrap text-md"><b>{{ $photo->desc }}</b></td> </tr>
-                                                                @endif
-                                                                
-                                                                @if($photo->credit)
-                                                                    <tr>
-                                                                    <td class="align-middle text-center text-sm"><b>📸 {{ $photo->credit }}</b></td> </tr>
-                                                                @endif
-                                                                
-                            
-
-                                                            </table>
-
-
-                                                        </div>
-                                                    @endforeach
-
-                                                    
-                                                </div>
-
-                                                <div class="position-absolute min-vh-25 w-100 top-10">
-                                                    <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-bs-slide="prev">
-                                                        <span class="carousel-control-prev-icon position-absolute bottom-50 text-info" aria-hidden="true"></span>
-                                                        <span class="visually-hidden">Previous</span>
-                                                    </a>
-                                                    <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-bs-slide="next">
-                                                        <span class="carousel-control-next-icon position-absolute bottom-50" aria-hidden="true"></span>
-                                                        <span class="visually-hidden">Next</span>
-                                                    </a>
-                                                </div>
-                                                
-                                            </div>
-
-                                        </tbody>    
-                                    </table>
-                                </div>    
-                            </div>
-                        </div>
-                    </div>
-                @endif
-            </div>
-
-            <div class="row mx-2">
+            <div class="row mx-0">
 
                 {{--Card 3D model--}}
                 @if($site->dModel != null)
-                <div class="col-md-12">             
+                <div class="col-md-12 px-0">             
                     <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
                         <div class="card-header p-0 mt-n4 mx-3">
                             <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
@@ -745,683 +625,740 @@
 
             {{-- Card Gases --}}
             
-            <div class="row mx-2">
-                
-                <div class="col-md-12">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <div class="d-flex align-items-center mx-4">
-                                    <h2 class="card-title text-white mb-0 me-3" id="bestGasTitle">Best Gas</h2>
-                                    <div class="form-check form-switch ps-0 mb-0 mx-5">
-                                        <input name="showGasDetails" class="form-check-input" type="checkbox" id="showGasDetails" value="1">
-                                        <label class="form-check-label ms-2 text-white mt-n1" for="showGasDetails">show details</label>
-                                    </div>
-                                </div>
+            <div class="row mx-0">
 
-                                <div class="table-responsive mt-3"></div>
-                            </div>
-
-
+                <div class="col-md-12 px-0">
+                    <section class="dh-panel">
+                        <div class="dh-panel-head-row">
+                            <h2 class="dh-panel-title" id="bestGasTitle">Best Gas</h2>
+                            <button type="button" id="showGasDetailsBtn" class="dh-btn dh-btn-ghost-dark" aria-label="Show details" aria-expanded="false">
+                                <span class="material-icons-round" id="showGasDetailsIcon" aria-hidden="true">chevron_right</span>
+                            </button>
                         </div>
-                        <div class="card-body" id="gasesCardBody">
+                        <div id="gasesCardBody">
 
                             <div class="row">
                                 <div class="col-12">
-                                    
-                                    <div class="nav-wrapper position-relative end-0">
-                                        <ul class="nav nav-pills nav-fill p-1" role="tablist" id="nav-tabs">
-                                            <li class="nav-item">
-                                                <a class="nav-link mb-0 px-0 py-1 active" href="#" data-tag="OC">Open Circuit</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link mb-0 px-0 py-1" href="#" data-tag="CC">Closed Circuit</a>
-                                            </li>
-                                        </ul>
+                                    <div class="dh-channel-picker dh-gas-picker" id="nav-tabs">
+                                        <a href="#" class="dh-channel-chip is-active" data-tag="OC">Open Circuit</a>
+                                        <a href="#" class="dh-channel-chip" data-tag="CC">Closed Circuit</a>
                                     </div>
-                            
                                 </div>
                             </div>
                             <div class="row" id="CC" hidden>
 
-                                <div class="col-12 col-lg-4 col-sm-12 col-md-4" style="border-bottom: 1px solid #D3D3D3;">
-                                    <div class="row" style="display: flex; justify-content: center;">
-                                        <div class="mt-n6" style="position: relative; width: 150px; height: 300px;">
-                                            <!-- Overlaying image -->
-                                            <img id="tankCCR" src="{{ asset("assets") }}/img/ccr.png" alt="Overlay Image" 
-                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+                                <div class="col-md-6" id="cc-diluent-col">
+                                    <div class="mt-n2">
+                                        <input type="hidden" id="sliderPPO2CCR-value" name="txsliderPPO2CCR">
 
-                                            <img id="unblendable_sign_CCR" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image" 
-                                                style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
-
-                                            
-                                            <!-- Fixed-size chart canvas -->
-                                            <div style="width: 300px; heigth:300px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
-                                                <canvas id="stackedBarChartCCR" 
-                                                        style="width: 90%; height: 177px; position: absolute; bottom: 10px; left: 0; transform: none; z-index: 1;"></canvas>
+                                        <label class="dh-gas-label" id="mainLabelTx">Diluent PPO&#8322; at max depth ({{ $site->maxDepth }} ft)</label>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <label class="text-info right-label-normal custom-label" id="txlabelPPO2CCR">0.9</label>
+                                                <span class="dh-gas-unit">atm</span>
                                             </div>
-
-                                            <!-- <canvas id="stackedBarChart" 
-                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 161px; z-index: 1;"></canvas> -->
+                                            <div class="slider-styled" id="txsliderPPO2CCR"></div>
                                         </div>
                                     </div>
-                                    <div class="row mt-3">
-                                        <div class="col-5">
-                                            <table class="table align-items-center mb-0"> 
-                                                <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Diluent mix</td> </tr>
-                                            </table>
-                                            <div class="label-container">
-                                                <label class="left-label text-success" id="mainLabel">Oxygen</label>
-                                                <label class="text-success right-label-success custom-label" id="labelMixO2CCR">21%</label>
+
+                                    <div class="mt-3">
+                                        <input type="hidden" id="sliderSetPoint-value" name="sliderSetPoint-input">
+
+                                        <label class="dh-gas-label">Set Point</label>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <label class="text-info right-label-normal custom-label" id="labelSetPoint">1.2</label>
+                                                <span class="dh-gas-unit">atm</span>
                                             </div>
-                                            <div class="label-container" id="label-container-mix-He-CCR">
-                                                <label class="left-label text-info" id="mainLabel">Helium</label>
-                                                <label class="text-info right-label-normal custom-label" id="labelMixHeCCR">35%</label>
+                                            <div class="slider-styled" id="sliderSetPoint"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <input type="hidden" id="sliderHeCCR-value" name="sliderHeCCR">
+
+                                        <div class="dh-gas-label-row">
+                                            <label class="dh-gas-label mb-0" id="ENDLabelMax">END at max depth ({{ $site->maxDepth }} ft)</label>
+                                            <label class="dh-gas-toggle" for="O2NarcoticCCR">
+                                                <input name="O2narcoticCCR" type="checkbox" id="O2NarcoticCCR" checked value="1">
+                                                <span class="dh-gas-toggle-track"><span class="dh-gas-toggle-thumb"></span></span>
+                                                <span class="dh-gas-toggle-label">O&#8322; narcotic?</span>
+                                            </label>
+                                        </div>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <label class="text-info right-label-normal custom-label" id="labelENDCCR"></label>
+                                                <span class="dh-gas-unit">ft</span>
                                             </div>
-                                            <div class="label-container">
-                                                <label class="left-label text-secondary" id="mainLabel">Nitrogen</label>
-                                                <label class="text-secondary right-label-secondary custom-label" id="labelMixN2CCR">47%</label>
+                                            <div class="slider-styled" id="sliderHeCCR"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <input type="hidden" id="sliderTempCCR-value" name="sliderTempCCR">
+
+                                        <div class="dh-gas-label-row">
+                                            <label class="dh-gas-label mb-0">Loop temperature at depth</label>
+                                            <label class="dh-gas-toggle" for="waterVapor">
+                                                <input name="waterVapor" type="checkbox" id="waterVapor" checked value="1">
+                                                <span class="dh-gas-toggle-track"><span class="dh-gas-toggle-thumb"></span></span>
+                                                <span class="dh-gas-toggle-label">Consider H&#8322;O vapor?</span>
+                                            </label>
+                                        </div>
+                                        <div class="dh-gas-row">
+                                            <div class="dh-gas-input-wrap">
+                                                <label class="text-info right-label-normal custom-label" id="labelTempCCR"></label>
+                                                <span class="dh-gas-unit">&deg;F/&deg;C</span>
+                                            </div>
+                                            <div class="slider-styled" id="sliderTempCCR"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <div class="text-center mb-2">
+                                            <div class="dh-gas-split-pill-row">
+                                                <span class="dh-gas-o2-badge-wrap">
+                                                    <div class="dh-gas-split-pill">
+                                                        <label class="dh-gas-result-pill is-o2" id="txBestO2CCR">32</label>
+                                                        <label class="dh-gas-result-pill is-he" id="txBestHeCCR">45</label>
+                                                    </div>
+                                                    <span class="dh-gas-hypoxic-badge" id="txhypoxicCCR" style="display: none;" data-bs-toggle="tooltip" data-bs-placement="top" title="Hypoxic at surface" aria-label="Hypoxic at surface">
+                                                        <span class="material-icons-round" aria-hidden="true">warning</span>
+                                                    </span>
+                                                </span>
+                                                <div class="dh-gas-density-col">
+                                                    <label class="text-info right-label-normal custom-label" id="gasDensityCCR"></label>
+                                                    <div class="dh-gas-density-caption" id="denisityCCR">Gas density</div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-7">
-                                            <table class="table align-items-center mb-0"> 
-                                                <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Gas prices</td> </tr>
-                                            </table>
-                                            <table class="table"> 
-                                                <tr>
-                                                    <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Diluent tank</td>
-                                                    <td id="diluentPrice" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$35.50</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">O2 tank</td>
-                                                    <td id="O2Price" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10.00</td>
-                                                </tr>
-                                                
-                                            </table>
-                                            <table class="table mt-n2">
-                                                <tr id="closeMixRowCCR" hidden style="border-top: 1px solid #D3D3D3;">
-                                                    <td class="text-info text-xs opacity-10 text-left" style="border: none;">Closest standard mix</td>
-                                                    <td id="closeMixCCR" class="text-info font-weight-bolder text-xs opacity-10 text-right" style="border: none; text-align: end;">-</td>
-                                                </tr>
-                                            </table>
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-11">
+                                                <a type="button" class="btn btn-info w-100 mb-0" id="buttonBestDiluent">
+                                                    Calculate Best Diluent
+                                                </a>
+                                            </div>
+                                            <div class="col-1">
+                                                <a type="button" class="btn btn-info w-100 mb-0 dh-gas-deco-btn" href="{{ route('DecoPlanner') }}/{{ $site->id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Calculate decompression">
+                                                    <span class="material-icons-round" aria-hidden="true">timer</span>
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="col-md-8">
-                                    <table class="table align-items-center mb-0"> 
-                                        <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Diluent</td> </tr>
-                                    </table>
-                                    <div class="mt-n2">
-                                        <input type="hidden" id="sliderPPO2CCR-value" name="txsliderPPO2CCR">
-                                        
-                                        <!-- Flex container for label alignment -->
-                                        <div class="label-container">
-                                            <label class="left-label" id="mainLabelTx">Diluent PPO2 at max depth ({{ $site->maxDepth }} ft)</label>
-                                            <label class="text-info right-label-normal custom-label" id="txlabelPPO2CCR">0.9</label>
-                                            <label class="text-info">atm</label>
-                                        </div>
-                                        
-                                        <div class="slider-styled" id="txsliderPPO2CCR"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">O2 Content Diluent</div>
-                                    </div>
+                                <div class="col-12 col-lg-6 col-sm-12 col-md-6" id="cc-tank-col">
+                                    <div class="dh-gas-tank-layout">
+                                        <div class="dh-gas-tank-graphic">
+                                            {{-- Scaled to 80% of the original 105x210/210x124 sizing (Pablo,
+                                                 2026-09-24: "make the tank and rebreather template...smaller
+                                                 because the Gas price frame is not looking good") - every
+                                                 pixel value here (wrap, chart wrapper/canvas, layout padding
+                                                 in the CCR chart's JS options above) scaled by the same
+                                                 factor together, since the tank art's transparent window is
+                                                 pixel-calibrated against the chart canvas's exact size. --}}
+                                            <div class="dh-gas-tank-img-wrap" style="position: relative; width: 84px; height: 168px;">
+                                                <!-- Overlaying image -->
+                                                <img id="tankCCR" src="{{ asset("assets") }}/img/ccr.png" alt="Overlay Image"
+                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
 
-                                    <div class="mt-0">
-                                        <input type="hidden" id="sliderSetPoint-value" name="sliderSetPoint-input">
-                                        
-                                        <!-- Flex container for label alignment -->
-                                        <div class="label-container">
-                                            <label class="left-label" id="mainLabelTx">Set Point</label>
-                                            <label class="text-info right-label-normal custom-label" id="labelSetPoint">1.2</label>
-                                            <label class="text-info">atm</label>
-                                        </div>
-                                        
-                                        <div class="slider-styled" id="sliderSetPoint"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Set Point</div>
-                                    </div>
+                                                <img id="unblendable_sign_CCR" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image"
+                                                    style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); width: 95%; height: 80%; z-index: 10;">
 
-                                    <div class="mt-2">
-                                        <input type="hidden" id="sliderHeCCR-value" name="sliderHeCCR">
-                                        
-                                        <!-- Flex container for label alignment -->
-                                        <div class="label-container">
-                                            <label class="left-label" id="ENDLabelMax">END at max depth ({{ $site->maxDepth }} ft)</label>
-                                            <label class="text-info right-label-normal custom-label" id="labelENDCCR"></label>
-                                            <label class="text-info">ft</label>
-                                        </div>
-                                        
-                                        
-                                        <div class="slider-styled" id="sliderHeCCR"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He Content Diluent</div>
-                                        <div class="form-container" style="display: flex; justify-content: space-between; align-items: center;">
-                                            <div class="form-check form-switch ps-0">
-                                                <input name="O2narcoticCCR" class="form-check-input ms-auto" type="checkbox"
-                                                    id="O2NarcoticCCR" checked value="1">
-                                                <label class="form-check-label text-body ms-3"
-                                                    for="O2NarcoticCCR">O2 narcotic?</label>
+                                                <!-- Fixed-size chart canvas -->
+                                                <div style="width: 168px; height: 99px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
+                                                    <canvas id="stackedBarChartCCR"
+                                                            style="width: 90%; height: 99px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
+                                                </div>
                                             </div>
-                                            
-                                        </div>
-                                    </div>
 
-                                    <div class="mt-n2">
-                                        <input type="hidden" id="sliderTempCCR-value" name="sliderTempCCR">
-                                        
-                                        <!-- Flex container for label alignment -->
-                                        <div class="label-container">
-                                            <label class="left-label">Loop temperature at depth</label>
-                                            <label class="text-info right-label-normal custom-label" id="labelTempCCR"></label>
-                                            <label class="text-info">°F/°C</label>
-                                        </div>
-                                        
-                                        
-                                        <div class="slider-styled" id="sliderTempCCR"></div>
-                                        <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">Loop temperature</div>
-                                        <div class="form-container" style="display: flex; justify-content: space-between; align-items: center;">
-                                            <div class="form-check form-switch ps-0">
-                                                <input name="waterVapor" class="form-check-input ms-auto" type="checkbox"
-                                                    id="waterVapor" checked value="1">
-                                                <label class="form-check-label text-body ms-3"
-                                                    for="waterVapor">Consider H2O vapor?</label>
-                                            </div>
-                                            <div class="label-container" style="text-align: right;">
-                                                <label class="left-label" id="denisityCCR" style="padding-right: 10px;">Gas density</label>
-                                                <label class="text-info right-label-normal custom-label" id="gasDensityCCR"></label>
-                                                <label class="text-info">g/L</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-2">
-                                        <table class="table mb-0" style="border: top; width: 100%;"> 
-                                            <tbody>
-                                                <tr class="mt-n4">
-                                                    <table style="width: 100%;">
-                                                        <tr>
-                                                            
-                                                            <td class="mt-n4" style="border: none; text-align: right; width: 49%;">
-                                                                <label class="text-info text-lg font-weight-bolder" id="txBestO2CCR">32</label>
-                                                            </td>
-                                                            <td class="mt-n4" style="border: none; width: 2%; text-align: center;">
-                                                                <label class="text-info text-lg font-weight-bolder">/</label>
-                                                            </td>
-                                                            <td class="mt-n4" style="border: none; text-align: left; width: 49%;">
-                                                                <label class="text-info text-lg font-weight-bolder" id="txBestHeCCR">45</label>
-                                                            </td>
-                                                        
-                                                        </tr>
-                                                        
-                                                    </table>
-                                                </tr>
-                                                <tr>
-                                                    <td style="border: none;">
-                                                    <div class="text-center align-items-center mt-n3 mb-n2" id="txhypoxicCCR" style="display: flex; justify-content: center; align-items: center;">
-                                                        <label class="text-danger text-sm font-weight-bolder" >Hypoxic at surface</label>
+                                            <div class="text-center mt-2">
+                                                <div class="dh-gas-split-pill">
+                                                    <label class="dh-gas-result-pill is-compact is-mix-o2" id="labelMixO2CCR">21%</label>
+                                                    <div id="label-container-mix-He-CCR" style="display: flex;">
+                                                        <label class="dh-gas-result-pill is-compact is-mix-he" id="labelMixHeCCR">35%</label>
                                                     </div>
+                                                    <label class="dh-gas-result-pill is-compact is-mix-n2" id="labelMixN2CCR">47%</label>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                                    </td>
-                                                </tr>
-                                                <tr class="text-center align-items-center">
-                                                    <td class="text-center align-items-center" style="border: none;"> <!-- Added text-center here -->
-                                                        <div class="text-center align-items-center mt-0">
-                                                            <a type="button" class="btn btn-info mt-0" id="buttonBestDiluent">
-                                                                Calculate Best Diluent
-                                                            </a>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                
-                                            </tbody> 
-                                        </table>
+                                        <div class="dh-gas-tank-side">
+                                            <details class="dh-wx-more">
+                                                <summary><span class="material-icons-round" aria-hidden="true">attach_money</span>Gas prices</summary>
+                                                <div class="dh-wx-more-body">
+                                                    <table class="table mb-0">
+                                                        <tr>
+                                                            <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Diluent tank</td>
+                                                            <td id="diluentPrice" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$35.50</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">O2 tank</td>
+                                                            <td id="O2Price" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10.00</td>
+                                                        </tr>
+                                                    </table>
+                                                    <div class="text-center dh-gas-closemix" id="closeMixRowCCR" hidden>
+                                                        <label class="dh-gas-result-pill is-compact is-closemix" id="closeMixCCR">-</label>
+                                                    </div>
+                                                </div>
+                                            </details>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="row" id="OC">
-                                <div class="col-12 col-lg-4 col-sm-12 col-md-4" style="border-bottom: 1px solid #D3D3D3;">
-                                    <div class="row" style="display: flex; justify-content: center;">
-                                        <div class="mt-n6" style="position: relative; width: 150px; height: 300px;">
-                                            <!-- Overlaying image -->
-                                            <img id="tank_single" src="{{ asset("assets") }}/img/tank_single.png"  hidden alt="Overlay Image" 
-                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
 
-                                            <img id="tank_double" src="{{ asset("assets") }}/img/tank_double.png"   alt="Overlay Image" 
-                                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+                                {{-- Sites between 150-180 ft get both a nitrox and a trimix
+                                     recommendation - used to render both stacked on top of
+                                     each other at once (col-md-4 each), which looked fine
+                                     side-by-side on desktop but showed as duplicate PPO2
+                                     sliders on mobile ("all the text boxes...are supposed
+                                     to be hidden", Pablo, 2026-09-24). Now toggled the same
+                                     way Best Gases' own Nitrox/Trimix chips work, so only
+                                     one shows at a time. --}}
+                                @php
+                                    $showNitroxCol = $site->maxDepth < 180;
+                                    $showTrimixCol = $site->maxDepth > 150;
+                                    $showFuelToggle = $showNitroxCol && $showTrimixCol;
+                                @endphp
 
-                                            <img id="unblendable_sign" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image" 
-                                                style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
-
-                                            
-                                            <!-- Fixed-size chart canvas -->
-                                            <div style="width: 300px; heigth:300px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
-                                                <canvas id="stackedBarChart" 
-                                                        style="width: 100%; height: 202px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
-                                            </div>
-
-                                            <!-- <canvas id="stackedBarChart" 
-                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 161px; z-index: 1;"></canvas> -->
+                                @if($showFuelToggle)
+                                    <div class="col-12">
+                                        <div class="dh-channel-picker dh-gas-picker" id="oc-fuel-picker">
+                                            <button type="button" class="dh-channel-chip is-active" data-fuel="nitrox">Nitrox</button>
+                                            <button type="button" class="dh-channel-chip" data-fuel="trimix">Trimix</button>
                                         </div>
                                     </div>
-                                    <div class="row mt-3">
-                                        <div class="col-5">
-                                            <table class="table align-items-center mb-0"> 
-                                                <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Gas mix</td> </tr>
-                                            </table>
-                                            <div class="label-container">
-                                                <label class="left-label text-success" id="mainLabel">Oxygen</label>
-                                                <label class="text-success right-label-success custom-label" id="labelMixO2">Bottom PPO2</label>
-                                            </div>
-                                            <div class="label-container" id="label-container-mix-He">
-                                                <label class="left-label text-info" id="mainLabel">Helium</label>
-                                                <label class="text-info right-label-normal custom-label" id="labelMixHe">Bottom PPO2</label>
-                                            </div>
-                                            <div class="label-container">
-                                                <label class="left-label text-secondary" id="mainLabel">Nitrogen</label>
-                                                <label class="text-secondary right-label-secondary custom-label" id="labelMixN2">Bottom PPO2</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-7">
-                                            <table class="table align-items-center mb-0"> 
-                                                <tr><td id="tankConf" class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Gas prices</td> </tr>
-                                            </table>
-                                            <table class="table"> 
-                                                <tr>
-                                                    <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Aluminum 80</td>
-                                                    <td id="tank80" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Steel HP 100</td>
-                                                    <td id="tank100" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Steel LP 85</td>
-                                                    <td id="tank85" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10</td>
-                                                </tr>
-                                                
-                                            </table>
-                                            <table class="table mt-n2">
-                                                <tr id="closeMixRow" hidden style="border-top: 1px solid #D3D3D3;">
-                                                    <td class="text-info text-xs opacity-10 text-left" style="border: none;">Closest standard mix</td>
-                                                    <td id="closeMix" class="text-info font-weight-bolder text-xs opacity-10 text-right" style="border: none; text-align: end;">-</td>
-                                                </tr>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-12">
-                                            @if( $site->maxDepth <= 140)
-                                                <div class="label-container">
-                                                    <!-- Highlighted max depth -->
-                                                    <label class="left-label">NDL at <span class="text-info" style="font-weight: bold;">{{ $site->maxDepth }} ft</span> - 24 hr min surface interval</label>
+                                    <script>
+                                        (function () {
+                                            var picker = document.getElementById('oc-fuel-picker');
+                                            function dhSelectGasFuel(fuel) {
+                                                document.getElementById('oc-nitrox-col').hidden = fuel !== 'nitrox';
+                                                document.getElementById('oc-trimix-col').hidden = fuel !== 'trimix';
+                                                picker.querySelectorAll('.dh-channel-chip').forEach(function (chip) {
+                                                    chip.classList.toggle('is-active', chip.getAttribute('data-fuel') === fuel);
+                                                });
+                                                // The tank image (single/double), gas price label and mix
+                                                // pills below the tank aren't owned by this toggle - they're
+                                                // set by whichever of the nitrox/trimix sliders' own 'update'
+                                                // handler last ran, so re-fire the one matching the
+                                                // now-visible column to pull them back in sync (Pablo,
+                                                // 2026-09-24: "the tank template for nitrox is the single
+                                                // tank, the tank for trimix is the double tank").
+                                                if (fuel === 'nitrox' && typeof slider !== 'undefined' && slider.noUiSlider) {
+                                                    slider.noUiSlider.set(slider.noUiSlider.get());
+                                                } else if (fuel === 'trimix' && typeof txslider !== 'undefined' && txslider.noUiSlider) {
+                                                    txslider.noUiSlider.set(txslider.noUiSlider.get());
+                                                }
+                                            }
+                                            picker.querySelectorAll('.dh-channel-chip').forEach(function (chip) {
+                                                chip.addEventListener('click', function () { dhSelectGasFuel(chip.getAttribute('data-fuel')); });
+                                            });
+                                            window.dhSelectGasFuel = dhSelectGasFuel;
+                                        })();
+                                    </script>
+                                @endif
 
-                                                    <!-- NDL result -->
-                                                    <label class="text-info right-label-normal custom-label" id="ndlResult">-</label>
-                                                    <label class="text-info">m</label>
-                                                </div>
-                                                <div class="text-center" style="border: none;"> <!-- Added text-center here -->
-                                                    <a type="button" class="btn btn-info mt-0" id="calculateNDLButton">
-                                                        Calculate NDL
-                                                    </a>
-                                                </div>
-                                            @endif
-                                            <!-- Legend directly below the first label -->
-                                            <div class="text-center mt-n2">
-                                                <label class="text-center text-danger text-xs">Always use a dive computer</label>
-                                            </div>
-                                                    
-                                        </div>
-                                    </div>
-                                </div>
+                                @if($showNitroxCol)
+                                    <div class="col-md-6" id="oc-nitrox-col">
 
-
-                                @if( $site->maxDepth < 180)
-                                    @if( $site->maxDepth > 150)
-                                        <div class="col-md-4" style="border-bottom: 1px solid #D3D3D3;">
-                                    @else
-                                        <div class="col-md-8" style="border-bottom: 1px solid #D3D3D3;">
-                                    @endif
-                                
-                                    
-                                        <table class="table align-items-center mb-0"> 
-                                            <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Nitrox</td> </tr>
-                                        </table>
                                         <div class="mt-n2">
                                             <input type="hidden" id="sliderPPO2-value" name="sliderPPO2">
-                                            
-                                            <!-- Flex container for label alignment -->
-                                            <div class="label-container">
-                                                <label class="left-label" id="mainLabel">PPO2 at max depth ({{ $site->maxDepth }} ft)</label>
-                                                <label class="text-info right-label-normal custom-label" id="labelPPO2">Bottom PPO2</label>
-                                                <label class="text-info">atm</label>
+
+                                            <label class="dh-gas-label" id="mainLabel">PPO&#8322; at max depth ({{ $site->maxDepth }} ft)</label>
+                                            <div class="dh-gas-row">
+                                                <div class="dh-gas-input-wrap">
+                                                    <label class="text-info right-label-normal custom-label" id="labelPPO2">Bottom PPO2</label>
+                                                    <span class="dh-gas-unit">atm</span>
+                                                </div>
+                                                <div class="slider-styled" id="sliderPPO2"></div>
                                             </div>
-                                            <div class="label-container">
-                                                <label class="left-label" id="mainLabel2">PPO2 at average depth ({{ $site->avgDepth }} ft)</label>
-                                                <label class="text-info right-label-normal custom-label" id="labelPPO2Avg">Bottom PPO2</label>
-                                                <label class="text-info">atm</label>
+                                            <label class="dh-gas-label mt-2" id="mainLabel2">PPO&#8322; at average depth ({{ $site->avgDepth }} ft)</label>
+                                            <div class="dh-gas-row">
+                                                <div class="dh-gas-input-wrap">
+                                                    <label class="text-info right-label-normal custom-label" id="labelPPO2Avg">Bottom PPO2</label>
+                                                    <span class="dh-gas-unit">atm</span>
+                                                </div>
                                             </div>
-                                            
-                                            <div class="slider-styled" id="sliderPPO2"></div>
                                         </div>
-                                        <div class="mt-0">
-                                            <table class="table align-items-center mb-0" style="border: top;"> 
-                                                <tr>
-                                                    <td class="text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">O2 Content</td>
-                                                </tr>
-                                                <tr class="mt-n4">
-                                                    <td class="text-center mt-n4" style="border: none;">
-                                                        <label class="text-info text-lg font-weight-bolder" id="bestNitrox">32%</label>
-                                                    </td>
-                                                </tr>
-                                                <tr >
-                                                    <td class="text-center" style="border: none;"> <!-- Added text-center here -->
-                                                        <a type="button" class="btn btn-info mt-n4" id="buttonBestNitrox">
-                                                            Calculate Best Nitrox
+                                        <div class="mt-3">
+                                            <div class="text-center">
+                                                <label class="dh-gas-result-pill is-o2" id="bestNitrox">32%</label>
+                                            </div>
+                                            <div class="pt-3">
+                                                <div class="row g-2 align-items-center">
+                                                    <div class="col-11">
+                                                        <div class="d-flex gap-2 align-items-center">
+                                                            <a type="button" class="btn btn-info flex-fill mb-0" id="buttonBestNitrox">
+                                                                Calculate Best Nitrox
+                                                            </a>
+                                                            @if( $site->maxDepth <= 140)
+                                                            <a type="button" class="btn btn-info flex-fill mb-0" id="calculateNDLButton">
+                                                                Calculate NDL
+                                                            </a>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-1">
+                                                        <a type="button" class="btn btn-info w-100 mb-0 dh-gas-deco-btn" href="{{ route('DecoPlanner') }}/{{ $site->id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Calculate decompression">
+                                                            <span class="material-icons-round" aria-hidden="true">timer</span>
                                                         </a>
-                                                    </td>
-                                                </tr>
-                                            </table>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                     </div>
                                 @endif
 
-                                @if( $site->maxDepth > 150)
-                                    @if( $site->maxDepth < 180)
-                                        <div class="col-md-4">
-                                    @else
-                                        <div class="col-md-8">
-                                    @endif
-                                        <table class="table align-items-center mb-0"> 
-                                            <tr><td class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-center" style="border: none;">Trimix</td> </tr>
-                                        </table>
+                                @if($showTrimixCol)
+                                    <div class="col-md-6" id="oc-trimix-col" @if($showFuelToggle) hidden @endif>
                                         <div class="mt-n2">
                                             <input type="hidden" id="sliderPPO2-value" name="txsliderPPO2">
-                                            
-                                            <!-- Flex container for label alignment -->
-                                            <div class="label-container">
-                                                <label class="left-label" id="mainLabelTx">PPO2 at max depth ({{ $site->maxDepth }} ft)</label>
-                                                <label class="text-info right-label-normal custom-label" id="txlabelPPO2">Bottom PPO2</label>
-                                                <label class="text-info">atm</label>
-                                            </div>
-                                            <div class="label-container">
-                                                <label class="left-label" id="txmainLabel2">PPO2 at average depth ({{ $site->avgDepth }} ft)</label>
-                                                <label class="text-info right-label-normal custom-label" id="txlabelPPO2Avg">Bottom PPO2</label>
-                                                <label class="text-info">atm</label>
-                                            </div>
-                                            
-                                            <div class="slider-styled" id="txsliderPPO2"></div>
-                                            <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">O2 Content</div>
-                                        </div>
-                                        <div class="mt-2">
-                                            <input type="hidden" id="sliderPPO2-value" name="txsliderPPHe">
-                                            
-                                            <!-- Flex container for label alignment -->
-                                            <div class="label-container">
-                                                <label class="left-label" id="ENDLabelMax">END at max depth ({{ $site->maxDepth }} ft)</label>
-                                                <label class="text-info right-label-normal custom-label" id="txlabelEND"></label>
-                                                <label class="text-info">ft</label>
-                                            </div>
-                                            <div class="label-container">
-                                                <label class="left-label" id="ENDLabelAvg">END at average depth ({{ $site->avgDepth }} ft)</label>
-                                                <label class="text-info right-label-normal custom-label" id="txlabelENDAvg"></label>
-                                                <label class="text-info">ft</label>
-                                            </div>
-                                            
-                                            <div class="slider-styled" id="txsliderHe"></div>
-                                            <div class="text-secondary text-xs font-weight-bolder opacity-7 text-center mt-2" style="border: none;">He Content</div>
-                                            <div class="form-container" style="display: flex; justify-content: space-between; align-items: center;">
-                                                <div class="form-check form-switch ps-0">
-                                                    <input name="O2narcotic" class="form-check-input ms-auto" type="checkbox"
-                                                        id="O2Narcotic" checked value="1">
-                                                    <label class="form-check-label text-body ms-3"
-                                                        for="O2Narcotic">O2 narcotic?</label>
-                                                </div>
-                                                <div class="label-container" style="text-align: right;">
-                                                    <label class="left-label" id="denisity" style="padding-right: 10px;">Gas density</label>
-                                                    <label class="text-info right-label-normal custom-label" id="gasDensity"></label>
-                                                    <label class="text-info">g/L</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="mt-2">
-                                            <table class="table mb-0" style="border: top; width: 100%;"> 
-                                                <tbody>
-                                                    <tr class="mt-n4">
-                                                        <table style="width: 100%;">
-                                                            <tr>
-                                                                
-                                                                <td class="mt-n4" style="border: none; text-align: right; width: 49%;">
-                                                                    <label class="text-info text-lg font-weight-bolder" id="txbestNitrox">32%</label>
-                                                                </td>
-                                                                <td class="mt-n4" style="border: none; width: 2%; text-align: center;">
-                                                                    <label class="text-info text-lg font-weight-bolder">/</label>
-                                                                </td>
-                                                                <td class="mt-n4" style="border: none; text-align: left; width: 49%;">
-                                                                    <label class="text-info text-lg font-weight-bolder" id="txbestHe">32%</label>
-                                                                </td>
-                                                            
-                                                            </tr>
-                                                            
-                                                        </table>
-                                                    </tr>
-                                                    <tr>
-                                                        <td style="border: none;">
-                                                        <div class="text-center align-items-center mt-n3 mb-n2" id="txhypoxic" style="display: flex; justify-content: center; align-items: center;">
-                                                            <label class="text-danger text-sm font-weight-bolder" >Hypoxic at surface</label>
-                                                        </div>
 
-                                                        </td>
-                                                    </tr>
-                                                    <tr class="text-center align-items-center">
-                                                        <td class="text-center align-items-center" style="border: none;"> <!-- Added text-center here -->
-                                                            <div class="text-center align-items-center mt-0">
-                                                                <a type="button" class="btn btn-info mt-0" id="txbuttonBestNitrox">
-                                                                    Calculate Best Trimix
-                                                                </a>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                    
-                                                </tbody> 
-                                            </table>
+                                            <label class="dh-gas-label" id="mainLabelTx">PPO&#8322; at max depth ({{ $site->maxDepth }} ft)</label>
+                                            <div class="dh-gas-row">
+                                                <div class="dh-gas-input-wrap">
+                                                    <label class="text-info right-label-normal custom-label" id="txlabelPPO2">Bottom PPO2</label>
+                                                    <span class="dh-gas-unit">atm</span>
+                                                </div>
+                                                <div class="slider-styled" id="txsliderPPO2"></div>
+                                            </div>
+                                            <label class="dh-gas-label mt-2" id="txmainLabel2">PPO&#8322; at average depth ({{ $site->avgDepth }} ft)</label>
+                                            <div class="dh-gas-row">
+                                                <div class="dh-gas-input-wrap">
+                                                    <label class="text-info right-label-normal custom-label" id="txlabelPPO2Avg">Bottom PPO2</label>
+                                                    <span class="dh-gas-unit">atm</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <input type="hidden" id="sliderPPO2-value" name="txsliderPPHe">
+
+                                            <div class="dh-gas-label-row">
+                                                <label class="dh-gas-label mb-0" id="ENDLabelMax">END at max depth ({{ $site->maxDepth }} ft)</label>
+                                                <label class="dh-gas-toggle" for="O2Narcotic">
+                                                    <input name="O2narcotic" type="checkbox" id="O2Narcotic" checked value="1">
+                                                    <span class="dh-gas-toggle-track"><span class="dh-gas-toggle-thumb"></span></span>
+                                                    <span class="dh-gas-toggle-label">O&#8322; narcotic?</span>
+                                                </label>
+                                            </div>
+                                            <div class="dh-gas-row">
+                                                <div class="dh-gas-input-wrap">
+                                                    <label class="text-info right-label-normal custom-label" id="txlabelEND"></label>
+                                                    <span class="dh-gas-unit">ft</span>
+                                                </div>
+                                                <div class="slider-styled" id="txsliderHe"></div>
+                                            </div>
+                                            <label class="dh-gas-label mt-2" id="ENDLabelAvg">END at average depth ({{ $site->avgDepth }} ft)</label>
+                                            <div class="dh-gas-row">
+                                                <div class="dh-gas-input-wrap">
+                                                    <label class="text-info right-label-normal custom-label" id="txlabelENDAvg"></label>
+                                                    <span class="dh-gas-unit">ft</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <div class="text-center mb-2">
+                                                <div class="dh-gas-split-pill-row">
+                                                    <span class="dh-gas-o2-badge-wrap">
+                                                        <div class="dh-gas-split-pill">
+                                                            <label class="dh-gas-result-pill is-o2" id="txbestNitrox">32</label>
+                                                            <label class="dh-gas-result-pill is-he" id="txbestHe">32</label>
+                                                        </div>
+                                                        <span class="dh-gas-hypoxic-badge" id="txhypoxic" style="display: none;" data-bs-toggle="tooltip" data-bs-placement="top" title="Hypoxic at surface" aria-label="Hypoxic at surface">
+                                                            <span class="material-icons-round" aria-hidden="true">warning</span>
+                                                        </span>
+                                                    </span>
+                                                    <div class="dh-gas-density-col">
+                                                        <label class="text-info right-label-normal custom-label" id="gasDensity"></label>
+                                                        <div class="dh-gas-density-caption" id="denisity">Gas density</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row g-2 align-items-center">
+                                                <div class="col-11">
+                                                    <a type="button" class="btn btn-info w-100 mb-0" id="txbuttonBestNitrox">
+                                                        Calculate Best Trimix
+                                                    </a>
+                                                </div>
+                                                <div class="col-1">
+                                                    <a type="button" class="btn btn-info w-100 mb-0 dh-gas-deco-btn" href="{{ route('DecoPlanner') }}/{{ $site->id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Calculate decompression">
+                                                        <span class="material-icons-round" aria-hidden="true">timer</span>
+                                                    </a>
+                                                </div>
+                                            </div>
                                         </div>
 
                                     </div>
                                 @endif
 
-                            </div>  
-                            
-                        
-                    
-                            <div class="row mt-2">
-                                <div class="col-lg-4 col-md-4 col-sm-12">
-                                    <div class="text-center mx-2" style="border: none;"> <!-- Added text-center here -->
-                                        <!-- <a type="button" class="btn btn-info mt-0" id="decoPlanningButton" href="{{ route('DecoPlanner', ['id' => $site->id] )}}"> -->
-                                        <a type="button" class="btn btn-info mt-0" id="decoPlanningButton" href="{{ route('DecoPlanner')}}/{{ $site->id }}">
-                                            Decompression planning
-                                        </a>
-                                    </div>    
+                                <div class="col-12 col-lg-6 col-sm-12 col-md-6" id="oc-tank-col">
+                                    <div class="dh-gas-tank-layout">
+                                        <div class="dh-gas-tank-graphic">
+                                            {{-- Scaled to 80%, same reason/ratio as the CCR block above. --}}
+                                            <div class="dh-gas-tank-img-wrap" style="position: relative; width: 84px; height: 168px;">
+                                                <!-- Overlaying image -->
+                                                <img id="tank_single" src="{{ asset("assets") }}/img/tank_single.png" hidden alt="Overlay Image"
+                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+
+                                                <img id="tank_double" src="{{ asset("assets") }}/img/tank_double.png" alt="Overlay Image"
+                                                    style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 150%; height: 75%; z-index: 10;">
+
+                                                <img id="unblendable_sign" src="{{ asset("assets") }}/img/unblendable_sign.png" hidden alt="Overlay Image"
+                                                    style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); width: 95%; height: 80%; z-index: 10;">
+
+                                                <!-- Fixed-size chart canvas. Chart.js's responsive mode
+                                                     resizes the canvas to match THIS WRAPPER's own height,
+                                                     not whatever height is declared on the <canvas> tag
+                                                     itself (confirmed via getBoundingClientRect() - the
+                                                     canvas's own 113px never actually took effect while
+                                                     this wrapper stayed 168px, Pablo, 2026-09-24). Wrapper
+                                                     height is therefore the real control for lining the
+                                                     bar's top up with tank_single.png/tank_double.png's
+                                                     window. -->
+                                                <div style="width: 168px; height: 113px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
+                                                    <canvas id="stackedBarChart"
+                                                            style="width: 100%; height: 113px; position: absolute; bottom: 0; left: 0; transform: none; z-index: 1;"></canvas>
+                                                </div>
+                                            </div>
+
+                                            <div class="text-center mt-2">
+                                                <div class="dh-gas-split-pill">
+                                                    <label class="dh-gas-result-pill is-compact is-mix-o2" id="labelMixO2">Bottom PPO2</label>
+                                                    <div id="label-container-mix-He" style="display: flex;">
+                                                        <label class="dh-gas-result-pill is-compact is-mix-he" id="labelMixHe">Bottom PPO2</label>
+                                                    </div>
+                                                    <label class="dh-gas-result-pill is-compact is-mix-n2" id="labelMixN2">Bottom PPO2</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="dh-gas-tank-side">
+                                            <details class="dh-wx-more">
+                                                <summary><span class="material-icons-round" aria-hidden="true">attach_money</span><span id="tankConf">Gas prices</span></summary>
+                                                <div class="dh-wx-more-body">
+                                                    <table class="table mb-0">
+                                                        <tr>
+                                                            <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Aluminum 80</td>
+                                                            <td id="tank80" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Steel HP 100</td>
+                                                            <td id="tank100" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="text-secondary text-xs opacity-10 text-left" style="border: none;">Steel LP 85</td>
+                                                            <td id="tank85" class="text-secondary text-xs opacity-10 text-right" style="border: none; text-align: end;">$10</td>
+                                                        </tr>
+                                                    </table>
+                                                    <div class="text-center dh-gas-closemix" id="closeMixRow" hidden>
+                                                        <label class="dh-gas-result-pill is-compact is-closemix" id="closeMix">-</label>
+                                                    </div>
+                                                </div>
+                                            </details>
+
+                                            @if( $site->maxDepth <= 140)
+                                            <div class="dh-wx-more dh-gas-ndl-card mt-2" id="ndlResultCard" hidden>
+                                                <div class="dh-gas-ndl-body">
+                                                    <div class="dh-gas-ndl-result">
+                                                        NDL at <label class="dh-gas-result-pill is-compact">{{ $site->maxDepth }} ft</label> is <label class="dh-gas-result-pill is-compact is-ndl" id="ndlResult">-</label>
+                                                    </div>
+                                                    <div class="dh-gas-ndl-sub">24 hr min surface interval</div>
+                                                    <div class="text-center mt-2">
+                                                        <span class="dh-gas-result-pill is-compact is-danger">Always use a dive computer <span class="material-icons-round" aria-hidden="true">watch</span></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
+
                             </div>
 
                         </div>
-                    </div>
+                    </section>
                 </div>
 
             </div>
-            
-            <div class="row mx-2">
+
+            <div class="row mx-0">
                     {{-- Card Wreck  --}}
                     @if($site->type == "wreck")
-                        <?php
-                            
-                            $wreck = json_decode($site->wreckData, true);
-                            
-                            
-                        ?>
-                        <div class="col-md-4">             
-                            <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                                <div class="card-header p-0 mt-n4 mx-3">
-                                    <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                        <h2 class="card-title text-white mx-4">Wreck Details</h2>
-                                        <div class="table-responsive"></div>
+                        @php
+                            $wreck = json_decode($site->wreckData, true) ?: [];
+                            // Every boat type actually in wreckData.type, mapped to its SVG
+                            // (2026-09-11). Anything not in this list (Drydock, Cargo Ship,
+                            // Cable Ship, Cruiser, Vessel - no dedicated icon exists yet)
+                            // falls back to the generic "other" site-type icon.
+                            $wreckTypeIcons = [
+                                'dredge' => 'dredge', 'tanker' => 'tanker', 'cutter' => 'cutter',
+                                'landing dock ship' => 'landing_dock_ship', 'freighter' => 'freighter',
+                                'barge' => 'barge', 'tugboat' => 'tugboat', 'schooner' => 'schooner',
+                                'workboat' => 'workboat', 'steamer' => 'steamer', 'buoy tender' => 'buoy_tender',
+                                'yatch' => 'yatch', 'ferry' => 'ferry', 'trawler' => 'trawler',
+                                'sailboat' => 'sailboat', 'destroyer' => 'destroyer', 'missile tracker' => 'missile_tracker',
+                            ];
+                            $wreckIconFile = $wreckTypeIcons[strtolower(trim($wreck['type'] ?? ''))] ?? null;
+                            $wreckTypeSvg = \App\Support\IconSvg::themed('assets/img/icons/boats/' . ($wreckIconFile ?? '') . '.svg')
+                                ?? \App\Support\IconSvg::themed('assets/img/icons/other_icon.svg');
+                            $shipLengthSvg = \App\Support\IconSvg::themed('assets/img/icons/boats/ship_length.svg');
+                            $shipBeamSvg = \App\Support\IconSvg::themed('assets/img/icons/boats/ship_beam.svg');
+                        @endphp
+                        <div class="col-md-4 px-0 pe-md-2">
+                            <section class="dh-panel">
+                                <div class="dh-panel-head-row">
+                                    <h2 class="dh-panel-title mb-0">Wreck Details</h2>
+                                    @if(!empty($wreck['sunkDate']))<span class="dh-wreck-sunk">Sunk {{ $wreck['sunkDate'] }}</span>@endif
+                                </div>
+                                <div class="dh-wreck-type">
+                                    @if($wreckTypeSvg)<span class="dh-wreck-type-icon" aria-hidden="true">{!! $wreckTypeSvg !!}</span>@endif
+                                    <b>{{ $wreck['type'] ?? 'Unknown' }}</b>
+                                </div>
+                                <div class="dh-wreck-dims">
+                                    <div>
+                                        @if($shipLengthSvg)<span class="dh-wreck-dim-icon" aria-hidden="true">{!! $shipLengthSvg !!}</span>@endif
+                                        <b>{{ $wreck['length'] ?? '?' }} ft</b><span>Length</span>
+                                    </div>
+                                    <div>
+                                        @if($shipBeamSvg)<span class="dh-wreck-dim-icon" aria-hidden="true">{!! $shipBeamSvg !!}</span>@endif
+                                        <b>{{ $wreck['beam'] ?? '?' }} ft</b><span>Beam</span>
                                     </div>
                                 </div>
-                                <div class="card-body mt-n4">
-                                    <div class="table-responsive">
-                                        <table class="table align-items-center mb-0"> 
-                                            <tbody>
-                                                <tr><td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_{{ strtolower($wreck["type"]) }}.png" alt="img-blur-shadow" class="img-fluid"></td></tr> 
-                                                <tr style="border-bottom: 1px solid #D3D3D3;"><td class="text-md text-center"> <b>{{ $wreck["type"]}}</b></td> </tr>
-                                            </tbody>
-                                        </table>
-
-                                        <table class="table align-items-center mb-0"> 
-                                            <tbody>
-                                                <tr><td class="text-secondary text-end text-sm font-weight-bolder opacity-7 w-50">Sunk date</td>
-                                                <td class="align-middle text-left text-md w-50"><b>{{ $wreck["sunkDate"] }}</b></td> </tr> 
-
-                                                
-                                                
-                                            </tbody>
-                                        </table>
-
-                                        <table class="table align-items-center mb-0"> 
-                                            <tbody>
-                                                <tr><td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_ship_length.png" alt="img-blur-shadow" class="img-fluid"></td>
-                                                <td class="text-center" style="border: none;"><img src="{{ asset('assets') }}/img/icons/icons_ship_beam.png" alt="img-blur-shadow" class="img-fluid"></td></tr>  
-
-                                                <tr>
-                                                    <td class="text-md text-center" style="border: none;"><b>{{ $wreck["length"] }} ft</b></td>
-                                                    <td class="text-md text-center" style="border: none;"> <b>{{ $wreck["beam"] }} ft</b></td>
-                                                </tr>
-
-                                                <tr class="mt-n2">
-                                                    <td class="text-xxs text-center" style="border: none;">Length</td>
-                                                    <td class="text-xxs text-center" style="border: none;">Beam</td>
-                                                </tr>
-                                                
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    
-                                </div>
-                            </div>
+                            </section>
                         </div>
                     @endif
                     {{--- Card Site decription --}}
-                    <div class="col-md-{{ $site->type == "wreck" ? 8 : 12 }}">             
-                        <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                            <div class="card-header p-0 mt-n4 mx-3">
-                                <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                    <h2 class="card-title text-white mx-4">Site Description</h4>
-                                    <div class="table-responsive"></div>
-                                </div>
-                            </div>
-                            <div class="card-body mt-4">
-                                {{-- Plain text server-rendered so a crawler that doesn't run
-                                     JS still sees real content here (Pablo, 2026-09-16 SEO
-                                     review) - the script below still overwrites this with the
-                                     fully formatted HTML for real visitors, unchanged. --}}
-                                <div id="desc" style="max-height: 424px; overflow-y: auto; white-space: pre-wrap;">{{ $site->getPlainTextDesc() }}</div>
-
-
-                            </div>
-                        </div>
+                    <div class="col-md-{{ $site->type == "wreck" ? 8 : 12 }} px-0 @if($site->type == 'wreck') ps-md-2 @endif">
+                        <section class="dh-panel">
+                            <h2 class="dh-panel-title">Site description</h2>
+                            {{-- Plain text server-rendered so a crawler that doesn't run JS
+                                 still sees real content here (Pablo, 2026-09-16 SEO review)
+                                 - the script below still overwrites this with the fully
+                                 formatted HTML for real visitors, unchanged. --}}
+                            <div id="desc" style="max-height: 424px; overflow-y: auto; white-space: pre-wrap;">{{ $site->getPlainTextDesc() }}</div>
+                        </section>
                     </div>
             </div>
 
-            <div class="row mx-2">
-
-                {{--- Card Route --}}
-                <div class="col-md-6">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Route</h4>
-                                <div class="table-responsive"></div>
+            {{--- Card Route + Typical Conditions, merged into one panel. --}}
+            <div class="row mx-0">
+                <div class="col-md-12 px-0">
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Route &amp; typical conditions</h2>
+                        <div class="dh-panel-cols">
+                            <div>
+                                <h3 class="dh-panel-subtitle">Route</h3>
+                                <div id="route" style="max-height: 300px; overflow-y: auto; white-space: pre-wrap;">{{ $site->getPlainTextRoute() }}</div>
+                            </div>
+                            <div>
+                                <h3 class="dh-panel-subtitle">Typical conditions</h3>
+                                <div id="typicalConditions" style="max-height: 300px; overflow-y: auto; white-space: pre-wrap;">{{ $site->getPlainTextTypicalConditions() }}</div>
                             </div>
                         </div>
-                        <div class="card-body mt-4">
-                            <div id="route" style="max-height: 424px; overflow-y: auto; white-space: pre-wrap;">{{ $site->getPlainTextRoute() }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                {{--- Card Typical Conditions --}}
-                <div class="col-md-6">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Typical Conditions</h4>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body mt-4">
-                                <div id="typicalConditions" style="max-height: 424px; overflow-y: auto; white-space: pre-wrap;">{{ $site->getPlainTextTypicalConditions() }}</div>
-                        </div>
-                    </div>
+                    </section>
                 </div>
             </div>
 
-            <div class="row mx-2">
+            <div class="row mx-0">
                 {{--- Card Wreck History --}}
                 @if($site->type == "wreck")
                 
-                <div class="col-md-12">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Wreck History</h2>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body mt-4">
-                            <div class="row">
-                                @if(!empty($site->historicImg))
-                                    <div class="col-md-4">
-                                        <div class="d-flex align-items-center justify-content-center mt-3">
-                                            <img src="{{ asset('assets') }}/img/sites/{{ $site->historicImg }}" class="img-fluid border-radius-xl shadow">
-                                        </div>
+                <div class="col-md-12 px-0">
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Wreck history</h2>
+                        <div class="row">
+                            @if(!empty($site->historicImg))
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <img src="{{ asset('assets') }}/img/sites/{{ $site->historicImg }}" class="img-fluid border-radius-xl shadow">
                                     </div>
-                                    <div class="col-md-8">
-                                @else
-                                    <div class="col-md-12">
-                                @endif
-                                    <div id="history" style="flex-grow: 1; max-height: 424px; overflow-y: auto; white-space: pre-wrap;" class="mt-2">{{ $site->getPlainTextHistory() }}</div>
-                                </div>                            
+                                </div>
+                                <div class="col-md-8">
+                            @else
+                                <div class="col-md-12">
+                            @endif
+                                <div id="history" style="flex-grow: 1; max-height: 424px; overflow-y: auto; white-space: pre-wrap;">{{ $site->getPlainTextHistory() }}</div>
                             </div>
                         </div>
-                    </div>
+                    </section>
                 </div>
                 @endif
             </div>
 
-            <div class="row mx-2">
-                <div class="col-md-6">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-secondary shadow-secondary border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Divers' Uploaded Pictures</h4>
-                                <div class="table-responsive"></div>
+            <div class="row mx-0">
+                <div class="col-md-6 px-0 pe-md-2">
+                    <section class="dh-panel" id="diver-photos">
+                        <div class="dh-panel-head-row">
+                            <h2 class="dh-panel-title mb-0">Divers' uploaded pictures</h2>
+                            @if(auth()->user()->isNotGuest())
+                                <button type="button" class="dh-btn dh-btn-primary" data-bs-toggle="modal" data-bs-target="#dh-upload-diver-photo-modal">
+                                    <span class="material-icons-round" aria-hidden="true">add_a_photo</span>Add a picture
+                                </button>
+                            @endif
+                        </div>
+
+                        @if($diverPhotos->isEmpty())
+                            <p class="text-secondary text-sm mb-0">
+                                No diver pictures yet.
+                                @if(auth()->user()->isNotGuest())
+                                    Be the first to add one!
+                                @endif
+                            </p>
+                        @else
+                            <div class="dh-diver-carousel" id="dh-diver-carousel">
+                                @foreach($diverPhotos->chunk(4) as $page)
+                                    <div class="dh-diver-page">
+                                        @foreach($page as $p)
+                                            @php
+                                                $uploaderName = $p->user->name ?? 'A diver';
+                                                $uploadedDate = $p->created_at->format('M j, Y');
+                                            @endphp
+                                            <figure class="dh-diver-tile-figure">
+                                                <button type="button" class="dh-diver-tile" data-bs-toggle="modal" data-bs-target="#dh-diver-photo-modal"
+                                                    data-photo-src="{{ \App\Support\SitePhoto::web($p->file) }}"
+                                                    data-uploader-name="{{ $uploaderName }}"
+                                                    data-uploaded-date="{{ $uploadedDate }}">
+                                                    <img src="{{ \App\Support\SitePhoto::thumb($p->file) }}" alt="{{ $site->name }} - photo by {{ $uploaderName }}" loading="lazy">
+                                                </button>
+                                                <figcaption class="dh-diver-tile-caption">
+                                                    <span class="dh-diver-tile-name do-not-translate">{{ $uploaderName }}</span>
+                                                    <span class="dh-diver-tile-date">{{ $uploadedDate }}</span>
+                                                </figcaption>
+                                            </figure>
+                                        @endforeach
+                                    </div>
+                                @endforeach
+                            </div>
+                            @if($diverPhotos->count() > 4)
+                                <p class="dh-diver-carousel-hint">
+                                    <span class="material-icons-round" aria-hidden="true">swipe</span>Swipe for more
+                                </p>
+                            @endif
+                        @endif
+                    </section>
+
+                    {{-- Upload note (Pablo, 2026-09-23: "Before submitting the picture,
+                         add a note that pictures will be public. Warn about
+                         inappropriate content"). --}}
+                    @if(auth()->user()->isNotGuest())
+                        <div class="modal fade" id="dh-upload-diver-photo-modal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title font-weight-normal">Add a picture of {{ $site->name }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form method="POST" action="{{ route('DiverPhotos.store', ['siteId' => $site->id]) }}" enctype="multipart/form-data" id="dh-diver-upload-form">
+                                        @csrf
+                                        <div class="modal-body">
+                                            {{-- Themed trigger over a hidden native input (Pablo, 2026-09-24:
+                                                 "the choose file button needs to be themed to the site - right
+                                                 now it's a system button"). --}}
+                                            <label class="dh-file-picker" for="dh-diver-photo-input">
+                                                <span class="material-icons-round" aria-hidden="true">add_photo_alternate</span>
+                                                <span id="dh-diver-photo-filename">Choose a picture&hellip;</span>
+                                            </label>
+                                            <input type="file" id="dh-diver-photo-input" name="photo" accept="image/jpeg,image/png,image/webp" required hidden>
+                                            <p class="text-xs text-secondary mt-2 mb-0">JPG, PNG or WebP, up to 8 MB.</p>
+                                            {{-- Server rejects an oversized file too (validation below), but
+                                                 silently - it redirects back with no error shown anywhere on
+                                                 this modal, which read as "nothing happened" (Pablo, 2026-09-24:
+                                                 "it will try to upload it with no error... reject the file
+                                                 saying file too large"). This is the immediate, before-submit
+                                                 check; the @error below is the fallback for whatever this
+                                                 can't catch client-side (wrong type despite accept=, etc.). --}}
+                                            <p class="text-danger text-xs mt-2 mb-0" id="dh-diver-photo-error" hidden></p>
+                                            @error('photo')
+                                                <p class="text-danger text-xs mt-2 mb-0">{{ $message }}</p>
+                                            @enderror
+                                            <p class="dh-comms-note dh-comms-warn mt-3">
+                                                <span class="material-icons-round" aria-hidden="true">info</span>
+                                                Your picture will be shown publicly on this site's page once approved. Inappropriate content will be rejected or removed.
+                                            </p>
+                                            <p class="dh-upload-progress" id="dh-diver-upload-progress" hidden>
+                                                <span class="dh-spinner" aria-hidden="true"></span>
+                                                Uploading your picture&hellip;
+                                            </p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="dh-btn dh-btn-primary" id="dh-diver-upload-submit">Submit for review</button>
+                                        </div>
+                                    </form>
+                                    <script>
+                                        (function () {
+                                            var MAX_BYTES = 8 * 1024 * 1024; // matches DiverPhotoController's max:8192 (KB)
+                                            var input = document.getElementById('dh-diver-photo-input');
+                                            var filename = document.getElementById('dh-diver-photo-filename');
+                                            var form = document.getElementById('dh-diver-upload-form');
+                                            var submitBtn = document.getElementById('dh-diver-upload-submit');
+                                            var progress = document.getElementById('dh-diver-upload-progress');
+                                            var errorEl = document.getElementById('dh-diver-photo-error');
+                                            if (!input || !form) return;
+
+                                            input.addEventListener('change', function () {
+                                                var file = input.files[0];
+                                                errorEl.hidden = true;
+                                                if (!file) {
+                                                    filename.textContent = 'Choose a picture…';
+                                                    return;
+                                                }
+                                                if (file.size > MAX_BYTES) {
+                                                    input.value = '';
+                                                    filename.textContent = 'Choose a picture…';
+                                                    errorEl.textContent = 'That picture is ' + (file.size / (1024 * 1024)).toFixed(1) + ' MB - the limit is 8 MB. Pick a smaller one.';
+                                                    errorEl.hidden = false;
+                                                    return;
+                                                }
+                                                filename.textContent = file.name;
+                                            });
+                                            // A spinner, not a true upload progress bar (Pablo, 2026-09-24:
+                                            // "a spinner or progress bar while the picture is uploading") -
+                                            // this is a plain form POST/redirect, not an XHR with real
+                                            // upload progress events, but the "it's working" feedback is
+                                            // the actual ask.
+                                            form.addEventListener('submit', function (e) {
+                                                if (submitBtn.disabled) return;
+                                                var file = input.files[0];
+                                                if (file && file.size > MAX_BYTES) {
+                                                    e.preventDefault();
+                                                    errorEl.textContent = 'That picture is ' + (file.size / (1024 * 1024)).toFixed(1) + ' MB - the limit is 8 MB. Pick a smaller one.';
+                                                    errorEl.hidden = false;
+                                                    return;
+                                                }
+                                                submitBtn.disabled = true;
+                                                submitBtn.textContent = 'Uploading…';
+                                                progress.hidden = false;
+                                            });
+                                        })();
+                                    </script>
+                                    @error('photo')
+                                        {{-- The modal opens fresh each click (data-bs-toggle), so a
+                                             validation failure needs its own reopen - Bootstrap doesn't
+                                             know this page reloaded because THIS modal's submit failed. --}}
+                                        <script>
+                                            document.addEventListener('DOMContentLoaded', function () {
+                                                var modalEl = document.getElementById('dh-upload-diver-photo-modal');
+                                                if (modalEl && window.bootstrap) {
+                                                    new bootstrap.Modal(modalEl).show();
+                                                }
+                                            });
+                                        </script>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
-                        <div class="card-body mt-4">
-                            Coming soon!
-                        </div>
-                    </div>
+
+                    @endif
                 </div>
 
-                <div class="col-md-6">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">Divers' Reviews</h4>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body mt-n3">
+                <div class="col-md-6 px-0 ps-md-2">
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Divers' reviews</h2>
                             @if (auth()->user()->isNotGuest())
-                                <div class="mt-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Add a comment">                                      
+                                <div class="mt-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Add a comment">
                                     <button id="addReviewButton" class="btn btn-icon btn-3 btn-info" type="button" onclick="showReviewForm()">
                                         <span class="btn-inner--text"> Add review</span>
                                     </button>
@@ -1459,8 +1396,8 @@
                                                             <tbody>
                                                                 <tr class="align-items-center"><td class="align-items-center text-center">
                                                                     <div class="avatar avatar-sm">
-                                                                        @if($review->user->picture)
-                                                                            <img src="{{ asset('assets') }}/img/users/{{  $review->user->picture }}" alt="profile_image"
+                                                                        @if($review->user?->picture)
+                                                                            <img src="{{ asset('assets') }}/img/users/{{  $review->user?->picture }}" alt="profile_image"
                                                                                 class="w-100 rounded-circle shadow-sm">
                                                                         @else
                                                                             <img src="{{ asset('assets') }}/img/default-avatar.png" alt="profile_image"
@@ -1471,7 +1408,7 @@
                                                                 </td></tr>
                                                                 <tr class="text-center"> <td class="text-xs text-info">
                                                                     <div class="mt-n2">
-                                                                        {{ $review->user->name }}
+                                                                        {{ $review->user?->name ?? 'A diver' }}
                                                                     </div>
                                                                 </td></tr>
                                                             </tbody>
@@ -1504,12 +1441,10 @@
                                         @endif
                                     </tbody>
                                 </table>
-                            </div>  
-                        </div>
-                    </div>
+                            </div>
+                    </section>
                 </div>
 
-                
             </div>
             
                 
@@ -1527,13 +1462,18 @@
     
     @push('js')
     
-    <script src="{{ asset('assets') }}/js/plugins/flatpickr.min.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/gauge.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/quill.min.js"></script>
     <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.js"></script>
+    {{-- model-viewer is a heavy 3D-rendering library; only the handful of
+         sites with a 3D model need it, so it no longer loads on every one
+         of the (many more) sites without one (2026-09-11). flatpickr was
+         removed outright: included on this page but never actually called. --}}
+    @if($site->dModel != null)
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+    @endif
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
     <script src="{{ asset('assets') }}/js/plugins/nouislider.js"></script>
@@ -1557,6 +1497,12 @@
                     document.getElementById("OC").setAttribute("hidden", "true");
                     document.getElementById("CC").removeAttribute("hidden"); // Show the row
                 }
+                // Restyle (v10.38.0) swapped these tabs to dh-channel-chip pills,
+                // but never taught this handler about the is-active class the new
+                // CSS keys off - so the highlight stayed stuck on OC (Pablo, 2026-09-24).
+                document.querySelectorAll('#nav-tabs a').forEach(chip => {
+                    chip.classList.toggle('is-active', chip === this);
+                });
                 console.log('Clicked on:', tag); // Example action
             });
         });
@@ -1708,7 +1654,7 @@
 
     <script>
 
-    let labelHorizontalOffset = -40; // Initial offset value
+    let labelHorizontalOffset = -20; // Initial offset value - shifted onto the left cylinder, not off tank_double.png's left edge (Pablo, 2026-09-24: "push the % label slightly to the right so they can be visible through the template")
 
     // Get the canvas element
     const ctx = document.getElementById('stackedBarChart').getContext('2d');
@@ -1744,6 +1690,12 @@
         },
         options: {
             responsive: true, // Makes the chart responsive
+            // Same fix as the CCR chart below (Pablo, 2026-09-24) - without
+            // this, Chart.js derives the canvas height from its parent's
+            // width and a default aspect ratio instead of the canvas's own
+            // declared 141px height ("the bar chart for the OC tank is
+            // coming slightly shorter").
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: false, // Hide legend
@@ -1760,10 +1712,22 @@
                 }
             },
             layout: {
+                // tank_single.png/tank_double.png's transparent window starts
+                // at y=57/300 of the source image (measured the same way as
+                // ccr.png below, scanning for the first non-opaque pixel from
+                // the top). Rendered at this wrap's 75%-height image (126px),
+                // the window's top sits 102px up from the tank's bottom - so
+                // with this 113px-tall canvas, 11px of top padding puts a
+                // 100%-full bar exactly at the window's top edge (Pablo,
+                // 2026-09-24: "the top of the bar chart need to be up to the
+                // first transparent point you find in the template"). Was
+                // 16px, a leftover from an earlier 80%-of-GasPlanning scale
+                // that never got updated after GasPlanning's own padding
+                // (top:14, once 20) changed.
                 padding: {
                     left: 0,
                     right: 0,
-                    top: 20,
+                    top: 11,
                     bottom: 0
                 }
             }
@@ -1778,7 +1742,7 @@
                         meta.data.forEach((bar, index) => {
                             const data = dataset.data[index];
                             if (data) {
-                                ctx.font = '14px Roboto';
+                                ctx.font = '12px Roboto'; // was 14px (Pablo, 2026-09-24: "slightly smaller")
                                 ctx.fillStyle = '#FFF'; // Label color
                                 ctx.textAlign = 'center';
                                 ctx.textBaseline = 'middle'; // Centers text vertically
@@ -1817,17 +1781,17 @@
             {
                 label: 'Oxygen',
                 data: [oxygen],
-                backgroundColor: 'rgb(76, 175, 80, 1.0)'
+                backgroundColor: '#2e7d4f'
             },
             {
                 label: 'Helium',
                 data: [helium],
-                backgroundColor: 'rgb(26, 115, 232, 1.0)'
+                backgroundColor: '#0e7c9e'
             },
             {
                 label: 'Nitrogen',
                 data: [nitrogen],
-                backgroundColor: '#7b809a'
+                backgroundColor: '#5a6b78'
             }
         ];
 
@@ -1947,6 +1911,12 @@
             }
             updateGasMix(labelBestNitrox.textContent, 0);
             $('#ndlResult').text("-");
+            // A moved slider invalidates whatever NDL was last calculated
+            // for the previous mix (Pablo, 2026-09-24: "hide the NDL results -
+            // they are not applicable anymore"). Uses jQuery, not
+            // getElementById, since #ndlResultCard only exists on sites
+            // shallow enough for the maxDepth <= 140 NDL card further up.
+            $('#ndlResultCard').prop("hidden", true);
             //calculateNDL({{ $site->maxDepth }}, labelMixO2.textContent.slice(0, -1)/100, labelMixN2.textContent.slice(0, -1)/100, labelMixHe.textContent.slice(0, -1)/100);
 
             updateLabelHorizontalOffset(0);
@@ -2117,12 +2087,18 @@
            updateGasDensity();
            updateGasMix(txlabelBestNitrox.textContent, txlabelBestHe.textContent);
            $('#ndlResult').text("-");
+            // A moved slider invalidates whatever NDL was last calculated
+            // for the previous mix (Pablo, 2026-09-24: "hide the NDL results -
+            // they are not applicable anymore"). Uses jQuery, not
+            // getElementById, since #ndlResultCard only exists on sites
+            // shallow enough for the maxDepth <= 140 NDL card further up.
+            $('#ndlResultCard').prop("hidden", true);
             //update NDL
             //const gasMix = {O2: txlabelBestNitrox.textContent / 100, N2: (100 - txlabelBestNitrox.textContent - txlabelBestHe.textContent)/100, He: txlabelBestHe.textContent/100};
             //const ndl = calculateNDL({{ $site->maxDepth }}, gasMix);
             //labelNDL = document.getElementById('labelNDL');
             //labelNDL.textContent = ndl;
-            updateLabelHorizontalOffset(-40);
+            updateLabelHorizontalOffset(-20);
             // JavaScript code to toggle visibility of images
             document.getElementById("tank_double").removeAttribute("hidden"); // Removes 'hidden' attribute from the first image
             document.getElementById("tank_single").setAttribute("hidden", "true"); // Adds 'hidden' attribute to the second image
@@ -2235,12 +2211,18 @@
             updateGasDensity();
             updateGasMix(txlabelBestNitrox.textContent, txlabelBestHe.textContent);
             $('#ndlResult').text("-");
+            // A moved slider invalidates whatever NDL was last calculated
+            // for the previous mix (Pablo, 2026-09-24: "hide the NDL results -
+            // they are not applicable anymore"). Uses jQuery, not
+            // getElementById, since #ndlResultCard only exists on sites
+            // shallow enough for the maxDepth <= 140 NDL card further up.
+            $('#ndlResultCard').prop("hidden", true);
             //update NDL
             //const gasMix = {O2: txlabelBestNitrox.textContent / 100, N2: (100 - txlabelBestNitrox.textContent - txlabelBestHe.textContent)/100, He: txlabelBestHe.textContent/100};
             //const ndl = calculateNDL({{ $site->maxDepth }}, gasMix);
             //labelNDL = document.getElementById('labelNDL');
             //labelNDL.textContent = ndl;
-            updateLabelHorizontalOffset(-40);
+            updateLabelHorizontalOffset(-20);
             // JavaScript code to toggle visibility of images
             document.getElementById("tank_double").removeAttribute("hidden"); // Removes 'hidden' attribute from the first image
             document.getElementById("tank_single").setAttribute("hidden", "true"); // Adds 'hidden' attribute to the second image
@@ -2258,6 +2240,12 @@
             updateGasDensity();
             updateGasMix(txlabelBestNitrox.textContent, txlabelBestHe.textContent);
             $('#ndlResult').text("-");
+            // A moved slider invalidates whatever NDL was last calculated
+            // for the previous mix (Pablo, 2026-09-24: "hide the NDL results -
+            // they are not applicable anymore"). Uses jQuery, not
+            // getElementById, since #ndlResultCard only exists on sites
+            // shallow enough for the maxDepth <= 140 NDL card further up.
+            $('#ndlResultCard').prop("hidden", true);
 
             //update NDL
             //const gasMix = {O2: txlabelBestNitrox.textContent / 100, N2: (100 - txlabelBestNitrox.textContent - txlabelBestHe.textContent)/100, He: txlabelBestHe.textContent/100};
@@ -2265,7 +2253,7 @@
             //labelNDL = document.getElementById('labelNDL');
             //labelNDL.textContent = ndl;
 
-            updateLabelHorizontalOffset(-40);
+            updateLabelHorizontalOffset(-20);
             // JavaScript code to toggle visibility of images
             document.getElementById("tank_double").removeAttribute("hidden"); // Removes 'hidden' attribute from the first image
             document.getElementById("tank_single").setAttribute("hidden", "true"); // Adds 'hidden' attribute to the second image
@@ -2294,8 +2282,27 @@
             txsliderHe.noUiSlider.set(txsliderHe.noUiSlider.get()); // Force an update with the current value
         });
 
-
-      
+        // Both the nitrox and trimix sliders above just ran their own
+        // initial 'update' as soon as they were created, each claiming the
+        // shared tank image/gas price label/mix pills for itself - trimix
+        // runs last so it always wins regardless of which tab is actually
+        // shown by default (nitrox). Re-syncing right here isn't enough
+        // though: divershub.js's global "number box next to every slider"
+        // feature (mirrorAll(), 2026-09-13) re-registers its own 'update'
+        // listener on every .slider-styled element on window 'load' -
+        // which noUiSlider answers by re-firing ALL of that slider's
+        // listeners (not just the new one), so trimix's tank/price/pill
+        // logic runs a third time and wins again right after 'load'. Defer
+        // this resync with setTimeout so it always runs strictly after
+        // every 'load' listener - including that one - has finished,
+        // regardless of which registered first.
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                if (typeof window.dhSelectGasFuel === 'function') {
+                    window.dhSelectGasFuel('nitrox');
+                }
+            }, 0);
+        });
 
  </script>
 
@@ -2330,13 +2337,17 @@
                 success: function (response) {
                     // Update the result in the HTML
                     $('#ndlResult').text(response.ndl);
+                    // Hidden until there's an actual result to show (Pablo,
+                    // 2026-09-24: "hide the NDL result frame at the
+                    // start...only show it once the user has clicked").
+                    document.getElementById('ndlResultCard').hidden = false;
                 },
                 error: function (xhr, status, error) {
                     console.error('Error:', error);
                 }
             });
 
-            
+
         });
 
         function calculateNDL(depth, oxygen, nitrogen, helium) {
@@ -2400,6 +2411,12 @@
             },
             options: {
                 responsive: true, // Makes the chart responsive
+                // Without this, Chart.js derives the canvas height from its
+                // parent's width and a default aspect ratio instead of the
+                // canvas's own CSS height - same fix already applied to
+                // GasPlanning's CCR chart (Pablo, 2026-09-18), ported here
+                // 2026-09-24 ("the chart for the CC is way shorter").
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         display: false, // Hide legend
@@ -2416,11 +2433,15 @@
                     }
                 },
                 layout: {
+                    // Scaled 80% along with the canvas's own 168x99 size
+                    // above (was 14/14/6/3 at GasPlanning's 210x124) - the
+                    // tank art's transparent window is pixel-calibrated
+                    // against this canvas's exact rendered size.
                     padding: {
-                        left: 20,
-                        right: 20,
-                        top: 20,
-                        bottom: 4
+                        left: 11,
+                        right: 11,
+                        top: 5,
+                        bottom: 2
                     }
                 }
             },
@@ -2434,14 +2455,14 @@
                             meta.data.forEach((bar, index) => {
                                 const data = dataset.data[index];
                                 if (data != 100 && data != 0) {
-                                    ctx.font = '12px Roboto';
+                                    ctx.font = '7px Roboto'; // was 11px, then 12px (Pablo, 2026-09-24: "can't read them well...need to be smaller")
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
                                     ctx.fillText(data + '%', bar.x + 12, bar.y + 10); // Position label slightly above the bar
                                     
                                 } else if (data == 100) {
-                                    ctx.font = '12px Roboto';
+                                    ctx.font = '7px Roboto'; // was 11px, then 12px (Pablo, 2026-09-24: "can't read them well...need to be smaller")
                                     ctx.fillStyle = '#FFF'; // Label color
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle'; // Centers text vertically
@@ -2590,17 +2611,17 @@
                 {
                     label: 'Oxygen',
                     data: [oxygen, 100],
-                    backgroundColor: 'rgb(76, 175, 80, 1.0)'
+                    backgroundColor: '#2e7d4f'
                 },
                 {
                     label: 'Helium',
                     data: [helium, 0],
-                    backgroundColor: 'rgb(26, 115, 232, 1.0)'
+                    backgroundColor: '#0e7c9e'
                 },
                 {
                     label: 'Nitrogen',
                     data: [nitrogen, 0],
-                    backgroundColor: '#7b809a'
+                    backgroundColor: '#5a6b78'
                 }
             ];
 
@@ -3136,7 +3157,10 @@
             style: 'mapbox://styles/pstrika/clwqz4fds03gv01qo9d4w3g21', // Choose a map style
             //center: [-80.07488399442913, 26.137643513173536], // Set the initial center coordinates
             center: [ {{ $longitude_dd }}, {{ $latitude_dd }}],
-            zoom: 12, // Set the initial zoom level
+            // Was 12, then 10 - still too tight to show real coastline
+            // context for an offshore site. Pulled back further; the user
+            // can still zoom in from here (2026-09-11).
+            zoom: 8,
             projection: 'albers'
         });
 
@@ -3198,6 +3222,7 @@
                                     "'name': \"" . $site->name . "\"," .
                                     "'icon': 'icon_" . $site->type . $suffixIcon . "'," .
                                     "'url': '" . $site->id . "'," .
+                                    "'isThis': " . ($thisSiteId == $site->id ? 'true' : 'false') . "," .
                             "}," .
                             "'geometry': {" .
                                 "'type': 'Point'," .
@@ -3216,33 +3241,71 @@
                 'data': sites
             });
 
+            // Two layers so the site you are reading about stands out (Zach, chunk 3 review):
+            // neighbours are small, faded pins with no label; this site is a big pin
+            // with a labelled name, drawn last so it sits on top of the cluster.
+            map.addLayer({
+                'id': 'poi-others',
+                'type': 'symbol',
+                'source': 'sites',
+                'filter': ['!', ['get', 'isThis']],
+                'layout': {
+                    'icon-image': ['get', 'icon'],
+                    'icon-size': 0.22,
+                    'icon-anchor': 'bottom',
+                    'icon-allow-overlap': true,
+                    // Neighbour names are small and Mapbox hides the ones that would collide,
+                    // so a dense cluster shows a few readable names instead of a pile of text.
+                    // text-optional keeps the pin when its label is dropped.
+                    'text-field': ['get', 'name'],
+                    'text-size': 11,
+                    'text-anchor': 'top',
+                    'text-offset': [0, 0.2],
+                    'text-allow-overlap': false,
+                    'text-optional': true,
+                    'text-padding': 4,
+                },
+                'paint': {
+                    'icon-opacity': 0.7,
+                    'text-color': 'white',
+                    'text-opacity': 0.85,
+                    'text-halo-color': '#0b2a3a',
+                    'text-halo-width': 1,
+                },
+            });
+
             map.addLayer({
                 'id': 'poi-labels',
                 'type': 'symbol',
                 'source': 'sites',
-                
+                'filter': ['get', 'isThis'],
                 'layout': {
                     'text-field': ['get', 'name'],
                     'text-variable-anchor': ['top'],
-                    'text-allow-overlap' : true,
-                    'text-radial-offset': 0.1,
+                    'text-allow-overlap': true,
+                    'text-radial-offset': 0.2,
                     'text-justify': 'auto',
-                    'text-size': 12,
+                    'text-size': 14,
+                    'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
                     'icon-image': ['get', 'icon'],
-                    'icon-size': 0.3,
+                    'icon-size': 0.5,
                     'icon-anchor': 'bottom',
-                    'icon-allow-overlap' : true,
+                    'icon-allow-overlap': true,
+                    'text-ignore-placement': true,
+                    'icon-ignore-placement': true,
                 },
                 'paint': {
                     'text-color': 'white',
+                    'text-halo-color': '#0b2a3a',
+                    'text-halo-width': 1.5,
                 },
             });
-
-            
         });
 
+        // Clicking any pin (this site or a neighbour) opens that site.
+        const pinLayers = ['poi-labels', 'poi-others'];
         map.on('click', function (e) {
-            var features = map.queryRenderedFeatures(e.point, { layers: ['poi-labels'] });
+            var features = map.queryRenderedFeatures(e.point, { layers: pinLayers });
 
             if (!features.length) {
                 return;
@@ -3257,7 +3320,7 @@
         });
 
         map.on('mousemove', function (e) {
-            var features = map.queryRenderedFeatures(e.point, { layers: ['poi-labels'] });
+            var features = map.queryRenderedFeatures(e.point, { layers: pinLayers });
             map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
 
         });
@@ -3265,14 +3328,22 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const checkbox = document.getElementById("showGasDetails");
+            // A plain show/hide button, not a toggle switch - no other card
+            // on this page uses a switch input, so Best Gas shouldn't either
+            // (2026-09-11). Collapsed by default, same as before. Swapped the
+            // "Show details"/"Hide details" text for a chevron that points
+            // right when collapsed and down when expanded (Pablo, 2026-09-24).
+            const btn = document.getElementById("showGasDetailsBtn");
+            const icon = document.getElementById("showGasDetailsIcon");
             const gasesCardBody = document.getElementById("gasesCardBody");
+            gasesCardBody.style.display = "none";
 
-            // Initial state (optional): hide or show based on checkbox
-            gasesCardBody.style.display = checkbox.checked ? "block" : "none";
-
-            checkbox.addEventListener("change", function () {
-            gasesCardBody.style.display = this.checked ? "block" : "none";
+            btn.addEventListener("click", function () {
+                const showing = gasesCardBody.style.display !== "none";
+                gasesCardBody.style.display = showing ? "none" : "block";
+                icon.textContent = showing ? "chevron_right" : "expand_more";
+                btn.setAttribute("aria-label", showing ? "Show details" : "Hide details");
+                btn.setAttribute("aria-expanded", showing ? "false" : "true");
             });
         });
     </script>

@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>rEvo Dive Companion</title>
+<style>
+  :root, :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-2: #242422;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --hairline: rgba(255,255,255,0.10);
+    --grid: #2c2c2a;
+    --accent: #3987e5;
+    --accent-ink: #ffffff;
+    --good: #0ca30c;
+    --warning: #fab219;
+    --serious: #ec835a;
+    --critical: #d03b3b;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --surface-2: #f0efec;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --hairline: rgba(11,11,11,0.10);
+    --grid: #e1e0d9;
+    --accent: #2a78d6;
+    --accent-ink: #ffffff;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.45;
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+  header.app {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--page) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--hairline);
+    padding: 12px 16px calc(10px);
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  header.app h1 { font-size: 17px; margin: 0; font-weight: 700; letter-spacing: 0.01em; }
+  header.app h1 .r { color: var(--accent); }
+  .hdr-btns { display: flex; gap: 6px; }
+  .icon-btn {
+    background: var(--surface); border: 1px solid var(--hairline); color: var(--ink-2);
+    border-radius: 10px; padding: 6px 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  main { padding: 14px 14px 24px; max-width: 640px; margin: 0 auto; }
+  section.view { display: none; }
+  section.view.active { display: block; }
+  .card {
+    background: var(--surface); border: 1px solid var(--hairline);
+    border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: var(--shadow);
+  }
+  .card h2 { font-size: 13px; margin: 0 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+  .card h2 .right { float: right; text-transform: none; letter-spacing: 0; font-weight: 600; }
+  .hero { font-size: 34px; font-weight: 700; line-height: 1.1; }
+  .hero small { font-size: 15px; color: var(--ink-2); font-weight: 600; }
+  .sub { color: var(--ink-2); font-size: 13.5px; margin-top: 2px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  /* meters */
+  .meter { height: 10px; border-radius: 6px; background: var(--surface-2); overflow: hidden; margin: 6px 0 4px; }
+  .meter > i { display: block; height: 100%; border-radius: 6px; background: var(--accent); transition: width .3s; }
+  .meter-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 700; padding: 3px 9px; border-radius: 99px; border: 1px solid var(--hairline); }
+  .badge.good { color: var(--good); }
+  .badge.warning { color: var(--warning); }
+  .badge.serious { color: var(--serious); }
+  .badge.critical { color: var(--critical); }
+  /* list rows */
+  .rowlist { display: flex; flex-direction: column; }
+  .rowitem {
+    display: flex; align-items: center; gap: 12px; padding: 12px 4px;
+    border-bottom: 1px solid var(--hairline); cursor: pointer;
+  }
+  .rowitem:last-child { border-bottom: none; }
+  .rowitem .grow { flex: 1; min-width: 0; }
+  .rowitem .t { font-weight: 600; font-size: 15px; }
+  .rowitem .d { color: var(--muted); font-size: 12.5px; }
+  .chev { color: var(--muted); font-size: 18px; }
+  .miniprog { width: 44px; height: 44px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  /* checklist items */
+  .chk {
+    display: flex; align-items: flex-start; gap: 12px; padding: 12px 2px;
+    border-bottom: 1px solid var(--hairline); cursor: pointer; user-select: none;
+  }
+  .chk:last-child { border-bottom: none; }
+  .box {
+    flex: none; width: 26px; height: 26px; margin-top: 1px; border-radius: 8px;
+    border: 2px solid var(--muted); display: grid; place-items: center;
+    font-size: 16px; color: transparent; transition: all .15s;
+  }
+  .chk.done .box { background: var(--good); border-color: var(--good); color: #fff; }
+  .chk.done .txt { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--hairline); }
+  .chk .txt { font-size: 15px; flex: 1; }
+  .chk .txt .fn { color: var(--accent); font-weight: 700; }
+  .chk .fields { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .chk .fields label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 2px; }
+  .chk input[type=number], .gasform input[type=number], .setform input[type=number] {
+    width: 88px; background: var(--surface-2); color: var(--ink); border: 1px solid var(--hairline);
+    border-radius: 8px; padding: 8px; font-size: 15px; font-variant-numeric: tabular-nums;
+  }
+  .chk input.bad { border-color: var(--critical); color: var(--critical); }
+  .chk input.ok { border-color: var(--good); }
+  .secthead { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; padding: 14px 2px 4px; }
+  .progressbar { height: 6px; border-radius: 4px; background: var(--surface-2); overflow: hidden; margin: 8px 0 2px; }
+  .progressbar > i { display: block; height: 100%; background: var(--good); transition: width .25s; }
+  /* buttons */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--accent); color: var(--accent-ink); border: none; border-radius: 12px;
+    padding: 12px 16px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%;
+  }
+  .btn.secondary { background: var(--surface-2); color: var(--ink); border: 1px solid var(--hairline); }
+  .btn.danger { background: transparent; color: var(--critical); border: 1px solid var(--critical); }
+  .btn.small { width: auto; padding: 8px 14px; font-size: 13.5px; border-radius: 10px; }
+  .btnrow { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .btnrow .btn { flex: 1; }
+  /* forms */
+  .gasform, .setform { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .gasform .full, .setform .full { grid-column: 1 / -1; }
+  .gasform label, .setform label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+  .gasform input[type=number], .setform input[type=number], .setform select {
+    width: 100%; background: var(--surface-2); color: var(--ink); border: 1px solid var(--hairline);
+    border-radius: 10px; padding: 10px; font-size: 16px;
+  }
+  .checkline { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); }
+  .checkline input { width: 18px; height: 18px; accent-color: var(--accent); }
+  /* results */
+  .result-hero { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .kv { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--hairline); font-size: 14px; }
+  .kv:last-child { border-bottom: none; }
+  .kv .k { color: var(--ink-2); }
+  .kv .v { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+  .warnnote { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; padding: 10px 12px; border-radius: 10px; margin-top: 10px; border: 1px solid var(--hairline); }
+  .warnnote.warning { color: var(--warning); }
+  .warnnote.critical { color: var(--critical); }
+  .warnnote.serious { color: var(--serious); }
+  .warnnote.info { color: var(--ink-2); }
+  /* segmented control */
+  .seg { display: flex; background: var(--surface-2); border-radius: 10px; padding: 3px; border: 1px solid var(--hairline); }
+  .seg button { flex: 1; border: none; background: transparent; color: var(--ink-2); padding: 7px 10px; border-radius: 8px; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+  .seg button.on { background: var(--accent); color: var(--accent-ink); }
+  /* scrubber canisters */
+  .canister { display: flex; gap: 14px; align-items: center; padding: 10px 0; }
+  .can-visual { flex: none; width: 54px; height: 84px; border: 2px solid var(--grid); border-radius: 10px; position: relative; overflow: hidden; background: var(--surface-2); }
+  .can-visual > i { position: absolute; bottom: 0; left: 0; right: 0; transition: height .3s; }
+  .can-visual span { position: absolute; top: 4px; left: 0; right: 0; text-align: center; font-size: 10px; font-weight: 800; color: var(--muted); letter-spacing: 0.05em; }
+  .timerline { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .timerline .time { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .history { font-size: 13px; color: var(--ink-2); }
+  .history .h-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--hairline); gap: 10px; }
+  .history .h-row:last-child { border-bottom: none; }
+  .history .when { color: var(--muted); flex: none; font-variant-numeric: tabular-nums; }
+  textarea.io { width: 100%; height: 110px; background: var(--surface-2); color: var(--ink); border: 1px solid var(--hairline); border-radius: 10px; padding: 10px; font-size: 12px; font-family: ui-monospace, monospace; }
+  .footnote { color: var(--muted); font-size: 12px; margin-top: 10px; }
+  .stamp { color: var(--good); font-size: 13px; font-weight: 600; margin-top: 6px; }
+  /* bottom nav */
+  nav.tabbar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 30;
+    display: flex; background: color-mix(in srgb, var(--surface) 94%, transparent);
+    backdrop-filter: blur(10px); border-top: 1px solid var(--hairline);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  nav.tabbar button {
+    flex: 1; background: none; border: none; color: var(--muted); cursor: pointer;
+    padding: 8px 0 9px; font-size: 10.5px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  nav.tabbar button .ico { font-size: 20px; line-height: 1; }
+  nav.tabbar button.on { color: var(--accent); }
+  .backlink { color: var(--accent); font-weight: 700; font-size: 14px; cursor: pointer; display: inline-block; margin-bottom: 8px; }
+  .pagetitle { font-size: 22px; font-weight: 800; margin: 2px 0 12px; }
+  .pagetitle .sub2 { display: block; font-size: 13px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+</style>
+</head>
+<body>
+<header class="app">
+  <h1><span class="r">rEvo</span> Dive Companion</h1>
+  <div class="hdr-btns">
+    <button class="icon-btn" id="unitBtn" onclick="toggleUnits()">ft/psi</button>
+    <button class="icon-btn" id="themeBtn" onclick="toggleTheme()">☀</button>
+  </div>
+</header>
+<main>
+  <section class="view active" id="view-home"></section>
+  <section class="view" id="view-dive"></section>
+  <section class="view" id="view-scrub"></section>
+  <section class="view" id="view-gas"></section>
+  <section class="view" id="view-settings"></section>
+</main>
+<nav class="tabbar">
+  <button data-tab="home" class="on" onclick="go('home')"><span class="ico">⌂</span>Home</button>
+  <button data-tab="dive" onclick="go('dive')"><span class="ico">✓</span>Dive</button>
+  <button data-tab="scrub" onclick="go('scrub')"><span class="ico">◍</span>Scrubbers</button>
+  <button data-tab="gas" onclick="go('gas')"><span class="ico">◔</span>Gas Plan</button>
+  <button data-tab="settings" onclick="go('settings')"><span class="ico">⚙</span>Settings</button>
+</nav>
+<script>
+// rEvo Checklist App — gas planning calculation engine (pure functions, metric internal)
+// Internal units: depth = meters, volume = liters (surface), pressure = bar, SAC = L/min
+
+const M_PER_FT = 0.3048;
+const L_PER_CUFT = 28.3168;
+
+const conv = {
+  ftToM: ft => ft * M_PER_FT,
+  mToFt: m => m / M_PER_FT,
+  cuftToL: cf => cf * L_PER_CUFT,
+  lToCuft: l => l / L_PER_CUFT,
+  psiToBar: psi => psi / 14.5038,
+  barToPsi: bar => bar * 14.5038,
+};
+
+// Ambient pressure in ATA at depth (meters, seawater)
+function ata(depthM) { return depthM / 10 + 1; }
+
+// PPO2 of a gas at depth
+function ppo2At(fo2, depthM) { return fo2 * ata(depthM); }
+
+// Equivalent Narcotic Depth (meters) — counts O2+N2 as narcotic (helium non-narcotic)
+function endAt(fhe, depthM) { return Math.max(0, (depthM + 10) * (1 - fhe) - 10); }
+
+// MOD (meters) for a gas at a given PPO2 limit
+function mod(fo2, ppo2Limit) { return (ppo2Limit / fo2 - 1) * 10; }
+
+// Minimum helium fraction to keep END <= endLimitM at depthM
+function minHe(depthM, endLimitM) {
+  return Math.max(0, 1 - (endLimitM + 10) / (depthM + 10));
+}
+
+// ---- Standard gas lists ----
+const DIL_GASES = [
+  { name: 'Air',    fo2: 0.21, fhe: 0.00 },
+  { name: '21/35',  fo2: 0.21, fhe: 0.35 },
+  { name: '18/45',  fo2: 0.18, fhe: 0.45 },
+  { name: '15/55',  fo2: 0.15, fhe: 0.55 },
+  { name: '12/65',  fo2: 0.12, fhe: 0.65 },
+  { name: '10/70',  fo2: 0.10, fhe: 0.70 },
+];
+
+const BAILOUT_GASES = [
+  { name: 'EAN50',  fo2: 0.50, fhe: 0.00 },
+  { name: 'EAN32',  fo2: 0.32, fhe: 0.00 },
+  { name: 'Air',    fo2: 0.21, fhe: 0.00 },
+  { name: '21/35',  fo2: 0.21, fhe: 0.35 },
+  { name: '18/45',  fo2: 0.18, fhe: 0.45 },
+  { name: '15/55',  fo2: 0.15, fhe: 0.55 },
+  { name: '12/65',  fo2: 0.12, fhe: 0.65 },
+];
+
+// Pick the best standard diluent for a depth.
+// Constraints: PPO2 at depth <= dilPpo2Max, END at depth <= endLimit,
+// surface-breathable preferred (fo2 >= 0.18). Prefer least helium that passes.
+function recommendDiluent(depthM, opts) {
+  const { dilPpo2Max = 1.0, endLimitM = 30 } = opts || {};
+  const TOL = 0.02; // rounding tolerance so e.g. 18/45 at 150 ft (PPO2 1.003) still passes a 1.0 limit
+  const candidates = DIL_GASES.filter(g =>
+    ppo2At(g.fo2, depthM) <= dilPpo2Max + TOL &&
+    endAt(g.fhe, depthM) <= endLimitM + 1e-9
+  );
+  // least helium first, then highest O2
+  candidates.sort((a, b) => a.fhe - b.fhe || b.fo2 - a.fo2);
+  const pick = candidates[0] || null;
+  return pick && {
+    ...pick,
+    ppo2AtDepth: ppo2At(pick.fo2, depthM),
+    endAtDepth: endAt(pick.fhe, depthM),
+    surfacePpo2: pick.fo2,
+    hypoxicWarning: pick.fo2 < 0.18,
+    minHeNeeded: minHe(depthM, endLimitM),
+  };
+}
+
+// Pick the best standard OC bailout bottom gas for a depth.
+// Constraints: PPO2 at depth <= bailPpo2Max (default 1.4), END <= endLimit,
+// breathable at switch depth. Prefer highest O2 that passes (fastest deco), least He.
+function recommendBailout(depthM, opts) {
+  const { bailPpo2Max = 1.4, endLimitM = 30 } = opts || {};
+  const TOL = 0.02; // same rounding tolerance as the diluent picker
+  const candidates = BAILOUT_GASES.filter(g =>
+    ppo2At(g.fo2, depthM) <= bailPpo2Max + TOL &&
+    endAt(g.fhe, depthM) <= endLimitM + 1e-9
+  );
+  candidates.sort((a, b) => b.fo2 - a.fo2 || a.fhe - b.fhe);
+  const pick = candidates[0] || null;
+  return pick && {
+    ...pick,
+    ppo2AtDepth: ppo2At(pick.fo2, depthM),
+    endAtDepth: endAt(pick.fhe, depthM),
+    modM: mod(pick.fo2, bailPpo2Max),
+    hypoxicWarning: pick.fo2 < 0.18,
+  };
+}
+
+// Open-circuit bailout volume (surface liters).
+// Model: trouble time at max depth + ascent at ascentRate to surface (or to gas
+// switch), + stop time. Everything x reserve factor.
+// If useDecoGas and depthM > switchDepth: bottom gas covers troubleshooting +
+// ascent to switchDepth; deco gas (EAN50 @ 21 m) covers ascent from switchDepth
+// to surface plus all deco minutes (assumed at avg 6 m).
+function bailoutVolume(depthM, opts) {
+  const {
+    sacL = 20,               // stressed SAC, L/min surface
+    troubleMin = 2,          // minutes at max depth sorting things out
+    ascentRate = 10,         // m/min
+    decoMin = 0,             // total deco/stop minutes (from dive computer/plan)
+    safetyStopMin = 3,       // used only when decoMin === 0
+    reserve = 1.5,           // volume multiplier
+    useDecoGas = false,
+    switchDepthM = 21,       // EAN50 switch depth
+  } = opts || {};
+
+  const seg = (minutes, avgDepthM) => sacL * minutes * ata(avgDepthM);
+  const segments = [];
+  let bottomL = 0, decoL = 0;
+
+  // 1) troubleshoot at depth
+  const t = seg(troubleMin, depthM);
+  segments.push({ label: 'Sort it out at depth', min: troubleMin, depthM, liters: t });
+  bottomL += t;
+
+  const splitting = useDecoGas && depthM > switchDepthM && decoMin > 0;
+
+  if (splitting) {
+    // ascent to switch
+    const t1 = (depthM - switchDepthM) / ascentRate;
+    const a1 = seg(t1, (depthM + switchDepthM) / 2);
+    segments.push({ label: `Ascend to ${switchDepthM} m switch`, min: t1, depthM: (depthM + switchDepthM) / 2, liters: a1 });
+    bottomL += a1;
+    // ascent from switch to surface on deco gas
+    const t2 = switchDepthM / ascentRate;
+    const a2 = seg(t2, switchDepthM / 2);
+    segments.push({ label: 'Ascend to surface (deco gas)', min: t2, depthM: switchDepthM / 2, liters: a2, deco: true });
+    decoL += a2;
+    // deco stops on deco gas, assume avg 6 m
+    const d = seg(decoMin, 6);
+    segments.push({ label: 'Deco stops (deco gas)', min: decoMin, depthM: 6, liters: d, deco: true });
+    decoL += d;
+  } else {
+    const t1 = depthM / ascentRate;
+    const a1 = seg(t1, depthM / 2);
+    segments.push({ label: 'Ascend to surface', min: t1, depthM: depthM / 2, liters: a1 });
+    bottomL += a1;
+    const stops = decoMin > 0 ? decoMin : safetyStopMin;
+    const stopDepth = decoMin > 0 ? 6 : 5;
+    const d = seg(stops, stopDepth);
+    segments.push({ label: decoMin > 0 ? 'Deco stops' : 'Safety stop', min: stops, depthM: stopDepth, liters: d });
+    bottomL += d;
+  }
+
+  return {
+    segments,
+    bottomRawL: bottomL,
+    decoRawL: decoL,
+    bottomL: bottomL * reserve,
+    decoL: decoL * reserve,
+    totalL: (bottomL + decoL) * reserve,
+    reserve,
+    splitting,
+  };
+}
+
+// Common bailout cylinders: free gas at rated fill (surface liters)
+const CYLINDERS = [
+  { name: 'AL19', cuft: 19.9,  liters: 19.9  * L_PER_CUFT },
+  { name: 'AL30', cuft: 30,    liters: 30    * L_PER_CUFT },
+  { name: 'AL40', cuft: 40,    liters: 40    * L_PER_CUFT },
+  { name: 'LP50', cuft: 50,    liters: 50    * L_PER_CUFT },
+  { name: 'AL80', cuft: 77.4,  liters: 77.4  * L_PER_CUFT },
+  { name: 'HP100', cuft: 100,  liters: 100   * L_PER_CUFT },
+];
+
+function smallestCylinder(requiredL) {
+  return CYLINDERS.find(c => c.liters >= requiredL) || null;
+}
+
+// ---- Scrubber model ----
+// The two canisters are a serial stack with a single clock. Dive time consumes
+// the TOP scrubber's allowance (topLimitH) first; only after the top is spent
+// does time eat into the BOTTOM's allowance (bottomLimitH) — and the bottom is
+// an emergency reserve, never plan time. At exactly topLimitH: rotate (top ->
+// bottom, fresh pack on top, old bottom repacked to the shelf) and the clock
+// resets. If any time lands on the bottom, rotation is off the table: repack
+// BOTH canisters.
+function scrubberStatus(scrub, limits) {
+  const { topLimitH = 3.0, bottomLimitH = 1.5 } = limits || {};
+  const used = Math.max(0, scrub.hoursUsed || 0);
+  const topRemaining = Math.max(0, topLimitH - used);
+  const botUsed = Math.min(bottomLimitH, Math.max(0, used - topLimitH));
+  const botRemaining = Math.max(0, bottomLimitH - botUsed);
+  const dipped = botUsed > 1e-9;
+  return {
+    used,
+    topRemaining,
+    botUsed,
+    botRemaining,
+    plannedH: topRemaining,          // dive time left before rotation is due
+    totalRemaining: topRemaining + botRemaining,
+    rotateDue: topRemaining <= 1e-9 && !dipped,
+    dipped,                          // bottom was used -> repack BOTH
+    spent: topRemaining <= 1e-9 && botRemaining <= 1e-9,
+    topPct: topLimitH ? topRemaining / topLimitH : 0,
+    botPct: bottomLimitH ? botRemaining / bottomLimitH : 0,
+  };
+}
+// Transcribed from rEvo checklists (v0.4) + rEvo pre-jump tags A/B.
+// ** = setpoint-controller (hybrid) / rMS specific step
+const CHECKLISTS = {
+  build: {
+    title: 'Build Check',
+    desc: 'Assembly & bench check — rEvo checklists v0.4',
+    sections: [
+      { name: 'Tanks & regulators', items: [
+        { text: 'Analyse content of the O2 tank', fields: [
+          { id: 'o2pct', label: '%O2', min: 97, max: 100 },
+          { id: 'o2press', label: 'pressure', unit: 'press' } ] },
+        { text: 'Analyse content of the dil tank', fields: [
+          { id: 'dilo2', label: '%O2', min: 5, max: 40 },
+          { id: 'dilhe', label: '%He', min: 0, max: 90 },
+          { id: 'dilpress', label: 'pressure', unit: 'press' } ] },
+        { text: 'Install both tanks on the unit: check correct installation & fixation' },
+        { text: 'Connect regulators to tank valves' } ] },
+      { name: 'Electronics & cells', items: [
+        { text: 'Check millivolts in air', hint: 'healthy cells read ~8–14 mV in air and close together', fields: [
+          { id: 'c1', label: 'cell 1 (mV)', min: 8, max: 14 },
+          { id: 'c2', label: 'cell 2 (mV)', min: 8, max: 14 },
+          { id: 'c3', label: 'cell 3 (mV)', min: 8, max: 14 } ] },
+        { text: 'Check external battery: fire solenoid 10 seconds', fn: true, fields: [
+          { id: 'extv', label: 'EXT volts (> 6.5)', min: 6.5, max: 99 } ] },
+        { text: 'Oxygen sensor life: youngest sensor < 7 months old? If not, add/replace sensor and mark date' } ] },
+      { name: 'Scrubbers', items: [
+        { text: 'Check remaining time on the scrubbers — refill with fresh sorb if needed', link: 'scrub', linkLabel: 'Open scrubber tracker' },
+        { text: 'Put moisture absorber in the inhale lung, UNDER the non-collapse tube' },
+        { text: 'Correctly install the sensor grid and solenoid grid: check cable routing' },
+        { text: 'Install scrubbers in unit: TOP-marker on exhale scrubber (rMS: arrows to top)', fn: true },
+        { text: 'Check the scrubber O-rings, clean sealing surfaces, grease if needed' },
+        { text: 'Close the cover, screw hand tight' } ] },
+      { name: 'Breathing loop', items: [
+        { text: 'Check breathing loop hoses / perform stereo check (non-return valves)' },
+        { text: 'Check bite-piece, O-rings breathing loop, clean sealing surfaces, grease if needed' },
+        { text: 'Install breathing loop on rebreather' },
+        { text: 'Wrap HUD cable 3–4 times clockwise around loop' } ] }
+    ]
+  },
+  closed: {
+    title: 'Closed Check',
+    desc: 'Full pressurised check after build — rEvo checklists v0.4',
+    sections: [
+      { name: 'Oxygen side', items: [
+        { text: 'Open O2 / add O2 manually (all) / pressure?' },
+        { text: 'Turn on Shearwater [set-point high / solenoid fires?]', fn: true },
+        { text: '[Set Shearwater set-point 0.19]', fn: true },
+        { text: 'Full O2 flush: 3× / DSV in mouth / close DSV / re-open gap' },
+        { text: 'rEvodream on: calibrate?' },
+        { text: 'Shearwater calibrate?' },
+        { text: 'Batteries: rEvodreams > 1.25 V / 3.30 V · Shearwater EXT > 6.5 V', fn: true, fields: [
+          { id: 'dreamv', label: 'dream (V)', min: 1.25, max: 99 },
+          { id: 'swv', label: 'SW (V)', min: 3.3, max: 99 },
+          { id: 'extv2', label: 'EXT (V)', min: 6.5, max: 99 } ] },
+        { text: 'Close O2 / pressure drops?' },
+        { text: 'Depressurise O2 line' } ] },
+      { name: 'Diluent side', items: [
+        { text: 'Open dil / suck ADV? / close loop' },
+        { text: 'Add dil manually (all) / pressure?' },
+        { text: 'OPV? / overpressure test' },
+        { text: 'Inflate wing to max' },
+        { text: 'Flush dil: PPO2 0.21 – 0.22?', fields: [
+          { id: 'flushppo2', label: 'PPO2', min: 0.21, max: 0.22, step: 0.01 } ] },
+        { text: 'Close dil: pressure stays?' },
+        { text: 'Negative test (start)' } ] },
+      { name: 'Bail-out & final', items: [
+        { text: 'Open bail-out: pressure? / breathe: pressure?' },
+        { text: 'Check connections' },
+        { text: 'Close bail-out / check mushroom valve regulator by inhaling' },
+        { text: 'Gasses programmed in CC / OC' },
+        { text: 'Sufficient scrubber time for the next dive?', link: 'scrub', linkLabel: 'Check scrubber tracker' },
+        { text: 'Negative test ok? Turn off Shearwater' },
+        { text: 'Check harness, crotch strap, gag strap …' } ] }
+    ]
+  },
+  prejump: {
+    title: 'Pre-Jump Check',
+    desc: 'Right before splash — rEvo tags A + B',
+    sections: [
+      { name: 'A · Bail-out', items: [
+        { text: 'Open bail-out / pressure?' },
+        { text: 'Breathe bail-out / pressure?' },
+        { text: 'Connections?' } ] },
+      { name: 'A · Diluent', items: [
+        { text: 'Open dil / pressure?' },
+        { text: 'ADV: suck ok?' },
+        { text: 'Add dil manually (all) / pressure?' },
+        { text: 'Inflate wing?' },
+        { text: 'Inflate dry-suit?' } ] },
+      { name: 'B · Oxygen & electronics', items: [
+        { text: 'Open O2 / pressure?' },
+        { text: 'Shearwater on / (SP low / solenoid?)', fn: true },
+        { text: 'Add O2 manually (all) / pressure?' },
+        { text: 'rEvodreams on / backup Shearwater on' },
+        { text: 'PPO2 > 0.7' },
+        { text: 'Batteries rEvodreams? Shearwater?' },
+        { text: 'Pre-breathe 5 min (or RCT > 0:45?) / check PPO2', fn: true, timer: 300 },
+        { text: 'Gasses in Shearwater computer? CC?' },
+        { text: 'Check mask, fins, spares, cutters, lights, …' } ] }
+    ]
+  },
+  postdive: {
+    title: 'Post-Dive',
+    desc: 'Suggested starter list — edit to match your routine',
+    sections: [
+      { name: 'Right after the dive', items: [
+        { text: 'Log dive time to the scrubber tracker', link: 'scrub', linkLabel: 'Log it now' },
+        { text: 'Close O2 & dil valves, depressurise lines' },
+        { text: 'Turn off Shearwater & rEvodreams' },
+        { text: 'Close DSV before rinsing — keep the loop dry' } ] },
+      { name: 'Rinse & dry', items: [
+        { text: 'Rinse unit and loop exterior with fresh water' },
+        { text: 'Drain water traps / counterlungs, inspect for water ingress' },
+        { text: 'Remove scrubbers if done for the day — note remaining time, store sealed if reusing' },
+        { text: 'Dry loop and bite-piece; disinfect loop regularly' },
+        { text: 'Leave head open to air-dry — no direct heat on cells' } ] },
+      { name: 'Prep for next time', items: [
+        { text: 'Charge / check batteries' },
+        { text: 'Note O2 & dil pressures remaining' },
+        { text: 'Write down any issues to fix before next build' } ] }
+    ]
+  }
+};
+const CHECKLIST_ORDER = ['build', 'closed', 'prejump', 'postdive'];
+const FOOTNOTE = '** = rEvo hybrid set-point controller / rMS specific step';
+
+/* ---------- state (in-memory for this prototype; use Export to save) ---------- */
+const DEFAULTS = {
+  version: 2,
+  settings: {
+    units: 'imperial',          // 'imperial' | 'metric'
+    sacL: 20,                   // stressed SAC, L/min
+    reserve: 1.5,
+    dilPpo2Max: 1.0,
+    bailPpo2Max: 1.4,
+    endLimitM: 30.5,            // = 100 ft
+    ascentRate: 10,             // m/min
+    troubleMin: 2,
+    safetyStopMin: 3,
+    switchDepthM: 21,
+    topLimitH: 3.0,
+    bottomLimitH: 1.5
+  },
+  scrub: { hoursUsed: 0, history: [] },   // GLOBAL — the unit, not the dive
+  dives: [],                              // per-dive: plan + gases + checklists
+  diveSeq: 1,
+  currentDiveId: null,
+  gas: { depthM: 30.48, bottomMin: 40, decoMin: 0, ean50: false, computed: false, custom: null }  // sandbox planner
+};
+let state = JSON.parse(JSON.stringify(DEFAULTS));
+
+let activeTab = 'home';
+let activeChecklist = null;     // checklist open inside the dive view
+let confirmArm = {};            // two-tap confirm state
+const timers = {};              // pre-breathe timers, keyed per dive
+
+/* ---------- unit helpers (internal: m, L, bar) ---------- */
+const S = () => state.settings;
+const imp = () => S().units === 'imperial';
+const r0 = x => Math.round(x);
+const r1 = x => Math.round(x * 10) / 10;
+const r2 = x => Math.round(x * 100) / 100;
+const depthU = () => imp() ? 'ft' : 'm';
+const volU = () => imp() ? 'cuft' : 'L';
+const pressU = () => imp() ? 'psi' : 'bar';
+const dDepth = m => imp() ? r0(conv.mToFt(m)) : r1(m);
+const pDepth = v => imp() ? conv.ftToM(v) : v;
+const dVol = l => imp() ? r1(conv.lToCuft(l)) : r0(l);
+const dSac = l => imp() ? r2(conv.lToCuft(l)) : r1(l);
+const pSac = v => imp() ? conv.cuftToL(v) : v;
+function hoursFmt(h) {
+  h = Math.max(0, h);
+  const hh = Math.floor(h), mm = Math.round((h - hh) * 60);
+  return hh + 'h ' + String(mm).padStart(2, '0') + 'm';
+}
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+function nowStamp() { return new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); }
+function dateStamp(iso) { return new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); }
+function statusFor(pct) {
+  if (pct <= 0) return { cls: 'critical', label: 'Spent', icon: '⛔' };
+  if (pct < 0.25) return { cls: 'serious', label: 'Low', icon: '▲' };
+  if (pct < 0.5) return { cls: 'warning', label: 'Getting low', icon: '◆' };
+  return { cls: 'good', label: 'OK', icon: '●' };
+}
+const statusHex = { good: 'var(--good)', warning: 'var(--warning)', serious: 'var(--serious)', critical: 'var(--critical)' };
+function gasName(g) {
+  if (!g) return '—';
+  const o2 = Math.round(g.fo2 * 100), he = Math.round((g.fhe || 0) * 100);
+  if (g.name) return g.name;
+  if (he > 0) return o2 + '/' + he;
+  if (o2 === 21) return 'Air';
+  if (o2 === 100) return 'O2';
+  return 'EAN' + o2;
+}
+const planOpts = () => ({ dilPpo2Max: S().dilPpo2Max, bailPpo2Max: S().bailPpo2Max, endLimitM: S().endLimitM });
+
+/* ---------- dive helpers ---------- */
+function activeDive() { return state.dives.find(d => d.status === 'active') || null; }
+function currentDive() { return state.dives.find(d => d.id === state.currentDiveId) || null; }
+function newDive() {
+  const a = activeDive();
+  if (a) { state.currentDiveId = a.id; go('dive'); return; }
+  const d = {
+    id: 'd' + state.diveSeq, num: state.diveSeq,
+    label: 'Dive #' + state.diveSeq,
+    createdAt: new Date().toISOString(),
+    depthM: 30.48, bottomMin: 45, decoMin: 0, ean50: false,
+    dil: null, bail: null,
+    checks: {}, status: 'active', loggedMin: null, doneAt: null
+  };
+  CHECKLIST_ORDER.forEach(k => d.checks[k] = { done: {}, vals: {}, completedAt: null });
+  state.diveSeq++;
+  state.dives.unshift(d);
+  state.currentDiveId = d.id;
+  activeChecklist = null;
+  go('dive');
+}
+function openDive(id) { state.currentDiveId = id; activeChecklist = null; go('dive'); }
+function setDiveNum(field, raw, transform) {
+  const d = currentDive(); if (!d) return;
+  const v = parseFloat(raw);
+  if (isNaN(v)) return;
+  d[field] = transform ? transform(v) : v;
+  render();
+}
+function setDiveEan50(on) { const d = currentDive(); if (d) { d.ean50 = on; render(); } }
+function autoDil() {
+  const d = currentDive(); if (!d) return;
+  const rec = recommendDiluent(d.depthM, planOpts());
+  d.dil = rec ? { fo2: rec.fo2, fhe: rec.fhe, name: rec.name } : null;
+  render();
+}
+function autoBail() {
+  const d = currentDive(); if (!d) return;
+  const rec = recommendBailout(d.depthM, planOpts());
+  d.bail = rec ? { fo2: rec.fo2, fhe: rec.fhe, name: rec.name } : null;
+  render();
+}
+function setGasField(which, part, raw) {
+  const d = currentDive(); if (!d) return;
+  const v = parseFloat(raw);
+  const g = d[which] || { fo2: 0.21, fhe: 0 };
+  if (part === 'o2') { if (isNaN(v) || v <= 0 || v > 100) return; g.fo2 = v / 100; }
+  else { g.fhe = isNaN(v) ? 0 : Math.max(0, Math.min(0.9, v / 100)); }
+  delete g.name;
+  d[which] = g;
+  render();
+}
+function finishDive() {
+  const d = currentDive(); if (!d || d.status !== 'active') return;
+  const el = document.getElementById('finMin');
+  const min = parseFloat(el && el.value);
+  if (!min || min <= 0) return;
+  armed('finish', 'Finish', () => {
+    const wasDipped = scrubNow().dipped;
+    state.scrub.hoursUsed += min / 60;
+    const st = scrubNow();
+    let msg = d.label + ' logged: +' + Math.round(min) + ' min (' + hoursFmt(st.used) + ' total on stack)';
+    if (st.dipped && !wasDipped) msg += ' — went into the BOTTOM scrubber: repack both before diving again';
+    pushHist(msg);
+    d.status = 'done';
+    d.doneAt = new Date().toISOString();
+    d.loggedMin = Math.round(min);
+    render();
+  });
+}
+function abandonDive() {
+  const d = currentDive(); if (!d) return;
+  armed('abandon', 'Abandon', () => {
+    state.dives = state.dives.filter(x => x.id !== d.id);
+    state.currentDiveId = null;
+    activeChecklist = null;
+    go('home');
+  });
+}
+
+/* ---------- navigation / chrome ---------- */
+function go(tab) {
+  activeTab = tab;
+  if (tab !== 'dive') activeChecklist = null;
+  render();
+}
+function toggleTheme() {
+  const el = document.documentElement;
+  el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.getElementById('themeBtn').textContent = el.dataset.theme === 'dark' ? '☀' : '☾';
+}
+function toggleUnits() {
+  S().units = imp() ? 'metric' : 'imperial';
+  render();
+}
+function chrome() {
+  document.getElementById('unitBtn').textContent = imp() ? 'ft/psi' : 'm/bar';
+  document.querySelectorAll('nav.tabbar button').forEach(b => b.classList.toggle('on', b.dataset.tab === activeTab));
+  document.querySelectorAll('section.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + activeTab));
+}
+
+/* ---------- checklist helpers (per dive) ---------- */
+function diveChecks(key) {
+  const d = currentDive();
+  if (!d) return null;
+  if (!d.checks[key]) d.checks[key] = { done: {}, vals: {}, completedAt: null };
+  return d.checks[key];
+}
+function clTotals(key) {
+  const cl = CHECKLISTS[key];
+  const c = diveChecks(key);
+  let total = 0, done = 0;
+  cl.sections.forEach((s, si) => s.items.forEach((it, ii) => {
+    total++;
+    if (c && c.done[si + ':' + ii]) done++;
+  }));
+  return { total, done };
+}
+function toggleItem(key, si, ii) {
+  const c = diveChecks(key); if (!c) return;
+  const id = si + ':' + ii;
+  c.done[id] = !c.done[id];
+  const t = clTotals(key);
+  c.completedAt = (t.done === t.total) ? new Date().toISOString() : null;
+  render();
+}
+function resetChecklist(key) {
+  const d = currentDive(); if (!d) return;
+  d.checks[key] = { done: {}, vals: {}, completedAt: null };
+  render();
+}
+function setVal(key, fieldId, raw, min, max) {
+  const c = diveChecks(key); if (!c) return;
+  const v = raw === '' ? null : parseFloat(raw);
+  c.vals[fieldId] = v;
+  const el = document.getElementById('f-' + key + '-' + fieldId);
+  if (!el) return;
+  el.classList.remove('ok', 'bad');
+  if (v == null || isNaN(v) || min == null) return;
+  el.classList.add(v >= min && v <= max ? 'ok' : 'bad');
+}
+function openChecklist(key) { activeTab = 'dive'; activeChecklist = key; render(); }
+
+/* ---------- pre-breathe timer ---------- */
+function timerKey(key, si, ii) {
+  const d = currentDive();
+  return (d ? d.id : 'x') + ':' + key + ':' + si + ':' + ii;
+}
+function toggleTimer(key, si, ii, secs) {
+  const tk = timerKey(key, si, ii);
+  const t = timers[tk];
+  if (t && t.int) { clearInterval(t.int); t.int = null; render(); return; }
+  const left = t ? t.left : secs;
+  timers[tk] = { left, int: setInterval(() => tick(tk, key, si, ii), 1000) };
+  render();
+}
+function resetTimer(key, si, ii, secs) {
+  const tk = timerKey(key, si, ii);
+  if (timers[tk] && timers[tk].int) clearInterval(timers[tk].int);
+  delete timers[tk];
+  render();
+}
+function tick(tk, key, si, ii) {
+  const t = timers[tk];
+  if (!t) return;
+  t.left--;
+  const el = document.getElementById('tm-' + tk.replace(/[:#]/g, '-'));
+  if (el) el.textContent = fmtSecs(t.left);
+  if (t.left <= 0) {
+    clearInterval(t.int); t.int = null; t.left = 0;
+    const c = diveChecks(key);
+    if (c && !c.done[si + ':' + ii]) toggleItem(key, si, ii); else render();
+  }
+}
+function fmtSecs(s) { s = Math.max(0, s); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+
+/* ---------- scrubber ops (GLOBAL) ---------- */
+function scrubNow() {
+  return scrubberStatus(state.scrub, { topLimitH: S().topLimitH, bottomLimitH: S().bottomLimitH });
+}
+function pushHist(what) {
+  state.scrub.history.unshift({ when: nowStamp(), what });
+  state.scrub.history = state.scrub.history.slice(0, 20);
+}
+function logDive() {
+  const el = document.getElementById('diveMin');
+  const min = parseFloat(el.value);
+  if (!min || min <= 0) return;
+  const wasDipped = scrubNow().dipped;
+  state.scrub.hoursUsed += min / 60;
+  const st = scrubNow();
+  let msg = 'Time logged: +' + Math.round(min) + ' min (' + hoursFmt(st.used) + ' total on stack)';
+  if (st.dipped && !wasDipped) msg += ' — went into the BOTTOM scrubber: repack both before diving again';
+  pushHist(msg);
+  render();
+}
+function armed(id, label, fn) {
+  if (confirmArm[id]) { confirmArm[id] = false; fn(); }
+  else { confirmArm[id] = true; render(); setTimeout(() => { if (confirmArm[id]) { confirmArm[id] = false; render(); } }, 4000); }
+}
+function rotate() {
+  if (scrubNow().dipped) return;   // bottom was used: repack both instead
+  armed('rot', 'Rotate', () => {
+    pushHist('Rotated: top (' + hoursFmt(state.scrub.hoursUsed) + ' used) moved to bottom, fresh pack on top, old bottom repacked to shelf');
+    state.scrub.hoursUsed = 0;
+    render();
+  });
+}
+function freshBoth() {
+  armed('fresh', 'Fresh', () => {
+    state.scrub.hoursUsed = 0;
+    pushHist('Both scrubbers freshly packed');
+    render();
+  });
+}
+let adjustOpen = false;
+function toggleAdjust() { adjustOpen = !adjustOpen; render(); }
+function applyAdjust() {
+  const t = parseFloat(document.getElementById('adjUsed').value);
+  if (!isNaN(t)) state.scrub.hoursUsed = Math.max(0, t);
+  pushHist('Hours adjusted manually (' + hoursFmt(state.scrub.hoursUsed) + ' on stack)');
+  adjustOpen = false;
+  render();
+}
+
+/* ---------- sandbox gas planner ---------- */
+function readGasForm() {
+  const g = state.gas;
+  const d = parseFloat(document.getElementById('gDepth').value);
+  const bt = parseFloat(document.getElementById('gBottom').value);
+  const dc = parseFloat(document.getElementById('gDeco').value);
+  if (!isNaN(d)) g.depthM = pDepth(d);
+  if (!isNaN(bt)) g.bottomMin = bt;
+  g.decoMin = isNaN(dc) ? 0 : dc;
+  g.ean50 = document.getElementById('gEan50').checked;
+}
+function computeGas() {
+  readGasForm();
+  state.gas.computed = true;
+  render();
+}
+function checkMix() {
+  const o2 = parseFloat(document.getElementById('mO2').value);
+  const he = parseFloat(document.getElementById('mHe').value) || 0;
+  if (isNaN(o2) || o2 <= 0) return;
+  state.gas.custom = { fo2: o2 / 100, fhe: he / 100 };
+  render();
+}
+
+/* ---------- export / import ---------- */
+function exportState() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'revo-companion-state.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  const ta = document.getElementById('ioBox');
+  if (ta) ta.value = JSON.stringify(state);
+}
+function importState() {
+  const ta = document.getElementById('ioBox');
+  try {
+    const s = JSON.parse(ta.value);
+    if (!s || !s.settings || !s.scrub) throw new Error('bad');
+    state = s;
+    if (state.scrub.hoursUsed == null) state.scrub = { hoursUsed: (state.scrub.top && state.scrub.top.hoursTop) || 0, history: state.scrub.history || [] };
+    if (!Array.isArray(state.dives)) state.dives = [];
+    if (!state.diveSeq) state.diveSeq = state.dives.length + 1;
+    if (!state.gas) state.gas = JSON.parse(JSON.stringify(DEFAULTS.gas));
+    render();
+  } catch (e) {
+    ta.value = 'Could not read that — paste the exact JSON from a previous export.';
+  }
+}
+
+/* ---------- settings ---------- */
+function setNum(path, raw, transform) {
+  const v = parseFloat(raw);
+  if (isNaN(v)) return;
+  S()[path] = transform ? transform(v) : v;
+  render();
+}
+
+/* ================================ RENDER ================================ */
+function render() {
+  chrome();
+  renderHome();
+  renderDive();
+  renderScrub();
+  renderGas();
+  renderSettings();
+}
+
+/* ---------- shared blocks ---------- */
+function meterBlock(label, remH, limH, pct) {
+  const s = statusFor(pct);
+  return '<div style="margin-top:8px"><div class="meter-label"><span>' + label + ' · ' + s.icon + ' ' + s.label + '</span><span>' + hoursFmt(remH) + ' of ' + hoursFmt(limH) + ' left</span></div>' +
+    '<div class="meter"><i style="width:' + Math.round(Math.max(0, Math.min(1, pct)) * 100) + '%;background:' + statusHex[s.cls] + '"></i></div></div>';
+}
+function checklistRows(dive) {
+  return CHECKLIST_ORDER.map(k => {
+    const cl = CHECKLISTS[k];
+    let total = 0, done = 0;
+    cl.sections.forEach((s, si) => s.items.forEach((it, ii) => { total++; if (dive.checks[k] && dive.checks[k].done[si + ':' + ii]) done++; }));
+    const pct = total ? Math.round(done / total * 100) : 0;
+    const stampTxt = dive.checks[k] && dive.checks[k].completedAt
+      ? '✓ completed ' + dateStamp(dive.checks[k].completedAt)
+      : (done ? done + ' of ' + total + ' done' : 'Not started');
+    return '<div class="rowitem" onclick="openDive(\'' + dive.id + '\');openChecklist(\'' + k + '\')">' +
+      '<div class="miniprog" style="background:conic-gradient(var(--good) ' + pct + '%, var(--surface-2) 0)"><span style="background:var(--surface);border-radius:50%;width:34px;height:34px;display:grid;place-items:center">' + done + '/' + total + '</span></div>' +
+      '<div class="grow"><div class="t">' + cl.title + '</div><div class="d">' + stampTxt + '</div></div><div class="chev">›</div></div>';
+  }).join('');
+}
+function planReadouts(d) {
+  const rows = [];
+  if (d.dil) {
+    const p = ppo2At(d.dil.fo2, d.depthM), e = endAt(d.dil.fhe || 0, d.depthM);
+    const pBad = p > S().dilPpo2Max + 1e-9, eBad = e > S().endLimitM + 1e-9, hyp = d.dil.fo2 < 0.18;
+    rows.push('<div class="kv"><span class="k">Dil ' + gasName(d.dil) + ' — PPO2 / END at ' + dDepth(d.depthM) + ' ' + depthU() + '</span><span class="v"><span style="' + (pBad ? 'color:var(--critical)' : '') + '">' + r2(p) + '</span> / <span style="' + (eBad ? 'color:var(--critical)' : '') + '">' + dDepth(e) + ' ' + depthU() + '</span></span></div>');
+    if (pBad) rows.push('<div class="warnnote critical">⛔ Dil PPO2 exceeds ' + S().dilPpo2Max + ' at depth — leaner O2 or more helium needed.</div>');
+    if (eBad) rows.push('<div class="warnnote warning">◆ Dil END exceeds ' + dDepth(S().endLimitM) + ' ' + depthU() + ' — consider more helium.</div>');
+    if (hyp) rows.push('<div class="warnnote warning">◆ Dil is hypoxic at the surface (' + Math.round(d.dil.fo2 * 100) + '% O2) — plan your descent and surface loop management.</div>');
+  }
+  if (d.bail) {
+    const p = ppo2At(d.bail.fo2, d.depthM), e = endAt(d.bail.fhe || 0, d.depthM), m = mod(d.bail.fo2, S().bailPpo2Max);
+    const pBad = p > S().bailPpo2Max + 1e-9;
+    rows.push('<div class="kv"><span class="k">Bailout ' + gasName(d.bail) + ' — PPO2 at depth / MOD</span><span class="v"><span style="' + (pBad ? 'color:var(--critical)' : '') + '">' + r2(p) + '</span> / ' + dDepth(m) + ' ' + depthU() + '</span></div>');
+    if (pBad) rows.push('<div class="warnnote critical">⛔ Bailout PPO2 exceeds ' + S().bailPpo2Max + ' at max depth — it must be breathable where things go wrong.</div>');
+  }
+  const vol = bailoutVolume(d.depthM, {
+    sacL: S().sacL, troubleMin: S().troubleMin, ascentRate: S().ascentRate,
+    decoMin: d.decoMin, safetyStopMin: S().safetyStopMin, reserve: S().reserve,
+    useDecoGas: d.ean50, switchDepthM: S().switchDepthM
+  });
+  const cyl = smallestCylinder(vol.bottomL);
+  const cylDeco = vol.splitting ? smallestCylinder(vol.decoL) : null;
+  rows.push('<div class="kv"><span class="k"><b>Bailout volume × ' + S().reserve + ' reserve</b></span><span class="v"><b>' + dVol(vol.bottomL) + ' ' + volU() + (vol.splitting ? ' + ' + dVol(vol.decoL) + ' ' + volU() + ' EAN50' : '') + '</b></span></div>');
+  rows.push(cyl ? '<div class="warnnote info">◎ Smallest common bottom bailout: <b>&nbsp;' + cyl.name + '&nbsp;</b>(' + dVol(cyl.liters) + ' ' + volU() + ')' + (cylDeco ? ' &nbsp;·&nbsp; deco: <b>&nbsp;' + cylDeco.name + '</b>' : '') + '</div>'
+    : '<div class="warnnote critical">⛔ More than an HP100 — stage cylinders.</div>');
+  if (!d.ean50 && d.decoMin > 0 && d.depthM > S().switchDepthM)
+    rows.push('<div class="warnnote warning">◆ You have deco — consider a dedicated EAN50 deco bailout (toggle above) to shrink the bottom cylinder and speed deco.</div>');
+  const st = scrubNow();
+  const needH = (d.bottomMin + d.decoMin) / 60;
+  const scrubOk = !st.dipped && st.plannedH >= needH;
+  rows.push('<div class="warnnote ' + (scrubOk ? 'info' : 'critical') + '">' +
+    (scrubOk ? '● Scrubber: plan needs ~' + hoursFmt(needH) + ' — ' + hoursFmt(st.plannedH) + ' plannable on top (+' + hoursFmt(st.botRemaining) + ' reserve). OK.'
+      : st.dipped ? '⛔ Scrubber: bottom has been used — repack both before this dive.'
+        : '⛔ Scrubber: plan needs ~' + hoursFmt(needH) + ' but only ' + hoursFmt(st.plannedH) + ' plannable — rotate/repack first.') + '</div>');
+  return rows.join('');
+}
+
+/* ---------- home ---------- */
+function renderHome() {
+  const st = scrubNow();
+  const s = st.dipped ? { cls: 'critical', label: 'Repack both', icon: '⛔' }
+    : st.rotateDue ? { cls: 'critical', label: 'Rotate now', icon: '⛔' }
+      : statusFor(st.topPct);
+  const a = activeDive();
+  let diveCard;
+  if (a) {
+    let total = 0, done = 0;
+    CHECKLIST_ORDER.forEach(k => CHECKLISTS[k].sections.forEach((sec, si) => sec.items.forEach((it, ii) => { total++; if (a.checks[k] && a.checks[k].done[si + ':' + ii]) done++; })));
+    diveCard = '<div class="card" onclick="openDive(\'' + a.id + '\')" style="cursor:pointer">' +
+      '<h2>Current dive <span class="right badge good">● In progress</span></h2>' +
+      '<div class="hero" style="font-size:24px">' + esc(a.label) + '</div>' +
+      '<div class="sub">' + dDepth(a.depthM) + ' ' + depthU() + ' · ' + a.bottomMin + ' min' + (a.decoMin ? ' + ' + a.decoMin + ' deco' : '') +
+      ' · dil ' + gasName(a.dil) + ' · bail ' + gasName(a.bail) + '</div>' +
+      '<div class="meter-label" style="margin-top:8px"><span>Checklists</span><span>' + done + ' of ' + total + '</span></div>' +
+      '<div class="progressbar"><i style="width:' + (total ? done / total * 100 : 0) + '%"></i></div>' +
+      '<div class="btnrow"><button class="btn">Continue dive ›</button></div></div>';
+  } else {
+    diveCard = '<div class="card"><h2>Dive</h2>' +
+      '<div class="sub" style="margin-bottom:10px">Plan the dive, pick gases, then run the checklists — everything for one dive lives together.</div>' +
+      '<button class="btn" onclick="newDive()">＋ Start a dive</button></div>';
+  }
+  const past = state.dives.filter(d => d.status === 'done').slice(0, 5);
+  const pastRows = past.length ? past.map(d => {
+    const allDone = CHECKLIST_ORDER.every(k => d.checks[k] && d.checks[k].completedAt);
+    return '<div class="rowitem" onclick="openDive(\'' + d.id + '\')">' +
+      '<div class="grow"><div class="t">' + esc(d.label) + '</div><div class="d">' + (d.doneAt ? dateStamp(d.doneAt) : '') + ' · ' + dDepth(d.depthM) + ' ' + depthU() + ' · ' + (d.loggedMin || 0) + ' min · dil ' + gasName(d.dil) + '</div></div>' +
+      (allDone ? '<span class="badge good">● All checks</span>' : '<span class="badge warning">◆ Checks open</span>') +
+      '<div class="chev">›</div></div>';
+  }).join('') : '';
+  document.getElementById('view-home').innerHTML =
+    diveCard +
+    '<div class="card" onclick="go(\'scrub\')" style="cursor:pointer">' +
+    '<h2>Scrubbers — unit-wide <span class="right badge ' + s.cls + '">' + s.icon + ' ' + s.label + '</span></h2>' +
+    '<div class="hero">' + hoursFmt(st.plannedH) + ' <small>plannable before rotation</small></div>' +
+    meterBlock('Top', st.topRemaining, S().topLimitH, st.topPct) +
+    meterBlock('Bottom (reserve)', st.botRemaining, S().bottomLimitH, st.botPct) +
+    (st.dipped ? '<div class="warnnote critical">⛔ The bottom scrubber has been used — repack BOTH canisters before diving again.</div>'
+      : st.rotateDue ? '<div class="warnnote critical">⛔ Top scrubber at its limit — rotate before diving again.</div>' : '') +
+    '</div>' +
+    (past.length ? '<div class="card"><h2>Recent dives</h2><div class="rowlist">' + pastRows + '</div></div>' : '') +
+    '<div class="footnote">Prototype: data lives in this session only — use Settings → Export before closing, Import to restore. The PWA version will remember everything automatically.</div>';
+}
+
+/* ---------- dive view ---------- */
+function renderDive() {
+  const el = document.getElementById('view-dive');
+  const d = currentDive();
+  if (!d) {
+    const past = state.dives.filter(x => x.status === 'done');
+    const pastRows = past.map(x =>
+      '<div class="rowitem" onclick="openDive(\'' + x.id + '\')"><div class="grow"><div class="t">' + esc(x.label) + '</div><div class="d">' + (x.doneAt ? dateStamp(x.doneAt) : '') + ' · ' + dDepth(x.depthM) + ' ' + depthU() + ' · ' + (x.loggedMin || 0) + ' min</div></div><div class="chev">›</div></div>').join('');
+    el.innerHTML = '<div class="pagetitle">Dive<span class="sub2">Plan → gases → checklists, one dive at a time.</span></div>' +
+      '<div class="card"><button class="btn" onclick="newDive()">＋ Start a dive</button></div>' +
+      (past.length ? '<div class="card"><h2>Past dives</h2><div class="rowlist">' + pastRows + '</div></div>' : '');
+    return;
+  }
+  if (activeChecklist) { renderChecklistDetail(el, d, activeChecklist); return; }
+
+  const dis = d.status === 'done' ? ' disabled' : '';
+  const doneBanner = d.status === 'done'
+    ? '<div class="warnnote info">● Dive finished ' + (d.doneAt ? dateStamp(d.doneAt) : '') + ' — ' + (d.loggedMin || 0) + ' min logged to the scrubbers. The post-dive checklist stays available below.</div>'
+    : '';
+  const planCard =
+    '<div class="card"><h2>1 · Plan &amp; gases</h2><div class="gasform">' +
+    '<div><label>Max depth (' + depthU() + ')</label><input type="number" inputmode="numeric" value="' + dDepth(d.depthM) + '" onchange="setDiveNum(\'depthM\',this.value,pDepth)"' + dis + '></div>' +
+    '<div><label>Bottom time (min)</label><input type="number" inputmode="numeric" value="' + d.bottomMin + '" onchange="setDiveNum(\'bottomMin\',this.value)"' + dis + '></div>' +
+    '<div><label>Deco time (min, from plan)</label><input type="number" inputmode="numeric" value="' + d.decoMin + '" onchange="setDiveNum(\'decoMin\',this.value)"' + dis + '></div>' +
+    '<div style="display:flex;align-items:flex-end;padding-bottom:6px"><label class="checkline" style="margin:0"><input type="checkbox" ' + (d.ean50 ? 'checked' : '') + ' onchange="setDiveEan50(this.checked)"' + dis + '> Carry EAN50 deco bailout</label></div>' +
+    '</div>' +
+    '<div class="secthead" style="padding-top:12px">Diluent</div>' +
+    '<div class="gasform">' +
+    '<div><label>%O2</label><input type="number" inputmode="numeric" value="' + (d.dil ? Math.round(d.dil.fo2 * 100) : '') + '" placeholder="21" onchange="setGasField(\'dil\',\'o2\',this.value)"' + dis + '></div>' +
+    '<div><label>%He</label><input type="number" inputmode="numeric" value="' + (d.dil ? Math.round((d.dil.fhe || 0) * 100) : '') + '" placeholder="0" onchange="setGasField(\'dil\',\'he\',this.value)"' + dis + '></div>' +
+    (d.status === 'done' ? '' : '<div class="full"><button class="btn small secondary" onclick="autoDil()">Don\'t know? Recommend a standard dil for ' + dDepth(d.depthM) + ' ' + depthU() + '</button></div>') +
+    '</div>' +
+    '<div class="secthead" style="padding-top:12px">Bailout (bottom gas)</div>' +
+    '<div class="gasform">' +
+    '<div><label>%O2</label><input type="number" inputmode="numeric" value="' + (d.bail ? Math.round(d.bail.fo2 * 100) : '') + '" placeholder="32" onchange="setGasField(\'bail\',\'o2\',this.value)"' + dis + '></div>' +
+    '<div><label>%He</label><input type="number" inputmode="numeric" value="' + (d.bail ? Math.round((d.bail.fhe || 0) * 100) : '') + '" placeholder="0" onchange="setGasField(\'bail\',\'he\',this.value)"' + dis + '></div>' +
+    (d.status === 'done' ? '' : '<div class="full"><button class="btn small secondary" onclick="autoBail()">Don\'t know? Recommend a standard bailout</button></div>') +
+    '</div>' +
+    ((d.dil || d.bail) ? '<div style="margin-top:10px">' + planReadouts(d) + '</div>' : '<div class="footnote">Enter gases or tap a recommend button — readouts, bailout sizing and the scrubber check appear here.</div>') +
+    '</div>';
+  const checksCard =
+    '<div class="card"><h2>2 · Checklists — this dive</h2><div class="rowlist">' + checklistRows(d) + '</div></div>';
+  const finishCard = d.status === 'done' ? '' :
+    '<div class="card"><h2>3 · Finish dive</h2>' +
+    '<div class="gasform"><div><label>Actual dive time (minutes)</label><input type="number" inputmode="numeric" id="finMin" value="' + (d.bottomMin + d.decoMin) + '"></div>' +
+    '<div style="display:flex;align-items:flex-end"><button class="btn" onclick="finishDive()">' + (confirmArm.finish ? 'Tap again to confirm' : 'Finish & log to scrubbers') + '</button></div></div>' +
+    '<div class="footnote">Adds the time to the unit-wide scrubber stack and files this dive. The post-dive checklist stays available after.</div></div>';
+  const abandonRow = d.status === 'done' ? '' :
+    '<div class="btnrow"><button class="btn danger" onclick="abandonDive()">' + (confirmArm.abandon ? 'Tap again to delete this dive' : 'Abandon dive') + '</button></div>';
+  el.innerHTML =
+    '<div class="pagetitle">' + esc(d.label) + '<span class="sub2">Started ' + dateStamp(d.createdAt) + (d.status === 'done' ? ' · finished' : '') + '</span></div>' +
+    doneBanner + planCard + checksCard + finishCard + abandonRow;
+}
+
+/* ---------- checklist detail (inside dive) ---------- */
+function renderChecklistDetail(el, d, key) {
+  const cl = CHECKLISTS[key];
+  const t = clTotals(key);
+  const c = diveChecks(key);
+  let hasFn = false;
+  const body = cl.sections.map((sec, si) => {
+    const items = sec.items.map((it, ii) => {
+      const id = si + ':' + ii;
+      const done = !!c.done[id];
+      if (it.fn) hasFn = true;
+      let extra = '';
+      if (it.fields) {
+        extra = '<div class="fields" onclick="event.stopPropagation()">' + it.fields.map(f => {
+          const unitLbl = f.unit === 'press' ? ' (' + pressU() + ')' : '';
+          const v = c.vals[f.id];
+          return '<div><label>' + f.label + unitLbl + '</label><input type="number" inputmode="decimal" step="' + (f.step || 'any') + '" id="f-' + key + '-' + f.id + '" value="' + (v == null ? '' : v) + '" onchange="setVal(\'' + key + '\',\'' + f.id + '\',this.value,' + (f.unit ? 'null,null' : f.min + ',' + f.max) + ')"></div>';
+        }).join('') + '</div>';
+      }
+      if (it.timer) {
+        const tk = timerKey(key, si, ii);
+        const tm = timers[tk];
+        const running = tm && tm.int;
+        const left = tm ? tm.left : it.timer;
+        extra += '<div class="timerline" onclick="event.stopPropagation()">' +
+          '<span class="time" id="tm-' + tk.replace(/[:#]/g, '-') + '">' + fmtSecs(left) + '</span>' +
+          '<button class="btn small ' + (running ? 'secondary' : '') + '" onclick="toggleTimer(\'' + key + '\',' + si + ',' + ii + ',' + it.timer + ')">' + (running ? 'Pause' : (tm ? 'Resume' : 'Start pre-breathe')) + '</button>' +
+          (tm ? '<button class="btn small secondary" onclick="resetTimer(\'' + key + '\',' + si + ',' + ii + ',' + it.timer + ')">Reset</button>' : '') + '</div>';
+      }
+      if (it.link) {
+        extra += '<div style="margin-top:8px" onclick="event.stopPropagation()"><button class="btn small secondary" onclick="go(\'' + it.link + '\')">' + it.linkLabel + ' ›</button></div>';
+      }
+      const hint = it.hint ? '<div class="d" style="color:var(--muted);font-size:12.5px;margin-top:2px">' + it.hint + '</div>' : '';
+      return '<div class="chk ' + (done ? 'done' : '') + '" onclick="toggleItem(\'' + key + '\',' + si + ',' + ii + ')">' +
+        '<div class="box">✓</div><div class="txt">' + esc(it.text) + (it.fn ? ' <span class="fn">**</span>' : '') + hint + extra + '</div></div>';
+    }).join('');
+    return '<div class="secthead">' + sec.name + '</div>' + items;
+  }).join('');
+  el.innerHTML =
+    '<span class="backlink" onclick="activeChecklist=null;render()">‹ ' + esc(d.label) + '</span>' +
+    '<div class="pagetitle">' + cl.title + '<span class="sub2">' + cl.desc + '</span></div>' +
+    '<div class="card"><div class="meter-label"><span>' + t.done + ' of ' + t.total + '</span><span>' + Math.round(t.done / t.total * 100) + '%</span></div>' +
+    '<div class="progressbar"><i style="width:' + (t.done / t.total * 100) + '%"></i></div>' +
+    (c.completedAt ? '<div class="stamp">✓ Completed ' + dateStamp(c.completedAt) + '</div>' : '') +
+    '</div>' +
+    '<div class="card">' + body + (hasFn ? '<div class="footnote">' + FOOTNOTE + '</div>' : '') + '</div>' +
+    '<div class="btnrow"><button class="btn danger" onclick="resetChecklist(\'' + key + '\')">Reset checklist</button></div>';
+}
+
+/* ---------- scrubbers (GLOBAL) ---------- */
+function renderScrub() {
+  const st = scrubNow();
+  const canis = (label, remH, limH, pct, sub, forceCls) => {
+    const s = forceCls ? { cls: forceCls, label: forceCls === 'critical' ? 'Repack' : 'OK', icon: forceCls === 'critical' ? '⛔' : '●' } : statusFor(pct);
+    return '<div class="canister">' +
+      '<div class="can-visual"><i style="height:' + Math.round(Math.max(0, Math.min(1, pct)) * 100) + '%;background:' + statusHex[s.cls] + '"></i><span>' + label + '</span></div>' +
+      '<div class="grow" style="flex:1">' +
+      '<div style="font-weight:700">' + label + ' scrubber <span class="badge ' + s.cls + '" style="margin-left:6px">' + s.icon + ' ' + s.label + '</span></div>' +
+      '<div class="sub">' + sub + '</div>' +
+      '</div></div>';
+  };
+  const topSub = hoursFmt(st.topRemaining) + ' of ' + hoursFmt(S().topLimitH) + ' plannable · ' + hoursFmt(Math.min(st.used, S().topLimitH)) + ' used';
+  const botSub = st.dipped
+    ? hoursFmt(st.botUsed) + ' of the reserve used — repack both before diving again'
+    : hoursFmt(st.botRemaining) + ' emergency reserve — never plan into it';
+  const hist = state.scrub.history.length
+    ? state.scrub.history.map(h => '<div class="h-row"><span>' + esc(h.what) + '</span><span class="when">' + h.when + '</span></div>').join('')
+    : '<div class="sub">No events yet.</div>';
+  document.getElementById('view-scrub').innerHTML =
+    '<div class="pagetitle">Scrubbers<span class="sub2">Unit-wide, across dives. Dive time comes off the TOP scrubber (' + hoursFmt(S().topLimitH) + '). At the limit, rotate: top → bottom, fresh pack on top. The bottom\'s ' + hoursFmt(S().bottomLimitH) + ' is emergency reserve — touch it and you repack both before diving again.</span></div>' +
+    '<div class="card"><h2>Status</h2>' +
+    '<div class="hero">' + hoursFmt(st.plannedH) + ' <small>plannable before rotation</small></div>' +
+    canis('TOP', st.topRemaining, S().topLimitH, st.topPct, topSub) +
+    canis('BOTTOM', st.botRemaining, S().bottomLimitH, st.botPct, botSub, st.dipped ? 'critical' : null) +
+    (st.dipped ? '<div class="warnnote critical">⛔ Bottom scrubber used — repack BOTH canisters before diving again.</div>'
+      : st.rotateDue ? '<div class="warnnote critical">⛔ Top at its limit — rotate before diving again.</div>' : '') +
+    '</div>' +
+    '<div class="card"><h2>Log time manually</h2>' +
+    '<div class="sub" style="margin-bottom:8px">Finishing a dive logs its time automatically — use this for bench time or dives made without a plan.</div>' +
+    '<div class="gasform"><div><label>Time (minutes)</label><input type="number" inputmode="numeric" id="diveMin" placeholder="e.g. 65"></div>' +
+    '<div style="display:flex;align-items:flex-end"><button class="btn" onclick="logDive()">Add time</button></div></div>' +
+    '</div>' +
+    '<div class="card"><h2>Service</h2>' +
+    (st.dipped
+      ? '<div class="sub" style="margin-bottom:6px">Rotation unavailable — the bottom canister has been used.</div>'
+      : '<div class="btnrow"><button class="btn ' + (confirmArm.rot ? '' : 'secondary') + '" onclick="rotate()">' + (confirmArm.rot ? 'Tap again to confirm rotation' : '↻ Rotate (top → bottom, fresh on top)') + '</button></div>') +
+    '<div class="btnrow">' +
+    '<button class="btn ' + (confirmArm.fresh ? '' : 'secondary') + '" onclick="freshBoth()">' + (confirmArm.fresh ? 'Tap again to confirm' : '✚ Repack both (fresh)') + '</button>' +
+    '<button class="btn secondary" onclick="toggleAdjust()">✎ Adjust hours</button>' +
+    '</div>' +
+    (adjustOpen ? '<div class="gasform" style="margin-top:10px"><div><label>Hours on the stack since last rotation/repack</label><input type="number" step="0.1" id="adjUsed" value="' + r1(st.used) + '"></div><div class="full"><button class="btn" onclick="applyAdjust()">Apply</button></div></div>' : '') +
+    '</div>' +
+    '<div class="card"><h2>History</h2><div class="history">' + hist + '</div></div>';
+}
+
+/* ---------- sandbox gas planner ---------- */
+function renderGas() {
+  const g = state.gas;
+  const st = scrubNow();
+  let results = '';
+  if (g.computed) {
+    const opts = planOpts();
+    const dil = recommendDiluent(g.depthM, opts);
+    const bail = recommendBailout(g.depthM, opts);
+    const vol = bailoutVolume(g.depthM, {
+      sacL: S().sacL, troubleMin: S().troubleMin, ascentRate: S().ascentRate,
+      decoMin: g.decoMin, safetyStopMin: S().safetyStopMin, reserve: S().reserve,
+      useDecoGas: g.ean50, switchDepthM: S().switchDepthM
+    });
+    const cyl = smallestCylinder(vol.bottomL);
+    const cylDeco = vol.splitting ? smallestCylinder(vol.decoL) : null;
+    const needH = (g.bottomMin + g.decoMin) / 60;
+    const scrubOk = !st.dipped && st.plannedH >= needH;
+    const segs = vol.segments.map(s =>
+      '<div class="kv"><span class="k">' + s.label + ' (' + r1(s.min) + ' min @ ~' + dDepth(s.depthM) + ' ' + depthU() + ')</span><span class="v">' + dVol(s.liters) + ' ' + volU() + '</span></div>').join('');
+    results =
+      '<div class="card"><h2>Diluent</h2>' +
+      (dil ?
+        '<div class="result-hero"><span class="hero">' + dil.name + '</span></div>' +
+        '<div class="kv"><span class="k">PPO2 at ' + dDepth(g.depthM) + ' ' + depthU() + '</span><span class="v">' + r2(dil.ppo2AtDepth) + '</span></div>' +
+        '<div class="kv"><span class="k">END at depth</span><span class="v">' + dDepth(dil.endAtDepth) + ' ' + depthU() + '</span></div>' +
+        '<div class="kv"><span class="k">Constraints</span><span class="v">PPO2 ≤ ' + S().dilPpo2Max + ' · END ≤ ' + dDepth(S().endLimitM) + ' ' + depthU() + '</span></div>' +
+        (dil.hypoxicWarning ? '<div class="warnnote warning">◆ Hypoxic at the surface (' + Math.round(dil.fo2 * 100) + '% O2) — needs a travel/ascent plan and careful loop management on the surface.</div>' : '')
+        : '<div class="warnnote critical">⛔ No standard diluent fits that depth with your limits.</div>') +
+      '</div>' +
+      '<div class="card"><h2>Bailout</h2>' +
+      (bail ?
+        '<div class="result-hero"><span class="hero">' + bail.name + '</span><span class="sub">bottom bailout · MOD ' + dDepth(bail.modM) + ' ' + depthU() + ' @ ' + S().bailPpo2Max + '</span></div>' +
+        '<div class="kv"><span class="k">PPO2 at depth / END</span><span class="v">' + r2(bail.ppo2AtDepth) + ' / ' + dDepth(bail.endAtDepth) + ' ' + depthU() + '</span></div>'
+        : '<div class="warnnote critical">⛔ No standard bailout gas fits — stage multiple gases.</div>') +
+      '<div class="secthead" style="padding-top:10px">Volume needed (OC ascent)</div>' + segs +
+      '<div class="kv"><span class="k"><b>Bottom gas × ' + S().reserve + ' reserve</b></span><span class="v"><b>' + dVol(vol.bottomL) + ' ' + volU() + '</b></span></div>' +
+      (vol.splitting ? '<div class="kv"><span class="k"><b>EAN50 deco gas × ' + S().reserve + '</b></span><span class="v"><b>' + dVol(vol.decoL) + ' ' + volU() + '</b></span></div>' : '') +
+      (cyl ? '<div class="warnnote info">◎ Smallest common bottom bailout: <b>&nbsp;' + cyl.name + '&nbsp;</b> (' + dVol(cyl.liters) + ' ' + volU() + ')' + (cylDeco ? ' &nbsp;·&nbsp; deco: <b>&nbsp;' + cylDeco.name + '</b>' : '') + '</div>'
+        : '<div class="warnnote critical">⛔ More than an HP100 — stage cylinders.</div>') +
+      (!g.ean50 && g.decoMin > 0 && g.depthM > S().switchDepthM ? '<div class="warnnote warning">◆ You have deco — consider a dedicated EAN50 deco bailout (toggle above) to shrink the bottom cylinder and speed deco.</div>' : '') +
+      '</div>' +
+      '<div class="card"><h2>Scrubber check</h2>' +
+      '<div class="warnnote ' + (scrubOk ? 'info' : 'critical') + '">' + (scrubOk ? '● Plan needs ~' + hoursFmt(needH) + ' — ' + hoursFmt(st.plannedH) + ' plannable on the top scrubber (+' + hoursFmt(st.botRemaining) + ' bottom reserve). OK.' : st.dipped ? '⛔ Bottom scrubber has been used — repack both before this dive.' : '⛔ Plan needs ~' + hoursFmt(needH) + ' but only ' + hoursFmt(st.plannedH) + ' plannable — rotate/repack first.') + '</div></div>';
+  }
+  let custom = '';
+  if (g.custom) {
+    const c = g.custom;
+    const p = ppo2At(c.fo2, g.depthM), e = endAt(c.fhe, g.depthM), m = mod(c.fo2, S().dilPpo2Max), mb = mod(c.fo2, S().bailPpo2Max);
+    custom =
+      '<div class="kv"><span class="k">PPO2 at ' + dDepth(g.depthM) + ' ' + depthU() + '</span><span class="v" style="color:' + (p > S().bailPpo2Max ? 'var(--critical)' : 'inherit') + '">' + r2(p) + '</span></div>' +
+      '<div class="kv"><span class="k">END at depth</span><span class="v" style="color:' + (e > S().endLimitM ? 'var(--critical)' : 'inherit') + '">' + dDepth(e) + ' ' + depthU() + '</span></div>' +
+      '<div class="kv"><span class="k">MOD as dil (' + S().dilPpo2Max + ') / as bailout (' + S().bailPpo2Max + ')</span><span class="v">' + dDepth(m) + ' / ' + dDepth(mb) + ' ' + depthU() + '</span></div>' +
+      (c.fo2 < 0.18 ? '<div class="warnnote warning">◆ Hypoxic at the surface.</div>' : '');
+  }
+  document.getElementById('view-gas').innerHTML =
+    '<div class="pagetitle">Gas Planner<span class="sub2">Sandbox — explore depths and mixes. Starting a dive pulls the same engine into the dive plan.</span></div>' +
+    '<div class="card"><h2>Dive</h2><div class="gasform">' +
+    '<div><label>Max depth (' + depthU() + ')</label><input type="number" inputmode="numeric" id="gDepth" value="' + dDepth(g.depthM) + '"></div>' +
+    '<div><label>Bottom time (min)</label><input type="number" inputmode="numeric" id="gBottom" value="' + g.bottomMin + '"></div>' +
+    '<div><label>Deco time (min, from plan)</label><input type="number" inputmode="numeric" id="gDeco" value="' + g.decoMin + '"></div>' +
+    '<div style="display:flex;align-items:flex-end;padding-bottom:6px"><label class="checkline" style="margin:0"><input type="checkbox" id="gEan50" ' + (g.ean50 ? 'checked' : '') + '> Carry EAN50 deco bailout</label></div>' +
+    '<div class="full"><button class="btn" onclick="computeGas()">Plan gas</button></div>' +
+    '</div><div class="footnote">Stressed SAC ' + dSac(S().sacL) + ' ' + volU() + '/min · reserve ×' + S().reserve + ' · ascent ' + dDepth(S().ascentRate) + ' ' + depthU() + '/min — change in Settings.</div></div>' +
+    results +
+    '<div class="card"><h2>Check a mix</h2><div class="gasform">' +
+    '<div><label>%O2</label><input type="number" inputmode="numeric" id="mO2" value="' + (g.custom ? Math.round(g.custom.fo2 * 100) : '') + '" placeholder="21"></div>' +
+    '<div><label>%He</label><input type="number" inputmode="numeric" id="mHe" value="' + (g.custom ? Math.round(g.custom.fhe * 100) : '') + '" placeholder="35"></div>' +
+    '<div class="full"><button class="btn secondary" onclick="checkMix()">Evaluate at planned depth</button></div>' +
+    '</div>' + custom + '</div>' +
+    '<div class="footnote">Planning aid only — verify everything against your training, tables and dive computer. Not a deco planner.</div>';
+}
+
+/* ---------- settings ---------- */
+function renderSettings() {
+  const s = S();
+  const num = (label, value, oncommit, step) =>
+    '<div><label>' + label + '</label><input type="number" step="' + (step || 'any') + '" value="' + value + '" onchange="' + oncommit + '"></div>';
+  document.getElementById('view-settings').innerHTML =
+    '<div class="pagetitle">Settings</div>' +
+    '<div class="card"><h2>Units</h2><div class="seg">' +
+    '<button class="' + (imp() ? 'on' : '') + '" onclick="S().units=\'imperial\';render()">ft · psi · cuft</button>' +
+    '<button class="' + (!imp() ? 'on' : '') + '" onclick="S().units=\'metric\';render()">m · bar · L</button>' +
+    '</div></div>' +
+    '<div class="card"><h2>Gas planning</h2><div class="setform">' +
+    num('Stressed SAC (' + volU() + '/min)', dSac(s.sacL), 'setNum(\'sacL\',this.value,pSac)') +
+    num('Reserve factor (×)', s.reserve, 'setNum(\'reserve\',this.value)', '0.1') +
+    num('Dil PPO2 max', s.dilPpo2Max, 'setNum(\'dilPpo2Max\',this.value)', '0.05') +
+    num('Bailout PPO2 max', s.bailPpo2Max, 'setNum(\'bailPpo2Max\',this.value)', '0.05') +
+    num('END limit (' + depthU() + ')', dDepth(s.endLimitM), 'setNum(\'endLimitM\',this.value,pDepth)') +
+    num('Ascent rate (' + depthU() + '/min)', dDepth(s.ascentRate), 'setNum(\'ascentRate\',this.value,pDepth)') +
+    num('Trouble time at depth (min)', s.troubleMin, 'setNum(\'troubleMin\',this.value)') +
+    num('Safety stop (min)', s.safetyStopMin, 'setNum(\'safetyStopMin\',this.value)') +
+    num('EAN50 switch depth (' + depthU() + ')', dDepth(s.switchDepthM), 'setNum(\'switchDepthM\',this.value,pDepth)') +
+    '</div></div>' +
+    '<div class="card"><h2>Scrubber limits</h2><div class="setform">' +
+    num('Top position limit (h)', s.topLimitH, 'setNum(\'topLimitH\',this.value)', '0.5') +
+    num('Bottom reserve after rotation (h)', s.bottomLimitH, 'setNum(\'bottomLimitH\',this.value)', '0.5') +
+    '</div><div class="footnote">Follow your rEvo manual &amp; training for actual scrubber duration — depth, workload and water temperature all shorten it.</div></div>' +
+    '<div class="card"><h2>Save / restore</h2>' +
+    '<div class="btnrow"><button class="btn" onclick="exportState()">⬇ Export state (JSON)</button><button class="btn secondary" onclick="importState()">⬆ Import from box</button></div>' +
+    '<div style="margin-top:10px"><textarea class="io" id="ioBox" placeholder="Export fills this box (and downloads a file). Paste a previous export here and tap Import."></textarea></div>' +
+    '<div class="footnote">This prototype keeps data in memory only — it resets when the artifact reloads. Export after diving; import before the next session. The PWA version will persist automatically.</div>' +
+    '</div>' +
+    '<div class="card"><h2>About</h2><div class="sub">rEvo Dive Companion — prototype. Checklists transcribed from rEvo checklists v0.4 and the rEvo pre-jump tags. ' + FOOTNOTE + '.<br><br><b>This app is a memory aid, not a substitute for training.</b> Always follow your rEvo manual, your instructor and your dive plan. Gas numbers are simplified planning estimates, not a decompression schedule.</div></div>';
+}
+
+render();
+
+</script>
+</body>
+</html>

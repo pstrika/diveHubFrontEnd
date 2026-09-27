@@ -44,6 +44,11 @@ class SessionsController extends Controller
         
         session()->regenerate();
         session()->put('logged_in', true);  // use this to clear the localStorage for filter in the client side
+        // Shows the boot splash on the very next page load - MyDashboard's
+        // first render after a fresh login is the slow one (Pablo,
+        // 2026-09-19: "right after login...show the splash...it feels like
+        // the site is dead otherwise").
+        session()->put('dh_show_splash', true);
 
         //return redirect()->intended($this->redirectTo);
         //return redirect('/Trips');
@@ -105,9 +110,11 @@ class SessionsController extends Controller
 
     public function destroy()
     {
-        // Remove the intended URL from the session
-        session()->forget('url.intended');
         auth()->logout();
+        // Standard secure-logout pattern - also drops url.intended and
+        // any other stale session data along with it.
+        session()->invalidate();
+        session()->regenerateToken();
 
         //return redirect('/sign-in');
 
@@ -120,6 +127,45 @@ class SessionsController extends Controller
         );
 
         return view('sessions.create', compact('SEO'));
+    }
+
+    /**
+     * Take a guest straight to the sign up form.
+     *
+     * Anonymous visitors are logged in as the shared guest user by the
+     * AuthenticateAsGuest middleware. If they click a link to the register
+     * page while still "logged in" as that guest the request is treated as
+     * an authenticated user and they get bounced. Until now the "Create
+     * account" links worked around that by pointing at sign-out, which
+     * landed people on a sign in screen and read like a bug (finding F-04).
+     *
+     * This logs the guest out (a real user hitting it by mistake is simply
+     * logged out too, which is harmless) and redirects to the register page.
+     */
+    public function createAccount()
+    {
+        session()->forget('url.intended');
+        auth()->logout();
+
+        return redirect()->route('register');
+    }
+
+    /**
+     * "I already have an account" from the guest prompt.
+     *
+     * Anonymous visitors are logged in as the shared guest user, so a plain link
+     * to sign in bounces straight back: they are already authenticated. Log the
+     * guest out first, then show the sign in form. Same shape as createAccount().
+     */
+    public function signInFresh()
+    {
+        $user = auth()->user();
+        if ($user && !$user->isNotGuest()) {
+            auth()->logout();
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
+        }
+        return redirect()->route('login');
     }
 
 }

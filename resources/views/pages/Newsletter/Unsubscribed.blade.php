@@ -9,6 +9,8 @@
                 <p style="margin:0 0 20px; font-size:14px; line-height:21px; color:#5a6b78;">
                     {{ $user->name }}, you won't get The Weekly Dive newsletter anymore. You'll still get booking confirmations, trip reminders, and cancellation notices for dives you've saved.
                 </p>
+                <a href="{{ route('/') }}" class="dh-btn dh-btn-primary" style="display:inline-flex; margin-bottom: 16px;">Go to Divers Hub</a>
+                <br>
                 <a href="{{ $resubscribeUrl }}" style="font-size:13px; color:#0e7c9e; text-decoration:underline;">
                     Changed your mind? Resubscribe
                 </a>

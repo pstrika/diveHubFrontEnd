@@ -18,7 +18,7 @@ class User extends Authenticatable
      *
      * @var string[]
      */
-    protected $fillable=['name', 'email', 'password', 'role_id','password_confirmation', 'phone', 'location', 'old_password','picture', 'certLevel', 'favOperators', 'favLocations', 'showLevel', 'prefersLocation', 'firstDayOfWeek', 'google_id', 'show_visited', 'deco_unit', 'calendar_token', 'last_seen_at'];
+    protected $fillable=['name', 'email', 'password', 'role_id','password_confirmation', 'phone', 'location', 'old_password','picture', 'certLevel', 'favOperators', 'favLocations', 'showLevel', 'prefersLocation', 'firstDayOfWeek', 'google_id', 'show_visited', 'deco_unit', 'calendar_token', 'last_seen_at', 'whatsapp_notifications', 'email_consent_at', 'sms_consent_at', 'whatsapp_consent_at', 'phone_verified_at', 'pending_phone', 'phone_verification_code_hash', 'phone_verification_sent_at', 'deco_gf_low', 'deco_gf_high', 'deco_setpoint', 'pinch_zoom_enabled', 'wizard_completed_at', 'google_avatar_url', 'nav_slot_1', 'nav_slot_2'];
 
     protected $connection = 'mysql';
     /**
@@ -39,6 +39,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'last_seen_at' => 'datetime',
+        'phone_verified_at' => 'datetime',
+        'phone_verification_sent_at' => 'datetime',
         'newsletter_subscribed' => 'boolean',
     ];
 
@@ -101,8 +103,25 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    /** Custom gas mixes saved from the Decompression Dive Planner's "My Gases" pill, up to 10 per diver. */
+    public function diveGases()
+    {
+        return $this->hasMany(UserDiveGas::class);
+    }
+
     public function unreadNotifications() {
         return Message::where('userId', $this->id)->where('deleted', 0)->where('read', 0)->count();
+    }
+
+    /**
+     * Same as unreadNotifications() but scoped to Groups-folder messages
+     * only (group_id set) - the Groups tab badge used to reuse the whole
+     * inbox+groups total, which read wrong once the two folders actually
+     * diverged (Pablo, 2026-09-17: "the message badge for groups...we want
+     * here the message count for groups, not the entire unread inbox").
+     */
+    public function unreadGroupNotifications() {
+        return Message::where('userId', $this->id)->where('deleted', 0)->where('read', 0)->whereNotNull('group_id')->count();
     }
 
     public function ensureCalendarToken()

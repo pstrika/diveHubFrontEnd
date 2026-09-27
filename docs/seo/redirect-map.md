@@ -1,0 +1,64 @@
+# Redirect map
+
+Every public URL and what happens to it in the redesign. The default is
+"unchanged". Anything else needs a reason here and a 301 in `routes/web.php`
+before it merges. Check this list against `sitemap.xml` before the switchover.
+
+Legend: **unchanged** keeps URL and content type. **redirect** returns a 301 to
+the target. **noindex** means the page is not indexed today and stays that way.
+
+## Content pages (indexed today)
+
+| URL | Disposition | Notes |
+|---|---|---|
+| `/` | unchanged | Home, redesigned in chunk 2 |
+| `/home` | unchanged | |
+| `/Trips`, `/Trips/{date}` | unchanged | Trip board, redesigned in chunk 2 |
+| `/DiveSites` | unchanged | Becomes the explorer in chunk 3 |
+| `/WreckSites` | unchanged | wreckWiki, renders through the explorer with the wreck preset |
+| `/SiteDetails/{slug}` | unchanged | Numeric ids already 301 to the slug |
+| `/BeachDiving` | unchanged | |
+| `/Operators` | unchanged | |
+| `/OperatorDetails/{slug}` | unchanged | |
+| `/Waivers` | unchanged | |
+| `/CalendarHydrotherapy`, `/CalendarHydrotherapy/{date}` | unchanged | |
+| `/Weather`, `/Weather/{location}` | unchanged | |
+| `/gasplanning` | unchanged | |
+| `/AboutUs` | unchanged | |
+| `/PrivacyPolicy` | unchanged | |
+| `/TermsOfUse` | unchanged | |
+| `/DataDeletion` | unchanged | Added on main in 9.16.0, merged into redesign |
+| `/sitemap.xml` | unchanged | |
+
+## Themed calendars (URLs unchanged, now presets of the trip finder)
+
+Each renders `/Trips` in range mode with its type preset and the next 30 days from
+the given date (2026-09-10). They were behind login and never indexed, so there is
+no ranking to protect; they are open to guests now like the board itself.
+
+| URL | Disposition |
+|---|---|
+| `/CalendarT`, `/CalendarT/{tripType}`, `/CalendarT/{tripType}/{date}` | unchanged URL; renders the finder, recreational or technical preset |
+| `/CalendarWreck`, `/CalendarWreck/{date}` | unchanged URL; finder, wreck preset |
+| `/CalendarShark`, `/CalendarShark/{date}` | unchanged URL; finder, shark preset |
+| `/CalendarLobster`, `/CalendarLobster/{date}` | unchanged URL; finder, lobster preset |
+| `/Trips?range=…`, `/Trips?from=…&to=…` | new query string views of `/Trips`, `noindex, follow`, canonical stays `/Trips` |
+
+## Tools (noindex today)
+
+| URL | Disposition | Notes |
+|---|---|---|
+| `/DiveSitesMap` | redirect (301) to `/DiveSites?view=map` | Done in chunk 3. Map is a view of the explorer (W4). Was noindex. |
+| `/DiveSitesSearch` | redirect (301) to `/DiveSites?q=...` | Done in chunk 3. Search is the explorer box (W4). Was noindex. The POST from the old search form forwards the term. |
+| `/DiveSitesAll` | redirect (301) to `/DiveSites?sort=name` | Done in chunk 3. The plain "all sites" table is the explorer sorted A to Z. Was noindex. Changed from "unchanged" in the first plan. |
+| `/DecoPlanner*` | unchanged | |
+| `/WeatherAR*` | unchanged | |
+| `/MyCalendar`, `/MyDashboard`, `/MyVisitedSites` | unchanged | Account pages |
+| `/TripDetails/{tripId}` | unchanged | noindex, follow today |
+| `/calendar/feed/{token}.ics` | unchanged | |
+| `/Landing` | unchanged | |
+
+## Not public
+
+Admin and template routes (`/DiveSitesAdmin`, `/items`, `/roles`, `/category`,
+`/tag`, `/overview`, template demo pages) are behind auth and out of scope.

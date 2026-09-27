@@ -1,8 +1,8 @@
-<x-page-template bodyClass='g-sidenav-show bg-gray-200'>
-    <x-auth.navbars.sidebar activePage="dashboard" activeItem="discover" activeSubitem=""></x-auth.navbars.sidebar>
+<x-page-template bodyClass='dh-shell bg-gray-200'>
+    <x-shell.nav active="" />
     <div class="main-content position-relative bg-gray-100 max-height-vh-100 h-100">
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Discover"></x-auth.navbars.navs.auth>
+        <x-shell.header title="Discover" />
         <!-- End Navbar -->
         <div class="container-fluid px-2 px-md-4">
             <div class="page-header min-height-300 border-radius-xl mt-4"

@@ -9,6 +9,7 @@ use App\Models\Operator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 //require 'vendor/autoload.php';
 use Mailgun\Mailgun;
 
@@ -164,7 +165,12 @@ class UserController extends Controller
     public function getProfile() {
         $user = User::findorFail(auth()->user()->id);
 
-        $operators = Operator::all();
+        // Deco Divers (id 4) isn't running anymore (Pablo, 2026-09-22) -
+        // there's no "active"/status column on operators to filter by
+        // generically, so this excludes it by id specifically, same as the
+        // Argentina locations exclusion below. Not deleted: historical
+        // trips and any diver who already favorited it still reference it.
+        $operators = Operator::where('id', '!=', 4)->orderBy('operatorName')->get();
         $favOperatorsIndex = explode(',', $user->favOperators);
         $favOperators = Operator::whereIn('id', $favOperatorsIndex)->get();
 
@@ -172,16 +178,36 @@ class UserController extends Controller
         $favLocationsIndex = explode(',', $user->favLocations);
         $favLocations = WeatherLocation::whereIn('id', $favLocationsIndex)->get();
 
-        $favoriteLevels = explode(',', $user->showLevel);
-        $showLevelLow = intval($favoriteLevels[0]);
-        $showLevelHigh = intval($favoriteLevels[1]);
+        // showLevel can be null - see MyDashboardController for why (a
+        // diver who skipped the wizard's level step, or an old account
+        // predating any level-picking UI at all). Falls back to the full
+        // 0-4 range rather than fataling the profile page on an undefined
+        // [1] key.
+        $favoriteLevels = explode(',', $user->showLevel ?: '0,4');
+        $showLevelLow = intval($favoriteLevels[0] ?? 0);
+        $showLevelHigh = intval($favoriteLevels[1] ?? 4);
 
-        return view('pages.profile.overview', compact('user', 'operators', 'favOperators', 'locations', 'favLocations', 'showLevelLow', 'showLevelHigh'));
+        // Own diver-uploaded site pictures, any status, so a still-pending
+        // or rejected one is visible here too, not just approved ones
+        // (Pablo, 2026-09-23: "members should also be able to remove their
+        // own pictures... show the mosaics of the pictures, the date and
+        // the site where they were uploaded").
+        $myDiverPhotos = \App\Models\DiverPhoto::where('userId', $user->id)->with('site')->latest()->get();
+
+        // Customizable mobile nav bar (Pablo, 2026-09-24) - resolved to a
+        // real key here so the picker always shows something selected,
+        // same fallback the nav bar itself uses.
+        $navSlot1 = \App\Support\NavTabs::resolveSlot($user->nav_slot_1, \App\Support\NavTabs::DEFAULT_SLOT_1);
+        $navSlot2 = \App\Support\NavTabs::resolveSlot($user->nav_slot_2, \App\Support\NavTabs::DEFAULT_SLOT_2);
+
+        return view('pages.profile.overview', compact('user', 'operators', 'favOperators', 'locations', 'favLocations', 'showLevelLow', 'showLevelHigh', 'myDiverPhotos', 'navSlot1', 'navSlot2'));
     }
 
     public function updateProfile(Request $request) {
 
         $user = User::findorFail(auth()->user()->id);
+        // Channel state before the save, so we can record what actually changed.
+        $commsBefore = \App\Support\NotificationConsent::state($user);
 
         Log::info('Request data:', $request->all());
 
@@ -195,9 +221,56 @@ class UserController extends Controller
             $user->name = $request->name;
         }
 
+        $phoneVerificationStarted = false;
         if($request->has('phone')) {
-            Log::info("Got phone. Updating to: " . str($request->phone));
-            $user->phone = $request->phone;
+            $rawPhone = trim((string) $request->phone);
+
+            if ($rawPhone === '') {
+                // Explicitly cleared: no number on file means no SMS/WhatsApp to send to.
+                Log::info('Phone cleared for user ' . $user->id);
+                $user->phone = null;
+                $user->phone_verified_at = null;
+                \App\Services\PhoneVerificationService::clearPending($user);
+                $user->sms_notifications = false;
+            } else {
+                $e164 = \App\Support\PhoneNumber::toE164($rawPhone);
+
+                if ($e164 === null) {
+                    session()->flash('phoneError', 'That doesn\'t look like a valid phone number.');
+                } elseif ($e164 !== $user->phone || !$user->phone_verified_at) {
+                    // Not just "did they type a different number" - a
+                    // number carried over from the old front end (or an
+                    // international one saved without verification) sits in
+                    // `phone` with phone_verified_at still null, so
+                    // re-entering that SAME number must still start real
+                    // verification rather than silently no-op (Pablo,
+                    // 2026-09-17: entered his already-on-file 954-292-2846
+                    // and got no code at all - `phone` was set from legacy
+                    // data, `phone_verified_at` never was).
+                    if (\App\Support\PhoneNumber::isUs($e164)) {
+                        // Held as pending until the SMS code comes back verified -
+                        // the number already on file (if any) keeps working until then.
+                        Log::info('Starting phone verification for user ' . $user->id . ' -> ' . $e164);
+                        $phoneVerificationStarted = \App\Services\PhoneVerificationService::start($user, $e164);
+                        if (!$phoneVerificationStarted) {
+                            // start() returning false now covers two different
+                            // things: the resend cooldown, or the SMS genuinely
+                            // failing to send - kept generic since a diver can't
+                            // tell which happened either way (Pablo, 2026-09-16:
+                            // "it said send OTP, but I didn't receive anything").
+                            session()->flash('phoneError', "We couldn't send a code just now - if you requested one recently, check your messages; otherwise please try again in a moment.");
+                        }
+                    } else {
+                        // International: nothing to verify (we have no SMS channel to
+                        // verify it with) and no SMS from us either - WhatsApp only.
+                        Log::info('Saving international phone for user ' . $user->id . ' -> ' . $e164);
+                        $user->phone = $e164;
+                        $user->phone_verified_at = null;
+                        \App\Services\PhoneVerificationService::clearPending($user);
+                        $user->sms_notifications = false;
+                    }
+                }
+            }
         }
 
         if($request->has('levelLow') and $request->has('levelHigh')) {
@@ -261,6 +334,26 @@ class UserController extends Controller
             $user->sms_notifications = 0;
         }
 
+        // WhatsApp, same shape as the other two: absent means the box was unticked.
+        if($request->has('whatsapp_notifications')) {
+            Log::info("Got whatsapp_notifications. Updating to: 1");
+            $user->whatsapp_notifications = 1;
+        } else {
+            Log::info("Didn't get whatsapp_notifications. Updating to: 0");
+            $user->whatsapp_notifications = 0;
+        }
+
+        // Newsletter, same shape - this one defaults ON (opt-out, not
+        // opt-in) since it's a plain marketing digest, not a consent-gated
+        // channel, so an absent checkbox here still means "untick it".
+        if($request->has('newsletter_subscribed')) {
+            Log::info("Got newsletter_subscribed. Updating to: 1");
+            $user->newsletter_subscribed = 1;
+        } else {
+            Log::info("Didn't get newsletter_subscribed. Updating to: 0");
+            $user->newsletter_subscribed = 0;
+        }
+
         if($request->has('show_visited')) {
             Log::info("Got show_visited. Updating to: 1");
             $user->show_visited = 1;
@@ -277,8 +370,67 @@ class UserController extends Controller
             $user->deco_unit = 0;
         }
 
+        if($request->has('pinch_zoom_enabled')) {
+            $user->pinch_zoom_enabled = 1;
+        } else {
+            $user->pinch_zoom_enabled = 0;
+        }
+
+        // Customizable mobile nav bar slots (Pablo, 2026-09-24) - null falls
+        // back to the default (Weather / Groups) in App\Support\NavTabs, so
+        // Nav bar slots have their own small form/endpoint now (Pablo,
+        // 2026-09-24: needed a standalone form so the section could sit in
+        // a col-6 next to "My uploaded pictures" - see
+        // UserController::updateNavSlots()). This method's checkboxes
+        // above all reset to 0/false when their field is simply absent
+        // from the request, which a form that only sends nav_slot_1/2
+        // would have wiped out.
+
+        // A submitted form should never be trusted alone for this - the
+        // checkboxes are already disabled client-side, but SMS/WhatsApp
+        // genuinely require a verified phone (Pablo, 2026-09-17).
+        \App\Support\NotificationConsent::enforcePhoneVerification($user);
+
+        // Consent timestamps for the channels that changed, before the save.
+        \App\Support\NotificationConsent::stamp($user, $commsBefore);
 
         $user->save();
+
+        if ($phoneVerificationStarted) {
+            session()->flash('phoneVerificationStarted', true);
+        }
+
+        return redirect()->back();
+    }
+
+    /** Code entry from the profile page's verify-phone modal. */
+    public function verifyPhone(Request $request)
+    {
+        $user = User::findOrFail(auth()->user()->id);
+
+        $request->validate(['code' => 'required|string']);
+
+        if (\App\Services\PhoneVerificationService::verify($user, $request->code)) {
+            session()->flash('phoneVerified', true);
+        } else {
+            session()->flash('phoneError', 'That code is incorrect or has expired.');
+            session()->flash('phoneVerificationStarted', true); // keep the modal open
+        }
+
+        return redirect()->back();
+    }
+
+    /** "Resend code" from the same modal. */
+    public function resendPhoneCode(Request $request)
+    {
+        $user = User::findOrFail(auth()->user()->id);
+
+        if (\App\Services\PhoneVerificationService::resend($user)) {
+            session()->flash('phoneVerificationStarted', true);
+        } else {
+            session()->flash('phoneError', 'Please wait a bit before requesting another code.');
+            session()->flash('phoneVerificationStarted', true);
+        }
 
         return redirect()->back();
     }
@@ -289,9 +441,61 @@ class UserController extends Controller
 
         $filename = time() . '_' . $request->file('img_file')->getClientOriginalName();
         Storage::disk('siteAssets')->putFileAs('img/users', $request->file('img_file'), $filename);
-        
+
         $user->picture = $filename;
         $user->save();
         return redirect()->back();
+    }
+
+    /**
+     * Same fetch-and-store pattern as OnboardingController@save's Google
+     * photo choice, but callable any time from the profile page (not
+     * gated on the user having no picture yet - here they're deliberately
+     * replacing whatever's there).
+     */
+    public function useGooglePicture(Request $request) {
+        $user = User::findOrFail(auth()->user()->id);
+
+        if (!$user->google_avatar_url) {
+            return redirect()->route('overview')->with('error', 'No Google photo is available for this account.');
+        }
+
+        try {
+            $response = Http::timeout(10)->get($user->google_avatar_url);
+            if ($response->successful()) {
+                $filename = time() . '_google_' . $user->id . '.jpg';
+                Storage::disk('siteAssets')->put('img/users/' . $filename, $response->body());
+                $user->picture = $filename;
+                $user->save();
+            } else {
+                return redirect()->route('overview')->with('error', 'Could not fetch your Google photo. Please try again.');
+            }
+        } catch (\Throwable $e) {
+            return redirect()->route('overview')->with('error', 'Could not fetch your Google photo. Please try again.');
+        }
+
+        return redirect()->route('overview');
+    }
+
+    /**
+     * Its own small endpoint, deliberately not folded into updateProfile()
+     * (Pablo, 2026-09-24) - that method's checkboxes (email/sms/whatsapp
+     * notifications, newsletter, firstDayOfWeek, show_visited, deco_unit,
+     * pinch_zoom_enabled) all reset to 0/false whenever their field is
+     * simply absent from the request, which a standalone nav-slots form
+     * would trigger on every one of them. Needed its own form in the first
+     * place so "Customize your navigation bar" could sit in a col-6 next
+     * to "My uploaded pictures" (also outside the big preferences form).
+     */
+    public function updateNavSlots(Request $request) {
+        $user = User::findOrFail(auth()->user()->id);
+
+        // An invalid/blank pick is just left unset (falls back to the
+        // default in App\Support\NavTabs) rather than rejecting the save.
+        $user->nav_slot_1 = \App\Support\NavTabs::isValid($request->input('nav_slot_1')) ? $request->input('nav_slot_1') : null;
+        $user->nav_slot_2 = \App\Support\NavTabs::isValid($request->input('nav_slot_2')) ? $request->input('nav_slot_2') : null;
+        $user->save();
+
+        return redirect()->route('overview')->with('msg', 'Navigation bar updated.');
     }
 }

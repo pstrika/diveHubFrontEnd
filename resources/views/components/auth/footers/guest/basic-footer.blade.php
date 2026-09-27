@@ -1,13 +1,13 @@
 @props(['textColor'])
-<footer class="footer position-absolute bottom-2 py-2 w-100">
+{{-- Mobile has the bottom tab bar for navigation already, so this footer
+     (nav links + copyright) is desktop-only. --}}
+<footer class="footer position-absolute bottom-2 py-2 w-100 d-none d-lg-block">
     <div class="container">
       <div class="row align-items-center justify-content-lg-between">
         <div class="col-12 col-md-6 my-auto">
           <div class="{{ $textColor}} copyright text-center text-sm text-lg-start">
-            © <script>
-              document.write(new Date().getFullYear())
-            </script>,
-            Divers Hub
+            © {{ date('Y') }} Divers Hub
+            <span class="mx-1 opacity-5">|</span> <x-version />
           </div>
         </div>
         <div class="col-12 col-md-6">

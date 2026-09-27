@@ -1,9 +1,9 @@
-<x-page-template bodyClass='g-sidenav-show  bg-gray-200'>
+<x-page-template bodyClass='dh-shell bg-gray-200'>
 
-    <x-auth.navbars.sidebar activePage="dashboard" activeItem="analytics" activeSubitem=""></x-auth.navbars.sidebar>
+    <x-shell.nav active="" />
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <!-- Navbar -->
-        <x-auth.navbars.navs.auth pageTitle="Analytics"></x-auth.navbars.navs.auth>
+        <x-shell.header title="Analytics" />
         <!-- End Navbar -->
         <div class="container-fluid py-4">
             <div class="row">

@@ -1,10 +1,16 @@
-/* Base button styling for FullCalendar nav buttons */
+/* Base button styling for FullCalendar nav buttons.
+   Was a hardcoded Google blue (#1A73E8) with !important, which beat the
+   theme's own --fc-button-* custom properties (divershub.css) outright
+   regardless of specificity - the one calendar on the site that didn't
+   pick up the theme colors (Pablo, 2026-09-17: "in all the calendars...
+   make those buttons using theme colors"). Same navy/blue pair as
+   .dh-btn-primary uses everywhere else. */
 .fc .fc-button-primary,
 .fc .fc-button-secondary,
 .fc .fc-prev-button,
 .fc .fc-next-button,
 .fc .fc-today-button {
-  background-color: #1A73E8 !important;
+  background-color: var(--dh-ink) !important;
   color: #ffffff !important;
   border: none !important;
   font-weight: 600;
@@ -18,11 +24,11 @@
 .fc .fc-prev-button:hover,
 .fc .fc-next-button:hover,
 .fc .fc-today-button:hover {
-  background-color: #1669C1 !important;
+  background-color: var(--dh-deep) !important;
   color: #ffffff !important;
 }
 
 /* Make active button stand out */
 .fc .fc-button-active {
-  box-shadow: 0 0 0 2px #1A73E8 inset;
+  box-shadow: 0 0 0 2px var(--dh-ink) inset;
 }

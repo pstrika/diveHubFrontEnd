@@ -1,117 +1,38 @@
-<x-page-template bodyClass='bg-gray-200'>
+{{--
+    Forgot password, step two: set the new one. Redesigned shell, same form,
+    same hidden token the mailed link carries.
+--}}
+<x-page-template bodyClass='dh-auth-body'>
+    <x-auth.shell title="Choose a new password">
 
-    <!-- Navbar -->
-    <nav
-        class="navbar navbar-expand-lg position-absolute top-0 z-index-3 w-100 shadow-none my-3 navbar-transparent mt-4">
-        <x-auth.navbars.navs.guest p='' btn='bg-gradient-primary' textColor='text-white' svgColor='white'>
-        </x-auth.navbars.navs.guest>
-    </nav>
-    <!-- End Navbar -->
-    <main class="main-content  mt-0">
-        <div class="page-header align-items-start min-vh-100"
-            style="background-image: url('/assets/img/diveHub-login.jpg');">
-            <span class="mask bg-gradient-dark opacity-6"></span>
-            <div class="container my-auto">
-                <div class="row">
-                    <div class="col-lg-4 col-md-8 col-12 mx-auto">
-                        <div class="card z-index-0 fadeIn3 fadeInBottom">
-                            <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
-                                <div class="bg-gradient-primary shadow-primary border-radius-lg py-3 pe-1">
-                                    <h4 class="text-white font-weight-bolder text-center mt-2 mb-0">Reset password</h4>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                @if (Session::has('email'))
-                                <div class="alert alert-danger alert-dismissible text-white" role="alert">
-                                    <span class="text-sm">{{ Session::get('email') }}</span>
-                                    <button type="button" class="btn-close text-lg py-3 opacity-10" data-bs-dismiss="alert"
-                                        aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                @endif
-                                <form role="form" method="POST"
-                                    action="{{ route('password.update', ['token' => $token]) }}" class="text-start">
-                                    @csrf
-                                    <input type="hidden" name="token" value="{{ $token }}">
+        <form role="form" method="POST" action="{{ route('password.update', ['token' => $token]) }}" class="dh-form">
+            @csrf
+            <input type="hidden" name="token" value="{{ $token }}">
 
-                                    <div class="input-group input-group-outline mt-3">
-                                        <label class="form-label">Email</label>
-                                        <input type="email" class="form-control" name='email'>
-                                    </div>
-                                    @error('email')
-                                    <p class='text-danger inputerror'>{{ $message }} </p>
-                                    @enderror
-
-                                    <div class="input-group input-group-outline mt-3">
-                                        <label class="form-label">Password</label>
-                                        <input type="password" class="form-control" name='password'>
-                                    </div>
-                                    @error('password')
-                                    <div class="text-danger inputerror">{{ $message }}</div>
-                                    @enderror
-
-                                    <div class="input-group input-group-outline mt-3">
-                                        <label class="form-label">Confirm Password</label>
-                                        <input type="password" class="form-control" name='password_confirmation'
-                                           >
-                                    </div>
-                                    @error('password_confirmation')
-                                    <div class="text-danger inputerror">{{ $message }}</div>
-                                    @enderror
-                                    <div class="text-center">
-                                        <button type="submit" class="btn bg-gradient-primary w-100 my-4 mb-2">Change
-                                            password</button>
-                                    </div>
-                                    <p class="mt-4 text-sm text-center">
-                                        Don't have an account?
-                                        <a href="{{ route('register') }}"
-                                            class="text-primary text-gradient font-weight-bold">Sign
-                                            up</a>
-                                    </p>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="dh-field">
+                <label for="reset-email">Email</label>
+                <input type="email" name="email" id="reset-email" autocomplete="email" autocapitalize="none" spellcheck="false">
             </div>
-            <x-auth.footers.guest.basic-footer textColor='text-white'></x-auth.footers.guest.basic-footer>
-        </div>
-    </main>
-    @push('js')
-    <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js"></script>
-    <script>
-        $(function () {
-    
-            function checkForInput(element) {
-    
-                const $label = $(element).parent();
-    
-                if ($(element).val().length > 0) {
-                    $label.addClass('is-filled');
-                } else {
-                    $label.removeClass('is-filled');
-                }
-            }
-            var input = $(".input-group input");
-            input.focusin(function () {
-                $(this).parent().addClass("focused is-focused");
-            });
-    
-            $('input').each(function () {
-                checkForInput(this);
-            });
+            @error('email')<p class="dh-field-error">{{ $message }}</p>@enderror
 
-            $('input').on('change keyup', function () {
-                checkForInput(this);
-            });
-    
-            input.focusout(function () {
-                $(this).parent().removeClass("focused is-focused");
-            });
-        });
-    
-    </script>
-    
-    @endpush
+            <div class="dh-field">
+                <label for="reset-password">New password</label>
+                <input type="password" name="password" id="reset-password" autocomplete="new-password">
+            </div>
+            @error('password')<p class="dh-field-error">{{ $message }}</p>@enderror
+
+            <div class="dh-field">
+                <label for="reset-password-confirm">New password again</label>
+                <input type="password" name="password_confirmation" id="reset-password-confirm" autocomplete="new-password">
+            </div>
+            @error('password_confirmation')<p class="dh-field-error">{{ $message }}</p>@enderror
+
+            <button type="submit" class="dh-btn dh-btn-primary dh-btn-block">Change my password</button>
+
+            <div class="dh-auth-links">
+                <p>Don't have an account? <a href="{{ route('register') }}">Create a free one</a></p>
+            </div>
+        </form>
+
+    </x-auth.shell>
 </x-page-template>

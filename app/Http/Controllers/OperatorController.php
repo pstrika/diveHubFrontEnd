@@ -8,6 +8,8 @@ use App\Models\Boat;
 use App\Models\Trip;
 use App\Models\Site;
 use App\Models\User;
+use App\Models\Photo;
+use App\Support\OperatorBoard;
 use Illuminate\Support\Facades\Log;
 
 use Illuminate\Http\Request;
@@ -17,10 +19,15 @@ use Symfony\Component\Console\Input\Input;
 
 class OperatorController extends Controller
 {
+    // Public (pk.) Mapbox token - safe client-side, shared with WeatherController's map.
+    public const MAPBOX_TOKEN = 'pk.eyJ1IjoicHN0cmlrYSIsImEiOiJjbHZsc2p2bXcyY240MmtuMDcydHJzd2UxIn0.KBf79cvk47WseBc9rNu6gQ';
     //
-    public function show($id = null) {
-    
-    
+    /**
+     * /Operators (no id) renders the operators explorer; /OperatorDetails/{id}
+     * renders one operator. Laravel injects $request and passes the route
+     * parameter as $id, so one method serves both routes as it always has.
+     */
+    public function show(Request $request, $id = null) {
 
     if ($id != null) {
         $user = User::findorFail(auth()->user()->id);
@@ -94,6 +101,15 @@ class OperatorController extends Controller
 
         $ratedAlready = OperatorRating::where('userId', auth()->id())->where('operatorId', $id)->exists();
 
+        // First photo per top site so the detail page can show site cards.
+        if ($topSites) {
+            $firstPhotos = Photo::whereIn('siteId', $topSites->pluck('id'))->orderBy('id')->get()->groupBy('siteId');
+            foreach ($topSites as $s) {
+                $s->photoFile = $firstPhotos->get($s->id)?->first()?->file;
+            }
+        }
+        $card = OperatorBoard::card($operator);
+
         /*Provide SEO metadata */
         $SEO = array(
             "title" => $operator->operatorName . " details - divers-hub.com",
@@ -102,16 +118,15 @@ class OperatorController extends Controller
             "canonical" => route("OperatorDetails", ['id' => $operator->slug ?? $operator->id]) ,
         );
 
-        return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites', 'trips', 'ratedAlready', 'SEO'));
+        return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites', 'trips', 'ratedAlready', 'SEO', 'card'));
     }
 
 
-    $operators = Operator::all()->sortBy('operatorName');
-
-    $locationAreas = Operator::distinct()->pluck('locationArea')->toArray();
+    // Explorer: filters, counts and cards come from OperatorBoard (query string driven).
+    $board = OperatorBoard::build($request);
 
     /*Provide SEO metadata */
-    $operatorNames = $operators->pluck('operatorName')->toArray();
+    $operatorNames = Operator::pluck('operatorName')->toArray();
     $SEO = array(
         "title" => "Scuba diving operators in South Florida - divers-hub.com",
         "desc" => "Find all scuba diving operator in Miami, Fort Lauderdale, West Palm Beach and the Florida Keys",
@@ -119,7 +134,7 @@ class OperatorController extends Controller
         "canonical" => route("Operators"),
     );
 
-    return view('pages.Operators', compact('operators', 'locationAreas', 'SEO'));
+    return view('pages.Operators', ['board' => $board, 'SEO' => $SEO, 'mapboxToken' => 'pk.eyJ1IjoicHN0cmlrYSIsImEiOiJjbHZsc2p2bXcyY240MmtuMDcydHJzd2UxIn0.KBf79cvk47WseBc9rNu6gQ']);
 
     }
 
@@ -151,13 +166,87 @@ class OperatorController extends Controller
         );
 
         return view('pages.Waivers', compact('operators', 'SEO'));
-    
+
         }
 
+    /**
+     * A short, fixed-domain redirect to an operator's own waiver link
+     * (route('waiver.redirect', $operator->id) -> /w/{id}). Exists so a
+     * WhatsApp template's "Sign Waiver" button can point somewhere -
+     * WhatsApp's dynamic URL buttons only allow a fixed base domain with a
+     * variable suffix, and operator waiver links live on the operators'
+     * own separate domains (see SendGroupDiveReminders' WhatsApp reminder
+     * and its "trip_reminder_3_with_waiver" Content template), so the
+     * button can't link straight to the operator's site. Also just a
+     * clean short link in its own right.
+     */
+    public function redirectToWaiver($operatorId)
+    {
+        $operator = Operator::find($operatorId);
+
+        if (!$operator || !$operator->waiverLink) {
+            return redirect()->route('Waivers');
+        }
+
+        return redirect()->away($operator->waiverLink);
+    }
+
     public function showHealth() {
-        $operators = Operator::whereNotNull('_ver')->get()->sortBy('operatorName');
-        $notScrapping = Operator::whereNull('_ver')->get()->sortBy('operatorName');
-        $weatherLocations = WeatherLocation::all();
-        return view('pages.PlatformHealth', compact('operators', 'weatherLocations', 'notScrapping'));
+        // Deco Divers is a dead operator - excluded from the health page (table and
+        // summary alarms both) rather than left showing permanent, meaningless errors.
+        $operators = Operator::whereNotNull('_ver')->where('operatorName', '!=', 'Deco Divers')->get()->sortBy('operatorName');
+        $notScrapping = Operator::whereNull('_ver')->where('operatorName', '!=', 'Deco Divers')->get()->sortBy('operatorName');
+        // Argentina locations are out of scope for this platform for now.
+        $weatherLocations = WeatherLocation::whereNotIn('short', \App\Support\Coast::all()['argentina']['codes'])->get();
+
+        // Top-of-page summary (2026-09-11): a glance at the whole crawler fleet
+        // before scrolling into the per-operator tables below.
+        $now = Carbon::now('UTC');
+        $running = 0; $waiting = 0; $okRecent = 0; $errored = 0;
+        $erroredOperators = [];
+        foreach ($operators as $operator) {
+            $status = \App\Support\OperatorHealth::status($operator->_status, $operator->_updatedCount);
+            switch ($status['code']) {
+                case -1:
+                    $running++;
+                    break;
+                case -2:
+                    $waiting++;
+                    break;
+                case 0:
+                    if (Carbon::parse((string) $operator->_lastUpdate, 'UTC')->gte($now->copy()->subDay())) {
+                        $okRecent++;
+                    }
+                    break;
+                case 1:
+                case 2:
+                case 3:
+                    $errored++;
+                    $erroredOperators[] = $operator->operatorName;
+                    break;
+            }
+        }
+
+        $wxTotal = $weatherLocations->count();
+        $wxOkRecent = $weatherLocations->filter(function ($loc) use ($now) {
+            if ((string) $loc->_status !== '1') {
+                return false;
+            }
+            return Carbon::parse((string) $loc->_lastUpdated, 'UTC')->gte($now->copy()->subHour());
+        })->count();
+
+        $summary = [
+            'running'          => $running,
+            'waiting'          => $waiting,
+            'okRecent'         => $okRecent,
+            'errored'          => $errored,
+            'erroredOperators' => $erroredOperators,
+            'notScrapping'     => $notScrapping->count(),
+            'wxOkRecent'       => $wxOkRecent,
+            'wxTotal'          => $wxTotal,
+            'wxPercent'        => $wxTotal > 0 ? round($wxOkRecent / $wxTotal * 100) : 0,
+        ];
+
+        return view('pages.PlatformHealth', compact('operators', 'weatherLocations', 'notScrapping', 'summary'));
     }
 }

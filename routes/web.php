@@ -30,27 +30,32 @@ use App\Http\Controllers\Auth\GoogleController;
 	//return redirect('Trips');
 })->middleware('guest');*/
 
-Route::get('/', function () {
-    // start_url in manifest.json is "/" - an installed PWA relaunches here
-    // even with a valid session, so an authenticated user needs to be sent
-    // to their dashboard instead of seeing the guest marketing page.
+// Front door. Pablo (9.21.1): an installed PWA relaunches at "/" even with a
+// valid session, so a signed in member goes to their dashboard and the shared
+// guest user to the trip board. Everyone else gets the redesigned home page
+// (HomeController::index, same URL, route name and SEO metadata as before).
+// Signed-in users get a tiny splash-then-redirect page instead of a bare
+// 302 (Pablo, 2026-09-19: relaunching the PWA showed a blank screen for a
+// couple of seconds while the invisible redirect resolved and the real,
+// much heavier destination page loaded - see BootRedirect.blade.php).
+Route::get('/', function (\Illuminate\Http\Request $request) {
     if (auth()->check()) {
-        return redirect()->route(auth()->id() == 5 ? 'Trips' : 'MyDashboard');
+        $to = route(auth()->id() == 5 ? 'Trips' : 'MyDashboard');
+        return view('pages.BootRedirect', ['to' => $to]);
     }
-
-    $SEO = [
-        "title" => "Florida scuba diving sites, calendars and operators",
-        "desc" => "All you need to know for diving in Florida: dive operators, dive sites and wreckwiki, calendars, dive planning and more",
-        "keywords" => "scuba diving florida, scuba, dive operators miami, dive operators fort lauderdale, diving florida keys, dive sites florida",
-		"canonical" => route("/"),
-    ];
-
-    return view('pages.Landing', compact('SEO'));
+    return app(\App\Http\Controllers\HomeController::class)->index($request);
 })->name('/');
 
 
 Route::get('sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 Route::get('cron/send-group-reminders', [\App\Http\Controllers\CronController::class, 'sendGroupReminders']);
+Route::get('cron/send-group-activity-digest', [\App\Http\Controllers\CronController::class, 'sendGroupActivityDigest']);
+Route::get('cron/detect-cancelled-trips', [\App\Http\Controllers\CronController::class, 'detectCancelledTrips']);
+Route::get('cron/send-scheduled-newsletters', [\App\Http\Controllers\CronController::class, 'sendScheduledNewsletters']);
+Route::get('cron/sync-support-inbox', [\App\Http\Controllers\CronController::class, 'syncSupportInbox']);
+Route::get('cron/apply-group-auto-add-rules', [\App\Http\Controllers\CronController::class, 'applyGroupAutoAddRules']);
+// Manual-trigger only, not on a schedule - see CronController::photosWebCopies().
+Route::get('cron/photos-web-copies', [\App\Http\Controllers\CronController::class, 'photosWebCopies']);
 
 // Newsletter one-click unsubscribe/resubscribe - reached from a signed link
 // in the email itself, not a logged-in session (the diver may be reading
@@ -60,6 +65,13 @@ Route::get('cron/send-group-reminders', [\App\Http\Controllers\CronController::c
 // NewsletterController.
 Route::get('newsletter/unsubscribe/{user}', [\App\Http\Controllers\NewsletterController::class, 'unsubscribe'])->name('Newsletter.unsubscribe')->middleware('signed');
 Route::get('newsletter/resubscribe/{user}', [\App\Http\Controllers\NewsletterController::class, 'resubscribe'])->name('Newsletter.resubscribe')->middleware('signed');
+
+// Twilio's own webhook - configured against the Twilio number in the
+// Twilio Console (Messaging configuration), not something a diver visits.
+// No auth (Twilio isn't a logged-in user) and CSRF-exempt (see
+// VerifyCsrfToken) - Twilio signs its requests instead, which this doesn't
+// verify yet (a hardening step for later, not required for this to work).
+Route::post('webhooks/twilio/inbound', [\App\Http\Controllers\TwilioWebhookController::class, 'inbound'])->name('webhooks.twilio.inbound');
 
 /* Privacy Policy */
 Route::get('PrivacyPolicy', function () {
@@ -98,26 +110,23 @@ Route::get('home', function () {
     return view('pages.home', compact('SEO'));
 })->name('home');
 
+// SEO here was a copy-paste of the Landing page's generic Florida-diving
+// copy - none of it actually described this tool, so it never had a real
+// shot at ranking for gas-planning searches (Pablo, 2026-09-19: "Best Gases
+// [is a] VERY important page that need[s] to have strong SEO...a HUGE
+// asset to divers").
 Route::get('gasplanning', function () {
 	$SEO = [
-        "title" => "Florida scuba diving sites, calendars and operators",
-        "desc" => "All you need to know for diving in Florida: dive operators, dive sites and wreckwiki, calendars, dive planning and more",
-        "keywords" => "scuba diving florida, scuba, dive operators miami, dive operators fort lauderdale, diving florida keys, dive sites florida",
+        "title" => "Best Gas Mix Calculator for Scuba Diving (Nitrox & Trimix) | Divers Hub",
+        "desc" => "Find your best nitrox and trimix gas mixes for free: MOD, END, PPO2, gas density and standard-mix matching for bottom, travel and deco gases - built for real dive planning, not a toy calculator.",
+        "keywords" => "best gas mix calculator, nitrox calculator, trimix calculator, MOD calculator, best mix diving, gas density calculator, END calculator, scuba gas planning tool",
 		"canonical" => route("gasplanning"),
     ];
     return view('pages.GasPlanning', compact('SEO'));
 })->name('gasplanning');
 
-Route::get('Landing', function () {
-    $SEO = [
-        "title" => "Florida scuba diving sites, calendars and operators",
-        "desc" => "All you need to know for diving in Florida: dive operators, dive sites and wreckwiki, calendars, dive planning and more",
-        "keywords" => "scuba diving florida, scuba, dive operators miami, dive operators fort lauderdale, diving florida keys, dive sites florida",
-		"canonical" => route("/"),
-    ];
-
-    return view('pages.Landing', compact('SEO'));
-})->name('Landing');
+// /Landing is the same page as / (the redesigned home) and keeps its canonical on /.
+Route::get('Landing', [App\Http\Controllers\HomeController::class, 'index'])->middleware('guest')->name('Landing');
 
 /* Google SSO Routes */
 Route::get('login/google', [GoogleController::class, 'redirectToGoogle'])->name('login.google');
@@ -147,41 +156,73 @@ Route::middleware(['auth', 'admin'])->group(function () {
 	Route::get('DeletePic/{id}', 'App\Http\Controllers\SiteController@deletePic')->middleware('auth')->name('DeletePic');
 	Route::get('DeletePic', 'App\Http\Controllers\SiteController@deletePic')->middleware('auth')->name('DeletePic');
 
-	
+	Route::get('admin/messages', [\App\Http\Controllers\AdminMessagesController::class, 'index'])->name('admin.messages.index');
+	Route::get('admin/messages/poll', [\App\Http\Controllers\AdminMessagesController::class, 'poll'])->name('admin.messages.poll');
+	Route::get('admin/messages/thread/{contact}', [\App\Http\Controllers\AdminMessagesController::class, 'thread'])->name('admin.messages.thread')->where('contact', '.*');
+	Route::get('admin/messages/users/search', [\App\Http\Controllers\AdminMessagesController::class, 'searchUsers'])->name('admin.messages.searchUsers');
+	Route::post('admin/messages/send', [\App\Http\Controllers\AdminMessagesController::class, 'send'])->name('admin.messages.send');
+	Route::post('admin/messages/invite', [\App\Http\Controllers\AdminMessagesController::class, 'sendInvite'])->name('admin.messages.invite');
+
 });
 
-Route::get('DecoPlanner/{id}', 'App\Http\Controllers\NDLController@show')->middleware('auth')->name('DecoPlanner');
-Route::get('DecoPlanner', 'App\Http\Controllers\NDLController@show')->middleware('auth')->name('DecoPlanner');
-Route::get('DecoPlannerImperial/{id}', 'App\Http\Controllers\NDLController@showImperial')->middleware('auth')->name('DecoPlannerImperial');
-Route::get('DecoPlannerImperial', 'App\Http\Controllers\NDLController@showImperial')->middleware('auth')->name('DecoPlannerImperial');
-Route::get('DecoPlannerMetric/{id}', 'App\Http\Controllers\NDLController@showMetric')->middleware('auth')->name('DecoPlannerMetric');
-Route::get('DecoPlannerMetric', 'App\Http\Controllers\NDLController@showMetric')->middleware('auth')->name('DecoPlannerMetric');
+// Deco planner and My Calendar render for guests (show, then gate); saving actions below stay on 'auth'.
+// {id} is constrained to digits only (Pablo, 2026-09-19 bugfix: "the open a
+// dive does not [work]") - without it, this wildcard registered ahead of
+// DecoPlanner/plans below swallowed literal requests to that path too
+// (Laravel matches route-by-route in registration order), sending
+// GET/DELETE DecoPlanner/plans into NDLController@show with id="plans"
+// instead of the new list/delete plan endpoints.
+Route::get('DecoPlanner/{id}', 'App\Http\Controllers\NDLController@show')->where('id', '[0-9]+')->middleware('guest')->name('DecoPlanner');
+Route::get('DecoPlanner', 'App\Http\Controllers\NDLController@show')->middleware('guest')->name('DecoPlanner');
+Route::get('DecoPlannerImperial/{id}', 'App\Http\Controllers\NDLController@showImperial')->where('id', '[0-9]+')->middleware('guest')->name('DecoPlannerImperial');
+Route::get('DecoPlannerImperial', 'App\Http\Controllers\NDLController@showImperial')->middleware('guest')->name('DecoPlannerImperial');
+Route::get('DecoPlannerMetric/{id}', 'App\Http\Controllers\NDLController@showMetric')->where('id', '[0-9]+')->middleware('guest')->name('DecoPlannerMetric');
+Route::get('DecoPlannerMetric', 'App\Http\Controllers\NDLController@showMetric')->middleware('guest')->name('DecoPlannerMetric');
+
+// Saving GF Low/High + setpoint and custom gas mixes needs a real profile
+// to save them to - 'guest' alone would silently write to the shared guest
+// account (Pablo, 2026-09-18).
+Route::middleware(['auth', 'not_guest'])->group(function () {
+    Route::post('DecoPlanner/preferences', 'App\Http\Controllers\NDLController@saveDecoPreferences')->name('DecoPlanner.savePreferences');
+    Route::post('DecoPlanner/gases', 'App\Http\Controllers\NDLController@saveDiveGas')->name('DecoPlanner.saveGas');
+    Route::delete('DecoPlanner/gases/{id}', 'App\Http\Controllers\NDLController@deleteDiveGas')->name('DecoPlanner.deleteGas');
+    Route::post('DecoPlanner/plans', 'App\Http\Controllers\NDLController@saveDecoPlan')->name('DecoPlanner.savePlan');
+    Route::get('DecoPlanner/plans', 'App\Http\Controllers\NDLController@listDecoPlans')->name('DecoPlanner.listPlans');
+    Route::delete('DecoPlanner/plans/{id}', 'App\Http\Controllers\NDLController@deleteDecoPlan')->name('DecoPlanner.deletePlan');
+});
 
 Route::get('Weather/{location}', 'App\Http\Controllers\WeatherController@show')->middleware('guest')->name('Weather');
 Route::get('Weather/', 'App\Http\Controllers\WeatherController@show')->middleware('guest')->name('Weather');
-Route::get('WeatherAR/{location}', 'App\Http\Controllers\WeatherController@showAR')->middleware('guest')->name('WeatherAR');
-Route::get('WeatherAR/', 'App\Http\Controllers\WeatherController@showAR')->middleware('guest')->name('WeatherAR');
-Route::get('WeatherARImperial/{location}', 'App\Http\Controllers\WeatherController@showARImperial')->middleware('guest')->name('WeatherARImperial');
-Route::get('WeatherARImperial/', 'App\Http\Controllers\WeatherController@showARImperial')->middleware('guest')->name('WeatherARImperial');
-Route::get('WeatherARMetric/{location}', 'App\Http\Controllers\WeatherController@showARMetric')->middleware('guest')->name('WeatherARMetric');
-Route::get('WeatherARMetric/', 'App\Http\Controllers\WeatherController@showARMetric')->middleware('guest')->name('WeatherARMetric');
+// The separate Argentina forecast retired in release 10: /Weather now serves
+// every location in weatherlocations, Argentina included, and it is the better
+// page. These URLs are indexed and were linked from the drawer for a year, so
+// they redirect rather than 404. The metric and imperial variants fold into the
+// same place; units are a setting to add back, see docs/roadmap.md.
+$weatherRedirect = fn ($location = 'mar del plata') => redirect(route('Weather') . '/' . rawurlencode($location), 301);
+Route::get('WeatherAR/{location?}', $weatherRedirect)->name('WeatherAR');
+Route::get('WeatherARImperial/{location?}', $weatherRedirect)->name('WeatherARImperial');
+Route::get('WeatherARMetric/{location?}', $weatherRedirect)->name('WeatherARMetric');
 
-Route::get('CalendarT/{tripType}/{date}', 'App\Http\Controllers\CalendarTController@show')->middleware('auth')->name('CalendarT');
-Route::get('CalendarT/{tripType}', 'App\Http\Controllers\CalendarTController@show')->middleware('auth')->name('CalendarT');
-Route::get('CalendarT/', 'App\Http\Controllers\CalendarTController@show')->middleware('auth')->name('CalendarT');
-Route::get('CalendarShark/{date}', 'App\Http\Controllers\CalendarTController@showShark')->middleware('auth')->name('CalendarShark');
-Route::get('CalendarShark/', 'App\Http\Controllers\CalendarTController@showShark')->middleware('auth')->name('CalendarShark');
-Route::get('CalendarLobster/{date}', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('auth')->name('CalendarLobster');
-Route::get('CalendarLobster/', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('auth')->name('CalendarLobster');
-Route::get('CalendarWreck/{date}', 'App\Http\Controllers\CalendarTController@showWreck')->middleware('auth')->name('CalendarWreck');
-Route::get('CalendarWreck/', 'App\Http\Controllers\CalendarTController@showWreck')->middleware('auth')->name('CalendarWreck');
+// Themed calendars render the trip finder with a type preset; open to guests like the board itself.
+Route::get('CalendarT/{tripType}/{date}', 'App\Http\Controllers\CalendarTController@show')->middleware('guest')->name('CalendarT');
+Route::get('CalendarT/{tripType}', 'App\Http\Controllers\CalendarTController@show')->middleware('guest')->name('CalendarT');
+Route::get('CalendarT/', 'App\Http\Controllers\CalendarTController@show')->middleware('guest')->name('CalendarT');
+Route::get('CalendarShark/{date}', 'App\Http\Controllers\CalendarTController@showShark')->middleware('guest')->name('CalendarShark');
+Route::get('CalendarShark/', 'App\Http\Controllers\CalendarTController@showShark')->middleware('guest')->name('CalendarShark');
+Route::get('CalendarLobster/{date}', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('guest')->name('CalendarLobster');
+Route::get('CalendarLobster/', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('guest')->name('CalendarLobster');
+Route::get('CalendarWreck/{date}', 'App\Http\Controllers\CalendarTController@showWreck')->middleware('guest')->name('CalendarWreck');
+Route::get('CalendarWreck/', 'App\Http\Controllers\CalendarTController@showWreck')->middleware('guest')->name('CalendarWreck');
 
 /* Special routes for Hydrotherapy integration */
-Route::get('CalendarHydrotherapy/{date}', 'App\Http\Controllers\CalendarTController@showHydrotherapy')->middleware('guest')->name('CalendarHydrotherapy');
-Route::get('CalendarHydrotherapy/', 'App\Http\Controllers\CalendarTController@showHydrotherapy')->middleware('guest')->name('CalendarHydrotherapy');
+// Hydrotherapy renders in an iframe on the client's own site. Its controller and
+// view are frozen and deliberately live apart from the other calendars so nothing
+// here can change them by accident. See HydrotherapyCalendarController.
+Route::get('CalendarHydrotherapy/{date}', 'App\Http\Controllers\HydrotherapyCalendarController@show')->middleware('guest')->name('CalendarHydrotherapy');
+Route::get('CalendarHydrotherapy/', 'App\Http\Controllers\HydrotherapyCalendarController@show')->middleware('guest')->name('CalendarHydrotherapy');
 
-Route::get('MyCalendar/{date}', 'App\Http\Controllers\EventController@show')->middleware('auth')->name('MyCalendar');
-Route::get('MyCalendar/', 'App\Http\Controllers\EventController@show')->middleware('auth')->name('MyCalendar');
+Route::get('MyCalendar/{date}', 'App\Http\Controllers\EventController@show')->middleware('guest')->name('MyCalendar');
+Route::get('MyCalendar/', 'App\Http\Controllers\EventController@show')->middleware('guest')->name('MyCalendar');
 
 Route::get('TripDetails/{tripId}', 'App\Http\Controllers\TripDetailsController@show')->middleware('guest')->name('TripDetails');
 Route::get('AddEventToCalendar/{tripId}', 'App\Http\Controllers\EventController@addEventToCalendar')->middleware('auth')->name('AddEventToCalendar');
@@ -191,6 +232,8 @@ Route::get('RemoveFromCalendar/{tripId}', 'App\Http\Controllers\EventController@
 
 Route::get('Operators/', 'App\Http\Controllers\OperatorController@show')->middleware('guest')->name('Operators');
 Route::get('Waivers', 'App\Http\Controllers\OperatorController@getWaivers')->middleware('guest')->name('Waivers');
+Route::get('w/{operator}', 'App\Http\Controllers\OperatorController@redirectToWaiver')->name('waiver.redirect');
+Route::post('chat/send', 'App\Http\Controllers\ChatWidgetController@send')->name('chat.send');
 Route::get('ToggleFav/{id}', 'App\Http\Controllers\OperatorController@toggleFav')->middleware('auth')->name('ToggleFav');
 
 Route::get('OperatorDetails/{id}', 'App\Http\Controllers\OperatorController@show')->middleware('guest')->name('OperatorDetails');
@@ -201,7 +244,9 @@ Route::get('BeachDiving', 'App\Http\Controllers\SiteController@showBeach')->midd
 
 Route::get('Messages', 'App\Http\Controllers\MessageController@show')->middleware('auth')->name('Messages');
 Route::post('mark-as-read', 'App\Http\Controllers\MessageController@markAsRead')->middleware('auth')->name('mark-as-read');;
-Route::post('delete-message', 'App\Http\Controllers\MessageController@delete')->middleware('auth')->name('delete-message');;
+Route::post('messages/bulk-delete', 'App\Http\Controllers\MessageController@bulkDelete')->middleware('auth')->name('messages.bulkDelete');
+Route::post('messages/restore', 'App\Http\Controllers\MessageController@restore')->middleware('auth')->name('messages.restore');
+Route::post('messages/destroy', 'App\Http\Controllers\MessageController@destroyMessages')->middleware('auth')->name('messages.destroy');
 
 Route::get('new-site/', 'App\Http\Controllers\SiteController@create')->middleware('auth')->name('new-site');
 Route::post('new-site', 'App\Http\Controllers\SiteController@store')->middleware('auth')->name('new-site-store');
@@ -229,12 +274,74 @@ Route::post('UpdateVisited', 'App\Http\Controllers\SiteController@updateVisited'
 Route::get('UpdateWished/{siteId}', 'App\Http\Controllers\SiteController@updateWished')->middleware('auth')->name('UpdateWished');
 Route::post('AddSiteReview/{siteId}', 'App\Http\Controllers\SiteController@addReview')->middleware('auth')->name('AddSiteReview');
 
+// Diver-uploaded site pictures (Pablo, 2026-09-23) - upload/remove need a
+// real account, not the guest shim SiteDetails itself uses.
+Route::post('DiverPhotos/{siteId}', 'App\Http\Controllers\DiverPhotoController@store')->middleware('auth')->name('DiverPhotos.store');
+Route::delete('DiverPhotos/{diverPhoto}', 'App\Http\Controllers\DiverPhotoController@destroy')->middleware('auth')->name('DiverPhotos.destroy');
+
 Route::get('DiveSites', 'App\Http\Controllers\SiteController@showTopRated')->middleware('guest')->name('DiveSites');
-Route::get('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites')->middleware('guest')->name('DiveSitesSearch');
-Route::post('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites')->middleware('guest')->name('DiveSitesSearch');
-Route::get('DiveSitesMap', 'App\Http\Controllers\SiteController@showAll')->middleware('guest')->name('DiveSitesMap');
-Route::get('DiveSitesAll', 'App\Http\Controllers\SiteController@showAllSearch')->middleware('guest')->name('DiveSitesAll');
+
+// Blog (2026-09-17): visual design pass only, mock content in
+// BlogController - see its docblock. SEO content marketing, so public/
+// indexable like every other content page, hence 'guest' not 'auth'.
+Route::get('Blog', 'App\Http\Controllers\BlogController@index')->middleware('guest')->name('Blog');
+
+// Creator/Admin authoring (2026-09-18) - declared before Blog/{slug} below,
+// which would otherwise swallow /Blog/manage as slug="manage". Policy
+// checks happen inside BlogAdminController (App\Policies\PostPolicy);
+// 'auth' here just keeps guests out entirely.
+Route::middleware('auth')->group(function () {
+    Route::get('Blog/manage', 'App\Http\Controllers\BlogAdminController@index')->name('Blog.manage.index');
+    Route::get('Blog/manage/create', 'App\Http\Controllers\BlogAdminController@create')->name('Blog.manage.create');
+    Route::post('Blog/manage', 'App\Http\Controllers\BlogAdminController@store')->name('Blog.manage.store');
+    Route::get('Blog/manage/search-sites', 'App\Http\Controllers\BlogAdminController@searchSites')->name('Blog.manage.searchSites');
+    // Renders the public article template from whatever is currently in the
+    // form - including unsaved edits - without touching the database, so a
+    // Creator can check how a draft will look before publishing (Pablo,
+    // 2026-09-18: "a preview of the article...opened in a temporary tab").
+    Route::post('Blog/manage/preview', 'App\Http\Controllers\BlogAdminController@preview')->name('Blog.manage.preview');
+    Route::get('Blog/manage/{post}/edit', 'App\Http\Controllers\BlogAdminController@edit')->name('Blog.manage.edit');
+    Route::put('Blog/manage/{post}', 'App\Http\Controllers\BlogAdminController@update')->name('Blog.manage.update');
+    Route::delete('Blog/manage/{post}', 'App\Http\Controllers\BlogAdminController@destroy')->name('Blog.manage.destroy');
+});
+
+// On-demand newsletter composer (2026-09-21) - reaches every subscribed
+// user at once, so 'admin' (role_id == 1) rather than the Blog's
+// Creator/Admin split.
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('Newsletter/manage', 'App\Http\Controllers\NewsletterAdminController@index')->name('Newsletter.manage.index');
+    Route::get('Newsletter/manage/create', 'App\Http\Controllers\NewsletterAdminController@create')->name('Newsletter.manage.create');
+    Route::post('Newsletter/manage', 'App\Http\Controllers\NewsletterAdminController@store')->name('Newsletter.manage.store');
+    Route::get('Newsletter/manage/{issue}/edit', 'App\Http\Controllers\NewsletterAdminController@edit')->name('Newsletter.manage.edit');
+    Route::put('Newsletter/manage/{issue}', 'App\Http\Controllers\NewsletterAdminController@update')->name('Newsletter.manage.update');
+    Route::delete('Newsletter/manage/{issue}', 'App\Http\Controllers\NewsletterAdminController@destroy')->name('Newsletter.manage.destroy');
+    Route::get('Newsletter/manage/{issue}/preview', 'App\Http\Controllers\NewsletterAdminController@preview')->name('Newsletter.manage.preview');
+    Route::post('Newsletter/manage/{issue}/send-test', 'App\Http\Controllers\NewsletterAdminController@sendTest')->name('Newsletter.manage.sendTest');
+    Route::post('Newsletter/manage/{issue}/send', 'App\Http\Controllers\NewsletterAdminController@send')->name('Newsletter.manage.send');
+    Route::post('Newsletter/manage/{issue}/schedule', 'App\Http\Controllers\NewsletterAdminController@schedule')->name('Newsletter.manage.schedule');
+    Route::post('Newsletter/manage/{issue}/unschedule', 'App\Http\Controllers\NewsletterAdminController@unschedule')->name('Newsletter.manage.unschedule');
+    Route::post('Newsletter/manage/generate-conditions', 'App\Http\Controllers\NewsletterAdminController@generateConditions')->name('Newsletter.manage.generateConditions');
+});
+
+Route::get('Blog/{slug}', 'App\Http\Controllers\BlogController@show')->middleware('guest')->name('Blog.show');
+// Redesign W4: Search and Map became views of the Dive Sites explorer. Both
+// pages were noindex, so the 301s cost nothing. Listed in docs/seo/redirect-map.md.
+// The POST is the navbar search form; SiteController::searchSites searches
+// name/aka, wreck data, description, history and operator names, and skips
+// straight to the site when only one could possibly be meant (2026-09-11).
+Route::get('DiveSitesSearch', fn () => redirect()->route('DiveSites', request()->query(), 301))->name('DiveSitesSearch');
+Route::post('DiveSitesSearch', 'App\Http\Controllers\SiteController@searchSites')->middleware('guest')->name('DiveSitesSearch.post');
+Route::get('DiveSitesMap', fn () => redirect()->route('DiveSites', ['view' => 'map'] + request()->query(), 301))->name('DiveSitesMap');
+// "Show me all sites" was a plain table of the catalog; the explorer sorted A to Z is that list. Noindex before, so a 301 costs nothing.
+Route::get('DiveSitesAll', fn () => redirect()->route('DiveSites', ['sort' => 'name'] + request()->query(), 301))->name('DiveSitesAll');
 Route::get('DiveSitesAdmin', 'App\Http\Controllers\SiteController@showAllAdmin')->middleware('auth')->name('DiveSitesAdmin');
+
+// Picture Management admin console (Pablo, 2026-09-23) - approve/reject
+// diver-uploaded site pictures, and a history to remove any of them later.
+Route::get('DiverPhotos-Admin', 'App\Http\Controllers\DiverPhotoAdminController@index')->middleware('auth')->name('DiverPhotos.manage.index');
+Route::post('DiverPhotos-Admin/{photo}/approve', 'App\Http\Controllers\DiverPhotoAdminController@approve')->middleware('auth')->name('DiverPhotos.manage.approve');
+Route::post('DiverPhotos-Admin/{photo}/reject', 'App\Http\Controllers\DiverPhotoAdminController@reject')->middleware('auth')->name('DiverPhotos.manage.reject');
+Route::delete('DiverPhotos-Admin/{photo}', 'App\Http\Controllers\DiverPhotoAdminController@destroy')->middleware('auth')->name('DiverPhotos.manage.destroy');
 Route::post('Calculate-ndl', 'App\Http\Controllers\NDLController@calculateNDL')->middleware('guest')->name('Calculate-ndl');
 Route::post('calculateDecoProfile', 'App\Http\Controllers\NDLController@calculateDecoProfile')->middleware('guest')->name('calculateDecoProfile');
 
@@ -244,11 +351,21 @@ Route::get('WreckSites', 'App\Http\Controllers\SiteController@showWrecks')->midd
 
 Route::get('overview', 'App\Http\Controllers\UserController@getProfile')->middleware('auth')->name('overview');
 Route::post('overview', 'App\Http\Controllers\UserController@updateProfile')->middleware('auth')->name('overview');
+// Own endpoint, not folded into the above (Pablo, 2026-09-24) - see
+// UserController::updateNavSlots()'s docblock for why.
+Route::post('overview/nav-slots', 'App\Http\Controllers\UserController@updateNavSlots')->middleware('auth')->name('overview.navSlots');
 Route::post('upload-profile-pic', 'App\Http\Controllers\UserController@updateProfilePic')->middleware('auth')->name('upload-profile-pic');
+Route::post('use-google-picture', 'App\Http\Controllers\UserController@useGooglePicture')->middleware('auth')->name('use-google-picture');
+Route::post('profile/verify-phone', 'App\Http\Controllers\UserController@verifyPhone')->middleware('auth')->name('profile.verifyPhone');
+Route::post('profile/resend-phone-code', 'App\Http\Controllers\UserController@resendPhoneCode')->middleware('auth')->name('profile.resendPhoneCode');
 
 //Route::get('dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
 Route::get('dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
 Route::get('MyDashboard', 'App\Http\Controllers\MyDashboardController@showDashboard')->middleware('auth')->name('MyDashboard');
+// Welcome wizard: first visit profile walk through (level, places, operators, photo). Members only.
+Route::get('welcome', 'App\Http\Controllers\OnboardingController@show')->middleware('auth')->name('welcome');
+Route::post('welcome', 'App\Http\Controllers\OnboardingController@save')->middleware('auth')->name('welcome.save');
+Route::post('welcome/skip', 'App\Http\Controllers\OnboardingController@skip')->middleware('auth')->name('welcome.skip');
 
 Route::get('AboutUs', function () {
 	$SEO = [
@@ -262,11 +379,27 @@ Route::get('AboutUs', function () {
 Route::get('sign-up', [RegisterController::class, 'create'])->middleware('guest')->name('register');
 Route::post('sign-up', [RegisterController::class, 'store'])->middleware('guest');
 
-Route::get('sign-in', [SessionsController::class, 'create'])->middleware('guest')->name('login');
-Route::post('sign-in', [SessionsController::class, 'store'])->middleware('guest');
+// No 'guest' (= AuthenticateAsGuest) middleware on these four routes on
+// purpose (Pablo, 2026-09-24: "when I sign-out...try to sign in again...it
+// usually sends me to the sign in page and I need to type the user and pwd
+// again"). That middleware silently Auth::loginUsingId()'s the shared guest
+// account whenever the visitor isn't authenticated, which migrates the
+// session (new id + new CSRF token) as a side effect - happening mid-flow
+// right as someone loads or submits the sign-in/sign-out forms, it could
+// invalidate the token a just-rendered form had already embedded before the
+// next submission reached the server, bouncing the login with a stale-CSRF
+// 419 that looked like "it didn't take, try again."
+Route::get('sign-in', [SessionsController::class, 'create'])->name('login');
+Route::post('sign-in', [SessionsController::class, 'store']);
 
-Route::post('sign-out', [SessionsController::class, 'destroy'])->middleware('guest')->name('logout');
-Route::get('sign-out', [SessionsController::class, 'create'])->middleware('guest');
+Route::post('sign-out', [SessionsController::class, 'destroy'])->name('logout');
+// Guest to sign up in one hop. Guests are logged in as the shared guest user, so
+// this logs them out first, then redirects to the register page. Every
+// "Create account" link should point here rather than at sign-out.
+Route::get('create-account', [SessionsController::class, 'createAccount'])->name('create-account');
+// "I already have an account" from the guest prompt: drops the shared guest session, then sign in.
+Route::get('sign-in-fresh', [SessionsController::class, 'signInFresh'])->name('sign-in-fresh');
+Route::get('sign-out', [SessionsController::class, 'create']);
 
 Route::post('verify', [SessionsController::class, 'show'])->middleware('guest');
 Route::post('reset-password', [SessionsController::class, 'update'])->middleware('guest')->name('password.update');
@@ -546,6 +679,8 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::get('MyGroups', 'App\Http\Controllers\GroupController@myGroups')->name('MyGroups');
 	Route::get('Groups/create', 'App\Http\Controllers\GroupController@create')->name('Groups.create');
 	Route::post('Groups', 'App\Http\Controllers\GroupController@store')->name('Groups.store');
+	Route::get('Groups/public/search', 'App\Http\Controllers\GroupController@searchPublic')->name('Groups.public.search');
+	Route::post('Groups/{group}/join', 'App\Http\Controllers\GroupController@joinPublic')->name('Groups.joinPublic');
 
 	Route::post('push/subscribe', 'App\Http\Controllers\PushSubscriptionController@store')->name('push.subscribe');
 	Route::post('push/unsubscribe', 'App\Http\Controllers\PushSubscriptionController@destroy')->name('push.unsubscribe');
@@ -565,6 +700,7 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 
 	Route::get('Groups/{group}', 'App\Http\Controllers\GroupController@show')->name('Groups.show');
 	Route::post('Groups/{group}/members/{member}/remove', 'App\Http\Controllers\GroupController@removeMember')->name('Groups.removeMember');
+	Route::post('Groups/{group}/mute', 'App\Http\Controllers\GroupController@toggleMute')->name('Groups.toggleMute');
 	Route::post('Groups/{group}/delete', 'App\Http\Controllers\GroupController@destroy')->name('Groups.destroy');
 	Route::post('Groups/{group}/upload-image', 'App\Http\Controllers\GroupController@uploadImage')->name('Groups.uploadImage');
 	Route::post('Groups/{group}/calling-card', 'App\Http\Controllers\GroupController@setCallingCard')->name('Groups.callingCard');
@@ -576,6 +712,7 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::post('Groups/{group}/messages', 'App\Http\Controllers\GroupMessageController@store')->name('Groups.messages.store');
 	Route::get('Groups/{group}/messages/poll', 'App\Http\Controllers\GroupMessageController@poll')->name('Groups.messages.poll');
 	Route::post('Groups/{group}/settings', 'App\Http\Controllers\GroupController@updateSettings')->name('Groups.updateSettings');
+	Route::post('Groups/{group}/auto-add-rule', 'App\Http\Controllers\GroupAutoAddRuleController@update')->name('Groups.autoAddRule.update');
 	Route::post('Groups/{group}/info', 'App\Http\Controllers\GroupController@updateInfo')->name('Groups.updateInfo');
 	Route::get('Groups/{group}/sites/search', 'App\Http\Controllers\GroupController@searchSites')->name('Groups.sites.search');
 

@@ -1,7 +1,7 @@
 <x-page-template bodyClass='g-sidenav-show bg-gray-20'>
-    <x-auth.navbars.sidebar activePage='pages' activeItem='account' activeSubitem='settings'></x-auth.navbars.sidebar>
+    <x-shell.nav active="me" />
     <main class="main-content main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-        <x-auth.navbars.navs.auth pageTitle='Settings'></x-auth.navbars.navs.auth>
+        <x-shell.header title="Settings" />
         <div class="container-fluid mt-4">
             <div class="row align-items-center">
                 <div class="col-lg-4 col-sm-8">

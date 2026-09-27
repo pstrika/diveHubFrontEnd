@@ -57,6 +57,14 @@ class Kernel extends HttpKernel
      */
     protected $routeMiddleware = [
         'auth' => \App\Http\Middleware\Authenticate::class,
+        // Stock Laravel auth middleware, used only by stateless API routes
+        // (Pablo, 2026-09-20, blog API). 'auth' above is this app's own
+        // override, which unconditionally touches the session and ignores
+        // its own guard argument - fine for the web routes it was written
+        // for, but it crashes ("Session store not set") on the api
+        // middleware group, which never starts one. Sanctum-guarded routes
+        // need the real thing, not that override.
+        'auth.api' => \Illuminate\Auth\Middleware\Authenticate::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
         'can' => \Illuminate\Auth\Middleware\Authorize::class,

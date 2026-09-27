@@ -6,9 +6,8 @@ use App\Models\Event;
 use App\Models\Group;
 use App\Models\GroupDive;
 use App\Models\GroupDiveRsvp;
-use App\Models\Photo;
 use App\Models\Trip;
-use App\Services\NotificationService;
+use App\Services\GroupDiveService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -41,21 +40,10 @@ class GroupDiveController extends Controller
             return redirect()->back()->with('msg', 'That trip is already on this group\'s calendar.');
         }
 
-        $dive = GroupDive::create([
-            'group_id' => $group->id,
-            'created_by' => auth()->user()->id,
-            'operatorId' => $trip->operatorId,
-            'date' => $trip->date,
-            'time' => $trip->departureTime,
-            'tripName' => $trip->tripName,
-            'siteId' => !empty($trip->site[0]) ? $trip->site[0]->id : null,
-            'notes' => $request->notes,
-        ]);
+        $dive = (new GroupDiveService())->createFromTrip($group, $trip, auth()->user()->id, $request->notes);
 
         // The person who added the dive is automatically going.
         $this->addRsvp($dive, auth()->user()->id);
-        $this->postDiveToFacebook($group, $dive);
-        $this->notifyNewDive($group, $dive);
 
         return redirect()->route('Groups.show', ['group' => $group->slug])
             ->with('msg', 'Dive added to the group calendar!');
@@ -102,8 +90,9 @@ class GroupDiveController extends Controller
         ]);
 
         $this->addRsvp($dive, auth()->user()->id);
-        $this->postDiveToFacebook($group, $dive);
-        $this->notifyNewDive($group, $dive);
+        $diveService = new GroupDiveService();
+        $diveService->postDiveToFacebook($group, $dive);
+        $diveService->notifyNewDive($group, $dive, auth()->user()->id);
 
         return redirect()->route('Groups.show', ['group' => $group->slug])
             ->with('msg', 'Custom dive added to the group calendar!');
@@ -136,12 +125,13 @@ class GroupDiveController extends Controller
             ->where('user_id', auth()->user()->id)
             ->delete();
 
-        // Remove the matching auto-added entry from their personal calendar too.
+        // Only the entry this dive created (or adopted) - see addRsvp(). A
+        // trip the diver saved separately from search has group_dive_id
+        // null and is left alone (Pablo, 2026-09-19: this used to delete by
+        // a blind date/time/operator/name match, which could wipe an
+        // unrelated manual save of the same trip).
         Event::where('userId', auth()->user()->id)
-            ->where('date', $dive->date)
-            ->where('time', $dive->time)
-            ->where('operatorId', $dive->operatorId)
-            ->where('tripName', $dive->tripName)
+            ->where('group_dive_id', $dive->id)
             ->delete();
 
         return redirect()->back()->with('msg', 'You are no longer going on this dive.');
@@ -151,7 +141,10 @@ class GroupDiveController extends Controller
      * RSVPs the user to a group dive, and mirrors it into their personal
      * calendar (Event) the same way EventController::addEventToCalendar
      * does for a directly-added trip, so "going" on a group dive shows up
-     * everywhere the user tracks their dives.
+     * everywhere the user tracks their dives. Stamps events.group_dive_id
+     * so leave()/EventController::removeFromCalendar() can find exactly
+     * this row later instead of guessing by composite key (Pablo,
+     * 2026-09-19).
      */
     private function addRsvp(GroupDive $dive, $userId)
     {
@@ -162,92 +155,38 @@ class GroupDiveController extends Controller
             ]);
         }
 
-        $alreadyOnPersonalCalendar = Event::where('userId', $userId)
-            ->where('date', $dive->date)
-            ->where('time', $dive->time)
-            ->where('operatorId', $dive->operatorId)
-            ->where('tripName', $dive->tripName)
-            ->exists();
-
-        if (!$alreadyOnPersonalCalendar) {
-            Event::create([
-                'userId' => $userId,
-                'operatorId' => $dive->operatorId,
-                'date' => $dive->date,
-                'time' => $dive->time,
-                'tripName' => $dive->tripName,
-                'booked' => false,
-            ]);
-        }
-    }
-
-    /**
-     * Best-effort announcement to the group's linked Facebook Page, if any.
-     * Must never block adding the dive - a broken/revoked Page token or a
-     * Graph API hiccup just gets logged. Posts as a photo (site photo, then
-     * operator logo) when one is available, since photo posts get more
-     * reach/engagement; falls back to a plain text post otherwise (e.g. a
-     * custom dive with neither a known site nor operator).
-     */
-    private function postDiveToFacebook(Group $group, GroupDive $dive)
-    {
-        if (!$group->isFacebookConnected() || !$group->fb_auto_post) {
+        // Already linked to this dive - nothing to do.
+        if (Event::where('userId', $userId)->where('group_dive_id', $dive->id)->exists()) {
             return;
         }
 
-        try {
-            $when = \Carbon\Carbon::parse($dive->date)->format('l, F j') . ($dive->time ? ' at ' . $dive->time : '');
-            $message = "New dive added to \"{$group->name}\": {$dive->tripName}\n{$when}\n\n"
-                . route('Groups.show', ['group' => $group->slug]);
+        // The diver had already saved this exact trip from search. Adopt
+        // that row rather than creating a second one: one trip, one
+        // calendar entry, and "Leaving" now takes it off the calendar the
+        // way the product is supposed to work.
+        $existing = Event::where('userId', $userId)
+            ->whereDate('date', $dive->date)
+            ->where('time', $dive->time)
+            ->where('operatorId', $dive->operatorId)
+            ->where('tripName', $dive->tripName)
+            ->whereNull('group_dive_id')
+            ->first();
 
-            $imageUrl = $this->resolveDiveImageUrl($dive);
-
-            if ($imageUrl) {
-                $response = Http::post('https://graph.facebook.com/' . GroupFacebookController::GRAPH_VERSION . '/' . $group->fb_page_id . '/photos', [
-                    'url' => $imageUrl,
-                    'caption' => $message,
-                    'access_token' => $group->fb_page_access_token,
-                ]);
-            } else {
-                $response = Http::post('https://graph.facebook.com/' . GroupFacebookController::GRAPH_VERSION . '/' . $group->fb_page_id . '/feed', [
-                    'message' => $message,
-                    'access_token' => $group->fb_page_access_token,
-                ]);
-            }
-
-            if ($response->failed()) {
-                Log::error('Facebook post failed for group ' . $group->id . ': ' . $response->body());
-                return;
-            }
-
-            $postId = $response->json('post_id') ?? $response->json('id');
-            if ($postId) {
-                $dive->update(['fb_post_id' => $postId]);
-            }
-        } catch (\Throwable $e) {
-            Log::error('Facebook post exception for group ' . $group->id . ': ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Picks the most relevant public image URL for a dive's Facebook post:
-     * a photo of the dive site, then the operator's logo, or null (post
-     * plain text) when neither is available - e.g. a custom dive.
-     */
-    private function resolveDiveImageUrl(GroupDive $dive): ?string
-    {
-        if ($dive->siteId) {
-            $sitePhoto = Photo::where('siteId', $dive->siteId)->first();
-            if ($sitePhoto) {
-                return asset('assets') . '/img/sites/' . $sitePhoto->file;
-            }
+        if ($existing) {
+            $existing->group_dive_id = $dive->id;
+            $existing->save();
+            return;
         }
 
-        if ($dive->operator && $dive->operator->logoUrl) {
-            return asset('assets') . $dive->operator->logoUrl;
-        }
-
-        return null;
+        Event::create([
+            'userId' => $userId,
+            'operatorId' => $dive->operatorId,
+            'date' => $dive->date,
+            'time' => $dive->time,
+            'tripName' => $dive->tripName,
+            'group_dive_id' => $dive->id,
+            'booked' => false,
+        ]);
     }
 
     /**
@@ -274,25 +213,6 @@ class GroupDiveController extends Controller
     }
 
     /**
-     * Notifies every other active member of the group - both the in-app
-     * notification center and a browser push. Best-effort -
-     * NotificationService swallows its own failures.
-     */
-    private function notifyNewDive(Group $group, GroupDive $dive)
-    {
-        $when = \Carbon\Carbon::parse($dive->date)->format('D, M j') . ($dive->time ? ' at ' . $dive->time : '');
-
-        NotificationService::notify(
-            $group->activeMembers()->pluck('user_id'),
-            $group->name,
-            'New dive added: ' . $dive->tripName . ' - ' . $when,
-            route('Groups.show', ['group' => $group->slug]),
-            auth()->user()->id,
-            auth()->user()->id
-        );
-    }
-
-    /**
      * Admin-only: removes a dive from the group calendar entirely, along
      * with every attendee's personal-calendar entry for it.
      */
@@ -311,6 +231,12 @@ class GroupDiveController extends Controller
         }
 
         $this->deleteDiveFacebookPost($group, $dive);
+
+        // Normally a no-op (the guard above already refuses to run while
+        // anyone is RSVP'd), but a cheap indexed delete that closes the gap
+        // for any row orphaned before events.group_dive_id existed, or by a
+        // race (Pablo, 2026-09-19).
+        Event::where('group_dive_id', $dive->id)->delete();
 
         $dive->delete();
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Event;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\Trip;
@@ -49,6 +50,71 @@ class GroupController extends Controller
         ];
 
         return view('pages.Groups.MyGroups', compact('groups', 'invites', 'SEO'));
+    }
+
+    /**
+     * Live search box on My Groups for discovering public groups - same
+     * name-search + JSON-response pattern as GroupInviteController::search().
+     * Excludes groups the diver is already a member of or has a pending
+     * invite to, so "Join" never shows for something they're already in.
+     */
+    public function searchPublic(Request $request)
+    {
+        $userId = auth()->user()->id;
+        $q = trim((string) $request->input('q'));
+        if (mb_strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $alreadyInGroupIds = GroupMember::where('user_id', $userId)->pluck('group_id');
+
+        // ->select() has to come BEFORE ->withCount(), not as an argument to
+        // ->get(): withCount() sets its own select(['*']) internally if none
+        // is set yet, and once the query already has a select, Eloquent's
+        // get($columns) silently ignores the columns it's passed - found
+        // 2026-09-23 while chasing a search bug: this endpoint was leaking
+        // every column, including fb_page_access_token and calendar_token,
+        // to any user who searched public groups.
+        $groups = Group::where('is_public', true)
+            ->where('name', 'LIKE', "%$q%")
+            ->whereNotIn('id', $alreadyInGroupIds)
+            ->select(['id', 'name', 'slug', 'description', 'avatar'])
+            ->withCount(['activeMembers'])
+            ->take(10)
+            ->get();
+
+        return response()->json($groups);
+    }
+
+    /**
+     * Direct self-join for a public group - the whole point of "public" is
+     * skipping the invite/accept round trip (Pablo, 2026-09-16: "these
+     * don't require invitation"). Same end state as GroupInviteController::
+     * accept() (an active GroupMember), just created straight away instead
+     * of starting as 'invited'.
+     */
+    public function joinPublic($groupSlug)
+    {
+        $group = Group::where('slug', $groupSlug)->firstOrFail();
+
+        if (!$group->is_public) {
+            abort(404);
+        }
+
+        $userId = auth()->user()->id;
+        if ($group->members()->where('user_id', $userId)->exists()) {
+            return redirect()->route('Groups.show', ['group' => $group->slug]);
+        }
+
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => $userId,
+            'role' => 'member',
+            'status' => 'active',
+        ]);
+
+        return redirect()->route('Groups.show', ['group' => $group->slug])
+            ->with('msg', 'Welcome to ' . $group->name . '!');
     }
 
     public function create()
@@ -104,6 +170,7 @@ class GroupController extends Controller
         }
 
         $isAdmin = $group->isAdmin($userId);
+        $myMembership = $group->members()->where('user_id', $userId)->where('status', 'active')->first();
 
         $members = $group->activeMembers()->with('user')->get();
 
@@ -156,9 +223,9 @@ class GroupController extends Controller
         $calendarFeedUrl = route('Groups.feed', ['group' => $group->slug, 'token' => $group->ensureCalendarToken()]);
 
         // All members (not just admins) need the operators list for the
-        // Custom Dive form's operator picker.
+        // Custom Dive form's operator picker (and, for admins, the
+        // auto-add rule's operator chip picker further below).
         $operators = \App\Models\Operator::orderBy('operatorName')->get(['id', 'operatorName']);
-        $favoriteOperatorIds = $isAdmin ? $group->favoriteOperators()->pluck('operators.id')->toArray() : [];
 
         $SEO = [
             "robots" => "noindex, nofollow",
@@ -170,7 +237,16 @@ class GroupController extends Controller
             ? app(GroupFacebookController::class)->getRecentPosts($group)
             : [];
 
-        return view('pages.Groups.Show', compact('group', 'isAdmin', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'addDiveSite', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'operators', 'favoriteOperatorIds', 'fbFeed', 'SEO'));
+        // Auto-add rule (Pablo, 2026-09-22) - admin-only, same as the
+        // settings modal's favorite operators. $ruleSites resolves the
+        // rule's saved site_ids to names for the chip picker's initial
+        // state; operator names come from $operators, already loaded above.
+        $autoAddRule = $isAdmin ? $group->autoAddRule : null;
+        $ruleSites = $isAdmin && !empty($autoAddRule?->site_ids)
+            ? \App\Models\Site::whereIn('id', $autoAddRule->site_ids)->get(['id', 'name'])
+            : collect();
+
+        return view('pages.Groups.Show', compact('group', 'isAdmin', 'myMembership', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'addDiveSite', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'operators', 'fbFeed', 'autoAddRule', 'ruleSites', 'SEO'));
     }
 
     /**
@@ -429,16 +505,29 @@ class GroupController extends Controller
 
         $request->validate([
             'reminders_enabled' => 'nullable|boolean',
+            'digest_enabled' => 'nullable|boolean',
+            'notifications_muted' => 'nullable|boolean',
             'allow_members_add_dives' => 'nullable|boolean',
-            'favorite_operators' => 'nullable|array',
-            'favorite_operators.*' => 'integer|exists:mysql_trips.operators,id',
+            'is_public' => 'nullable|boolean',
         ]);
 
-        $group->reminders_enabled = $request->boolean('reminders_enabled');
-        $group->allow_members_add_dives = $request->boolean('allow_members_add_dives');
-        $group->save();
+        $wantsPublic = $request->boolean('is_public');
+        if ($wantsPublic && !$group->is_public && !auth()->user()->isAdmin()) {
+            // One public group per admin, to stop unused ones piling up
+            // (Pablo, 2026-09-16) - waived for platform admins (role_id 1,
+            // "the rule of only one public group does not apply to
+            // platform admins").
+            if (Group::publicGroupLimitReachedFor(auth()->id(), $group->id)) {
+                return redirect()->back()->with('msg', "You're already an admin of a public group - only one at a time is allowed.");
+            }
+        }
 
-        $group->favoriteOperators()->sync($request->input('favorite_operators', []));
+        $group->reminders_enabled = $request->boolean('reminders_enabled');
+        $group->digest_enabled = $request->boolean('digest_enabled');
+        $group->notifications_muted = $request->boolean('notifications_muted');
+        $group->allow_members_add_dives = $request->boolean('allow_members_add_dives');
+        $group->is_public = $wantsPublic;
+        $group->save();
 
         return redirect()->route('Groups.show', ['group' => $group->slug])->with('msg', 'Group settings updated!');
     }
@@ -489,6 +578,29 @@ class GroupController extends Controller
         return redirect()->back()->with('msg', $wasInvite ? 'Invite cancelled.' : 'Member removed.');
     }
 
+    /**
+     * A member's own bell toggle - separate from the admin-only "mute
+     * all" in updateSettings() above. Defaults off (notifications on) at
+     * invite time, per the group_members migration (Pablo, 2026-09-14).
+     */
+    public function toggleMute($groupSlug)
+    {
+        $group = Group::where('slug', $groupSlug)->firstOrFail();
+        $userId = auth()->user()->id;
+
+        $member = $group->members()->where('user_id', $userId)->where('status', 'active')->first();
+        if (!$member) {
+            abort(403);
+        }
+
+        $member->notifications_muted = !$member->notifications_muted;
+        $member->save();
+
+        return redirect()->back()->with('msg', $member->notifications_muted
+            ? 'Notifications muted for ' . $group->name . '.'
+            : 'Notifications turned back on for ' . $group->name . '.');
+    }
+
     public function destroy($groupSlug)
     {
         $group = Group::where('slug', $groupSlug)->firstOrFail();
@@ -507,6 +619,11 @@ class GroupController extends Controller
         }
 
         foreach ($group->dives as $dive) {
+            // Deleting the group takes the dive off every attendee's
+            // personal calendar too - without this the events survive as
+            // orphans pointing at a group_dive_id that no longer exists
+            // (Pablo, 2026-09-19).
+            Event::where('group_dive_id', $dive->id)->delete();
             $dive->rsvps()->delete();
             $dive->delete();
         }

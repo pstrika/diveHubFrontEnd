@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Operator;
+use App\Models\Post;
 use App\Models\Site;
 use App\Models\WeatherLocation;
 use Illuminate\Support\Facades\Cache;
@@ -35,7 +36,10 @@ class SitemapController extends Controller
                         $sitemap->add(
                             Url::create(route('SiteDetails') . '/' . ($site->slug ?? $site->id))
                                 ->setLastModificationDate($site->updated_at ?? now())
-                                ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
+                                // Each site page embeds that site's upcoming trip
+                                // calendar, which is crawler-refreshed daily, not
+                                // the site's own static content (Pablo, 2026-09-19).
+                                ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY)
                                 ->setPriority(0.8)
                         );
                     }
@@ -50,6 +54,23 @@ class SitemapController extends Controller
                     foreach ($operators as $operator) {
                         $sitemap->add(
                             Url::create(route('OperatorDetails', ['id' => $operator->slug ?? $operator->id]))
+                                // Same reasoning as sites above - each operator
+                                // page includes their own trip calendar, refreshed
+                                // daily by the crawler (Pablo, 2026-09-19).
+                                ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY)
+                                ->setPriority(0.6)
+                        );
+                    }
+                });
+
+            Post::published()
+                ->select('slug', 'updated_at')
+                ->orderBy('id')
+                ->chunk(200, function ($posts) use ($sitemap) {
+                    foreach ($posts as $post) {
+                        $sitemap->add(
+                            Url::create(route('Blog.show', $post->slug))
+                                ->setLastModificationDate($post->updated_at ?? now())
                                 ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
                                 ->setPriority(0.6)
                         );
@@ -60,7 +81,8 @@ class SitemapController extends Controller
                 ->orderBy('location')
                 ->chunk(200, function ($locations) use ($sitemap) {
                     foreach ($locations as $weatherLocation) {
-                        $routeName = $weatherLocation->country === 'AR' ? 'WeatherAR' : 'Weather';
+                        // One forecast page for every location since release 10.
+                        $routeName = 'Weather';
                         $sitemap->add(
                             Url::create(route($routeName) . '/' . rawurlencode($weatherLocation->location))
                                 ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY)
@@ -84,7 +106,18 @@ class SitemapController extends Controller
             'WreckSites' => ['priority' => 0.9, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'BeachDiving' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'Operators' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
-            'gasplanning' => ['priority' => 0.5, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            // SEO content marketing (Pablo, 2026-09-17 - see routes/web.php);
+            // was never added when the Blog shipped.
+            'Blog' => ['priority' => 0.6, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            // Both real planning tools, not marketing pages - bumped from
+            // the previous 0.5/missing (Pablo, 2026-09-19: "Deco Planner
+            // and Best Gases are VERY important pages...a HUGE asset to
+            // divers"). DecoPlannerImperial/DecoPlannerMetric are the same
+            // content in different units, so only the plain DecoPlanner URL
+            // goes in the sitemap - its own canonical tag is what tells
+            // crawlers the other two aren't separate pages.
+            'gasplanning' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            'DecoPlanner' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'home' => ['priority' => 0.6, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'Waivers' => ['priority' => 0.4, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'CalendarHydrotherapy' => ['priority' => 0.4, 'changefreq' => Url::CHANGE_FREQUENCY_DAILY],
