@@ -5,6 +5,7 @@
         <x-shell.header title="Welcome" />
 
         <div class="container-fluid py-0 dh-board">
+            <meta name="csrf-token" content="{{ csrf_token() }}">
             {{--
                 Welcome wizard (OnboardingController). One step per page load, each a
                 plain form. Big tappable choices, nothing to type except a name.
@@ -36,15 +37,17 @@
                             @if($user->picture)
                                 <span class="dh-wizard-photo-row">
                                     <img src="{{ asset('assets') }}/img/users/{{ $user->picture }}" alt="" width="56" height="56">
-                                    {{-- Themed trigger over a hidden native input, same pattern as
-                                         the diver-photo picker on SiteDetails (Pablo, 2026-09-24:
-                                         "the choose file button needs to be themed to the site -
-                                         right now it's a system button"). --}}
-                                    <label class="dh-file-picker" for="dhWizardPhotoInputExisting">
+                                    {{-- Opens the same crop-and-upload modal as the profile page
+                                         (Pablo, 2026-09-27: submitting a raw phone photo through
+                                         the wizard's own form hit the web server's request-size
+                                         limit - "Entity too large" - before Laravel ever saw it;
+                                         the Overview modal already avoids this by resizing/cropping
+                                         client-side before upload, and uploads immediately through
+                                         its own endpoint instead of riding along with this form). --}}
+                                    <button type="button" class="dh-file-picker" data-bs-toggle="modal" data-bs-target="#modal-add-pic">
                                         <span class="material-icons-round" aria-hidden="true">add_photo_alternate</span>
-                                        <span class="dh-file-picker-name" id="dhWizardPhotoNameExisting">Choose a new picture&hellip;</span>
-                                    </label>
-                                    <input type="file" name="picture" accept="image/*" id="dhWizardPhotoInputExisting" hidden>
+                                        <span class="dh-file-picker-name">Choose a new picture&hellip;</span>
+                                    </button>
                                 </span>
                             @elseif($user->google_avatar_url)
                                 {{-- Signed up with Google - offer their Google photo instead of
@@ -67,64 +70,148 @@
                                         </span>
                                     </label>
                                 </div>
-                                {{-- Themed trigger, same pattern as above - only the LABEL's
-                                     visibility toggles with the radio choice now, not the raw
-                                     input's, so what appears is never the unstyled system button
-                                     (Pablo, 2026-09-27: "the button to choose a photo needs to be
-                                     themed"). --}}
-                                <label class="dh-file-picker" for="dhPhotoUploadInput" id="dhPhotoUploadLabel" hidden style="margin-top: 8px;">
+                                <button type="button" class="dh-file-picker" id="dhPhotoUploadLabel" hidden style="margin-top: 8px;" data-bs-toggle="modal" data-bs-target="#modal-add-pic">
                                     <span class="material-icons-round" aria-hidden="true">add_photo_alternate</span>
-                                    <span class="dh-file-picker-name" id="dhPhotoUploadName">Choose a picture&hellip;</span>
-                                </label>
-                                <input type="file" name="picture" accept="image/*" id="dhPhotoUploadInput" hidden>
+                                    <span class="dh-file-picker-name">Choose a picture&hellip;</span>
+                                </button>
                                 <script>
                                     (function () {
                                         var uploadChoice = document.getElementById('dhPhotoUploadChoice');
                                         var uploadLabel = document.getElementById('dhPhotoUploadLabel');
-                                        var uploadInput = document.getElementById('dhPhotoUploadInput');
-                                        var uploadName = document.getElementById('dhPhotoUploadName');
-                                        if (!uploadChoice || !uploadLabel || !uploadInput) return;
+                                        if (!uploadChoice || !uploadLabel) return;
                                         document.querySelectorAll('input[name="photoSource"]').forEach(function (radio) {
                                             radio.addEventListener('change', function () {
                                                 uploadLabel.hidden = !uploadChoice.checked;
                                             });
-                                        });
-                                        uploadInput.addEventListener('change', function () {
-                                            var file = uploadInput.files[0];
-                                            uploadName.textContent = file ? file.name : 'Choose a picture…';
                                         });
                                     })();
                                 </script>
                             @else
                                 <span class="dh-wizard-photo-row">
                                     <span class="material-icons-round" aria-hidden="true">account_circle</span>
-                                    <label class="dh-file-picker" for="dhWizardPhotoInputBlank">
+                                    <button type="button" class="dh-file-picker" data-bs-toggle="modal" data-bs-target="#modal-add-pic">
                                         <span class="material-icons-round" aria-hidden="true">add_photo_alternate</span>
-                                        <span class="dh-file-picker-name" id="dhWizardPhotoNameBlank">Choose a picture&hellip;</span>
-                                    </label>
-                                    <input type="file" name="picture" accept="image/*" id="dhWizardPhotoInputBlank" hidden>
+                                        <span class="dh-file-picker-name">Choose a picture&hellip;</span>
+                                    </button>
                                 </span>
                             @endif
                         </label>
-                        <script>
-                            (function () {
-                                [['dhWizardPhotoInputExisting', 'dhWizardPhotoNameExisting'], ['dhWizardPhotoInputBlank', 'dhWizardPhotoNameBlank']].forEach(function (pair) {
-                                    var input = document.getElementById(pair[0]);
-                                    var name = document.getElementById(pair[1]);
-                                    if (!input || !name) return;
-                                    input.addEventListener('change', function () {
-                                        var file = input.files[0];
-                                        name.textContent = file ? file.name : (pair[0] === 'dhWizardPhotoInputExisting' ? 'Choose a new picture…' : 'Choose a picture…');
-                                    });
-                                });
-                            })();
-                        </script>
                         @error('picture')<p class="text-danger text-sm">{{ $message }}</p>@enderror
                         <div class="dh-wizard-actions">
                             <button type="submit" class="dh-btn dh-btn-primary">Next</button>
                             <a class="dh-btn dh-btn-ghost-dark" href="{{ $stepUrl($nextStep) }}">Skip this</a>
                         </div>
                     </form>
+
+                    {{-- Crop-and-upload modal, identical in mechanics to the one on the
+                         profile page (Overview.blade.php's #modal-add-pic): Dropzone
+                         resizes/crops to a small square client-side before it ever leaves
+                         the browser, then posts straight to upload-profile-pic - sidesteps
+                         the wizard form entirely, so it can't blow past a request-size
+                         limit no matter how large the original photo is. --}}
+                    <div class="modal fade" id="modal-add-pic" data-backdrop="static" data-keyboard="false" tabindex="-1">
+                        <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document" style="max-width: 560px;">
+                            <div class="modal-content">
+                                <div class="modal-header text-center">
+                                    <h6 class="modal-title font-weight-normal" id="modal-title-notification">Notification</h6>
+                                    <span aria-hidden="true">×</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="py-3 text-center">
+                                        <i class="material-icons h1 text-info">account_box</i>
+                                        <h4 class="text-gradient text-info mt-4">Add profile picture here</h4>
+                                        <div class="form-control border dropzone" id="myDropzone"></div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button class="btn bg-gradient-info ms-auto" id="upload-pics-button" onclick="">Crop and upload</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script src="{{ asset('assets') }}/js/plugins/jquery-3.6.0.min.js" type="text/javascript"></script>
+                    <link href="{{ asset('assets') }}/css/cropper.min.css?v=1.6.2" rel="stylesheet"/>
+                    <script src="{{ asset('assets') }}/js/plugins/cropper.min.js?v=1.6.2"></script>
+                    <script src="{{ asset('assets') }}/js/plugins/dropzone.min.js"></script>
+                    <script>
+                        Dropzone.autoDiscovery = false;
+                        Dropzone.options.myDropzone = {
+                            url: "{{ route('upload-profile-pic') }}",
+                            autoProcessQueue: false,
+                            maxFilesize: 40,
+                            acceptedFiles: ".jpeg,.jpg,.png,.gif,.webp",
+                            parallelUploads: 1,
+                            maxFiles: 1,
+                            addRemoveLinks: true,
+                            method: "post",
+                            resizeWidth: 800,
+                            paramName: "img_file",
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                            },
+                            queuecomplete: function (file, response) {
+                                window.location.href = '{{ route("welcome", ["step" => "welcome"]) }}';
+                            },
+                            sending: function (file, xhr, formData) {
+                                formData.append('userId', '{{ $user->id }}');
+                            },
+                            init: function () {
+                                var submitButton = document.querySelector("#upload-pics-button");
+                                var myDropzone = this;
+                                submitButton.addEventListener("click", function (e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    myDropzone.processQueue();
+                                });
+                                this.on("error", function (file, errorMessage) {
+                                    console.error("Error uploading file:", file.name, errorMessage);
+                                });
+                            },
+                            transformFile: function (file, done) {
+                                var myDropZone = this;
+                                var editor = document.createElement('div');
+                                editor.style.position = 'fixed';
+                                editor.style.left = 0;
+                                editor.style.right = 0;
+                                editor.style.top = 0;
+                                editor.style.bottom = 0;
+                                editor.style.zIndex = 9999;
+                                editor.style.backgroundColor = '#000';
+                                document.body.appendChild(editor);
+                                var buttonConfirm = document.createElement('button');
+                                buttonConfirm.style.position = 'absolute';
+                                buttonConfirm.style.left = '10px';
+                                buttonConfirm.style.top = '10px';
+                                buttonConfirm.style.zIndex = 9999;
+                                buttonConfirm.textContent = 'Confirm';
+                                editor.appendChild(buttonConfirm);
+                                buttonConfirm.addEventListener('click', function () {
+                                    var canvas = cropper.getCroppedCanvas({ width: 256, height: 256 });
+                                    canvas.toBlob(function (blob) {
+                                        myDropZone.createThumbnail(
+                                            blob,
+                                            myDropZone.options.thumbnailWidth,
+                                            myDropZone.options.thumbnailHeight,
+                                            myDropZone.options.thumbnailMethod,
+                                            false,
+                                            function (dataURL) {
+                                                myDropZone.emit('thumbnail', file, dataURL);
+                                                done(blob);
+                                            }
+                                        );
+                                    });
+                                    document.body.removeChild(editor);
+                                });
+                                var image = new Image();
+                                image.src = URL.createObjectURL(file);
+                                editor.appendChild(image);
+                                var cropper = new Cropper(image, { aspectRatio: 1 });
+                            },
+                        };
+                    </script>
 
                 @elseif($step === 'level')
                     <h1 class="dh-wizard-title">What is your certification level?</h1>
