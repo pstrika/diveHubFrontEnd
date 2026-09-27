@@ -2484,6 +2484,20 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-gas-result-pill.is-warn { background: var(--dh-warn); }
 .dh-gas-result-pill.is-danger { background: var(--dh-danger); }
 
+/* Eye toggle inside the "Gas allows..." pill - overlays that scenario's
+   own profile on the chart (Pablo, 2026-09-26). Translucent white circle
+   at rest so it reads as part of the pill, solid white with a dark icon
+   once active so the on/off state is obvious at a glance. */
+.dh-gas-limit-eye-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; margin-left: 4px; padding: 0; border: none;
+  border-radius: 50%; background: rgba(255,255,255,.25); color: #fff; cursor: pointer;
+  flex: 0 0 auto;
+}
+.dh-gas-limit-eye-btn .material-icons-round { font-size: 14px; }
+.dh-gas-limit-eye-btn:hover { background: rgba(255,255,255,.4); }
+.dh-gas-limit-eye-btn.is-active { background: #fff; color: var(--dh-ink); }
+
 /* Gas symbol tag baked into the pill itself instead of a separate caption
    underneath (Pablo, 2026-09-15: "remove the O2 % content label... add O2
    in the Nitrox result pill") - generated content, never part of the
@@ -2806,6 +2820,141 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .slider-styled.noUi-horizontal .noUi-handle.noUi-active {
   background-color: var(--dh-shallow); border-color: var(--dh-shallow);
 }
+/* noUiSlider's own default "grip" stripes (two thin grey vertical lines
+   baked into every handle via nouislider.css) - removed on every themed
+   slider in the app, not just Tanks (Pablo, 2026-09-26: "I noticed all
+   the sliders have like a double vertical grey line in the handle...get
+   rid of them EVERYWHERE"). */
+.slider-styled.noUi-horizontal .noUi-handle:before,
+.slider-styled.noUi-horizontal .noUi-handle:after {
+  display: none;
+}
+
+/* Tanks card (Pablo, 2026-09-26) - the first dual-handle slider in this
+   file: a reserve handle (lower, red - gas below this point doesn't count
+   as usable) and a fill handle (upper, blue - how much is actually in the
+   tank). Three connect segments come out of noUiSlider in DOM order -
+   :nth-child(1) is [0, reserve], :nth-child(2) is [reserve, fill], the
+   third (untouched, stays --dh-line) is [fill, max] - unfilled capacity. */
+.dh-tank-slider.noUi-horizontal .noUi-connects .noUi-connect:nth-child(1) { background: var(--dh-danger); }
+.dh-tank-slider.noUi-horizontal .noUi-connects .noUi-connect:nth-child(2) { background: var(--dh-sea); }
+.dh-tank-slider.noUi-horizontal .noUi-handle-lower { background-color: var(--dh-danger); border-color: var(--dh-danger); }
+.dh-tank-slider.noUi-horizontal .noUi-handle-lower:hover,
+.dh-tank-slider.noUi-horizontal .noUi-handle-lower.noUi-active { background-color: #c9564c; border-color: #c9564c; }
+.dh-tank-slider.noUi-horizontal .noUi-handle-upper { background-color: var(--dh-sea); border-color: var(--dh-sea); }
+.dh-tank-slider.noUi-horizontal .noUi-handle-upper:hover,
+.dh-tank-slider.noUi-horizontal .noUi-handle-upper.noUi-active { background-color: var(--dh-shallow); border-color: var(--dh-shallow); }
+
+/* A small triangle under the track marking the tank type's own rated
+   capacity (e.g. 3000 PSI for an AL cylinder) - "a small triangle pointing
+   to that point but slightly below the slider (just touching it)"
+   (Pablo, 2026-09-26). Positioned in JS via dhUpdateTankCapacityMarker()
+   (left: X%), not CSS, since the position depends on the selected tank
+   type and the unit-aware max. border-bottom draws the triangle pointing
+   up (apex touching the slider's own bottom edge); translateX(-50%)
+   centers the apex on the computed left%, rather than using it as the
+   triangle's own left edge. */
+.dh-tank-slider-wrap { position: relative; padding: 0 7px; }
+.dh-tank-capacity-marker {
+  position: absolute; top: 100%; left: 0; width: 0; height: 0;
+  border-left: 5px solid transparent; border-right: 5px solid transparent;
+  border-bottom: 6px solid var(--dh-ink); opacity: .6; pointer-events: none; z-index: 1;
+  transform: translateX(-50%);
+}
+/* Reserve/Fill are editable text boxes now, not plain read-only spans
+   (Pablo, 2026-09-26: "make the reserve and fill editable...similar to
+   what you did in the sac") - a wider .dh-gas-input than the 66px default,
+   since PSI runs to 4 digits where a gas % never does. Reserve sits at the
+   start and Fill at the end of the row (space-between), each lined up
+   with its own slider handle underneath ("align to the end of the slider
+   the Fill textbox"); reserve's own textbox is themed red to match its
+   handle/connect-segment color ("I like the reserve in red...make the
+   text in the textbox for reserve in red"). */
+.dh-tank-readout { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; padding: 0 7px; }
+.dh-tank-readout-start, .dh-tank-readout-end { display: flex; align-items: center; gap: 4px; }
+.dh-tank-editable .dh-gas-input { width: 76px; }
+.dh-tank-reserve-editable .dh-gas-input { color: var(--dh-danger); font-weight: 700; }
+.dh-tank-unit-a, .dh-tank-unit-b { color: var(--dh-muted); font-weight: 600; }
+/* Nominal volume readout under the Type dropdown - CUFT, or liters in
+   metric, doubled when Twins is checked (Pablo, 2026-09-26). */
+.dh-tank-volume-label { margin-top: 2px; }
+
+/* Every cell in the Tanks table centers vertically - rows mix a two-line
+   Type+select, a one-line Gas pill, and a two-line Reserve/Fill control,
+   which look mismatched top-aligned (Pablo, 2026-09-26: "get all
+   vertically aligned middle"). */
+#dhTanksTable > tbody > tr > td { vertical-align: middle; }
+
+/* Type dropdown - "some theme style" instead of the bare Bootstrap
+   .form-select default (Pablo, 2026-09-26). appearance:none + a hand-drawn
+   chevron since native select arrows can't take the theme color directly. */
+.dh-tank-type-select {
+  border: 1px solid var(--dh-line); border-radius: 10px; color: var(--dh-ink);
+  background-color: #fff; font-weight: 600; font-size: .85rem;
+  -webkit-appearance: none; -moz-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%235a6b78' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+}
+.dh-tank-type-select:focus { outline: none; border-color: var(--dh-sea); box-shadow: 0 0 0 3px rgba(14,124,158,.15); }
+.dh-tank-type-select:hover { border-color: var(--dh-sea); }
+
+/* Twins - a plain checkbox in its own column now, not a labeled switch
+   under the Type select (Pablo, 2026-09-26: "change the toggle to a
+   checkbox for twin...an additional column for twin so to make it all
+   align") - every row gets the column, only the bottom-gas row gets a
+   checkbox in it, so the grid still lines up either way. */
+.dh-tank-twins-check { width: 18px; height: 18px; cursor: pointer; }
+
+/* Mobile-only captions for the two controls that have no self-evident
+   label once the column headers are hidden below (a bare checkbox, and a
+   number that could otherwise be mistaken for the nominal-volume figure
+   next to it) - paired with the flex-reorder media query right after,
+   both keyed to the same md breakpoint so captions and layout change
+   together. */
+.dh-tank-mobile-label { display: block; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--dh-muted); margin-bottom: 3px; }
+
+/* Mobile: each tank becomes a two-line "card" instead of a cramped
+   6-column row - Type/Twins/Available gas/SAC on top, the gas pill and
+   Reserve/Fill slider below (Pablo, 2026-09-26: "bleed into two rows per
+   row...keep type, twins, available gas and SAC in the top row, then put
+   the slider with gas and reserve/fill below...light grey separators
+   between gases"). A <tr> set to flex-wrap can reorder its own <td>
+   children via `order` regardless of source order - column 1/2/5/6 move
+   up via order, letting 3 (Gas) and 4 (Reserve/Fill) wrap onto their own
+   line for free once the first four already fill the row (their
+   flex-basis sums to 100%, same for the second line's two). 767.98px
+   matches Bootstrap's own md breakpoint (the .d-md-none captions above),
+   not this file's other 768px convention, so the two stay in lockstep. */
+@media (max-width: 767.98px) {
+  #dhTanksTable, #dhTanksTable tbody { display: block; width: 100%; }
+  #dhTanksTable tbody tr[data-tank-slot] {
+    display: flex; flex-wrap: wrap; align-items: flex-start;
+    padding: 12px 0; border-bottom: 1px solid var(--dh-line);
+  }
+  #dhTanksTable tbody tr[data-tank-slot]:last-child { border-bottom: none; }
+  /* min-width: 0 overrides flex items' default min-width: auto, which
+     otherwise sizes each <td> to its content's min-content width (a
+     select, a slider, two number inputs) regardless of flex-basis -
+     without it, SAC/Reserve-Fill's own natural widths were wider than
+     their allotted share and forced an extra wrap instead of landing on
+     the intended line. */
+  #dhTanksTable td { display: block; padding: 4px 6px; border: none !important; min-width: 0; }
+
+  .dh-tank-col-type        { order: 1; flex: 0 0 38%; }
+  .dh-tank-col-twins       { order: 2; flex: 0 0 14%; }
+  .dh-tank-col-available   { order: 3; flex: 0 0 22%; }
+  .dh-tank-col-sac         { order: 4; flex: 0 0 26%; }
+  .dh-tank-col-gas         { order: 5; flex: 0 0 34%; margin-top: 8px; }
+  .dh-tank-col-reservefill { order: 6; flex: 1 1 66%; margin-top: 8px; }
+}
+
+/* Twins checkbox centered in its column on every viewport (Pablo,
+   2026-09-26); Gas column's role label + pill lean toward the Reserve/Fill
+   slider they describe rather than the far edge of their own column, on
+   mobile that slider sits immediately to the right on the same line
+   ("the gas title...aligned to the right of the col"). */
+.dh-tank-col-twins { text-align: center; }
+.dh-tank-col-gas { text-align: right; }
 
 /* Deco Planner gas selector, v2: a vertical accordion instead of horizontal
    tabs (Pablo, 2026-09-16: tabs "go out of screen" with 4 gases and aren't

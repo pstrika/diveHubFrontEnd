@@ -353,11 +353,26 @@
                                 </label>
                             </div>
 
-                            <div class="form-check form-switch ps-0">
+                            <div class="form-check form-switch ps-0 mb-3">
                                 <input class="form-check-input ms-auto" type="checkbox" id="dhToggleRemoveGuards">
                                 <label class="form-check-label text-body ms-3 mb-0" for="dhToggleRemoveGuards">
                                     Remove safety guards
                                     <div class="text-secondary text-xs">Allow diluent PPO&#8322; up to 2.0 ATA and fully independent GF Low/High.</div>
+                                </label>
+                            </div>
+
+                            {{-- Off by default (Pablo, 2026-09-26: "this is a feature that
+                                 will require a lot of testing and we are launching in two
+                                 days") - the Tanks card and every gas-limited-bottom-time
+                                 pill/overlay it drives are all still brand new this same
+                                 week. Unchecked here matches #dhTanksCardRow's own hardcoded
+                                 `hidden` attribute below, so there's no flash of the card
+                                 before this modal's IIFE runs. --}}
+                            <div class="form-check form-switch ps-0">
+                                <input class="form-check-input ms-auto" type="checkbox" id="dhToggleShowTanks">
+                                <label class="form-check-label text-body ms-3 mb-0" for="dhToggleShowTanks">
+                                    Show tanks &amp; gas-limited bottom time
+                                    <div class="text-secondary text-xs">Preview feature - tank/SAC inputs and the gas-limited warning pill, hidden until this has had more real-world testing.</div>
                                 </label>
                             </div>
                         </div>
@@ -1551,6 +1566,90 @@
                                 </div>
                             </div>
 
+                            {{-- Tanks: one row per OC-breathed gas currently configured -
+                                 bottom gas for OC, bailout + deco gases for CC (never the
+                                 diluent, same set Gas Consumption already tracks) - tank
+                                 type/twins, a reserve+fill dual-handle slider, and a per-gas
+                                 SAC that becomes Gas Consumption's starting SAC for that same
+                                 gas (Pablo, 2026-09-26: "calculate the max bottom time
+                                 possible with a given set of tanks...for starters, the SAC
+                                 set for each of the gases here are the ones you will use as
+                                 default for the Gas Consumption card"). Rows are built/kept in
+                                 sync by dhRenderTanksTable() - frontend only for now, nothing
+                                 here drives an actual max-bottom-time calculation yet. --}}
+                            {{-- Same single-tank icon as the Recreational calendar's own
+                                 drawer link (Pablo, 2026-09-26), not the generic propane_tank
+                                 Material icon this used to be - same asset already reused for
+                                 Gas Consumption's own header above. --}}
+                            @php $tanksHeaderSvg = \App\Support\IconSvg::themed('assets/img/icons/icons_calendar_rec.svg'); @endphp
+                            {{-- Hidden by default (Pablo, 2026-09-26: "by default no
+                                 show... this is a feature that will require a lot of
+                                 testing and we are launching in two days") - the Advanced
+                                 Settings "Show tanks & gas-limited bottom time" toggle
+                                 un-hides it. Hardcoded here rather than left to JS so
+                                 there's no flash of the card before that toggle's IIFE runs. --}}
+                            <div class="row mt-2" id="dhTanksCardRow" hidden>
+                                <div class="col-12">
+                                    {{-- Same collapsible dark-header treatment Gas Consumption's own
+                                         section uses (dh-deco-section-head/-body) - collapsed by
+                                         default, unlike Gas Consumption itself (Pablo, 2026-09-26:
+                                         "wrap the card in the theme cards that we have (same as
+                                         sections for gas)...by default this section should be
+                                         collapsed"). Rotation-only chevron (CSS handles
+                                         .is-collapsed), no icon-swap JS needed. --}}
+                                    <div class="dh-deco-section-head is-toggle is-collapsed" id="dhTanksSectionHead" role="button" tabindex="0" aria-expanded="false" aria-controls="dhTanksSectionBody">
+                                        @if($tanksHeaderSvg)
+                                            <span class="dh-deco-section-head-icon-svg" aria-hidden="true">{!! $tanksHeaderSvg !!}</span>
+                                        @else
+                                            <span class="material-icons-round" aria-hidden="true">propane_tank</span>
+                                        @endif
+                                        <div class="dh-deco-section-head-title-wrap">
+                                            <h3>Tanks</h3>
+                                        </div>
+                                        <span class="material-icons-round dh-deco-section-head-chevron" aria-hidden="true">expand_more</span>
+                                    </div>
+                                    <div class="dh-deco-section-body" id="dhTanksSectionBody" hidden>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm align-middle mb-0" id="dhTanksTable">
+                                                {{-- Column headers don't correspond to anything once each
+                                                     row reflows into two lines on mobile (Pablo,
+                                                     2026-09-26: "bleed into two rows per row in the
+                                                     mobile view") - hidden there the same way the deco
+                                                     table's own PPO2/GF headers are (.hide-on-mobile,
+                                                     defined above for @media max-width:768px). --}}
+                                                <thead class="hide-on-mobile">
+                                                    <tr>
+                                                        <th class="text-xs text-center" style="width: 14%;">Type</th>
+                                                        <th class="text-xs text-center" style="width: 6%;">Twins</th>
+                                                        <th class="text-xs text-center" style="width: 12%;">Gas</th>
+                                                        <th class="text-xs text-center" style="width: 36%;">Reserve / Fill</th>
+                                                        <th class="text-xs text-center" style="width: 14%;">Available gas</th>
+                                                        <th class="text-xs text-center" style="width: 18%;">SAC</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="dhTanksTableBody"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <script>
+                                        (function () {
+                                            var head = document.getElementById('dhTanksSectionHead');
+                                            var body = document.getElementById('dhTanksSectionBody');
+                                            if (!head || !body) return;
+                                            function setOpen(open) {
+                                                body.hidden = !open;
+                                                head.classList.toggle('is-collapsed', !open);
+                                                head.setAttribute('aria-expanded', open ? 'true' : 'false');
+                                            }
+                                            head.addEventListener('click', function () { setOpen(body.hidden); });
+                                            head.addEventListener('keydown', function (e) {
+                                                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(body.hidden); }
+                                            });
+                                        })();
+                                    </script>
+                                </div>
+                            </div>
+
                             <!-- Row for calculate button -->
                             <div class="row mt-3">
                                 <div class="col-12">
@@ -1892,7 +1991,15 @@
                                         // it's meant to be anchored inside this specific card.
                                         document.body.appendChild(backdrop);
 
-                                        function openModal() { backdrop.hidden = false; }
+                                        function openModal() {
+                                            backdrop.hidden = false;
+                                            // A gas-limited profile and a What-if profile on
+                                            // screen together would be confusing to read
+                                            // (Pablo, 2026-09-26: "if at any time the What
+                                            // if bubble is pressed, you hide the max
+                                            // allowed profile").
+                                            if (typeof dhSetGasLimitOverlay === 'function') dhSetGasLimitOverlay(false);
+                                        }
                                         function closeModal() { backdrop.hidden = true; }
 
                                         fab.addEventListener('click', openModal);
@@ -2441,6 +2548,14 @@
             addDecoGas("gasAccordionItemDeco3", "labelDecoGas3O2", "labelDecoGas3He", "labelDecoGas3Switch");
             addDecoGas("gasAccordionItemDeco4", "labelDecoGas4O2", "labelDecoGas4He", "labelDecoGas4Switch");
 
+            // Gas-Limited Bottom Time (Pablo, 2026-09-26 -
+            // https://claude.ai/code/artifact/d340db19-47cb-4581-87f2-25703629b3e8):
+            // attach each gas's available volume + SAC from the Tanks card,
+            // if the diver has configured one - the deco engine gas-checks
+            // and returns a gasLimited scenario/level trim on the strength
+            // of these alone.
+            if (typeof dhAttachGasSupply === 'function') dhAttachGasSupply(bottomGas, decoGases);
+
             // Create final JSON structure
             const diveProfile = {
                 mode: modeOCOrCC,
@@ -2453,6 +2568,10 @@
                 decoGases: decoGases,
                 setpoint: setpoint
             };
+            if (typeof dhSnapshotTanksForSave === 'function') {
+                var tanksSnapshot = dhSnapshotTanksForSave();
+                if (tanksSnapshot) diveProfile.tanks = tanksSnapshot;
+            }
 
             // Convert to JSON string
             const diveJSON = JSON.stringify(diveProfile, null, 4);
@@ -2594,7 +2713,12 @@
                     console.log(conveyor.length);
 
                     renderO2Toxicity(window.dhScenarios.baseline.o2Exposure || response['o2Exposure']);
-                    dhRenderSafetyWarnings(window.dhScenarios.baseline);
+                    window.dhScenarios.gasLimited = dhNormalizeScenario(scenarios.gasLimited);
+                    dhRenderSafetyWarnings(window.dhScenarios.baseline, {
+                        isMultiLevel: false,
+                        plannedBottomTime: diveProfile.bottomTime,
+                        gasLimited: scenarios.gasLimited || null,
+                    });
                     timeLapseSlider.noUiSlider.updateOptions({
                         range: {
                             'min': 0,
@@ -2639,8 +2763,18 @@
                     }
 
 
-                    // reset all checkboxes
-                    document.querySelectorAll(".form-check-input").forEach(cb => {
+                    // Reset every What-if filter checkbox - a fresh
+                    // calculation means no scenario should carry over.
+                    // Scoped to .dh-whatif-chip (same selector the modal's
+                    // own close/legend logic uses) - a bare
+                    // ".form-check-input" matches every checkbox on the
+                    // page, including unrelated ones like the Tanks card's
+                    // Twins checkbox, and was wiping those too (Pablo,
+                    // 2026-09-26, surfaced by "save the tanks
+                    // configurations when the user saves the dive": a
+                    // restored Twins=true reverted to unchecked the moment
+                    // Calculate's success handler ran).
+                    document.querySelectorAll(".dh-whatif-chip input[type=checkbox]").forEach(cb => {
                             cb.checked = false; // Uncheck all other checkboxes
                     });
                     if (typeof window.dhUpdateWhatIfVisibility === 'function') window.dhUpdateWhatIfVisibility();
@@ -2992,7 +3126,12 @@
 
                     conveyor = window.dhScenarios.baseline.conveyor || window.dhScenarios.baseline.profile;
                     renderO2Toxicity(window.dhScenarios.baseline.o2Exposure);
-                    dhRenderSafetyWarnings(window.dhScenarios.baseline);
+                    window.dhScenarios.gasLimited = dhNormalizeScenario(scenarios.gasLimited);
+                    dhRenderSafetyWarnings(window.dhScenarios.baseline, {
+                        isMultiLevel: true,
+                        plannedLevels: levels,
+                        gasLimited: scenarios.gasLimited || null,
+                    });
                     timeLapseSlider.noUiSlider.updateOptions({
                         range: { 'min': 0, 'max': conveyor.length - 1 }
                     });
@@ -3021,7 +3160,11 @@
                         document.getElementById("gasConsumptionDecoOrBOHeader").innerText = "Bailout Gases";
                     }
 
-                    document.querySelectorAll(".form-check-input").forEach(function (cb) { cb.checked = false; });
+                    // Same fix as the single-level success handler's
+                    // identical call - scoped to the What-if filter
+                    // checkboxes specifically, not every checkbox on the
+                    // page.
+                    document.querySelectorAll(".dh-whatif-chip input[type=checkbox]").forEach(function (cb) { cb.checked = false; });
                     if (typeof window.dhUpdateWhatIfVisibility === 'function') window.dhUpdateWhatIfVisibility();
 
                     dhRenderCriticalPoint(window.dhScenarios.baseline.criticalPoint);
@@ -3064,6 +3207,13 @@
         // other script blocks have run.
         let dhRecommendBestGases = true;
         let dhRemoveSafetyGuards = false;
+        // Off by default (Pablo, 2026-09-26: "a lot of testing and we are
+        // launching in two days") - gates the Tanks card's visibility,
+        // whether gasSupply is ever attached to a request at all (see
+        // dhAttachGasSupply), and the gas-limited pill/overlay, all in one
+        // place. Declared here, not down with the Tanks code itself, for
+        // the same early-declaration reason as the two flags above.
+        let dhShowTanksFeature = false;
 
         //var depth = parseInt(document.getElementById("labelDepth").textContent);
         @if( !is_null($currentSite))
@@ -4435,6 +4585,479 @@
                 entryBtn.dataset.gasPrefix = prefix;
                 entryBtn.querySelector('.dh-gas-accordion-head-title').textContent = prefix + ' (' + mix + ')';
             });
+
+            // Tanks table stays in sync with whichever gas slots are visible -
+            // dhReorderGasAccordion() already runs on every add/remove/mode
+            // switch/committed composition change, so it's the one place to
+            // hook a rebuild into (Pablo, 2026-09-26: "calculate the max
+            // bottom time possible with a given set of tanks").
+            if (typeof dhRenderTanksTable === 'function') dhRenderTanksTable();
+        }
+
+        // Tanks card (Pablo, 2026-09-26) - one row per OC-breathed gas
+        // currently configured: bottom gas for OC, bailout + deco gases for
+        // CC (never the diluent - same set Gas Consumption already tracks,
+        // see dhGetSacRateForGas below). Defined here (not further down
+        // near dhBuildGasSplitPillHtml) for the same reason
+        // dhGasPillO2Info/dhApplyGasPillO2Label live early - every gas
+        // card's O2/He sliders call dhRenderTanksTable() from their own
+        // 'update' handler, which noUiSlider fires synchronously the
+        // moment .create() runs, long before a script block further down
+        // the page has executed.
+        //
+        // Frontend only for now - tank type/twins/reserve/fill are captured
+        // per slot for a future backend-driven max-bottom-time calculation,
+        // but nothing here computes that yet. The one live integration
+        // today: each row's SAC becomes Gas Consumption's starting SAC for
+        // that same gas mix (Pablo: "the SAC set for each of the gases here
+        // are the ones you will use as default for the Gas Consumption
+        // card").
+        var DH_TANK_TYPES = {
+            'AL-20':     { capacityPsi: 3000, cuft: 18.3 },
+            'AL-30':     { capacityPsi: 3000, cuft: 29.1 },
+            'AL-40':     { capacityPsi: 3000, cuft: 38.8 },
+            'AL-72':     { capacityPsi: 3000, cuft: 69.9 },
+            'AL-80':     { capacityPsi: 3000, cuft: 77.5 },
+            'ST-LP-85':  { capacityPsi: 2640, cuft: 81.1 },
+            'ST-HP-100': { capacityPsi: 3442, cuft: 101.3 },
+            // 300 bar carbon-fiber cylinders: PSI = 300 * DH_TANK_PSI_PER_BAR,
+            // CUFT via the standard liters*bar/28.3168 free-gas conversion.
+            'Carbon Fiber 6.8L': { capacityPsi: 4351, cuft: 72.0 },
+            'Carbon Fiber 12L':  { capacityPsi: 4351, cuft: 127.1 },
+        };
+        var DH_TANK_PSI_PER_BAR = 14.5038;
+        var DH_TANK_MAX_PSI = 4500;
+
+        var DH_TANK_SLOTS = [
+            { id: 'bottom', o2Id: 'labelBottomGasO2', heId: 'labelBottomGasHe', allowTwins: true, label: 'Bottom gas' },
+            { id: 'deco1', o2Id: 'labelDecoGas1O2', heId: 'labelDecoGas1He', accordionId: 'gasAccordionItemDeco1', tabBtnId: 'gasTabBtnDeco1' },
+            { id: 'deco2', o2Id: 'labelDecoGas2O2', heId: 'labelDecoGas2He', accordionId: 'gasAccordionItemDeco2', tabBtnId: 'gasTabBtnDeco2' },
+            { id: 'deco3', o2Id: 'labelDecoGas3O2', heId: 'labelDecoGas3He', accordionId: 'gasAccordionItemDeco3', tabBtnId: 'gasTabBtnDeco3' },
+            { id: 'deco4', o2Id: 'labelDecoGas4O2', heId: 'labelDecoGas4He', accordionId: 'gasAccordionItemDeco4', tabBtnId: 'gasTabBtnDeco4' },
+        ];
+
+        // Persistent per-slot tank config and SAC - survive gas-composition
+        // changes and re-renders, only cleared when a slot actually goes
+        // away, so re-adding a gas mid-session doesn't lose its tank setup.
+        window.dhTanksState = window.dhTanksState || {};
+        window.dhTanksSacRates = window.dhTanksSacRates || {};
+
+        function dhTankSlotActive(slot) {
+            if (slot.id === 'bottom') return typeof modeOCOrCC === 'undefined' || modeOCOrCC === 'OC';
+            var el = document.getElementById(slot.accordionId);
+            return !!el && !el.hidden;
+        }
+
+        function dhTankSlotLabel(slot) {
+            if (slot.id === 'bottom') return 'Bottom gas';
+            var btn = document.getElementById(slot.tabBtnId);
+            return (btn && btn.dataset.gasPrefix) || slot.label || slot.id;
+        }
+
+        function dhTankSlotGas(slot) {
+            var o2El = document.getElementById(slot.o2Id);
+            var heEl = document.getElementById(slot.heId);
+            return { o2: o2El ? (parseInt(o2El.value, 10) || 0) : 0, he: heEl ? (parseInt(heEl.value, 10) || 0) : 0 };
+        }
+
+        function dhTankDefaultState() {
+            return { tankType: 'AL-80', twins: false, reservePsi: 500, fillPsi: DH_TANK_TYPES['AL-80'].capacityPsi };
+        }
+
+        function dhTankPsiToDisplay(psi) {
+            return (typeof modeImpOrMetric === 'undefined' || modeImpOrMetric === 'imp') ? Math.round(psi) : Math.round(psi / DH_TANK_PSI_PER_BAR);
+        }
+        function dhTankDisplayToPsi(display) {
+            return (typeof modeImpOrMetric === 'undefined' || modeImpOrMetric === 'imp') ? Math.round(display) : Math.round(display * DH_TANK_PSI_PER_BAR);
+        }
+        function dhTankMaxDisplay() {
+            return (typeof modeImpOrMetric === 'undefined' || modeImpOrMetric === 'imp') ? DH_TANK_MAX_PSI : Math.round(DH_TANK_MAX_PSI / DH_TANK_PSI_PER_BAR);
+        }
+        function dhTankUnitLabel() {
+            return (typeof modeImpOrMetric === 'undefined' || modeImpOrMetric === 'imp') ? 'PSI' : 'bar';
+        }
+
+        function dhUpdateTankCapacityMarker(row, state) {
+            var marker = row.querySelector('.dh-tank-capacity-marker');
+            if (!marker) return;
+            var capacityPsi = DH_TANK_TYPES[state.tankType].capacityPsi;
+            var pct = Math.min(100, (capacityPsi / DH_TANK_MAX_PSI) * 100);
+            marker.style.left = pct + '%';
+            marker.title = dhTankPsiToDisplay(capacityPsi) + ' ' + dhTankUnitLabel() + ' standard fill';
+        }
+
+        // Nominal volume shown under the Type dropdown - CUFT (as given on
+        // DH_TANK_TYPES) in imperial, converted to liters of actual cylinder
+        // water capacity in metric. The conversion inverts the same
+        // liters*bar/28.3168 free-gas relationship used to derive the
+        // carbon-fiber entries' own CUFT: waterVolumeLiters = (cuft *
+        // 28.3168) / ratedBar. Doubles with Twins checked (Pablo,
+        // 2026-09-26: "if the twin checkbox is set, then the nominal volume
+        // is double").
+        function dhTankVolumeLabel(state) {
+            var t = DH_TANK_TYPES[state.tankType];
+            if (!t) return '';
+            var cuft = t.cuft * (state.twins ? 2 : 1);
+            if (typeof modeImpOrMetric !== 'undefined' && modeImpOrMetric === 'met') {
+                var ratedBar = t.capacityPsi / DH_TANK_PSI_PER_BAR;
+                var liters = (cuft * 28.3168) / ratedBar;
+                return liters.toFixed(1) + ' L';
+            }
+            return cuft.toFixed(1) + ' cuft';
+        }
+        function dhRefreshTankVolumeLabel(row, state) {
+            var el = row.querySelector('.dh-tank-volume-label');
+            if (el) el.textContent = dhTankVolumeLabel(state);
+        }
+
+        // Available gas - how much of the fill is actually usable (fill
+        // minus reserve), converted from PSI to volume via the tank type's
+        // own cuft-per-psi ratio (nominal cuft / nominal working pressure),
+        // same approach the app already uses to move between cuft and
+        // liters for SAC/gas-consumption volumes (Pablo, 2026-09-26: "get a
+        // number for CUFT/PSI...multiply by the actual pressure
+        // available...update as the user updates the fill or changes
+        // tanks"). Doubles with Twins, same as the nominal volume above.
+        // Raw cuft value, unrounded - the number actually sent to the deco
+        // API as gasSupply.availableVolumeCuft (see dhAttachGasSupply
+        // below), not just a display string. dhTankAvailableGasLabel()
+        // builds its rounded, unit-aware label on top of this so there's
+        // one formula, not two copies that could drift.
+        function dhTankAvailableGasCuft(state) {
+            var t = DH_TANK_TYPES[state.tankType];
+            if (!t) return 0;
+            var cuftPerPsi = t.cuft / t.capacityPsi;
+            var availPsi = Math.max(0, state.fillPsi - state.reservePsi);
+            return cuftPerPsi * availPsi * (state.twins ? 2 : 1);
+        }
+        function dhTankAvailableGasLabel(state) {
+            var availCuft = dhTankAvailableGasCuft(state);
+            if (typeof modeImpOrMetric !== 'undefined' && modeImpOrMetric === 'met') {
+                return (availCuft * 28.3168).toFixed(0) + ' L';
+            }
+            return availCuft.toFixed(1) + ' cuft';
+        }
+        function dhRefreshTankAvailableGas(row, state) {
+            var el = row.querySelector('.dh-tank-available-value');
+            if (el) el.textContent = dhTankAvailableGasLabel(state);
+        }
+
+        // Gas-Limited Bottom Time (Pablo, 2026-09-26 - artifact
+        // d340db19-47cb-4581-87f2-25703629b3e8): {availableVolumeCuft,
+        // sacCuftPerMin} for one tank slot, in the exact shape the deco API
+        // expects on bottomGas/decoGases[i].gasSupply. Always cuft, never
+        // the display unit - same "cuft is canonical, liters is a metric
+        // display conversion" rule as everywhere else this card computes
+        // volume. Returns null if the slot has no tank configured (should
+        // only happen if this runs before dhRenderTanksTable ever has).
+        function dhGasSupplyFor(slotId) {
+            var state = window.dhTanksState[slotId];
+            var sac = window.dhTanksSacRates[slotId];
+            if (!state || typeof sac !== 'number') return null;
+            return {
+                availableVolumeCuft: Math.round(dhTankAvailableGasCuft(state) * 10) / 10,
+                sacCuftPerMin: Math.round(sac * 100) / 100,
+            };
+        }
+
+        // Attaches gasSupply to bottomGas and each decoGases[] entry right
+        // before they're sent to DecoPlanner/MultiLevelDivePlanner - reuses
+        // dhTankSlotActive() so a gas only carries gasSupply when it
+        // actually has a Tanks row (the diluent in CC mode never does, same
+        // as the Tanks card itself). decoGases[] and the Tanks table's own
+        // deco1-4 slots are built by walking the exact same
+        // gasAccordionItemDecoN.hidden checks, in the same order, so a
+        // running index lines them up correctly without needing to search.
+        function dhAttachGasSupply(bottomGas, decoGases) {
+            // Preview feature, off by default (Pablo, 2026-09-26) - with
+            // the toggle off, no gasSupply ever reaches the deco API at
+            // all, so it never computes or returns gasLimited in the
+            // first place. The Tanks card being hidden alone wouldn't be
+            // enough, since dhRenderTanksTable still seeds default tank
+            // state for every active slot even while the card is hidden.
+            if (!dhShowTanksFeature) return;
+            var bottomSlot = DH_TANK_SLOTS[0];
+            if (bottomSlot && dhTankSlotActive(bottomSlot)) {
+                var bottomSupply = dhGasSupplyFor(bottomSlot.id);
+                if (bottomSupply) bottomGas.gasSupply = bottomSupply;
+            }
+            var idx = 0;
+            DH_TANK_SLOTS.slice(1).forEach(function (slot) {
+                if (!dhTankSlotActive(slot)) return;
+                if (idx < decoGases.length) {
+                    var supply = dhGasSupplyFor(slot.id);
+                    if (supply) decoGases[idx].gasSupply = supply;
+                }
+                idx++;
+            });
+        }
+
+        // Snapshot for "Save Plan"/PDF-inputs (Pablo, 2026-09-26: "save the
+        // tanks configurations when the user saves the dive") - the diver's
+        // own tank type/twins/reserve/fill/SAC per gas, not just the
+        // derived availableVolumeCuft/sacCuftPerMin already implicit on
+        // bottomGas/decoGases via dhAttachGasSupply above. Gated the same
+        // way that is: with the feature off, dhTanksState only holds
+        // auto-seeded defaults the diver never actually saw or configured,
+        // so there's nothing real to save.
+        function dhSnapshotTanksForSave() {
+            if (!dhShowTanksFeature) return null;
+            return {
+                state: JSON.parse(JSON.stringify(window.dhTanksState || {})),
+                sacRates: JSON.parse(JSON.stringify(window.dhTanksSacRates || {})),
+            };
+        }
+
+        // Forces an already-existing row's controls to match current state
+        // (dhRenderTanksTable only calls this for a row that survived from
+        // an earlier render pass - a freshly created row is already correct
+        // from dhCreateTankRow's own initial markup/wiring). Needed because
+        // a row's checkbox/select/slider are otherwise only ever set once,
+        // at creation - "Open a dive" restoring a saved tank config into
+        // window.dhTanksState later doesn't reach a row that's still
+        // sitting there from before the restore ran.
+        function dhSyncTankRowUI(row, slot) {
+            var state = window.dhTanksState[slot.id];
+            if (!state) return;
+
+            var typeSelect = row.querySelector('.dh-tank-type-select');
+            if (typeSelect && typeSelect.value !== state.tankType) typeSelect.value = state.tankType;
+
+            var twinsCheck = row.querySelector('.dh-tank-twins-check');
+            if (twinsCheck) twinsCheck.checked = !!state.twins;
+
+            var sliderEl = row.querySelector('.dh-tank-slider');
+            if (sliderEl && sliderEl.noUiSlider) {
+                sliderEl.noUiSlider.set([dhTankPsiToDisplay(state.reservePsi), dhTankPsiToDisplay(state.fillPsi)]);
+            }
+            dhUpdateTankCapacityMarker(row, state);
+            dhRefreshTankVolumeLabel(row, state);
+            dhRefreshTankAvailableGas(row, state);
+
+            var sacRate = window.dhTanksSacRates[slot.id];
+            if (typeof sacRate === 'number') {
+                var isMetric = (typeof modeImpOrMetric !== 'undefined' && modeImpOrMetric === 'met');
+                var sacInput = row.querySelector('.dh-tank-sac-input');
+                var sacSlider = row.querySelector('.dh-tank-sac-slider');
+                if (sacSlider) sacSlider.value = sacRate;
+                if (sacInput) sacInput.value = isMetric ? (sacRate * 28.3168).toFixed(0) : sacRate.toFixed(1);
+            }
+        }
+
+        function dhCreateTankRow(slot) {
+            var state = window.dhTanksState[slot.id];
+            var row = document.createElement('tr');
+            row.id = 'tankRow_' + slot.id;
+            row.dataset.tankSlot = slot.id;
+
+            var typeOptions = Object.keys(DH_TANK_TYPES).map(function (t) {
+                return '<option value="' + t + '"' + (t === state.tankType ? ' selected' : '') + '>' + t + '</option>';
+            }).join('');
+
+            row.innerHTML =
+                '<td class="dh-tank-col-type">' +
+                    '<select class="form-select form-select-sm dh-tank-type-select">' + typeOptions + '</select>' +
+                    '<div class="text-xs text-secondary dh-tank-volume-label"></div>' +
+                '</td>' +
+                '<td class="dh-tank-col-twins text-center">' +
+                    (slot.allowTwins
+                        ? '<span class="dh-tank-mobile-label d-md-none">Twins</span>' +
+                          '<div class="form-check d-flex justify-content-center m-0 p-0"><input class="form-check-input dh-tank-twins-check m-0" type="checkbox" id="tankTwins_' + slot.id + '" aria-label="Twin tanks"' + (state.twins ? ' checked' : '') + '></div>'
+                        : '') +
+                '</td>' +
+                '<td class="dh-tank-col-gas">' +
+                    '<div class="text-xs text-secondary dh-tank-role-label"></div>' +
+                    '<div class="dh-tank-gas-pill"></div>' +
+                '</td>' +
+                '<td class="dh-tank-col-reservefill">' +
+                    '<div class="dh-tank-readout">' +
+                        '<div class="dh-tank-readout-start">' +
+                            '<div class="dh-gas-editable dh-tank-editable dh-tank-reserve-editable">' +
+                                '<input type="text" inputmode="numeric" class="dh-gas-input dh-tank-reserve-input" aria-label="Reserve pressure">' +
+                                '<span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>' +
+                            '</div>' +
+                            '<span class="dh-tank-unit-a text-xs"></span>' +
+                        '</div>' +
+                        '<div class="dh-tank-readout-end">' +
+                            '<div class="dh-gas-editable dh-tank-editable">' +
+                                '<input type="text" inputmode="numeric" class="dh-gas-input dh-tank-fill-input" aria-label="Fill pressure">' +
+                                '<span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>' +
+                            '</div>' +
+                            '<span class="dh-tank-unit-b text-xs"></span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="dh-tank-slider-wrap">' +
+                        // data-dh-num-mirror="1" opts this OUT of divershub.js's
+                        // global single-value numeric-entry companion (every
+                        // other slider on this page carries the same
+                        // attribute for the same reason) - that mirror only
+                        // understands one handle, and this slider has two.
+                        '<div class="slider-styled dh-tank-slider" data-dh-num-mirror="1"></div>' +
+                        '<div class="dh-tank-capacity-marker"></div>' +
+                    '</div>' +
+                '</td>' +
+                '<td class="dh-tank-col-available text-center">' +
+                    '<span class="dh-tank-mobile-label d-md-none">Available</span>' +
+                    '<span class="dh-gas-result-pill is-compact dh-tank-available-value"></span>' +
+                '</td>' +
+                '<td class="dh-tank-col-sac">' +
+                    '<div class="dh-gasconsumption-sac">' +
+                        '<div class="dh-gas-editable">' +
+                            '<input type="text" inputmode="decimal" class="dh-gas-input dh-tank-sac-input">' +
+                            '<span class="dh-gas-edit-icon material-icons-round" aria-hidden="true">edit</span>' +
+                        '</div>' +
+                        '<span class="dh-gasconsumption-sac-unit"></span>' +
+                        '<input type="range" class="dh-gasconsumption-sac-slider dh-tank-sac-slider" min="0.3" max="4" step="0.1">' +
+                    '</div>' +
+                '</td>';
+
+            var typeSelect = row.querySelector('.dh-tank-type-select');
+            var sliderEl = row.querySelector('.dh-tank-slider');
+
+            typeSelect.addEventListener('change', function () {
+                state.tankType = typeSelect.value;
+                // A fresh cylinder swap reads as "just filled" until the
+                // diver says otherwise - snap fill to the new type's own
+                // standard capacity, and pull reserve down with it if it
+                // would otherwise sit above the new fill.
+                state.fillPsi = Math.min(DH_TANK_TYPES[state.tankType].capacityPsi, DH_TANK_MAX_PSI);
+                if (state.reservePsi > state.fillPsi) state.reservePsi = state.fillPsi;
+                sliderEl.noUiSlider.set([dhTankPsiToDisplay(state.reservePsi), dhTankPsiToDisplay(state.fillPsi)]);
+                dhUpdateTankCapacityMarker(row, state);
+                dhRefreshTankVolumeLabel(row, state);
+            });
+
+            var twinsCheck = row.querySelector('.dh-tank-twins-check');
+            if (twinsCheck) {
+                twinsCheck.addEventListener('change', function () {
+                    state.twins = twinsCheck.checked;
+                    dhRefreshTankVolumeLabel(row, state);
+                    dhRefreshTankAvailableGas(row, state);
+                });
+            }
+
+            noUiSlider.create(sliderEl, {
+                start: [dhTankPsiToDisplay(state.reservePsi), dhTankPsiToDisplay(state.fillPsi)],
+                connect: [true, true, false],
+                range: { min: 0, max: dhTankMaxDisplay() },
+                step: (typeof modeImpOrMetric === 'undefined' || modeImpOrMetric === 'imp') ? 50 : 5,
+            });
+
+            // Reserve/Fill - editable text boxes (same .dh-gas-editable
+            // pencil-icon affordance as everywhere else on this page) kept
+            // in sync with the slider both ways (Pablo, 2026-09-26: "make
+            // the reserve and fill editable...similar to what you did in
+            // the sac"). Passing null for the other handle in .set() moves
+            // just the one that was typed into, same as dragging a single
+            // handle would.
+            var reserveInput = row.querySelector('.dh-tank-reserve-input');
+            var fillInput = row.querySelector('.dh-tank-fill-input');
+            var unitAEl = row.querySelector('.dh-tank-unit-a');
+            var unitBEl = row.querySelector('.dh-tank-unit-b');
+            sliderEl.noUiSlider.on('update', function (values) {
+                var reserveDisplay = Math.round(values[0]);
+                var fillDisplay = Math.round(values[1]);
+                if (document.activeElement !== reserveInput) reserveInput.value = reserveDisplay;
+                if (document.activeElement !== fillInput) fillInput.value = fillDisplay;
+                unitAEl.textContent = dhTankUnitLabel();
+                unitBEl.textContent = dhTankUnitLabel();
+                state.reservePsi = dhTankDisplayToPsi(reserveDisplay);
+                state.fillPsi = dhTankDisplayToPsi(fillDisplay);
+                dhRefreshTankAvailableGas(row, state);
+            });
+            reserveInput.addEventListener('change', function () {
+                var typed = parseFloat(reserveInput.value);
+                if (isNaN(typed)) { reserveInput.value = Math.round(sliderEl.noUiSlider.get()[0]); return; }
+                sliderEl.noUiSlider.set([typed, null]);
+            });
+            fillInput.addEventListener('change', function () {
+                var typed = parseFloat(fillInput.value);
+                if (isNaN(typed)) { fillInput.value = Math.round(sliderEl.noUiSlider.get()[1]); return; }
+                sliderEl.noUiSlider.set([null, typed]);
+            });
+
+            dhUpdateTankCapacityMarker(row, state);
+            dhRefreshTankVolumeLabel(row, state);
+            dhRefreshTankAvailableGas(row, state);
+
+            // SAC - same "editable pill + native range input" markup as the
+            // Gas Consumption card's own per-gas SAC control, so the two
+            // read as the same control (Pablo: "SAC in cuft/min...0.3 to 4").
+            var sacInput = row.querySelector('.dh-tank-sac-input');
+            var sacSlider = row.querySelector('.dh-tank-sac-slider');
+            var sacUnitEl = row.querySelector('.dh-gasconsumption-sac-unit');
+            var isMetric = (typeof modeImpOrMetric !== 'undefined' && modeImpOrMetric === 'met');
+            sacUnitEl.textContent = isMetric ? 'L/min' : 'cuft/min';
+
+            function refreshSacDisplay() {
+                var canonical = window.dhTanksSacRates[slot.id];
+                sacSlider.value = canonical;
+                sacInput.value = isMetric ? (canonical * 28.3168).toFixed(0) : canonical.toFixed(1);
+            }
+            function applySac(canonical) {
+                canonical = Math.min(4, Math.max(0.3, canonical));
+                window.dhTanksSacRates[slot.id] = canonical;
+                refreshSacDisplay();
+            }
+            refreshSacDisplay();
+            sacSlider.addEventListener('input', function () { applySac(parseFloat(sacSlider.value)); });
+            sacInput.addEventListener('change', function () {
+                var typed = parseFloat(sacInput.value);
+                if (isNaN(typed)) { refreshSacDisplay(); return; }
+                applySac(isMetric ? (typed / 28.3168) : typed);
+            });
+
+            return row;
+        }
+
+        function dhRenderTanksTable() {
+            var tbody = document.getElementById('dhTanksTableBody');
+            if (!tbody) return;
+
+            var activeIds = {};
+            DH_TANK_SLOTS.forEach(function (slot) {
+                if (!dhTankSlotActive(slot)) return;
+                activeIds[slot.id] = true;
+
+                if (!window.dhTanksState[slot.id]) window.dhTanksState[slot.id] = dhTankDefaultState();
+                if (window.dhTanksSacRates[slot.id] === undefined) {
+                    window.dhTanksSacRates[slot.id] = (slot.id === 'bottom') ? 0.8 : 0.5;
+                }
+
+                var row = document.getElementById('tankRow_' + slot.id);
+                var isNewRow = !row;
+                if (isNewRow) row = dhCreateTankRow(slot);
+                tbody.appendChild(row); // no-op if already last child - keeps a stable bottom/deco1-4 order
+
+                // A row surviving from an earlier render only had its
+                // checkbox/select/slider set up once, at creation - re-
+                // running this loop (e.g. after "Open a dive" restores a
+                // saved tank config into window.dhTanksState) never
+                // touched them again, so a pre-existing row could keep
+                // showing stale controls even though the underlying state
+                // was correct (Pablo, 2026-09-26: "save the tanks
+                // configurations when the user saves the dive" surfaced
+                // this - twins restored true in state, checkbox still
+                // unchecked). Syncing here on every pass, not just at
+                // creation, makes this render idempotent instead of
+                // creation-only.
+                if (!isNewRow) dhSyncTankRowUI(row, slot);
+
+                var gas = dhTankSlotGas(slot);
+                var labelEl = row.querySelector('.dh-tank-role-label');
+                if (labelEl) labelEl.textContent = dhTankSlotLabel(slot);
+                var pillEl = row.querySelector('.dh-tank-gas-pill');
+                if (pillEl) pillEl.innerHTML = dhBuildGasSplitPillHtml(gas.o2, gas.he, true);
+            });
+
+            Array.prototype.slice.call(tbody.querySelectorAll('tr[data-tank-slot]')).forEach(function (row) {
+                var id = row.dataset.tankSlot;
+                if (!activeIds[id]) {
+                    row.remove();
+                    delete window.dhTanksState[id];
+                    delete window.dhTanksSacRates[id];
+                }
+            });
         }
 
         function dhUpdateBottomGasTabLabel() {
@@ -4758,6 +5381,35 @@
             el.textContent = info.text;
             el.classList.toggle('is-gas-label', info.extraClass.indexOf('is-gas-label') !== -1);
             el.classList.toggle('is-air', info.extraClass.indexOf('is-air') !== -1);
+            // Every gas-slider handler on the page (bottom/diluent, deco 1-4)
+            // calls this whenever a gas's O2/He changes, so it's also the one
+            // place to keep the Tanks table's gas pills in sync (Pablo,
+            // 2026-09-26: "if the user changes the gases above, you need to
+            // update the table with the gas pill").
+            if (typeof dhRenderTanksTable === 'function') dhRenderTanksTable();
+        }
+
+        // The one green-O2/blue-He split pill markup, as an HTML string for
+        // the places that build a table row via innerHTML rather than the
+        // DOM API (Pablo, 2026-09-19: "in the app view, we can use the gas
+        // split pills in the gas consumption...same criteria we do
+        // everywhere else"). Shared by generateDecoTable's Gas column, the
+        // Tanks table, and the Gas Consumption tables further down, so all
+        // three stay in sync. Defined this early (not next to its own
+        // "PDF/gas consumption" neighbors further down) for the same reason
+        // dhGasPillO2Info/dhApplyGasPillO2Label above are - the Tanks
+        // table's own row-building code calls it from dhReorderGasAccordion,
+        // which fires synchronously during page load, long before a script
+        // block further down the page has executed.
+        function dhBuildGasSplitPillHtml(o2, he, compact) {
+            var sizeClass = compact ? ' is-compact' : '';
+            var info = dhGasPillO2Info(o2, he);
+            var o2Class = 'dh-gas-result-pill is-o2' + sizeClass + (info.extraClass ? ' ' + info.extraClass : '');
+            var o2Html = '<label class="' + o2Class + '">' + info.text + '</label>';
+            if (he == 0) {
+                return '<span class="dh-gas-split-pill is-solo">' + o2Html + '</span>';
+            }
+            return '<span class="dh-gas-split-pill">' + o2Html + '<label class="dh-gas-result-pill is-he' + sizeClass + '">' + he + '</label></span>';
         }
 
         // CC bailout's switch depth/PPO2/END aren't user-adjustable via a
@@ -6242,6 +6894,11 @@
             var uddfStatusEl = document.getElementById('uddfStatus');
             if (uddfStatusEl) uddfStatusEl.textContent = '';
 
+            // Same reasoning as the UDDF reset above - a fresh calculation
+            // means stale scenario data, so any gas-limit overlay toggled
+            // on for a previous run shouldn't carry over silently.
+            window.dhGasLimitOverlayOn = false;
+
             // Create Chart.js Scatter Plot (correctly scaled x-axis)
             profileChartInstance = new Chart(ctx, {
                 type: 'scatter', // Scatter ensures proportional spacing of points
@@ -7146,7 +7803,56 @@
         // (and <= 200ft) yellow (Pablo, 2026-09-26: "I want to flag when a
         // dive plan is unsafe"). Call with the scenario currently driving
         // the main summary (today: baseline).
-        function dhRenderSafetyWarnings(scenario) {
+        // Gas-Limited Bottom Time (Pablo, 2026-09-26 - artifact
+        // d340db19-47cb-4581-87f2-25703629b3e8): compares the diver's own
+        // planned bottom time against the deco engine's gasLimited scenario
+        // (computed from the Tanks card's per-gas available volume + SAC).
+        // gasLimit is null when no gas carried a Tanks row - nothing to
+        // compare, no pill. Otherwise shaped:
+        //   { isMultiLevel, plannedBottomTime, plannedLevels, gasLimited }
+        // Single-level: danger if the gas falls short of the plan, a
+        // quieter "ideal" pill if there's extra margin - both directions,
+        // since DecoPlanner always returns a concrete max either way.
+        // Multi-level: only ever a shortfall warning, naming which level
+        // got trimmed - MultiLevelDivePlanner has no equivalent "here's
+        // your surplus" figure when the plan already fits (trimmedLevelIndex
+        // comes back null with levels unchanged), so there's nothing
+        // positive to report in that case.
+        function dhComputeGasLimitWarning(gasLimit) {
+            // Belt-and-suspenders alongside dhAttachGasSupply's own gate -
+            // catches a scenario left over from earlier in the session if
+            // the toggle gets flipped off mid-session (see dhToggleShowTanks's
+            // own handler, which also proactively re-renders immediately).
+            if (!dhShowTanksFeature) return null;
+            if (!gasLimit || !gasLimit.gasLimited) return null;
+            var gl = gasLimit.gasLimited;
+
+            if (gasLimit.isMultiLevel) {
+                if (gl.trimmedLevelIndex === null || gl.trimmedLevelIndex === undefined) return null;
+                var idx = gl.trimmedLevelIndex;
+                var trimmedLevel = gl.levels && gl.levels[idx];
+                var plannedLevel = gasLimit.plannedLevels && gasLimit.plannedLevels[idx];
+                if (!trimmedLevel || !plannedLevel) return null;
+                return {
+                    level: 'danger', isGasLimit: true,
+                    text: 'Gas limits level ' + (idx + 1) + ' to ' + Math.round(trimmedLevel.bottomTime) +
+                        ' min (planned ' + Math.round(plannedLevel.bottomTime) + ')',
+                };
+            }
+
+            if (typeof gl.bottomTime !== 'number' || typeof gasLimit.plannedBottomTime !== 'number') return null;
+            var maxTime = Math.round(gl.bottomTime);
+            var plannedTime = Math.round(gasLimit.plannedBottomTime);
+            if (maxTime < plannedTime) {
+                return { level: 'danger', isGasLimit: true, text: 'Gas allows ' + maxTime + ' min (planned ' + plannedTime + ')' };
+            }
+            if (maxTime > plannedTime) {
+                return { level: 'ideal', isGasLimit: true, text: 'Gas allows up to ' + maxTime + ' min (planned ' + plannedTime + ')' };
+            }
+            return null;
+        }
+
+        function dhRenderSafetyWarnings(scenario, gasLimit) {
             var row = document.getElementById('dhSafetyWarningsRow');
             var container = document.getElementById('dhSafetyWarningsContainer');
             if (!row || !container) return;
@@ -7181,14 +7887,91 @@
                 }
             }
 
+            var gasWarning = dhComputeGasLimitWarning(gasLimit);
+            if (gasWarning) warnings.push(gasWarning);
+
             warnings.forEach(function (w) {
                 var pill = document.createElement('span');
                 pill.className = 'dh-gas-result-pill dh-deco-summary-pill is-' + w.level;
-                pill.innerHTML = '<span class="material-icons-round" aria-hidden="true" style="font-size: 16px; vertical-align: -3px;">warning</span> ' + w.text;
+                // "ideal" (extra gas margin) is good news, not a warning -
+                // a check mark reads correctly there where the triangle
+                // would not.
+                var icon = w.level === 'ideal' ? 'check_circle' : 'warning';
+                var html = '<span class="material-icons-round" aria-hidden="true" style="font-size: 16px; vertical-align: -3px;">' + icon + '</span> ' + w.text;
+                // Eye toggle - overlays the gasLimited scenario's own
+                // profile on the chart, on/off (Pablo, 2026-09-26: "an eye
+                // button that will basically overlay into the chart the
+                // profile for the max allowed"). Only the gas-limit pill
+                // gets one; PPO2/CNS/END warnings have no scenario profile
+                // of their own to show.
+                if (w.isGasLimit) {
+                    html += ' <button type="button" class="dh-gas-limit-eye-btn" id="dhGasLimitEyeBtn" aria-pressed="false" aria-label="Show max allowed profile on chart">' +
+                        '<span class="material-icons-round" aria-hidden="true">visibility_off</span></button>';
+                }
+                pill.innerHTML = html;
                 container.appendChild(pill);
+
+                if (w.isGasLimit) {
+                    var eyeBtn = pill.querySelector('.dh-gas-limit-eye-btn');
+                    if (eyeBtn) {
+                        eyeBtn.addEventListener('click', function () {
+                            dhSetGasLimitOverlay(!window.dhGasLimitOverlayOn);
+                        });
+                    }
+                }
             });
 
             row.hidden = warnings.length === 0;
+        }
+
+        // Draws (or removes) the gasLimited scenario's own profile as a
+        // dashed overlay on the already-rendered chart - same {x: time,
+        // y: -(abs_p-1)*unitConversion} point shape renderProfileChart()
+        // itself uses, so it lands on the same axes. Turned off whenever a
+        // fresh Calculate runs (renderProfileChart resets it, same as the
+        // UDDF overlay) or the What if...? bubble is opened (Pablo,
+        // 2026-09-26: "if at any time the What if bubble is pressed, you
+        // hide the max allowed profile") - a hypothetical gas-limited
+        // profile and a hypothetical what-if profile on screen at once
+        // would be genuinely confusing to read.
+        function dhSetGasLimitOverlay(on) {
+            if (!profileChartInstance) return;
+            profileChartInstance.data.datasets = profileChartInstance.data.datasets.filter(function (d) {
+                return !d.isGasLimitOverlay;
+            });
+
+            var scenario = window.dhScenarios.gasLimited;
+            if (on && (!scenario || !Array.isArray(scenario.profile) || !scenario.profile.length)) on = false;
+
+            if (on) {
+                var unitConversion = (modeImpOrMetric === 'met') ? 10 : 33;
+                var points = scenario.profile.map(function (item) {
+                    return { x: item.time, y: -(item.abs_p - 1) * unitConversion };
+                });
+                profileChartInstance.data.datasets.push({
+                    label: 'Max allowed (gas)',
+                    data: points,
+                    borderColor: '#ffb300',
+                    backgroundColor: 'rgba(255, 179, 0, 0.12)',
+                    borderDash: [6, 4],
+                    borderWidth: 2,
+                    showLine: true,
+                    fill: false,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    isGasLimitOverlay: true,
+                });
+            }
+            profileChartInstance.update();
+
+            window.dhGasLimitOverlayOn = on;
+            var eyeBtn = document.getElementById('dhGasLimitEyeBtn');
+            if (eyeBtn) {
+                eyeBtn.classList.toggle('is-active', on);
+                eyeBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+                var icon = eyeBtn.querySelector('.material-icons-round');
+                if (icon) icon.textContent = on ? 'visibility' : 'visibility_off';
+            }
         }
     </script>
 
@@ -7270,7 +8053,12 @@
             reapplyUddfOverlay(); // keep an uploaded real-dive log visible across What If? toggles
             profileChartInstance.update(); // Refresh chart
 
-            document.querySelectorAll(".form-check-input").forEach(cb => {
+            // Scoped to .dh-whatif-chip - was a bare ".form-check-input",
+            // which matches every checkbox on the page (Tanks card's Twins
+            // checkbox included) rather than just these 7 filter chips,
+            // same bug/fix as the Calculate success handlers' identical
+            // reset (Pablo, 2026-09-26).
+            document.querySelectorAll(".dh-whatif-chip input[type=checkbox]").forEach(cb => {
                 if (cb !== this) {
                     cb.checked = false; // Uncheck all other checkboxes
                 }
@@ -7358,7 +8146,7 @@
             reapplyUddfOverlay(); // keep an uploaded real-dive log visible across What If? toggles
             profileChartInstance.update(); // Refresh chart
 
-            document.querySelectorAll(".form-check-input").forEach(cb => {
+            document.querySelectorAll(".dh-whatif-chip input[type=checkbox]").forEach(cb => {
                     if (cb !== this) {
                         cb.checked = false; // Uncheck all other checkboxes
                     }
@@ -7463,7 +8251,7 @@
             reapplyUddfOverlay(); // keep an uploaded real-dive log visible across What If? toggles
             profileChartInstance.update(); // Refresh chart
 
-            document.querySelectorAll(".form-check-input").forEach(cb => {
+            document.querySelectorAll(".dh-whatif-chip input[type=checkbox]").forEach(cb => {
                     if (cb !== this) {
                         cb.checked = false; // Uncheck all other checkboxes
                     }
@@ -7551,7 +8339,7 @@
             reapplyUddfOverlay(); // keep an uploaded real-dive log visible across What If? toggles
             profileChartInstance.update(); // Refresh chart
 
-            document.querySelectorAll(".form-check-input").forEach(cb => {
+            document.querySelectorAll(".dh-whatif-chip input[type=checkbox]").forEach(cb => {
                     if (cb !== this) {
                         cb.checked = false; // Uncheck all other checkboxes
                     }
@@ -7641,7 +8429,7 @@
             reapplyUddfOverlay(); // keep an uploaded real-dive log visible across What If? toggles
             profileChartInstance.update(); // Refresh chart
 
-            document.querySelectorAll(".form-check-input").forEach(cb => {
+            document.querySelectorAll(".dh-whatif-chip input[type=checkbox]").forEach(cb => {
                     if (cb !== this) {
                         cb.checked = false; // Uncheck all other checkboxes
                     }
@@ -7732,7 +8520,7 @@
             reapplyUddfOverlay(); // keep an uploaded real-dive log visible across What If? toggles
             profileChartInstance.update(); // Refresh chart
 
-            document.querySelectorAll(".form-check-input").forEach(cb => {
+            document.querySelectorAll(".dh-whatif-chip input[type=checkbox]").forEach(cb => {
                     if (cb !== this) {
                         cb.checked = false; // Uncheck all other checkboxes
                     }
@@ -7880,7 +8668,7 @@
             
 
 
-            document.querySelectorAll(".form-check-input").forEach(cb => {
+            document.querySelectorAll(".dh-whatif-chip input[type=checkbox]").forEach(cb => {
                     if (cb !== this) {
                         cb.checked = false; // Uncheck all other checkboxes
                     }
@@ -9022,23 +9810,6 @@
             return { o2: parseInt(str, 10) || 0, he: 0 };
         }
 
-        // The one green-O2/blue-He split pill markup, as an HTML string for
-        // the places that build a table row via innerHTML rather than the
-        // DOM API (Pablo, 2026-09-19: "in the app view, we can use the gas
-        // split pills in the gas consumption...same criteria we do
-        // everywhere else"). Shared by generateDecoTable's Gas column and
-        // the Gas Consumption tables below, so both stay in sync.
-        function dhBuildGasSplitPillHtml(o2, he, compact) {
-            var sizeClass = compact ? ' is-compact' : '';
-            var info = dhGasPillO2Info(o2, he);
-            var o2Class = 'dh-gas-result-pill is-o2' + sizeClass + (info.extraClass ? ' ' + info.extraClass : '');
-            var o2Html = '<label class="' + o2Class + '">' + info.text + '</label>';
-            if (he == 0) {
-                return '<span class="dh-gas-split-pill is-solo">' + o2Html + '</span>';
-            }
-            return '<span class="dh-gas-split-pill">' + o2Html + '<label class="dh-gas-result-pill is-he' + sizeClass + '">' + he + '</label></span>';
-        }
-
         function dhBuildPdfHeader(profile, isCC) {
             var header = document.createElement('div');
             header.style.cssText = 'position:relative; background:#0b2a3a; color:#fff; display:flex; align-items:center; padding:26px 48px; gap:28px; flex:0 0 auto;';
@@ -9680,6 +10451,26 @@
                 GFHSlider.noUiSlider.set(GFHSlider.noUiSlider.get());
                 setpointSlider.noUiSlider.set(setpointSlider.noUiSlider.get());
             });
+
+            var showTanksToggle = document.getElementById('dhToggleShowTanks');
+            var tanksCardRow = document.getElementById('dhTanksCardRow');
+            if (showTanksToggle) {
+                showTanksToggle.addEventListener('change', function (e) {
+                    dhShowTanksFeature = e.target.checked;
+                    if (tanksCardRow) tanksCardRow.hidden = !dhShowTanksFeature;
+                    // Turning it off mid-session should also clear
+                    // whatever gas-limit pill/overlay is currently showing,
+                    // not just hide the Tanks card itself - re-running the
+                    // same render functions with the flag now off is
+                    // simpler than writing a separate teardown path.
+                    if (!dhShowTanksFeature) {
+                        if (typeof dhSetGasLimitOverlay === 'function') dhSetGasLimitOverlay(false);
+                        if (window.dhScenarios && window.dhScenarios.baseline && typeof dhRenderSafetyWarnings === 'function') {
+                            dhRenderSafetyWarnings(window.dhScenarios.baseline, null);
+                        }
+                    }
+                });
+            }
         })();
 
         // "Open a dive" (Pablo, 2026-09-19): reloads a saved plan's exact
@@ -9870,6 +10661,49 @@
                 dhSetFieldValue('labelDecoGas' + n + 'O2', gas.O2);
                 dhSetFieldValue('labelDecoGas' + n + 'He', gas.He);
             });
+
+            // Tanks (Pablo, 2026-09-26: "save the tanks configurations when
+            // the user saves the dive") - restored regardless of the
+            // Advanced Settings toggle's current state, so the data isn't
+            // lost if the diver turns the preview feature on afterward
+            // without reopening this same plan again. Existing rows (the
+            // tab-switch clicks above already seeded default state/rows
+            // for whichever gases are active) are torn down first so
+            // dhRenderTanksTable() rebuilds them from the restored state
+            // instead of leaving stale defaults in place.
+            //
+            // Explicit type coercion below, not a plain JSON clone - Save
+            // Plan's own $.ajax call has no contentType/data override, so
+            // jQuery form-encodes the whole payload and every value (this
+            // plan's maxDepth/O2/etc included, confirmed via the raw DB
+            // row - not something new from Tanks) comes back through
+            // Laravel as a string. twins as the string "false" is still
+            // truthy in JS, and a string has no .toFixed() where SAC's
+            // canonical rate needs one - both silently wrong without this.
+            if (inputs.tanks) {
+                var restoredTankState = {};
+                var savedTankState = inputs.tanks.state || {};
+                Object.keys(savedTankState).forEach(function (slotId) {
+                    var s = savedTankState[slotId] || {};
+                    restoredTankState[slotId] = {
+                        tankType: s.tankType,
+                        twins: (s.twins === true || s.twins === 'true'),
+                        reservePsi: parseFloat(s.reservePsi),
+                        fillPsi: parseFloat(s.fillPsi),
+                    };
+                });
+                var restoredSacRates = {};
+                var savedSacRates = inputs.tanks.sacRates || {};
+                Object.keys(savedSacRates).forEach(function (slotId) {
+                    restoredSacRates[slotId] = parseFloat(savedSacRates[slotId]);
+                });
+
+                window.dhTanksState = restoredTankState;
+                window.dhTanksSacRates = restoredSacRates;
+                var tanksBody = document.getElementById('dhTanksTableBody');
+                if (tanksBody) tanksBody.innerHTML = '';
+                if (typeof dhRenderTanksTable === 'function') dhRenderTanksTable();
+            }
 
             document.getElementById('calculateDecoProfile').click();
         }
