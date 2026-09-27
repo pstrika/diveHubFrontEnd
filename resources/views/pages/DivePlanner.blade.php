@@ -432,15 +432,32 @@
 
             <div class="dh-panel-head-row mb-3">
                 <h2 class="dh-panel-title mb-0">Decompression Dive Planner</h2>
-                @if(!is_null($currentSite) && $deco_unit)
-                    <a class="dh-btn dh-btn-ghost-dark" id="switchUnits" href="{{ route('DecoPlannerImperial') }}/{{ $currentSite->id }}">Switch to Imperial</a>
-                @elseif(is_null($currentSite) && $deco_unit)
-                    <a class="dh-btn dh-btn-ghost-dark" id="switchUnits" href="{{ route('DecoPlannerImperial') }}">Switch to Imperial</a>
-                @elseif(!is_null($currentSite) && !$deco_unit)
-                    <a class="dh-btn dh-btn-ghost-dark" id="switchUnits" href="{{ route('DecoPlannerMetric') }}/{{ $currentSite->id }}">Switch to Metric</a>
-                @else
-                    <a class="dh-btn dh-btn-ghost-dark" id="switchUnits" href="{{ route('DecoPlannerMetric') }}">Switch to Metric</a>
-                @endif
+                <div class="d-flex align-items-center" style="gap: 8px;">
+                    @if(!is_null($currentSite) && $deco_unit)
+                        <a class="dh-btn dh-btn-ghost-dark" id="switchUnits" href="{{ route('DecoPlannerImperial') }}/{{ $currentSite->id }}">Switch to Imperial</a>
+                    @elseif(is_null($currentSite) && $deco_unit)
+                        <a class="dh-btn dh-btn-ghost-dark" id="switchUnits" href="{{ route('DecoPlannerImperial') }}">Switch to Imperial</a>
+                    @elseif(!is_null($currentSite) && !$deco_unit)
+                        <a class="dh-btn dh-btn-ghost-dark" id="switchUnits" href="{{ route('DecoPlannerMetric') }}/{{ $currentSite->id }}">Switch to Metric</a>
+                    @else
+                        <a class="dh-btn dh-btn-ghost-dark" id="switchUnits" href="{{ route('DecoPlannerMetric') }}">Switch to Metric</a>
+                    @endif
+                    {{-- Advanced settings - moved out of the Inputs card to sit next
+                         to Switch to Metric/Imperial instead (Pablo, 2026-09-27:
+                         "put it to the right of switch to metric button - not
+                         inside the input card"). Registered users only, not even
+                         shown to guests (Pablo, 2026-09-25: "This is ONLY available
+                         for registered users. For guest, don't even show the gear
+                         icon"), unlike the lock-badge treatment used for Multi
+                         Level/Export PDF - these settings can create genuinely
+                         dangerous configurations, so there's no upsell value in
+                         advertising them to a guest. --}}
+                    @if(auth()->user()->isNotGuest())
+                        <button type="button" class="dh-gear-btn" id="dhAdvancedSettingsBtn" title="Advanced settings" aria-label="Advanced settings">
+                            <span class="material-icons-round" aria-hidden="true">settings</span>
+                        </button>
+                    @endif
+                </div>
             </div>
 
             <div class="row">
@@ -481,16 +498,6 @@
                                         <button type="button" class="dh-channel-chip dh-deco-searchrow-pill" id="openDivePlanBtn" style="flex: 0 0 auto; margin-left:auto;" title="Load a previously saved dive plan">
                                             <span class="material-icons-round" aria-hidden="true" style="font-size: 15px; vertical-align: -3px;">folder_open</span>
                                             Open a dive
-                                        </button>
-                                        {{-- Advanced settings - registered users only, not even shown
-                                             to guests (Pablo, 2026-09-25: "This is ONLY available for
-                                             registered users. For guest, don't even show the gear
-                                             icon"), unlike the lock-badge treatment used for Multi
-                                             Level/Export PDF - these settings can create genuinely
-                                             dangerous configurations, so there's no upsell value in
-                                             advertising them to a guest. --}}
-                                        <button type="button" class="dh-gear-btn" id="dhAdvancedSettingsBtn" title="Advanced settings" aria-label="Advanced settings" style="margin-left: 6px;">
-                                            <span class="material-icons-round" aria-hidden="true">settings</span>
                                         </button>
                                     @endif
                                 </div>
