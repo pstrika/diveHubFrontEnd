@@ -76,7 +76,7 @@
 
             {{--modal add pics--}}
             <div class="modal fade" id="modal-add-pic" data-backdrop="static" data-keyboard="false" tabindex="-1" >
-                <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">
+                <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document" style="max-width: 560px;">
                     <div class="modal-content">
                         <div class="modal-header text-center">
                             <h6 class="modal-title font-weight-normal" id="modal-title-notification">Notification</h6>
@@ -90,9 +90,20 @@
                             </i>
                             <h4 id="deleteConfirmText" class="text-gradient text-info mt-4">Add profile picture here</h4>
                             <div  class="form-control border dropzone" id="myDropzone"></div>
-                            <div class="modal-footer">
+                            @if($user->google_avatar_url)
+                                <form id="useGooglePictureForm" method="POST" action="{{ route('use-google-picture') }}" class="d-none">
+                                    @csrf
+                                </form>
+                            @endif
+                            <div class="modal-footer" style="justify-content: space-between; flex-wrap: nowrap;">
                                 <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button class="btn bg-gradient-info ms-auto" id="upload-pics-button" title="Delete" onclick="">Crop and upload</button>
+                                @if($user->google_avatar_url)
+                                    <button type="submit" form="useGooglePictureForm" class="btn bg-gradient-info d-inline-flex align-items-center justify-content-center gap-2">
+                                        <img src="{{ asset('assets') }}/img/icons/google_icon.webp" alt="" width="16" height="16">
+                                        Google Picture
+                                    </button>
+                                @endif
+                                <button class="btn bg-gradient-info" id="upload-pics-button" title="Delete" onclick="">Crop and upload</button>
 
                             </div>
                             </div>

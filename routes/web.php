@@ -355,6 +355,7 @@ Route::post('overview', 'App\Http\Controllers\UserController@updateProfile')->mi
 // UserController::updateNavSlots()'s docblock for why.
 Route::post('overview/nav-slots', 'App\Http\Controllers\UserController@updateNavSlots')->middleware('auth')->name('overview.navSlots');
 Route::post('upload-profile-pic', 'App\Http\Controllers\UserController@updateProfilePic')->middleware('auth')->name('upload-profile-pic');
+Route::post('use-google-picture', 'App\Http\Controllers\UserController@useGooglePicture')->middleware('auth')->name('use-google-picture');
 Route::post('profile/verify-phone', 'App\Http\Controllers\UserController@verifyPhone')->middleware('auth')->name('profile.verifyPhone');
 Route::post('profile/resend-phone-code', 'App\Http\Controllers\UserController@resendPhoneCode')->middleware('auth')->name('profile.resendPhoneCode');
 

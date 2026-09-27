@@ -9,6 +9,7 @@ use App\Models\Operator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 //require 'vendor/autoload.php';
 use Mailgun\Mailgun;
 
@@ -444,6 +445,36 @@ class UserController extends Controller
         $user->picture = $filename;
         $user->save();
         return redirect()->back();
+    }
+
+    /**
+     * Same fetch-and-store pattern as OnboardingController@save's Google
+     * photo choice, but callable any time from the profile page (not
+     * gated on the user having no picture yet - here they're deliberately
+     * replacing whatever's there).
+     */
+    public function useGooglePicture(Request $request) {
+        $user = User::findOrFail(auth()->user()->id);
+
+        if (!$user->google_avatar_url) {
+            return redirect()->route('overview')->with('error', 'No Google photo is available for this account.');
+        }
+
+        try {
+            $response = Http::timeout(10)->get($user->google_avatar_url);
+            if ($response->successful()) {
+                $filename = time() . '_google_' . $user->id . '.jpg';
+                Storage::disk('siteAssets')->put('img/users/' . $filename, $response->body());
+                $user->picture = $filename;
+                $user->save();
+            } else {
+                return redirect()->route('overview')->with('error', 'Could not fetch your Google photo. Please try again.');
+            }
+        } catch (\Throwable $e) {
+            return redirect()->route('overview')->with('error', 'Could not fetch your Google photo. Please try again.');
+        }
+
+        return redirect()->route('overview');
     }
 
     /**

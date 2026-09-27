@@ -36,7 +36,15 @@
                             @if($user->picture)
                                 <span class="dh-wizard-photo-row">
                                     <img src="{{ asset('assets') }}/img/users/{{ $user->picture }}" alt="" width="56" height="56">
-                                    <input type="file" name="picture" accept="image/*">
+                                    {{-- Themed trigger over a hidden native input, same pattern as
+                                         the diver-photo picker on SiteDetails (Pablo, 2026-09-24:
+                                         "the choose file button needs to be themed to the site -
+                                         right now it's a system button"). --}}
+                                    <label class="dh-file-picker" for="dhWizardPhotoInputExisting">
+                                        <span class="material-icons-round" aria-hidden="true">add_photo_alternate</span>
+                                        <span class="dh-file-picker-name" id="dhWizardPhotoNameExisting">Choose a new picture&hellip;</span>
+                                    </label>
+                                    <input type="file" name="picture" accept="image/*" id="dhWizardPhotoInputExisting" hidden>
                                 </span>
                             @elseif($user->google_avatar_url)
                                 {{-- Signed up with Google - offer their Google photo instead of
@@ -59,26 +67,58 @@
                                         </span>
                                     </label>
                                 </div>
-                                <input type="file" name="picture" accept="image/*" id="dhPhotoUploadInput" hidden style="margin-top: 8px;">
+                                {{-- Themed trigger, same pattern as above - only the LABEL's
+                                     visibility toggles with the radio choice now, not the raw
+                                     input's, so what appears is never the unstyled system button
+                                     (Pablo, 2026-09-27: "the button to choose a photo needs to be
+                                     themed"). --}}
+                                <label class="dh-file-picker" for="dhPhotoUploadInput" id="dhPhotoUploadLabel" hidden style="margin-top: 8px;">
+                                    <span class="material-icons-round" aria-hidden="true">add_photo_alternate</span>
+                                    <span class="dh-file-picker-name" id="dhPhotoUploadName">Choose a picture&hellip;</span>
+                                </label>
+                                <input type="file" name="picture" accept="image/*" id="dhPhotoUploadInput" hidden>
                                 <script>
                                     (function () {
                                         var uploadChoice = document.getElementById('dhPhotoUploadChoice');
+                                        var uploadLabel = document.getElementById('dhPhotoUploadLabel');
                                         var uploadInput = document.getElementById('dhPhotoUploadInput');
-                                        if (!uploadChoice || !uploadInput) return;
+                                        var uploadName = document.getElementById('dhPhotoUploadName');
+                                        if (!uploadChoice || !uploadLabel || !uploadInput) return;
                                         document.querySelectorAll('input[name="photoSource"]').forEach(function (radio) {
                                             radio.addEventListener('change', function () {
-                                                uploadInput.hidden = !uploadChoice.checked;
+                                                uploadLabel.hidden = !uploadChoice.checked;
                                             });
+                                        });
+                                        uploadInput.addEventListener('change', function () {
+                                            var file = uploadInput.files[0];
+                                            uploadName.textContent = file ? file.name : 'Choose a picture…';
                                         });
                                     })();
                                 </script>
                             @else
                                 <span class="dh-wizard-photo-row">
                                     <span class="material-icons-round" aria-hidden="true">account_circle</span>
-                                    <input type="file" name="picture" accept="image/*">
+                                    <label class="dh-file-picker" for="dhWizardPhotoInputBlank">
+                                        <span class="material-icons-round" aria-hidden="true">add_photo_alternate</span>
+                                        <span class="dh-file-picker-name" id="dhWizardPhotoNameBlank">Choose a picture&hellip;</span>
+                                    </label>
+                                    <input type="file" name="picture" accept="image/*" id="dhWizardPhotoInputBlank" hidden>
                                 </span>
                             @endif
                         </label>
+                        <script>
+                            (function () {
+                                [['dhWizardPhotoInputExisting', 'dhWizardPhotoNameExisting'], ['dhWizardPhotoInputBlank', 'dhWizardPhotoNameBlank']].forEach(function (pair) {
+                                    var input = document.getElementById(pair[0]);
+                                    var name = document.getElementById(pair[1]);
+                                    if (!input || !name) return;
+                                    input.addEventListener('change', function () {
+                                        var file = input.files[0];
+                                        name.textContent = file ? file.name : (pair[0] === 'dhWizardPhotoInputExisting' ? 'Choose a new picture…' : 'Choose a picture…');
+                                    });
+                                });
+                            })();
+                        </script>
                         @error('picture')<p class="text-danger text-sm">{{ $message }}</p>@enderror
                         <div class="dh-wizard-actions">
                             <button type="submit" class="dh-btn dh-btn-primary">Next</button>
