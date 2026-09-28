@@ -3198,47 +3198,34 @@
         });
 
 
-        const sites = {
-            'type': 'FeatureCollection',
-            'features': [
-                <?php
-                    
-                    $thisSiteId = $site->id;
+        // Fetched instead of baked into this page's HTML (SEO audit,
+        // 2026-09-28) - the old inline version hand-built ~370 sites' worth
+        // of JS with raw string concatenation on every single page load
+        // (a site name with a quote or apostrophe in it would have broken
+        // the whole page's JavaScript). The endpoint returns the same JSON
+        // for every site page, so the browser only pays for this once per
+        // visit; "is this the current site" is worked out right here
+        // instead of the server baking a per-page variant.
+        const currentSiteId = {{ $site->id }};
+        let sitesGeoJSON = null;
+        let mapLoaded = false;
 
-                    foreach($sites as $site) {
-                        list($lat_deg, $lat_min, $lat_dir) = sscanf($site->gpsLat, "%d° %f' %c");
-                        list($lon_deg, $lon_min, $lon_dir) = sscanf($site->gpsLon, "%d° %f' %c");
+        fetch('{{ route('SiteDetails.mapPins') }}')
+            .then(r => r.json())
+            .then(data => {
+                data.features.forEach(f => { f.properties.isThis = (f.properties.id === currentSiteId); });
+                sitesGeoJSON = data;
+                addSitesSourceIfReady();
+            })
+            .catch(() => { /* the map still works, just without the neighbour pins */ });
 
-                        $latitude_dd = dms_to_dd($lat_deg, $lat_min, $lat_dir);
-                        $longitude_dd = dms_to_dd($lon_deg, $lon_min, $lon_dir);
-                
-                        $suffixIcon = "";
-                        if($thisSiteId == $site->id)
-                            $suffixIcon = "_this";
+        function addSitesSourceIfReady() {
+            if (!mapLoaded || !sitesGeoJSON || map.getSource('sites')) return;
 
-                        echo "{
-                            'type': '" . $site->type . "'," .
-                                "'properties': {" .
-                                    "'name': \"" . $site->name . "\"," .
-                                    "'icon': 'icon_" . $site->type . $suffixIcon . "'," .
-                                    "'url': '" . $site->id . "'," .
-                                    "'isThis': " . ($thisSiteId == $site->id ? 'true' : 'false') . "," .
-                            "}," .
-                            "'geometry': {" .
-                                "'type': 'Point'," .
-                                "'coordinates': [" . $longitude_dd . "," . $latitude_dd . "]" .
-                            "}" .
-                        "},";
-                    }
-                ?>
-            ]
-        };
-
-        map.on('load', () => {
             // Add a GeoJSON source containing place coordinates and information.
             map.addSource('sites', {
                 'type': 'geojson',
-                'data': sites
+                'data': sitesGeoJSON
             });
 
             // Two layers so the site you are reading about stands out (Zach, chunk 3 review):
@@ -3300,6 +3287,11 @@
                     'text-halo-width': 1.5,
                 },
             });
+        }
+
+        map.on('load', () => {
+            mapLoaded = true;
+            addSitesSourceIfReady();
         });
 
         // Clicking any pin (this site or a neighbour) opens that site.

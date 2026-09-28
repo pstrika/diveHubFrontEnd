@@ -273,6 +273,14 @@ Route::get('edit-site-pics/{id}', 'App\Http\Controllers\SiteController@showAdmin
 Route::post('edit-site-pics/{id}/hero', 'App\Http\Controllers\SiteController@setHeroPhoto')->middleware('auth')->name('site-hero-photo');
 
 
+// Registered before SiteDetails/{id} below - that wildcard route would
+// otherwise swallow this path first and try to look up a site literally
+// named "map-pins" (SEO audit, 2026-09-28). The "nearby sites" map on
+// every SiteDetails page fetches this instead of having the same
+// ~370-site list baked into every page's HTML. Same JSON for every
+// caller, so it's cached server-side and sent with a browser cache
+// header - no auth/session needed either.
+Route::get('SiteDetails/map-pins', 'App\Http\Controllers\SiteController@mapPins')->middleware('guest')->name('SiteDetails.mapPins');
 Route::get('SiteDetails/{id}', 'App\Http\Controllers\SiteController@show')->middleware('guest')->name('SiteDetails');
 Route::get('SiteDetails', 'App\Http\Controllers\SiteController@show')->middleware('guest')->name('SiteDetails');
 Route::post('RateSite', 'App\Http\Controllers\SiteRatingController@new')->middleware('auth')->name('RateSite');

@@ -20,6 +20,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use App\Helpers\GasHelper;
 
 class SiteController extends Controller
@@ -237,6 +239,67 @@ class SiteController extends Controller
         return $desc;
     }
 
+    /**
+     * Every non-hidden site's map pin, as GeoJSON - shared across every
+     * site page (SEO audit, 2026-09-28: this used to be ~370 sites' worth
+     * of data hand-built with raw string concatenation and baked directly
+     * into every SiteDetails page's HTML, unique per request and never
+     * cached - about 171KB of inline JS on every single page load).
+     * Cached server-side, and the response is identical no matter which
+     * site page fetches it - "is this the current site" is worked out
+     * client-side instead of the server baking a per-page variant, so the
+     * browser can reuse one cached copy across every site page in a visit.
+     */
+    public function mapPins()
+    {
+        $features = Cache::remember('site_map_pins', now()->addHours(6), function () {
+            $hasSlug = Schema::connection('mysql_trips')->hasColumn('sites', 'slug');
+
+            return Site::where('_hidden', '<>', 1)
+                ->select(array_filter(['id', 'name', 'type', 'gpsLat', 'gpsLon', $hasSlug ? 'slug' : null]))
+                ->get()
+                ->map(function ($site) {
+                    $latParts = sscanf($site->gpsLat, "%d° %f' %c");
+                    $lonParts = sscanf($site->gpsLon, "%d° %f' %c");
+                    if (count(array_filter($latParts, fn ($v) => $v !== null)) !== 3
+                        || count(array_filter($lonParts, fn ($v) => $v !== null)) !== 3) {
+                        return null;
+                    }
+                    [$latDeg, $latMin, $latDir] = $latParts;
+                    [$lonDeg, $lonMin, $lonDir] = $lonParts;
+
+                    return [
+                        'type' => 'Feature',
+                        'properties' => [
+                            'id' => $site->id,
+                            'name' => $site->name,
+                            'icon' => 'icon_' . $site->type,
+                            'url' => route('SiteDetails') . '/' . ($site->slug ?? $site->id),
+                        ],
+                        'geometry' => [
+                            'type' => 'Point',
+                            'coordinates' => [
+                                self::dmsToDd($lonDeg, $lonMin, $lonDir),
+                                self::dmsToDd($latDeg, $latMin, $latDir),
+                            ],
+                        ],
+                    ];
+                })
+                ->filter()
+                ->values();
+        });
+
+        return response()->json(['type' => 'FeatureCollection', 'features' => $features])
+            ->header('Cache-Control', 'public, max-age=3600');
+    }
+
+    /** Same formula SiteDetails.blade.php's own dms_to_dd() used inline. */
+    private static function dmsToDd($degrees, $minutes, $direction): float
+    {
+        $sign = ($direction === 'N' || $direction === 'E') ? 1 : -1;
+        return ($degrees + ($minutes * 60) / 3600) * $sign;
+    }
+
     public function show($id = null) {
         if (is_numeric($id)) {
             $site = Site::with('reviews.user')->findOrFail(intval($id));
@@ -310,11 +373,9 @@ class SiteController extends Controller
             "image" => $this->shareImageForSite($site, $photos),
         );
         
-        // get site list to print map
-        $sites = Site::where('_hidden', '<>', 1)
-             ->select('id', 'name', 'type', 'gpsLat', 'gpsLon')
-             ->get()
-             ->sortBy('name');
+        // The nearby-sites map pin list used to be queried and built here
+        // on every request (SEO audit, 2026-09-28) - it's now its own
+        // cached, shared endpoint; see mapPins() below.
 
         // Redesign W3: live "diveable today" pill from this location's forecast,
         // and the next boats to this site as trip cards (the board's card).
@@ -325,7 +386,7 @@ class SiteController extends Controller
         $operatorsById = Operator::select('id', 'location', 'phone')->get()->keyBy('id')->all();
         $nextTrips = $trips->take(8)->map(fn ($t) => \App\Support\TripBoard::card($t, $now, $operatorsById))->values()->all();
 
-        return view('pages.SiteDetails', compact('site','photos', 'diverPhotos', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'sites', 'gasMixes', 'forecast', 'nextTrips'));
+        return view('pages.SiteDetails', compact('site','photos', 'diverPhotos', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'gasMixes', 'forecast', 'nextTrips'));
 
     }
     public function getMyVisitedSites() {
