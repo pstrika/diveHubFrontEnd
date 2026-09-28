@@ -3,7 +3,9 @@
 
     Desktop (lg and up) keeps the original fixed bar decided with Zach and
     Pablo on 2026-09-10 - Dives, Sites, Weather, Groups, plus a More link
-    that opens the drawer (shell/menu.blade.php). $tabs below, unchanged.
+    that opens the drawer (shell/menu.blade.php). My Dashboard was added
+    ahead of Dives for signed-in members on 2026-09-27 - guests still get
+    the original four, since they have no dashboard. $tabs below.
 
     Phones get their own $mobileTabs bar, customizable per diver since
     2026-09-24 (Pablo: "give them the chance to customize which icons they
@@ -37,16 +39,22 @@
 @php
     $user = auth()->user();
     $isGuest = !$user || !$user->isNotGuest();
-    // Four linked destinations plus Me. "Dives" is the trip finder (day board plus
-    // date ranges). "Groups" is personal, so for guests it opens the account prompt.
-    // Desktop only (see $mobileTabs below for the phone tab bar, which is
-    // customizable and has its own Dashboard tab - Pablo, 2026-09-24).
-    $tabs = [
-        'today'   => ['label' => 'Dives',      'short' => 'Dives',   'icon' => 'scuba_diving', 'href' => route('Trips')],
-        'sites'   => ['label' => 'Dive Sites', 'short' => 'Sites',   'icon' => 'pin_drop',     'href' => route('DiveSites')],
-        'weather' => ['label' => 'Weather',    'short' => 'Weather', 'icon' => 'cloud',        'href' => route('Weather')],
-        'groups'  => ['label' => 'Groups',     'short' => 'Groups',  'icon' => 'groups',       'href' => $isGuest ? '#' : route('MyGroups'), 'gated' => $isGuest],
-    ];
+    // Five linked destinations plus Me for a signed-in member (four for a
+    // guest, who has no dashboard). "Dives" is the trip finder (day board
+    // plus date ranges). "Groups" is personal, so for guests it opens the
+    // account prompt. Desktop only (see $mobileTabs below for the phone tab
+    // bar, which is customizable and has its own Dashboard tab - Pablo,
+    // 2026-09-24).
+    $tabs = [];
+    if (!$isGuest) {
+        // First, ahead of Dives (Pablo, 2026-09-27: "show My Dashboard in
+        // the top nav bar for desktop...first option...before Dives").
+        $tabs['dashboard'] = ['label' => 'My Dashboard', 'short' => 'Dashboard', 'icon' => 'dashboard', 'href' => route('MyDashboard')];
+    }
+    $tabs['today']   = ['label' => 'Dives',      'short' => 'Dives',   'icon' => 'scuba_diving', 'href' => route('Trips')];
+    $tabs['sites']   = ['label' => 'Dive Sites', 'short' => 'Sites',   'icon' => 'pin_drop',     'href' => route('DiveSites')];
+    $tabs['weather'] = ['label' => 'Weather',    'short' => 'Weather', 'icon' => 'cloud',        'href' => route('Weather')];
+    $tabs['groups']  = ['label' => 'Groups',     'short' => 'Groups',  'icon' => 'groups',       'href' => $isGuest ? '#' : route('MyGroups'), 'gated' => $isGuest];
 
     // Unread in-app notifications, for the bell icon - inbox and groups combined.
     $unread = $isGuest ? 0 : (int) $user->unreadNotifications();
