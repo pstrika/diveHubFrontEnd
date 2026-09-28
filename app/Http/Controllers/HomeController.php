@@ -80,9 +80,9 @@ class HomeController extends Controller
             ->select('id', 'name', 'slug', 'type', 'level', 'maxDepth', 'rate', 'votes', 'access')
             ->get();
         $featured = SiteRank::apply($candidates)->take(self::FEATURED);
-        $photos = Photo::whereIn('siteId', $featured->pluck('id'))->get()->groupBy('siteId');
+        $covers = Photo::coversFor($featured->pluck('id'));
         foreach ($featured as $site) {
-            $photo = $photos->get($site->id)?->first();
+            $photo = $covers->get($site->id);
             // The site card component picks the web sized copy from this filename (SitePhoto::thumb).
             $site->photoFile = $photo?->file;
         }

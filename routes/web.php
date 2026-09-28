@@ -260,6 +260,7 @@ Route::get('edit-site/{id}', 'App\Http\Controllers\SiteController@showAdmin')->m
 Route::post('update-site', 'App\Http\Controllers\SiteController@update')->middleware('auth')->name('update-site');
 
 Route::get('edit-site-pics/{id}', 'App\Http\Controllers\SiteController@showAdminPics')->middleware('auth')->name('edit-site-pics');
+Route::post('edit-site-pics/{id}/hero', 'App\Http\Controllers\SiteController@setHeroPhoto')->middleware('auth')->name('site-hero-photo');
 
 
 Route::get('SiteDetails/{id}', 'App\Http\Controllers\SiteController@show')->middleware('guest')->name('SiteDetails');

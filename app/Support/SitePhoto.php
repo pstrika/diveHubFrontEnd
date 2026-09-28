@@ -56,6 +56,105 @@ final class SitePhoto
         return self::url($file, 'web/thumb');
     }
 
+    /**
+     * Link preview copy of a site's hero photo (Pablo, 2026-09-28): a
+     * 1200 px JPEG at img/sites/web/share/<stem>.jpg, because link
+     * previewers want JPEG/PNG under a few MB and the originals can be
+     * 20 MB+ or WebP. Made by makeShareCopy() when an admin picks the
+     * hero. Null when there is no copy.
+     */
+    public static function share(?string $file): ?string
+    {
+        if (!$file) {
+            return null;
+        }
+        $relative = self::DIR . '/' . self::SHARE_VARIANT . '/' . self::stem($file) . '.jpg';
+        return is_file(public_path('assets/' . $relative)) ? asset('assets') . '/' . $relative : null;
+    }
+
+    public const SHARE_VARIANT = 'web/share';
+
+    private const SHARE_WIDTH = 1200;
+
+    private const JPEG_QUALITY = 85;
+
+    /**
+     * Make the link preview JPEG for one original in img/sites. Never
+     * throws, like makeCopies(): true when written or already up to date,
+     * false on failure (logged).
+     */
+    public static function makeShareCopy(string $file): bool
+    {
+        $src = public_path('assets/' . self::DIR . '/' . $file);
+        $dest = public_path('assets/' . self::DIR . '/' . self::SHARE_VARIANT . '/' . self::stem($file) . '.jpg');
+        if (!is_file($src)) {
+            Log::warning("SitePhoto: original not found: $src");
+            return false;
+        }
+        if (is_file($dest) && filemtime($dest) >= filemtime($src)) {
+            return true;
+        }
+        $size = @getimagesize($src);
+        if (!$size || $size[0] * $size[1] > self::MAX_PIXELS) {
+            Log::warning("SitePhoto: $file is unreadable or too large to resize in PHP; no share copy");
+            return false;
+        }
+        if (!is_dir(dirname($dest))) {
+            mkdir(dirname($dest), 0775, true);
+        }
+
+        try {
+            if (extension_loaded('imagick')) {
+                $image = new \Imagick($src);
+                self::applyImagickOrientation($image);
+                if ($image->getImageWidth() > self::SHARE_WIDTH) {
+                    $image->resizeImage(self::SHARE_WIDTH, 0, \Imagick::FILTER_LANCZOS, 1, false);
+                }
+                // Flatten transparency (PNG) onto white; JPEG has no alpha.
+                $image->setImageBackgroundColor('white');
+                $image = $image->mergeImageLayers(\Imagick::LAYERMETHOD_FLATTEN);
+                $image->setImageFormat('jpeg');
+                $image->setImageCompressionQuality(self::JPEG_QUALITY);
+                $image->stripImage();
+                $ok = $image->writeImage($dest);
+                $image->clear();
+                $image->destroy();
+            } elseif (function_exists('imagejpeg') && function_exists('imagecreatefromstring')) {
+                $image = @imagecreatefromstring((string) file_get_contents($src));
+                if (!$image) {
+                    Log::warning("SitePhoto (GD): could not decode $file");
+                    return false;
+                }
+                $image = self::applyExifOrientation($image, $src, $size[2]);
+                // imagecopyresampled rather than scaled(): imagescale() with
+                // IMG_BICUBIC returns false on some GD builds, which would
+                // silently keep the full size original. Also flattens
+                // transparency onto white.
+                $w = imagesx($image);
+                $h = imagesy($image);
+                $newW = min($w, self::SHARE_WIDTH);
+                $newH = (int) round($h * $newW / $w);
+                $flat = imagecreatetruecolor($newW, $newH);
+                imagefill($flat, 0, 0, imagecolorallocate($flat, 255, 255, 255));
+                imagecopyresampled($flat, $image, 0, 0, 0, 0, $newW, $newH, $w, $h);
+                $ok = imagejpeg($flat, $dest, self::JPEG_QUALITY);
+                imagedestroy($flat);
+                imagedestroy($image);
+            } else {
+                Log::warning("SitePhoto: no image backend, no share copy for $file");
+                return false;
+            }
+        } catch (\Throwable $e) {
+            Log::warning("SitePhoto: share copy failed for $file: " . $e->getMessage());
+            return false;
+        }
+
+        if (!$ok) {
+            Log::warning("SitePhoto: could not write $dest");
+        }
+        return (bool) $ok;
+    }
+
     /** The untouched original. */
     public static function original(?string $file): ?string
     {

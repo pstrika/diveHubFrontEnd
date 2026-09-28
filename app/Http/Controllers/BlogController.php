@@ -43,9 +43,9 @@ class BlogController extends Controller
         // cases we will have rankings" - Pablo, 2026-09-17).
         $rankedSites = $post->rankedSites();
         if ($rankedSites->isNotEmpty()) {
-            $photos = Photo::whereIn('siteId', $rankedSites->pluck('site.id'))->get()->groupBy('siteId');
+            $covers = Photo::coversFor($rankedSites->pluck('site.id'));
             foreach ($rankedSites as $entry) {
-                $entry['site']->photoFile = $photos->get($entry['site']->id)?->first()?->file;
+                $entry['site']->photoFile = $covers->get($entry['site']->id)?->file;
             }
         }
 

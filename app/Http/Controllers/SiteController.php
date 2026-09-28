@@ -12,6 +12,7 @@ use App\Models\VisitedSite;
 use App\Models\WishedSite;
 use App\Models\Site;
 use App\Support\DiveLevel;
+use App\Support\SitePhoto;
 use App\Models\SiteComment;
 use App\Models\Photo;
 use App\Models\SiteRating;
@@ -175,9 +176,17 @@ class SiteController extends Controller
      * images over 8 MB and some site photos are 20 MB+ camera exports, and
      * AVIF/WebP support is patchy across link previewers, so only JPEG/PNG
      * under 5 MB qualify. Returns null (= template default) when none do.
+     *
+     * An admin-picked hero (Pablo, 2026-09-28) always wins, through its
+     * 1200 px JPEG share copy (SitePhoto::share), so any hero works
+     * whatever its size or format. $photos comes hero first.
      */
-    private function shareImageForSite($photos): ?string
+    private function shareImageForSite(Site $site, $photos): ?string
     {
+        $hero = $site->heroPhotoId ? $photos->firstWhere('id', $site->heroPhotoId) : null;
+        if ($hero && ($url = SitePhoto::share($hero->file))) {
+            return $url;
+        }
         foreach ($photos as $photo) {
             $file = (string) ($photo->file ?? '');
             if ($file === '' || !preg_match('/\.(jpe?g|png)$/i', $file)) {
@@ -266,7 +275,8 @@ class SiteController extends Controller
         $site->upcomingTrips = $trips;
         Log::debug("This site has upcoming trips:" . count($site->upcomingTrips));
 
-        $photos = Photo::where('siteId', $id)->get();
+        // Hero first (Pablo, 2026-09-28): the gallery header shows the first photo.
+        $photos = Photo::where('photos.siteId', $id)->heroFirst()->get();
         // Registered divers' own pictures of this site, approved ones only
         // (Pablo, 2026-09-23) - see App\Models\DiverPhoto.
         $diverPhotos = \App\Models\DiverPhoto::where('siteId', $id)->approved()->with('user')->latest()->get();
@@ -297,7 +307,7 @@ class SiteController extends Controller
             "desc" => $this->buildSiteMetaDescription($site, $locationTitleCase),
             "keywords" => $site->name . "," . ($site->aka ? $site->aka . "," : "") . $location->location . "," . $site->type,
             "canonical" => route("SiteDetails") . "/" . ($site->slug ?? $site->id),
-            "image" => $this->shareImageForSite($photos),
+            "image" => $this->shareImageForSite($site, $photos),
         );
         
         // get site list to print map
@@ -408,25 +418,46 @@ class SiteController extends Controller
     }
     public function showAdmin($id) {
         $this->authorize('manage-items', User::class);
-        $status = null;
         $site = Site::findOrFail(intval($id));
-        $photos = Photo::where('siteId', $id)->get();
-        $locations = WeatherLocation::all();
+        $cover = Photo::coversFor([$site->id])->get($site->id);
+        $locations = WeatherLocation::all()->sortBy('location');
         $operators = Operator::all();
 
         $visitingOperatorsIndex = explode(',', $site->visitingOperators);
         $visitingOperators = Operator::whereIn('id', $visitingOperatorsIndex)->get();
 
-        return view('pages.edit-site', compact('site','photos', 'locations', 'operators', 'status', 'visitingOperators'));
+        return view('pages.edit-site', compact('site', 'cover', 'locations', 'operators', 'visitingOperators'));
     }
 
     public function showAdminPics($id) {
         $this->authorize('manage-items', User::class);
-        $status = null;
         $site = Site::findOrFail(intval($id));
-        $photos = Photo::where('siteId', $id)->get();
+        // Same order the site page shows them in: hero first.
+        $photos = Photo::where('photos.siteId', $site->id)->heroFirst()->get();
 
-        return view('pages.updatePics', compact('site','photos', 'status'));
+        return view('pages.updatePics', compact('site', 'photos'));
+    }
+
+    /**
+     * Flag one of a site's photos as its hero (Pablo, 2026-09-28): first on
+     * the site page, the picture on every site card, and the link preview.
+     * Also makes the hero's JPEG link preview copy. JSON, called by the
+     * star buttons on edit-site-pics.
+     */
+    public function setHeroPhoto(Request $request, $id) {
+        $this->authorize('manage-items', User::class);
+        $site = Site::findOrFail(intval($id));
+        $photo = Photo::where('siteId', $site->id)->findOrFail(intval($request->input('photoId')));
+
+        $site->heroPhotoId = $photo->id;
+        $site->save();
+
+        $shareReady = SitePhoto::makeShareCopy($photo->file);
+
+        return response()->json([
+            'heroPhotoId' => $photo->id,
+            'shareReady' => $shareReady,
+        ]);
     }
 
     public function updatePics(Request $request) {
@@ -440,50 +471,41 @@ class SiteController extends Controller
         // Update photos only if we get an array with photoIds
         
         if($request->has('photoId')) {
-            $photoIds = $request->photoId;
-            $photoDescs = $request->picDesc;
-            $photoCredits = $request->picCredit;
-            $photos = Photo::whereIn('id', $photoIds)->get();
+            // Match each description/credit to its photo by position in the
+            // request, not by database order - the page lists the hero first
+            // (2026-09-28), so the two orders differ.
+            $photoIds = $request->input('photoId', []);
+            $photoDescs = $request->input('picDesc', []);
+            $photoCredits = $request->input('picCredit', []);
+            $photos = Photo::where('siteId', $site->id)->whereIn('id', $photoIds)->get()->keyBy('id');
 
-            //Log::debug("Length of photoId: " . count($photos));
-            $i =0;
-            foreach($photos as $photo) {
-                Log::debug("Photo name: " . $photo->file);
-                Log::debug("Old desc: " . $photo->desc);
-                Log::debug("New desc: " . $photoDescs[$i]);
-
-                $photo->desc = $photoDescs[$i];
-                $photo->credit = $photoCredits[$i];
-                $i++;
+            foreach ($photoIds as $i => $photoId) {
+                $photo = $photos->get((int) $photoId);
+                if (!$photo) {
+                    continue;
+                }
+                $photo->desc = array_key_exists($i, $photoDescs) ? $photoDescs[$i] : $photo->desc;
+                $photo->credit = array_key_exists($i, $photoCredits) ? $photoCredits[$i] : $photo->credit;
                 $photo->save();
             }
         }
 
         if($request->has('videoCredit')) {
             Log::debug("Got video info");
-            $videoArray = array(
-                array("link" => $request->video, "credit" => $request->videoCredit),
-            );
-
-            $site->videos = json_encode($videoArray);
+            // An empty link clears the video rather than saving a blank one.
+            $site->videos = trim((string) $request->video) === '' ? null : json_encode([
+                ["link" => $request->video, "credit" => $request->videoCredit],
+            ]);
 
             $site->save();
         }
 
-        // retrieve latest from model and show blade
-        $photos = Photo::where('siteId', $request->siteId)->get();
-        $status = "Media for site " . $site->name . " updated successfully";
-        return view('pages.updatePics', compact('site','photos', 'status'));
+        return redirect()->route('edit-site-pics', ['id' => $site->id])->with('msg', 'Media for ' . $site->name . ' saved');
     }
 
     public function update(Request $request) {
      
         $this->authorize('manage-items', User::class);
-
-        $locations = WeatherLocation::all();
-        $operators = Operator::all();
-        $photos = Photo::where('siteId', $request->id)->get();
-        //$newSite = Site::create($request->all());
 
         Log::info('Request data:', $request->all());
 
@@ -540,6 +562,10 @@ class SiteController extends Controller
         if($request->has('visitingOperators')) {
             Log::info("Got visitingOperators. Updating to: " . str(implode(', ' , $request->input('visitingOperators'))));
             $site->visitingOperators = implode(', ' , $request->input('visitingOperators'));
+        } elseif ($request->has('visitingOperatorsSent')) {
+            // The rethemed form (2026-09-28) says it sent the picker, so an
+            // empty picker really means "no operators", not "not edited".
+            $site->visitingOperators = '';
         }
 
         if($request->has('desc')) {
@@ -574,18 +600,9 @@ class SiteController extends Controller
 
         
         $site->save();
-        $status = "Dive site updated successfully";
 
-        $visitingOperatorsIndex = explode(',', $site->visitingOperators);
-        $visitingOperators = Operator::whereIn('id', $visitingOperatorsIndex)->get();
-        
-        //return view('pages.new-site', compact('locations','operators','status', 'newId'));
+        return redirect()->route('edit-site', ['id' => $site->id])->with('msg', $site->name . ' saved');
 
-        
-        //return redirect('new-site-uploadPics')->withStatus('Item successfully created.');
-        //return view('pages.new-site-uploadPics', compact('newId', 'newName', 'status'));
-        return view('pages.edit-site', compact('site','photos', 'locations', 'operators', 'status', 'visitingOperators'));
-        
     }
 
     public function deletePic($id) {
@@ -600,10 +617,13 @@ class SiteController extends Controller
         $photoIds = $photos->pluck('id')->toArray();
         $commaSeparatedString = implode(', ', $photoIds);
         $site->pics = $commaSeparatedString;
+        // Deleting the hero falls back to the oldest remaining photo.
+        if ((int) $site->heroPhotoId === (int) $photo->id) {
+            $site->heroPhotoId = null;
+        }
         $site->save();
 
-        $status = "Picture successfully deleted.";
-        return view('pages.updatePics', compact('site','photos', 'status'));
+        return redirect()->route('edit-site-pics', ['id' => $site->id])->with('msg', 'Picture deleted');
     }
     public function delete($id) {
 
@@ -760,8 +780,8 @@ class SiteController extends Controller
             \App\Support\SiteRank::apply($sites);
         }
 
-        // First photo per site for the cards, one query for the whole page.
-        $firstPhotos = Photo::whereIn('siteId', $sites->pluck('id'))->orderBy('id')->get()->groupBy('siteId');
+        // Cover photo per site for the cards (hero, else oldest), one query for the whole page.
+        $covers = Photo::coversFor($sites->pluck('id'));
         // Thirteen rows that change maybe once a year - cached like
         // SiteRank::tripCounts() rather than paying a remote round trip for
         // it on every single card-grid page load (2026-09-11).
@@ -781,7 +801,7 @@ class SiteController extends Controller
         $soon = \App\Support\SiteRank::tripsSoon();
 
         foreach ($sites as $site) {
-            $site->photoFile = $firstPhotos->get($site->id)?->first()?->file;
+            $site->photoFile = $covers->get($site->id)?->file;
             $site->locationName = $locationNames[$site->location] ?? null;
             $site->wished = isset($wishedIds[$site->id]);
             $site->visited = isset($visitedIds[$site->id]);

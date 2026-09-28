@@ -229,7 +229,6 @@
                         @if(count($sites))
                             <div class="dh-site-grid">
                                 @foreach($sites as $s)
-                                    @php $s->photoFile = isset($s->photos[0]) ? $s->photos[0]->file : null; @endphp
                                     <x-site-card :site="$s" />
                                 @endforeach
                             </div>

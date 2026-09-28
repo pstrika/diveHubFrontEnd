@@ -101,11 +101,11 @@ class OperatorController extends Controller
 
         $ratedAlready = OperatorRating::where('userId', auth()->id())->where('operatorId', $id)->exists();
 
-        // First photo per top site so the detail page can show site cards.
+        // Cover photo (hero, else oldest) per top site so the detail page can show site cards.
         if ($topSites) {
-            $firstPhotos = Photo::whereIn('siteId', $topSites->pluck('id'))->orderBy('id')->get()->groupBy('siteId');
+            $covers = Photo::coversFor($topSites->pluck('id'));
             foreach ($topSites as $s) {
-                $s->photoFile = $firstPhotos->get($s->id)?->first()?->file;
+                $s->photoFile = $covers->get($s->id)?->file;
             }
         }
         $card = OperatorBoard::card($operator);

@@ -50,6 +50,11 @@ class TripDetailsController extends Controller
         if(count($siteIds)>1) { //can also use $siteIds[0] != ""
             $sites = Site::whereIn('id', $siteIds)->get();
             Log::debug("Got " . count($sites) . " sites for this trip");
+            // Card picture: the site's hero, else its oldest photo.
+            $covers = \App\Models\Photo::coversFor($sites->pluck('id'));
+            foreach ($sites as $s) {
+                $s->photoFile = $covers->get($s->id)?->file;
+            }
             #foreach($sites as $site) {
             #    Log::debug("Photos for site " . $site->name . " is " . $site->photos[0]->id . " and location long is " . $site->locationLong->location);
             #}

@@ -101,9 +101,10 @@ class GroupDiveService
     private function resolveDiveImageUrl(GroupDive $dive): ?string
     {
         if ($dive->siteId) {
-            $sitePhoto = Photo::where('siteId', $dive->siteId)->first();
+            $sitePhoto = Photo::coversFor([$dive->siteId])->get($dive->siteId);
             if ($sitePhoto) {
-                return asset('assets') . '/img/sites/' . $sitePhoto->file;
+                // The hero's JPEG share copy when there is one: sized for Facebook.
+                return \App\Support\SitePhoto::share($sitePhoto->file) ?? asset('assets') . '/img/sites/' . $sitePhoto->file;
             }
         }
 

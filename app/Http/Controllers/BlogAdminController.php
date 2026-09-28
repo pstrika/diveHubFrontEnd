@@ -130,9 +130,9 @@ class BlogAdminController extends Controller
 
         $rankedSites = $post->rankedSites();
         if ($rankedSites->isNotEmpty()) {
-            $photos = \App\Models\Photo::whereIn('siteId', $rankedSites->pluck('site.id'))->get()->groupBy('siteId');
+            $covers = \App\Models\Photo::coversFor($rankedSites->pluck('site.id'));
             foreach ($rankedSites as $entry) {
-                $entry['site']->photoFile = $photos->get($entry['site']->id)?->first()?->file;
+                $entry['site']->photoFile = $covers->get($entry['site']->id)?->file;
             }
         }
 
