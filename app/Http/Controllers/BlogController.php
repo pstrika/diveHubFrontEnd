@@ -49,8 +49,25 @@ class BlogController extends Controller
             }
         }
 
+        // 8 posts (SEO audit, 2026-09-28 re-audit) run past 60 chars once
+        // " - Divers Hub Blog" is appended; drop the suffix first, same as
+        // every other title fallback this pass. 4 of those have a title
+        // long enough on its own that dropping the suffix isn't enough -
+        // those get a shorter meta title here (the on-page H1 is untouched).
+        static $shortBlogTitles = [
+            'lionfish-invasion-what-divers-can-do' => 'The Lionfish Invasion: What Divers Can Do',
+            'open-circuit-vs-closed-circuit' => 'Open Circuit vs. Closed Circuit Diving',
+            'seasonal-diving-conditions-in-the-florida-keys-a-month-by-month-guide-for-local-divers' => 'Florida Keys Diving Conditions by Month',
+            'lionfish-with-open-sores' => 'Lionfish With Open Sores: What Hunters Should Know',
+        ];
+        $metaTitleBase = $shortBlogTitles[$post->slug] ?? $post->title;
+        $metaTitle = $metaTitleBase . ' - Divers Hub Blog';
+        if (mb_strlen($metaTitle) > 60) {
+            $metaTitle = $metaTitleBase;
+        }
+
         $SEO = [
-            'title' => $post->title . ' - Divers Hub Blog',
+            'title' => $metaTitle,
             'desc' => $post->excerpt,
             'canonical' => route('Blog.show', $post->slug),
             'image' => $post->cover_image ? asset($post->cover_image) : null,

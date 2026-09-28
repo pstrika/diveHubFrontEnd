@@ -168,6 +168,14 @@ class SiteController extends Controller
         if (mb_strlen($title) > 60) {
             $title = $name . $place;
         }
+        // One site (SEO audit, 2026-09-28 re-audit: "Christ of the Abyss
+        // and Grecian Rocks", 64 chars) has a long enough name that
+        // dropping the brand above still isn't enough. "Dive Site" is the
+        // keyword phrase worth keeping (it's the whole reason this method
+        // exists - finding #1), so the type label goes first here instead.
+        if (mb_strlen($title) > 60 && $typeLabel !== '') {
+            $title = trim($site->name) . $place;
+        }
         return $title;
     }
 

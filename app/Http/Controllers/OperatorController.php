@@ -119,6 +119,22 @@ class OperatorController extends Controller
         if (mb_strlen($opTitle) > 60) {
             $opTitle = mb_substr($opTitle, 0, mb_strlen($opTitle) - mb_strlen(' | Divers Hub'));
         }
+        // 5 operator names (SEO audit, 2026-09-28 re-audit) are long enough
+        // that even dropping the brand above still leaves the title over
+        // 60 chars - e.g. "South Florida Diving HQ Pompano - Dive Charters
+        // in Pompano Beach" (64). Pablo picked a shortened display name for
+        // each of these five rather than a generic truncation.
+        static $shortOperatorNames = [
+            'South Florida Diving HQ Pompano'   => 'South FL Diving HQ Pompano',
+            'South Florida Diving HQ Boynton'   => 'South FL Diving HQ Boynton',
+            'Parrot Island Scuba Adventures'    => 'Parrot Island Scuba',
+            'American Dream Dive Charter'       => 'American Dream Dive',
+            "Captain Slate's Scuba Adventures"  => "Captain Slate's Scuba",
+        ];
+        if (mb_strlen($opTitle) > 60 && $opCity !== '') {
+            $shortName = $shortOperatorNames[$operator->operatorName] ?? $operator->operatorName;
+            $opTitle = $shortName . ' – ' . $opCity;
+        }
         $SEO = array(
             "title" => $opTitle,
             "desc" => $operator->operatorName . ($opCity !== '' ? ' in ' . $opCity : '') . ": upcoming dive trips, boats, the dive sites they visit most and contact details, on Divers Hub.",

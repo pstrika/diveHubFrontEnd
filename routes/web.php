@@ -113,7 +113,7 @@ Route::permanentRedirect('home', '/')->name('home');
 // asset to divers").
 Route::get('gasplanning', function () {
 	$SEO = [
-        "title" => "Best Gas Mix Calculator for Scuba Diving (Nitrox & Trimix) | Divers Hub",
+        "title" => "Best Gas Mix Calculator (Nitrox & Trimix) | Divers Hub",
         "desc" => "Find your best nitrox and trimix gas mixes for free: MOD, END, PPO2, gas density and standard-mix matching for bottom, travel and deco gases - built for real dive planning, not a toy calculator.",
         "keywords" => "best gas mix calculator, nitrox calculator, trimix calculator, MOD calculator, best mix diving, gas density calculator, END calculator, scuba gas planning tool",
 		"canonical" => route("gasplanning"),

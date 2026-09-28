@@ -144,10 +144,13 @@ class WeatherController extends Controller
         /*Provide SEO metadata */
         // Title-cased place name and a clean slug canonical, not the raw
         // lowercase param and its %20-encoded URL (SEO audit, 2026-09-28,
-        // finding #4).
+        // finding #4). The original "... Seas, Wind & Tides | Divers Hub"
+        // suffix ran 67-76 characters for every single location - past the
+        // ~60 char cutoff Google truncates at - so it's gone entirely
+        // rather than just shortened (re-audit, 2026-09-28 3:15pm).
         $place = ucwords(strtolower($location));
         $SEO = array(
-            "title" => $place . " Marine Forecast for Divers – Seas, Wind & Tides | Divers Hub",
+            "title" => $place . " Marine Forecast for Divers | Divers Hub",
             "desc" => "7-day marine forecast for " . $place . ": wave height, wind, water temperature and tides, read for scuba divers.",
             "keywords" => "marine weather " . $location . ",dive,diving,scuba,florida diving,tides,florida scuba",
             "canonical" => route("Weather") . "/" . \Illuminate\Support\Str::slug($location),
