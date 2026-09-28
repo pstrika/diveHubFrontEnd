@@ -147,15 +147,25 @@
         </nav>
 
         <div class="dh-topbar-actions">
-            {{-- Full bar from md up; a plain icon opening the same form in a
-                 modal on phones, where there's no room for it inline but
-                 search is too important to hide entirely (2026-09-11). --}}
-            <form class="dh-search d-none d-md-flex" action="{{ route('DiveSitesSearch') }}" method="POST" role="search">
+            {{-- Full bar from xl up only; a plain icon opening the same form
+                 in a modal everywhere narrower, where there's no room for it
+                 inline but search is too important to hide entirely
+                 (2026-09-11). Used to switch at md (768px), which left the
+                 inline bar competing with the desktop nav for space right
+                 where the nav itself first appears at lg (992px) - with My
+                 Dashboard added as a 6th item (Pablo, 2026-09-27), that gap
+                 was consistently losing and pushing More out of the nav's
+                 own scroll area, past the search bar's left edge, at any
+                 width under roughly 1150px. Moved the switch to xl (1200px)
+                 instead, past where that ever happens (Pablo, 2026-09-27:
+                 "collapse the search bar and do the modal search as you have
+                 in the mobile version"). --}}
+            <form class="dh-search d-none d-xl-flex" action="{{ route('DiveSitesSearch') }}" method="POST" role="search">
                 @csrf
                 <span class="material-icons-round" aria-hidden="true">search</span>
                 <input type="search" name="searchString" placeholder="Search sites" aria-label="Search dive sites">
             </form>
-            <button type="button" class="dh-search-btn d-md-none" data-bs-toggle="modal" data-bs-target="#dh-search-modal" aria-label="Search dive sites">
+            <button type="button" class="dh-search-btn d-xl-none" data-bs-toggle="modal" data-bs-target="#dh-search-modal" aria-label="Search dive sites">
                 <span class="material-icons-round" aria-hidden="true">search</span>
             </button>
 
