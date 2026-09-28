@@ -299,6 +299,8 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
    cards' left edge; now uses --dh-content-x like the cards and the
    Me-tab rows below them. */
 .dh-pagehead-title { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--dh-ink); display: flex; align-items: center; gap: 10px; }
+/* Page titles can render as <h1> (:h1="true") on pages with no other h1; pin the h6 metrics so both tags look identical. */
+h1.dh-pagehead-title { line-height: 1.625; letter-spacing: normal; }
 .dh-pagehead-icon { display: inline-flex; width: 26px; height: 26px; color: var(--dh-sea); flex: 0 0 auto; }
 .dh-pagehead-icon svg { width: 100%; height: 100%; }
 .dh-pagehead-icon.is-font { width: auto; height: auto; font-size: 24px; }
@@ -1637,6 +1639,7 @@ body.dh-auth-body .dh-install { bottom: calc(10px + env(safe-area-inset-bottom, 
 .dh-wx-current-speed { font-size: .8rem; font-weight: 800; color: var(--dh-deep); }
 .dh-wx-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .dh-wx-place { font-size: 1.2rem; font-weight: 700; margin: 0; color: var(--dh-ink); }
+h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 to h2 */
 .dh-wx-date { font-size: .76rem; color: var(--dh-muted); margin: 2px 0 0; }
 .dh-wx-swap { flex: 0 0 auto; border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill); padding: 6px 12px; font-size: .78rem; font-weight: 700; color: var(--dh-sea); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
 .dh-wx-swap .material-icons-round { font-size: 16px; }

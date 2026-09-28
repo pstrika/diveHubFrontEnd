@@ -5,7 +5,7 @@
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <!-- Navbar -->
-        <x-shell.header title="Dive Planner" icon="timer" />
+        <x-shell.header title="Dive Planner" icon="timer" :h1="true" />
         <!-- End Navbar -->
         <div class="container-fluid py-0">
 

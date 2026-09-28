@@ -166,7 +166,7 @@
         </style>
 
         <!-- Navbar -->
-        <x-shell.header title="Best Gases" icon="science" />
+        <x-shell.header title="Best Gases" icon="science" :h1="true" />
         <!-- End Navbar -->
         <div class="container-fluid py-0">
 

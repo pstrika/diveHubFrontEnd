@@ -2,7 +2,7 @@
     <x-shell.nav active="" />
 
     <main class="main-content position-relative h-100 border-radius-lg">
-        <x-shell.header title="About us" />
+        <x-shell.header title="About us" :h1="true" />
 
         <div class="container-fluid py-0 dh-board">
             <section class="dh-panel">

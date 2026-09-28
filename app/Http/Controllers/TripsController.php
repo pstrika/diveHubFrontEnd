@@ -197,9 +197,14 @@ class TripsController extends Controller
         
 
         /*Provide SEO metadata */
+        // SEO audit 2026-09-28: every date, e.g. /Trips/2026-10-10, was titled
+        // "Today...". Canonical stays /Trips so dated pages still consolidate.
+        $isTodayShown = Carbon::today()->toDateString() == $date;
         $SEO = array(
-            "title" => "Today scuba diving trips in Florida",
-            "desc" => "A calendar for all scuba diving trips going out today in South Florida. From Stuart to key West",
+            "title" => $isTodayShown
+                ? "Today's Scuba Diving Trips in South Florida | Divers Hub"
+                : "Scuba Diving Trips in South Florida – " . Carbon::parse($date)->format('D, M j') . " | Divers Hub",
+            "desc" => "Every dive boat going out in South Florida on one calendar, from Stuart to Key West: departure times, dive sites and open spots.",
             "keywords" => "diving, fort lauderdale beach diving, palm beach beach diving,dive sites,scuba diving sites,dive wrecks,dive reefs,wreck,reef",
             "canonical" => route("Trips")
         );

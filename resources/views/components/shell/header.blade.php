@@ -16,7 +16,7 @@
     Operators/Dive Trip Details/Blog are exactly this title). Omit it on
     every page that isn't a drill-down from something else.
 --}}
-@props(['title' => '', 'icon' => null, 'back' => null])
+@props(['title' => '', 'icon' => null, 'back' => null, 'h1' => false])
 
 @php
     $__headIconSvg = ($icon && str_ends_with($icon, '.svg')) ? \App\Support\IconSvg::themed('assets/img/icons/' . $icon) : null;
@@ -24,14 +24,16 @@
 
 <div class="dh-pagehead">
     @if($title !== '')
-        <h6 class="dh-pagehead-title">
+        {{-- :h1="true" on pages that have no other <h1> (SEO audit, 2026-09-28).
+             .dh-pagehead-title sets size and margin, so it looks the same. --}}
+        <{{ $h1 ? 'h1' : 'h6' }} class="dh-pagehead-title">
             {{ $title }}
             @if($__headIconSvg)
                 <span class="dh-pagehead-icon" aria-hidden="true">{!! $__headIconSvg !!}</span>
             @elseif($icon)
                 <span class="material-icons-round dh-pagehead-icon is-font" aria-hidden="true">{{ $icon }}</span>
             @endif
-        </h6>
+        </{{ $h1 ? 'h1' : 'h6' }}>
     @endif
     @php $__u = auth()->user(); @endphp
     @if(!$__u || !$__u->isNotGuest())

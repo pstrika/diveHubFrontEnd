@@ -2,7 +2,7 @@
     <x-shell.nav active="sites" />
 
     <main class="main-content position-relative h-100 border-radius-lg">
-        <x-shell.header :title="$explorer['heading']" />
+        <x-shell.header :title="$explorer['heading']" :h1="true" />
 
         <div class="container-fluid py-0 dh-board">
             {{--

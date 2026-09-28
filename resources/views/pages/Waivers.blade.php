@@ -2,7 +2,7 @@
     <x-shell.nav active="" />
 
     <main class="main-content position-relative h-100 border-radius-lg">
-        <x-shell.header title="Online Waivers" icon="assignment" />
+        <x-shell.header title="Online Waivers" icon="assignment" :h1="true" />
 
         <div class="container-fluid py-0 dh-board">
             <section class="dh-panel">

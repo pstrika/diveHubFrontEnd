@@ -144,6 +144,54 @@ class SiteController extends Controller
     }
 
     /**
+     * Page title for a dive site (SEO audit, 2026-09-28). Used to be
+     * "Lady Luck wreck" - no town, no "dive site", no brand, and 18 sites
+     * with type "other" read "Neptune Memorial other". Now:
+     * "Lady Luck Wreck – Pompano Beach Dive Site | Divers Hub". The brand
+     * is dropped first when the title runs past 60 characters, the length
+     * Google shows before truncating.
+     */
+    private function buildSiteTitle(Site $site, string $locationTitleCase): string
+    {
+        $typeLabel = match (strtolower(trim((string) $site->type))) {
+            'wreck' => 'Wreck',
+            'reef'  => 'Reef',
+            default => '',
+        };
+        $name = trim($site->name . ' ' . $typeLabel);
+        $place = trim($locationTitleCase) !== '' ? ' – ' . $locationTitleCase . ' Dive Site' : ' Dive Site';
+
+        $title = $name . $place . ' | Divers Hub';
+        if (mb_strlen($title) > 60) {
+            $title = $name . $place;
+        }
+        return $title;
+    }
+
+    /**
+     * Social preview image for a dive site (SEO audit, 2026-09-28): the
+     * first of its photos that link previews can actually use, instead of
+     * the site wide og-default.jpg every page shared. Facebook ignores
+     * images over 8 MB and some site photos are 20 MB+ camera exports, and
+     * AVIF/WebP support is patchy across link previewers, so only JPEG/PNG
+     * under 5 MB qualify. Returns null (= template default) when none do.
+     */
+    private function shareImageForSite($photos): ?string
+    {
+        foreach ($photos as $photo) {
+            $file = (string) ($photo->file ?? '');
+            if ($file === '' || !preg_match('/\.(jpe?g|png)$/i', $file)) {
+                continue;
+            }
+            $path = public_path('assets/img/sites/' . $file);
+            if (is_file($path) && filesize($path) <= 5 * 1024 * 1024) {
+                return asset('assets') . '/img/sites/' . rawurlencode($file);
+            }
+        }
+        return null;
+    }
+
+    /**
      * Every site's meta description used to be the identical template
      * ("Name type in Location. Max depth X ft") - Pablo, 2026-09-16 SEO
      * review: "every site puts the same on the meta...what do you think is
@@ -245,10 +293,11 @@ class SiteController extends Controller
         // location").
         $locationTitleCase = ucwords(strtolower($location->location));
         $SEO = array(
-            "title" => $site->name . " ". $site->type,
+            "title" => $this->buildSiteTitle($site, $locationTitleCase),
             "desc" => $this->buildSiteMetaDescription($site, $locationTitleCase),
             "keywords" => $site->name . "," . ($site->aka ? $site->aka . "," : "") . $location->location . "," . $site->type,
             "canonical" => route("SiteDetails") . "/" . ($site->slug ?? $site->id),
+            "image" => $this->shareImageForSite($photos),
         );
         
         // get site list to print map
@@ -806,8 +855,8 @@ class SiteController extends Controller
     public function showWrecks(Request $request) {
         /*Provide SEO metadata */
         $SEO = array(
-            "title" => "Florida wreckwiki",
-            "desc" => "An encyclopedia of all scuaba diving sites in Florida. The evolution of wreckwiki.com",
+            "title" => "Florida Shipwrecks & Artificial Reefs – Wreck Wiki | Divers Hub",
+            "desc" => "Every shipwreck and artificial reef in Florida with depth, certification level, history and photos, from Stuart to Key West. The evolution of wreckwiki.com.",
             "keywords" => "diving, fort lauderdale beach diving, palm beach beach diving,dive sites,scuba diving sites,dive wrecks,dive reefs,wreck,reef",
             "canonical" => route("WreckSites")
         );

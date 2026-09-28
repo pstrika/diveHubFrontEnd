@@ -111,11 +111,23 @@ class OperatorController extends Controller
         $card = OperatorBoard::card($operator);
 
         /*Provide SEO metadata */
+        // SEO audit 2026-09-28: was "X details - divers-hub.com" with a
+        // generic "All details for X: location, popular dive sites, prices,
+        // etc" on all operators, and the site wide default share image.
+        $opCity = ucwords(strtolower(trim((string) ($operator->cityAddress ?: $operator->location))));
+        $opTitle = $operator->operatorName . ($opCity !== '' ? ' – Dive Charters in ' . $opCity : ' – Dive Charters') . ' | Divers Hub';
+        if (mb_strlen($opTitle) > 60) {
+            $opTitle = mb_substr($opTitle, 0, mb_strlen($opTitle) - mb_strlen(' | Divers Hub'));
+        }
         $SEO = array(
-            "title" => $operator->operatorName . " details - divers-hub.com",
-            "desc" => "All details for " . $operator->operatorName . ": location, popular dive sites, prices, etc",
+            "title" => $opTitle,
+            "desc" => $operator->operatorName . ($opCity !== '' ? ' in ' . $opCity : '') . ": upcoming dive trips, boats, the dive sites they visit most and contact details, on Divers Hub.",
             "keywords" => $operator->operatorName . ", " . $operator->location . ", " . $operator->cityAddress,
             "canonical" => route("OperatorDetails", ['id' => $operator->slug ?? $operator->id]) ,
+            // Logo as the share image; logos are small and square, so ask for
+            // the compact card instead of a cropped large one.
+            "image" => $operator->logoUrl ? asset('assets') . $operator->logoUrl : null,
+            "twitterCard" => $operator->logoUrl ? "summary" : null,
         );
 
         return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites', 'trips', 'ratedAlready', 'SEO', 'card'));
@@ -128,8 +140,8 @@ class OperatorController extends Controller
     /*Provide SEO metadata */
     $operatorNames = Operator::pluck('operatorName')->toArray();
     $SEO = array(
-        "title" => "Scuba diving operators in South Florida - divers-hub.com",
-        "desc" => "Find all scuba diving operator in Miami, Fort Lauderdale, West Palm Beach and the Florida Keys",
+        "title" => "South Florida Dive Shops & Charter Boats | Divers Hub",
+        "desc" => "Every scuba diving operator from Stuart to Key West, including Miami, Fort Lauderdale, West Palm Beach and the Florida Keys: boats, schedules and the sites they run.",
         "keywords" => implode(', ', $operatorNames),
         "canonical" => route("Operators"),
     );

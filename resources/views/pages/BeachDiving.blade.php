@@ -2,7 +2,7 @@
     <x-shell.nav active="" />
 
     <main class="main-content position-relative h-100 border-radius-lg">
-        <x-shell.header title="Beach Diving" icon="beach_access" />
+        <x-shell.header title="Beach Diving" icon="beach_access" :h1="true" />
 
         <style>
             iframe {
@@ -83,7 +83,7 @@
                         <section class="dh-wx-verdict">
                             <div class="dh-wx-head">
                                 <div>
-                                    <h1 class="dh-wx-place">{{ $beach['label'] }}</h1>
+                                    <h2 class="dh-wx-place">{{ $beach['label'] }}</h2>
                                     <p class="dh-wx-date">{{ $today ? \Carbon\Carbon::parse($today->date)->format('l j F') : 'No forecast available' }}</p>
                                     @if($today && $today->conditions_text)
                                         <p class="dh-beach-sky">

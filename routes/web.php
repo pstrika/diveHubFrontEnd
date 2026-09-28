@@ -101,14 +101,10 @@ Route::get('DataDeletion', function () {
     return view('pages.DataDeletion', compact('SEO'));
 })->middleware('guest')->name('DataDeletion');
 
-Route::get('home', function () {
-    $SEO = [
-        "title" => "Divers Hub - your one stop for diving in FL!",
-        "desc" => "Everything you need to know about scuba diving in South Florida: dive calendars, dive sites database and marine weather.",
-        "canonical" => route("home"),
-    ];
-    return view('pages.home', compact('SEO'));
-})->name('home');
+// The pre-relaunch homepage. "/" is the homepage now, so /home 301s there
+// instead of competing with it as a second indexable page (SEO audit,
+// 2026-09-28). Name kept so route('home') links still resolve.
+Route::permanentRedirect('home', '/')->name('home');
 
 // SEO here was a copy-paste of the Landing page's generic Florida-diving
 // copy - none of it actually described this tool, so it never had a real

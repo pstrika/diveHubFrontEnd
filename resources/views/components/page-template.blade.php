@@ -97,7 +97,7 @@
   <meta property="og:description" content="{{ $ogDesc }}">
   <meta property="og:url" content="{{ $ogUrl }}">
   <meta property="og:image" content="{{ $ogImage }}">
-  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:card" content="{{ $SEO['twitterCard'] ?? 'summary_large_image' }}">
   <meta name="twitter:title" content="{{ $ogTitle }}">
   <meta name="twitter:description" content="{{ $ogDesc }}">
   <meta name="twitter:image" content="{{ $ogImage }}">
