@@ -238,6 +238,28 @@ class SiteController extends Controller
                 }
                 $desc .= " " . $sentence . ".";
             }
+        } elseif ($site->type !== "wreck") {
+            // Reefs and "other" sites have no wreckData to draw the extra
+            // sentence above from, leaving 186 of them under 100 chars
+            // (SEO audit, 2026-09-28 re-audit). avgDepth and access are
+            // populated on effectively all of them - use those instead.
+            $bits = [];
+            if ($site->avgDepth && $site->avgDepth != $site->maxDepth) {
+                $bits[] = "average depth " . $site->avgDepth . " ft";
+            }
+            $accessPhrase = match (trim((string) $site->access)) {
+                "Hot Drop" => "reached by live drop",
+                "Permanent Mooring Balls" => "reached via mooring ball",
+                "Temporary Line" => "reached via a temporary line",
+                "Beach Access" => "reached from shore",
+                default => null,
+            };
+            if ($accessPhrase) {
+                $bits[] = $accessPhrase;
+            }
+            if ($bits) {
+                $desc .= " " . ucfirst(implode(", ", $bits)) . ".";
+            }
         }
 
         if (DiveLevel::isValid($site->level)) {
