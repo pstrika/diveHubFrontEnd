@@ -92,7 +92,7 @@
                                         </p>
                                     @endif
                                 </div>
-                                <a class="dh-wx-swap" href="{{ route('Weather') }}/{{ rawurlencode($beach['key']) }}">
+                                <a class="dh-wx-swap" href="{{ route('Weather') }}/{{ Str::slug($beach['key']) }}">
                                     <span class="material-icons-round" aria-hidden="true">open_in_new</span>Full forecast
                                 </a>
                             </div>

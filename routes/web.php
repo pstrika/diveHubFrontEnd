@@ -187,14 +187,24 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
     Route::delete('DecoPlanner/plans/{id}', 'App\Http\Controllers\NDLController@deleteDecoPlan')->name('DecoPlanner.deletePlan');
 });
 
-Route::get('Weather/{location}', 'App\Http\Controllers\WeatherController@show')->middleware('guest')->name('Weather');
+// Accepts the clean slug form ("key-largo"); anything else (the old
+// %20-encoded "key largo", mixed case, ...) 301s to the slug so there's
+// one canonical URL per location instead of two indexable variants (SEO
+// audit, 2026-09-28, finding #4).
+Route::get('Weather/{location}', function (string $location) {
+    $slug = \Illuminate\Support\Str::slug($location);
+    if ($slug !== $location) {
+        return redirect('/Weather/' . $slug, 301);
+    }
+    return app(\App\Http\Controllers\WeatherController::class)->show(request(), str_replace('-', ' ', $location));
+})->middleware('guest')->name('Weather');
 Route::get('Weather/', 'App\Http\Controllers\WeatherController@show')->middleware('guest')->name('Weather');
 // The separate Argentina forecast retired in release 10: /Weather now serves
 // every location in weatherlocations, Argentina included, and it is the better
 // page. These URLs are indexed and were linked from the drawer for a year, so
 // they redirect rather than 404. The metric and imperial variants fold into the
 // same place; units are a setting to add back, see docs/roadmap.md.
-$weatherRedirect = fn ($location = 'mar del plata') => redirect(route('Weather') . '/' . rawurlencode($location), 301);
+$weatherRedirect = fn ($location = 'mar del plata') => redirect(route('Weather') . '/' . \Illuminate\Support\Str::slug($location), 301);
 Route::get('WeatherAR/{location?}', $weatherRedirect)->name('WeatherAR');
 Route::get('WeatherARImperial/{location?}', $weatherRedirect)->name('WeatherARImperial');
 Route::get('WeatherARMetric/{location?}', $weatherRedirect)->name('WeatherARMetric');
@@ -367,7 +377,7 @@ Route::post('welcome/skip', 'App\Http\Controllers\OnboardingController@skip')->m
 Route::get('AboutUs', function () {
 	$SEO = [
 		"title" => "About Us | Divers Hub",
-		"desc" => "Learn who's behind Divers Hub and how to get in touch with us.",
+		"desc" => "Divers Hub is built by South Florida divers to make planning your next dive easy: real trip schedules, dive sites and planning tools in one place.",
 		"canonical" => route("AboutUs"),
 	];
 	return view('pages.Contact', compact('SEO'));

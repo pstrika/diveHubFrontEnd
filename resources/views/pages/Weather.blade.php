@@ -266,7 +266,7 @@
             <section class="dh-wx-card" id="dh-wx-coast">
                 <h2 class="dh-wx-ch">
                     <span class="dh-wx-ch-title">Along the coast today <span class="dh-wx-hint">tap to switch</span></span>
-                    <a class="dh-wx-sort" href="{{ route('Weather') }}/{{ rawurlencode($location) }}?coastSort={{ $coastSort === 'ntos' ? 'ston' : 'ntos' }}#dh-wx-coast">
+                    <a class="dh-wx-sort" href="{{ route('Weather') }}/{{ Str::slug($location) }}?coastSort={{ $coastSort === 'ntos' ? 'ston' : 'ntos' }}#dh-wx-coast">
                         <span class="material-icons-round" aria-hidden="true">swap_vert</span>{{ $coastSort === 'ntos' ? 'N to S' : 'S to N' }}
                     </a>
                 </h2>
@@ -276,7 +276,7 @@
                     @elseif($coastFavCount > 0 && $i === $coastFavCount)
                         <p class="dh-wx-clabel">All other locations</p>
                     @endif
-                    <a class="dh-wx-crow {{ $c->location === $location ? 'is-here' : '' }}" href="{{ route('Weather') }}/{{ rawurlencode($c->location) }}">
+                    <a class="dh-wx-crow {{ $c->location === $location ? 'is-here' : '' }}" href="{{ route('Weather') }}/{{ Str::slug($c->location) }}">
                         <span class="dh-wx-cname">{{ ucwords($c->location) }}</span>
                         <span class="dh-pill dh-pill-{{ $tone($c->conditionsAM_text) }}">{{ $c->conditionsAM_text }}</span>
                         <span class="dh-wx-cnum"><b>{{ $ft($c->swell_height_AM) }}</b> ft {{ $ft($c->swell_period_AM) }}s</span>
@@ -319,7 +319,7 @@
                     <div class="dh-wx-florida">
                         <img src="{{ asset('assets') }}/img/Florida1.png" alt="Map of Florida" class="dh-wx-florida-img">
                         @foreach($floridaPins as $pinLoc => $pos)
-                            <a href="{{ route('Weather') }}/{{ rawurlencode($pinLoc) }}"
+                            <a href="{{ route('Weather') }}/{{ Str::slug($pinLoc) }}"
                                class="dh-wx-florida-pin {{ $location === $pinLoc ? 'is-here' : '' }}"
                                style="top: {{ $pos['top'] + 24 }}px; left: {{ $pos['left'] + 16 }}px;"
                                title="{{ ucwords($pinLoc) }}" aria-label="{{ ucwords($pinLoc) }}"></a>

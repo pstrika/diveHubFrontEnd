@@ -91,7 +91,7 @@
     // Default social preview: a 1200x630 web copy (165 KB) of the 17 MB login photo that used to be served here.
     $ogImage = $SEO['image'] ?? asset($dhFrozen ? \App\Support\EmbeddedPage::LEGACY_OG_IMAGE : 'assets/img/og-default.jpg');
   @endphp
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="{{ $SEO['ogType'] ?? 'website' }}">
   <meta property="og:site_name" content="Divers Hub">
   <meta property="og:title" content="{{ $ogTitle }}">
   <meta property="og:description" content="{{ $ogDesc }}">
@@ -191,8 +191,6 @@
     Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
   }
 </script>
-<!-- Github buttons -->
-<script async defer src="https://buttons.github.io/buttons.js"></script>
 <!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc -->
 <script src="{{ asset('assets') }}/js/material-dashboard.min.js?v=3.0.1"></script>
 </body>

@@ -561,7 +561,7 @@
                         <ul class="dh-operator-list">
                             @foreach($operators as $operator)
                                 <li><a href="{{ route('OperatorDetails', ['id' => $operator->slug ?? $operator->id]) }}">
-                                    @if($operator->logoUrl)<img src="{{ asset('assets') }}{{ $operator->logoUrl }}" alt="" loading="lazy">@endif
+                                    @if($operator->logoUrl)<img src="{{ asset('assets') }}{{ $operator->logoUrl }}" alt="{{ $operator->operatorName }} logo" loading="lazy">@endif
                                     <span>{{ $operator->operatorName }}</span></a></li>
                             @endforeach
                         </ul>
@@ -1172,7 +1172,7 @@
                             @if(!empty($site->historicImg))
                                 <div class="col-md-4">
                                     <div class="d-flex align-items-center justify-content-center">
-                                        <img src="{{ asset('assets') }}/img/sites/{{ $site->historicImg }}" class="img-fluid border-radius-xl shadow">
+                                        <img src="{{ asset('assets') }}/img/sites/{{ $site->historicImg }}" class="img-fluid border-radius-xl shadow" alt="{{ $site->name }} historic photo">
                                     </div>
                                 </div>
                                 <div class="col-md-8">

@@ -1,0 +1,28 @@
+# Divers Hub
+
+> Divers Hub (divers-hub.com) is a free scuba diving planner for South Florida and the Florida Keys. It combines the trip calendars of local dive operators into one daily schedule, and adds a database of dive sites, marine forecasts and dive-planning tools.
+
+Coverage runs from Stuart to Key West. Contact: support@divers-hub.com
+
+## Plan a dive
+- [Today's dive trips](https://divers-hub.com/Trips): every scheduled boat dive from participating South Florida operators, by date, with departure time and site.
+- [Dive operators](https://divers-hub.com/Operators): dive shops and charter boats with location, boats, sites they visit and contact details.
+- [Beach diving](https://divers-hub.com/BeachDiving): shore diving conditions and tides for Fort Lauderdale and West Palm Beach.
+- [Marine forecasts](https://divers-hub.com/Weather/jupiter): 7-day wave, wind and tide forecasts for South Florida dive towns.
+
+## Dive sites
+- [Top rated dive sites](https://divers-hub.com/DiveSites): reefs and wrecks ranked by how often boats visit and diver ratings.
+- [Wreck wiki](https://divers-hub.com/WreckSites): Florida shipwrecks and artificial reefs with depth, history, certification level and photos.
+- Each site has its own page at https://divers-hub.com/SiteDetails/{site-name}, for example [Lady Luck](https://divers-hub.com/SiteDetails/lady-luck) and [Spiegel Grove](https://divers-hub.com/SiteDetails/spiegel-grove).
+
+## Tools
+- [Gas mix calculator](https://divers-hub.com/gasplanning): nitrox and trimix best-mix and MOD calculator.
+- [Decompression planner](https://divers-hub.com/DecoPlanner): free dive and deco schedule planner.
+- [Online dive waivers](https://divers-hub.com/Waivers)
+
+## Guides
+- [Blog](https://divers-hub.com/Blog): local guides on wrecks, seasons, lobster season, lionfish, nitrox and more.
+
+## About
+- [About Divers Hub](https://divers-hub.com/AboutUs)
+- [Privacy policy](https://divers-hub.com/PrivacyPolicy)

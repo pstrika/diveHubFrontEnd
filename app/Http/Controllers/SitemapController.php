@@ -77,14 +77,20 @@ class SitemapController extends Controller
                     }
                 });
 
+            // US only (SEO audit, 2026-09-28, finding #4): WeatherController@show
+            // itself only serves country = 'US' locations, falling back to Fort
+            // Lauderdale for anything else (the Argentina forecast was retired in
+            // release 10 - see routes/web.php) - listing those rows here just
+            // pointed crawlers at pages that silently rendered a duplicate of
+            // Fort Lauderdale's forecast. Clean hyphenated slug, not %20s.
             WeatherLocation::select('location', 'country')
+                ->where('country', 'US')
                 ->orderBy('location')
                 ->chunk(200, function ($locations) use ($sitemap) {
                     foreach ($locations as $weatherLocation) {
-                        // One forecast page for every location since release 10.
                         $routeName = 'Weather';
                         $sitemap->add(
-                            Url::create(route($routeName) . '/' . rawurlencode($weatherLocation->location))
+                            Url::create(route($routeName) . '/' . \Illuminate\Support\Str::slug($weatherLocation->location))
                                 ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY)
                                 ->setPriority(0.5)
                         );
@@ -118,7 +124,9 @@ class SitemapController extends Controller
             // crawlers the other two aren't separate pages.
             'gasplanning' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'DecoPlanner' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
-            'home' => ['priority' => 0.6, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            // 'home' deliberately excluded (SEO audit, 2026-09-28): it now
+            // just 301s to '/', so listing it would point crawlers at a
+            // redirect instead of a real page.
             'Waivers' => ['priority' => 0.4, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'CalendarHydrotherapy' => ['priority' => 0.4, 'changefreq' => Url::CHANGE_FREQUENCY_DAILY],
             'AboutUs' => ['priority' => 0.3, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],

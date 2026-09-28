@@ -11,7 +11,7 @@
                     @foreach($operators as $operator)
                         @if($operator->waiverLink)
                             <a href="{{ $operator->waiverLink }}" class="dh-waiver-card" target="_blank" rel="noopener">
-                                <img src="{{ asset('assets') }}{{ $operator->logoUrl }}" alt="" class="dh-waiver-logo">
+                                <img src="{{ asset('assets') }}{{ $operator->logoUrl }}" alt="{{ $operator->operatorName }} logo" class="dh-waiver-logo">
                                 <span class="dh-waiver-name">{{ $operator->operatorName }}</span>
                             </a>
                         @endif

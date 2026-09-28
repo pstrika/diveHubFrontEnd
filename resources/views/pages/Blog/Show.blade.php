@@ -17,6 +17,10 @@
                 $focusOf = fn ($p) => 'object-position: center ' . ($p->cover_focus ?: 'center') . ';';
             @endphp
 
+            @unless($preview)
+                <x-blog-structured-data :post="$post" />
+            @endunless
+
             @if($preview)
                 {{-- Opened by the "Preview" button in Blog/Manage/Form.blade.php,
                      from whatever is currently in the form - not yet saved.
@@ -50,7 +54,7 @@
                     <span class="dh-blog-avatar">{{ Str::of($post->author->name ?? '?')->substr(0, 1) }}</span>
                     <span><strong>{{ $post->author->name ?? 'Divers Hub' }}</strong> <span class="chip chip-static dh-blog-role">{{ $roleLabel }}</span></span>
                     <span class="dh-blog-dot">&middot;</span>
-                    <span>{{ optional($post->published_at)->format('F j, Y') }}</span>
+                    <time datetime="{{ optional($post->published_at)->toDateString() }}">{{ optional($post->published_at)->format('F j, Y') }}</time>
                     <span class="dh-blog-dot">&middot;</span>
                     <span>{{ $post->readMinutes }} min read</span>
                 </div>

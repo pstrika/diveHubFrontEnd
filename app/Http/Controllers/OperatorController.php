@@ -173,7 +173,7 @@ class OperatorController extends Controller
         /*Provide SEO metadata */
         $SEO = array(
             "title" => "Online Dive Waivers | Divers Hub",
-            "desc" => "Find online liability waiver links for scuba diving operators in South Florida.",
+            "desc" => "Sign your liability waiver online before you show up at the boat - direct links for every South Florida dive operator that offers one.",
             "canonical" => route("Waivers"),
         );
 

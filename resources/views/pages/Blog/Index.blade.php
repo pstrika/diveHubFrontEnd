@@ -67,7 +67,7 @@
                 @if($featured)
                     <a href="{{ route('Blog.show', $featured->slug) }}" class="dh-blog-featured">
                         <span class="dh-blog-featured-img">
-                            <img src="{{ $coverOr($featured) }}" alt="" loading="lazy" style="{{ $focusOf($featured) }}">
+                            <img src="{{ $coverOr($featured) }}" alt="{{ $featured->title }}" loading="lazy" style="{{ $focusOf($featured) }}">
                         </span>
                         <span class="dh-blog-featured-body">
                             <span class="dh-blog-eyebrow">{{ $featured->category }}</span>
@@ -98,7 +98,7 @@
                 @foreach($rest as $post)
                     <a href="{{ route('Blog.show', $post->slug) }}" class="dh-blog-card">
                         <span class="dh-blog-card-img">
-                            <img src="{{ $coverOr($post) }}" alt="" loading="lazy" style="{{ $focusOf($post) }}">
+                            <img src="{{ $coverOr($post) }}" alt="{{ $post->title }}" loading="lazy" style="{{ $focusOf($post) }}">
                             <span class="chip chip-static dh-blog-cat-chip">{{ $post->category }}</span>
                         </span>
                         <span class="dh-blog-card-body">
@@ -149,7 +149,7 @@
 
             function featuredHtml(p) {
                 return '<a href="/Blog/' + esc(p.slug) + '" class="dh-blog-featured">'
-                    + '<span class="dh-blog-featured-img"><img src="' + esc(p.image) + '" alt="" loading="lazy" style="object-position: center ' + esc(p.focus || 'center') + ';"></span>'
+                    + '<span class="dh-blog-featured-img"><img src="' + esc(p.image) + '" alt="' + esc(p.title) + '" loading="lazy" style="object-position: center ' + esc(p.focus || 'center') + ';"></span>'
                     + '<span class="dh-blog-featured-body">'
                     + '<span class="dh-blog-eyebrow">' + esc(p.category) + '</span>'
                     + '<span class="dh-blog-featured-title">' + esc(p.title) + '</span>'
@@ -165,7 +165,7 @@
 
             function cardHtml(p) {
                 return '<a href="/Blog/' + esc(p.slug) + '" class="dh-blog-card">'
-                    + '<span class="dh-blog-card-img"><img src="' + esc(p.image) + '" alt="" loading="lazy" style="object-position: center ' + esc(p.focus || 'center') + ';"><span class="chip chip-static dh-blog-cat-chip">' + esc(p.category) + '</span></span>'
+                    + '<span class="dh-blog-card-img"><img src="' + esc(p.image) + '" alt="' + esc(p.title) + '" loading="lazy" style="object-position: center ' + esc(p.focus || 'center') + ';"><span class="chip chip-static dh-blog-cat-chip">' + esc(p.category) + '</span></span>'
                     + '<span class="dh-blog-card-body">'
                     + '<span class="dh-blog-card-title">' + esc(p.title) + '</span>'
                     + '<span class="dh-blog-excerpt">' + esc(p.excerpt) + '</span>'

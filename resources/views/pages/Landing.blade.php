@@ -1,4 +1,5 @@
 <x-page-template bodyClass='dh-shell bg-gray-200' :SEO="$SEO">
+    <x-organization-structured-data />
     <x-shell.nav active="" />
 
     <main class="main-content position-relative h-100 border-radius-lg">

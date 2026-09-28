@@ -13,7 +13,11 @@
 <article class="dh-op-card{{ $card['private'] ? ' dh-op-card-private' : '' }}">
     <a class="dh-op-logo" href="{{ $card['url'] }}" aria-hidden="true" tabindex="-1">
         @if($card['logo'])
-            <img src="{{ $card['logo'] }}" alt="" loading="lazy" decoding="async">
+            {{-- alt is real text (not "") for image-search indexing, even
+                 though the parent link is aria-hidden/tabindex="-1" for
+                 screen readers - the operator name link right below is the
+                 accessible route to the same page (SEO audit, 2026-09-28). --}}
+            <img src="{{ $card['logo'] }}" alt="{{ $card['name'] }} logo" loading="lazy" decoding="async">
         @else
             <span class="material-icons-round">directions_boat</span>
         @endif

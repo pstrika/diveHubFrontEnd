@@ -54,6 +54,9 @@ class BlogController extends Controller
             'desc' => $post->excerpt,
             'canonical' => route('Blog.show', $post->slug),
             'image' => $post->cover_image ? asset($post->cover_image) : null,
+            // Blog posts are articles, not generic pages (SEO audit, 2026-09-28,
+            // finding #3) - og:type defaults to "website" everywhere else.
+            'ogType' => 'article',
         ];
 
         return view('pages.Blog.Show', compact('post', 'related', 'rankedSites', 'SEO'));

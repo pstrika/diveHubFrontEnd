@@ -142,11 +142,15 @@ class WeatherController extends Controller
         }
 
         /*Provide SEO metadata */
+        // Title-cased place name and a clean slug canonical, not the raw
+        // lowercase param and its %20-encoded URL (SEO audit, 2026-09-28,
+        // finding #4).
+        $place = ucwords(strtolower($location));
         $SEO = array(
-            "title" => "Marine forecast for " . $location,
-            "desc" => "7-day marine forecast for " . $location . ". Ocean conditions, tides and more",
+            "title" => $place . " Marine Forecast for Divers – Seas, Wind & Tides | Divers Hub",
+            "desc" => "7-day marine forecast for " . $place . ": wave height, wind, water temperature and tides, read for scuba divers.",
             "keywords" => "marine weather " . $location . ",dive,diving,scuba,florida diving,tides,florida scuba",
-            "canonical" => route("Weather") . "/" . rawurlencode($location),
+            "canonical" => route("Weather") . "/" . \Illuminate\Support\Str::slug($location),
         );
 
         return view('pages.Weather', compact('weathers', 'date', 'location', 'currentLocation', 'SEO', 'days', 'today', 'coastToday', 'coastFavCount', 'boatsByDate', 'coastSort'));
