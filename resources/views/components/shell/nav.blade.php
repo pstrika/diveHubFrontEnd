@@ -3,7 +3,9 @@
 
     Desktop (lg and up) keeps the original fixed bar decided with Zach and
     Pablo on 2026-09-10 - Dives, Sites, Weather, Groups, plus a More link
-    that opens the drawer (shell/menu.blade.php). $tabs below, unchanged.
+    that opens the drawer (shell/menu.blade.php). My Dashboard was added
+    ahead of Dives for signed-in members on 2026-09-27 - guests still get
+    the original four, since they have no dashboard. $tabs below.
 
     Phones get their own $mobileTabs bar, customizable per diver since
     2026-09-24 (Pablo: "give them the chance to customize which icons they
@@ -37,16 +39,22 @@
 @php
     $user = auth()->user();
     $isGuest = !$user || !$user->isNotGuest();
-    // Four linked destinations plus Me. "Dives" is the trip finder (day board plus
-    // date ranges). "Groups" is personal, so for guests it opens the account prompt.
-    // Desktop only (see $mobileTabs below for the phone tab bar, which is
-    // customizable and has its own Dashboard tab - Pablo, 2026-09-24).
-    $tabs = [
-        'today'   => ['label' => 'Dives',      'short' => 'Dives',   'icon' => 'scuba_diving', 'href' => route('Trips')],
-        'sites'   => ['label' => 'Dive Sites', 'short' => 'Sites',   'icon' => 'pin_drop',     'href' => route('DiveSites')],
-        'weather' => ['label' => 'Weather',    'short' => 'Weather', 'icon' => 'cloud',        'href' => route('Weather')],
-        'groups'  => ['label' => 'Groups',     'short' => 'Groups',  'icon' => 'groups',       'href' => $isGuest ? '#' : route('MyGroups'), 'gated' => $isGuest],
-    ];
+    // Five linked destinations plus Me for a signed-in member (four for a
+    // guest, who has no dashboard). "Dives" is the trip finder (day board
+    // plus date ranges). "Groups" is personal, so for guests it opens the
+    // account prompt. Desktop only (see $mobileTabs below for the phone tab
+    // bar, which is customizable and has its own Dashboard tab - Pablo,
+    // 2026-09-24).
+    $tabs = [];
+    if (!$isGuest) {
+        // First, ahead of Dives (Pablo, 2026-09-27: "show My Dashboard in
+        // the top nav bar for desktop...first option...before Dives").
+        $tabs['dashboard'] = ['label' => 'My Dashboard', 'short' => 'Dashboard', 'icon' => 'dashboard', 'href' => route('MyDashboard')];
+    }
+    $tabs['today']   = ['label' => 'Dives',      'short' => 'Dives',   'icon' => 'scuba_diving', 'href' => route('Trips')];
+    $tabs['sites']   = ['label' => 'Dive Sites', 'short' => 'Sites',   'icon' => 'pin_drop',     'href' => route('DiveSites')];
+    $tabs['weather'] = ['label' => 'Weather',    'short' => 'Weather', 'icon' => 'cloud',        'href' => route('Weather')];
+    $tabs['groups']  = ['label' => 'Groups',     'short' => 'Groups',  'icon' => 'groups',       'href' => $isGuest ? '#' : route('MyGroups'), 'gated' => $isGuest];
 
     // Unread in-app notifications, for the bell icon - inbox and groups combined.
     $unread = $isGuest ? 0 : (int) $user->unreadNotifications();
@@ -139,15 +147,25 @@
         </nav>
 
         <div class="dh-topbar-actions">
-            {{-- Full bar from md up; a plain icon opening the same form in a
-                 modal on phones, where there's no room for it inline but
-                 search is too important to hide entirely (2026-09-11). --}}
-            <form class="dh-search d-none d-md-flex" action="{{ route('DiveSitesSearch') }}" method="POST" role="search">
+            {{-- Full bar from xl up only; a plain icon opening the same form
+                 in a modal everywhere narrower, where there's no room for it
+                 inline but search is too important to hide entirely
+                 (2026-09-11). Used to switch at md (768px), which left the
+                 inline bar competing with the desktop nav for space right
+                 where the nav itself first appears at lg (992px) - with My
+                 Dashboard added as a 6th item (Pablo, 2026-09-27), that gap
+                 was consistently losing and pushing More out of the nav's
+                 own scroll area, past the search bar's left edge, at any
+                 width under roughly 1150px. Moved the switch to xl (1200px)
+                 instead, past where that ever happens (Pablo, 2026-09-27:
+                 "collapse the search bar and do the modal search as you have
+                 in the mobile version"). --}}
+            <form class="dh-search d-none d-xl-flex" action="{{ route('DiveSitesSearch') }}" method="POST" role="search">
                 @csrf
                 <span class="material-icons-round" aria-hidden="true">search</span>
                 <input type="search" name="searchString" placeholder="Search sites" aria-label="Search dive sites">
             </form>
-            <button type="button" class="dh-search-btn d-md-none" data-bs-toggle="modal" data-bs-target="#dh-search-modal" aria-label="Search dive sites">
+            <button type="button" class="dh-search-btn d-xl-none" data-bs-toggle="modal" data-bs-target="#dh-search-modal" aria-label="Search dive sites">
                 <span class="material-icons-round" aria-hidden="true">search</span>
             </button>
 
