@@ -92,7 +92,11 @@
 <div class="dh-menu-group">
     <h6>Operators and shore</h6>
     {{-- Operators left the tab bar for Weather (2026-09-10); this row, trip cards,
-         site pages and the finder's operator filter are the ways in. --}}
+         site pages and the finder's operator filter are the ways in. Dive Sites
+         is here too (2026-09-28) - it's a customizable tab bar slot, so a member
+         who picks two other slots would otherwise have no way back to the
+         listing page at all. --}}
+    {!! $link('Dive sites', route('DiveSites'), 'pin_drop') !!}
     {!! $link('Dive operators', route('Operators'), 'directions_boat') !!}
     {!! $link('Marine forecast', route('Weather'), 'cloud') !!}
     {!! $link('Beach diving', route('BeachDiving'), 'beach_access') !!}
