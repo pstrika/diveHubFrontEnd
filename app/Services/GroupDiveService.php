@@ -8,6 +8,7 @@ use App\Models\GroupDive;
 use App\Models\Photo;
 use App\Models\Trip;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -81,6 +82,11 @@ class GroupDiveService
             $postId = $response->json('post_id') ?? $response->json('id');
             if ($postId) {
                 $dive->update(['fb_post_id' => $postId]);
+                // Otherwise the group page's feed card (GroupFacebookController::
+                // getRecentPosts()) keeps serving its 5-minute cache and this
+                // brand new post doesn't show there until that expires, even
+                // though it's already live on the actual Facebook Page.
+                Cache::forget('group_fb_feed_' . $group->id);
             }
         } catch (\Throwable $e) {
             Log::error('Facebook post exception for group ' . $group->id . ': ' . $e->getMessage());
