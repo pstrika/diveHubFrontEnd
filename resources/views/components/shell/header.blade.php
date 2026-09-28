@@ -25,15 +25,27 @@
 <div class="dh-pagehead">
     @if($title !== '')
         {{-- :h1="true" on pages that have no other <h1> (SEO audit, 2026-09-28).
-             .dh-pagehead-title sets size and margin, so it looks the same. --}}
-        <{{ $h1 ? 'h1' : 'h6' }} class="dh-pagehead-title">
+             The icon sits OUTSIDE the <h1>: it's a Material icon ligature, so
+             inside the heading its name became part of the text search
+             engines read ("Online Waivers assignment"). The wrapper keeps
+             the class, so layout and size are unchanged. --}}
+        @if($h1)
+        <div class="dh-pagehead-title">
+            <h1 class="dh-pagehead-h1">{{ $title }}</h1>
+        @else
+        <h6 class="dh-pagehead-title">
             {{ $title }}
+        @endif
             @if($__headIconSvg)
                 <span class="dh-pagehead-icon" aria-hidden="true">{!! $__headIconSvg !!}</span>
             @elseif($icon)
                 <span class="material-icons-round dh-pagehead-icon is-font" aria-hidden="true">{{ $icon }}</span>
             @endif
-        </{{ $h1 ? 'h1' : 'h6' }}>
+        @if($h1)
+        </div>
+        @else
+        </h6>
+        @endif
     @endif
     @php $__u = auth()->user(); @endphp
     @if(!$__u || !$__u->isNotGuest())

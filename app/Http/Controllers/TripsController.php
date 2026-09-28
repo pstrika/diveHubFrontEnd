@@ -203,7 +203,7 @@ class TripsController extends Controller
         $SEO = array(
             "title" => $isTodayShown
                 ? "Today's Scuba Diving Trips in South Florida | Divers Hub"
-                : "Scuba Diving Trips in South Florida – " . Carbon::parse($date)->format('D, M j') . " | Divers Hub",
+                : "Scuba Diving Trips in South Florida – " . Carbon::parse($date)->format('D, M j'),
             "desc" => "Every dive boat going out in South Florida on one calendar, from Stuart to Key West: departure times, dive sites and open spots.",
             "keywords" => "diving, fort lauderdale beach diving, palm beach beach diving,dive sites,scuba diving sites,dive wrecks,dive reefs,wreck,reef",
             "canonical" => route("Trips")

@@ -875,7 +875,7 @@ class SiteController extends Controller
     public function showWrecks(Request $request) {
         /*Provide SEO metadata */
         $SEO = array(
-            "title" => "Florida Shipwrecks & Artificial Reefs – Wreck Wiki | Divers Hub",
+            "title" => "Florida Shipwrecks & Artificial Reefs – Wreck Wiki",
             "desc" => "Every shipwreck and artificial reef in Florida with depth, certification level, history and photos, from Stuart to Key West. The evolution of wreckwiki.com.",
             "keywords" => "diving, fort lauderdale beach diving, palm beach beach diving,dive sites,scuba diving sites,dive wrecks,dive reefs,wreck,reef",
             "canonical" => route("WreckSites")
