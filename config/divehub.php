@@ -14,11 +14,7 @@
 
 return [
 
-<<<<<<< HEAD
     'version' => '11.0.2',
-=======
-    'version' => '11.0.2',
->>>>>>> 31fa5ca (Bust the group's FB feed cache right after posting a new dive (v11.0.3))
 
     // Release date shown next to the version. Any human readable format.
     'released' => '09/27/26',
