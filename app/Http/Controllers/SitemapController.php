@@ -103,6 +103,59 @@ class SitemapController extends Controller
         return response($xml, 200)->header('Content-Type', 'text/xml');
     }
 
+    /**
+     * Every real, indexable URL on the site as a flat list of strings -
+     * same pages as the sitemap above, just without the XML/priority
+     * wrapping. Used by IndexNowSubmitAll to push the whole site in one
+     * batch (Pablo, 2026-09-29); kept as its own pass over the same tables
+     * rather than reusing the cached sitemap.xml, so it can run on demand
+     * without waiting on or invalidating that 6-hour cache.
+     */
+    public function allUrls(): array
+    {
+        $urls = [];
+
+        foreach (array_keys($this->staticPages()) as $routeName) {
+            $urls[] = route($routeName);
+        }
+
+        $siteHasSlug = Schema::connection('mysql_trips')->hasColumn('sites', 'slug');
+        Site::where('_hidden', '<>', 1)
+            ->select(array_filter(['id', $siteHasSlug ? 'slug' : null]))
+            ->orderBy('id')
+            ->chunk(200, function ($sites) use (&$urls) {
+                foreach ($sites as $site) {
+                    $urls[] = route('SiteDetails') . '/' . ($site->slug ?? $site->id);
+                }
+            });
+
+        $operatorHasSlug = Schema::connection('mysql_trips')->hasColumn('operators', 'slug');
+        Operator::where('private', '<>', 1)
+            ->select(array_filter(['id', $operatorHasSlug ? 'slug' : null]))
+            ->orderBy('id')
+            ->chunk(200, function ($operators) use (&$urls) {
+                foreach ($operators as $operator) {
+                    $urls[] = route('OperatorDetails', ['id' => $operator->slug ?? $operator->id]);
+                }
+            });
+
+        Post::published()->select('slug')->orderBy('id')
+            ->chunk(200, function ($posts) use (&$urls) {
+                foreach ($posts as $post) {
+                    $urls[] = route('Blog.show', $post->slug);
+                }
+            });
+
+        WeatherLocation::select('location')->where('country', 'US')->orderBy('location')
+            ->chunk(200, function ($locations) use (&$urls) {
+                foreach ($locations as $weatherLocation) {
+                    $urls[] = route('Weather') . '/' . \Illuminate\Support\Str::slug($weatherLocation->location);
+                }
+            });
+
+        return $urls;
+    }
+
     private function staticPages(): array
     {
         return [

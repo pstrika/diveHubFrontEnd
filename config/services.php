@@ -36,6 +36,15 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    // IndexNow (Bing, Yandex, Seznam, Naver - not Google, which has no
+    // equivalent push API): tells search engines a URL changed instead of
+    // waiting for their next crawl. The key doubles as proof of ownership -
+    // it must also exist verbatim at public/{key}.txt, which IndexNow
+    // fetches over HTTPS before accepting any submission using it.
+    'indexnow' => [
+        'key' => env('INDEXNOW_KEY'),
+    ],
+
     'facebook' => [
         'client_id' => env('FACEBOOK_CLIENT_ID'),
         'client_secret' => env('FACEBOOK_CLIENT_SECRET'),

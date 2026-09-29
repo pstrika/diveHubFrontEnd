@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use App\Models\Site;
+use App\Services\IndexNowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -53,7 +54,14 @@ class BlogAdminController extends Controller
             $data['published_at'] = now();
         }
 
-        Post::create($data);
+        $post = Post::create($data);
+
+        // New content, not just a metadata tweak - worth telling Bing/Yandex
+        // about right away rather than waiting for their next crawl or the
+        // next indexnow:submit-all (Pablo, 2026-09-29).
+        if ($post->status === 'published') {
+            IndexNowService::submitOne(route('Blog.show', $post->slug));
+        }
 
         return redirect()->route('Blog.manage.index')->with('success', 'Article saved.');
     }
@@ -86,6 +94,12 @@ class BlogAdminController extends Controller
         }
 
         $post->update($data);
+
+        // Same reasoning as store() above - covers both a draft going live
+        // and a live post's content changing (title, body, etc).
+        if ($post->status === 'published') {
+            IndexNowService::submitOne(route('Blog.show', $post->slug));
+        }
 
         return redirect()->route('Blog.manage.index')->with('success', 'Article saved.');
     }
