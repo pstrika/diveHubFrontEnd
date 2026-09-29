@@ -136,4 +136,23 @@ class CronController extends Controller
 
         return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
     }
+
+    /**
+     * Manual-trigger only (Pablo, 2026-09-29) - same reasoning as
+     * photosWebCopies above: needs to run on this server itself, since
+     * IndexNow's submission has to be made from a request that resolves
+     * route()/url() against the real production APP_URL, not a local
+     * tinker session pointed at divers-hub.com's shared DB. See
+     * IndexNowSubmitAll / App\Services\IndexNowService.
+     */
+    public function indexNowSubmitAll(Request $request)
+    {
+        if (!hash_equals((string) env('CRON_SECRET'), (string) $request->query('secret'))) {
+            abort(403);
+        }
+
+        Artisan::call('indexnow:submit-all');
+
+        return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
+    }
 }
