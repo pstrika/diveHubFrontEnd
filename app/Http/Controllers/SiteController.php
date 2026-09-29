@@ -226,7 +226,12 @@ class SiteController extends Controller
      */
     private function buildSiteMetaDescription(Site $site, string $locationTitleCase): string
     {
-        $desc = $site->name . " " . $site->type . " in " . $locationTitleCase . ". Max depth " . $site->maxDepth . " ft.";
+        // 18 sites are type "other", which read as the literal, meaningless
+        // "Neptune Memorial other in Miami Beach" (SEO audit, 2026-09-28
+        // re-audit). They're all artificial structures, not natural reef or
+        // wreck, so that's the real word for what a diver would search.
+        $typeForDesc = $site->type === "other" ? "artificial reef" : $site->type;
+        $desc = $site->name . " " . $typeForDesc . " in " . $locationTitleCase . ". Max depth " . $site->maxDepth . " ft.";
 
         if ($site->type === "wreck" && $site->wreckData) {
             $wreckData = json_decode($site->wreckData, true);

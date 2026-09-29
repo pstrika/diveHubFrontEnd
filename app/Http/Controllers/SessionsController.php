@@ -22,7 +22,12 @@ class SessionsController extends Controller
             "title" => "Sign in to divers-hub.com",
             "desc" => "Sign up to everything you need to know before diving in South Florida",
             "keywords" => "beach diving, fort lauderdale beach diving, palm beach beach diving, shore diving, scuba, dive sites, dive operators, marine forecast, dive sites miami",
-            "canonical" => route("login")
+            "canonical" => route("login"),
+            // A sign-in form has nothing for a searcher to land on (SEO
+            // audit, 2026-09-28 re-audit) - keep it out of the index, but
+            // still follow its links so nothing linked only from here gets
+            // orphaned from crawling.
+            "robots" => "noindex, follow",
         );
 
         return view('sessions.create', compact('SEO'));
@@ -123,7 +128,8 @@ class SessionsController extends Controller
             "title" => "Sign out divers-hub.com",
             "desc" => "Sign up to everything you need to know before diving in South Florida",
             "keywords" => "beach diving, fort lauderdale beach diving, palm beach beach diving, shore diving, scuba, dive sites, dive operators, marine forecast, dive sites miami",
-            "canonical" => route("logout")
+            "canonical" => route("logout"),
+            "robots" => "noindex, follow",
         );
 
         return view('sessions.create', compact('SEO'));

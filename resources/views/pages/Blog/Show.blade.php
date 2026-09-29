@@ -79,7 +79,7 @@
                     </div>
                 @endif
 
-                <img class="dh-blog-hero-img" src="{{ $coverOr($post) }}" alt="" style="{{ $focusOf($post) }}">
+                <img class="dh-blog-hero-img" src="{{ $coverOr($post) }}" alt="{{ $post->title }}" style="{{ $focusOf($post) }}">
 
                 {{-- Server-rendered plain text first (Google's copy), same
                      pattern as sites.desc/route/typicalConditions/history -
@@ -118,7 +118,7 @@
                         @foreach($related as $rp)
                             <a href="{{ route('Blog.show', $rp->slug) }}" class="dh-blog-card">
                                 <span class="dh-blog-card-img">
-                                    <img src="{{ $coverOr($rp) }}" alt="" loading="lazy" style="{{ $focusOf($rp) }}">
+                                    <img src="{{ $coverOr($rp) }}" alt="{{ $rp->title }}" loading="lazy" style="{{ $focusOf($rp) }}">
                                     <span class="chip chip-static dh-blog-cat-chip">{{ $rp->category }}</span>
                                 </span>
                                 <span class="dh-blog-card-body">
