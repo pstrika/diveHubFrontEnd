@@ -155,8 +155,15 @@
                                 <button type="submit" class="dh-btn dh-btn-ghost-dark">Disconnect</button>
                             </form>
                         </div>
-                    @else
+                    @elseif(auth()->user()->isAdmin())
                         <p class="text-xs text-secondary mt-n1">Use the "Connect FB Page" button at the top of this page to link a Facebook Page.</p>
+                    @else
+                        {{-- This modal is reachable by any group admin ($isAdmin),
+                             but the "Connect FB Page" button it points to is
+                             currently platform-admin-only too - see the note
+                             above it. Don't send a group admin looking for a
+                             button that isn't there for them right now. --}}
+                        <p class="text-xs text-secondary mt-n1">Facebook connections are temporarily limited to Divers Hub admins - Facebook is returning a "Feature Unavailable" error for other accounts right now (Pablo, 2026-10-02).</p>
                     @endif
                 </div>
             </div>
@@ -413,7 +420,16 @@
                             <span class="material-icons-round" aria-hidden="true">{{ $iAmMuted ? 'notifications_off' : 'notifications_active' }}</span>{{ $iAmMuted ? 'Muted' : 'Notifications on' }}
                         </button>
                     </form>
-                    @if($isAdmin)
+                    {{-- Re-gated behind platform-admin, on top of the usual
+                         per-group admin check ($isAdmin), after opening this
+                         to all group admins surfaced Facebook's own "Feature
+                         Unavailable...we are updating additional details for
+                         this app" error for a real (non-admin) user even
+                         though the app is published/Live (Pablo, 2026-10-02).
+                         Remove the auth()->user()->isAdmin() && half again
+                         once that's resolved on Meta's side - see
+                         GroupFacebookController and the handoff artifact. --}}
+                    @if(auth()->user()->isAdmin() && $isAdmin)
                         @if($group->isFacebookConnected())
                             <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-toggle="modal" data-bs-target="#modalGroupSettings">
                                 <i class="fa-brands fa-facebook" aria-hidden="true"></i>Connected: {{ $group->fb_page_name }}

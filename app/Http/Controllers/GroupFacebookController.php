@@ -72,6 +72,15 @@ class GroupFacebookController extends Controller
             abort(403);
         }
 
+        // Re-added, on top of the group-admin check above, after opening
+        // this to all group admins surfaced Facebook's own "Feature
+        // Unavailable" error for a real user even though the app is
+        // published/Live (Pablo, 2026-10-02). Remove once resolved on
+        // Meta's side - see the handoff artifact.
+        if (!auth()->user()->isAdmin()) {
+            abort(403);
+        }
+
         session(['fb_connect_group_id' => $group->id]);
 
         // auth_type=rerequest forces Facebook to show the consent screen
@@ -98,6 +107,11 @@ class GroupFacebookController extends Controller
         $group = Group::findOrFail($groupId);
 
         if (!$group->isAdmin(auth()->user()->id)) {
+            abort(403);
+        }
+
+        // Re-added, see connect() above.
+        if (!auth()->user()->isAdmin()) {
             abort(403);
         }
 
@@ -148,6 +162,11 @@ class GroupFacebookController extends Controller
         $group = Group::where('slug', $groupSlug)->firstOrFail();
 
         if (!$group->isAdmin(auth()->user()->id)) {
+            abort(403);
+        }
+
+        // Re-added, see connect() above.
+        if (!auth()->user()->isAdmin()) {
             abort(403);
         }
 
