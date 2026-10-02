@@ -26,8 +26,13 @@
 
 @php
     $file = $site->photoFile ?? null;
+    $defaultIllustration = match (strtolower($site->type)) {
+        'wreck' => 'site_wreck.webp',
+        'reef'  => 'site_reef.webp',
+        default => 'dive-site.webp',
+    };
     $img = $file ? \App\Support\SitePhoto::thumb($file)
-                 : asset('assets') . '/img/illustrations/' . (strtolower($site->type) === 'wreck' ? 'site_wreck.webp' : 'dive-site.webp');
+                 : asset('assets') . '/img/illustrations/' . $defaultIllustration;
     $levelInfo = \App\Support\DiveLevel::get($site->level);
     $hasActions = isset($site->wished);
     $soon = (int) ($site->tripsSoon ?? 0);
