@@ -207,7 +207,17 @@ class SiteController extends Controller
                 return asset('assets') . '/img/sites/' . rawurlencode($file);
             }
         }
-        return null;
+
+        // No real photo at all - the type-matched illustration (same one
+        // the page itself shows as its hero image) beats the sitewide
+        // generic og-default.jpg for a site-specific share card
+        // (Pablo, 2026-10-02).
+        $defaultIllustration = match (strtolower($site->type)) {
+            'wreck' => 'site_wreck.webp',
+            'reef'  => 'site_reef.webp',
+            default => 'dive-site.webp',
+        };
+        return asset('assets') . '/img/illustrations/' . $defaultIllustration;
     }
 
     /**
