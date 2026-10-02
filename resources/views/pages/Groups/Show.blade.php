@@ -155,15 +155,8 @@
                                 <button type="submit" class="dh-btn dh-btn-ghost-dark">Disconnect</button>
                             </form>
                         </div>
-                    @elseif(auth()->user()->isAdmin())
-                        <p class="text-xs text-secondary mt-n1">Use the "Connect FB Page" button at the top of this page to link a Facebook Page.</p>
                     @else
-                        {{-- This modal is reachable by any group admin ($isAdmin),
-                             but the "Connect FB Page" button it points to is
-                             currently platform-admin-only too - see the note
-                             above it. Don't send a group admin looking for a
-                             button that isn't there for them right now. --}}
-                        <p class="text-xs text-secondary mt-n1">Facebook connections are temporarily limited to Divers Hub admins while a Meta review is in progress.</p>
+                        <p class="text-xs text-secondary mt-n1">Use the "Connect FB Page" button at the top of this page to link a Facebook Page.</p>
                     @endif
                 </div>
             </div>
@@ -420,20 +413,7 @@
                             <span class="material-icons-round" aria-hidden="true">{{ $iAmMuted ? 'notifications_off' : 'notifications_active' }}</span>{{ $iAmMuted ? 'Muted' : 'Notifications on' }}
                         </button>
                     </form>
-                    {{-- Temporarily also gated behind platform-admin, on top of
-                         the usual per-group admin check ($isAdmin), while the
-                         app's Meta App Review for these Facebook permissions is
-                         still pending (Pablo, 2026-09-22: "Only show the Connect
-                         to FB groups button to Platform admins for now...After
-                         that, we will show the Connect to FB group to all users
-                         that are admins for that particular group"). Once
-                         review clears, drop the auth()->user()->isAdmin() &&
-                         half of this condition so it's just $isAdmin again.
-
-                         Nothing renders at all for anyone who fails this check
-                         (Pablo, 2026-09-22: "don't show it at all for the user
-                         that cannot click") - no disabled "Coming soon" stand-in. --}}
-                    @if(auth()->user()->isAdmin() && $isAdmin)
+                    @if($isAdmin)
                         @if($group->isFacebookConnected())
                             <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-toggle="modal" data-bs-target="#modalGroupSettings">
                                 <i class="fa-brands fa-facebook" aria-hidden="true"></i>Connected: {{ $group->fb_page_name }}

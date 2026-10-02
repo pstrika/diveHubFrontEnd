@@ -301,8 +301,12 @@
                 $isMember = auth()->user() && auth()->user()->isNotGuest();
                 $gallery = collect($photos)->values();
                 $heroFile = $gallery->first()?->file;
+                // Type-matched fallback, same as site-card.blade.php - a reef
+                // or "other" site showing the wreck illustration by default
+                // was never intentional (Pablo, 2026-09-29).
+                $defaultIllustration = strtolower($site->type) === 'wreck' ? 'site_wreck.webp' : 'dive-site.webp';
                 $heroUrl = $heroFile ? \App\Support\SitePhoto::web($heroFile)
-                    : (!is_null($site->historicImg) ? asset('assets') . '/img/sites/' . $site->historicImg : asset('assets') . '/img/illustrations/site_wreck.webp');
+                    : (!is_null($site->historicImg) ? asset('assets') . '/img/sites/' . $site->historicImg : asset('assets') . '/img/illustrations/' . $defaultIllustration);
                 $levelInfo = \App\Support\DiveLevel::get($site->level);
                 $hour = (int) now()->format('G');
                 $forecastText = $forecast ? ($hour < 12 ? $forecast->conditionsAM_text : $forecast->conditionsPM_text) : null;
