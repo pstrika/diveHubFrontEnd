@@ -582,16 +582,10 @@
 
                 {{--Card 3D model--}}
                 @if($site->dModel != null)
-                <div class="col-md-12 px-0">             
-                    <div class="card p-0 position-relative mt-3 mx-0 z-index-2 mb-4">
-                        <div class="card-header p-0 mt-n4 mx-3">
-                            <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1">
-                                <h2 class="card-title text-white mx-4">3D-Model</h2>
-                                <h3 class="card-title text-md text-white mx-4 mt-n2"><a class="text-white" href="https://www.bythecmedia.com/" target="_blank">Visit "By The C Media" website</a></h3>
-                                <div class="table-responsive"></div>
-                            </div>
-                        </div>
-                        <div class="card-body mt-4">
+                <div class="col-md-12 px-0">
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">3D Model</h2>
+                        <p class="text-sm text-secondary mt-n2 mb-3"><a href="https://www.bythecmedia.com/" target="_blank">Visit "By The C Media" website</a></p>
                             <div class="wp-block-tdvb-td-viewer  align" id="tdvb3DViewerBlock-38a8dc92-1">
                                 <style> 
                                     #tdvb3DViewerBlock-38a8dc92-1 .tdvb3DViewerBlock {
@@ -622,10 +616,8 @@
                                     </model-viewer>
                                     <p class="align-middle text-center text-sm"><b>📸 {{ $site->dModelCredit }}</b></p>
                                 </div>
-                            </div> 
-                           
-                        </div>
-                    </div>
+                            </div>
+                    </section>
                 </div>
                 @endif
 
