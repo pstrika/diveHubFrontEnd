@@ -199,7 +199,7 @@
 
                     @if($addDiveDate || $addDiveSite)
                         @if($tripsForDate && $tripsForDate->isNotEmpty())
-                            <table class="table align-items-center mb-0">
+                            <table class="table align-items-center mb-0 dh-add-dive-table">
                                 <tbody>
                                     @foreach($tripsForDate as $trip)
                                         <tr style="border-bottom: 1px solid #D3D3D3;">
@@ -210,7 +210,7 @@
                                                     @if($addDiveSite) · {{ \Carbon\Carbon::parse($trip->date)->format('D, M j') }} @endif
                                                 </span>
                                             </td>
-                                            <td class="align-middle text-end">
+                                            <td class="align-middle text-end dh-add-dive-cell">
                                                 @if($trip->alreadyInThisGroup)
                                                     <span class="chip chip-static">Already added</span>
                                                 @else

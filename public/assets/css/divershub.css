@@ -525,6 +525,17 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-pwa-back:hover { color: var(--dh-sea); }
 .dh-pwa-back .material-icons-round { font-size: 18px; }
 
+/* "Add a dive" trip browser (Groups page, #modalAddDive): the inherited
+   Material Dashboard rule `.table td { white-space: nowrap }` forced the
+   trip-name cell to stay on one line, so on a narrow mobile modal the row
+   grew wider than the viewport and pushed the Add button's cell off-screen
+   with no scroll container to reach it (Pablo, 2026-10-02 bug report - "Add"
+   buttons not visible on mobile). Letting that cell wrap keeps the whole
+   row within the modal's width; the button cell stays nowrap/compact so
+   it never shrinks past fitting "Add". */
+.dh-add-dive-table td { white-space: normal; }
+.dh-add-dive-table .dh-add-dive-cell { white-space: nowrap; width: 1%; }
+
 /* Groups (MyGroups, retheme 2026-09-11). */
 .dh-groups-toolbar { display: flex; justify-content: flex-end; margin: var(--dh-space-3) 0; }
 .dh-invite-list { list-style: none; margin: 0; padding: 0; }
