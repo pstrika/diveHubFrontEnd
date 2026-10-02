@@ -165,8 +165,13 @@ class GroupController extends Controller
         $group = Group::where('slug', $groupSlug)->firstOrFail();
         $userId = auth()->user()->id;
 
+        // A bare 403 page for a private group's URL landing in someone's feed
+        // (shared by a member, an old link, a search result) is a dead end -
+        // send them somewhere useful instead. MyGroups rather than home,
+        // since it's the one other page that actually renders this flash
+        // message (Pablo, 2026-10-02).
         if (!$group->isMember($userId)) {
-            abort(403, "You're not a member of this group.");
+            return redirect()->route('MyGroups')->with('msg', 'That group is private - you need to be a member to view it.');
         }
 
         $isAdmin = $group->isAdmin($userId);
