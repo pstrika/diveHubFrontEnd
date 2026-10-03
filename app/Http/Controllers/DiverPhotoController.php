@@ -27,7 +27,10 @@ class DiverPhotoController extends Controller
             // No HEIC/HEIF: GD (App\Support\SitePhoto) can't decode it, and
             // browsers can't render it inline either - the original would
             // upload fine but look "broken" everywhere it's shown.
-            'photo' => 'required|image|mimes:jpg,jpeg,png,webp|max:8192',
+            // Raised from 8MB (Pablo, 2026-10-03: his camera's JPGs run
+            // ~15MB) - still comfortably under the 25MB nginx
+            // client_max_body_size and the 30MB PHP post_max_size.
+            'photo' => 'required|image|mimes:jpg,jpeg,png,webp|max:20480',
         ]);
 
         $file = $request->file('photo');

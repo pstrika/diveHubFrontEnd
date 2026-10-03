@@ -1194,7 +1194,7 @@
                             <h2 class="dh-panel-title mb-0">Divers' uploaded pictures</h2>
                             @if(auth()->user()->isNotGuest())
                                 <button type="button" class="dh-btn dh-btn-primary" data-bs-toggle="modal" data-bs-target="#dh-upload-diver-photo-modal">
-                                    <span class="material-icons-round" aria-hidden="true">add_a_photo</span>Add a picture
+                                    <span class="material-icons-round" aria-hidden="true">add_a_photo</span>Add pictures
                                 </button>
                             @endif
                         </div>
@@ -1243,113 +1243,88 @@
                          add a note that pictures will be public. Warn about
                          inappropriate content"). --}}
                     @if(auth()->user()->isNotGuest())
-                        <div class="modal fade" id="dh-upload-diver-photo-modal" tabindex="-1" aria-hidden="true">
+                        <div class="modal fade" id="dh-upload-diver-photo-modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
                             <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title font-weight-normal">Add a picture of {{ $site->name }}</h5>
+                                        <h5 class="modal-title font-weight-normal">Add pictures of {{ $site->name }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
-                                    <form method="POST" action="{{ route('DiverPhotos.store', ['siteId' => $site->id]) }}" enctype="multipart/form-data" id="dh-diver-upload-form">
-                                        @csrf
-                                        <div class="modal-body">
-                                            {{-- Themed trigger over a hidden native input (Pablo, 2026-09-24:
-                                                 "the choose file button needs to be themed to the site - right
-                                                 now it's a system button"). --}}
-                                            <label class="dh-file-picker" for="dh-diver-photo-input">
-                                                <span class="material-icons-round" aria-hidden="true">add_photo_alternate</span>
-                                                <span id="dh-diver-photo-filename">Choose a picture&hellip;</span>
-                                            </label>
-                                            <input type="file" id="dh-diver-photo-input" name="photo" accept="image/jpeg,image/png,image/webp" required hidden>
-                                            <p class="text-xs text-secondary mt-2 mb-0">JPG, PNG or WebP, up to 8 MB.</p>
-                                            {{-- Server rejects an oversized file too (validation below), but
-                                                 silently - it redirects back with no error shown anywhere on
-                                                 this modal, which read as "nothing happened" (Pablo, 2026-09-24:
-                                                 "it will try to upload it with no error... reject the file
-                                                 saying file too large"). This is the immediate, before-submit
-                                                 check; the @error below is the fallback for whatever this
-                                                 can't catch client-side (wrong type despite accept=, etc.). --}}
-                                            <p class="text-danger text-xs mt-2 mb-0" id="dh-diver-photo-error" hidden></p>
-                                            @error('photo')
-                                                <p class="text-danger text-xs mt-2 mb-0">{{ $message }}</p>
-                                            @enderror
-                                            <p class="dh-comms-note dh-comms-warn mt-3">
-                                                <span class="material-icons-round" aria-hidden="true">info</span>
-                                                Your picture will be shown publicly on this site's page once approved. Inappropriate content will be rejected or removed.
-                                            </p>
-                                            <p class="dh-upload-progress" id="dh-diver-upload-progress" hidden>
-                                                <span class="dh-spinner" aria-hidden="true"></span>
-                                                Uploading your picture&hellip;
-                                            </p>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="dh-btn dh-btn-primary" id="dh-diver-upload-submit">Submit for review</button>
-                                        </div>
-                                    </form>
-                                    <script>
-                                        (function () {
-                                            var MAX_BYTES = 8 * 1024 * 1024; // matches DiverPhotoController's max:8192 (KB)
-                                            var input = document.getElementById('dh-diver-photo-input');
-                                            var filename = document.getElementById('dh-diver-photo-filename');
-                                            var form = document.getElementById('dh-diver-upload-form');
-                                            var submitBtn = document.getElementById('dh-diver-upload-submit');
-                                            var progress = document.getElementById('dh-diver-upload-progress');
-                                            var errorEl = document.getElementById('dh-diver-photo-error');
-                                            if (!input || !form) return;
-
-                                            input.addEventListener('change', function () {
-                                                var file = input.files[0];
-                                                errorEl.hidden = true;
-                                                if (!file) {
-                                                    filename.textContent = 'Choose a picture…';
-                                                    return;
-                                                }
-                                                if (file.size > MAX_BYTES) {
-                                                    input.value = '';
-                                                    filename.textContent = 'Choose a picture…';
-                                                    errorEl.textContent = 'That picture is ' + (file.size / (1024 * 1024)).toFixed(1) + ' MB - the limit is 8 MB. Pick a smaller one.';
-                                                    errorEl.hidden = false;
-                                                    return;
-                                                }
-                                                filename.textContent = file.name;
-                                            });
-                                            // A spinner, not a true upload progress bar (Pablo, 2026-09-24:
-                                            // "a spinner or progress bar while the picture is uploading") -
-                                            // this is a plain form POST/redirect, not an XHR with real
-                                            // upload progress events, but the "it's working" feedback is
-                                            // the actual ask.
-                                            form.addEventListener('submit', function (e) {
-                                                if (submitBtn.disabled) return;
-                                                var file = input.files[0];
-                                                if (file && file.size > MAX_BYTES) {
-                                                    e.preventDefault();
-                                                    errorEl.textContent = 'That picture is ' + (file.size / (1024 * 1024)).toFixed(1) + ' MB - the limit is 8 MB. Pick a smaller one.';
-                                                    errorEl.hidden = false;
-                                                    return;
-                                                }
-                                                submitBtn.disabled = true;
-                                                submitBtn.textContent = 'Uploading…';
-                                                progress.hidden = false;
-                                            });
-                                        })();
-                                    </script>
-                                    @error('photo')
-                                        {{-- The modal opens fresh each click (data-bs-toggle), so a
-                                             validation failure needs its own reopen - Bootstrap doesn't
-                                             know this page reloaded because THIS modal's submit failed. --}}
-                                        <script>
-                                            document.addEventListener('DOMContentLoaded', function () {
-                                                var modalEl = document.getElementById('dh-upload-diver-photo-modal');
-                                                if (modalEl && window.bootstrap) {
-                                                    new bootstrap.Modal(modalEl).show();
-                                                }
-                                            });
-                                        </script>
-                                    @enderror
+                                    <div class="modal-body">
+                                        {{-- Dropzone, same plugin/pattern as the admin photo uploader
+                                             (updatePics.blade.php) - up to 4 at once instead of the old
+                                             one-at-a-time file input (Pablo, 2026-10-03). Not chunked:
+                                             DiverPhotoController handles one complete file per request,
+                                             no chunk-reassembly like the admin upload endpoint has. --}}
+                                        <div class="dropzone dh-dropzone" id="dh-diver-dropzone"></div>
+                                        <p class="text-xs text-secondary mt-2 mb-0">JPG, PNG or WebP, up to 20 MB each. Drop up to 4 at once.</p>
+                                        @error('photo')
+                                            <p class="text-danger text-xs mt-2 mb-0">{{ $message }}</p>
+                                        @enderror
+                                        <p class="dh-comms-note dh-comms-warn mt-3">
+                                            <span class="material-icons-round" aria-hidden="true">info</span>
+                                            Your pictures will be shown publicly on this site's page once approved. Inappropriate content will be rejected or removed.
+                                        </p>
+                                        <p class="dh-upload-progress" id="dh-diver-upload-progress" hidden>
+                                            <span class="dh-spinner" aria-hidden="true"></span>
+                                            Uploading your pictures&hellip;
+                                        </p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" class="dh-btn dh-btn-primary" id="dh-diver-upload-submit">Submit for review</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        <script src="{{ asset('assets') }}/js/plugins/dropzone.min.js"></script>
+                        <script>
+                            (function () {
+                                Dropzone.autoDiscover = false;
+                                var progress = document.getElementById('dh-diver-upload-progress');
+                                var submitBtn = document.getElementById('dh-diver-upload-submit');
+                                var dz = new Dropzone('#dh-diver-dropzone', {
+                                    url: "{{ route('DiverPhotos.store', ['siteId' => $site->id]) }}",
+                                    autoProcessQueue: false,
+                                    maxFiles: 4,
+                                    maxFilesize: 20,
+                                    acceptedFiles: ".jpeg,.jpg,.png,.webp",
+                                    parallelUploads: 4,
+                                    addRemoveLinks: true,
+                                    method: "post",
+                                    paramName: "photo",
+                                    dictDefaultMessage: "Drop pictures here or tap to choose",
+                                    dictMaxFilesExceeded: "Up to 4 pictures at a time.",
+                                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                                    queuecomplete: function () {
+                                        window.location.reload();
+                                    },
+                                });
+                                dz.on('error', function (file, message) {
+                                    console.error('Upload failed:', file.name, message);
+                                });
+                                submitBtn.addEventListener('click', function () {
+                                    if (!dz.getQueuedFiles().length || submitBtn.disabled) return;
+                                    submitBtn.disabled = true;
+                                    submitBtn.textContent = 'Uploading…';
+                                    progress.hidden = false;
+                                    dz.processQueue();
+                                });
+                            })();
+                        </script>
+                        @error('photo')
+                            {{-- The modal opens fresh each click (data-bs-toggle), so a
+                                 validation failure needs its own reopen - Bootstrap doesn't
+                                 know this page reloaded because THIS modal's submit failed. --}}
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    var modalEl = document.getElementById('dh-upload-diver-photo-modal');
+                                    if (modalEl && window.bootstrap) {
+                                        new bootstrap.Modal(modalEl).show();
+                                    }
+                                });
+                            </script>
+                        @enderror
 
                     @endif
                 </div>
