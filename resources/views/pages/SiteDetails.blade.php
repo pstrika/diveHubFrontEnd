@@ -1250,27 +1250,40 @@
                                         <h5 class="modal-title font-weight-normal">Add pictures of {{ $site->name }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
-                                    <div class="modal-body">
+                                    <div class="modal-body" id="dh-diver-upload-body">
                                         {{-- Dropzone, same plugin/pattern as the admin photo uploader
                                              (updatePics.blade.php) - up to 4 at once instead of the old
                                              one-at-a-time file input (Pablo, 2026-10-03). Not chunked:
                                              DiverPhotoController handles one complete file per request,
                                              no chunk-reassembly like the admin upload endpoint has. --}}
-                                        <div class="dropzone dh-dropzone" id="dh-diver-dropzone"></div>
-                                        <p class="text-xs text-secondary mt-2 mb-0">JPG, PNG or WebP, up to 20 MB each. Drop up to 4 at once.</p>
-                                        @error('photo')
-                                            <p class="text-danger text-xs mt-2 mb-0">{{ $message }}</p>
-                                        @enderror
-                                        <p class="dh-comms-note dh-comms-warn mt-3">
-                                            <span class="material-icons-round" aria-hidden="true">info</span>
-                                            Your pictures will be shown publicly on this site's page once approved. Inappropriate content will be rejected or removed.
-                                        </p>
-                                        <p class="dh-upload-progress" id="dh-diver-upload-progress" hidden>
-                                            <span class="dh-spinner" aria-hidden="true"></span>
-                                            Uploading your pictures&hellip;
-                                        </p>
+                                        <div id="dh-diver-upload-form-state">
+                                            <div class="dropzone dh-dropzone" id="dh-diver-dropzone"></div>
+                                            <p class="text-xs text-secondary mt-2 mb-0">JPG, PNG or WebP, up to 20 MB each. Drop up to 4 at once.</p>
+                                            @error('photo')
+                                                <p class="text-danger text-xs mt-2 mb-0">{{ $message }}</p>
+                                            @enderror
+                                            <p class="dh-comms-note dh-comms-warn mt-3">
+                                                <span class="material-icons-round" aria-hidden="true">info</span>
+                                                Your pictures will be shown publicly on this site's page once approved. Inappropriate content will be rejected or removed.
+                                            </p>
+                                            <p class="dh-upload-progress" id="dh-diver-upload-progress" hidden>
+                                                <span class="dh-spinner" aria-hidden="true"></span>
+                                                Uploading your pictures&hellip;
+                                            </p>
+                                        </div>
+                                        {{-- Shown via JS once the batch finishes - not a server flash
+                                             message (Pablo, 2026-10-03: "I did not get the thanks you
+                                             modal"). A flash set by one of several AJAX upload requests
+                                             in this batch gets aged out by Laravel's session flash
+                                             cycling before the page reload that would display it ever
+                                             sees it - reliable only for a single request/redirect, which
+                                             this multi-file flow isn't anymore. --}}
+                                        <div class="py-3 text-center" id="dh-diver-upload-success" hidden>
+                                            <i class="material-icons h1 text-secondary">task_alt</i>
+                                            <h4 class="text-gradient text-info mt-4" id="dh-diver-upload-success-text"></h4>
+                                        </div>
                                     </div>
-                                    <div class="modal-footer">
+                                    <div class="modal-footer" id="dh-diver-upload-footer">
                                         <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-dismiss="modal">Cancel</button>
                                         <button type="button" class="dh-btn dh-btn-primary" id="dh-diver-upload-submit">Submit for review</button>
                                     </div>
@@ -1281,8 +1294,15 @@
                         <script>
                             (function () {
                                 Dropzone.autoDiscover = false;
+                                var modalEl = document.getElementById('dh-upload-diver-photo-modal');
                                 var progress = document.getElementById('dh-diver-upload-progress');
                                 var submitBtn = document.getElementById('dh-diver-upload-submit');
+                                var formState = document.getElementById('dh-diver-upload-form-state');
+                                var footer = document.getElementById('dh-diver-upload-footer');
+                                var successEl = document.getElementById('dh-diver-upload-success');
+                                var successText = document.getElementById('dh-diver-upload-success-text');
+                                var siteName = @json($site->name);
+                                var okCount = 0, failCount = 0, didUpload = false;
                                 var dz = new Dropzone('#dh-diver-dropzone', {
                                     url: "{{ route('DiverPhotos.store', ['siteId' => $site->id]) }}",
                                     autoProcessQueue: false,
@@ -1296,12 +1316,34 @@
                                     dictDefaultMessage: "Drop pictures here or tap to choose",
                                     dictMaxFilesExceeded: "Up to 4 pictures at a time.",
                                     headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                                    success: function () { okCount++; },
                                     queuecomplete: function () {
-                                        window.location.reload();
+                                        // Shown here, client-side, instead of relying on the server's
+                                        // flash('msg') - see the comment on #dh-diver-upload-success
+                                        // above for why that broke with multiple requests in one batch.
+                                        formState.hidden = true;
+                                        footer.hidden = true;
+                                        successEl.hidden = false;
+                                        if (okCount > 0) {
+                                            didUpload = true;
+                                            successText.textContent = 'Thanks! Your ' + okCount + (okCount === 1 ? ' picture is' : ' pictures are')
+                                                + ' pending review and will show on ' + siteName + "'s page once approved.";
+                                        } else {
+                                            successText.textContent = 'That upload did not go through - please try again.';
+                                        }
+                                        if (failCount > 0) {
+                                            successText.textContent += ' (' + failCount + ' of ' + (okCount + failCount) + ' failed to upload.)';
+                                        }
                                     },
                                 });
                                 dz.on('error', function (file, message) {
+                                    failCount++;
                                     console.error('Upload failed:', file.name, message);
+                                });
+                                // Reload only once the diver has actually seen the confirmation and
+                                // closed it, so the gallery/pending-count picks up what just uploaded.
+                                modalEl.addEventListener('hidden.bs.modal', function () {
+                                    if (didUpload) window.location.reload();
                                 });
                                 submitBtn.addEventListener('click', function () {
                                     if (!dz.getQueuedFiles().length || submitBtn.disabled) return;

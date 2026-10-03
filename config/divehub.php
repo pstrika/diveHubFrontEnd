@@ -14,7 +14,7 @@
 
 return [
 
-    'version' => '11.3.0',
+    'version' => '11.3.1',
 
     // Release date shown next to the version. Any human readable format.
     'released' => '10/03/26',
