@@ -22,22 +22,32 @@
             @endunless
 
             @if($preview)
-                {{-- Opened by the "Preview" button in Blog/Manage/Form.blade.php,
-                     from whatever is currently in the form - not yet saved.
-                     "Close this tab" doesn't hold up in the installed PWA
-                     (Pablo, 2026-09-18: "gets you trapped") - there's no tab
-                     chrome to close, and window.open() there just navigates
-                     the one app window instead of opening a real new one. The
-                     button below tries window.close() (works when this really
-                     is a separate script-opened tab) and falls back to
-                     history.back()/the article list otherwise, so there's
-                     always a way out. --}}
                 <div class="dh-preview-banner">
                     <span class="material-icons-round" aria-hidden="true">visibility</span>
-                    <span>Preview only - this article has not been saved.</span>
-                    <button type="button" class="dh-btn dh-btn-ghost-dark dh-preview-close" onclick="dhClosePreview()">
-                        <span class="material-icons-round" aria-hidden="true">close</span>Close preview
-                    </button>
+                    @if($sharedDraftPreview ?? false)
+                        {{-- Reached via a signed link generated from the admin
+                             edit screen (BlogAdminController::previewLink()) -
+                             a real saved post, just not published yet. No
+                             "close" action: the viewer has no app chrome to
+                             return to, just a normal browser tab (Pablo,
+                             2026-10-04). --}}
+                        <span>Draft preview - shared for review, not yet live on the Blog.</span>
+                    @else
+                        {{-- Opened by the "Preview" button in Blog/Manage/Form.blade.php,
+                             from whatever is currently in the form - not yet saved.
+                             "Close this tab" doesn't hold up in the installed PWA
+                             (Pablo, 2026-09-18: "gets you trapped") - there's no tab
+                             chrome to close, and window.open() there just navigates
+                             the one app window instead of opening a real new one. The
+                             button below tries window.close() (works when this really
+                             is a separate script-opened tab) and falls back to
+                             history.back()/the article list otherwise, so there's
+                             always a way out. --}}
+                        <span>Preview only - this article has not been saved.</span>
+                        <button type="button" class="dh-btn dh-btn-ghost-dark dh-preview-close" onclick="dhClosePreview()">
+                            <span class="material-icons-round" aria-hidden="true">close</span>Close preview
+                        </button>
+                    @endif
                 </div>
             @endif
 

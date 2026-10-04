@@ -7,6 +7,7 @@ use App\Models\Site;
 use App\Services\IndexNowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 /**
  * Creator/Admin authoring screen (Pablo, 2026-09-17/18). Creators publish
@@ -166,6 +167,23 @@ class BlogAdminController extends Controller
             'preview' => true,
             'previewCoverUrl' => $previewCoverUrl,
         ]);
+    }
+
+    /**
+     * A signed, expiring link to the SAVED article (draft or published),
+     * for handing to an outside reviewer with no Divers Hub login - unlike
+     * preview() above, this is the real persisted post, reachable without
+     * re-submitting the form (Pablo, 2026-10-04: "how do I share a blog in
+     * draft with someone that I want to review"). Same signed-route
+     * pattern as Newsletter's unsubscribe link (NewsletterController).
+     */
+    public function previewLink(Post $post)
+    {
+        $this->authorize('update', $post);
+
+        $url = URL::signedRoute('Blog.previewSigned', ['slug' => $post->slug], now()->addDays(7));
+
+        return response()->json(['url' => $url, 'expiresInDays' => 7]);
     }
 
     /** Small JSON search behind the "related dive sites" picker in the form - name only, real Site records. */

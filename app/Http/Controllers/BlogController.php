@@ -36,7 +36,29 @@ class BlogController extends Controller
         $post = Post::published()->where('slug', $slug)->first();
         abort_unless($post, 404);
 
-        $related = Post::published()->where('slug', '!=', $slug)->latest('published_at')->take(2)->get();
+        return $this->render($post);
+    }
+
+    /**
+     * Shareable draft preview, reached via a signed URL generated from the
+     * admin edit screen (BlogAdminController::previewLink()) - so a draft
+     * can be handed to an outside reviewer with no Divers Hub login
+     * (Pablo, 2026-10-04: "how do I share a blog in draft with someone").
+     * Deliberately skips the published() scope the public route above
+     * uses; the `signed` middleware (routes/web.php) is what gates this
+     * instead, and the signature carries its own expiry.
+     */
+    public function previewSigned(string $slug)
+    {
+        $post = Post::where('slug', $slug)->first();
+        abort_unless($post, 404);
+
+        return $this->render($post, sharedDraftPreview: true);
+    }
+
+    private function render(Post $post, bool $sharedDraftPreview = false)
+    {
+        $related = Post::published()->where('slug', '!=', $post->slug)->latest('published_at')->take(2)->get();
 
         // Real sites, so the "internal links" a guide post exists to drive
         // actually go somewhere - not every post has these ("not in all
@@ -75,7 +97,19 @@ class BlogController extends Controller
             // finding #3) - og:type defaults to "website" everywhere else.
             'ogType' => 'article',
         ];
+        // A shared draft has no business being crawled/indexed even though
+        // the route itself has no auth wall.
+        if ($sharedDraftPreview) {
+            $SEO['robots'] = 'noindex, nofollow';
+        }
 
-        return view('pages.Blog.Show', compact('post', 'related', 'rankedSites', 'SEO'));
+        return view('pages.Blog.Show', [
+            'post' => $post,
+            'related' => $related,
+            'rankedSites' => $rankedSites,
+            'SEO' => $SEO,
+            'preview' => $sharedDraftPreview,
+            'sharedDraftPreview' => $sharedDraftPreview,
+        ]);
     }
 }

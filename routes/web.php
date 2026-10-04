@@ -336,6 +336,10 @@ Route::middleware('auth')->group(function () {
     Route::get('Blog/manage/{post}/edit', 'App\Http\Controllers\BlogAdminController@edit')->name('Blog.manage.edit');
     Route::put('Blog/manage/{post}', 'App\Http\Controllers\BlogAdminController@update')->name('Blog.manage.update');
     Route::delete('Blog/manage/{post}', 'App\Http\Controllers\BlogAdminController@destroy')->name('Blog.manage.destroy');
+    // Generates a signed, expiring link to a SAVED draft (or published)
+    // post, for handing to an outside reviewer who has no Divers Hub login
+    // (Pablo, 2026-10-04). See BlogController::previewSigned() below.
+    Route::get('Blog/manage/{post}/preview-link', 'App\Http\Controllers\BlogAdminController@previewLink')->name('Blog.manage.previewLink');
 });
 
 // On-demand newsletter composer (2026-09-21) - reaches every subscribed
@@ -357,6 +361,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
 });
 
 Route::get('Blog/{slug}', 'App\Http\Controllers\BlogController@show')->middleware('guest')->name('Blog.show');
+// Shareable draft preview (Pablo, 2026-10-04) - the signature (not 'auth')
+// is the authorization, so an outside reviewer with no Divers Hub login
+// can open it; see BlogAdminController::previewLink() for how the link is
+// generated and BlogController::previewSigned() for the status-agnostic
+// lookup.
+Route::get('Blog/{slug}/preview-signed', 'App\Http\Controllers\BlogController@previewSigned')->middleware('signed')->name('Blog.previewSigned');
 // Redesign W4: Search and Map became views of the Dive Sites explorer. Both
 // pages were noindex, so the 301s cost nothing. Listed in docs/seo/redirect-map.md.
 // The POST is the navbar search form; SiteController::searchSites searches

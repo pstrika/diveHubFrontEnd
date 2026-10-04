@@ -88,6 +88,16 @@
                                 <button type="button" id="previewArticleBtn" class="dh-btn dh-btn-ghost-dark" style="width: 100%; justify-content: center; margin-top: 8px;">
                                     <span class="material-icons-round" aria-hidden="true">visibility</span>Preview
                                 </button>
+                                @if($post->exists)
+                                    {{-- A real, shareable link to this saved article (draft or
+                                         published) - for handing to an outside reviewer with no
+                                         Divers Hub login, unlike Preview above which only renders
+                                         the unsaved form in a new tab for the Creator themselves
+                                         (Pablo, 2026-10-04). --}}
+                                    <button type="button" id="copyPreviewLinkBtn" class="dh-btn dh-btn-ghost-dark" style="width: 100%; justify-content: center; margin-top: 8px;">
+                                        <span class="material-icons-round" aria-hidden="true">share</span>Copy preview link
+                                    </button>
+                                @endif
                             </div>
                         </div>
 
@@ -440,6 +450,40 @@
                     send({!! json_encode($post->cover_image ? asset($post->cover_image) : '') !!});
                 }
             });
+
+            @if($post->exists)
+            // Copy preview link: a signed, expiring URL to the SAVED
+            // article - generated server-side (not the Preview button's
+            // unsaved-form POST above), so it still works for whoever it's
+            // shared with even after this tab closes (Pablo, 2026-10-04).
+            document.getElementById('copyPreviewLinkBtn').addEventListener('click', function () {
+                var btn = this;
+                var originalHtml = btn.innerHTML;
+                fetch({!! json_encode(route('Blog.manage.previewLink', $post)) !!}, {
+                    headers: { 'Accept': 'application/json' },
+                })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (!data.url) throw new Error('no url');
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(data.url);
+                        } else {
+                            var input = document.createElement('input');
+                            input.value = data.url;
+                            document.body.appendChild(input);
+                            input.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(input);
+                        }
+                        btn.innerHTML = '<span class="material-icons-round" aria-hidden="true">check</span>Copied! Valid ' + data.expiresInDays + ' days';
+                        setTimeout(function () { btn.innerHTML = originalHtml; }, 2500);
+                    })
+                    .catch(function () {
+                        btn.innerHTML = '<span class="material-icons-round" aria-hidden="true">error_outline</span>Could not generate link';
+                        setTimeout(function () { btn.innerHTML = originalHtml; }, 2500);
+                    });
+            });
+            @endif
         })();
     </script>
     @endpush
