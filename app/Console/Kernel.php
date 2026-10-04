@@ -20,6 +20,8 @@ class Kernel extends ConsoleKernel
         Commands\SendScheduledNewsletters::class,
         Commands\SyncSupportInbox::class,
         Commands\ApplyGroupAutoAddRules::class,
+        Commands\SendPostDiveFeedbackRequests::class,
+        Commands\SendDivePhotoReminders::class,
     ];
 
     /**

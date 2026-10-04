@@ -20,26 +20,69 @@ class EventController extends Controller
         $user = User::findorFail(auth()->user()->id);
         $trip = Trip::findorFail($tripId);
 
-        // The button that links here is only supposed to render when the
-        // trip isn't already saved (TripDetails.blade.php switches to a
-        // Remove link once it is), but this guard is what actually stops a
-        // duplicate - a stale page, a double click or a revisited URL would
-        // otherwise still hit this route and create a second event
-        // (Pablo, 2026-09-20).
-        if (!Event::findInCalendar($tripId)) {
-            Event::create([
-                'userId' => $user->id,
-                'operatorId' => $trip->operatorId,
-                'date' => $trip->date,
-                'time' => $trip->departureTime,
-                'tripName' => $trip->tripName,
-                'booked' => false,
-            ]);
-        }
+        $this->findOrCreateEvent($trip, $user);
 
         return redirect()->back()->with('alreadyInCalendar', true);
     }
 
+    /**
+     * Same composite-key lookup Event::findInCalendar() uses, but taking the
+     * user explicitly rather than relying on the implicit auth()->user()
+     * buried in that static method - confirmBooked() below needs this to be
+     * unambiguous about whose calendar it's touching.
+     *
+     * The "find" guard is what actually stops a duplicate - a stale page, a
+     * double click or a revisited URL would otherwise still hit this and
+     * create a second event (Pablo, 2026-09-20).
+     */
+    private function findOrCreateEvent(Trip $trip, User $user): Event
+    {
+        $event = Event::where([
+            ['userId', '=', $user->id],
+            ['date', '=', $trip->date],
+            ['time', '=', $trip->departureTime],
+            ['operatorId', '=', $trip->operatorId],
+            ['tripName', '=', $trip->tripName],
+        ])->first();
+
+        if ($event) {
+            return $event;
+        }
+
+        return Event::create([
+            'userId' => $user->id,
+            'operatorId' => $trip->operatorId,
+            'date' => $trip->date,
+            'time' => $trip->departureTime,
+            'tripName' => $trip->tripName,
+            'booked' => false,
+        ]);
+    }
+
+    /**
+     * "Did you really book this?" confirmation, fired when a diver returns
+     * to the tab after clicking an operator's external booking link (see the
+     * dh-book-link JS in the main layout). Finds-or-creates the calendar
+     * entry and marks it booked in one step, since the diver may never have
+     * hit "Add to calendar" first (Pablo, 2026-10-04).
+     *
+     * Trip ids churn on the daily rescrape, so a trip clicked hours ago can
+     * have aged out by the time the diver comes back - fail soft instead of
+     * a raw 404.
+     */
+    public function confirmBooked($tripId) {
+        $trip = Trip::find($tripId);
+        if (!$trip) {
+            return redirect()->back()->with('bookConfirmFailed', true);
+        }
+
+        $user = User::findOrFail(auth()->user()->id);
+        $event = $this->findOrCreateEvent($trip, $user);
+        $event->booked = true;
+        $event->save();
+
+        return redirect()->back()->with('bookConfirmed', true);
+    }
 
     /**
      * The personal "My Calendar" - same grid/anchor/pagination criteria as the

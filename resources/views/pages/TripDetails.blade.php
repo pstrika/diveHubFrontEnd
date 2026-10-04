@@ -188,7 +188,7 @@
                 <div class="dh-site-facts-side">
                     <div class="dh-page-actions">
                         @if($card['bookUrl'] && $a['state'] !== 'full')
-                            <a class="dh-btn dh-btn-primary" href="{{ $card['bookUrl'] }}" target="_blank" rel="noopener">Book this trip</a>
+                            <a class="dh-btn dh-btn-primary dh-book-link" data-trip-id="{{ $card['id'] }}" data-trip-name="{{ $card['fullTitle'] }}" href="{{ $card['bookUrl'] }}" target="_blank" rel="noopener">Book this trip</a>
                         @elseif($operator->phone)
                             <a class="dh-btn dh-btn-primary" href="tel:{{ preg_replace('/[^0-9+]/', '', $operator->phone) }}">Call to book</a>
                         @endif

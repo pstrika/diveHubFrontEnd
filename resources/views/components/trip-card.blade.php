@@ -76,7 +76,7 @@
                 <a class="dh-btn dh-btn-danger" href="{{ url('RemoveFromCalendar') }}/{{ $trip['eventId'] }}">Remove</a>
             @endif
         @elseif($trip['bookUrl'] && $a['state'] !== 'full')
-            <a class="dh-btn dh-btn-primary" href="{{ $trip['bookUrl'] }}" target="_blank" rel="noopener">Book</a>
+            <a class="dh-btn dh-btn-primary dh-book-link" data-trip-id="{{ $trip['id'] }}" data-trip-name="{{ $trip['fullTitle'] }}" href="{{ $trip['bookUrl'] }}" target="_blank" rel="noopener">Book</a>
         @elseif($a['state'] === 'call' && $trip['operatorPhone'])
             <a class="dh-btn dh-btn-ghost-dark" href="tel:{{ preg_replace('/[^0-9+]/', '', $trip['operatorPhone']) }}">Call</a>
         @else

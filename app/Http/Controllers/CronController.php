@@ -155,4 +155,38 @@ class CronController extends Controller
 
         return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
     }
+
+    /**
+     * Twice daily (3pm and 6:30pm, two Azure Logic App recurrences -
+     * divehub-send-post-dive-feedback-3pm / -630pm - both hitting this same
+     * endpoint), covering morning and afternoon dives respectively without
+     * the command itself needing to classify which is which - see
+     * App\Console\Commands\SendPostDiveFeedbackRequests (Pablo, 2026-10-04).
+     */
+    public function sendPostDiveFeedbackRequests(Request $request)
+    {
+        if (!hash_equals((string) env('CRON_SECRET'), (string) $request->query('secret'))) {
+            abort(403);
+        }
+
+        Artisan::call('dives:send-feedback-requests');
+
+        return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
+    }
+
+    /**
+     * Daily, triggered by an Azure Logic App
+     * (divehub-send-dive-photo-reminders) - see App\Console\Commands\
+     * SendDivePhotoReminders (Pablo, 2026-10-04).
+     */
+    public function sendDivePhotoReminders(Request $request)
+    {
+        if (!hash_equals((string) env('CRON_SECRET'), (string) $request->query('secret'))) {
+            abort(403);
+        }
+
+        Artisan::call('dives:send-photo-reminders');
+
+        return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
+    }
 }

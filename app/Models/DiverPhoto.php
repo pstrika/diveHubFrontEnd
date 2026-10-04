@@ -21,6 +21,7 @@ class DiverPhoto extends Model
     protected $fillable = [
         'siteId',
         'userId',
+        'eventId',
         'file',
         'status',
         'reviewedBy',

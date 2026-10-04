@@ -54,6 +54,8 @@ Route::get('cron/detect-cancelled-trips', [\App\Http\Controllers\CronController:
 Route::get('cron/send-scheduled-newsletters', [\App\Http\Controllers\CronController::class, 'sendScheduledNewsletters']);
 Route::get('cron/sync-support-inbox', [\App\Http\Controllers\CronController::class, 'syncSupportInbox']);
 Route::get('cron/apply-group-auto-add-rules', [\App\Http\Controllers\CronController::class, 'applyGroupAutoAddRules']);
+Route::get('cron/send-post-dive-feedback-requests', [\App\Http\Controllers\CronController::class, 'sendPostDiveFeedbackRequests']);
+Route::get('cron/send-dive-photo-reminders', [\App\Http\Controllers\CronController::class, 'sendDivePhotoReminders']);
 // Manual-trigger only, not on a schedule - see CronController::photosWebCopies().
 Route::get('cron/photos-web-copies', [\App\Http\Controllers\CronController::class, 'photosWebCopies']);
 // Manual-trigger only, not on a schedule - see CronController::indexNowSubmitAll().
@@ -237,6 +239,7 @@ Route::get('AddEventToCalendar/{tripId}', 'App\Http\Controllers\EventController@
 Route::get('SetEventBook/{tripId}', 'App\Http\Controllers\EventController@setEventBook')->middleware('auth')->name('SetEventBook');
 Route::get('SetEventWaiverSigned/{tripId}', 'App\Http\Controllers\EventController@setEventWaiverSigned')->middleware('auth')->name('SetEventWaiverSigned');
 Route::get('RemoveFromCalendar/{tripId}', 'App\Http\Controllers\EventController@removeFromCalendar')->middleware('auth')->name('RemoveFromCalendar');
+Route::get('ConfirmTripBooked/{tripId}', 'App\Http\Controllers\EventController@confirmBooked')->middleware('auth')->name('ConfirmTripBooked');
 
 Route::get('Operators/', 'App\Http\Controllers\OperatorController@show')->middleware('guest')->name('Operators');
 Route::get('Waivers', 'App\Http\Controllers\OperatorController@getWaivers')->middleware('guest')->name('Waivers');
@@ -295,6 +298,19 @@ Route::post('AddSiteReview/{siteId}', 'App\Http\Controllers\SiteController@addRe
 // real account, not the guest shim SiteDetails itself uses.
 Route::post('DiverPhotos/{siteId}', 'App\Http\Controllers\DiverPhotoController@store')->middleware('auth')->name('DiverPhotos.store');
 Route::delete('DiverPhotos/{diverPhoto}', 'App\Http\Controllers\DiverPhotoController@destroy')->middleware('auth')->name('DiverPhotos.destroy');
+
+// Post-dive feedback wizard (Pablo, 2026-10-04) - reached via a bare token
+// link (WhatsApp/SMS/email), deliberately NOT behind 'auth': the token
+// itself is the authorization, same pattern as the newsletter unsubscribe
+// link - see App\Http\Controllers\DiveFeedbackController's class comment.
+Route::get('dive-feedback/{token}', 'App\Http\Controllers\DiveFeedbackController@show')->name('DiveFeedback.show');
+Route::post('dive-feedback/{token}/conditions', 'App\Http\Controllers\DiveFeedbackController@submitConditions')->name('DiveFeedback.conditions');
+Route::post('dive-feedback/{token}/photos', 'App\Http\Controllers\DiveFeedbackController@uploadPhoto')->name('DiveFeedback.photos');
+Route::post('dive-feedback/{token}/photos/remind-later', 'App\Http\Controllers\DiveFeedbackController@requestPhotoReminder')->name('DiveFeedback.photos.remindLater');
+Route::post('dive-feedback/{token}/site-rating', 'App\Http\Controllers\DiveFeedbackController@submitSiteRating')->name('DiveFeedback.siteRating');
+Route::post('dive-feedback/{token}/site-review', 'App\Http\Controllers\DiveFeedbackController@submitSiteReview')->name('DiveFeedback.siteReview');
+Route::post('dive-feedback/{token}/operator-rating', 'App\Http\Controllers\DiveFeedbackController@submitOperatorRating')->name('DiveFeedback.operatorRating');
+Route::post('dive-feedback/{token}/finish', 'App\Http\Controllers\DiveFeedbackController@finish')->name('DiveFeedback.finish');
 
 Route::get('DiveSites', 'App\Http\Controllers\SiteController@showTopRated')->middleware('guest')->name('DiveSites');
 

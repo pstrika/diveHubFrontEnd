@@ -304,7 +304,7 @@
                                             @if($seats <= 0)
                                                 <span class="dh-seats is-full">Full</span>
                                             @elseif($trip->linkToBook)
-                                                <a class="dh-seats is-open" href="{{ $trip->linkToBook }}" target="_blank" rel="noopener"><span class="material-icons-round" aria-hidden="true">event_seat</span>{{ $seats >= 1000 ? 'Book' : $seats . ' ' . Str::plural('seat', $seats) }}</a>
+                                                <a class="dh-seats is-open dh-book-link" data-trip-id="{{ $trip->id }}" data-trip-name="{{ $trip->tripName }}" href="{{ $trip->linkToBook }}" target="_blank" rel="noopener"><span class="material-icons-round" aria-hidden="true">event_seat</span>{{ $seats >= 1000 ? 'Book' : $seats . ' ' . Str::plural('seat', $seats) }}</a>
                                             @else
                                                 <span class="dh-seats is-open"><span class="material-icons-round" aria-hidden="true">event_seat</span>{{ $seats >= 1000 ? 'Open' : $seats . ' ' . Str::plural('seat', $seats) }}</span>
                                             @endif
@@ -373,7 +373,7 @@
                                                     @if($seats <= 0)
                                                         <span class="dh-seats is-full">Full</span>
                                                     @elseif($wish->linkToBook)
-                                                        <a class="dh-seats is-open" href="{{ $wish->linkToBook }}" target="_blank" rel="noopener">{{ $seats >= 1000 ? 'Book' : $seats . ' ' . Str::plural('seat', $seats) }}</a>
+                                                        <a class="dh-seats is-open dh-book-link" data-trip-id="{{ $wish->tripId }}" data-trip-name="{{ $ws->name }} with {{ $wish->operator }}" href="{{ $wish->linkToBook }}" target="_blank" rel="noopener">{{ $seats >= 1000 ? 'Book' : $seats . ' ' . Str::plural('seat', $seats) }}</a>
                                                     @endif
                                                 @else
                                                     <span>No boat scheduled yet. We will tell you when one is.</span>
