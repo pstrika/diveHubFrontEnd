@@ -5,8 +5,9 @@ server {
     listen [::]:8080;
     root /home/site/wwwroot/public; # Changed for Laravel
     index  index.php index.html index.htm;
-    server_name  example.com www.example.com; 
+    server_name  example.com www.example.com;
     port_in_redirect off;
+    client_max_body_size 25M;
 
     location / {            
         index  index.php index.html index.htm hostingstart.html;

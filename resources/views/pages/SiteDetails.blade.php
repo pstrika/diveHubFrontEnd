@@ -1284,7 +1284,7 @@
                                         </div>
                                     </div>
                                     <div class="modal-footer" id="dh-diver-upload-footer">
-                                        <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-dismiss="modal" id="dh-diver-upload-cancel">Cancel</button>
                                         <button type="button" class="dh-btn dh-btn-primary" id="dh-diver-upload-submit">Submit for review</button>
                                     </div>
                                 </div>
@@ -1297,12 +1297,13 @@
                                 var modalEl = document.getElementById('dh-upload-diver-photo-modal');
                                 var progress = document.getElementById('dh-diver-upload-progress');
                                 var submitBtn = document.getElementById('dh-diver-upload-submit');
+                                var cancelBtn = document.getElementById('dh-diver-upload-cancel');
                                 var formState = document.getElementById('dh-diver-upload-form-state');
-                                var footer = document.getElementById('dh-diver-upload-footer');
                                 var successEl = document.getElementById('dh-diver-upload-success');
                                 var successText = document.getElementById('dh-diver-upload-success-text');
                                 var siteName = @json($site->name);
                                 var okCount = 0, failCount = 0, didUpload = false;
+                                var firstErrorDetail = null;
                                 var dz = new Dropzone('#dh-diver-dropzone', {
                                     url: "{{ route('DiverPhotos.store', ['siteId' => $site->id]) }}",
                                     autoProcessQueue: false,
@@ -1321,23 +1322,38 @@
                                         // Shown here, client-side, instead of relying on the server's
                                         // flash('msg') - see the comment on #dh-diver-upload-success
                                         // above for why that broke with multiple requests in one batch.
+                                        // The footer stays visible throughout (Pablo, 2026-10-04: "I got
+                                        // trapped" - hiding it along with the dropzone left only the tiny
+                                        // header X to get out of a static-backdrop modal); only the
+                                        // no-longer-relevant Submit button goes away, Cancel stays and
+                                        // relabels to Close.
                                         formState.hidden = true;
-                                        footer.hidden = true;
                                         successEl.hidden = false;
+                                        submitBtn.hidden = true;
+                                        cancelBtn.textContent = 'Close';
                                         if (okCount > 0) {
                                             didUpload = true;
                                             successText.textContent = 'Thanks! Your ' + okCount + (okCount === 1 ? ' picture is' : ' pictures are')
                                                 + ' pending review and will show on ' + siteName + "'s page once approved.";
                                         } else {
                                             successText.textContent = 'That upload did not go through - please try again.';
+                                            if (firstErrorDetail) {
+                                                successText.textContent += ' (' + firstErrorDetail + ')';
+                                            }
                                         }
-                                        if (failCount > 0) {
+                                        if (failCount > 0 && okCount > 0) {
                                             successText.textContent += ' (' + failCount + ' of ' + (okCount + failCount) + ' failed to upload.)';
                                         }
                                     },
                                 });
                                 dz.on('error', function (file, message) {
                                     failCount++;
+                                    // message is the parsed server response when it's JSON (Laravel's
+                                    // validation error body), or a plain string otherwise - either way,
+                                    // worth surfacing instead of a generic "didn't work" (Pablo,
+                                    // 2026-10-04: uploads that reported failing with no detail to go on).
+                                    var detail = (message && message.message) ? message.message : (typeof message === 'string' ? message : null);
+                                    if (detail && !firstErrorDetail) firstErrorDetail = detail;
                                     console.error('Upload failed:', file.name, message);
                                 });
                                 // Reload only once the diver has actually seen the confirmation and
