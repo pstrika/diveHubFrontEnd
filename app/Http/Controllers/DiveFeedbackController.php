@@ -74,9 +74,12 @@ class DiveFeedbackController extends Controller
     {
         $feedbackRequest = $this->resolveOrFail($token);
 
+        // Dropdowns, not free-form fields - in: against the exact step
+        // values is tighter than a min/max range (Pablo, 2026-10-05:
+        // visibility in steps of 10, waves in steps of 1 up to 8ft).
         $request->validate([
-            'visibility_ft' => 'nullable|integer|min:0|max:100',
-            'waves_ft' => 'nullable|integer|min:0|max:6',
+            'visibility_ft' => 'nullable|integer|in:' . implode(',', range(0, 100, 10)),
+            'waves_ft' => 'nullable|integer|in:' . implode(',', range(0, 8, 1)),
             'current_strength' => 'nullable|in:' . implode(',', DiveConditionsReport::CURRENT_STRENGTHS),
             'current_direction' => 'nullable|in:' . implode(',', DiveConditionsReport::CURRENT_DIRECTIONS),
         ]);

@@ -49,13 +49,17 @@
                                 <div class="col-md-6">
                                     <div class="dh-field">
                                         <label for="dh-dcf-visibility">Visibility (ft)</label>
-                                        <input type="number" min="0" max="100" id="dh-dcf-visibility" value="{{ $conditions->visibility_ft ?? '' }}" placeholder="0-100">
+                                        <x-dh-select name="visibility_ft" id="dh-dcf-visibility"
+                                            :options="collect(range(0, 100, 10))->mapWithKeys(fn($v) => [$v => $v . ' ft'])->all()"
+                                            :selected="$conditions->visibility_ft ?? null" placeholder="–" :disabled="false" />
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="dh-field">
                                         <label for="dh-dcf-waves">Waves (ft)</label>
-                                        <input type="number" min="0" max="6" id="dh-dcf-waves" value="{{ $conditions->waves_ft ?? '' }}" placeholder="0-6">
+                                        <x-dh-select name="waves_ft" id="dh-dcf-waves"
+                                            :options="collect(range(0, 8, 1))->mapWithKeys(fn($v) => [$v => $v . ' ft'])->all()"
+                                            :selected="$conditions->waves_ft ?? null" placeholder="–" :disabled="false" />
                                     </div>
                                 </div>
                                 <div class="col-md-6">

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->index();
             $table->unsignedBigInteger('site_id')->nullable();
             $table->unsignedTinyInteger('visibility_ft')->nullable(); // 0-100
-            $table->unsignedTinyInteger('waves_ft')->nullable(); // 0-6
+            $table->unsignedTinyInteger('waves_ft')->nullable(); // 0-8, dropdown in steps of 1 (Pablo, 2026-10-05 - was 0-6)
             $table->string('current_strength', 10)->nullable(); // none|mild|moderate|strong
             $table->string('current_direction', 2)->nullable(); // N|S|E|W
             $table->timestamps();
