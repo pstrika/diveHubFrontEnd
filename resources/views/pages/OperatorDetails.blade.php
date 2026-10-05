@@ -348,7 +348,8 @@
                 projection: 'albers'
             });
 
-            const marker1 = new mapboxgl.Marker({ color: '#0e4d68' })
+            {{-- --dh-shallow, not --dh-deep: the darker navy blended into the water on this map's base style (Pablo, 2026-10-05). --}}
+            const marker1 = new mapboxgl.Marker({ color: '#5fb4cf' })
                 .setLngLat([lng, lat])
                 .addTo(map);
 

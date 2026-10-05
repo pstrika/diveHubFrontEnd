@@ -103,7 +103,8 @@
                     if (!data.features || !data.features.length) return;
                     const [lng, lat] = data.features[0].center;
                     const popup = new mapboxgl.Popup({ offset: 24 }).setHTML(`<a href="${op.url}">${op.name}</a>`);
-                    new mapboxgl.Marker({ color: '#0e4d68' }).setLngLat([lng, lat]).setPopup(popup).addTo(map);
+                    {{-- --dh-shallow, not --dh-deep: the darker navy blended into the water on this map's base style (Pablo, 2026-10-05). --}}
+                    new mapboxgl.Marker({ color: '#5fb4cf' }).setLngLat([lng, lat]).setPopup(popup).addTo(map);
                     bounds.extend([lng, lat]);
                     if (++placed > 1) map.fitBounds(bounds, { padding: 40, maxZoom: 11 });
                 })
