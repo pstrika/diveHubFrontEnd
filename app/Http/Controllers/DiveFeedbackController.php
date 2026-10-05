@@ -43,6 +43,7 @@ class DiveFeedbackController extends Controller
         $event = $feedbackRequest->event;
         $site = $feedbackRequest->site_id ? Site::find($feedbackRequest->site_id) : null;
         $operator = $feedbackRequest->operator_id ? Operator::find($feedbackRequest->operator_id) : null;
+        $diver = $feedbackRequest->user;
 
         $conditions = DiveConditionsReport::where('event_id', $feedbackRequest->event_id)
             ->where('user_id', $feedbackRequest->user_id)
@@ -61,6 +62,7 @@ class DiveFeedbackController extends Controller
             'event' => $event,
             'site' => $site,
             'operator' => $operator,
+            'diver' => $diver,
             'conditions' => $conditions,
             'photosUploaded' => $photosUploaded,
             'alreadyRatedSite' => $alreadyRatedSite,

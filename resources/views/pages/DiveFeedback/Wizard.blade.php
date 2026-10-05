@@ -1,15 +1,33 @@
 <x-page-template bodyClass='dh-shell bg-gray-200'>
+    <header class="dh-topbar">
+        <div class="dh-topbar-inner">
+            <a class="dh-brand" href="{{ url('/') }}" aria-label="Divers Hub home">
+                <img src="{{ asset('assets') }}/img/logos/logo_circle.png" alt="" width="34" height="34">
+                <span>Divers Hub</span>
+            </a>
+        </div>
+    </header>
+
     <main class="main-content mt-0">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <x-shell.header title="How was your dive?" icon="waves" />
 
         <div class="container-fluid py-0 dh-board">
             <div class="dh-wizard-card">
-                <p class="text-sm text-secondary" style="margin: 0 0 4px;">
-                    {{ $event->tripName ?? 'Your dive' }}
-                    @if($event && $event->date) &middot; {{ \Carbon\Carbon::parse($event->date)->format('D, M j') }} @endif
-                    @if($operator) &middot; {{ $operator->operatorName }} @endif
-                </p>
+                @php $firstName = $diver && $diver->name ? explode(' ', trim($diver->name))[0] : null; @endphp
+                <h4 class="dh-wizard-greeting">{{ $firstName ? $firstName . ', h' : 'H' }}ow was your dive?</h4>
+
+                <div class="dh-wizard-facts">
+                    @if($event && $event->date)
+                        <span class="chip chip-static"><span class="material-icons-round" aria-hidden="true">event</span>{{ \Carbon\Carbon::parse($event->date)->format('D, M j') }}</span>
+                    @endif
+                    @if($operator)
+                        <span class="chip chip-static"><span class="material-icons-round" aria-hidden="true">store</span>{{ $operator->operatorName }}</span>
+                    @endif
+                    @if($site)
+                        <span class="chip chip-static"><span class="material-icons-round" aria-hidden="true">place</span>{{ $site->name }}</span>
+                    @endif
+                </div>
+
                 <p class="text-sm text-secondary" style="margin: 0 0 18px;">Every step below is optional - skip anything you'd rather not answer.</p>
 
                 <div class="dh-profile-card" id="dh-dcf-card">
@@ -45,7 +63,7 @@
                                         <label for="dh-dcf-current-strength">Current strength</label>
                                         <x-dh-select name="current_strength" id="dh-dcf-current-strength"
                                             :options="collect(\App\Models\DiveConditionsReport::CURRENT_STRENGTHS)->mapWithKeys(fn($s) => [$s => ucfirst($s)])->all()"
-                                            :selected="$conditions->current_strength ?? null" placeholder="&ndash;" :disabled="false" />
+                                            :selected="$conditions->current_strength ?? null" placeholder="–" :disabled="false" />
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -53,7 +71,7 @@
                                         <label for="dh-dcf-current-direction">Current direction</label>
                                         <x-dh-select name="current_direction" id="dh-dcf-current-direction"
                                             :options="collect(\App\Models\DiveConditionsReport::CURRENT_DIRECTIONS)->mapWithKeys(fn($d) => [$d => $d])->all()"
-                                            :selected="$conditions->current_direction ?? null" placeholder="&ndash;" :disabled="false" />
+                                            :selected="$conditions->current_direction ?? null" placeholder="–" :disabled="false" />
                                     </div>
                                 </div>
                             </div>

@@ -3345,6 +3345,8 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
 
 /* Post-dive feedback wizard (Pablo, 2026-10-04) */
 .dh-wizard-card { max-width: 640px; margin: 0 auto; }
+.dh-wizard-greeting { font-size: 1.3rem; font-weight: 800; color: var(--dh-ink); margin: 20px 0 10px; }
+.dh-wizard-facts { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
 .dh-wizard-steps { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 20px; }
 .dh-wizard-step-dot { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--dh-radius-pill); background: var(--dh-foam); color: var(--dh-muted); font-size: .78rem; font-weight: 700; }
 .dh-wizard-step-num { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--dh-line); color: var(--dh-paper); font-size: .7rem; flex: 0 0 auto; }
