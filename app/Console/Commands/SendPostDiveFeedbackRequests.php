@@ -57,7 +57,7 @@ class SendPostDiveFeedbackRequests extends Command
 
             $channel = $this->sendViaPreferredChannel(
                 $user,
-                $this->whatsappPayload($user, $event, $trip, $operator, $wizardUrl),
+                $this->whatsappPayload($user, $event, $operator, $token),
                 $this->smsBody($event, $operator, $wizardUrl),
                 $this->emailPayload($event, $trip, $siteId, $operator, $wizardUrl)
             );
@@ -113,7 +113,16 @@ class SendPostDiveFeedbackRequests extends Command
         return $token;
     }
 
-    private function whatsappPayload(User $user, Event $event, ?Trip $trip, ?Operator $operator, string $wizardUrl): ?array
+    /**
+     * Variables match the approved Twilio Content template exactly: {{1}}
+     * name, {{2}} operator, {{3}} date - and {{4}} is the bare token, not
+     * the full wizard URL, because WhatsApp's dynamic-URL button requires a
+     * fixed base domain+path with only the suffix varying (same reason the
+     * group/waiver buttons on the trip-reminder template work the way they
+     * do) - the button itself is configured in Twilio as
+     * https://divers-hub.com/dive-feedback/{{4}} (Pablo, 2026-10-04).
+     */
+    private function whatsappPayload(User $user, Event $event, ?Operator $operator, string $token): ?array
     {
         $contentSid = config('services.whatsapp.post_dive_feedback_content_sid');
         if (!$contentSid) {
@@ -124,9 +133,9 @@ class SendPostDiveFeedbackRequests extends Command
             'contentSid' => $contentSid,
             'variables' => [
                 '1' => $user->name,
-                '2' => $trip->tripName ?? $event->tripName,
-                '3' => $operator->operatorName ?? 'Divers Hub',
-                '4' => $wizardUrl,
+                '2' => $operator->operatorName ?? 'Divers Hub',
+                '3' => Carbon::parse($event->date)->format('l, F j'),
+                '4' => $token,
             ],
         ];
     }
