@@ -3342,3 +3342,19 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
 .dh-dropzone.dropzone:hover { border-color: var(--dh-sea); background: #fff; }
 .dh-media-savebar { position: sticky; bottom: calc(var(--dh-tabbar-h) + env(safe-area-inset-bottom) + 8px); z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: var(--dh-space-3); flex-wrap: wrap; margin: var(--dh-space-3) 0; padding: 10px 12px 10px 16px; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 14px; box-shadow: 0 6px 20px rgba(11,42,58,.10); }
 @media (min-width: 992px) { .dh-media-savebar { bottom: 12px; } }
+
+/* Post-dive feedback wizard (Pablo, 2026-10-04) */
+.dh-wizard-card { max-width: 640px; margin: 0 auto; }
+.dh-wizard-steps { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 20px; }
+.dh-wizard-step-dot { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--dh-radius-pill); background: var(--dh-foam); color: var(--dh-muted); font-size: .78rem; font-weight: 700; }
+.dh-wizard-step-num { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--dh-line); color: var(--dh-paper); font-size: .7rem; flex: 0 0 auto; }
+.dh-wizard-step-dot.is-active { background: var(--dh-sea); color: #fff; }
+.dh-wizard-step-dot.is-active .dh-wizard-step-num { background: #fff; color: var(--dh-sea); }
+.dh-wizard-step-dot.is-done { color: var(--dh-good); }
+.dh-wizard-step-dot.is-done .dh-wizard-step-num { background: var(--dh-good); color: #fff; }
+.dh-wizard-panel-title { font-size: 1.05rem; font-weight: 800; color: var(--dh-ink); margin: 0 0 4px; }
+.dh-wizard-panel-sub { font-size: .82rem; color: var(--dh-muted); margin: 0 0 16px; }
+.dh-wizard-actions { display: flex; align-items: center; gap: 10px; margin-top: 22px; }
+.dh-wizard-actions .dh-btn-primary { margin-left: auto; }
+.dh-wizard-status { font-size: .78rem; color: var(--dh-muted); margin-top: 10px; min-height: 1em; }
+.dh-wizard-rate { text-align: center; padding: 10px 0 4px; }
