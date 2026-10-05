@@ -141,13 +141,24 @@ return [
         // from the credentials/trip-reminder template above.
         'mention_content_sid' => env('TWILIO_WHATSAPP_MENTION_SID'),
         // Post-dive "how was your dive?" prompt - App\Console\Commands\
-        // SendPostDiveFeedbackRequests. Submitted as category UTILITY (not
-        // MARKETING - see the long note above on trip_reminder_content_sid
-        // for why that distinction matters for US delivery), approved by
-        // Meta 2026-10-05. Variables: {{1}} name, {{2}} operator, {{3}}
-        // date, {{4}} token - button URL is the fixed
+        // SendPostDiveFeedbackRequests. Variables: {{1}} name, {{2}}
+        // operator, {{3}} date, {{4}} token - button URL is the fixed
         // https://divers-hub.com/dive-feedback/{{4}}.
-        'post_dive_feedback_content_sid' => env('TWILIO_WHATSAPP_POST_DIVE_FEEDBACK_SID', 'HXdca06f52071057f6dc3fffed29868b56'),
+        //
+        // "trip_review_with_link_utility" (HXc5211c...) - category UTILITY,
+        // approved 2026-10-05, confirmed via Twilio's own ApprovalRequests
+        // API before wiring in. The FIRST attempt
+        // (HXdca06f52071057f6dc3fffed29868b56, "copy_of_
+        // trip_review_with_link_marketing") looked right and Twilio's
+        // Console showed it "approved", but a real test send came back
+        // undelivered/63049 - the ApprovalRequests endpoint showed its
+        // actual category as MARKETING despite the name/intent, same trap
+        // as trip_reminder_content_sid's history below. Lesson: don't
+        // trust the Console's category selector:
+        // GET content.twilio.com/v1/Content/{sid}/ApprovalRequests and
+        // check the real "category" field, and do a real test send,
+        // before ever wiring a new template's SID in here.
+        'post_dive_feedback_content_sid' => env('TWILIO_WHATSAPP_POST_DIVE_FEEDBACK_SID', 'HXc5211c3214c96878266651fb96b3262c'),
     ],
 
 ];
