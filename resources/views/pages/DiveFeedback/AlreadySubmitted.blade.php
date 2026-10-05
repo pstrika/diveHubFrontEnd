@@ -37,9 +37,19 @@
                         <i class="material-icons-round" style="font-size: 2.5rem; color: var(--dh-sea);">task_alt</i>
                         <h6 class="dh-panel-title" style="text-transform: none; font-size: 1.1rem; margin-top: 12px;">You already shared your feedback for this dive.</h6>
                         <p class="text-sm text-secondary">Thanks for helping other divers plan their trip.</p>
+                        {{-- Same trap as the main wizard's Finish state - see
+                             its comment on #dh-dcf-close for why this isn't
+                             just window.close() alone (Pablo, 2026-10-05). --}}
+                        <button type="button" class="dh-btn dh-btn-primary" id="dh-dcf-close" style="margin-top: 18px;">Close</button>
                     </div>
                 </div>
             </div>
         </div>
     </main>
+    <script>
+        document.getElementById('dh-dcf-close').addEventListener('click', function () {
+            try { window.close(); } catch (e) { /* ignore */ }
+            setTimeout(function () { window.location.href = '{{ url('/') }}'; }, 150);
+        });
+    </script>
 </x-page-template>

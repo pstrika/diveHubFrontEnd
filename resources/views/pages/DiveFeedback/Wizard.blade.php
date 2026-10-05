@@ -169,6 +169,15 @@
                         <i class="material-icons-round" style="font-size: 2.5rem; color: var(--dh-sea);">task_alt</i>
                         <h6 class="dh-panel-title" style="text-transform: none; font-size: 1.1rem; margin-top: 12px;">Thanks for sharing!</h6>
                         <p class="text-sm text-secondary">Your feedback helps other divers plan their trip.</p>
+                        {{-- Opened from WhatsApp/SMS/email, not a tab this page
+                             itself opened - window.close() is only reliably
+                             honored by in-app browsers (WhatsApp's included)
+                             that treat it as "close this webview," not by a
+                             regular browser tab. The redirect fallback below
+                             covers the rest, same pattern as Blog preview's
+                             dhClosePreview() (Pablo, 2026-10-05: "I can't
+                             close it...forcing me to close WhatsApp"). --}}
+                        <button type="button" class="dh-btn dh-btn-primary" id="dh-dcf-close" style="margin-top: 18px;">Close</button>
                     </div>
                 </div>
             </div>
@@ -302,6 +311,13 @@
                     document.getElementById('dh-dcf-card').hidden = true;
                     document.getElementById('dh-dcf-thanks').hidden = false;
                 });
+            });
+            document.getElementById('dh-dcf-close').addEventListener('click', function () {
+                try { window.close(); } catch (e) { /* ignore */ }
+                // Still here after a beat - window.close() didn't take
+                // (a regular browser tab, not an in-app browser that honors
+                // it) - land somewhere real instead of a dead page.
+                setTimeout(function () { window.location.href = '{{ url('/') }}'; }, 150);
             });
 
             goToStep(1);

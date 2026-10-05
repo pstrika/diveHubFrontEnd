@@ -48,12 +48,22 @@
                             <p class="text-xs text-secondary mt-2 mb-0">JPG, PNG or WebP, up to 20 MB each.</p>
                             <p class="dh-wizard-status" id="dh-dive-photo-status"></p>
                         @endif
+                        {{-- Same trap as the main wizard's Finish state - see
+                             its comment on #dh-dcf-close for why this isn't
+                             just window.close() alone (Pablo, 2026-10-05). --}}
+                        <button type="button" class="dh-btn dh-btn-ghost-dark" id="dh-dcf-close" style="margin-top: 14px;">Close</button>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
+    <script>
+        document.getElementById('dh-dcf-close').addEventListener('click', function () {
+            try { window.close(); } catch (e) { /* ignore */ }
+            setTimeout(function () { window.location.href = '{{ url('/') }}'; }, 150);
+        });
+    </script>
     @if($site)
     <script src="{{ asset('assets') }}/js/plugins/dropzone.min.js"></script>
     <script>
