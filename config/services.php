@@ -141,15 +141,13 @@ return [
         // from the credentials/trip-reminder template above.
         'mention_content_sid' => env('TWILIO_WHATSAPP_MENTION_SID'),
         // Post-dive "how was your dive?" prompt - App\Console\Commands\
-        // SendPostDiveFeedbackRequests. No template exists for this yet
-        // either - null until one is created. MUST be submitted as
-        // category UTILITY, not MARKETING: see the long note above on
-        // trip_reminder_content_sid - a MARKETING template silently never
-        // delivers to a US number, and an approved template can't be
-        // recategorized in place, only resubmitted as a new one. Until
-        // this is set, the cascade in SendsViaPreferredChannel falls
-        // straight through to SMS/email.
-        'post_dive_feedback_content_sid' => env('TWILIO_WHATSAPP_POST_DIVE_FEEDBACK_SID'),
+        // SendPostDiveFeedbackRequests. Submitted as category UTILITY (not
+        // MARKETING - see the long note above on trip_reminder_content_sid
+        // for why that distinction matters for US delivery), approved by
+        // Meta 2026-10-05. Variables: {{1}} name, {{2}} operator, {{3}}
+        // date, {{4}} token - button URL is the fixed
+        // https://divers-hub.com/dive-feedback/{{4}}.
+        'post_dive_feedback_content_sid' => env('TWILIO_WHATSAPP_POST_DIVE_FEEDBACK_SID', 'HXdca06f52071057f6dc3fffed29868b56'),
     ],
 
 ];
