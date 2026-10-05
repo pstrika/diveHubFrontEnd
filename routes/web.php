@@ -60,6 +60,8 @@ Route::get('cron/send-dive-photo-reminders', [\App\Http\Controllers\CronControll
 Route::get('cron/photos-web-copies', [\App\Http\Controllers\CronController::class, 'photosWebCopies']);
 // Manual-trigger only, not on a schedule - see CronController::indexNowSubmitAll().
 Route::get('cron/indexnow-submit-all', [\App\Http\Controllers\CronController::class, 'indexNowSubmitAll']);
+// Manual-trigger only, not on a schedule - see CronController::backfillGroupFacebookPosts().
+Route::get('cron/backfill-group-facebook-posts', [\App\Http\Controllers\CronController::class, 'backfillGroupFacebookPosts']);
 
 // Newsletter one-click unsubscribe/resubscribe - reached from a signed link
 // in the email itself, not a logged-in session (the diver may be reading

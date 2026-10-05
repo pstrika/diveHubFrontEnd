@@ -189,4 +189,27 @@ class CronController extends Controller
 
         return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
     }
+
+    /**
+     * Manual-trigger only (Pablo, 2026-10-05), same reasoning as
+     * photosWebCopies/indexNowSubmitAll above: the image URLs this posts
+     * to Facebook are built with asset()/url(), which resolve against
+     * whatever APP_URL the request itself runs under - a local tinker
+     * session would hand Facebook an unreachable http://localhost/... URL
+     * (confirmed: that's exactly what happened on the first attempt, every
+     * post rejected with Graph API error 324 "Missing or invalid image
+     * file"). Requires ?group=<slug> - see App\Console\Commands\
+     * BackfillGroupFacebookPosts for why there's no "run for every group"
+     * default.
+     */
+    public function backfillGroupFacebookPosts(Request $request)
+    {
+        if (!hash_equals((string) env('CRON_SECRET'), (string) $request->query('secret'))) {
+            abort(403);
+        }
+
+        Artisan::call('groups:backfill-facebook-posts', ['--group' => $request->query('group')]);
+
+        return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
+    }
 }
