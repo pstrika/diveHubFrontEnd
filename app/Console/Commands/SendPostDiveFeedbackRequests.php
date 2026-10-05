@@ -76,7 +76,7 @@ class SendPostDiveFeedbackRequests extends Command
                 'token' => $token,
                 'channel' => $channel,
                 'sent_at' => now(),
-                'expires_at' => now()->addDays(30),
+                'expires_at' => now()->addDays(7),
             ]);
             $sent++;
         }

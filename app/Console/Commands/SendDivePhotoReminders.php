@@ -41,7 +41,12 @@ class SendDivePhotoReminders extends Command
 
             $operator = $request->operator_id ? Operator::find($request->operator_id) : null;
             $event = Event::find($request->event_id);
-            $wizardUrl = route('DiveFeedback.show', ['token' => $request->token]) . '#photos';
+            // No #photos fragment needed any more: DiveFeedbackController::
+            // show() now serves the restricted photos-only view itself once
+            // completed_at is set and a reminder is still outstanding, so
+            // every channel (including WhatsApp's fixed-prefix button URL)
+            // can share this exact same link (Pablo, 2026-10-05).
+            $wizardUrl = route('DiveFeedback.show', ['token' => $request->token]);
 
             $channel = $this->sendViaPreferredChannel(
                 $user,

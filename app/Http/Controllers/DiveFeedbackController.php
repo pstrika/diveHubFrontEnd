@@ -24,8 +24,8 @@ use Illuminate\Support\Facades\Storage;
  * this app already uses for NewsletterController::unsubscribe()'s signed
  * link - a diver clicking from WhatsApp/SMS on their phone may not be
  * logged in there, and forcing a login first would just kill completion.
- * Unlike that link, this one authorizes several writes over up to 30 days,
- * hence the expires_at check on every request (Pablo, 2026-10-04).
+ * Unlike that link, this one authorizes several writes over up to 7 days,
+ * hence the expires_at check on every request (Pablo, 2026-10-04/05).
  */
 class DiveFeedbackController extends Controller
 {
@@ -44,6 +44,33 @@ class DiveFeedbackController extends Controller
         $site = $feedbackRequest->site_id ? Site::find($feedbackRequest->site_id) : null;
         $operator = $feedbackRequest->operator_id ? Operator::find($feedbackRequest->operator_id) : null;
         $diver = $feedbackRequest->user;
+
+        // Once submitted, the link stops offering the review steps again -
+        // except photos, which the diver may have deliberately deferred
+        // ("remind me in 2 days") after finishing everything else. Same
+        // URL either way: no second link to send, no WhatsApp button
+        // pointing somewhere a not-yet-approved template can't reach
+        // (Pablo, 2026-10-05).
+        if ($feedbackRequest->completed_at) {
+            $stillWantsPhotos = $feedbackRequest->photo_reminder_requested && !$feedbackRequest->photos_uploaded_at;
+
+            if ($stillWantsPhotos) {
+                return view('pages.DiveFeedback.PhotosOnly', [
+                    'token' => $token,
+                    'event' => $event,
+                    'site' => $site,
+                    'operator' => $operator,
+                    'diver' => $diver,
+                ]);
+            }
+
+            return view('pages.DiveFeedback.AlreadySubmitted', [
+                'event' => $event,
+                'site' => $site,
+                'operator' => $operator,
+                'diver' => $diver,
+            ]);
+        }
 
         $conditions = DiveConditionsReport::where('event_id', $feedbackRequest->event_id)
             ->where('user_id', $feedbackRequest->user_id)
@@ -72,7 +99,7 @@ class DiveFeedbackController extends Controller
 
     public function submitConditions(Request $request, $token)
     {
-        $feedbackRequest = $this->resolveOrFail($token);
+        $feedbackRequest = $this->resolveEditableOrFail($token);
 
         // Dropdowns, not free-form fields - in: against the exact step
         // values is tighter than a min/max range (Pablo, 2026-10-05:
@@ -154,7 +181,7 @@ class DiveFeedbackController extends Controller
     /** Duplicates SiteRatingController::new()'s averaging formula rather than extracting it - see that controller for why. */
     public function submitSiteRating(Request $request, $token)
     {
-        $feedbackRequest = $this->resolveOrFail($token);
+        $feedbackRequest = $this->resolveEditableOrFail($token);
         if (!$feedbackRequest->site_id) {
             return response()->json(['success' => false], 422);
         }
@@ -176,7 +203,7 @@ class DiveFeedbackController extends Controller
 
     public function submitSiteReview(Request $request, $token)
     {
-        $feedbackRequest = $this->resolveOrFail($token);
+        $feedbackRequest = $this->resolveEditableOrFail($token);
         if (!$feedbackRequest->site_id) {
             return response()->json(['success' => false], 422);
         }
@@ -195,7 +222,7 @@ class DiveFeedbackController extends Controller
     /** Duplicates OperatorRatingController::new()'s averaging formula - same reasoning as submitSiteRating(). */
     public function submitOperatorRating(Request $request, $token)
     {
-        $feedbackRequest = $this->resolveOrFail($token);
+        $feedbackRequest = $this->resolveEditableOrFail($token);
         if (!$feedbackRequest->operator_id) {
             return response()->json(['success' => false], 422);
         }
@@ -231,6 +258,24 @@ class DiveFeedbackController extends Controller
         $feedbackRequest = PostDiveFeedbackRequest::where('token', $token)->first();
         if (!$feedbackRequest || $feedbackRequest->isExpired()) {
             abort(410, 'This link has expired.');
+        }
+
+        return $feedbackRequest;
+    }
+
+    /**
+     * Same as resolveOrFail(), plus: once the diver has finished the
+     * review (completed_at set), the review steps - conditions, site
+     * rating/review, operator rating - can't be resubmitted through this
+     * link. Photo upload/remind-later deliberately don't use this: a
+     * diver who finished everything else but deferred photos still needs
+     * to be able to upload them later (Pablo, 2026-10-05).
+     */
+    private function resolveEditableOrFail(string $token): PostDiveFeedbackRequest
+    {
+        $feedbackRequest = $this->resolveOrFail($token);
+        if ($feedbackRequest->completed_at) {
+            abort(410, 'This feedback has already been submitted.');
         }
 
         return $feedbackRequest;
