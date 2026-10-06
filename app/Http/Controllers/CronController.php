@@ -212,4 +212,38 @@ class CronController extends Controller
 
         return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
     }
+
+    /**
+     * Rebuilds Laravel's config/route/view cache - the LAST step of every
+     * production deploy (main_divehub.yml), not a manual/scheduled action
+     * like the endpoints above. Exists because Kudu's command executor
+     * (used by that workflow's "clear stale cache" steps right before
+     * this) has no `php` binary - it runs in a separate, minimal
+     * deployment container from the real PHP-FPM runtime - so rebuilding
+     * actually requires a real HTTP hit to the running app, same as every
+     * other Artisan-via-cron endpoint here.
+     *
+     * Found 2026-10-05 (Pablo: "the app is somewhat stalling and
+     * lagging"): the deploy workflow was deleting bootstrap/cache/*.php
+     * after every push (to keep config/divehub.php's version fresh) but
+     * never rebuilding it - production was permanently running with ZERO
+     * config/route/view caching, re-parsing everything on every single
+     * request. That explained a measured ~300-700ms baseline TTFB even on
+     * trivial pages. This closes the loop: clear, then rebuild fresh
+     * against the code that was JUST deployed.
+     */
+    public function optimizeCache(Request $request)
+    {
+        if (!hash_equals((string) env('CRON_SECRET'), (string) $request->query('secret'))) {
+            abort(403);
+        }
+
+        $output = '';
+        foreach (['config:cache', 'route:cache', 'view:cache'] as $command) {
+            Artisan::call($command);
+            $output .= "\$ php artisan {$command}\n" . Artisan::output() . "\n";
+        }
+
+        return response($output, 200, ['Content-Type' => 'text/plain']);
+    }
 }

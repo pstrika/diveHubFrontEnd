@@ -38,7 +38,7 @@ jobs:
 
       - name: Run composer install if composer.json exists
         if: steps.check_files.outputs.files_exists == 'true'
-        run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
+        run: composer validate --no-check-publish && composer install --prefer-dist --no-progress --optimize-autoloader
 
       - name: Zip artifact for deployment
         # Azure's deploy endpoint rejects packages of 1 GB or more (400 Bad Request).
@@ -112,3 +112,15 @@ jobs:
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
             -d '{"command":"rm -f bootstrap/cache/config.php bootstrap/cache/routes-v7.php bootstrap/cache/packages.php bootstrap/cache/services.php","dir":"site/wwwroot"}'
+
+      # Rebuilds what the step above just cleared, against the code that
+      # was JUST deployed - a real HTTP hit, not another Kudu command,
+      # because Kudu's executor has no php binary (see
+      # CronController::optimizeCache's docblock). Found 2026-10-05:
+      # production had been running with ZERO config/route/view caching
+      # since this clear step was added and nothing ever rebuilt it -
+      # every request was re-parsing config/re-resolving routes from
+      # scratch (Pablo: "the app is somewhat stalling and lagging").
+      - name: Rebuild Laravel config/route/view cache for fast boot
+        continue-on-error: true
+        run: curl -sf "https://divers-hub.com/cron/optimize-cache?secret=${{ secrets.CRON_SECRET }}"

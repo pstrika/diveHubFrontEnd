@@ -62,6 +62,8 @@ Route::get('cron/photos-web-copies', [\App\Http\Controllers\CronController::clas
 Route::get('cron/indexnow-submit-all', [\App\Http\Controllers\CronController::class, 'indexNowSubmitAll']);
 // Manual-trigger only, not on a schedule - see CronController::backfillGroupFacebookPosts().
 Route::get('cron/backfill-group-facebook-posts', [\App\Http\Controllers\CronController::class, 'backfillGroupFacebookPosts']);
+// Hit automatically as the last step of every deploy (main_divehub.yml), not manual/scheduled - see CronController::optimizeCache().
+Route::get('cron/optimize-cache', [\App\Http\Controllers\CronController::class, 'optimizeCache']);
 
 // Newsletter one-click unsubscribe/resubscribe - reached from a signed link
 // in the email itself, not a logged-in session (the diver may be reading
@@ -135,9 +137,16 @@ Route::get('login/google', [GoogleController::class, 'redirectToGoogle'])->name(
 Route::get('login/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 
 /* Routes for diveHub */
-Route::get('Trips/{date}', 'App\Http\Controllers\TripsController@show')->middleware('guest')->name('Trips');
+// Unnamed on purpose: every route('Trips') call in the app builds a dated
+// URL by string-appending '/'.$date to the base route below, never by
+// Laravel's own named-route parameters - this one only needs to match the
+// URL pattern. It used to carry the same 'Trips' name as the line below,
+// which silently collided (duplicate route names) and was the one thing
+// blocking php artisan route:cache from ever working at all (Pablo,
+// 2026-10-05 performance investigation - production had been running with
+// zero route caching for this exact reason).
+Route::get('Trips/{date}', 'App\Http\Controllers\TripsController@show')->middleware('guest');
 Route::get('Trips/', 'App\Http\Controllers\TripsController@show')->middleware('guest')->name('Trips');
-//Route::get('Trips/', 'App\Http\Controllers\TripsController@show')->middleware('guest')->name('Trips');
 
 Route::middleware(['auth', 'admin'])->group(function () {
     // Define admin-only routes here
@@ -152,10 +161,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
 	Route::post('edit-user/{id}',[UserManagementController::class, 'update'])->middleware('auth');
 	Route::post('users-management/{id}',[UserManagementController::class, 'destroy'])->middleware('auth')->name('delete.user');
 
-	Route::get('DeleteDiveSite/{id}', 'App\Http\Controllers\SiteController@delete')->middleware('auth')->name('DeleteDiveSite');
+	Route::get('DeleteDiveSite/{id}', 'App\Http\Controllers\SiteController@delete')->middleware('auth');
 	Route::get('DeleteDiveSite', 'App\Http\Controllers\SiteController@delete')->middleware('auth')->name('DeleteDiveSite');
 
-	Route::get('DeletePic/{id}', 'App\Http\Controllers\SiteController@deletePic')->middleware('auth')->name('DeletePic');
+	Route::get('DeletePic/{id}', 'App\Http\Controllers\SiteController@deletePic')->middleware('auth');
 	Route::get('DeletePic', 'App\Http\Controllers\SiteController@deletePic')->middleware('auth')->name('DeletePic');
 
 	Route::get('admin/messages', [\App\Http\Controllers\AdminMessagesController::class, 'index'])->name('admin.messages.index');
@@ -174,11 +183,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
 // (Laravel matches route-by-route in registration order), sending
 // GET/DELETE DecoPlanner/plans into NDLController@show with id="plans"
 // instead of the new list/delete plan endpoints.
-Route::get('DecoPlanner/{id}', 'App\Http\Controllers\NDLController@show')->where('id', '[0-9]+')->middleware('guest')->name('DecoPlanner');
+Route::get('DecoPlanner/{id}', 'App\Http\Controllers\NDLController@show')->where('id', '[0-9]+')->middleware('guest');
 Route::get('DecoPlanner', 'App\Http\Controllers\NDLController@show')->middleware('guest')->name('DecoPlanner');
-Route::get('DecoPlannerImperial/{id}', 'App\Http\Controllers\NDLController@showImperial')->where('id', '[0-9]+')->middleware('guest')->name('DecoPlannerImperial');
+Route::get('DecoPlannerImperial/{id}', 'App\Http\Controllers\NDLController@showImperial')->where('id', '[0-9]+')->middleware('guest');
 Route::get('DecoPlannerImperial', 'App\Http\Controllers\NDLController@showImperial')->middleware('guest')->name('DecoPlannerImperial');
-Route::get('DecoPlannerMetric/{id}', 'App\Http\Controllers\NDLController@showMetric')->where('id', '[0-9]+')->middleware('guest')->name('DecoPlannerMetric');
+Route::get('DecoPlannerMetric/{id}', 'App\Http\Controllers\NDLController@showMetric')->where('id', '[0-9]+')->middleware('guest');
 Route::get('DecoPlannerMetric', 'App\Http\Controllers\NDLController@showMetric')->middleware('guest')->name('DecoPlannerMetric');
 
 // Saving GF Low/High + setpoint and custom gas mixes needs a real profile
@@ -203,7 +212,7 @@ Route::get('Weather/{location}', function (string $location) {
         return redirect('/Weather/' . $slug, 301);
     }
     return app(\App\Http\Controllers\WeatherController::class)->show(request(), str_replace('-', ' ', $location));
-})->middleware('guest')->name('Weather');
+})->middleware('guest');
 Route::get('Weather/', 'App\Http\Controllers\WeatherController@show')->middleware('guest')->name('Weather');
 // The separate Argentina forecast retired in release 10: /Weather now serves
 // every location in weatherlocations, Argentina included, and it is the better
@@ -216,24 +225,24 @@ Route::get('WeatherARImperial/{location?}', $weatherRedirect)->name('WeatherARIm
 Route::get('WeatherARMetric/{location?}', $weatherRedirect)->name('WeatherARMetric');
 
 // Themed calendars render the trip finder with a type preset; open to guests like the board itself.
-Route::get('CalendarT/{tripType}/{date}', 'App\Http\Controllers\CalendarTController@show')->middleware('guest')->name('CalendarT');
-Route::get('CalendarT/{tripType}', 'App\Http\Controllers\CalendarTController@show')->middleware('guest')->name('CalendarT');
+Route::get('CalendarT/{tripType}/{date}', 'App\Http\Controllers\CalendarTController@show')->middleware('guest');
+Route::get('CalendarT/{tripType}', 'App\Http\Controllers\CalendarTController@show')->middleware('guest');
 Route::get('CalendarT/', 'App\Http\Controllers\CalendarTController@show')->middleware('guest')->name('CalendarT');
-Route::get('CalendarShark/{date}', 'App\Http\Controllers\CalendarTController@showShark')->middleware('guest')->name('CalendarShark');
+Route::get('CalendarShark/{date}', 'App\Http\Controllers\CalendarTController@showShark')->middleware('guest');
 Route::get('CalendarShark/', 'App\Http\Controllers\CalendarTController@showShark')->middleware('guest')->name('CalendarShark');
-Route::get('CalendarLobster/{date}', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('guest')->name('CalendarLobster');
+Route::get('CalendarLobster/{date}', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('guest');
 Route::get('CalendarLobster/', 'App\Http\Controllers\CalendarTController@showLobster')->middleware('guest')->name('CalendarLobster');
-Route::get('CalendarWreck/{date}', 'App\Http\Controllers\CalendarTController@showWreck')->middleware('guest')->name('CalendarWreck');
+Route::get('CalendarWreck/{date}', 'App\Http\Controllers\CalendarTController@showWreck')->middleware('guest');
 Route::get('CalendarWreck/', 'App\Http\Controllers\CalendarTController@showWreck')->middleware('guest')->name('CalendarWreck');
 
 /* Special routes for Hydrotherapy integration */
 // Hydrotherapy renders in an iframe on the client's own site. Its controller and
 // view are frozen and deliberately live apart from the other calendars so nothing
 // here can change them by accident. See HydrotherapyCalendarController.
-Route::get('CalendarHydrotherapy/{date}', 'App\Http\Controllers\HydrotherapyCalendarController@show')->middleware('guest')->name('CalendarHydrotherapy');
+Route::get('CalendarHydrotherapy/{date}', 'App\Http\Controllers\HydrotherapyCalendarController@show')->middleware('guest');
 Route::get('CalendarHydrotherapy/', 'App\Http\Controllers\HydrotherapyCalendarController@show')->middleware('guest')->name('CalendarHydrotherapy');
 
-Route::get('MyCalendar/{date}', 'App\Http\Controllers\EventController@show')->middleware('guest')->name('MyCalendar');
+Route::get('MyCalendar/{date}', 'App\Http\Controllers\EventController@show')->middleware('guest');
 Route::get('MyCalendar/', 'App\Http\Controllers\EventController@show')->middleware('guest')->name('MyCalendar');
 
 Route::get('TripDetails/{tripId}', 'App\Http\Controllers\TripDetailsController@show')->middleware('guest')->name('TripDetails');
@@ -265,7 +274,12 @@ Route::get('new-site/', 'App\Http\Controllers\SiteController@create')->middlewar
 Route::post('new-site', 'App\Http\Controllers\SiteController@store')->middleware('auth')->name('new-site-store');
 
 Route::get('new-site-uploadPics', 'App\Http\Controllers\SiteController@create')->middleware('auth')->name('new-site-uploadPics');
-Route::post('new-site-uploadPics', 'App\Http\Controllers\SiteController@updateMedia')->middleware('auth')->name('new-site-uploadPics');
+// Same name as the GET above would work fine at request-time (routing
+// dispatches by URI+method, not by name) but breaks route:cache, which
+// treats a shared name as a collision regardless of method - named
+// distinctly so route('new-site-uploadPics') still resolves to the same
+// URI either form needs (Pablo, 2026-10-05 route:cache fix).
+Route::post('new-site-uploadPics', 'App\Http\Controllers\SiteController@updateMedia')->middleware('auth')->name('new-site-uploadPics.store');
 
 Route::post('upload', 'App\Http\Controllers\SiteController@upload')->middleware('auth')->name('upload');
 
@@ -288,7 +302,7 @@ Route::post('edit-site-pics/{id}/hero', 'App\Http\Controllers\SiteController@set
 // caller, so it's cached server-side and sent with a browser cache
 // header - no auth/session needed either.
 Route::get('SiteDetails/map-pins', 'App\Http\Controllers\SiteController@mapPins')->middleware('guest')->name('SiteDetails.mapPins');
-Route::get('SiteDetails/{id}', 'App\Http\Controllers\SiteController@show')->middleware('guest')->name('SiteDetails');
+Route::get('SiteDetails/{id}', 'App\Http\Controllers\SiteController@show')->middleware('guest');
 Route::get('SiteDetails', 'App\Http\Controllers\SiteController@show')->middleware('guest')->name('SiteDetails');
 Route::post('RateSite', 'App\Http\Controllers\SiteRatingController@new')->middleware('auth')->name('RateSite');
 Route::post('RateOperator', 'App\Http\Controllers\OperatorRatingController@new')->middleware('auth')->name('RateOperator');
@@ -395,7 +409,12 @@ Route::get('WreckSites', 'App\Http\Controllers\SiteController@showWrecks')->midd
 
 
 Route::get('overview', 'App\Http\Controllers\UserController@getProfile')->middleware('auth')->name('overview');
-Route::post('overview', 'App\Http\Controllers\UserController@updateProfile')->middleware('auth')->name('overview');
+// Same name as the GET above would work fine at request-time (routing
+// dispatches by URI+method, not by name) but breaks route:cache, which
+// treats a shared name as a collision regardless of method - named
+// distinctly so route('overview') still resolves to the same URI either
+// form needs (Pablo, 2026-10-05 route:cache fix).
+Route::post('overview', 'App\Http\Controllers\UserController@updateProfile')->middleware('auth')->name('overview.update');
 // Own endpoint, not folded into the above (Pablo, 2026-09-24) - see
 // UserController::updateNavSlots()'s docblock for why.
 Route::post('overview/nav-slots', 'App\Http\Controllers\UserController@updateNavSlots')->middleware('auth')->name('overview.navSlots');

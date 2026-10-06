@@ -80,7 +80,7 @@
                                     </td>
                                     <td>
                                         @if($photo->site)
-                                            <a href="{{ route('SiteDetails', $photo->site->slug ?? $photo->site->id) }}" target="_blank" rel="noopener">{{ $photo->site->name }}</a>
+                                            <a href="{{ route('SiteDetails') }}/{{ $photo->site->slug ?? $photo->site->id }}" target="_blank" rel="noopener">{{ $photo->site->name }}</a>
                                         @else
                                             <span class="text-secondary">Deleted site</span>
                                         @endif
@@ -139,7 +139,7 @@
                                     </td>
                                     <td>
                                         @if($photo->site)
-                                            <a href="{{ route('SiteDetails', $photo->site->slug ?? $photo->site->id) }}" target="_blank" rel="noopener">{{ $photo->site->name }}</a>
+                                            <a href="{{ route('SiteDetails') }}/{{ $photo->site->slug ?? $photo->site->id }}" target="_blank" rel="noopener">{{ $photo->site->name }}</a>
                                         @else
                                             <span class="text-secondary">Deleted site</span>
                                         @endif
