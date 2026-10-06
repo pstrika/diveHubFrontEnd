@@ -66,15 +66,35 @@ class MyDashboardController extends Controller
         $groupInvites = \App\Models\GroupMember::where('user_id', $user->id)->where('status', 'invited')->count();
 
         Log::debug("Got " . str(count($events)) . " event for user " . $user->name);
+        // Batch-prefetch trip candidates for every distinct (date, operatorId)
+        // slot across all events in ONE query, instead of Trip::tripInEvent()
+        // running its own query per event inside this loop - up to 40 extra
+        // full-table scans on a page that was saturating the App Service
+        // (Pablo, 2026-10-06). This only covers the fast path - an exact
+        // tripName match, the overwhelming majority of events - so
+        // Trip::tripInEvent()'s fuzzy rename-detection (resolveRenamedTrip)
+        // still runs, unchanged, as the fallback for whatever this prefetch
+        // doesn't resolve.
+        $eventDates = $events->pluck('date')->unique();
+        $eventOperatorIds = $events->pluck('operatorId')->unique();
+        $candidatesBySlot = $eventDates->isNotEmpty()
+            ? Trip::whereIn('date', $eventDates)->whereIn('operatorId', $eventOperatorIds)->get()
+                ->groupBy(fn ($t) => $t->date . '|' . $t->departureTime . '|' . $t->operatorId)
+            : collect();
+        $operatorsById = Operator::whereIn('id', $eventOperatorIds)->get()->keyBy('id');
+
         $trips = [];
         foreach($events as $event) {
-            $trip = Trip::tripInEvent($event);
+            $slotKey = $event->date . '|' . $event->time . '|' . $event->operatorId;
+            $exactMatch = $candidatesBySlot->get($slotKey, collect())
+                ->first(fn ($c) => trim($c->tripName) === trim($event->tripName));
+            $trip = $exactMatch ?: Trip::tripInEvent($event);
             if($trip) {
                 $trip->booked = $event->booked;
                 $trip->eventId = $event->id;
                 $trip->cancelled = false;
                 // need to get the link to the waiver
-                $operator = Operator::where('id', $trip->operatorId)->first();
+                $operator = $operatorsById->get($trip->operatorId);
                 $trip->waiver = optional($operator)->waiverLink;
                 $trips[] = $trip;
             } elseif ($event->cancelled_at) {
@@ -276,25 +296,52 @@ class MyDashboardController extends Controller
         Log::debug("Got wished sites: " . count($wished));
 
         
-        foreach($wished as $i => $wish) {
-            Log::debug("Site: " . $wish->site->name);
-            $wishedTrips = Trip::where('siteId', $wish->siteId)
+        // Batch-prefetch every wishlisted site's upcoming trips in ONE query,
+        // grouped by siteId, instead of one query per wishlisted site inside
+        // the loop below (Pablo, 2026-10-06 - the other half of this page's
+        // N+1, alongside the event/trip loop above).
+        //
+        // Group by the FIRST comma-separated token, not the raw column: some
+        // trips.siteId values carry trailing junk ("44, " instead of "44"),
+        // which MySQL's implicit numeric cast silently tolerated in the
+        // original exact-match `where('siteId', $wish->siteId)` query (a
+        // string-to-number comparison takes the leading numeric prefix) but
+        // Eloquent's groupBy() does an exact PHP string comparison and would
+        // group that row under "44, " instead of 44, making it unreachable
+        // by a clean integer lookup - caught via a real mismatch while
+        // testing this (siteId 44 had a genuine upcoming trip that silently
+        // vanished from the wishlist card). Same first-token idiom already
+        // used elsewhere in this app for a comma-list siteId.
+        $wishedSiteIds = $wished->pluck('siteId')->filter()->unique();
+        $tripsBySite = $wishedSiteIds->isNotEmpty()
+            ? Trip::whereIn('siteId', $wishedSiteIds)
                 ->where('siteIdStatus', 'confirmed')
                 ->whereDate('date', '>=', Carbon::today())
-                ->get()->sortBy('date');
+                ->get()
+                ->groupBy(fn ($t) => (int) trim(explode(',', $t->siteId)[0]))
+            : collect();
+
+        foreach($wished as $i => $wish) {
+            Log::debug("Site: " . $wish->site->name);
+            // ->first() here, not the original code's $wishedTrips[0]: sortBy()
+            // reorders iteration but keeps each item's ORIGINAL array key, so a
+            // literal [0] lookup didn't actually honor the date sort - found
+            // while batching this query, fixed alongside it (Pablo, 2026-10-06).
+            $wishedTrips = ($tripsBySite->get($wish->siteId) ?? collect())->sortBy('date')->values();
             Log::debug("Count of trips for this site: " . count($wishedTrips));
-            if(count($wishedTrips) > 0) {
-                $wished[$i]->operator = $wishedTrips[0]->operatorName;
-                $wished[$i]->date = $wishedTrips[0]->date;
-                $wished[$i]->time = $wishedTrips[0]->departureTime;
-                $wished[$i]->linkToBook = $wishedTrips[0]->linkToBook;
-                $wished[$i]->tripName = $wishedTrips[0]->tripName;
-                $wished[$i]->tripFreeSpots = $wishedTrips[0]->tripFreeSpots;
-                $wished[$i]->operatorId = $wishedTrips[0]->operatorId;
-                $wished[$i]->tripId = $wishedTrips[0]->id;
+            if($wishedTrips->isNotEmpty()) {
+                $nextTrip = $wishedTrips->first();
+                $wished[$i]->operator = $nextTrip->operatorName;
+                $wished[$i]->date = $nextTrip->date;
+                $wished[$i]->time = $nextTrip->departureTime;
+                $wished[$i]->linkToBook = $nextTrip->linkToBook;
+                $wished[$i]->tripName = $nextTrip->tripName;
+                $wished[$i]->tripFreeSpots = $nextTrip->tripFreeSpots;
+                $wished[$i]->operatorId = $nextTrip->operatorId;
+                $wished[$i]->tripId = $nextTrip->id;
 
                 Log::debug("Trip on: " . $wished[$i]->date . " " . $wished[$i]->time . " " . $wished[$i]->operator);
-              
+
             }
         }
 
