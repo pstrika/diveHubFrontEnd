@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.divershub.app",
+      "sha256_cert_fingerprints": [
+        "AE:04:33:9A:69:E1:89:65:75:C5:76:71:C0:C8:F6:A3:8A:D7:43:12:10:D8:61:8F:F1:AE:C9:19:67:5E:AA:7B"
+      ]
+    }
+  }
+]
