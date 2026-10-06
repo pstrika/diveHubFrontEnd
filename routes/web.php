@@ -62,6 +62,7 @@ Route::get('cron/photos-web-copies', [\App\Http\Controllers\CronController::clas
 Route::get('cron/indexnow-submit-all', [\App\Http\Controllers\CronController::class, 'indexNowSubmitAll']);
 // Manual-trigger only, not on a schedule - see CronController::backfillGroupFacebookPosts().
 Route::get('cron/backfill-group-facebook-posts', [\App\Http\Controllers\CronController::class, 'backfillGroupFacebookPosts']);
+Route::get('cron/sync-trip-sites-pivot', [\App\Http\Controllers\CronController::class, 'syncTripSitesPivot']);
 // Hit automatically as the last step of every deploy (main_divehub.yml), not manual/scheduled - see CronController::optimizeCache().
 Route::get('cron/optimize-cache', [\App\Http\Controllers\CronController::class, 'optimizeCache']);
 

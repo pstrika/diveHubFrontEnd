@@ -22,6 +22,7 @@ class Kernel extends ConsoleKernel
         Commands\ApplyGroupAutoAddRules::class,
         Commands\SendPostDiveFeedbackRequests::class,
         Commands\SendDivePhotoReminders::class,
+        Commands\SyncTripSitesPivot::class,
     ];
 
     /**

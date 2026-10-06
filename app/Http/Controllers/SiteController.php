@@ -372,10 +372,26 @@ class SiteController extends Controller
         Log::debug('BestMix: ', $gasMixes['bestMix']);
         Log::debug('BestMixO2Narcotic: ', $gasMixes['bestMixO2Narcotic']);
 
-        $trips = Trip::where('siteId', 'LIKE', '% ' . $id . ',%')
-        ->orWhere('siteId', 'LIKE', $id . ',%')     //this is to account for the case where the siteId is in the first postion (not space in front)
-        ->where('siteIdStatus', 'confirmed')
-        ->whereDate('date', '>=', Carbon::today())
+        // Was a leading-wildcard LIKE '% id,%'/LIKE 'id,%' pair against the
+        // raw comma-list siteId column - could never use an index, a full
+        // scan of all ~45k trips on every single site-detail request
+        // (confirmed as the dominant cost in the 2026-10-06 performance
+        // investigation). trip_sites is a normalized pivot kept in sync by
+        // App\Console\Commands\SyncTripSitesPivot - see that class and its
+        // migration for why it's rebuilt wholesale each cycle rather than
+        // incrementally maintained (trips.id isn't durable - the scraper
+        // deletes and reinserts with fresh auto-increment ids every pass).
+        //
+        // This also fixes a real correctness bug the old query had: Eloquent
+        // compiles where()->orWhere()->where()->whereDate() as
+        // `A OR (B AND C AND D)`, not `(A OR B) AND C AND D` - the LIKE '%
+        // id,%' branch was never actually constrained by siteIdStatus/date
+        // at all. whereIn() below is unambiguous.
+        $trips = Trip::join('trip_sites', 'trips.id', '=', 'trip_sites.trip_id')
+        ->where('trip_sites.site_id', $id)
+        ->where('trips.siteIdStatus', 'confirmed')
+        ->whereDate('trips.date', '>=', Carbon::today())
+        ->select('trips.*')
         ->get()->sortBy('date');
 
 

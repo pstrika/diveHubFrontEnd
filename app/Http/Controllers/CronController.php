@@ -246,4 +246,24 @@ class CronController extends Controller
 
         return response($output, 200, ['Content-Type' => 'text/plain']);
     }
+
+    /**
+     * Every 15 minutes, triggered by an Azure Logic App
+     * (divehub-sync-trip-sites-pivot) - rebuilds trip_sites, the
+     * normalized pivot SiteController@show now queries instead of a
+     * leading-wildcard LIKE against trips.siteId (Pablo, 2026-10-06). 15
+     * minutes, not the 30 ApplyGroupAutoAddRules uses: this directly
+     * backs a user-facing page's query, not a background matching job, so
+     * it should lag the live scrape less.
+     */
+    public function syncTripSitesPivot(Request $request)
+    {
+        if (!hash_equals((string) env('CRON_SECRET'), (string) $request->query('secret'))) {
+            abort(403);
+        }
+
+        Artisan::call('trips:sync-site-pivot');
+
+        return response(Artisan::output(), 200, ['Content-Type' => 'text/plain']);
+    }
 }
