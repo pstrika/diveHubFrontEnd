@@ -418,7 +418,7 @@
                     <div class="dh-page-actions">
                         @if($isMember)
                             <a class="dh-btn dh-btn-ghost-dark" href="{{ route('UpdateWished', ['siteId' => $site->id]) }}">
-                                <span class="material-icons-round">{{ $wished ? 'favorite' : 'favorite_border' }}</span>{{ $wished ? 'Saved' : 'Save' }}
+                                <span class="material-icons-round">{{ $wished ? 'bookmark' : 'bookmark_border' }}</span>{{ $wished ? 'Wishlisted' : 'Wishlist' }}
                             </a>
                             <form method="POST" action="{{ route('UpdateVisited') }}" id="updatedVisited-form" class="dh-dived-toggle">
                                 @csrf
@@ -431,7 +431,7 @@
                             </form>
                         @else
                             {{-- Show, then gate (F-04): the actions are visible and ask for an account on click. --}}
-                            <a class="dh-btn dh-btn-ghost-dark" href="#" onclick="event.preventDefault();showModalGuest();"><span class="material-icons-round">favorite_border</span>Save</a>
+                            <a class="dh-btn dh-btn-ghost-dark" href="#" onclick="event.preventDefault();showModalGuest();"><span class="material-icons-round">bookmark_border</span>Wishlist</a>
                             <a class="dh-btn dh-btn-ghost-dark" href="#" onclick="event.preventDefault();showModalGuest();"><span class="material-icons-round">check_circle</span>Dived it?</a>
                         @endif
                     </div>

@@ -14,6 +14,7 @@ use App\Models\Site;
 use App\Models\User;
 use App\Models\WeatherLocation;
 use App\Models\VisitedSite;
+use App\Models\WishedSite;
 use Carbon\Carbon;
 use Symfony\Component\Console\Input\Input;
 use Illuminate\Support\Facades\Log;
@@ -232,11 +233,21 @@ class TripsController extends Controller
         // (Pablo, 2026-09-19: "we keep the rule that if the user is
         // registered and have fav locations, we show those first").
         $favoriteCoasts = [];
+        $favShorts = [];
         if ($user && $user->isNotGuest() && $user->favLocations) {
             $favIds = array_values(array_filter(array_map('intval', explode(',', $user->favLocations))));
             $favShorts = $favIds ? $locations->whereIn('id', $favIds)->pluck('short')->all() : [];
             $favoriteCoasts = array_values(array_unique(array_map(fn ($short) => Coast::forCode($short), $favShorts)));
         }
+
+        // Whether a trip's "matches your favorites" heart belongs next to the
+        // operator name (favorite-by-operator) or the location name in the
+        // region header (favorite-by-location) - the blue edge stays either way.
+        $favMode = $user->prefersLocation ? 'location' : 'operator';
+
+        // One wishlist lookup for the whole board, not one per trip - mirrors
+        // how $visitedSites is fetched once above.
+        $wishedSiteIds = WishedSite::where('userId', auth()->user()->id)->pluck('siteId')->all();
 
         // One board per day in the range (a single day in day mode). Every date
         // is present, even with no trips, so the day strip has a cell for each.
@@ -244,7 +255,7 @@ class TripsController extends Controller
         $days = [];
         for ($d = Carbon::parse($from); $d->lte(Carbon::parse($to)); $d->addDay()) {
             $key = $d->toDateString();
-            $days[$key] = TripBoard::build($byDate->get($key, collect()), $allWeather->get($key, collect()), $locations, $filters, $operators, $favoriteCoasts);
+            $days[$key] = TripBoard::build($byDate->get($key, collect()), $allWeather->get($key, collect()), $locations, $filters, $operators, $favoriteCoasts, $favShorts, $wishedSiteIds);
         }
         $board = $mode === 'day' ? $days[$date] : TripBoard::merge($days);
         $presets = TripBoard::rangePresets(Carbon::today());
@@ -268,7 +279,7 @@ class TripsController extends Controller
             $SEO['robots'] = 'noindex, follow';
         }
 
-        return view('pages.Trips', compact('board', 'days', 'mode', 'from', 'to', 'rangeKey', 'presets', 'filterParams', 'favOperatorIds',
+        return view('pages.Trips', compact('board', 'days', 'mode', 'from', 'to', 'rangeKey', 'presets', 'filterParams', 'favOperatorIds', 'favMode',
             'date', 'today', 'previousDay', 'nextDay', 'controlNav', 'user', 'SEO', 'query'));
         //return view('pages.Trips', compact('trips', 'weathers', 'today', 'previousDay', 'nextDay', 'controlNav'));
 

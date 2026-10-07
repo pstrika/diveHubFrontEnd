@@ -8,7 +8,16 @@
 
     Usage: <x-trip-card :trip="$card" />
 --}}
-@props(['trip', 'showDate' => false])
+{{--
+    favMode (optional): where this card's "matches your favorites" heart goes.
+      null        legacy placement, next to the trip name (Calendar, MyCalendar,
+                  SiteDetails - pages that don't yet pass a mode).
+      'operator'  next to the operator name (Trips view, diver favorites by operator).
+      'location'  no heart on the card at all - shown once per location in the
+                  region header instead (see pages/trips/_regions.blade.php).
+    In every mode the blue "is-fav" left edge is unchanged.
+--}}
+@props(['trip', 'showDate' => false, 'favMode' => null])
 
 @php
     $a = $trip['availability'];
@@ -40,7 +49,7 @@
                 <span title="{{ $trip['fullTitle'] }}">{{ $trip['title'] }}</span>
             @endif
             @if($cancelled)<span class="chip chip-static chip-cancelled">Cancelled</span>@endif
-            @if($trip['fav'])<span class="material-icons-round dh-trip-favicon" title="Matches your favorites">favorite</span>@endif
+            @if($trip['fav'] && $favMode === null)<span class="material-icons-round dh-trip-favicon" title="Matches your favorites">favorite</span>@endif
         </h3>
         <p class="dh-trip-meta">
             @if($trip['operatorUrl'])
@@ -48,11 +57,13 @@
             @else
                 {{ $trip['operatorName'] }}
             @endif
+            @if($trip['fav'] && $favMode === 'operator')<span class="material-icons-round dh-trip-favicon" title="Matches your favorite operators">favorite</span>@endif
             @if($trip['siteNames'])
                 <span class="dh-dot">·</span>
                 @if($trip['siteUrl'])<a href="{{ $trip['siteUrl'] }}">{{ implode(', ', array_slice($trip['siteNames'], 0, 2)) }}</a>
                 @else {{ implode(', ', array_slice($trip['siteNames'], 0, 2)) }}@endif
                 @if(count($trip['siteNames']) > 2) <span class="text-muted">+{{ count($trip['siteNames']) - 2 }}</span>@endif
+                @if(!empty($trip['wished']))<span class="material-icons-round dh-trip-wished" title="On your wishlist">bookmark</span>@endif
             @endif
             @if($trip['visited'])<span class="dh-dot">·</span><span class="dh-visited" title="You have dived this site">Dived it</span>@endif
         </p>

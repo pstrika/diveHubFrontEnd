@@ -10,7 +10,7 @@
 --}}
 @props(['card'])
 
-<article class="dh-op-card{{ $card['private'] ? ' dh-op-card-private' : '' }}">
+<article class="dh-op-card{{ $card['private'] ? ' dh-op-card-private' : '' }}{{ !empty($card['fav']) ? ' is-fav' : '' }}">
     <a class="dh-op-logo" href="{{ $card['url'] }}" aria-hidden="true" tabindex="-1">
         @if($card['logo'])
             {{-- alt is real text (not "") for image-search indexing, even

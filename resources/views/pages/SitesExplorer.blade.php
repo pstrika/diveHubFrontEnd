@@ -91,7 +91,7 @@
                         </div>
                     @endif
                     <p class="dh-board-count mt-3">
-                        <span class="material-icons-round dh-inline-icon" aria-hidden="true">favorite_border</span> saves a site to your wishlist, we tell you when a boat goes there &nbsp;&middot;&nbsp;
+                        <span class="material-icons-round dh-inline-icon" aria-hidden="true">bookmark_border</span> saves a site to your wishlist, we tell you when a boat goes there &nbsp;&middot;&nbsp;
                         <span class="material-icons-round dh-inline-icon" aria-hidden="true">radio_button_unchecked</span> marks it as dived
                     </p>
                 @endif

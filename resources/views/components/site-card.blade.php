@@ -68,7 +68,7 @@
     @if($hasActions)
         <span class="dh-site-actions">
             <button type="button" class="dh-site-act {{ $site->wished ? 'is-on' : '' }}" data-act="wish" aria-pressed="{{ $site->wished ? 'true' : 'false' }}" title="{{ $site->wished ? 'On your wishlist' : 'Add to my wishlist' }}" aria-label="{{ $site->wished ? 'Remove from my wishlist' : 'Add to my wishlist' }}">
-                <span class="material-icons-round" aria-hidden="true">{{ $site->wished ? 'favorite' : 'favorite_border' }}</span>
+                <span class="material-icons-round" aria-hidden="true">{{ $site->wished ? 'bookmark' : 'bookmark_border' }}</span>
             </button>
             <button type="button" class="dh-site-act {{ $site->visited ? 'is-on' : '' }}" data-act="dived" aria-pressed="{{ $site->visited ? 'true' : 'false' }}" title="{{ $site->visited ? 'You have dived this site' : 'Mark as dived' }}" aria-label="{{ $site->visited ? 'Unmark as dived' : 'Mark as dived' }}">
                 <span class="material-icons-round" aria-hidden="true">{{ $site->visited ? 'check_circle' : 'radio_button_unchecked' }}</span>

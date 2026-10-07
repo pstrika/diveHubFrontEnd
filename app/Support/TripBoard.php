@@ -70,8 +70,12 @@ final class TripBoard
      * @param string[]   $favoriteCoasts Coast keys to show first, ahead of the
      *                                   normal Coast::boardOrder() sequence -
      *                                   a registered diver's favourite locations.
+     * @param string[]   $favoriteLocationShorts Location short codes (e.g. "FLL") the
+     *                                   diver favourited - marks the matching location
+     *                                   header in each region's conditions row.
+     * @param int[]      $wishedSiteIds  Site ids on the current viewer's wishlist.
      */
-    public static function build(Collection $trips, Collection $weathers, Collection $locations, array $filters, array $operators = [], array $favoriteCoasts = []): array
+    public static function build(Collection $trips, Collection $weathers, Collection $locations, array $filters, array $operators = [], array $favoriteCoasts = [], array $favoriteLocationShorts = [], array $wishedSiteIds = []): array
     {
         $now = Carbon::now();
         $shortToName = $locations->pluck('location', 'short')->map(fn ($n) => strtolower($n))->all();
@@ -106,7 +110,7 @@ final class TripBoard
 
         foreach ($trips as $trip) {
             $total++;
-            $card = self::card($trip, $now, $operators);
+            $card = self::card($trip, $now, $operators, $wishedSiteIds);
             if (self::passes($card, $withoutType)) {
                 foreach (array_keys(self::TYPE_OPTIONS) as $type) {
                     if (self::passes($card, ['region' => null, 'level' => null, 'seats' => false, 'type' => $type])) {
@@ -146,6 +150,7 @@ final class TripBoard
                     'name' => ucwords($shortToName[$code] ?? $code),
                     'am'   => $w ? $w->conditionsAM_text : null,
                     'pm'   => $w ? $w->conditionsPM_text : null,
+                    'isFavorite' => in_array($code, $favoriteLocationShorts, true),
                 ];
             }
         }
@@ -276,8 +281,12 @@ final class TripBoard
     /** Longest custom range the finder accepts, in days. */
     public const MAX_RANGE_DAYS = 31;
 
-    /** One normalised trip card. Keys are stable; views and the future JSON feed rely on them. */
-    public static function card($trip, Carbon $now, array $operators = []): array
+    /**
+     * One normalised trip card. Keys are stable; views and the future JSON feed rely on them.
+     *
+     * @param int[] $wishedSiteIds Site ids on the current viewer's wishlist.
+     */
+    public static function card($trip, Carbon $now, array $operators = [], array $wishedSiteIds = []): array
     {
         $tags = strtoupper((string) $trip->tags);
         $locationCode = strtok($tags, ' ') ?: null;
@@ -337,6 +346,7 @@ final class TripBoard
             'isNight'       => $hour >= 17,
             'fav'           => (bool) ($trip->fav ?? false),
             'visited'       => (bool) ($trip->visited ?? false),
+            'wished'        => (bool) array_intersect(array_map(fn ($s) => $s->id, $sites), $wishedSiteIds),
             'availability'  => self::availability($trip, $departed),
             'bookUrl'       => $departed ? null : ($trip->linkToBook ?: null),
             'detailsUrl'    => route('TripDetails', ['tripId' => $trip->id]),

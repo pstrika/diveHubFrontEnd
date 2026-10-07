@@ -492,6 +492,8 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-trip-title a { color: var(--dh-ink); text-decoration: none; }
 .dh-trip-title a:hover { color: var(--dh-sea); }
 .dh-trip-favicon { font-size: 16px; color: var(--dh-sea); vertical-align: -3px; margin-left: 4px; }
+.dh-trip-wished { font-size: 16px; color: var(--dh-sea); vertical-align: -3px; margin-left: 4px; }
+.dh-region-locname .dh-trip-favicon { margin-left: 2px; }
 .dh-trip-meta { font-size: .8rem; color: var(--dh-muted); margin: 0 0 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dh-trip-meta a { color: var(--dh-muted); text-decoration: none; }
 .dh-trip-meta a:hover { color: var(--dh-sea); text-decoration: underline; }
@@ -988,6 +990,7 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-op-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--dh-space-3); }
 .dh-op-card { display: grid; grid-template-columns: 112px 1fr; grid-template-rows: auto auto; gap: var(--dh-space-2) var(--dh-space-3); background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 14px; padding: var(--dh-space-3); }
 .dh-op-card-private { border-style: dashed; }
+.dh-op-card.is-fav { border-left: 3px solid var(--dh-sea); }
 /* Fixed 2:1 white box so logos of every shape line up. */
 .dh-op-logo { grid-row: 1 / span 2; display: flex; align-items: center; justify-content: center; width: 112px; height: 56px; padding: 4px; background: #fff; border: 1px solid var(--dh-line); border-radius: 10px; color: var(--dh-muted); }
 /* Definite box so the image has a size before it loads (lazy loading needs one). */

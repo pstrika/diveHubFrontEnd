@@ -200,10 +200,10 @@
                         @if($operator->webSite)<a class="dh-btn dh-btn-ghost-dark" href="{{ $operator->webSite }}" target="_blank" rel="noopener"><span class="material-icons-round">open_in_new</span>Website</a>@endif
                         @if($isMember)
                             <a class="dh-btn dh-btn-ghost-dark {{ $fav ? 'is-on' : '' }}" href="{{ route('ToggleFav', ['id' => $operator->id]) }}" title="{{ $fav ? 'Remove from my favorite operators' : 'Add to my favorite operators' }}">
-                                <span class="material-icons-round">{{ $fav ? 'favorite' : 'favorite_border' }}</span>{{ $fav ? 'Favorite' : 'Save' }}
+                                <span class="material-icons-round">{{ $fav ? 'favorite' : 'favorite_border' }}</span>{{ $fav ? 'Favorited' : 'Favorite' }}
                             </a>
                         @else
-                            <a class="dh-btn dh-btn-ghost-dark" href="#" onclick="event.preventDefault();showModalGuest();"><span class="material-icons-round">favorite_border</span>Save</a>
+                            <a class="dh-btn dh-btn-ghost-dark" href="#" onclick="event.preventDefault();showModalGuest();"><span class="material-icons-round">favorite_border</span>Favorite</a>
                         @endif
                     </div>
                 </div>

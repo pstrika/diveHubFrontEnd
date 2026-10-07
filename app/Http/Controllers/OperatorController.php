@@ -151,7 +151,14 @@ class OperatorController extends Controller
 
 
     // Explorer: filters, counts and cards come from OperatorBoard (query string driven).
-    $board = OperatorBoard::build($request);
+    $user = User::find(auth()->user()->id);
+    if (!$user) {
+        $user = User::find(5);
+    }
+    $favOperatorIds = $user->favOperators
+        ? array_values(array_filter(array_map('intval', explode(',', $user->favOperators))))
+        : [];
+    $board = OperatorBoard::build($request, $favOperatorIds);
 
     /*Provide SEO metadata */
     $operatorNames = Operator::pluck('operatorName')->toArray();

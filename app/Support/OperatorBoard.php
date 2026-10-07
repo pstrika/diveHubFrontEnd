@@ -55,9 +55,11 @@ final class OperatorBoard
     }
 
     /**
+     * @param int[] $favOperatorIds The current viewer's favourite operator ids
+     *                               (users.favOperators), for the blue "is-fav" edge.
      * @return array{operators: Collection, cards: array, filters: array, regionCounts: array, featureCounts: array, total: int}
      */
-    public static function build(Request $request): array
+    public static function build(Request $request, array $favOperatorIds = []): array
     {
         $f = self::filtersFromRequest($request);
 
@@ -118,7 +120,7 @@ final class OperatorBoard
         }
         $operators = $query->get();
 
-        $cards = $operators->map(fn ($o) => self::card($o))->values()->all();
+        $cards = $operators->map(fn ($o) => self::card($o, $favOperatorIds))->values()->all();
         if ($f['sort'] === 'price') {
             // Price lives inside a JSON text column, so this one sort happens in PHP.
             usort($cards, fn ($a, $b) => ($a['price'] ?? PHP_INT_MAX) <=> ($b['price'] ?? PHP_INT_MAX) ?: strcmp($a['name'], $b['name']));
@@ -137,14 +139,17 @@ final class OperatorBoard
     /**
      * Plain array for an operator card. Kept free of Eloquent so it can be
      * emitted as JSON later for the offline app.
+     *
+     * @param int[] $favOperatorIds The current viewer's favourite operator ids.
      */
-    public static function card(Operator $o): array
+    public static function card(Operator $o, array $favOperatorIds = []): array
     {
         [$price, $priceLabel] = self::fromPrice($o);
         return [
             'id'         => $o->id,
             'name'       => $o->operatorName,
             'url'        => route('OperatorDetails', ['id' => $o->slug ?? $o->id]),
+            'fav'        => in_array($o->id, $favOperatorIds, true),
             'logo'       => $o->logoUrl ? asset('assets') . $o->logoUrl : null,
             'city'       => $o->cityAddress,
             'area'       => $o->locationArea,

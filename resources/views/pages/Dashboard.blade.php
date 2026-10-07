@@ -337,7 +337,7 @@
                                 {{-- Pablo, 2026-09-10: the wishlist only earns its place if divers fill
                                      it, so the empty state sends them somewhere to do that. Saving a site
                                      means we tell them when a boat is scheduled to go there. --}}
-                                <p class="text-sm mb-3">Save the sites you want to dive and we will tell you when a boat is going there. Tap the heart on any site card.</p>
+                                <p class="text-sm mb-3">Save the sites you want to dive and we will tell you when a boat is going there. Tap the bookmark on any site card.</p>
                                 <a class="dh-btn dh-btn-primary" href="{{ route('DiveSites') }}">
                                     <span class="material-icons-round">travel_explore</span>Find sites to add
                                 </a>
@@ -355,7 +355,7 @@
                                             <a class="dh-wish-site" href="{{ route('SiteDetails') }}/{{ $ws->slug ?? $ws->id }}">
                                                 <x-site-type-icon :type="$ws->type" size="28" />
                                                 <span class="dh-trip-main">
-                                                    <span class="dh-trip-title do-not-translate">{{ $ws->name }}</span>
+                                                    <span class="dh-trip-title do-not-translate">{{ $ws->name }}<span class="material-icons-round dh-trip-wished" title="On your wishlist" aria-hidden="true">bookmark</span></span>
                                                     <span class="dh-trip-facts">
                                                         <img src="{{ asset('assets') }}/img/icons/icons_level_{{ $ws->level }}.png" alt="Level {{ $ws->level }}">
                                                         @if($ws->maxDepth)<span>{{ $ws->maxDepth }} ft</span>@endif
@@ -440,8 +440,9 @@
 
                                         <!-- Logo -->
                                         <div class="text-left mx-n2 mt-n3">
-                                            <img id="operatorLogo" src="{{ asset('assets') }}/img/logos/logo_circle.png" height="45" alt="Operator Logo">
-                                            
+                                            <a id="operatorLogoLink" href="{{ route('OperatorDetails', ['id' => $favOperators[0]->slug ?? $favOperators[0]->id ?? '']) }}">
+                                                <img id="operatorLogo" src="{{ asset('assets') }}/img/logos/logo_circle.png" height="45" alt="Operator Logo">
+                                            </a>
                                         </div>
                                     </div>
                                 </td></tr>
@@ -580,12 +581,14 @@
     function applyFilter() {
         const filterDropdown = document.getElementById('filterOperators');
         const operatorLogo = document.getElementById('operatorLogo');
+        const operatorLogoLink = document.getElementById('operatorLogoLink');
         const selectedId = filterDropdown.value;
 
-        // Update logo
+        // Update logo (and the link around it, to that operator's page)
         const selectedOperator = favOperators.find(op => op.id == selectedId);
         if (selectedOperator) {
             operatorLogo.src = '{{ asset('assets') }}/' + selectedOperator.logoUrl || '{{ asset('assets') }}/img/logos/logo_circle.png';
+            operatorLogoLink.href = '{{ url('OperatorDetails') }}/' + (selectedOperator.slug || selectedOperator.id);
         } else {
             operatorLogo.src = '{{ asset('assets') }}/img/logos/logo_circle.png';
         }

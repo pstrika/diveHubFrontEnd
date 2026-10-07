@@ -54,7 +54,7 @@
 
             @if($mode === 'day')
                 @if(count($board['groups']))
-                    @include('pages.trips._regions', ['board' => $board, 'date' => $date, 'query' => $query, 'limit' => null])
+                    @include('pages.trips._regions', ['board' => $board, 'date' => $date, 'query' => $query, 'limit' => null, 'favMode' => $favMode])
                 @else
                     <div class="dh-empty">
                         <span class="material-icons-round" aria-hidden="true">directions_boat</span>
@@ -101,7 +101,7 @@
                             <a class="dh-why" href="{{ route('Trips') }}/{{ $d }}{{ $query }}">Full board for this day</a>
                         </h2>
                         {{-- Three cards per coast keeps a 30 day search light; the link above has the rest. --}}
-                        @include('pages.trips._regions', ['board' => $dayBoard, 'date' => $d, 'query' => $query, 'limit' => 3])
+                        @include('pages.trips._regions', ['board' => $dayBoard, 'date' => $d, 'query' => $query, 'limit' => 3, 'favMode' => $favMode])
                     </section>
                 @endforeach
             @endif
