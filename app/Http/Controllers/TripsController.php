@@ -56,6 +56,36 @@ class TripsController extends Controller
         $visitedSites = VisitedSite::where('userId', auth()->user()->id)->get();
         Log::debug("Visited sites:" . $visitedSites);
 
+        // These depend only on the current user, not on the trip being processed,
+        // so they're computed once here instead of once per trip in the loop below.
+        // Previously ran a WeatherLocation query on every single trip - cheap for a
+        // single day, but a range view (?range=30d) can enrich thousands of trips.
+        if ($user->prefersLocation) {
+            $favoriteLocationsIndex = explode(',', $user->favLocations);
+            $favLocationShorts = WeatherLocation::whereIn('id', $favoriteLocationsIndex)
+                ->pluck('short')
+                ->toArray();
+
+            // showLevel can be null - see MyDashboardController for why
+            // (a diver who skipped the wizard's level step, or an old
+            // account predating any level-picking UI at all). Falls
+            // back to the full 0-4 range rather than fataling on an
+            // undefined [1] key.
+            $favoriteLevels = explode(',', $user->showLevel ?: '0,4');
+            $showLevelLow = intval($favoriteLevels[0] ?? 0);
+            $showLevelHigh = intval($favoriteLevels[1] ?? 4);
+        } else {
+            $favoriteOperatorsIndex = explode(',', $user->favOperators);
+            // showLevel can be null - see MyDashboardController for why
+            // (a diver who skipped the wizard's level step, or an old
+            // account predating any level-picking UI at all). Falls
+            // back to the full 0-4 range rather than fataling on an
+            // undefined [1] key.
+            $favoriteLevels = explode(',', $user->showLevel ?: '0,4');
+            $showLevelLow = intval($favoriteLevels[0] ?? 0);
+            $showLevelHigh = intval($favoriteLevels[1] ?? 4);
+        }
+
         foreach($trips as $i => $trip) {
             $trips[$i]->visited = 0;
             if($trip->siteId != null) {
@@ -64,19 +94,16 @@ class TripsController extends Controller
                 //$relatedSites = Site::whereIn('id', $siteIds)->get();
                 $relatedSites = array_filter(array_map(fn ($id) => $sites->get((int) trim($id)), $siteIds));
                 //Log::debug("size of relatedSites: " . count($relatedSites));
-                //$trips[$i]->site = $relatedSites;
-                
-                #$j=0;
 
-                
-                
+                // Trip has a real "site" HasMany relationship (Trip::site()), so
+                // "site" is an overloaded property on the model - PHP silently drops
+                // `$trips[$i]->site[] = ...` appends on those (no error, no effect).
+                // Build the list locally and assign it once via `=` so it actually
+                // triggers Eloquent's __set and sticks.
+                $tripSites = [];
+
                 foreach($relatedSites as $relatedSite) {
-                    #$trips[$i]->site[$j]->id = $relatedSite->id;
-                    #$trips[$i]->site[$j]->maxDepth = $relatedSite->maxDepth;
-                    #$trips[$i]->site[$j]->level = $relatedSite->level;
-                    //Log::debug("Trip [" . $trips[$i]->date . " " . $trips[$i]->departureTime . " " . $trips[$i]->tripName . "[" . $trips[$i]->site[$j]->maxDepth . "]");
-                    #$j++;
-                    $trips[$i]->site[] = $relatedSite;
+                    $tripSites[] = $relatedSite;
 
                     // check if the user has visited this site
                     if (auth()->user()->id == 5 or auth()->user()->show_visited == 0)
@@ -103,31 +130,20 @@ class TripsController extends Controller
                     elseif($relatedSite->level == 4) {
                         $trips[$i]->level = 4;
                     }
-                    
+
                 }
-            
+
+                $trips[$i]->site = $tripSites;
             }
-            else
+            else {
                 $trips[$i]->level = -1;
+                $trips[$i]->site = [];
+            }
 
             // check if trip is a favorite
 
             // user prefers operator fav or location fav?
             if($user->prefersLocation) {
-                $favoriteLocationsIndex = explode(',', $user->favLocations);
-                $favLocationShorts = WeatherLocation::whereIn('id', $favoriteLocationsIndex)
-                    ->pluck('short')
-                    ->toArray();
-
-                // showLevel can be null - see MyDashboardController for why
-                // (a diver who skipped the wizard's level step, or an old
-                // account predating any level-picking UI at all). Falls
-                // back to the full 0-4 range rather than fataling on an
-                // undefined [1] key.
-                $favoriteLevels = explode(',', $user->showLevel ?: '0,4');
-                $showLevelLow = intval($favoriteLevels[0] ?? 0);
-                $showLevelHigh = intval($favoriteLevels[1] ?? 4);
-
                 if(in_array(substr($trip->tags,0 ,3),  $favLocationShorts)) {
                     Log::debug("Operator for this trip is in favorites!");
 
@@ -148,16 +164,6 @@ class TripsController extends Controller
                     //}
                 }
             } else {
-                $favoriteOperatorsIndex = explode(',', $user->favOperators);
-                // showLevel can be null - see MyDashboardController for why
-                // (a diver who skipped the wizard's level step, or an old
-                // account predating any level-picking UI at all). Falls
-                // back to the full 0-4 range rather than fataling on an
-                // undefined [1] key.
-                $favoriteLevels = explode(',', $user->showLevel ?: '0,4');
-                $showLevelLow = intval($favoriteLevels[0] ?? 0);
-                $showLevelHigh = intval($favoriteLevels[1] ?? 4);
-
                 if(in_array($trip->operatorId, $favoriteOperatorsIndex)) {
                     Log::debug("Operator for this trip is in favorites!");
 
