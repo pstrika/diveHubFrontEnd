@@ -248,9 +248,11 @@ class TripsController extends Controller
          * only) is kept for anything else that still reads it.
          */
         $filters   = TripBoard::filtersFromRequest($request);
-        $locations = WeatherLocation::all();
+        // Neither of these is personalized - same for every viewer, worth
+        // caching outright regardless of guest/member status.
+        $locations = Cache::remember('weatherlocations.all', 300, fn () => WeatherLocation::all());
         $allWeather = Weatherday::whereBetween('date', [$from, $to])->get()->groupBy('date');
-        $operators = Operator::select('id', 'location', 'phone')->get()->keyBy('id')->all();
+        $operators = Cache::remember('operators.minimal', 300, fn () => Operator::select('id', 'location', 'phone')->get()->keyBy('id')->all());
 
         // Registered divers with favourite locations still see those coasts'
         // groups first, ahead of the pill-matching order otherwise applied
@@ -275,11 +277,41 @@ class TripsController extends Controller
 
         // One board per day in the range (a single day in day mode). Every date
         // is present, even with no trips, so the day strip has a cell for each.
+        //
+        // TripBoard::build() itself isn't cheap - it re-evaluates every filter
+        // combination against every trip to drive the chip counts - and that
+        // cost is paid in full on every request regardless of the trips/sites
+        // caching above, since only the raw data was cached, not the built
+        // board. Incident 2026-10-08: AI crawlers (guest, unauthenticated)
+        // systematically walked every region/level/type/seats/range combination
+        // as query-string permutations, so this was getting rebuilt from scratch
+        // thousands of times for data that, for a guest, is identical every time.
+        // Cached ONLY for the shared guest account - a real member's board
+        // depends on their own favorites/wishlist and must never be shared
+        // across viewers.
+        $isGuestViewer = auth()->user()->id == 5;
         $byDate = $trips->groupBy('date');
         $days = [];
         for ($d = Carbon::parse($from); $d->lte(Carbon::parse($to)); $d->addDay()) {
             $key = $d->toDateString();
-            $days[$key] = TripBoard::build($byDate->get($key, collect()), $allWeather->get($key, collect()), $locations, $filters, $operators, $favoriteCoasts, $favShorts, $wishedSiteIds);
+            if (!$isGuestViewer) {
+                $days[$key] = TripBoard::build($byDate->get($key, collect()), $allWeather->get($key, collect()), $locations, $filters, $operators, $favoriteCoasts, $favShorts, $wishedSiteIds);
+                continue;
+            }
+            $boardCacheKey = 'board.' . $key . '.' . md5(json_encode($filters));
+            $days[$key] = Cache::get($boardCacheKey);
+            if ($days[$key] === null) {
+                $build = function () use ($byDate, $key, $allWeather, $locations, $filters, $operators) {
+                    return TripBoard::build($byDate->get($key, collect()), $allWeather->get($key, collect()), $locations, $filters, $operators, [], [], []);
+                };
+                try {
+                    $days[$key] = Cache::lock("lock:$boardCacheKey", 15)->block(10, function () use ($boardCacheKey, $build) {
+                        return Cache::remember($boardCacheKey, 90, $build);
+                    });
+                } catch (\Illuminate\Contracts\Cache\LockTimeoutException $e) {
+                    $days[$key] = $build();
+                }
+            }
         }
         $board = $mode === 'day' ? $days[$date] : TripBoard::merge($days);
         $presets = TripBoard::rangePresets(Carbon::today());
