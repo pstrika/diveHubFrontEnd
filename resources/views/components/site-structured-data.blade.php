@@ -31,6 +31,24 @@
             $jsonLd['image'] = $jsonLdImages;
         }
 
+        // Wrecks in particular often go by several names divers actually
+        // search (SEO audit, 2026-10-08: "Ken Vitale" is also "Tracey"/
+        // "Tracy"/"Fort Lauderdale Wreck Trek"). Stored lowercase, comma
+        // separated - title-cased here to match how the location string is
+        // already cleaned up for display elsewhere on this page.
+        if (!empty($site->aka)) {
+            $alternateNames = collect(explode(',', $site->aka))
+                ->map(fn ($a) => trim($a))
+                ->filter()
+                ->map(fn ($a) => ucwords($a))
+                ->unique()
+                ->values()
+                ->all();
+            if ($alternateNames) {
+                $jsonLd['alternateName'] = count($alternateNames) === 1 ? $alternateNames[0] : $alternateNames;
+            }
+        }
+
         if (!empty($site->gpsLat) && !empty($site->gpsLon)) {
             $latParts = sscanf($site->gpsLat, "%d° %f' %c");
             $lonParts = sscanf($site->gpsLon, "%d° %f' %c");
