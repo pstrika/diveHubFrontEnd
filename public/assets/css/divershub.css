@@ -840,7 +840,7 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-site-chips .chip img { vertical-align: -3px; margin-right: 2px; }
 .dh-site-facts-side { display: flex; flex-direction: column; align-items: flex-end; gap: var(--dh-space-3); }
 .dh-site-rating { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-.dh-page-actions { display: flex; gap: var(--dh-space-2); flex-wrap: wrap; }
+.dh-page-actions { display: flex; align-items: flex-start; gap: var(--dh-space-2); flex-wrap: wrap; }
 .dh-page-actions .material-icons-round { font-size: 18px; }
 .dh-dived-toggle input[type="checkbox"] { position: absolute; opacity: 0; pointer-events: none; }
 .dh-dived-toggle label { cursor: pointer; }

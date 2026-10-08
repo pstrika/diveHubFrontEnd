@@ -320,7 +320,7 @@
     var isMember = grid.getAttribute('data-member') === '1';
     var csrf = grid.getAttribute('data-csrf');
     var icons = {
-        wish:  { on: 'favorite',     off: 'favorite_border' },
+        wish:  { on: 'bookmark',     off: 'bookmark_border' },
         dived: { on: 'check_circle', off: 'radio_button_unchecked' }
     };
     function paint(btn, act, on) {
