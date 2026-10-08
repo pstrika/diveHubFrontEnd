@@ -417,7 +417,7 @@
                     </div>
                     <div class="dh-page-actions">
                         @if($isMember)
-                            <a class="dh-btn dh-btn-ghost-dark" href="{{ route('UpdateWished', ['siteId' => $site->id]) }}">
+                            <a id="wishlistBtn" class="dh-btn dh-btn-ghost-dark {{ $wished ? 'is-on' : '' }}" href="{{ route('UpdateWished', ['siteId' => $site->id]) }}" data-site-id="{{ $site->id }}">
                                 <span class="material-icons-round">{{ $wished ? 'bookmark' : 'bookmark_border' }}</span>{{ $wished ? 'Wishlisted' : 'Wishlist' }}
                             </a>
                             <form method="POST" action="{{ route('UpdateVisited') }}" id="updatedVisited-form" class="dh-dived-toggle">
@@ -3160,12 +3160,60 @@
             else
                 document.getElementById('bestGasTitle').textContent = 'Best Gas - Trimix ' + document.getElementById('txbestNitrox').textContent + '/' + document.getElementById('txbestHe').textContent;
 
-            document.getElementById('alreadyVisited').addEventListener('change', function() {
-                document.getElementById('alreadyVisitedHiddenInput').value = document.getElementById('alreadyVisited').checked;  
-                document.getElementById('updatedVisited-form').submit();
-            });
+            // Wishlist and Dived-it toggle over fetch instead of a full page
+            // reload (Pablo, 2026-10-08: "the page is refreshing every time I
+            // hit wishlist or dive it"). Same pattern as the dive-sites grid's
+            // bubble buttons (public/assets/js/divershub.js) - both routes
+            // already return JSON for an XHR/fetch request.
+            var wishlistBtn = document.getElementById('wishlistBtn');
+            if (wishlistBtn) {
+                wishlistBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    if (wishlistBtn.classList.contains('is-loading')) return;
+                    var wasOn = wishlistBtn.classList.contains('is-on');
+                    var icon = wishlistBtn.querySelector('.material-icons-round');
+                    function paint(on) {
+                        wishlistBtn.classList.toggle('is-on', on);
+                        icon.textContent = on ? 'bookmark' : 'bookmark_border';
+                        icon.nextSibling.textContent = on ? 'Wishlisted' : 'Wishlist';
+                    }
+                    paint(!wasOn);
+                    wishlistBtn.classList.add('is-loading');
+                    fetch(wishlistBtn.href, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+                        .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+                        .then(function (data) { paint(!!data.wished); })
+                        .catch(function () { paint(wasOn); })
+                        .then(function () { wishlistBtn.classList.remove('is-loading'); });
+                });
+            }
 
-            
+            var divedCheckbox = document.getElementById('alreadyVisited');
+            if (divedCheckbox) {
+                var divedLabel = divedCheckbox.closest('label');
+                var divedIcon = divedLabel.querySelector('.material-icons-round');
+                var divedForm = document.getElementById('updatedVisited-form');
+                function paintDived(on) {
+                    divedLabel.classList.toggle('is-on', on);
+                    divedCheckbox.checked = on;
+                    divedIcon.textContent = on ? 'check_circle' : 'radio_button_unchecked';
+                    divedIcon.nextSibling.textContent = on ? 'Dived it' : 'Dived it?';
+                }
+                divedCheckbox.addEventListener('change', function () {
+                    var on = divedCheckbox.checked;
+                    paintDived(on);
+                    var body = new URLSearchParams();
+                    body.set('_token', divedForm.querySelector('input[name=_token]').value);
+                    body.set('site', document.getElementById('siteHiddenInput').value);
+                    fetch(divedForm.action, {
+                        method: 'POST', credentials: 'same-origin',
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: body.toString(),
+                    })
+                        .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+                        .then(function (data) { paintDived(!!data.visited); })
+                        .catch(function () { paintDived(!on); });
+                });
+            }
         });
     </script>
 
