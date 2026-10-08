@@ -1,4 +1,18 @@
 User-agent: *
 Disallow: /Trips/*-*-*
 
+# AI-training crawlers have no SEO reason to index the trip board at all (it's
+# not just the dated sub-pages that are expensive - the bare /Trips board
+# itself is the single costliest page on the site). Blocked outright for
+# these specific bots; Google/Bing etc. still get the dated-page-only rule
+# above, since the bare page has real search value for them.
+User-agent: ClaudeBot
+Disallow: /Trips
+
+User-agent: PerplexityBot
+Disallow: /Trips
+
+User-agent: meta-externalagent
+Disallow: /Trips
+
 Sitemap: https://divers-hub.com/sitemap.xml

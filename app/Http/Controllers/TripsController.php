@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\WeatherLocation;
 use App\Models\VisitedSite;
 use App\Models\WishedSite;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use Symfony\Component\Console\Input\Input;
 use Illuminate\Support\Facades\Log;
@@ -44,11 +45,34 @@ class TripsController extends Controller
             $date = $from;
         }
 
-        $trips = Trip::whereBetween('date', [$from, $to])->get()->sortBy('departureTime');
+        // Cached per date range, not per request: this is the single costliest
+        // query on the site, and it was running fully uncached for every hit -
+        // including every AI-crawler request (2026-10-08 incident: PerplexityBot
+        // alone drove sustained 78-81% CPU and real request timeouts on today's
+        // date). Cache::lock serializes concurrent cache-miss requests for the
+        // SAME range so a burst of simultaneous bot/user traffic computes it
+        // once, not once per request.
+        $tripsCacheKey = "trips.range.$from.$to";
+        $trips = Cache::get($tripsCacheKey);
+        if ($trips === null) {
+            try {
+                $trips = Cache::lock("lock:$tripsCacheKey", 15)->block(10, function () use ($tripsCacheKey, $from, $to) {
+                    return Cache::remember($tripsCacheKey, 120, function () use ($from, $to) {
+                        return Trip::whereBetween('date', [$from, $to])->get()->sortBy('departureTime');
+                    });
+                });
+            } catch (\Illuminate\Contracts\Cache\LockTimeoutException $e) {
+                // Someone else is already computing this under heavy load and didn't
+                // finish in time - run it directly rather than 500 the request.
+                $trips = Trip::whereBetween('date', [$from, $to])->get()->sortBy('departureTime');
+            }
+        }
 
         // name, type and slug are needed by the trip cards (site link, wreck chip).
         // Keyed by id: a range search enriches thousands of trips, and a scan per trip was the slow part.
-        $sites = Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get()->keyBy('id');
+        $sites = Cache::remember('sites.minimal', 300, function () {
+            return Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get()->keyBy('id');
+        });
         //$trips = Trip::where('date', $date)->with(['site' => function ($query) {
         //    $query->select('id', 'maxDepth', 'level');
         //}])->get()->sortBy('departureTime');
