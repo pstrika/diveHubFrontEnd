@@ -74,8 +74,11 @@ final class TripBoard
      *                                   diver favourited - marks the matching location
      *                                   header in each region's conditions row.
      * @param int[]      $wishedSiteIds  Site ids on the current viewer's wishlist.
+     * @param ?Collection $siteCovers    siteId => Photo (App\Models\Photo::coversFor()), for
+     *                                   each card's site hero thumbnail - optional, only the
+     *                                   trip finder passes this (Pablo, 2026-10-09).
      */
-    public static function build(Collection $trips, Collection $weathers, Collection $locations, array $filters, array $operators = [], array $favoriteCoasts = [], array $favoriteLocationShorts = [], array $wishedSiteIds = []): array
+    public static function build(Collection $trips, Collection $weathers, Collection $locations, array $filters, array $operators = [], array $favoriteCoasts = [], array $favoriteLocationShorts = [], array $wishedSiteIds = [], ?Collection $siteCovers = null): array
     {
         $now = Carbon::now();
         $shortToName = $locations->pluck('location', 'short')->map(fn ($n) => strtolower($n))->all();
@@ -110,7 +113,7 @@ final class TripBoard
 
         foreach ($trips as $trip) {
             $total++;
-            $card = self::card($trip, $now, $operators, $wishedSiteIds);
+            $card = self::card($trip, $now, $operators, $wishedSiteIds, $siteCovers);
             if (self::passes($card, $withoutType)) {
                 foreach (array_keys(self::TYPE_OPTIONS) as $type) {
                     if (self::passes($card, ['region' => null, 'level' => null, 'seats' => false, 'type' => $type])) {
@@ -285,8 +288,9 @@ final class TripBoard
      * One normalised trip card. Keys are stable; views and the future JSON feed rely on them.
      *
      * @param int[] $wishedSiteIds Site ids on the current viewer's wishlist.
+     * @param ?Collection $siteCovers siteId => Photo, see build()'s docblock.
      */
-    public static function card($trip, Carbon $now, array $operators = [], array $wishedSiteIds = []): array
+    public static function card($trip, Carbon $now, array $operators = [], array $wishedSiteIds = [], ?Collection $siteCovers = null): array
     {
         $tags = strtoupper((string) $trip->tags);
         $locationCode = strtok($tags, ' ') ?: null;
@@ -352,6 +356,11 @@ final class TripBoard
             'detailsUrl'    => route('TripDetails', ['tripId' => $trip->id]),
             'operatorUrl'   => route('OperatorDetails', ['id' => $trip->operatorId]),
             'siteUrl'       => $first ? route('SiteDetails') . '/' . ($first->slug ?? $first->id) : null,
+            // For the trip finder's desktop/tablet card photo (Pablo,
+            // 2026-10-09) - null for every other caller, which doesn't pass
+            // $siteCovers, and for a trip with no cover photo on file.
+            'sitePhotoFile' => $first ? $siteCovers?->get($first->id)?->file : null,
+            'siteType'      => $first->type ?? null,
         ];
     }
 

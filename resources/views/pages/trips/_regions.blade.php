@@ -43,7 +43,7 @@
                 @if($i === 0 || $trip['period'] !== $trips[$i - 1]['period'])
                     <div class="dh-period">{{ ['AM' => 'Morning', 'PM' => 'Afternoon and evening', 'TBD' => 'Time to be confirmed'][$trip['period']] }}</div>
                 @endif
-                <x-trip-card :trip="$trip" :favMode="$favMode" />
+                <x-trip-card :trip="$trip" :favMode="$favMode" :showPhoto="true" />
             @endforeach
         </div>
         @if($collapsed)

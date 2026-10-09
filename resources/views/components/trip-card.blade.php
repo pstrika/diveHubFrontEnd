@@ -17,7 +17,7 @@
                   region header instead (see pages/trips/_regions.blade.php).
     In every mode the blue "is-fav" left edge is unchanged.
 --}}
-@props(['trip', 'showDate' => false, 'favMode' => null])
+@props(['trip', 'showDate' => false, 'favMode' => null, 'showPhoto' => false])
 
 @php
     $a = $trip['availability'];
@@ -26,9 +26,25 @@
     // other caller passes a plain TripBoard::card() array with no such key
     // (Pablo, 2026-09-19: don't silently vanish a cancelled trip, mark it).
     $cancelled = $trip['cancelled'] ?? false;
+
+    // Desktop/tablet-only site photo, opt-in per caller (Pablo, 2026-10-09:
+    // trip finder cards only - $showPhoto stays false for every other
+    // screen reusing this component, unchanged). Hidden on mobile by CSS,
+    // not here - same card markup for every breakpoint.
+    $siteImg = null;
+    if ($showPhoto && !empty($trip['siteNames'])) {
+        $defaultIllustration = match (strtolower($trip['siteType'] ?? '')) {
+            'wreck' => 'site_wreck.webp',
+            'reef'  => 'site_reef.webp',
+            default => 'dive-site.webp',
+        };
+        $siteImg = !empty($trip['sitePhotoFile'])
+            ? \App\Support\SitePhoto::thumb($trip['sitePhotoFile'])
+            : asset('assets') . '/img/illustrations/' . $defaultIllustration;
+    }
 @endphp
 
-<article class="dh-trip {{ $trip['departed'] ? 'is-departed' : '' }} {{ $trip['fav'] ? 'is-fav' : '' }} {{ $cancelled ? 'is-cancelled' : '' }}" data-trip-id="{{ $trip['id'] }}">
+<article class="dh-trip {{ $trip['departed'] ? 'is-departed' : '' }} {{ $trip['fav'] ? 'is-fav' : '' }} {{ $cancelled ? 'is-cancelled' : '' }} {{ $siteImg ? 'has-photo' : '' }}" data-trip-id="{{ $trip['id'] }}">
     <div class="dh-trip-time" aria-label="Departs {{ $trip['time'] }} {{ $trip['meridiem'] }}">
         @if($showDate)<span class="dh-trip-date">{{ \Carbon\Carbon::parse($trip['date'])->format('D M j') }}</span>@endif
         @if($trip['time24'] === '00:00')
@@ -40,6 +56,12 @@
             <span class="dh-trip-ampm">{{ $trip['meridiem'] }}</span>
         @endif
     </div>
+
+    @if($siteImg)
+        <div class="dh-trip-photo">
+            <img src="{{ $siteImg }}" alt="" loading="lazy" decoding="async">
+        </div>
+    @endif
 
     <div class="dh-trip-body">
         <h3 class="dh-trip-title">

@@ -73,6 +73,13 @@ class TripsController extends Controller
         $sites = Cache::remember('sites.minimal', 300, function () {
             return Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get()->keyBy('id');
         });
+
+        // Each trip card's site hero photo, desktop/tablet only (Pablo,
+        // 2026-10-09). One cached query for every site's cover, same 5
+        // minute TTL as $sites above - never a per-trip or per-card query.
+        $siteCovers = Cache::remember('sites.covers', 300, function () use ($sites) {
+            return \App\Models\Photo::coversFor($sites->keys()->all());
+        });
         //$trips = Trip::where('date', $date)->with(['site' => function ($query) {
         //    $query->select('id', 'maxDepth', 'level');
         //}])->get()->sortBy('departureTime');
@@ -295,14 +302,14 @@ class TripsController extends Controller
         for ($d = Carbon::parse($from); $d->lte(Carbon::parse($to)); $d->addDay()) {
             $key = $d->toDateString();
             if (!$isGuestViewer) {
-                $days[$key] = TripBoard::build($byDate->get($key, collect()), $allWeather->get($key, collect()), $locations, $filters, $operators, $favoriteCoasts, $favShorts, $wishedSiteIds);
+                $days[$key] = TripBoard::build($byDate->get($key, collect()), $allWeather->get($key, collect()), $locations, $filters, $operators, $favoriteCoasts, $favShorts, $wishedSiteIds, $siteCovers);
                 continue;
             }
             $boardCacheKey = 'board.' . $key . '.' . md5(json_encode($filters));
             $days[$key] = Cache::get($boardCacheKey);
             if ($days[$key] === null) {
-                $build = function () use ($byDate, $key, $allWeather, $locations, $filters, $operators) {
-                    return TripBoard::build($byDate->get($key, collect()), $allWeather->get($key, collect()), $locations, $filters, $operators, [], [], []);
+                $build = function () use ($byDate, $key, $allWeather, $locations, $filters, $operators, $siteCovers) {
+                    return TripBoard::build($byDate->get($key, collect()), $allWeather->get($key, collect()), $locations, $filters, $operators, [], [], [], $siteCovers);
                 };
                 try {
                     $days[$key] = Cache::lock("lock:$boardCacheKey", 15)->block(10, function () use ($boardCacheKey, $build) {
