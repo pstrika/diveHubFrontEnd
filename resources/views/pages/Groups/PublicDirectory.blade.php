@@ -9,15 +9,22 @@
                 <div>
                     <p class="dh-explorer-intro">Find dive buddies and plan trips together. These groups are open to join - sign in to request a spot.</p>
                 </div>
+                <form class="dh-omnibox" method="GET" action="{{ route('Groups.public') }}" role="search">
+                    <span class="material-icons-round" aria-hidden="true">search</span>
+                    <input type="search" name="q" value="{{ $q }}" placeholder="Search groups by name" aria-label="Search public groups">
+                    @if($q !== '')
+                        <a class="dh-omnibox-clear" href="{{ route('Groups.public') }}" aria-label="Clear search">&times;</a>
+                    @endif
+                </form>
             </header>
 
             @if($groups->isEmpty())
                 <div class="dh-empty">
                     <span class="material-icons-round" aria-hidden="true">groups</span>
-                    <p>No public groups right now.</p>
+                    <p>{{ $q !== '' ? 'No public groups match "' . $q . '".' : 'No public groups right now.' }}</p>
                 </div>
             @else
-                <div class="dh-group-grid">
+                <div class="dh-group-list">
                     @foreach($groups as $group)
                         <a class="dh-group-card" href="{{ route('Groups.show', ['group' => $group->slug]) }}">
                             <div class="dh-group-card-photo">
@@ -34,7 +41,7 @@
                                     {{ $group->active_members_count }} {{ Str::plural('member', $group->active_members_count) }}
                                 </p>
                                 @if($group->description)
-                                    <p class="dh-group-card-desc">{{ Str::limit($group->description, 120) }}</p>
+                                    <p class="dh-group-card-desc">{{ Str::limit($group->description, 90) }}</p>
                                 @endif
                             </div>
                         </a>

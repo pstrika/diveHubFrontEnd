@@ -166,21 +166,27 @@ class GroupController extends Controller
      * route (Pablo, 2026-10-09: public groups need to be indexable, and
      * every group page redirected non-members away until now).
      */
-    public function publicDirectory()
+    public function publicDirectory(Request $request)
     {
+        $q = trim((string) $request->input('q', ''));
+
         $groups = Group::where('is_public', true)
+            ->when($q !== '', fn ($query) => $query->where('name', 'LIKE', "%$q%"))
             ->select(['id', 'name', 'slug', 'description', 'avatar', 'banner'])
             ->withCount('activeMembers')
             ->orderByDesc('active_members_count')
+            ->take(5)
             ->get();
 
         $SEO = [
             'title' => 'Diving Groups in Florida | Divers Hub',
             'desc' => 'Public diving groups in Florida - find dive buddies, coordinate trips, and plan dives together with local divers.',
+            // Never includes the search query - one canonical URL for the
+            // directory regardless of what a visitor searched for.
             'canonical' => route('Groups.public'),
         ];
 
-        return view('pages.Groups.PublicDirectory', compact('groups', 'SEO'));
+        return view('pages.Groups.PublicDirectory', compact('groups', 'q', 'SEO'));
     }
 
     public function show(Request $request, $groupSlug)
