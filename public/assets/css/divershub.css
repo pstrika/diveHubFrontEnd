@@ -486,6 +486,16 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-trip.has-photo { grid-template-columns: 62px 72px minmax(0, 1fr) auto; }
 .dh-trip-photo { width: 72px; height: 56px; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
 .dh-trip-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* "Mobile" in this app means the bottom tab bar range, not just phones -
+   .dh-topnav/.dh-tabbar switch at the same 992px breakpoint (see
+   .dh-tabbar below). Below it, the trip photo is dropped, same as the
+   bottom tab bar replacing the top nav (Pablo, 2026-10-09: "I need the
+   picture not shown when it's mobile view" - the narrower 575.98px-only
+   override below is for the action row, unrelated to the photo). */
+@media (max-width: 991.98px) {
+  .dh-trip-photo { display: none; }
+  .dh-trip.has-photo { grid-template-columns: 62px minmax(0, 1fr) auto; }
+}
 .dh-trip.is-fav { border-left: 3px solid var(--dh-sea); }
 .dh-trip.is-departed { opacity: .55; }
 .dh-trip.is-cancelled { opacity: .7; }
