@@ -54,7 +54,10 @@
     $tabs['today']   = ['label' => 'Dives',      'short' => 'Dives',   'icon' => 'scuba_diving', 'href' => route('Trips')];
     $tabs['sites']   = ['label' => 'Dive Sites', 'short' => 'Sites',   'icon' => 'pin_drop',     'href' => route('DiveSites')];
     $tabs['weather'] = ['label' => 'Weather',    'short' => 'Weather', 'icon' => 'cloud',        'href' => route('Weather')];
-    $tabs['groups']  = ['label' => 'Groups',     'short' => 'Groups',  'icon' => 'groups',       'href' => $isGuest ? '#' : route('MyGroups'), 'gated' => $isGuest];
+    // Guests get the public groups directory instead of the gated "My
+    // Groups" page (Pablo, 2026-10-09: public groups need to be reachable
+    // from the nav itself, not just a direct URL).
+    $tabs['groups']  = ['label' => 'Groups',     'short' => 'Groups',  'icon' => 'groups',       'href' => $isGuest ? route('Groups.public') : route('MyGroups')];
 
     // Unread in-app notifications, for the bell icon - inbox and groups combined.
     $unread = $isGuest ? 0 : (int) $user->unreadNotifications();
