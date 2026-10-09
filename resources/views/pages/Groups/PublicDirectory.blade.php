@@ -43,7 +43,7 @@
                                         {{ $group->active_members_count }} {{ Str::plural('member', $group->active_members_count) }}
                                     </p>
                                     @if($group->description)
-                                        <p class="dh-group-card-desc">{{ Str::limit($group->description, 90) }}</p>
+                                        <p class="dh-group-card-desc">{{ $group->description }}</p>
                                     @endif
                                 </div>
                             </a>
