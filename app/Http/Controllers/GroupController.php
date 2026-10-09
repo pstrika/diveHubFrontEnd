@@ -160,17 +160,43 @@ class GroupController extends Controller
             ->with('msg', 'Group "' . $group->name . '" created!');
     }
 
+    /**
+     * Public directory of is_public groups, reachable by anyone (including
+     * Google) - see publicDirectory() and the "guest" middleware on its
+     * route (Pablo, 2026-10-09: public groups need to be indexable, and
+     * every group page redirected non-members away until now).
+     */
+    public function publicDirectory()
+    {
+        $groups = Group::where('is_public', true)
+            ->select(['id', 'name', 'slug', 'description', 'avatar', 'banner'])
+            ->withCount('activeMembers')
+            ->orderByDesc('active_members_count')
+            ->get();
+
+        $SEO = [
+            'title' => 'Diving Groups in Florida | Divers Hub',
+            'desc' => 'Public diving groups in Florida - find dive buddies, coordinate trips, and plan dives together with local divers.',
+            'canonical' => route('Groups.public'),
+        ];
+
+        return view('pages.Groups.PublicDirectory', compact('groups', 'SEO'));
+    }
+
     public function show(Request $request, $groupSlug)
     {
         $group = Group::where('slug', $groupSlug)->firstOrFail();
         $userId = auth()->user()->id;
 
-        // A bare 403 page for a private group's URL landing in someone's feed
-        // (shared by a member, an old link, a search result) is a dead end -
-        // send them somewhere useful instead. MyGroups rather than home,
-        // since it's the one other page that actually renders this flash
-        // message (Pablo, 2026-10-02).
         if (!$group->isMember($userId)) {
+            // A public group gets a real, indexable preview instead of being
+            // a dead end - the whole point of this change (Pablo, 2026-10-09).
+            // A private group's URL landing in someone's feed (shared by a
+            // member, an old link, a search result) still isn't a page
+            // worth showing to a non-member, so that one still bounces.
+            if ($group->is_public) {
+                return $this->showPublicPreview($group);
+            }
             return redirect()->route('MyGroups')->with('msg', 'That group is private - you need to be a member to view it.');
         }
 
@@ -252,6 +278,38 @@ class GroupController extends Controller
             : collect();
 
         return view('pages.Groups.Show', compact('group', 'isAdmin', 'myMembership', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'addDiveSite', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'operators', 'fbFeed', 'autoAddRule', 'ruleSites', 'SEO'));
+    }
+
+    /**
+     * A public group's page for a non-member (including an anonymous
+     * visitor/crawler) - name, photo, description, member count, a few
+     * upcoming dives, and a join/sign-in prompt. Deliberately not the full
+     * Show view: no chat, no member list, no calendar token, nothing that
+     * view assumes a real member. Real, indexable SEO metadata, unlike the
+     * member view's noindex (Pablo, 2026-10-09).
+     */
+    private function showPublicPreview(Group $group)
+    {
+        $memberCount = $group->activeMembers()->count();
+        $upcomingDives = $group->dives()
+            ->whereDate('date', '>=', now())
+            ->orderBy('date')
+            ->with(['site', 'operator'])
+            ->take(5)
+            ->get();
+
+        // A non-member here is either a genuine guest/crawler, or a real
+        // signed-in diver who just hasn't joined THIS group yet - those get
+        // different CTAs (sign in, vs. a real one-click join).
+        $isSignedIn = auth()->user()->isNotGuest();
+
+        $SEO = [
+            'title' => $group->name . ' - South Florida Diving Group | Divers Hub',
+            'desc' => Str::limit($group->description ?: ('Join ' . $group->name . ', a public diving group on Divers Hub.'), 155),
+            'canonical' => route('Groups.show', ['group' => $group->slug]),
+        ];
+
+        return view('pages.Groups.PublicPreview', compact('group', 'memberCount', 'upcomingDives', 'isSignedIn', 'SEO'));
     }
 
     /**

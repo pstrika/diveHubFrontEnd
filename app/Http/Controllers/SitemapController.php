@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Group;
 use App\Models\Operator;
 use App\Models\Post;
 use App\Models\Site;
@@ -77,6 +78,23 @@ class SitemapController extends Controller
                     }
                 });
 
+            // Public groups only (Pablo, 2026-10-09) - a private group's URL
+            // just redirects a non-member away, so listing it would point
+            // crawlers at a dead end.
+            Group::where('is_public', true)
+                ->select('slug', 'updated_at')
+                ->orderBy('id')
+                ->chunk(200, function ($groups) use ($sitemap) {
+                    foreach ($groups as $group) {
+                        $sitemap->add(
+                            Url::create(route('Groups.show', ['group' => $group->slug]))
+                                ->setLastModificationDate($group->updated_at ?? now())
+                                ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
+                                ->setPriority(0.5)
+                        );
+                    }
+                });
+
             // US only (SEO audit, 2026-09-28, finding #4): WeatherController@show
             // itself only serves country = 'US' locations, falling back to Fort
             // Lauderdale for anything else (the Argentina forecast was retired in
@@ -146,6 +164,13 @@ class SitemapController extends Controller
                 }
             });
 
+        Group::where('is_public', true)->select('slug')->orderBy('id')
+            ->chunk(200, function ($groups) use (&$urls) {
+                foreach ($groups as $group) {
+                    $urls[] = route('Groups.show', ['group' => $group->slug]);
+                }
+            });
+
         WeatherLocation::select('location')->where('country', 'US')->orderBy('location')
             ->chunk(200, function ($locations) use (&$urls) {
                 foreach ($locations as $weatherLocation) {
@@ -165,6 +190,9 @@ class SitemapController extends Controller
             'WreckSites' => ['priority' => 0.9, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'BeachDiving' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'Operators' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            // Public groups directory (Pablo, 2026-10-09): every individual
+            // public group page is in the sitemap too, below.
+            'Groups.public' => ['priority' => 0.6, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             // SEO content marketing (Pablo, 2026-09-17 - see routes/web.php);
             // was never added when the Blog shipped.
             'Blog' => ['priority' => 0.6, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],

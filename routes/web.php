@@ -740,6 +740,16 @@ Route::group(['middleware' => 'auth'], function () {
 /* Diving Groups */
 Route::get('Groups/{group}/feed/{token}.ics', 'App\Http\Controllers\GroupController@feed')->name('Groups.feed');
 
+// Public directory + a public group's own page both need to be reachable by
+// an anonymous visitor (and Google) - 'guest' auto-logs-in the shared Guest
+// account for anyone not already signed in, same pattern Trips/DiveSites/
+// SiteDetails already use, rather than leaving auth()->user() null (Pablo,
+// 2026-10-09: "we need to make sure that the public diving groups are
+// indexed by google"). Group::show() itself still gates a PRIVATE group
+// behind real membership - only is_public groups get a real page here.
+Route::get('Groups', 'App\Http\Controllers\GroupController@publicDirectory')->middleware('guest')->name('Groups.public');
+Route::get('Groups/{group}', 'App\Http\Controllers\GroupController@show')->middleware('guest')->name('Groups.show');
+
 Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::get('MyGroups', 'App\Http\Controllers\GroupController@myGroups')->name('MyGroups');
 	Route::get('Groups/create', 'App\Http\Controllers\GroupController@create')->name('Groups.create');
@@ -763,7 +773,6 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::post('Groups/dives/{dive}/leave', 'App\Http\Controllers\GroupDiveController@leave')->name('Groups.dives.leave');
 	Route::delete('Groups/dives/{dive}', 'App\Http\Controllers\GroupDiveController@destroy')->name('Groups.dives.destroy');
 
-	Route::get('Groups/{group}', 'App\Http\Controllers\GroupController@show')->name('Groups.show');
 	Route::post('Groups/{group}/members/{member}/remove', 'App\Http\Controllers\GroupController@removeMember')->name('Groups.removeMember');
 	Route::post('Groups/{group}/mute', 'App\Http\Controllers\GroupController@toggleMute')->name('Groups.toggleMute');
 	Route::post('Groups/{group}/delete', 'App\Http\Controllers\GroupController@destroy')->name('Groups.destroy');
