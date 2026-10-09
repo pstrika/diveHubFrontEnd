@@ -9,14 +9,15 @@
                 <div>
                     <p class="dh-explorer-intro">Find dive buddies and plan trips together. These groups are open to join - sign in to request a spot.</p>
                 </div>
-                <form class="dh-omnibox" method="GET" action="{{ route('Groups.public') }}" role="search">
-                    <span class="material-icons-round" aria-hidden="true">search</span>
-                    <input type="search" name="q" value="{{ $q }}" placeholder="Search groups by name" aria-label="Search public groups">
-                    @if($q !== '')
-                        <a class="dh-omnibox-clear" href="{{ route('Groups.public') }}" aria-label="Clear search">&times;</a>
-                    @endif
-                </form>
             </header>
+
+            <form class="dh-omnibox mb-3" method="GET" action="{{ route('Groups.public') }}" role="search">
+                <span class="material-icons-round" aria-hidden="true">search</span>
+                <input type="search" name="q" value="{{ $q }}" placeholder="Search groups by name" aria-label="Search public groups">
+                @if($q !== '')
+                    <a class="dh-omnibox-clear" href="{{ route('Groups.public') }}" aria-label="Clear search">&times;</a>
+                @endif
+            </form>
 
             @if($groups->isEmpty())
                 <div class="dh-empty">
