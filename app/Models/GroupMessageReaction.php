@@ -30,6 +30,7 @@ class GroupMessageReaction extends Model
         'down'     => ['glyph' => '👎', 'label' => 'Thumbs down'],
         'heart'    => ['glyph' => '❤️', 'label' => 'Heart'],
         'thinking' => ['glyph' => '🤔', 'label' => 'Thinking'],
+        'laugh'    => ['glyph' => '😂', 'label' => 'Laughing'],
     ];
 
     public function message(): BelongsTo
