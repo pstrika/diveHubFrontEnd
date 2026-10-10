@@ -112,7 +112,7 @@ class GroupMessageController extends Controller
         }
 
         $messages = $group->messages()
-            ->with(['user', 'photos', 'siteMentions.site', 'reactions'])
+            ->with(['user', 'photos', 'siteMentions.site', 'reactions.user'])
             ->orderBy('created_at')
             ->get();
 

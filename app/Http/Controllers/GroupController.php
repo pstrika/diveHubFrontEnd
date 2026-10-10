@@ -260,7 +260,7 @@ class GroupController extends Controller
         // eager-loading them here too, Eloquent falls back to one lazy
         // query per message per relation on every page load of this
         // chat - functionally correct but a real N+1 this avoids.
-        $messages = $group->messages()->with(['user', 'photos', 'siteMentions.site', 'reactions'])->orderBy('created_at')->get();
+        $messages = $group->messages()->with(['user', 'photos', 'siteMentions.site', 'reactions.user'])->orderBy('created_at')->get();
 
         // The chat poll's initial baseline (Pablo, 2026-10-10) - without a
         // real starting signature here, the live poll's FIRST tick after

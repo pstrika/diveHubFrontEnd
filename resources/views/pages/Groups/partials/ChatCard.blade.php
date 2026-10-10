@@ -20,6 +20,12 @@
         @endforeach
     </div>
 
+    {{-- One shared "who reacted" popover for the whole chat (Pablo,
+         2026-10-10, v6) - tapping a reaction badge positions and shows
+         this next to it, reading data-reactors off that badge's
+         container. See showReactorsPopover() in Show.blade.php. --}}
+    <div id="chatReactorsPopover" class="dh-chat-reactors-popover" hidden></div>
+
     <hr class="dh-panel-divider">
 
     <form method="POST" action="{{ route('Groups.messages.store', ['group' => $group->slug]) }}" id="groupChatForm">
