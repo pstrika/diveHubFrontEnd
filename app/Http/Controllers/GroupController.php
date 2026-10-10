@@ -255,7 +255,21 @@ class GroupController extends Controller
             });
         }
 
-        $messages = $group->messages()->with(['user', 'photos'])->orderBy('created_at')->get();
+        // siteMentions.site/reactions added 2026-10-10 - messages.blade.php
+        // (shared with GroupMessageController@poll) reads both; without
+        // eager-loading them here too, Eloquent falls back to one lazy
+        // query per message per relation on every page load of this
+        // chat - functionally correct but a real N+1 this avoids.
+        $messages = $group->messages()->with(['user', 'photos', 'siteMentions.site', 'reactions'])->orderBy('created_at')->get();
+
+        // The chat poll's initial baseline (Pablo, 2026-10-10) - without a
+        // real starting signature here, the live poll's FIRST tick after
+        // opening the chat has nothing to compare against but null, which
+        // always looks "different" and fired the reaction-received sound
+        // on every page load that happened to already have reactions in
+        // it. See GroupMessage::chatSignature() for why this has to be
+        // computed the same way poll() does, not independently.
+        $chatSignature = \App\Models\GroupMessage::chatSignature($messages);
 
         $calendarFeedUrl = route('Groups.feed', ['group' => $group->slug, 'token' => $group->ensureCalendarToken()]);
 
@@ -283,7 +297,7 @@ class GroupController extends Controller
             ? \App\Models\Site::whereIn('id', $autoAddRule->site_ids)->get(['id', 'name'])
             : collect();
 
-        return view('pages.Groups.Show', compact('group', 'isAdmin', 'myMembership', 'members', 'invitedMembers', 'dives', 'messages', 'addDiveDate', 'addDiveSite', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'operators', 'fbFeed', 'autoAddRule', 'ruleSites', 'SEO'));
+        return view('pages.Groups.Show', compact('group', 'isAdmin', 'myMembership', 'members', 'invitedMembers', 'dives', 'messages', 'chatSignature', 'addDiveDate', 'addDiveSite', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'operators', 'fbFeed', 'autoAddRule', 'ruleSites', 'SEO'));
     }
 
     /**
@@ -542,7 +556,10 @@ class GroupController extends Controller
     }
 
     /**
-     * Simple site-name search for the "Custom Dive" form's site picker.
+     * Simple site-name search for the "Custom Dive" form's site picker -
+     * also reused by the chat composer's "#site" mention dropdown (Pablo,
+     * 2026-10-10), which is why `slug` is included: that one needs a real
+     * SiteDetails link, not just the id/name the Custom Dive picker reads.
      */
     public function searchSites(Request $request, $groupSlug)
     {
@@ -553,13 +570,17 @@ class GroupController extends Controller
         }
 
         $q = trim((string) $request->input('q'));
-        if (mb_strlen($q) < 2) {
+        // 1 char, not 2 (Pablo, 2026-10-10) - the chat "#site" dropdown
+        // searches from the first letter typed, to feel as immediate as
+        // @mention; the Custom Dive picker's own client-side code still
+        // gates at 2 chars before ever calling this, so it's unaffected.
+        if (mb_strlen($q) < 1) {
             return response()->json([]);
         }
 
         $sites = \App\Models\Site::where('name', 'LIKE', "%$q%")
             ->take(10)
-            ->get(['id', 'name', 'level']);
+            ->get(['id', 'name', 'level', 'slug']);
 
         return response()->json($sites);
     }

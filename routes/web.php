@@ -747,12 +747,20 @@ Route::get('Groups/{group}/feed/{token}.ics', 'App\Http\Controllers\GroupControl
 // 2026-10-09: "we need to make sure that the public diving groups are
 // indexed by google"). Group::show() itself still gates a PRIVATE group
 // behind real membership - only is_public groups get a real page here.
+// Groups/create has to be registered before the Groups/{group} wildcard
+// below it, or GET Groups/create matches {group}="create" first (Laravel
+// matches routes in registration order) - GroupController@show('create')
+// then 404s via firstOrFail() since no group has that slug, instead of
+// ever reaching the create form (Pablo, 2026-10-10: a real regression
+// from adding the Groups/{group} wildcard here for the public directory -
+// "when trying to create a new group I get a 404").
+Route::get('Groups/create', 'App\Http\Controllers\GroupController@create')->middleware(['auth', 'not_guest'])->name('Groups.create');
+
 Route::get('Groups', 'App\Http\Controllers\GroupController@publicDirectory')->middleware('guest')->name('Groups.public');
 Route::get('Groups/{group}', 'App\Http\Controllers\GroupController@show')->middleware('guest')->name('Groups.show');
 
 Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::get('MyGroups', 'App\Http\Controllers\GroupController@myGroups')->name('MyGroups');
-	Route::get('Groups/create', 'App\Http\Controllers\GroupController@create')->name('Groups.create');
 	Route::post('Groups', 'App\Http\Controllers\GroupController@store')->name('Groups.store');
 	Route::get('Groups/public/search', 'App\Http\Controllers\GroupController@searchPublic')->name('Groups.public.search');
 	Route::post('Groups/{group}/join', 'App\Http\Controllers\GroupController@joinPublic')->name('Groups.joinPublic');
@@ -785,6 +793,7 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::post('Groups/{group}/dives/custom', 'App\Http\Controllers\GroupDiveController@storeCustom')->name('Groups.dives.storeCustom');
 	Route::post('Groups/{group}/messages', 'App\Http\Controllers\GroupMessageController@store')->name('Groups.messages.store');
 	Route::get('Groups/{group}/messages/poll', 'App\Http\Controllers\GroupMessageController@poll')->name('Groups.messages.poll');
+	Route::post('Groups/{group}/messages/{message}/react', 'App\Http\Controllers\GroupMessageController@react')->name('Groups.messages.react');
 	Route::post('Groups/{group}/settings', 'App\Http\Controllers\GroupController@updateSettings')->name('Groups.updateSettings');
 	Route::post('Groups/{group}/auto-add-rule', 'App\Http\Controllers\GroupAutoAddRuleController@update')->name('Groups.autoAddRule.update');
 	Route::post('Groups/{group}/info', 'App\Http\Controllers\GroupController@updateInfo')->name('Groups.updateInfo');

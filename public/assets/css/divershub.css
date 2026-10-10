@@ -598,10 +598,79 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-chat-bubble-wrap { display: flex; flex-direction: column; max-width: 75%; min-width: 0; }
 .dh-chat-row.is-mine .dh-chat-bubble-wrap { align-items: flex-end; }
 .dh-chat-meta { font-size: .7rem; color: var(--dh-muted); }
-.dh-chat-bubble { background: var(--dh-foam); border-radius: 14px 14px 14px 4px; padding: 8px 12px; margin-top: 2px; }
-.dh-chat-row.is-mine .dh-chat-bubble { background: var(--dh-sea); color: #fff; border-radius: 14px 14px 4px 14px; }
+.dh-chat-bubble { position: relative; background: var(--dh-foam); border-radius: 14px 14px 14px 4px; padding: 8px 12px; margin-top: 2px; cursor: pointer; }
+.dh-chat-row.is-mine .dh-chat-bubble { background: var(--dh-sea); color: #fff; border-radius: 14px 14px 4px 14px; cursor: default; }
 .dh-chat-text { font-size: .88rem; overflow-wrap: break-word; }
-.dh-chat-time { margin-top: 2px; }
+/* #site mention link inside a chat bubble (Pablo, 2026-10-10) - color:
+   inherit because the bubble's own text color flips (white on the sender's
+   own sea-blue bubble, dark ink on everyone else's pale one); underline +
+   weight carries the "this is a link" signal in both. */
+.dh-chat-mention { color: inherit; text-decoration: underline; font-weight: 700; }
+.dh-chat-mention:hover { opacity: .85; }
+
+/* Chat photos (Pablo, 2026-10-10, v5: "pictures shown with no frame at
+   all...not they are inside a message bubble") - no bubble background
+   around them, just the image with its own rounded corners, same as
+   WhatsApp. position:relative for the same reason .dh-chat-bubble is -
+   both the react button and the reaction pills position against it. */
+.dh-chat-photos { position: relative; display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; max-width: 220px; }
+.dh-chat-row.is-mine .dh-chat-photos { margin-left: auto; }
+.dh-chat-photo { width: 160px; height: 160px; object-fit: cover; border-radius: 12px; cursor: pointer; display: block; }
+/* The only way to react to a photo message - tapping the photo itself
+   opens the viewer (showChatPhoto), not the picker, so it needs its own
+   explicit affordance unlike a text bubble, which is reactable anywhere
+   on it (Pablo, 2026-10-10: "to react to a photo, we can put a smilie
+   emoji next to the photo. User clicks and the pill with the reactions
+   show up"). Bottom corner, WhatsApp-style; flips to the left on the
+   viewer's own photos so it still reads "into" the chat, same reasoning
+   as the reaction badges' own is-mine flip below. */
+.dh-chat-react-btn { position: absolute; bottom: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%; background: rgba(0,0,0,.55); border: 2px solid var(--dh-paper); color: #fff; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; }
+.dh-chat-react-btn:hover { background: rgba(0,0,0,.75); }
+.dh-chat-react-btn .material-icons-round { font-size: 15px; }
+.dh-chat-row.is-mine .dh-chat-react-btn { right: auto; left: 6px; }
+
+/* Reaction badges overlapping a chat bubble's bottom edge (Pablo,
+   2026-10-10, v3 - "smaller...overlapping the message bubble at the
+   bottom...like a badge, dark grey"). Tap/click the bubble itself to
+   react; a badge only shows once a reaction actually has a count, never
+   all four as a standing row. Positioned relative to .dh-chat-bubble
+   (position:relative - see above), not in normal flow, so it floats half
+   on/half off the bubble's bottom-right corner like an iOS/WhatsApp
+   reaction badge. The ring (box-shadow) is the page background color, not
+   a border, so it reads as a cutout separating the badge from the bubble
+   underneath regardless of that bubble's own color (sender vs. everyone
+   else's). */
+.dh-chat-reactions { position: absolute; left: 0; right: 0; bottom: -9px; display: flex; flex-wrap: wrap; gap: 3px; justify-content: flex-end; padding: 0 6px; }
+.dh-chat-row.is-mine .dh-chat-reactions { justify-content: flex-start; }
+/* Plain display, not a button (Pablo, 2026-10-10, v4: "let's not allow to
+   click the badge" - tapping it used to toggle the reaction off directly,
+   which read as "it disappeared when I tapped it"). cursor:default - a
+   click here still opens the picker (it bubbles up to the bubble's own
+   handler either way), it's just not a separate interactive target. */
+.dh-chat-reaction { display: inline-flex; align-items: center; gap: 2px; border: 0; background: #3a3a3a; box-shadow: 0 0 0 2px var(--dh-paper); border-radius: var(--dh-radius-pill); padding: 1px 5px; font-size: .6rem; line-height: 1.5; color: #fff; cursor: default; }
+/* "This is the one I gave" - informational now, not a pressed-button
+   state (see messagesEl's click handler: picking a different reaction
+   switches this to the new emoji; one per user per message). */
+.dh-chat-reaction.is-on { background: var(--dh-sea); }
+.dh-chat-reaction-glyph { font-size: .64rem; line-height: 1; }
+.dh-chat-reaction-count { font-weight: 700; font-size: .56rem; }
+
+/* Reaction picker (Pablo, 2026-10-10): one shared popover, positioned next
+   to whatever bubble was tapped - see the click handler in Show.blade.php.
+   position:fixed so it escapes #groupChatMessages' own scroll clipping
+   regardless of where in the list the clicked bubble sits. */
+.dh-chat-reaction-picker { position: fixed; display: flex; gap: 2px; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill); padding: 4px; box-shadow: 0 8px 24px rgba(11,42,58,.22); z-index: 1200; }
+.dh-chat-reaction-picker button { border: 0; background: transparent; font-size: 1.15rem; line-height: 1; padding: 5px; border-radius: 50%; cursor: pointer; }
+.dh-chat-reaction-picker button:hover { background: var(--dh-foam); }
+/* The reaction the viewer already gave, highlighted when the picker opens
+   (Pablo, 2026-10-10: "if I click on the message, highlight the reaction
+   that I've given before"). */
+.dh-chat-reaction-picker button.is-on { background: var(--dh-foam); box-shadow: inset 0 0 0 2px var(--dh-sea); }
+/* Extra top margin vs. the original 2px (Pablo, 2026-10-10) - reaction
+   badges now overlap the bubble's own bottom edge (position:absolute, see
+   .dh-chat-reactions above), so the timestamp needs headroom to not run
+   into one when a message has been reacted to. */
+.dh-chat-time { margin-top: 10px; }
 .dh-form-error { background: var(--dh-poor-bg); color: var(--dh-poor); border-radius: var(--dh-radius); padding: 12px 16px; margin-bottom: var(--dh-space-3); font-size: .88rem; }
 .dh-form-error ul { padding-left: 18px; }
 .dh-fb-page-list { display: flex; flex-direction: column; gap: 8px; }
@@ -2174,6 +2243,9 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
   font-size: .88rem; font-weight: 600; color: var(--dh-ink); cursor: pointer;
 }
 .dh-mention-item:hover, .dh-mention-item:first-child { background: var(--dh-foam); }
+/* #site search's "keep typing" / "searching…" / "no matches" rows (Pablo,
+   2026-10-10) - same menu, a non-interactive line instead of a button. */
+.dh-mention-hint { padding: 9px 12px; font-size: .82rem; color: var(--dh-muted); }
 
 /* Profile Overview rebrand (2026-09-14). Keeps the page's existing
    multistep-form edit-toggle/slider/Choices/Dropzone JS wiring untouched -

@@ -803,29 +803,85 @@
 
         var suppressNextReceiveSound = false;
 
+        // refreshChatMessages() now fires from more places than just the 5s
+        // interval - submitChatMessage() and every reaction both call it
+        // directly too, for an immediate update instead of waiting out the
+        // rest of the poll cycle. That means calls can overlap (e.g. a
+        // reaction click fires one right as the interval's own tick is
+        // already in flight) and, on this app's slow local dev server
+        // especially, stay in flight for seconds at a time.
+        //
+        // A first attempt guarded this with a sequence counter (discard a
+        // response unless it's from the most-recently-STARTED request) -
+        // wrong, caught via Playwright: when two overlapping requests both
+        // carry the correct fresh data (there's no actual staleness in
+        // either one - both are simply separate, slightly-staggered reads
+        // of the same already-committed write), that guard throws away
+        // the EARLIER one's perfectly good response just because a later
+        // one had also started, and then has to wait on the later one
+        // regardless. Simpler and actually correct: never let more than
+        // one poll be in flight at all. A call that arrives while one is
+        // already running just flags "run again once this finishes"
+        // instead of firing a second concurrent request - the in-flight
+        // request still reflects anything written before IT started, and
+        // the immediate follow-up run picks up anything written since.
+        var chatPollInFlight = false;
+        var chatPollAgain = false;
+
         function refreshChatMessages() {
+            if (chatPollInFlight) { chatPollAgain = true; return; }
+            chatPollInFlight = true;
             var messagesEl = document.getElementById('groupChatMessages');
             return fetch("{{ route('Groups.messages.poll', ['group' => $group->slug]) }}", { headers: { 'Accept': 'application/json' } })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     var oldCount = parseInt(messagesEl.getAttribute('data-count'), 10);
-                    if (String(data.count) !== messagesEl.getAttribute('data-count')) {
+                    var oldReactionSignature = messagesEl.getAttribute('data-reaction-signature');
+                    // Compares the signature, not the plain count: a reaction
+                    // changes neither the message count nor (without this)
+                    // the decision to re-render at all, so it would otherwise
+                    // never show up for anyone but the reactor's own
+                    // optimistic click (Pablo, 2026-10-10). data-count and
+                    // data-reaction-signature are kept separately just to
+                    // decide WHICH sound (if any) to play below.
+                    if (String(data.signature) !== messagesEl.getAttribute('data-signature')) {
                         var wasScrolledToBottom = messagesEl.scrollTop + messagesEl.clientHeight >= messagesEl.scrollHeight - 20;
                         messagesEl.innerHTML = data.html;
                         messagesEl.setAttribute('data-count', data.count);
+                        messagesEl.setAttribute('data-signature', data.signature);
+                        messagesEl.setAttribute('data-reaction-signature', data.reactionSignature);
                         if (wasScrolledToBottom) {
                             messagesEl.scrollTop = messagesEl.scrollHeight;
                         }
-                        if (data.count > oldCount) {
-                            if (suppressNextReceiveSound) {
-                                suppressNextReceiveSound = false;
-                            } else {
-                                playChatReceiveSound();
-                            }
+                        // A new message and a reaction changing are
+                        // mutually exclusive in practice (sending a message
+                        // doesn't touch reactions and vice versa), so at
+                        // most one of these actually fires per poll - still
+                        // written as two independent checks rather than
+                        // else-if, since there's no real reason to assume
+                        // that stays true forever.
+                        var isNewMessage = data.count > oldCount;
+                        var isReactionChange = String(data.reactionSignature) !== oldReactionSignature;
+                        if (suppressNextReceiveSound) {
+                            suppressNextReceiveSound = false;
+                        } else {
+                            if (isNewMessage) playChatReceiveSound();
+                            // Pablo, 2026-10-10: "can you play a sound on
+                            // the reaction on the receiver?" - same sound
+                            // as a new message, just gated on the reaction
+                            // signature instead of the message count.
+                            else if (isReactionChange) playChatReceiveSound();
                         }
                     }
                 })
-                .catch(function () {});
+                .catch(function () {})
+                .then(function () {
+                    chatPollInFlight = false;
+                    if (chatPollAgain) {
+                        chatPollAgain = false;
+                        refreshChatMessages();
+                    }
+                });
         }
 
         // Scroll to the newest messages on initial load - without this the
@@ -847,6 +903,18 @@
             var formData = new FormData(form);
             chatPhotoPaths.forEach(function (p) { formData.append('existing_photos[]', p); });
 
+            // Only submit a tracked #site mention if its "#Name" text is
+            // still actually present in the message - a diver who inserts
+            // one and then deletes/edits it shouldn't have it silently
+            // re-attached (Pablo, 2026-10-10; see ChatCard.blade.php for
+            // where window.dhChatMentionedSites gets populated).
+            var bodyText = document.getElementById('chatBodyInput').value;
+            (window.dhChatMentionedSites || []).forEach(function (s) {
+                if (bodyText.indexOf('#' + s.name) !== -1) {
+                    formData.append('mentioned_site_ids[]', s.id);
+                }
+            });
+
             fetch(form.action, {
                 method: 'POST',
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
@@ -857,6 +925,7 @@
                     if (result.ok && result.data.success) {
                         document.getElementById('chatBodyInput').value = '';
                         chatPhotoPaths = [];
+                        window.dhChatMentionedSites = [];
                         updateChatPhotoPreview();
                         playChatSendSound();
                         suppressNextReceiveSound = true;
@@ -879,6 +948,228 @@
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 submitChatMessage();
+            }
+        });
+
+        // Reactions (Pablo, 2026-10-10, v4): tap/click a message bubble to
+        // open a small 4-emoji picker next to it, showing which one (if
+        // any) the viewer already gave, highlighted. Picking a different
+        // one switches to it; picking the same one again removes it - one
+        // reaction per user per message, same as WhatsApp (Pablo:
+        // "Instead, if I click on the message, highlight the reaction
+        // that I've given before. I can change the reaction - only one
+        // reaction per message per user"). The rendered pills themselves
+        // are plain, non-interactive <span>s now, not buttons (v3 made
+        // them directly clickable to toggle, which read as "the reaction
+        // disappeared when I tapped it" - surprising, since the only
+        // documented way in was the picker).
+        //
+        // Painted optimistically - building/updating/removing the DOM pill
+        // by hand rather than waiting on any network round trip - then
+        // reconciled to the server's actual response once it lands, and
+        // reverted on failure. This app's local dev server can take
+        // several seconds per request (full Laravel bootstrap, no
+        // opcache), which otherwise reads as "nothing happened" even
+        // though it eventually would have.
+        var chatReactUrlTemplate = @json(route('Groups.messages.react', ['group' => $group->slug, 'message' => '__ID__']));
+        var reactionPicker = document.getElementById('chatReactionPicker');
+        var messagesEl = document.getElementById('groupChatMessages');
+
+        var reactionPickerOpenedAt = 0;
+        var reactionPickerBubble = null;
+
+        function hideReactionPicker() {
+            if (reactionPicker) reactionPicker.hidden = true;
+            reactionPickerBubble = null;
+        }
+
+        // The emoji key the viewer currently has on this message, or null -
+        // read straight off the rendered pills (whichever one, if any,
+        // carries .is-on), not tracked separately.
+        function myCurrentReaction(bubbleEl) {
+            var row = bubbleEl.closest('.dh-chat-row');
+            var mine = row.querySelector('.dh-chat-reactions .dh-chat-reaction.is-on');
+            return mine ? mine.getAttribute('data-emoji') : null;
+        }
+
+        function showReactionPicker(bubbleEl, messageId) {
+            if (!reactionPicker) return;
+            reactionPickerOpenedAt = Date.now();
+            reactionPickerBubble = bubbleEl;
+            reactionPicker.setAttribute('data-message-id', messageId);
+
+            var mine = myCurrentReaction(bubbleEl);
+            reactionPicker.querySelectorAll('button[data-emoji]').forEach(function (btn) {
+                btn.classList.toggle('is-on', btn.getAttribute('data-emoji') === mine);
+            });
+
+            reactionPicker.hidden = false;
+            var rect = bubbleEl.getBoundingClientRect();
+            var pickerRect = reactionPicker.getBoundingClientRect();
+            var top = rect.top - pickerRect.height - 6;
+            if (top < 4) top = rect.bottom + 6; // not enough room above - show below instead
+            var left = rect.left + (rect.width / 2) - (pickerRect.width / 2);
+            left = Math.max(4, Math.min(left, window.innerWidth - pickerRect.width - 4));
+            reactionPicker.style.top = top + 'px';
+            reactionPicker.style.left = left + 'px';
+        }
+
+        // The emoji glyph for a key, read off the picker's own buttons
+        // rather than duplicating GroupMessageReaction::REACTIONS in JS -
+        // only needed when painting a message's first-ever reaction to a
+        // given emoji, since any other paint is modifying a pill that
+        // already has its glyph in the DOM.
+        function reactionGlyph(emoji) {
+            var btn = reactionPicker && reactionPicker.querySelector('button[data-emoji="' + emoji + '"]');
+            return btn ? btn.textContent : '';
+        }
+
+        // Transitions the viewer's own reaction on one message from
+        // whatever it currently is to newEmoji (or to no reaction at all,
+        // if newEmoji is null) - decrementing/removing the old pill,
+        // incrementing/creating the new one. Used both for the optimistic
+        // guess (before the request) and the authoritative repaint (after
+        // the response), so there's one single place that actually
+        // touches this DOM.
+        function paintMyReaction(bubbleEl, newEmoji) {
+            var row = bubbleEl.closest('.dh-chat-row');
+            var reactionsEl = row.querySelector('.dh-chat-reactions');
+            var oldPill = reactionsEl ? reactionsEl.querySelector('.dh-chat-reaction.is-on') : null;
+            var oldEmoji = oldPill ? oldPill.getAttribute('data-emoji') : null;
+            if (oldEmoji === newEmoji) return;
+
+            if (oldPill) {
+                var oldCount = parseInt(oldPill.querySelector('.dh-chat-reaction-count').textContent, 10) - 1;
+                if (oldCount <= 0) {
+                    oldPill.remove();
+                } else {
+                    oldPill.classList.remove('is-on');
+                    oldPill.querySelector('.dh-chat-reaction-count').textContent = oldCount;
+                }
+            }
+
+            if (newEmoji) {
+                if (!reactionsEl) {
+                    reactionsEl = document.createElement('div');
+                    reactionsEl.className = 'dh-chat-reactions';
+                    reactionsEl.setAttribute('data-message-id', bubbleEl.getAttribute('data-message-id'));
+                    // A CHILD of the bubble (appendChild) - see
+                    // messages.blade.php's own comment on why: position:
+                    // absolute here only resolves against the bubble's
+                    // position:relative if it's actually nested inside it.
+                    bubbleEl.appendChild(reactionsEl);
+                }
+                var newPill = reactionsEl.querySelector('.dh-chat-reaction[data-emoji="' + newEmoji + '"]');
+                var newCount = (newPill ? parseInt(newPill.querySelector('.dh-chat-reaction-count').textContent, 10) : 0) + 1;
+                if (!newPill) {
+                    newPill = document.createElement('span');
+                    newPill.className = 'dh-chat-reaction';
+                    newPill.setAttribute('data-emoji', newEmoji);
+                    newPill.innerHTML = '<span class="dh-chat-reaction-glyph" aria-hidden="true">' + reactionGlyph(newEmoji) + '</span><span class="dh-chat-reaction-count"></span>';
+                    reactionsEl.appendChild(newPill);
+                }
+                newPill.classList.add('is-on');
+                newPill.querySelector('.dh-chat-reaction-count').textContent = newCount;
+            }
+
+            if (reactionsEl && !reactionsEl.querySelector('.dh-chat-reaction')) reactionsEl.remove();
+        }
+
+        function sendReaction(bubbleEl, messageId, emoji) {
+            var current = myCurrentReaction(bubbleEl);
+            var target = (current === emoji) ? null : emoji; // tapping your own reaction again removes it
+
+            paintMyReaction(bubbleEl, target);
+
+            fetch(chatReactUrlTemplate.replace('__ID__', messageId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ emoji: emoji }),
+            })
+                .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+                .then(function (data) {
+                    // Reconcile to the server's authoritative state (in
+                    // case anything else changed concurrently), and pick
+                    // up anyone else's reactions via the normal poll.
+                    paintMyReaction(bubbleEl, data.mine);
+                    suppressNextReceiveSound = true;
+                    refreshChatMessages();
+                })
+                .catch(function () {
+                    paintMyReaction(bubbleEl, current);
+                });
+        }
+
+        messagesEl.addEventListener('click', function (e) {
+            // Can't react to your own message (Pablo, 2026-10-10) - the
+            // server rejects it either way (GroupMessageController@react),
+            // this just skips offering the interaction at all. Someone
+            // else's reaction on your own message still shows and is
+            // still visible either way - only adding your own is blocked.
+            if (e.target.closest('.dh-chat-row.is-mine')) return;
+
+            // A photo message (Pablo, 2026-10-10, v5): unlike a text
+            // bubble, tapping the photo itself has its own job (opens the
+            // viewer, via showChatPhoto's onclick) - only the explicit
+            // smiley button, or an existing reaction pill, opens the
+            // picker here.
+            var photos = e.target.closest('.dh-chat-photos');
+            if (photos) {
+                if (e.target.closest('.dh-chat-react-btn') || e.target.closest('.dh-chat-reaction')) {
+                    showReactionPicker(photos, photos.getAttribute('data-message-id'));
+                }
+                return;
+            }
+
+            // A text bubble: anywhere on it - including directly on an
+            // existing reaction pill, which is no longer its own separate
+            // click target - opens the picker, except a link inside it,
+            // which needs its own click (navigate).
+            var bubble = e.target.closest('.dh-chat-bubble');
+            if (bubble && bubble.hasAttribute('data-message-id') && !e.target.closest('a')) {
+                showReactionPicker(bubble, bubble.getAttribute('data-message-id'));
+            }
+        });
+
+        // Scrolling the message list invalidates whatever position the
+        // picker was shown at (it's position:fixed, viewport-relative, so
+        // it wouldn't otherwise follow the bubble it was opened for) - but
+        // the click that OPENS the picker can itself cause a scroll (e.g.
+        // scrolling a not-quite-fully-visible bubble into view first), and
+        // that scroll event would otherwise hide the picker the instant it
+        // opens (Pablo, 2026-10-10 - caught via Playwright: the picker
+        // showed then immediately vanished on every click). Ignore scrolls
+        // in the brief window right after opening; only a real scroll
+        // after that closes it.
+        messagesEl.addEventListener('scroll', function () {
+            if (Date.now() - reactionPickerOpenedAt < 400) return;
+            hideReactionPicker();
+        });
+
+        if (reactionPicker) {
+            reactionPicker.addEventListener('click', function (e) {
+                var btn = e.target.closest('button[data-emoji]');
+                if (!btn || !reactionPickerBubble) return;
+                sendReaction(reactionPickerBubble, reactionPicker.getAttribute('data-message-id'), btn.getAttribute('data-emoji'));
+                hideReactionPicker();
+            });
+        }
+
+        // Click anywhere else on the page closes the picker - excluding
+        // .dh-chat-photos as of v5 (Pablo, 2026-10-10), not just
+        // .dh-chat-bubble: without it, the very click that OPENS the
+        // picker via the photo's smiley button also immediately closed it
+        // again in the same click's bubble phase, since that click's
+        // target was never inside a .dh-chat-bubble to begin with (caught
+        // via Playwright - the picker's data-message-id was set correctly,
+        // it just never actually stayed visible).
+        document.addEventListener('click', function (e) {
+            if (reactionPicker && !reactionPicker.hidden && !reactionPicker.contains(e.target) && !e.target.closest('.dh-chat-bubble') && !e.target.closest('.dh-chat-photos')) {
+                hideReactionPicker();
             }
         });
     </script>
