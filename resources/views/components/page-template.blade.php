@@ -34,6 +34,34 @@
        (manifest.json icons are ignored by iOS Safari for this purpose). -->
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets') }}/img/pwa/apple-touch-icon.png">
+  @unless($dhFrozen)
+    {{-- Consumes a pending post-notification-tap redirect left by sw.js's
+         notificationclick handler (see its own comment) - the most
+         reliable fix for iOS relaunching an installed PWA at
+         manifest.json's start_url instead of the tapped notification's
+         actual target when the app wasn't already running (Pablo,
+         2026-10-10). An ordinary page-level redirect, so it works
+         regardless of whether the service worker's own window-targeting
+         (clients.navigate/openWindow) actually took effect - runs on
+         every page, a no-op whenever there's nothing stashed. Cache name
+         must match NOTIF_REDIRECT_CACHE in public/sw.js exactly. --}}
+    <script>
+      (function () {
+        if (!('caches' in window)) return;
+        caches.open('dh-notif-redirect-v1').then(function (cache) {
+          return cache.match('/__pending-notification-url');
+        }).then(function (res) {
+          if (!res) return;
+          caches.open('dh-notif-redirect-v1').then(function (cache) { cache.delete('/__pending-notification-url'); });
+          return res.text().then(function (url) {
+            if (url && url !== location.href) {
+              location.replace(url);
+            }
+          });
+        }).catch(function () {});
+      })();
+    </script>
+  @endunless
   {{-- Redesign shell colour, except on frozen pages which keep the colour they had. --}}
   <meta name="theme-color" content="{{ $dhFrozen ? \App\Support\EmbeddedPage::LEGACY_THEME_COLOR : '#0b2a3a' }}">
   <meta name="apple-mobile-web-app-capable" content="yes">

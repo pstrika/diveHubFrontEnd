@@ -28,6 +28,13 @@
 const CACHE_NAME = 'dh-cache-v1';
 const OFFLINE_URL = '/offline.html';
 
+// Separate from CACHE_NAME above (and never needs bumping alongside it) -
+// just a one-entry stash for notificationclick's own workaround below, not
+// part of the asset-caching strategy. Must stay the same literal string as
+// page-template.blade.php's bootstrap script, which is the other half of
+// this (no shared-constant mechanism across the sw.js/Blade boundary).
+const NOTIF_REDIRECT_CACHE = 'dh-notif-redirect-v1';
+
 self.addEventListener('install', function (event) {
     self.skipWaiting();
     event.waitUntil(
@@ -42,8 +49,12 @@ self.addEventListener('activate', function (event) {
         Promise.all([
             self.clients.claim(),
             caches.keys().then(function (names) {
+                // Keeps NOTIF_REDIRECT_CACHE too - it's not an asset cache
+                // this bump is meant to clear, and deleting it here would
+                // erase a just-stashed pending redirect before the page
+                // that's supposed to consume it ever loads.
                 return Promise.all(
-                    names.filter(function (name) { return name !== CACHE_NAME; })
+                    names.filter(function (name) { return name !== CACHE_NAME && name !== NOTIF_REDIRECT_CACHE; })
                         .map(function (name) { return caches.delete(name); })
                 );
             }),
@@ -123,7 +134,24 @@ self.addEventListener('notificationclick', function (event) {
     var url = (event.notification.data && event.notification.data.url) || '/';
 
     event.waitUntil(
-        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (windowClients) {
+        // Stashed first, unconditionally, before anything else below
+        // (Pablo, 2026-10-10: "tapping a notification...takes me to the
+        // app, but not to the specific page") - an installed iOS PWA that
+        // isn't already running gets relaunched at manifest.json's
+        // start_url ("/") rather than reliably honoring this handler's own
+        // window-targeting (clients.matchAll/navigate/openWindow below),
+        // a known iOS/WebKit inconsistency, not something fixable from
+        // inside this handler alone. A freshly-loaded page has no way to
+        // know it was launched by a notification tap otherwise, so every
+        // page checks this cache entry on load (see the bootstrap script
+        // in page-template.blade.php) and self-redirects if it finds one -
+        // that's a plain page-level redirect, so it works regardless of
+        // whether openWindow/navigate below actually took effect.
+        caches.open(NOTIF_REDIRECT_CACHE).then(function (cache) {
+            return cache.put('/__pending-notification-url', new Response(url));
+        }).then(function () {
+            return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        }).then(function (windowClients) {
             // Reuse the first open window/app instance for this origin,
             // navigating it to the target page, rather than requiring an
             // exact URL match - an exact match meant any open window on a
