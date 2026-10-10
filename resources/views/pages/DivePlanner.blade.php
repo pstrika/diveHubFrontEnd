@@ -345,18 +345,25 @@
                                 <span>Turning off safety guardrails can let you configure dangerous diving conditions. Only change these if you understand the risk.</span>
                             </div>
 
-                            <div class="form-check form-switch ps-0 mb-3">
-                                <input class="form-check-input ms-auto" type="checkbox" id="dhToggleRecommendGases" checked>
-                                <label class="form-check-label text-body ms-3 mb-0" for="dhToggleRecommendGases">
-                                    Recommend best gases
+                            {{-- Square checkboxes, not pill toggles (Pablo,
+                                 2026-10-09: "replace the toggles...by the
+                                 square checkboxes we use everywhere else...
+                                 the toggles are from the old front end") -
+                                 .dh-check is the same reusable class the
+                                 group settings modal and comms preferences
+                                 use (see its definition in divershub.css). --}}
+                            <div class="form-check mb-3">
+                                <input class="form-check-input dh-check" type="checkbox" id="dhToggleRecommendGases" checked>
+                                <label class="form-check-label text-body mb-0" for="dhToggleRecommendGases">
+                                    <span class="dh-check-title">Recommend best gases</span>
                                     <div class="text-secondary text-xs">Auto-fill bottom gas, diluent and bailout as you move the depth sliders.</div>
                                 </label>
                             </div>
 
-                            <div class="form-check form-switch ps-0 mb-3">
-                                <input class="form-check-input ms-auto" type="checkbox" id="dhToggleRemoveGuards">
-                                <label class="form-check-label text-body ms-3 mb-0" for="dhToggleRemoveGuards">
-                                    Remove safety guards
+                            <div class="form-check mb-3">
+                                <input class="form-check-input dh-check" type="checkbox" id="dhToggleRemoveGuards">
+                                <label class="form-check-label text-body mb-0" for="dhToggleRemoveGuards">
+                                    <span class="dh-check-title">Remove safety guards</span>
                                     <div class="text-secondary text-xs">Allow diluent PPO&#8322; up to 2.0 ATA and fully independent GF Low/High.</div>
                                 </label>
                             </div>
@@ -368,11 +375,22 @@
                                  week. Unchecked here matches #dhTanksCardRow's own hardcoded
                                  `hidden` attribute below, so there's no flash of the card
                                  before this modal's IIFE runs. --}}
-                            <div class="form-check form-switch ps-0">
-                                <input class="form-check-input ms-auto" type="checkbox" id="dhToggleShowTanks">
-                                <label class="form-check-label text-body ms-3 mb-0" for="dhToggleShowTanks">
-                                    Show tanks &amp; gas-limited bottom time
+                            <div class="form-check mb-3">
+                                <input class="form-check-input dh-check" type="checkbox" id="dhToggleShowTanks">
+                                <label class="form-check-label text-body mb-0" for="dhToggleShowTanks">
+                                    <span class="dh-check-title">Show tanks &amp; gas-limited bottom time</span>
                                     <div class="text-secondary text-xs">Preview feature - tank/SAC inputs and the gas-limited warning pill, hidden until this has had more real-world testing.</div>
+                                </label>
+                            </div>
+
+                            {{-- Off by default (Pablo, 2026-10-09). Sent to the
+                                 deco API as part of the dive profile payload -
+                                 see dhLastStopAt20ft in deco-planner.js. --}}
+                            <div class="form-check">
+                                <input class="form-check-input dh-check" type="checkbox" id="dhToggleLastStop20">
+                                <label class="form-check-label text-body mb-0" for="dhToggleLastStop20">
+                                    <span class="dh-check-title">Last stop at 20 ft</span>
+                                    <div class="text-secondary text-xs">Round the shallowest stop to 20 ft instead of the default last-stop depth.</div>
                                 </label>
                             </div>
                         </div>

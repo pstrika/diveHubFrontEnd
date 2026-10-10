@@ -473,6 +473,25 @@
             // of these alone.
             if (typeof dhAttachGasSupply === 'function') dhAttachGasSupply(bottomGas, decoGases);
 
+            // Last stop at 20ft/6m (Pablo, 2026-10-09, confirmed with
+            // dh-back-end): decotengu's last_stop_6m folds the normal
+            // 10ft/3m stop into an extended 20ft/6m one and ascends
+            // straight from there. If the shallowest deco gas only
+            // switches in at 10ft, turning this on removes that stop
+            // entirely - the gas would never actually get breathed.
+            // Not blocked on the backend; just a heads-up so a diver can
+            // fix their gas plan or confirm they understand the tradeoff.
+            if (dhLastStopAt20ft && decoGases.length) {
+                var dhShallowestSwitch = Math.min.apply(null, decoGases.map(function (g) { return g.switchDepth; }));
+                if (dhShallowestSwitch === 10) {
+                    var dhLastStopProceed = confirm('Your shallowest deco gas switches in at 10 ft, but "Last stop at 20 ft" removes that stop - that gas would never get breathed. Continue anyway?');
+                    if (!dhLastStopProceed) {
+                        if (dhCalcSplash) dhCalcSplash.classList.remove('is-visible');
+                        return;
+                    }
+                }
+            }
+
             // Create final JSON structure
             const diveProfile = {
                 mode: modeOCOrCC,
@@ -483,7 +502,8 @@
                 rate: rate,
                 surfaceTime: surfTime,
                 decoGases: decoGases,
-                setpoint: setpoint
+                setpoint: setpoint,
+                lastStop6m: dhLastStopAt20ft
             };
             if (typeof dhSnapshotTanksForSave === 'function') {
                 var tanksSnapshot = dhSnapshotTanksForSave();
@@ -892,7 +912,11 @@
                 rate: diveProfile.rate,
                 bottomGas: diveProfile.bottomGas,
                 decoGases: diveProfile.decoGases,
-                levels: levels
+                levels: levels,
+                // Applies identically to DecoPlanner and MultiLevelDivePlanner
+                // (confirmed with dh-back-end, 2026-10-09) - both share the
+                // same underlying engine-config function.
+                lastStop6m: diveProfile.lastStop6m
                 // surfaceTime deliberately omitted (optional per the API) -
                 // its slider is hidden in multi-level mode (Pablo, 2026-09-24:
                 // "the surface time slider is not needed either"), so the
@@ -1110,6 +1134,9 @@
         // place. Declared here, not down with the Tanks code itself, for
         // the same early-declaration reason as the two flags above.
         let dhShowTanksFeature = false;
+        // Off by default (Pablo, 2026-10-09). Sent to the deco API as part
+        // of the dive profile payload - see its construction further down.
+        let dhLastStopAt20ft = false;
 
         //var depth = parseInt(document.getElementById("labelDepth").textContent);
         let depth = currentSite ? currentSite.maxDepth : 100;    // default depth
@@ -8365,6 +8392,13 @@
                             dhRenderSafetyWarnings(window.dhScenarios.baseline, null);
                         }
                     }
+                });
+            }
+
+            var lastStop20Toggle = document.getElementById('dhToggleLastStop20');
+            if (lastStop20Toggle) {
+                lastStop20Toggle.addEventListener('change', function (e) {
+                    dhLastStopAt20ft = e.target.checked;
                 });
             }
         })();

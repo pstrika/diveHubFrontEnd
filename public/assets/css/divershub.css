@@ -1370,6 +1370,22 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
   opacity: .6;
 }
 
+/* Same small uppercase label font as the profile page's card headers
+   (.dh-profile-card-head .dh-panel-title - "Contact information",
+   "Certification level"), reused for a .dh-check's own title text
+   (Pablo, 2026-10-09, Deco Planner's Advanced settings modal: "use the
+   same font...as you use in the user profile...Contact information...
+   or Certification level"). */
+.dh-check-title {
+  display: block;
+  text-transform: uppercase;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  color: var(--dh-muted);
+  margin-bottom: 2px;
+}
+
 /* Guest prompt: create an account or sign in, side by side and stacking on phones. */
 .dh-guest-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: var(--dh-space-3); }
 
