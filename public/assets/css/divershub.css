@@ -2588,7 +2588,7 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
    laptop's pill size untouched. 16px is the documented threshold that
    avoids the zoom entirely. */
 @media (hover: none) and (pointer: coarse) {
-  .dh-gas-input, #chatBodyInput { font-size: 16px; }
+  .dh-gas-input, #chatBodyInput, .dh-search input { font-size: 16px; }
 }
 
 /* Pencil icon so the pill reads as "type here", not a static badge - shown
