@@ -89,8 +89,14 @@
                                     <td>{{ $photo->created_at->format('M j, Y') }}</td>
                                     <td>
                                         <div class="dh-admin-actions">
-                                            <form method="POST" action="{{ route('DiverPhotos.manage.approve', $photo) }}" style="display:inline;">
+                                            {{-- Short admin-written caption, used as this image's ALT
+                                                 text on the site page (Pablo, 2026-10-11) - optional,
+                                                 approving with it blank leaves the existing generic
+                                                 fallback alt text in place. Submitted together with
+                                                 Approve, not its own separate save step. --}}
+                                            <form method="POST" action="{{ route('DiverPhotos.manage.approve', $photo) }}" class="dh-diver-photo-approve-form">
                                                 @csrf
+                                                <input type="text" name="desc" placeholder="Short description (used as ALT text)" maxlength="150" class="dh-diver-photo-desc-input">
                                                 <button type="submit" title="Approve" style="color: var(--dh-good);"><i class="material-icons" style="font-size:20px;">check_circle</i></button>
                                             </form>
                                             <button type="button" class="is-danger" title="Reject"

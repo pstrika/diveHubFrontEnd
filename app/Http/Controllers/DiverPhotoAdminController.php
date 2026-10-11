@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DiverPhoto;
 use App\Models\User;
+use Illuminate\Http\Request;
 
 /**
  * Picture Management admin console (Pablo, 2026-09-23: "Admins should
@@ -24,12 +25,22 @@ class DiverPhotoAdminController extends Controller
         return view('pages.Admin.DiverPhotos.Index', compact('pending', 'history'));
     }
 
-    public function approve(DiverPhoto $photo)
+    public function approve(Request $request, DiverPhoto $photo)
     {
         $this->authorize('manage-items', User::class);
 
+        // Admin-written, not diver-written (Pablo, 2026-10-11: "I don't
+        // want the divers to add a description, I think that's something
+        // that the admin (me) should do"). Optional - approving without
+        // one leaves SiteDetails.blade.php's existing generic fallback
+        // alt text in place, same as before this field existed.
+        $validated = $request->validate([
+            'desc' => 'nullable|string|max:150',
+        ]);
+
         $photo->update([
             'status' => 'approved',
+            'desc' => $validated['desc'] ?? null,
             'reviewedBy' => auth()->id(),
             'reviewedAt' => now(),
         ]);

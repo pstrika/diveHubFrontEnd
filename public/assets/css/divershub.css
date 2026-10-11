@@ -843,7 +843,12 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-diver-tile-figure { margin: 0; }
 .dh-diver-tile { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
 .dh-diver-tile img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--dh-radius); display: block; }
-.dh-diver-tile-caption { display: flex; justify-content: space-between; gap: 6px; font-size: .72rem; color: var(--dh-muted); margin-top: 4px; }
+.dh-diver-tile-caption { display: flex; flex-direction: column; gap: 2px; font-size: .72rem; color: var(--dh-muted); margin-top: 4px; }
+/* Admin-written description (Pablo, 2026-10-11), when there is one - sits
+   above the uploader byline rather than squeezed into its space-between
+   row, since it can run longer than a name/date pair. */
+.dh-diver-tile-desc { color: var(--dh-ink); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.dh-diver-tile-byline { display: flex; justify-content: space-between; gap: 6px; }
 .dh-diver-tile-name { font-weight: 700; color: var(--dh-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dh-diver-carousel-hint { display: flex; align-items: center; gap: 4px; justify-content: center; font-size: .72rem; color: var(--dh-muted); margin: 8px 0 0; }
 .dh-diver-carousel-hint .material-icons-round { font-size: 16px; }
@@ -2588,7 +2593,7 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
    laptop's pill size untouched. 16px is the documented threshold that
    avoids the zoom entirely. */
 @media (hover: none) and (pointer: coarse) {
-  .dh-gas-input, #chatBodyInput, .dh-search input { font-size: 16px; }
+  .dh-gas-input, #chatBodyInput, .dh-search input, .dh-diver-photo-desc-input { font-size: 16px; }
 }
 
 /* Pencil icon so the pill reads as "type here", not a static badge - shown
@@ -3230,6 +3235,12 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
 .dh-admin-table .dh-admin-actions a, .dh-admin-table .dh-admin-actions button { color: var(--dh-muted); background: none; border: none; padding: 0; cursor: pointer; display: inline-flex; }
 .dh-admin-table .dh-admin-actions a:hover { color: var(--dh-sea); }
 .dh-admin-table .dh-admin-actions .is-danger:hover { color: var(--dh-danger); }
+/* The diver-photo approval console's admin-written ALT text, entered
+   alongside the Approve button rather than its own save step (Pablo,
+   2026-10-11). */
+.dh-diver-photo-approve-form { display: flex; gap: 8px; align-items: center; }
+.dh-diver-photo-desc-input { font-size: .8rem; padding: 5px 8px; border: 1px solid var(--dh-line); border-radius: 6px; color: var(--dh-ink); width: 200px; }
+.dh-diver-photo-desc-input:focus { outline: none; border-color: var(--dh-sea); box-shadow: 0 0 0 2px var(--dh-foam); }
 .dh-admin-empty-row td { text-align: center; padding: 40px; color: var(--dh-muted); }
 
 /* Google-vs-native signup badge on the User Management avatar (Pablo,

@@ -1220,11 +1220,21 @@
                                                     data-photo-src="{{ \App\Support\SitePhoto::web($p->file) }}"
                                                     data-uploader-name="{{ $uploaderName }}"
                                                     data-uploaded-date="{{ $uploadedDate }}">
-                                                    <img src="{{ \App\Support\SitePhoto::thumb($p->file) }}" alt="{{ $site->name }} - photo by {{ $uploaderName }}" loading="lazy">
+                                                    {{-- Admin-written desc, when there is one, takes priority
+                                                         over the generic "photo by X" fallback - same pattern
+                                                         the admin-uploaded gallery above already uses
+                                                         (Pablo, 2026-10-11: added via the Picture Management
+                                                         approval console, not by the diver). --}}
+                                                    <img src="{{ \App\Support\SitePhoto::thumb($p->file) }}" alt="{{ $p->desc ? $site->name . ' - ' . $p->desc : $site->name . ' - photo by ' . $uploaderName }}" loading="lazy">
                                                 </button>
                                                 <figcaption class="dh-diver-tile-caption">
-                                                    <span class="dh-diver-tile-name do-not-translate">{{ $uploaderName }}</span>
-                                                    <span class="dh-diver-tile-date">{{ $uploadedDate }}</span>
+                                                    @if($p->desc)
+                                                        <span class="dh-diver-tile-desc">{{ $p->desc }}</span>
+                                                    @endif
+                                                    <span class="dh-diver-tile-byline">
+                                                        <span class="dh-diver-tile-name do-not-translate">{{ $uploaderName }}</span>
+                                                        <span class="dh-diver-tile-date">{{ $uploadedDate }}</span>
+                                                    </span>
                                                 </figcaption>
                                             </figure>
                                         @endforeach

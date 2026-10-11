@@ -23,6 +23,7 @@ class DiverPhoto extends Model
         'userId',
         'eventId',
         'file',
+        'desc',
         'status',
         'reviewedBy',
         'reviewedAt',
