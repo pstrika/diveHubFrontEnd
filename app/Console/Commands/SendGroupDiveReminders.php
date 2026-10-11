@@ -2,21 +2,19 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Group;
+use App\Console\Commands\Concerns\SendsViaPreferredChannel;
+use App\Models\Event;
 use App\Models\GroupDive;
-use App\Models\Operator;
-use App\Models\Trip;
+use App\Models\User;
 use App\Services\NotificationService;
-use App\Services\SmsService;
-use App\Services\WhatsAppService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Mailgun\Mailgun;
 
 class SendGroupDiveReminders extends Command
 {
+    use SendsViaPreferredChannel;
+
     protected $signature = 'groups:send-reminders';
 
     protected $description = 'Emails group members a reminder 3 days and 1 day before an upcoming group dive';
@@ -49,10 +47,8 @@ class SendGroupDiveReminders extends Command
                 continue;
             }
 
-            $this->sendReminderEmail($dive, $daysAhead);
             $this->notifyReminderInApp($dive, $daysAhead);
-            $this->sendReminderSms($dive, $daysAhead);
-            $this->sendReminderWhatsApp($dive, $daysAhead);
+            $this->sendChannelReminders($dive, $daysAhead);
 
             DB::connection('mysql_trips')->table('group_dive_reminders_sent')->insert([
                 'group_dive_id' => $dive->id,
@@ -68,39 +64,83 @@ class SendGroupDiveReminders extends Command
      * Only members who actually RSVP'd "I'm going" to THIS dive - not the
      * whole group (Pablo, 2026-09-22: "If the user is not coming to a
      * certain trip, we don't want to send 1 day and 3 day reminders. Only
-     * to the ones that have said 'I'm coming'"). Still respects the
-     * existing group/member mute settings via unmutedActiveMembers().
+     * to the ones that have said 'I'm coming'") - AND who have actually
+     * confirmed/booked it with the operator, not just RSVP'd (Pablo,
+     * 2026-10-11: "I only receive reminders for trips I have confirmed
+     * booked" - RSVPing alone only puts an unbooked Event on the diver's
+     * own calendar, see GroupDiveController::addRsvp()'s 'booked' => false).
+     * Still respects the existing group/member mute settings via
+     * unmutedActiveMembers().
      */
     private function remindableMembers(GroupDive $dive): \Illuminate\Support\Collection
     {
         $goingUserIds = $dive->rsvps->pluck('user_id');
 
+        $bookedUserIds = Event::where('group_dive_id', $dive->id)
+            ->where('booked', true)
+            ->whereIn('userId', $goingUserIds)
+            ->pluck('userId');
+
         return $dive->group->unmutedActiveMembers()
-            ->filter(fn ($member) => $goingUserIds->contains($member->user_id))
+            ->filter(fn ($member) => $bookedUserIds->contains($member->user_id))
             ->values();
     }
 
-    private function sendReminderEmail(GroupDive $dive, int $daysAhead)
+    /**
+     * One channel per member - WhatsApp, then SMS, then email, stopping at
+     * the first that's both opted-in and actually sends (Pablo,
+     * 2026-10-11: "only in one channel...depending on how the user has
+     * given consent: WhatsApp -> SMS -> Email, in that order") - not the
+     * old behavior of firing every eligible channel independently and
+     * unconditionally, which is why a diver with both WhatsApp and SMS
+     * opted in got the same reminder twice. See
+     * App\Console\Commands\Concerns\SendsViaPreferredChannel, the same
+     * trait App\Console\Commands\SendPostDiveFeedbackRequests already
+     * uses for this exact shape.
+     */
+    private function sendChannelReminders(GroupDive $dive, int $daysAhead)
     {
-        $group = $dive->group;
         $members = $this->remindableMembers($dive);
-
         if ($members->isEmpty()) {
             return;
         }
 
+        $sms = $this->smsBody($dive, $daysAhead);
+        $email = $this->emailPayload($dive, $daysAhead);
+
+        foreach ($members as $member) {
+            if (!$member->user) {
+                continue;
+            }
+
+            $this->sendViaPreferredChannel(
+                $member->user,
+                $this->whatsappPayload($dive, $daysAhead, $member->user),
+                $sms,
+                $email
+            );
+        }
+    }
+
+    /**
+     * Same document for every recipient - rendered once per dive, not per
+     * member, since none of its content (trip/date/time/who's going) is
+     * member-specific. Uses the blank Mailgun template ("2026 new dh
+     * template"), same as the newsletter, instead of the old dedicated
+     * "tripreminder" template (Pablo, 2026-09-22: "we need to start using
+     * the blank template in mailgun - the same one we have with
+     * newsletters" - approved after reviewing a sample render of this
+     * exact document).
+     */
+    private function emailPayload(GroupDive $dive, int $daysAhead): array
+    {
+        $group = $dive->group;
         $operator = $dive->operator;
         $goingNames = $dive->rsvps->pluck('user.name')->filter()->implode(', ') ?: 'No one yet';
         $dateFormatted = Carbon::parse($dive->date)->format('l, F j');
         $timeFormatted = $dive->time ? Carbon::parse($dive->time)->format('g:i A') : 'TBD';
 
-        // Same document for every recipient - render it once. Uses the
-        // blank Mailgun template ("2026 new dh template"), same as the
-        // newsletter, instead of the old dedicated "tripreminder" template
-        // (Pablo, 2026-09-22: "we need to start using the blank template
-        // in mailgun - the same one we have with newsletters" - approved
-        // after reviewing a sample render of this exact document).
-        $document = view('emails.trip-reminder-document', [
+        $html = view('emails.trip-reminder-document', [
             'preheader' => $dive->tripName . ' is in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '') . ' - here\'s what you need to know.',
             'tripName' => $dive->tripName,
             'daysAhead' => $daysAhead,
@@ -112,30 +152,10 @@ class SendGroupDiveReminders extends Command
             'groupUrl' => route('Groups.show', ['group' => $group->slug]),
         ])->render();
 
-        try {
-            $mg = Mailgun::create(env('MAILGUN_KEY'));
-
-            // email_notifications gate added 2026-09-15 (manifest entry
-            // #1) - this reminder used to go out regardless of that
-            // preference.
-            foreach ($members as $member) {
-                if (!$member->user || !$member->user->email || !$member->user->email_notifications) {
-                    continue;
-                }
-
-                Log::info('Sending group dive reminder (' . $daysAhead . 'd) to: ' . $member->user->email);
-
-                $mg->messages()->send('mail.divers-hub.com', [
-                    'from' => 'Divers-Hub <postmaster@mail.divers-hub.com>',
-                    'to' => $member->user->name . ' <' . $member->user->email . '>',
-                    'subject' => 'Reminder: ' . $dive->tripName . ' in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : ''),
-                    'template' => '2026 new dh template',
-                    'h:X-Mailgun-Variables' => json_encode(['body' => $document]),
-                ]);
-            }
-        } catch (\Throwable $e) {
-            Log::error('Failed to send group dive reminder email: ' . $e->getMessage());
-        }
+        return [
+            'subject' => 'Reminder: ' . $dive->tripName . ' in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : ''),
+            'html' => $html,
+        ];
     }
 
     /**
@@ -147,12 +167,17 @@ class SendGroupDiveReminders extends Command
      */
     private function notifyReminderInApp(GroupDive $dive, int $daysAhead)
     {
+        $members = $this->remindableMembers($dive);
+        if ($members->isEmpty()) {
+            return;
+        }
+
         $group = $dive->group;
         $dateFormatted = Carbon::parse($dive->date)->format('D, M j');
         $timeFormatted = $dive->time ? Carbon::parse($dive->time)->format('g:i A') : 'TBD';
 
         NotificationService::notify(
-            $dive->rsvps->pluck('user_id'),
+            $members->pluck('user_id'),
             $group->name,
             'Reminder: ' . $dive->tripName . ' in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '') . ' - ' . $dateFormatted . ' at ' . $timeFormatted,
             route('Groups.show', ['group' => $group->slug]),
@@ -161,74 +186,42 @@ class SendGroupDiveReminders extends Command
     }
 
     /**
-     * SMS reminder via Twilio, only for members who have both a phone
-     * number on file AND have opted in via the `sms_notifications` profile
-     * checkbox (required consent for Twilio's A2P 10DLC campaign, and not
-     * pre-selected by default). SmsService itself no-ops if Twilio isn't
-     * configured, so this is safe to call unconditionally.
+     * Opt-out language is repeated on purpose - Twilio's A2P 10DLC campaign
+     * is registered with sample messages that include it, and carriers
+     * filter traffic that doesn't match its registered samples. Same body
+     * for every recipient, so built once per dive rather than per member.
      */
-    private function sendReminderSms(GroupDive $dive, int $daysAhead)
+    private function smsBody(GroupDive $dive, int $daysAhead): string
     {
-        $group = $dive->group;
-        $members = $this->remindableMembers($dive);
-
-        if ($members->isEmpty()) {
-            return;
-        }
-
         $dateFormatted = Carbon::parse($dive->date)->format('D, M j');
         $timeFormatted = $dive->time ? Carbon::parse($dive->time)->format('g:i A') : 'TBD';
-        $url = route('Groups.show', ['group' => $group->slug]);
+        $url = route('Groups.show', ['group' => $dive->group->slug]);
 
-        // Opt-out language is repeated in every message on purpose - Twilio's
-        // A2P 10DLC campaign is registered with sample messages that include
-        // it, and carriers filter traffic that doesn't match its registered
-        // samples.
-        $body = 'Divers Hub: ' . $dive->tripName . ' is in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '')
+        return 'Divers Hub: ' . $dive->tripName . ' is in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '')
             . ' - ' . $dateFormatted . ' at ' . $timeFormatted . '. ' . $url . ' Reply STOP to unsubscribe.';
-
-        foreach ($members as $member) {
-            if (!$member->user || !$member->user->phone || !$member->user->sms_notifications) {
-                continue;
-            }
-
-            SmsService::send($member->user->phone, $body);
-        }
     }
 
     /**
-     * WhatsApp reminder via Twilio's "trip_reminder_3_with_waiver" Content
-     * template (whatsapp/card: header image, body, footer, "Trip Details"
-     * and "Sign Waiver" buttons - content.twilio.com, submitted for Meta
-     * review 2026-09-14, approved the same day - Pablo: "all WhatsApp
-     * templates were approved"), only for members who opted in
-     * (`whatsapp_notifications`) and have a phone on file - WhatsAppService
-     * itself also no-ops without Twilio credentials configured.
-     *
-     * The template's variables are fixed by what was actually submitted:
-     * {{1}} diver's name, {{2}} site, {{3}} operator, {{4}} date, {{5}}
-     * time, {{6}} the group's slug (the "Trip Details" button's URL is
-     * https://divers-hub.com/Groups/{{6}}), {{7}} the operator's id (the
-     * "Sign Waiver" button is https://divers-hub.com/w/{{7}}, a fixed-
-     * domain redirect to that operator's actual waiver link -
-     * OperatorController::redirectToWaiver - since WhatsApp's dynamic URL
-     * buttons only allow a fixed base domain and every operator's waiver
-     * lives on its own separate site). Not the days-ahead/group-URL
-     * phrasing the SMS body above uses, since WhatsApp cannot send
-     * free-form business-initiated text, only this exact template shape.
+     * Twilio's "trip_reminder_3_with_waiver" Content template (whatsapp/
+     * card: header image, body, footer, "Trip Details" and "Sign Waiver"
+     * buttons - content.twilio.com, submitted for Meta review 2026-09-14,
+     * approved the same day). Variables are fixed by what was actually
+     * submitted: {{1}} diver's name, {{2}} site, {{3}} operator, {{4}}
+     * date, {{5}} time, {{6}} the group's slug (the "Trip Details"
+     * button's URL is https://divers-hub.com/Groups/{{6}}), {{7}} the
+     * operator's id (the "Sign Waiver" button is
+     * https://divers-hub.com/w/{{7}}, a fixed-domain redirect to that
+     * operator's actual waiver link - OperatorController::redirectToWaiver,
+     * since WhatsApp's dynamic URL buttons only allow a fixed base domain
+     * and every operator's waiver lives on its own separate site). {{1}}
+     * is member-specific (their name), so this is built per member, unlike
+     * smsBody()/emailPayload() above.
      */
-    private function sendReminderWhatsApp(GroupDive $dive, int $daysAhead)
+    private function whatsappPayload(GroupDive $dive, int $daysAhead, User $user): ?array
     {
         $contentSid = config('services.whatsapp.trip_reminder_content_sid');
         if (!$contentSid) {
-            return;
-        }
-
-        $group = $dive->group;
-        $members = $this->remindableMembers($dive);
-
-        if ($members->isEmpty()) {
-            return;
+            return null;
         }
 
         $site = $dive->site->name ?? $dive->tripName;
@@ -240,20 +233,17 @@ class SendGroupDiveReminders extends Command
         // instead of a dead link - see redirectToWaiver's own fallback.
         $operatorId = $dive->operatorId ?: 0;
 
-        foreach ($members as $member) {
-            if (!$member->user || !$member->user->phone || !$member->user->whatsapp_notifications) {
-                continue;
-            }
-
-            WhatsAppService::sendTemplate($member->user->phone, $contentSid, [
-                '1' => $member->user->name,
+        return [
+            'contentSid' => $contentSid,
+            'variables' => [
+                '1' => $user->name,
                 '2' => $site,
                 '3' => $operatorName,
                 '4' => $dateFormatted,
                 '5' => $timeFormatted,
-                '6' => $group->slug,
+                '6' => $dive->group->slug,
                 '7' => (string) $operatorId,
-            ]);
-        }
+            ],
+        ];
     }
 }
