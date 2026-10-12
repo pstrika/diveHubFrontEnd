@@ -141,6 +141,20 @@
     return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   }
 
+  // The real native Android app (com.divershub.app), not a browser tab -
+  // Android's own WebView component stamps "; wv" into its user agent
+  // specifically so a site can tell it's embedded in a plain WebView
+  // rather than running in Chrome itself (Pablo, 2026-10-11: "avoid
+  // showing 'Install as App' from the [native app] itself" - unlike
+  // getInstalledRelatedApps() below, this test is synchronous and direct
+  // because this code is literally running inside that WebView right now,
+  // not guessing whether some OTHER app is installed). Offering to
+  // install the PWA from inside the app that already replaced the PWA
+  // install flow doesn't make sense.
+  function isNativeAndroidApp() {
+    return /; wv\)/.test(window.navigator.userAgent);
+  }
+
   // Never prompt inside an iframe: some of our pages are embedded in a client's
   // own website and an install bar over their content would be ours, not theirs.
   function isEmbedded() {
@@ -193,17 +207,43 @@
     var bar = document.getElementById('dh-install');
     var menuLink = document.getElementById('dh-install-menu-link');
 
-    if (isStandalone()) {
-      // Already installed: the drawer entry has nothing to do, and the bar
-      // never shows again until/unless this becomes a fresh browser profile.
+    // Already installed - as the PWA (isStandalone), as the real native
+    // Android app running right now (isNativeAndroidApp), or as the native
+    // app installed separately while browsing in regular Chrome
+    // (getInstalledRelatedApps, below): the drawer entry has nothing to
+    // do, and no bar/modal should interrupt. The PWA install flow itself
+    // stays fully available otherwise - this only suppresses it for
+    // visitors who already have a real installed app one way or the other
+    // (Pablo, 2026-10-11: "I still want the PWA availability there... but
+    // avoid showing 'Install as App' from the [native app] itself").
+    // getInstalledRelatedApps() only exists in Chrome and is async, unlike
+    // these two synchronous checks, so it has to gate everything below
+    // rather than being a third early return right here - the rest of
+    // this function's body is wrapped in installSetupBody() and only runs
+    // once we actually know none of the three is true.
+    if (isStandalone() || isNativeAndroidApp()) {
       if (menuLink) menuLink.hidden = true;
       return;
+    }
+
+    if ('getInstalledRelatedApps' in navigator) {
+      navigator.getInstalledRelatedApps().then(function (relatedApps) {
+        var nativeAppInstalled = relatedApps.some(function (app) { return app.id === 'com.divershub.app'; });
+        if (nativeAppInstalled) {
+          if (menuLink) menuLink.hidden = true;
+          return;
+        }
+        installSetupBody();
+      }).catch(function () { installSetupBody(); });
+    } else {
+      installSetupBody();
     }
 
     // iOS has no install API at all - beforeinstallprompt never fires, and
     // there is nothing a button could call to trigger the Home Screen add
     // programmatically. It gets the walkthrough modal (<x-ios-install-modal
     // />) instead of this bar on every path below.
+    function installSetupBody() {
     var showIosModal = function () {
       if (document.querySelector('.modal.show') || typeof window.dhShowIosInstallModal !== 'function') return;
       window.dhShowIosInstallModal(isIosSafari());
@@ -287,6 +327,7 @@
       } else {
         show(false);
       }
+    }
     }
   }
 

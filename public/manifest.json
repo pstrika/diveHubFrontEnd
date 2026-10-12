@@ -8,6 +8,12 @@
   "orientation": "portrait-primary",
   "background_color": "#0b2a3a",
   "theme_color": "#0b2a3a",
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "com.divershub.app"
+    }
+  ],
   "icons": [
     {
       "src": "/assets/img/pwa/icon-192.png",
