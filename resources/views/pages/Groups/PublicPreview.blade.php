@@ -3,6 +3,7 @@
 
     <main class="main-content position-relative h-100 border-radius-lg">
         <x-shell.header :title="$group->name" icon="groups" :back="route('Groups.public')" :h1="true" />
+        <x-group-structured-data :group="$group" :SEO="$SEO" />
 
         <div class="container-fluid py-0 dh-board" style="max-width: 760px;">
             <div class="dh-group-preview-hero">

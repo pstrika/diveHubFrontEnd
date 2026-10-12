@@ -341,6 +341,7 @@ body.dh-shell:has(.dh-me-rows) .main-content { padding-bottom: 0; }
 .dh-datebar { display: flex; align-items: center; justify-content: space-between; gap: var(--dh-space-3); margin: var(--dh-space-3) 0 var(--dh-space-2); }
 .dh-datebar-center { display: flex; align-items: center; gap: var(--dh-space-2); min-width: 0; }
 .dh-date-title { font-size: 1.35rem; font-weight: 800; margin: 0; color: var(--dh-ink); white-space: nowrap; }
+h2.dh-date-title { line-height: 1.25; letter-spacing: -0.05rem; } /* was an h1 until the 2026-10-12 SEO pass; keep the h1 metrics */
 .dh-datebtn { width: 40px; height: 40px; padding: 0; justify-content: center; }
 .dh-datebtn[aria-disabled="true"] { opacity: .35; pointer-events: none; }
 .dh-datepick { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; color: var(--dh-sea); cursor: pointer; }

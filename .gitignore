@@ -15,3 +15,6 @@ yarn-error.log
 /.vscode
 /public/assets/img/illustrations/beach.mov
 /public/assets/img/illustrations/dive_sites.mp4
+
+# Link-preview JPEG copies made at runtime by App\Support\ShareImage
+/public/assets/img/share/

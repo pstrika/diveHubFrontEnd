@@ -81,6 +81,7 @@ class BlogController extends Controller
             'open-circuit-vs-closed-circuit' => 'Open Circuit vs. Closed Circuit Diving',
             'seasonal-diving-conditions-in-the-florida-keys-a-month-by-month-guide-for-local-divers' => 'Florida Keys Diving Conditions by Month',
             'lionfish-with-open-sores' => 'Lionfish With Open Sores: What Hunters Should Know',
+            'the-300-foot-rule-floridas-dive-flag-law-and-why-it-cuts-both-ways' => "The 300-Foot Rule: Florida's Dive Flag Law",
         ];
         $metaTitleBase = $shortBlogTitles[$post->slug] ?? $post->title;
         $metaTitle = $metaTitleBase . ' - Divers Hub Blog';
@@ -90,9 +91,13 @@ class BlogController extends Controller
 
         $SEO = [
             'title' => $metaTitle,
-            'desc' => $post->excerpt,
+            // Excerpts are written for the page and can run past the ~160
+            // chars a search snippet shows (6 posts did); whole sentences
+            // only (SEO spot check, 2026-10-12).
+            'desc' => \App\Support\MetaText::description($post->excerpt),
             'canonical' => route('Blog.show', $post->slug),
-            'image' => $post->cover_image ? asset($post->cover_image) : null,
+            // Covers are often WebP, which some link previewers skip; serve a JPEG copy.
+            'image' => $post->cover_image ? (\App\Support\ShareImage::jpeg($post->cover_image) ?? asset($post->cover_image)) : null,
             // Blog posts are articles, not generic pages (SEO audit, 2026-09-28,
             // finding #3) - og:type defaults to "website" everywhere else.
             'ogType' => 'article',

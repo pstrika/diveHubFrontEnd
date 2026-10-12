@@ -323,10 +323,19 @@ class GroupController extends Controller
         // different CTAs (sign in, vs. a real one-click join).
         $isSignedIn = auth()->user()->isNotGuest();
 
+        // SEO spot check, 2026-10-12: titles ran to 74 chars with
+        // " - South Florida Diving Group" in the middle, and every group
+        // shared the sitewide default image despite having a banner.
+        $groupTitle = $group->name . ' | Divers Hub';
+        if (mb_strlen($groupTitle) > 60) {
+            $groupTitle = $group->name;
+        }
         $SEO = [
-            'title' => $group->name . ' - South Florida Diving Group | Divers Hub',
-            'desc' => Str::limit($group->description ?: ('Join ' . $group->name . ', a public diving group on Divers Hub.'), 155),
+            'title' => $groupTitle,
+            'desc' => \App\Support\MetaText::description($group->description ?: ('Join ' . $group->name . ', a public diving group in South Florida on Divers Hub.')),
             'canonical' => route('Groups.show', ['group' => $group->slug]),
+            // Banners are saved as resized JPEGs on upload, so they work in link previews as is.
+            'image' => $group->banner ? asset('assets/' . $group->banner) : null,
         ];
 
         return view('pages.Groups.PublicPreview', compact('group', 'memberCount', 'upcomingDives', 'isSignedIn', 'SEO'));

@@ -59,7 +59,9 @@
 
     @if($siteImg)
         <div class="dh-trip-photo">
-            <img src="{{ $siteImg }}" alt="" loading="lazy" decoding="async">
+            {{-- Alt = the site's name (SEO spot check, 2026-10-12: 72 of the
+                 trip finder's 76 images had an empty alt). --}}
+            <img src="{{ $siteImg }}" alt="{{ $trip['siteNames'][0] }} dive site" loading="lazy" decoding="async">
         </div>
     @endif
 

@@ -20,9 +20,9 @@
             <span class="material-icons-round">chevron_left</span>
         </a>
         <div class="dh-datebar-center">
-            <h1 class="dh-date-title">
+            <h2 class="dh-date-title">
                 @if($isToday) Today, @endif{{ \Carbon\Carbon::parse($date)->format('D, M j') }}
-            </h1>
+            </h2>
             <label class="dh-datepick">
                 <span class="material-icons-round" aria-hidden="true">calendar_month</span>
                 <span class="visually-hidden">Pick a date</span>

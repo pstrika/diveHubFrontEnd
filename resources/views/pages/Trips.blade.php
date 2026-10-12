@@ -2,7 +2,12 @@
     <x-shell.nav active="today" />
 
     <main class="main-content position-relative h-100 border-radius-lg">
-        <x-shell.header :title="$mode === 'day' ? 'Dive Today' : 'Find a dive'" />
+        {{-- Day mode's H1 says what the page is (SEO spot check, 2026-10-12:
+             the only H1 was the date, "Today, Mon, Oct 12"). The date
+             heading below drops to H2 in day mode. Range mode keeps its own
+             H1 (the range) and this stays an h6 there. --}}
+        <x-shell.header :title="$mode === 'day' ? 'South Florida dive trips' : 'Find a dive'" :h1="$mode === 'day'" />
+        <x-trips-structured-data />
 
         <div class="container-fluid py-0 dh-board">
             {{--

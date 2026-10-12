@@ -217,7 +217,9 @@ class SiteController extends Controller
             'reef'  => 'site_reef.webp',
             default => 'dive-site.webp',
         };
-        return asset('assets') . '/img/illustrations/' . $defaultIllustration;
+        // JPEG copy for link previewers that skip WebP (SEO spot check, 2026-10-12).
+        return \App\Support\ShareImage::jpeg('assets/img/illustrations/' . $defaultIllustration)
+            ?? asset('assets') . '/img/illustrations/' . $defaultIllustration;
     }
 
     /**
