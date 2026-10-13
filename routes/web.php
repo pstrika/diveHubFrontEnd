@@ -485,6 +485,16 @@ Route::post('UpdateAllVisited', 'App\Http\Controllers\SiteController@updateAllVi
 
 // Calendar feed routes (UPDATED 2026-08-16)
 Route::post('MyCalendar/regenerate-token', 'App\Http\Controllers\EventController@regenerateToken')->middleware('auth')->name('MyCalendar.regenerateToken');
+// Registered BEFORE the token-based feed below, with a `where()` restricting
+// {type} to these 5 literal values - real calendar_token values are 48 hex
+// chars (bin2hex(random_bytes(24))), so there's no real collision risk, but
+// registration order still matters: an unconstrained {token} route would
+// otherwise swallow every "calendar/feed/*.ics" request first, since both
+// routes share the identical URI shape (Pablo, 2026-10-13: calendar
+// subscribe feeds for the 5 themed calendars).
+Route::get('calendar/feed/{type}.ics', 'App\Http\Controllers\CalendarTController@feed')
+    ->where('type', 'rec|tec|wreck|shark|lobster')
+    ->name('CalendarT.feed');
 Route::get('calendar/feed/{token}.ics', 'App\Http\Controllers\EventController@feed')->name('MyCalendar.feed');
 
 

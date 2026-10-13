@@ -197,42 +197,198 @@ class CalendarTController extends Controller
             'otherColor'   => self::OPERATOR_OTHER_COLOR,
             'about'        => self::ABOUT[$type] ?? null,
             'SEO'          => $SEO,
+            'calendarFeedUrl' => route('CalendarT.feed', ['type' => $type]),
         ]);
     }
 
     public function show($tripType = null, $date = null)
     {
         $isTec = $tripType === 'tec';
-        $type = $isTec ? 'Technical' : 'Recreational';
+        $type = $isTec ? 'tec' : 'rec';
         return $this->month(
-            $isTec ? 'tec' : 'rec',
             $type,
+            $isTec ? 'Technical' : 'Recreational',
             $date,
-            fn (Builder $q) => $q->where('tripType', 'like', "%{$type}%"),
-            'CalendarT/' . ($isTec ? 'tec' : 'rec')
+            $this->typeFilter($type),
+            'CalendarT/' . $type
         );
     }
 
     public function showShark($date = null)
     {
-        return $this->month('shark', 'Shark', $date, fn (Builder $q) => $q->where('tags', 'like', '%SHA%'), 'CalendarShark');
+        return $this->month('shark', 'Shark', $date, $this->typeFilter('shark'), 'CalendarShark');
     }
 
     public function showLobster($date = null)
     {
-        return $this->month('lobster', 'Lobster', $date, fn (Builder $q) => $q->where('tags', 'like', '%LOB%'), 'CalendarLobster');
+        return $this->month('lobster', 'Lobster', $date, $this->typeFilter('lobster'), 'CalendarLobster');
     }
 
     public function showWreck($date = null)
     {
-        return $this->month('wreck', 'Wreck', $date, function (Builder $q) {
-            $q->where('siteIdStatus', 'confirmed')->whereExists(function ($sub) {
-                $sub->select(DB::raw(1))
-                    ->from('sites')
-                    ->whereRaw('FIND_IN_SET(sites.id, trips.siteId)')
-                    ->where('sites.type', 'wreck');
-            });
-        }, 'CalendarWreck');
+        return $this->month('wreck', 'Wreck', $date, $this->typeFilter('wreck'), 'CalendarWreck');
+    }
+
+    /**
+     * The same per-type trip filter used both to render a calendar's own
+     * grid/list (month(), above) and to build its public .ics feed (feed(),
+     * below) - one source of truth so the feed can never drift from what
+     * the page itself shows (Pablo, 2026-10-13: calendar subscribe feeds
+     * for the 5 themed calendars).
+     *
+     * @return \Closure(Builder):void
+     */
+    private function typeFilter(string $type): \Closure
+    {
+        return match ($type) {
+            'tec' => fn (Builder $q) => $q->where('tripType', 'like', '%Technical%'),
+            'rec' => fn (Builder $q) => $q->where('tripType', 'like', '%Recreational%'),
+            'shark' => fn (Builder $q) => $q->where('tags', 'like', '%SHA%'),
+            'lobster' => fn (Builder $q) => $q->where('tags', 'like', '%LOB%'),
+            'wreck' => function (Builder $q) {
+                $q->where('siteIdStatus', 'confirmed')->whereExists(function ($sub) {
+                    $sub->select(DB::raw(1))
+                        ->from('sites')
+                        ->whereRaw('FIND_IN_SET(sites.id, trips.siteId)')
+                        ->where('sites.type', 'wreck');
+                });
+            },
+            default => throw new \InvalidArgumentException("Unknown calendar type: {$type}"),
+        };
+    }
+
+    /**
+     * Public iCalendar subscription feed for one themed calendar - every
+     * upcoming trip of that type, same content for every visitor (unlike
+     * EventController::feed()/GroupController::feed(), which are per-user/
+     * per-group tokened feeds of saved trips). No token: the type itself
+     * (validated against HEADER's known keys) is the only input, and the
+     * route constrains it to the 5 real values besides.
+     *
+     * Capped to the next FEED_WINDOW_DAYS: an unbounded feed only grows,
+     * and a calendar client re-polls this URL on its own schedule anyway,
+     * so there is no reason to ever hand it years of trips at once.
+     */
+    private const FEED_WINDOW_DAYS = 120;
+
+    public function feed($type)
+    {
+        if (!isset(self::HEADER[$type])) {
+            abort(404);
+        }
+
+        $today = Carbon::today();
+        // ->with('operator'): buildTripIcs() below reads $trip->operator for
+        // every trip - without eager-loading it that's one query per trip,
+        // which is fine for a single month (month()'s own usual scope) but
+        // timed out at 30s for the wreck filter's wider FEED_WINDOW_DAYS
+        // (1000+ trips, each a separate round trip) when first tested
+        // locally (Pablo, 2026-10-13).
+        $query = Trip::with('operator')
+            ->whereDate('date', '>=', $today->toDateString())
+            ->whereDate('date', '<=', $today->copy()->addDays(self::FEED_WINDOW_DAYS)->toDateString());
+        ($this->typeFilter($type))($query);
+        $trips = $query->get()->sortBy(['date', 'departureTime']);
+
+        $ics = $this->buildTripIcs($type, $trips);
+
+        return response($ics, 200, [
+            'Content-Type' => 'text/calendar; charset=utf-8',
+            'Content-Disposition' => 'inline; filename="divehub-' . $type . '-calendar.ics"',
+        ]);
+    }
+
+    /**
+     * Same RFC 5545 shape as EventController::buildIcs()/GroupController::
+     * feed() - a self-contained VTIMEZONE so DST is handled by the
+     * calendar client - built from Trip rows directly rather than a
+     * user's saved Events or a group's dives, since this feed has no
+     * owner to source "saved" trips from.
+     */
+    private function buildTripIcs(string $type, \Illuminate\Support\Collection $trips): string
+    {
+        $tz = 'America/New_York';
+        $calName = (self::HEADER[$type]['title'] ?? ucfirst($type)) . ' - Divers Hub';
+
+        $lines = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//DiveHub//Calendar' . ucfirst($type) . '//EN',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
+            'X-WR-CALNAME:' . $calName,
+            "X-WR-TIMEZONE:{$tz}",
+            'BEGIN:VTIMEZONE',
+            'TZID:America/New_York',
+            'BEGIN:DAYLIGHT',
+            'TZOFFSETFROM:-0500',
+            'TZOFFSETTO:-0400',
+            'TZNAME:EDT',
+            'DTSTART:19700308T020000',
+            'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU',
+            'END:DAYLIGHT',
+            'BEGIN:STANDARD',
+            'TZOFFSETFROM:-0400',
+            'TZOFFSETTO:-0500',
+            'TZNAME:EST',
+            'DTSTART:19701101T020000',
+            'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU',
+            'END:STANDARD',
+            'END:VTIMEZONE',
+        ];
+
+        $stamp = Carbon::now('UTC')->format('Ymd\THis\Z');
+
+        foreach ($trips as $trip) {
+            $operator = $trip->operator;
+            $operatorName = $operator->operatorName ?? null;
+            $cityAddress = $operator->cityAddress ?? null;
+
+            $start = Carbon::parse(
+                Carbon::parse($trip->date)->format('Y-m-d') . ' ' . ($trip->departureTime ?: '00:00'),
+                $tz
+            );
+            $end = (clone $start)->addHours(3);
+
+            $summary = trim($trip->tripName . ($operatorName ? ' — ' . $operatorName : ''));
+            $location = $cityAddress ?: $operatorName;
+
+            $descParts = [];
+            if ($trip->linkToBook) {
+                $descParts[] = 'Booking: ' . $trip->linkToBook;
+            }
+            $descParts[] = 'End time is an estimate (3h) — DiveHub trips have no set end time.';
+
+            $lines[] = 'BEGIN:VEVENT';
+            $lines[] = "UID:divehub-trip-{$trip->id}-{$type}@divers-hub.com";
+            $lines[] = "DTSTAMP:{$stamp}";
+            $lines[] = "DTSTART;TZID={$tz}:" . $start->format('Ymd\THis');
+            $lines[] = "DTEND;TZID={$tz}:" . $end->format('Ymd\THis');
+            $lines[] = 'SUMMARY:' . $this->icsEscape($summary);
+            if ($location) {
+                $lines[] = 'LOCATION:' . $this->icsEscape($location);
+            }
+            if ($trip->linkToBook) {
+                $lines[] = 'URL:' . $this->icsEscape($trip->linkToBook);
+            }
+            $lines[] = 'DESCRIPTION:' . $this->icsEscape(implode("\n", $descParts));
+            $lines[] = 'STATUS:CONFIRMED';
+            $lines[] = 'END:VEVENT';
+        }
+
+        $lines[] = 'END:VCALENDAR';
+
+        return implode("\r\n", $lines) . "\r\n";
+    }
+
+    /** Same escaping rules as EventController::icsEscape()/GroupController::icsEscape(). */
+    private function icsEscape($text)
+    {
+        return str_replace(
+            ['\\', ',', ';', "\n", "\r"],
+            ['\\\\', '\\,', '\\;', '\\n', ''],
+            $text ?? ''
+        );
     }
 
     // showHydrotherapy moved to HydrotherapyCalendarController so this file can never
