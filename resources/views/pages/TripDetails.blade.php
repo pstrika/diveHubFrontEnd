@@ -1,6 +1,19 @@
 <x-page-template bodyClass='dh-shell bg-gray-200' :SEO="$SEO ?? []">
     <x-shell.nav active="today" />
 
+    @php
+        // Was never set anywhere - referenced below (the "Add to my
+        // calendar"/"Add to a group" vs. guest-prompt branch) but always
+        // undefined, so that @if always took the guest branch for every
+        // visitor, including real signed-in members (Pablo, 2026-10-13:
+        // "when logged as Guest, I'm allowed to 'add trip to my
+        // calendar'... this button should not show"). Same local
+        // computation Welcome.blade.php/OperatorDetails.blade.php/
+        // SiteDetails.blade.php already use - this was just the one page
+        // missing it.
+        $isMember = auth()->user() && auth()->user()->isNotGuest();
+    @endphp
+
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
 
     @if(auth()->user()->isNotGuest())
@@ -206,7 +219,15 @@
                                 <span class="material-icons-round">groups</span>Add to a group
                             </button>
                         @else
-                            {{-- Show, then gate (F-04). --}}
+                            {{-- Show, then gate (F-04) - a guest sees the same
+                                 button, clicking opens the sign in/create
+                                 account prompt instead of actually adding
+                                 anything (Pablo, 2026-10-13: tried hiding it
+                                 outright first, decided this nudge-to-sign-up
+                                 pattern - already used ~18 other places in
+                                 this app, see guest-modal.blade.php's own
+                                 docblock - reads better than no affordance
+                                 at all). --}}
                             <a class="dh-btn dh-btn-ghost-dark" href="#" onclick="event.preventDefault();showModalGuest();"><span class="material-icons-round">event</span>Add to my calendar</a>
                         @endif
                     </div>
