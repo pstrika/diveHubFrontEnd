@@ -280,6 +280,7 @@ class GroupController extends Controller
 
         $SEO = [
             "robots" => "noindex, nofollow",
+            'title' => $this->groupTabTitle($group),
         ];
 
         $callingCards = self::CALLING_CARDS;
@@ -308,6 +309,24 @@ class GroupController extends Controller
      * view assumes a real member. Real, indexable SEO metadata, unlike the
      * member view's noindex (Pablo, 2026-10-09).
      */
+    /**
+     * "{Group Name} | Divers Hub", falling back to the bare group name past
+     * 60 characters - shared by showPublicPreview() (SEO - a non-member's
+     * crawled/shared title) and show()'s own member branch (Pablo,
+     * 2026-10-12: "the only thing I don't see is the tab title" - as a
+     * signed-in member of his own group, he was hitting show()'s branch,
+     * which never set a title at all before this, not even the old long
+     * one - it fell back to the generic sitewide default. Not an SEO
+     * concern for a noindex'd member page, but the tab title itself was
+     * just missing).
+     */
+    private function groupTabTitle(Group $group): string
+    {
+        $title = $group->name . ' | Divers Hub';
+
+        return mb_strlen($title) > 60 ? $group->name : $title;
+    }
+
     private function showPublicPreview(Group $group)
     {
         $memberCount = $group->activeMembers()->count();
@@ -323,15 +342,8 @@ class GroupController extends Controller
         // different CTAs (sign in, vs. a real one-click join).
         $isSignedIn = auth()->user()->isNotGuest();
 
-        // SEO spot check, 2026-10-12: titles ran to 74 chars with
-        // " - South Florida Diving Group" in the middle, and every group
-        // shared the sitewide default image despite having a banner.
-        $groupTitle = $group->name . ' | Divers Hub';
-        if (mb_strlen($groupTitle) > 60) {
-            $groupTitle = $group->name;
-        }
         $SEO = [
-            'title' => $groupTitle,
+            'title' => $this->groupTabTitle($group),
             'desc' => \App\Support\MetaText::description($group->description ?: ('Join ' . $group->name . ', a public diving group in South Florida on Divers Hub.')),
             'canonical' => route('Groups.show', ['group' => $group->slug]),
             // Banners are saved as resized JPEGs on upload, so they work in link previews as is.
