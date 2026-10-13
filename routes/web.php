@@ -191,6 +191,21 @@ Route::get('DecoPlannerImperial', 'App\Http\Controllers\NDLController@showImperi
 Route::get('DecoPlannerMetric/{id}', 'App\Http\Controllers\NDLController@showMetric')->where('id', '[0-9]+')->middleware('guest');
 Route::get('DecoPlannerMetric', 'App\Http\Controllers\NDLController@showMetric')->middleware('guest')->name('DecoPlannerMetric');
 
+// Multi Dive Planner (Pablo, 2026-10-13, gated to platform admins only as
+// of 2026-10-15 for its initial production rollout) - up to 4 separate
+// dives with a surface interval between each. 'auth' here (not 'guest'
+// like the single-dive planner above) + $this->authorize('manage-users',
+// User::class) as the first line of every action method below - same
+// enforcement pattern as UserManagementController/RolesController, not
+// PlatformHealth's menu-only hiding (that one was never actually blocked
+// at the route level). Same {id} numeric constraint as before.
+Route::get('MultiDivePlanner/{id}', 'App\Http\Controllers\MultiDivePlannerController@show')->where('id', '[0-9]+')->middleware('auth');
+Route::get('MultiDivePlanner', 'App\Http\Controllers\MultiDivePlannerController@show')->middleware('auth')->name('MultiDivePlanner');
+Route::get('MultiDivePlannerImperial/{id}', 'App\Http\Controllers\MultiDivePlannerController@showImperial')->where('id', '[0-9]+')->middleware('auth');
+Route::get('MultiDivePlannerImperial', 'App\Http\Controllers\MultiDivePlannerController@showImperial')->middleware('auth')->name('MultiDivePlannerImperial');
+Route::get('MultiDivePlannerMetric/{id}', 'App\Http\Controllers\MultiDivePlannerController@showMetric')->where('id', '[0-9]+')->middleware('auth');
+Route::get('MultiDivePlannerMetric', 'App\Http\Controllers\MultiDivePlannerController@showMetric')->middleware('auth')->name('MultiDivePlannerMetric');
+
 // Saving GF Low/High + setpoint and custom gas mixes needs a real profile
 // to save them to - 'guest' alone would silently write to the shared guest
 // account (Pablo, 2026-09-18).

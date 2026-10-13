@@ -2108,6 +2108,110 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
    too far apart (Pablo, 2026-09-25: "in desktop and iPad I want them
    slightly closer"). */
 @media (min-width: 768px) { #multiLevelRow { --bs-gutter-x: 1rem; } }
+/* Multi Dive Planner's own dive/surface-interval panels are always
+   col-12 (Pablo, 2026-10-13: "horizontal cards taking all width"), unlike
+   #multiLevelRow's 4-across grid above - they stack at every breakpoint,
+   so the vertical gutter (not .dh-level-panel's own margin-bottom, which
+   only exists for narrow/mobile stacking and is zeroed out at
+   min-width:992px for the OTHER grid's benefit) is what spaces them. */
+#multiDiveRow { --bs-gutter-y: .75rem; }
+#multiDiveRow .dh-level-panel { margin-bottom: 0; }
+
+/* A surface interval panel represents time passing, not a dive itself -
+   muted fill and a centered clock icon set it apart from the .dh-level-
+   panel dive cards on either side of it (Pablo, 2026-10-13, Multi Dive
+   Planner). */
+.dh-surface-interval-panel { background: var(--dh-foam); text-align: center; }
+.dh-surface-interval-icon { display: block; margin: 6px auto 8px; font-size: 28px; color: var(--dh-sea); }
+
+/* Stage-to-stage connector arrow (Pablo, 2026-10-13: "add a small arrow
+   from 'stage' to 'stage'") between two consecutive full-width panels -
+   shown/hidden in lockstep with the panel it leads into, see
+   dhShowDive()/dhDeleteDive() in multi-dive-planner.js. */
+.dh-stage-arrow { display: flex; justify-content: center; color: var(--dh-muted); }
+.dh-stage-arrow .material-icons-round { font-size: 20px; }
+
+/* Wide enough for "HH:MM" (5 chars) where the default 66px .dh-gas-input
+   is sized for a 2-3 digit number - same precedent as .dh-tank-editable's
+   own 76px override. */
+.dh-gas-input-wide { width: 76px; }
+
+/* "Solve for this" toggle (Pablo, 2026-10-13): for a surface interval and
+   the dive that follows it, exactly one of surface interval time, depth or
+   bottom time is the unknown a future backend solves for - the other two
+   stay plain editable inputs. Mutually exclusive per interval+dive pair,
+   see dhSetSolveFor() in multi-dive-planner.js. A small badge overlaying
+   its own field's pill (Pablo: "smaller badge overlaying the text input"),
+   not a separate control below it - lives inside .dh-gas-editable, the
+   same position:relative wrapper the pencil edit-icon already uses
+   (.dh-gas-edit-icon, right:5px/vertically centered INSIDE the input), at
+   the opposite corner (top-right, outside) so the two never collide. */
+.dh-solve-toggle {
+  position: absolute; top: -7px; right: -7px; z-index: 2;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%; cursor: pointer;
+  background: #fff; color: var(--dh-danger); border: 1.5px solid var(--dh-danger);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+}
+.dh-solve-toggle .material-icons-round { font-size: 12px; }
+.dh-solve-toggle:hover { filter: brightness(.95); }
+.dh-solve-toggle.is-active { background: var(--dh-danger); color: #fff; }
+
+/* The field currently being solved for shows "??" instead of a value,
+   dark-blue background / white text, so it reads as "not yours to set
+   right now" (Pablo, 2026-10-13: "theme dark blue bg with white font and
+   the placeholder '??'"). Its slider is disabled (grayed, un-draggable)
+   alongside it - see dhApplySolveVisual() in multi-dive-planner.js. */
+.dh-gas-input.is-solving {
+  background: var(--dh-deep); border-color: var(--dh-deep); color: #fff; cursor: default;
+}
+.dh-gas-input.is-solving::placeholder { color: rgba(255, 255, 255, .85); }
+
+/* Multi Dive Planner results (Pablo, 2026-10-14): the cell that was the
+   actual unknown the backend solved for, same dark blue as the inputs'
+   own "solving" state above, now showing the real answer instead of "??".
+   See dhSolvedPillHtml() in multi-dive-planner.js. */
+.dh-solved-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 28px; padding: 0 12px; border-radius: var(--dh-radius-pill);
+  background: var(--dh-deep); color: #fff; font-weight: 700; font-size: .82rem;
+}
+.dh-solved-pill.is-infeasible { background: var(--dh-danger); }
+
+/* A value the diver TYPED got silently shortened for safety (the NDL
+   clamp) - distinct from a value the backend was explicitly asked to
+   solve for (blue). Originally grey, but that read as the same color as
+   the Air gas pill (also grey) sitting right next to it in the same row -
+   switched to --dh-avg's yellow/olive (Pablo, 2026-10-15: "the gas pill
+   being grey get's confused with the grey pill when we adjust a
+   time...let's use a yellow pill instead"), same token the site already
+   uses for an "average" rating elsewhere. Same shape as .dh-solved-pill,
+   different color only. */
+.dh-clamped-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 28px; padding: 0 12px; border-radius: var(--dh-radius-pill);
+  background: var(--dh-avg); color: #fff; font-weight: 700; font-size: .82rem;
+}
+
+/* Full-width "Total excursion time" summary, under the results table
+   (Pablo, 2026-10-14: "a pill extending all width...dark blue theme bg
+   with white fonts") - same dark blue as .dh-solved-pill, just a block
+   instead of inline-sized-to-content. */
+.dh-total-excursion-pill {
+  display: block; width: 100%; text-align: center; background: var(--dh-deep);
+  color: #fff; font-weight: 700; font-size: .9rem; padding: 10px 16px;
+  border-radius: var(--dh-radius-pill);
+}
+
+/* Clamp/infeasibility notices above the results table - same two-tone
+   convention as the rest of the app (soft fill, a left accent bar), info
+   (dive 1's NDL clamp) in sea blue, warn (a transition came back
+   infeasible) in amber. */
+.callout-info, .callout-warn {
+  border-radius: var(--dh-radius); padding: 12px 16px; font-size: .86rem;
+  border-left: 3px solid var(--dh-sea); background: var(--dh-foam); color: var(--dh-ink);
+}
+.callout-warn { border-left-color: var(--dh-warn); background: #fdf1e6; }
 
 /* Small red circular delete affordance, replacing the old full-width
    "Delete level"/"Delete gas" buttons to save layout space (Pablo,
@@ -2256,6 +2360,14 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
   background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 10px;
   box-shadow: 0 6px 20px rgba(11,42,58,.18); max-height: 220px; overflow-y: auto;
 }
+/* Opens downward instead of up (Pablo, 2026-10-13, Multi Dive Planner's
+   site search) - the base rule above opens upward because its one
+   existing caller, the chat composer, sits near the bottom of the screen;
+   a form field near the TOP of a page (like a dive's site search here)
+   would otherwise render its dropdown behind the sticky page header and
+   unclickable - caught live via Playwright, a result button existed but
+   every click landed on .dh-pagehead instead. */
+.dh-mention-menu-down { bottom: auto; top: 100%; margin-bottom: 0; margin-top: 4px; }
 .dh-mention-item {
   display: block; width: 100%; text-align: left; border: 0; background: none; padding: 9px 12px;
   font-size: .88rem; font-weight: 600; color: var(--dh-ink); cursor: pointer;
@@ -2695,6 +2807,11 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
    higher specificity below, which is exactly the "Air%" bug this replaced
    (Pablo, 2026-09-26: "it should be just 'Air'"). */
 .dh-gas-result-pill.is-air { background: var(--dh-muted); }
+/* Same "Air" suppression as the split-pill rule further down, for a
+   STANDALONE is-o2 pill (Multi Dive Planner's own O2% result pill,
+   Pablo, 2026-10-14) - its "%" is real .textContent set in JS, not a
+   generated ::after, so only the leading "O2" ::before needs hiding here. */
+.dh-gas-result-pill.is-gas-label::before { content: none; }
 
 /* Gas density: a calculation result like the others, but a supporting
    figure rather than the headline the split pill above it is - smaller,
