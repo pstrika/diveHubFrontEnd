@@ -506,7 +506,13 @@
                                         <span class="d-flex align-items-center">
                                             <div class="avatar avatar-sm me-2 position-relative">
                                                 <img src="{{ \App\Support\UserAvatar::url($member->user->picture) }}" alt="profile_image" class="w-100 rounded-circle shadow-sm">
-                                                <span class="position-absolute border border-white rounded-circle {{ $member->user->isOnline() ? 'bg-success' : 'bg-secondary' }}" style="width: 10px; height: 10px; bottom: 0; right: 0;" data-bs-toggle="tooltip" title="{{ $member->user->isOnline() ? 'Online' : 'Offline' }}"></span>
+                                                {{-- class dh-presence-dot + data-user-id: lets the chat poll
+                                                     (Show.blade.php's dhUpdatePresence(), driven by
+                                                     GroupMessageController::poll()'s onlineUserIds) flip this
+                                                     live instead of only ever reflecting isOnline() as of the
+                                                     last full page load (Pablo, 2026-10-13: "member presence
+                                                     doesn't update live"). --}}
+                                                <span class="dh-presence-dot position-absolute border border-white rounded-circle {{ $member->user->isOnline() ? 'bg-success' : 'bg-secondary' }}" data-user-id="{{ $member->user->id }}" style="width: 10px; height: 10px; bottom: 0; right: 0;" data-bs-toggle="tooltip" title="{{ $member->user->isOnline() ? 'Online' : 'Offline' }}"></span>
                                             </div>
                                             {{ $member->user->name }}
                                             @if($member->user->certLevel !== null)
@@ -835,6 +841,12 @@
             return fetch("{{ route('Groups.messages.poll', ['group' => $group->slug]) }}", { headers: { 'Accept': 'application/json' } })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
+                    // Independent of the signature check below - presence
+                    // can change (someone opens/closes the chat) on a poll
+                    // where no message/reaction did, and would otherwise
+                    // never be reflected (Pablo, 2026-10-13).
+                    dhUpdatePresence(data.onlineUserIds);
+
                     var oldCount = parseInt(messagesEl.getAttribute('data-count'), 10);
                     var oldReactionSignature = messagesEl.getAttribute('data-reaction-signature');
                     // Compares the signature, not the plain count: a reaction
@@ -892,6 +904,76 @@
         })();
 
         setInterval(refreshChatMessages, 5000);
+
+        // Relative chat timestamps tick forward on their own instead of
+        // freezing at render time until the next full reload (Pablo,
+        // 2026-10-13). Every element already carries its real instant in
+        // data-created-at (messages.blade.php) - this just recomputes the
+        // display text from it, client-side, on an interval; no server
+        // round trip, and it naturally picks up every message currently in
+        // the DOM each time it runs, including ones refreshChatMessages()
+        // swapped in since the last tick.
+        function dhRelativeTime(thenMs) {
+            var seconds = Math.round((Date.now() - thenMs) / 1000);
+            if (seconds < 0) seconds = 0; // clock skew - never show a negative/future time
+            if (seconds < 45) return 'a few seconds ago';
+
+            // Each divisor steps `value` up to the NEXT unit (seconds -> minutes
+            // -> hours -> ... ), and unitIndex tracks which label that lands on -
+            // stop as soon as value is small enough to read naturally in its
+            // current unit, same approach any relative-time library uses.
+            var divisors = [60, 60, 24, 7, 4.348, 12];
+            var labels = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'];
+            var value = seconds;
+            var unitIndex = 0;
+            for (var i = 0; i < divisors.length; i++) {
+                if (value < divisors[i]) break;
+                value /= divisors[i];
+                unitIndex++;
+            }
+            var rounded = Math.max(1, Math.round(value));
+            return rounded + ' ' + labels[unitIndex] + (rounded === 1 ? '' : 's') + ' ago';
+        }
+
+        function dhTickChatTimestamps() {
+            document.querySelectorAll('.dh-chat-time[data-created-at]').forEach(function (el) {
+                var then = Date.parse(el.getAttribute('data-created-at'));
+                if (!isNaN(then)) el.textContent = dhRelativeTime(then);
+            });
+        }
+        dhTickChatTimestamps();
+        setInterval(dhTickChatTimestamps, 30000);
+
+        // Live member presence dots (Pablo, 2026-10-13) - driven by
+        // GroupMessageController::poll()'s onlineUserIds, piggybacked on
+        // the same 5s chat poll rather than a separate request. Tooltip
+        // text is swapped too since Bootstrap tooltips read their content
+        // from the title attribute once on init, not live off the DOM.
+        function dhUpdatePresence(onlineUserIds) {
+            if (!onlineUserIds) return;
+            var onlineSet = {};
+            onlineUserIds.forEach(function (id) { onlineSet[id] = true; });
+
+            document.querySelectorAll('.dh-presence-dot[data-user-id]').forEach(function (dot) {
+                var isOnline = !!onlineSet[dot.getAttribute('data-user-id')];
+                dot.classList.toggle('bg-success', isOnline);
+                dot.classList.toggle('bg-secondary', !isOnline);
+                dot.setAttribute('title', isOnline ? 'Online' : 'Offline');
+                // Bootstrap tooltips read their text from the title attribute
+                // once, at init - updating the attribute alone doesn't
+                // change an already-shown/cached tooltip, so the instance
+                // needs to be rebuilt to pick up the new text.
+                var tooltip = bootstrap.Tooltip.getInstance(dot);
+                if (tooltip) {
+                    tooltip.dispose();
+                    // container: 'body' matches material-dashboard.js's own
+                    // site-wide tooltip init - without it, a recreated
+                    // tooltip renders clipped inside this member list's own
+                    // overflow:auto scroll box instead of escaping it.
+                    new bootstrap.Tooltip(dot, { container: 'body' });
+                }
+            });
+        }
 
         function showChatPhoto(url) {
             document.getElementById('chatPhotoViewerImg').src = url;

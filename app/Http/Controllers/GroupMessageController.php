@@ -128,6 +128,19 @@ class GroupMessageController extends Controller
             // without re-deriving it.
             'reactionSignature' => $sig['reactionSignature'],
             'html' => view('pages.Groups.partials.messages', compact('messages'))->render(),
+            // Piggybacks on this same 5s poll rather than a second parallel
+            // mechanism (Pablo, 2026-10-13: "member presence doesn't update
+            // live") - User::isOnline() (last_seen_at within 3 minutes) is
+            // already kept fresh for every active member by
+            // UpdateLastSeen's own per-request heartbeat, including by
+            // their own poll requests, so reading it here on every poll is
+            // enough to reflect near-live status - no extra write needed.
+            'onlineUserIds' => $group->activeMembers()
+                ->with('user')
+                ->get()
+                ->filter(fn ($member) => $member->user && $member->user->isOnline())
+                ->pluck('user.id')
+                ->values(),
         ]);
     }
 

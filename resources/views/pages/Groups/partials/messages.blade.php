@@ -57,7 +57,13 @@
                 </div>
             @endif
 
-            <div class="dh-chat-meta dh-chat-time">{{ $message->created_at->diffForHumans() }}</div>
+            {{-- data-created-at: lets Show.blade.php's dhTickChatTimestamps()
+                 recompute this text client-side every 30s (Pablo,
+                 2026-10-13: "chat timestamps that tick forward without a
+                 page reload") - ISO 8601 with the offset, so JS parses it
+                 as the same instant regardless of the viewer's own
+                 timezone. --}}
+            <div class="dh-chat-meta dh-chat-time" data-created-at="{{ $message->created_at->toIso8601String() }}">{{ $message->created_at->diffForHumans() }}</div>
         </div>
 
         {{-- One react button per message, never on your own (Pablo,
