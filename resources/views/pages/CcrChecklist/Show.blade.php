@@ -94,10 +94,18 @@
                                                             // the number's still the real reading, just no longer
                                                             // in effect.
                                                             $resultStale = isset($answer['result_minutes']) && !empty($answer['refilled']);
+                                                            // "Max Fresh" only when the step was actually attended
+                                                            // to (repacked, or fresh sorb noted) - a blank result
+                                                            // because the step was left incomplete (e.g. a broken
+                                                            // RCT gauge) is not the same as a fresh canister
+                                                            // (Pablo, 2026-10-17).
+                                                            $scrubberResultLabel = isset($answer['result_minutes'])
+                                                                ? $answer['result_minutes'] . ' mins'
+                                                                : (!empty($answer['checked']) ? 'Max Fresh' : '—');
                                                         @endphp
                                                         <div class="col-auto mb-1">
                                                             <span class="dh-gas-label d-inline">Result:</span>
-                                                            <strong class="{{ $resultStale ? 'dh-ccr-result-stale-plain' : '' }}">{{ isset($answer['result_minutes']) ? $answer['result_minutes'] . ' mins' : 'Max Fresh' }}</strong>
+                                                            <strong class="{{ $resultStale ? 'dh-ccr-result-stale-plain' : '' }}">{{ $scrubberResultLabel }}</strong>
                                                         </div>
                                                     @endif
                                                 </div>

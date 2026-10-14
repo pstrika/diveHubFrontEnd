@@ -57,11 +57,18 @@
                                                     $refilled = (array) ($scrubber['refilled'] ?? []);
                                                     $onTop = $installScrubbers['on_top'] ?? null;
                                                     $resultStale = isset($scrubber['result_minutes']) && count($refilled);
+                                                    // "Max Fresh" only when the step was actually attended to
+                                                    // (repacked, or fresh sorb noted) - a blank result because
+                                                    // the step was left incomplete (e.g. a broken RCT gauge) is
+                                                    // not the same as a fresh canister (Pablo, 2026-10-17).
+                                                    $scrubberResultLabel = isset($scrubber['result_minutes'])
+                                                        ? $scrubber['result_minutes'] . ' mins'
+                                                        : (!empty($scrubber['checked']) ? 'Max Fresh' : '—');
                                                 @endphp
                                                 <tr>
                                                     <td>{{ $session->build_date->format('M j, Y g:i A') }}</td>
                                                     <td class="text-end"><x-gas-mix-pill :o2="$diluent['o2_percent'] ?? null" :he="$diluent['he_percent'] ?? null" /></td>
-                                                    <td class="text-end"><span class="{{ $resultStale ? 'dh-ccr-result-stale-plain' : '' }}">{{ isset($scrubber['result_minutes']) ? $scrubber['result_minutes'] . ' mins' : 'Max Fresh' }}</span></td>
+                                                    <td class="text-end"><span class="{{ $resultStale ? 'dh-ccr-result-stale-plain' : '' }}">{{ $scrubberResultLabel }}</span></td>
                                                     <td class="text-end">
                                                         @if (count($replaced))
                                                             @foreach ($replaced as $label)
