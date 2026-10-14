@@ -61,7 +61,7 @@
                                                 <tr>
                                                     <td>{{ $session->build_date->format('M j, Y g:i A') }}</td>
                                                     <td class="text-end"><x-gas-mix-pill :o2="$diluent['o2_percent'] ?? null" :he="$diluent['he_percent'] ?? null" /></td>
-                                                    <td class="text-end"><span class="{{ $resultStale ? 'dh-ccr-result-stale-plain' : '' }}">{{ isset($scrubber['result_minutes']) ? $scrubber['result_minutes'] . ' mins' : '—' }}</span></td>
+                                                    <td class="text-end"><span class="{{ $resultStale ? 'dh-ccr-result-stale-plain' : '' }}">{{ isset($scrubber['result_minutes']) ? $scrubber['result_minutes'] . ' mins' : 'Max Fresh' }}</span></td>
                                                     <td class="text-end">
                                                         @if (count($replaced))
                                                             @foreach ($replaced as $label)

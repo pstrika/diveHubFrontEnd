@@ -97,7 +97,7 @@
                                                         @endphp
                                                         <div class="col-auto mb-1">
                                                             <span class="dh-gas-label d-inline">Result:</span>
-                                                            <strong class="{{ $resultStale ? 'dh-ccr-result-stale-plain' : '' }}">{{ isset($answer['result_minutes']) ? $answer['result_minutes'] . ' mins' : '—' }}</strong>
+                                                            <strong class="{{ $resultStale ? 'dh-ccr-result-stale-plain' : '' }}">{{ isset($answer['result_minutes']) ? $answer['result_minutes'] . ' mins' : 'Max Fresh' }}</strong>
                                                         </div>
                                                     @endif
                                                 </div>
