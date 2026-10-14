@@ -49,7 +49,111 @@ class CcrChecklistController extends Controller
 
         return view('pages.CcrChecklist.Index', [
             'sessions' => $sessions,
+            'equipment' => $this->equipmentDashboard($sessions),
         ]);
+    }
+
+    /**
+     * Equipment-status summary for the top of the history page (Pablo,
+     * 2026-10-17: "mini dashboard...sensors (installation date, time to
+     * replacement...and last read (mV). Last scrubber time and which
+     * canister is on top. Also, last battery replacement"). $sessions is
+     * already newest-build-first, so every "most recent session that..."
+     * lookup below is just "first match walking the collection in order".
+     *
+     * Sensor install dates: prefer the newest session with that sensor's
+     * own o2_sensor_life.sensorN_date set (only populated going forward,
+     * via ccr-checklist.js's updates_sensor cascade - never on any of the
+     * 196 historical backfilled sessions), else fall back to the newest
+     * session where that cell's own *_replaced flag was ticked (true for
+     * backfilled data too). Age thresholds (>12mo red, 9-12mo yellow,
+     * <9mo green) mirror ccr-checklist.js's own refreshAgeBadge exactly,
+     * so the dashboard agrees with the live form's own badges.
+     */
+    private function equipmentDashboard($sessions): array
+    {
+        if ($sessions->isEmpty()) {
+            return ['sensors' => [], 'scrubberLabel' => null, 'onTop' => null, 'batteryDate' => null];
+        }
+
+        $sensorDefs = [
+            ['label' => 'Petrel Cell 1', 'group' => 'petrel_mv', 'cell' => 'cell1', 'sensorDate' => 'sensor1_date'],
+            ['label' => 'Petrel Cell 2', 'group' => 'petrel_mv', 'cell' => 'cell2', 'sensorDate' => 'sensor2_date'],
+            ['label' => 'Petrel Cell 3', 'group' => 'petrel_mv', 'cell' => 'cell3', 'sensorDate' => 'sensor3_date'],
+            ['label' => 'Nerd Cell 1', 'group' => 'nerd_mv', 'cell' => 'cell1', 'sensorDate' => 'sensor4_date'],
+            ['label' => 'Nerd Cell 2', 'group' => 'nerd_mv', 'cell' => 'cell2', 'sensorDate' => 'sensor5_date'],
+        ];
+
+        $sensors = [];
+        foreach ($sensorDefs as $def) {
+            $installDate = null;
+            foreach ($sessions as $session) {
+                $dateVal = $session->answers['o2_sensor_life'][$def['sensorDate']] ?? null;
+                if (!empty($dateVal)) {
+                    $installDate = \Carbon\Carbon::parse($dateVal);
+                    break;
+                }
+            }
+            if (!$installDate) {
+                foreach ($sessions as $session) {
+                    if (!empty($session->answers[$def['group']][$def['cell'] . '_replaced'])) {
+                        $installDate = $session->build_date;
+                        break;
+                    }
+                }
+            }
+
+            $lastMv = null;
+            foreach ($sessions as $session) {
+                $mv = $session->answers[$def['group']][$def['cell']] ?? null;
+                if ($mv !== null && $mv !== '') {
+                    $lastMv = $mv;
+                    break;
+                }
+            }
+
+            $months = null;
+            $tone = 'none';
+            $replaceBy = null;
+            if ($installDate) {
+                $months = $installDate->diffInMonths(now());
+                $replaceBy = $installDate->copy()->addYear();
+                if ($months > 12) $tone = 'poor';
+                elseif ($months >= 9) $tone = 'avg';
+                else $tone = 'good';
+            }
+
+            $sensors[] = [
+                'label' => $def['label'],
+                'installDate' => $installDate?->format('M j, Y'),
+                'replaceBy' => $replaceBy?->format('M j, Y'),
+                'months' => $months,
+                'tone' => $tone,
+                'lastMv' => $lastMv,
+            ];
+        }
+
+        $latest = $sessions->first();
+        $scrubber = $latest->answers['scrubber_time'] ?? [];
+        $scrubberLabel = isset($scrubber['result_minutes'])
+            ? $scrubber['result_minutes'] . ' mins'
+            : (!empty($scrubber['checked']) ? 'Max Fresh' : '—');
+        $onTop = $latest->answers['install_scrubbers']['on_top'] ?? null;
+
+        $batteryDate = null;
+        foreach ($sessions as $session) {
+            if (!empty($session->answers['ext_battery']['replaced_bat'])) {
+                $batteryDate = $session->build_date;
+                break;
+            }
+        }
+
+        return [
+            'sensors' => $sensors,
+            'scrubberLabel' => $scrubberLabel,
+            'onTop' => $onTop,
+            'batteryDate' => $batteryDate?->format('M j, Y'),
+        ];
     }
 
     /** The live, fillable checklist - always the config's current `active` template version. */
@@ -131,5 +235,33 @@ class CcrChecklistController extends Controller
             'session' => $session,
             'template' => $template,
         ]);
+    }
+
+    /**
+     * One-page PDF report of a saved session (Pablo, 2026-10-17: "it
+     * should create a pdf with the document. All needs to fit in 1 page. I
+     * want the date, time and name of the user that created it. Also the
+     * signature if available") - a real downloadable file via dompdf, not
+     * the earlier browser print-dialog approach. CcrChecklist/Pdf.blade.php
+     * is its own minimal-CSS view (dompdf's HTML/CSS support is a subset
+     * of what the rest of this app's dh- design system uses - no flexbox,
+     * no CSS custom properties), laid out as a dense table so all 16 items
+     * plus header/signature fit on one Letter page without scaling tricks.
+     */
+    public function pdf($id)
+    {
+        $this->authorize('ccrChecklistAccess', User::class);
+
+        $session = CcrChecklistSession::where('user_id', auth()->id())->where('id', $id)->with('user')->firstOrFail();
+        $template = $this->template($session->template_version);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pages.CcrChecklist.Pdf', [
+            'session' => $session,
+            'template' => $template,
+        ])->setPaper('letter', 'portrait');
+
+        $filename = 'rEvo-CCR-Checklist-' . $session->build_date->format('Y-m-d') . '.pdf';
+
+        return $pdf->download($filename);
     }
 }

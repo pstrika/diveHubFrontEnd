@@ -216,6 +216,7 @@ Route::get('CcrChecklist', 'App\Http\Controllers\CcrChecklistController@index')-
 Route::get('CcrChecklist/New', 'App\Http\Controllers\CcrChecklistController@create')->middleware('auth')->name('CcrChecklist.create');
 Route::post('CcrChecklist', 'App\Http\Controllers\CcrChecklistController@store')->middleware('auth')->name('CcrChecklist.store');
 Route::get('CcrChecklist/{id}', 'App\Http\Controllers\CcrChecklistController@show')->where('id', '[0-9]+')->middleware('auth')->name('CcrChecklist.show');
+Route::get('CcrChecklist/{id}/pdf', 'App\Http\Controllers\CcrChecklistController@pdf')->where('id', '[0-9]+')->middleware('auth')->name('CcrChecklist.pdf');
 
 // Saving GF Low/High + setpoint and custom gas mixes needs a real profile
 // to save them to - 'guest' alone would silently write to the shared guest

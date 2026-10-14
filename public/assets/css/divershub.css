@@ -693,6 +693,30 @@ body.dh-ccr-bg[data-theme="dark"] .input-group.input-group-outline.dh-ccr-result
 body.dh-ccr-bg[data-theme="dark"] .dh-ccr-history-scroll thead th {
     background: #182530;
 }
+/* Material Dashboard's default table cell padding (24px each side) is
+   generous enough on its own to force horizontal scrolling on an iPad
+   even after every column's own content is already narrow (Pablo,
+   2026-10-17: "avoid the horizontal scrolling in a desktop or iPad
+   view") - this table's columns are short values (dates, pills, 1-2
+   digit numbers), so a much tighter padding still reads fine. Needs
+   !important: Material's own `.table thead tr th` (3 elements + 1
+   class) and `.table>:not(caption)>*>*` outrank a plain
+   `.dh-ccr-history-scroll th`/`td` on specificity alone. */
+.dh-ccr-history-scroll th,
+.dh-ccr-history-scroll td {
+    padding: 8px 10px !important;
+}
+/* Replaced can hold 2-3 pills on a busy build (cells + battery) - wraps
+   onto its own lines within a capped width instead of growing the
+   column wide enough to force the table into horizontal scroll. */
+.dh-ccr-history-scroll td.dh-ccr-replaced-cell {
+    max-width: 160px;
+    white-space: normal;
+}
+.dh-ccr-history-scroll td.dh-ccr-replaced-cell .dh-pill {
+    display: inline-block;
+    margin: 1px 0 1px 4px;
+}
 
 /* An alarm-triggered field (red/yellow/green, Pablo's earlier threshold
    rules) needs to win over the grey/colored variants above once the box
@@ -1302,6 +1326,32 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-health-stat.is-poor { color: var(--dh-poor); }
 .dh-health-stat.is-none { color: var(--dh-muted); }
 .dh-health-stat .dh-health-stat-n { color: var(--dh-ink); }
+
+/* rEvo CCR Checklist "equipment status" mini dashboard (Pablo, 2026-10-17) -
+   same flex-tile-row idea as .dh-health-stats above, but each tile carries
+   a label + status line + 1-2 meta lines instead of a single big number,
+   so it's its own variant rather than reusing .dh-health-stat directly. */
+.dh-equip-stats { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.dh-equip-stat { flex: 1 1 150px; display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; border-radius: var(--dh-radius); background: var(--dh-sand); border-left: 3px solid var(--dh-muted); }
+.dh-equip-stat.is-good { border-left-color: var(--dh-good); }
+.dh-equip-stat.is-avg { border-left-color: var(--dh-avg); }
+.dh-equip-stat.is-poor { border-left-color: var(--dh-poor); }
+.dh-equip-stat-head { display: flex; align-items: center; gap: 6px; }
+.dh-equip-stat-head .material-icons-round { font-size: 18px; color: var(--dh-muted); }
+.dh-equip-stat.is-good .dh-equip-stat-head .material-icons-round { color: var(--dh-good); }
+.dh-equip-stat.is-avg .dh-equip-stat-head .material-icons-round { color: var(--dh-avg); }
+.dh-equip-stat.is-poor .dh-equip-stat-head .material-icons-round { color: var(--dh-poor); }
+.dh-equip-stat-label { font-size: .78rem; font-weight: 700; color: var(--dh-ink); }
+.dh-equip-stat-status { font-size: .8rem; font-weight: 700; color: var(--dh-muted); }
+.dh-equip-stat.is-good .dh-equip-stat-status { color: var(--dh-good); }
+.dh-equip-stat.is-avg .dh-equip-stat-status { color: var(--dh-avg); }
+.dh-equip-stat.is-poor .dh-equip-stat-status { color: var(--dh-poor); }
+.dh-equip-stat-meta { font-size: .72rem; color: var(--dh-muted); }
+.dh-equip-glance { display: flex; flex-wrap: wrap; gap: 10px; }
+.dh-equip-glance .dh-health-stat { flex: 1 1 140px; }
+.dh-equip-logo-tile { flex: 1 1 140px; display: flex; align-items: center; justify-content: center; padding: 10px; border-radius: var(--dh-radius); background: var(--dh-sand); }
+.dh-equip-logo-tile img { max-width: 100%; max-height: 54px; border-radius: 6px; }
+
 .dh-health-errored { display: flex; align-items: flex-start; gap: 6px; margin: 14px 0 0; padding: 10px 12px; background: var(--dh-poor-bg); color: var(--dh-poor); border-radius: var(--dh-radius); font-size: .85rem; }
 .dh-health-errored .material-icons-round { font-size: 18px; flex: 0 0 auto; margin-top: 1px; }
 .dh-health-wx-summary { display: flex; align-items: flex-start; gap: 6px; margin: 10px 0 0; font-size: .85rem; color: var(--dh-muted); }

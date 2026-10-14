@@ -24,13 +24,13 @@
 @else
     <div {{ $attributes->merge(['class' => 'dh-gas-split-pill' . ($hasHe ? '' : ' is-solo')]) }}>
         @if ($isAir)
-            <span class="dh-gas-result-pill is-o2 is-air is-gas-label">Air</span>
+            <span class="dh-gas-result-pill is-compact is-o2 is-air is-gas-label">Air</span>
         @elseif ($isPureO2)
-            <span class="dh-gas-result-pill is-o2 is-gas-label">Pure O2</span>
+            <span class="dh-gas-result-pill is-compact is-o2 is-gas-label">Pure O2</span>
         @else
-            <span class="dh-gas-result-pill is-o2">{{ $o2 }}</span>
+            <span class="dh-gas-result-pill is-compact is-o2">{{ $o2 }}</span>
             @if ($hasHe)
-                <span class="dh-gas-result-pill is-he">{{ $he }}</span>
+                <span class="dh-gas-result-pill is-compact is-he">{{ $he }}</span>
             @endif
         @endif
     </div>

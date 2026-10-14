@@ -17,6 +17,59 @@
                         </a>
                     </div>
 
+                    @if ($sessions->isNotEmpty())
+                        <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
+                            <div class="dh-calc-inputs-head">
+                                <span class="material-icons-round" aria-hidden="true">build_circle</span>
+                                <h3>Equipment status</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="dh-equip-stats">
+                                    @foreach ($equipment['sensors'] as $sensor)
+                                        <div class="dh-equip-stat is-{{ $sensor['tone'] }}">
+                                            <div class="dh-equip-stat-head">
+                                                <span class="material-icons-round" aria-hidden="true">
+                                                    {{ $sensor['tone'] === 'poor' ? 'error' : ($sensor['tone'] === 'avg' ? 'warning' : 'check_circle') }}
+                                                </span>
+                                                <span class="dh-equip-stat-label">{{ $sensor['label'] }}</span>
+                                            </div>
+                                            <div class="dh-equip-stat-status">
+                                                @if ($sensor['installDate'])
+                                                    {{ $sensor['tone'] === 'poor' ? 'Overdue - replace now' : 'Replace by ' . $sensor['replaceBy'] }}
+                                                @else
+                                                    Unknown
+                                                @endif
+                                            </div>
+                                            <div class="dh-equip-stat-meta">Installed {{ $sensor['installDate'] ?? '—' }}</div>
+                                            <div class="dh-equip-stat-meta">Last read: {{ $sensor['lastMv'] !== null ? $sensor['lastMv'] . ' mV' : '—' }}</div>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <div class="dh-equip-glance">
+                                    <div class="dh-health-stat is-run">
+                                        <span class="material-icons-round" aria-hidden="true">timer</span>
+                                        <span class="dh-health-stat-n" style="font-size: 1.1rem;">{{ $equipment['scrubberLabel'] ?? '—' }}</span>
+                                        <span class="dh-health-stat-label">Last scrubber time</span>
+                                    </div>
+                                    <div class="dh-health-stat is-run">
+                                        <span class="material-icons-round" aria-hidden="true">layers</span>
+                                        <span class="dh-health-stat-n">{{ $equipment['onTop'] ?? '—' }}</span>
+                                        <span class="dh-health-stat-label">Canister on top</span>
+                                    </div>
+                                    <div class="dh-health-stat is-run">
+                                        <span class="material-icons-round" aria-hidden="true">battery_charging_full</span>
+                                        <span class="dh-health-stat-n" style="font-size: 1.1rem;">{{ $equipment['batteryDate'] ?? '—' }}</span>
+                                        <span class="dh-health-stat-label">Last battery replacement</span>
+                                    </div>
+                                    <div class="dh-equip-logo-tile">
+                                        <img src="{{ asset('assets') }}/img/revo-rebreathers-logo.png" alt="rEvo Rebreathers">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
                         <div class="card-body">
                             @if ($sessions->isEmpty())
@@ -30,8 +83,8 @@
                                                 <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-end">Diluent gas</th>
                                                 <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-end">Scrubber time</th>
                                                 <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-end">Replaced</th>
-                                                <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-end">Refilled #</th>
-                                                <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-end">On top #</th>
+                                                <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-end" style="white-space: normal; max-width: 60px;">Refill #</th>
+                                                <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 text-end" style="white-space: normal; max-width: 60px;">Top #</th>
                                                 <th></th>
                                             </tr>
                                         </thead>
@@ -66,10 +119,13 @@
                                                         : (!empty($scrubber['checked']) ? 'Max Fresh' : '—');
                                                 @endphp
                                                 <tr>
-                                                    <td>{{ $session->build_date->format('M j, Y g:i A') }}</td>
+                                                    <td>
+                                                        <div>{{ $session->build_date->format('M j, Y') }}</div>
+                                                        <div class="text-secondary" style="font-size: .68rem;">{{ $session->build_date->format('g:i A') }}</div>
+                                                    </td>
                                                     <td class="text-end"><x-gas-mix-pill :o2="$diluent['o2_percent'] ?? null" :he="$diluent['he_percent'] ?? null" /></td>
                                                     <td class="text-end"><span class="{{ $resultStale ? 'dh-ccr-result-stale-plain' : '' }}">{{ $scrubberResultLabel }}</span></td>
-                                                    <td class="text-end">
+                                                    <td class="text-end dh-ccr-replaced-cell">
                                                         @if (count($replaced))
                                                             @foreach ($replaced as $label)
                                                                 <span class="dh-pill dh-pill-good">{{ $label }}</span>
@@ -84,9 +140,9 @@
                                                         <a class="dh-icon-btn" href="{{ route('CcrChecklist.show', $session->id) }}" title="View" aria-label="View">
                                                             <span class="material-icons-round" aria-hidden="true">visibility</span>
                                                         </a>
-                                                        <button type="button" class="dh-icon-btn" title="Print" aria-label="Print">
+                                                        <a class="dh-icon-btn" href="{{ route('CcrChecklist.pdf', $session->id) }}" title="Download PDF report" aria-label="Download PDF report">
                                                             <span class="material-icons-round" aria-hidden="true">print</span>
-                                                        </button>
+                                                        </a>
                                                     </td>
                                                 </tr>
                                             @endforeach

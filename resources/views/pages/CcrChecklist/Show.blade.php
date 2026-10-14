@@ -6,11 +6,14 @@
 
         <div class="container-fluid py-0">
             <div class="row">
-                <div class="col-md-12 m-auto">
-                    <div class="d-flex justify-content-end align-items-center mt-3" style="gap: 10px;">
+                <div class="col-md-12 m-auto pt-4">
+                    <div class="d-flex justify-content-end align-items-center" style="gap: 10px;">
                         <button type="button" class="dh-ccr-theme-toggle" id="ccrThemeToggle" title="Switch to dark mode" aria-label="Switch to dark mode">
                             <span class="material-icons-round" aria-hidden="true">dark_mode</span>
                         </button>
+                        <a class="dh-icon-btn" href="{{ route('CcrChecklist.pdf', $session->id) }}" title="Download PDF report" aria-label="Download PDF report">
+                            <span class="material-icons-round" aria-hidden="true">print</span>
+                        </a>
                         <a class="dh-btn dh-btn-ghost-dark" href="{{ route('CcrChecklist') }}">Back to history</a>
                     </div>
 
