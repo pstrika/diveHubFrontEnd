@@ -130,6 +130,20 @@ Route::get('gasplanning', function () {
     return view('pages.GasPlanning', compact('SEO'));
 })->name('gasplanning');
 
+// Gas Blending (Pablo, 2026-10-17): 3 blending calculators (Blend Standard
+// Trimix, Top Off, Bleed Down) sharing one page with a dh-channel-chip tab
+// switcher - see config/gas_blends.php for the named mix presets. A
+// standalone "Blend Helitrox" tool existed briefly but was folded back into
+// Trimix (2026-10-17: "the helitrox calculator is redundant" once Trimix
+// got a configurable bank gas - normoxic mixes are just Trimix target
+// presets now, see gas_blends.php's own comment). The blend math itself is
+// still pure client-side arithmetic (public/assets/js/gas-blending.js) -
+// GasBlendingController exists only to hand the view candidate dive shops
+// for the "who can fill this" suggestion (2026-10-17: needs a real
+// mysql_trips query, which a bare closure can't do). Open to all
+// registered users, no admin/personal gate.
+Route::get('GasBlending', [App\Http\Controllers\GasBlendingController::class, 'index'])->name('GasBlending');
+
 // /Landing is the same page as / (the redesigned home) and keeps its canonical on /.
 Route::get('Landing', [App\Http\Controllers\HomeController::class, 'index'])->middleware('guest')->name('Landing');
 

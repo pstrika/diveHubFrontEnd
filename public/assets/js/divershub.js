@@ -516,3 +516,27 @@ document.addEventListener('click', function (e) {
     if (document.body && document.body.dataset.dhPinchZoomEnabled === '1') return;
     document.documentElement.classList.add('dh-pwa-standalone');
 })();
+
+/**
+ * Opens Gas Blending with a mix prefilled (Pablo, 2026-10-17: "Blend
+ * Mix" buttons on GasPlanning/SiteDetails' Gas Prices panel and each Deco
+ * Planner gas slot). Same-window nav in a standalone PWA/TWA/native shell
+ * (an opened tab there either does nothing or kicks the diver out to a
+ * separate browser instance, breaking the installed-app feel - the
+ * existing .dh-pwa-back component exists for exactly this "navigated away
+ * from my flow in standalone mode" case, so same-window + that back
+ * button is already an established pattern here); a new tab everywhere
+ * else, so this doesn't cut off whatever the diver was mid-filling on the
+ * calculator/planner page they're branching from. window.dhGasBlendingUrl
+ * is set per-page via route('GasBlending') (APP_URL-correct, unlike a
+ * hardcoded path) - this file has no access to the route() helper itself.
+ */
+window.dhOpenGasBlending = function (o2, he) {
+    var base = window.dhGasBlendingUrl || '/GasBlending';
+    var url = base + '?o2=' + encodeURIComponent(o2) + '&he=' + encodeURIComponent(he || 0);
+    if (document.documentElement.classList.contains('dh-pwa-standalone')) {
+        window.location.href = url;
+    } else {
+        window.open(url, '_blank');
+    }
+};

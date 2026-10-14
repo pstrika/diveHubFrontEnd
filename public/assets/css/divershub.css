@@ -1352,6 +1352,46 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-equip-logo-tile { flex: 1 1 140px; display: flex; align-items: center; justify-content: center; padding: 10px; border-radius: var(--dh-radius); background: var(--dh-sand); }
 .dh-equip-logo-tile img { max-width: 100%; max-height: 54px; border-radius: 6px; }
 
+/* Gas Blending's reorderable fill-sequence rows (Pablo, 2026-10-17: "show
+   the results in rows...able to change the order"), dragged via dragula
+   (already loaded site-wide for the kanban board, page-template.blade.php)
+   - no jKanban wrapper, just dragula() on the single .dh-blend-steps list.
+   Swatch colors match the existing gas-mix-pill palette exactly: He = the
+   same blue as .dh-gas-result-pill.is-he, O2 = the same green as .is-o2,
+   bank/topping = the same grey as .is-air. */
+.dh-blend-steps { display: flex; flex-direction: column; gap: 8px; }
+.dh-blend-step { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--dh-line); border-radius: var(--dh-radius); background: var(--dh-paper); cursor: grab; }
+.dh-blend-step.gu-mirror { cursor: grabbing; box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+.dh-blend-step.gu-transit { opacity: .4; }
+.dh-blend-step-handle { color: var(--dh-muted); font-size: 20px; flex: 0 0 auto; }
+.dh-blend-step-swatch { width: 10px; height: 36px; border-radius: 3px; flex: 0 0 auto; }
+.dh-blend-step-swatch.is-he { background: var(--dh-sea); }
+.dh-blend-step-swatch.is-o2 { background: var(--dh-good); }
+.dh-blend-step-swatch.is-bank { background: var(--dh-muted); }
+.dh-blend-step-swatch.is-vent { background: var(--dh-poor); }
+.dh-blend-step-body { flex: 1 1 auto; min-width: 0; }
+.dh-blend-step-label { font-weight: 700; font-size: .85rem; }
+.dh-blend-step-amount { font-size: .78rem; color: var(--dh-muted); }
+.dh-blend-step-progress { display: flex; align-items: center; gap: 6px; font-size: .85rem; font-weight: 700; flex: 0 0 auto; white-space: nowrap; }
+.dh-blend-step-progress .material-icons-round { font-size: 16px; color: var(--dh-muted); }
+.dh-blend-step-to { color: var(--dh-ink); }
+
+/* Slimmer preset chips on the Gas Blending page specifically (Pablo,
+   2026-10-17: "make the pills slimmer") - scoped under .dh-blend-panel so
+   the shared .dh-channel-chip used elsewhere (DivePlanner's Single/Multi
+   Level switch, etc.) is untouched. */
+.dh-blend-panel .dh-channel-chip { padding: 5px 10px; font-size: .76rem; }
+
+/* Gas-pill preset chips (components/gas-chip.blade.php) - unselected
+   chips are semi-transparent, the active one is full color (Pablo,
+   2026-10-17: "lighter when not selected, full color when selected, like
+   semitransparent"), rather than the plain chip's dark-background toggle -
+   the pill's own green/blue/grey already carries meaning, so opacity reads
+   as "selected" without fighting that color. */
+.dh-blend-pill-chip { background: none; border: none; padding: 2px; cursor: pointer; display: inline-flex; flex: 0 0 auto; opacity: .4; transition: opacity .15s ease; }
+.dh-blend-pill-chip:hover { opacity: .7; }
+.dh-blend-pill-chip.is-active { opacity: 1; }
+
 .dh-health-errored { display: flex; align-items: flex-start; gap: 6px; margin: 14px 0 0; padding: 10px 12px; background: var(--dh-poor-bg); color: var(--dh-poor); border-radius: var(--dh-radius); font-size: .85rem; }
 .dh-health-errored .material-icons-round { font-size: 18px; flex: 0 0 auto; margin-top: 1px; }
 .dh-health-wx-summary { display: flex; align-items: flex-start; gap: 6px; margin: 10px 0 0; font-size: .85rem; color: var(--dh-muted); }
@@ -1503,6 +1543,7 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-shell .btn.bg-gradient-primary,
 .dh-shell .btn.bg-gradient-info:hover,
 .dh-shell .btn.bg-gradient-primary:hover { box-shadow: 0 3px 8px 0 rgba(11, 42, 58, 0.25) !important; }
+.dh-blend-mix-btn .material-icons-round { font-size: 16px; vertical-align: -3px; margin-right: 4px; }
 
 /* ------------------------------------------------------------------ */
 /* Operators explorer and operator detail.                             */
@@ -3376,6 +3417,23 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
    width"). */
 .dh-gas-picker { justify-content: flex-start; margin-bottom: 10px; }
 .dh-gas-picker .dh-channel-chip { flex: 0 0 auto; padding: 3px 12px; font-size: .76rem; }
+
+/* Deco Planner's gas-mix preset chips show the same green/blue split pill
+   (or solid green/grey) as Gas Blending's own chips, semi-transparent
+   unless selected (Pablo, 2026-10-17: "Everywhere we have chips for gas
+   selectors...same split pill...semitransparent when not selected") -
+   same visual contract as .dh-blend-pill-chip, just scoped to this class
+   instead since these buttons must keep the plain .dh-channel-chip class
+   itself (deco-planner.js's own querySelectorAll('.dh-gas-preset-row
+   .dh-channel-chip') and dhUpdateGasPreset()'s is-active toggle both
+   depend on it - only the VISUAL rules change here). Specificity (0,2,0)
+   matches .dh-gas-picker .dh-channel-chip above, so background/border/
+   padding here win by source order; .is-active below outranks
+   .dh-channel-chip.is-active's dark fill on specificity alone (3 classes
+   vs 2), regardless of order. */
+.dh-channel-chip.dh-gas-preset-pill { background: none; border: none; padding: 2px; opacity: .4; transition: opacity .15s ease; }
+.dh-channel-chip.dh-gas-preset-pill:hover { opacity: .7; }
+.dh-channel-chip.dh-gas-preset-pill.is-active { background: none; border-color: transparent; opacity: 1; }
 
 /* Search dive sites / Save GFs / the selected-site result pill, all forced
    to the exact same box regardless of their different base components (a

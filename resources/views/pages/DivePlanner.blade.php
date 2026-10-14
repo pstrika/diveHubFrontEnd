@@ -4,6 +4,7 @@
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <script>window.dhGasBlendingUrl = "{{ route('GasBlending') }}";</script>
         <!-- Navbar -->
         <x-shell.header title="Dive Planner" icon="timer" :h1="true" />
         <!-- End Navbar -->
@@ -1008,10 +1009,10 @@
                                          (Pablo, 2026-09-17: "for Diluent: Air, 21/35, 18/45 and 10/55").
                                          showOpenCircuit/showClosedCircuit toggle this row's visibility. -->
                                     <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPresetDiluent" data-slot="bottom" hidden>
-                                        <button type="button" class="dh-channel-chip" data-o2="21" data-he="0">Air</button>
-                                        <button type="button" class="dh-channel-chip" data-o2="21" data-he="35">21/35</button>
-                                        <button type="button" class="dh-channel-chip" data-o2="18" data-he="45">18/45</button>
-                                        <button type="button" class="dh-channel-chip" data-o2="10" data-he="55">10/55</button>
+                                        <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="21" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-air is-gas-label">Air</span></button>
+                                        <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="21" data-he="35"><span class="dh-gas-split-pill"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">21</span><span class="dh-gas-result-pill is-compact is-he is-gas-label">35</span></span></button>
+                                        <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="18" data-he="45"><span class="dh-gas-split-pill"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">18</span><span class="dh-gas-result-pill is-compact is-he is-gas-label">45</span></span></button>
+                                        <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="10" data-he="55"><span class="dh-gas-split-pill"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">10</span><span class="dh-gas-result-pill is-compact is-he is-gas-label">55</span></span></button>
                                         @if(auth()->user()->isNotGuest())
                                             <button type="button" class="dh-channel-chip dh-gas-mygases-chip" data-mygases-slot="bottom">My Gases</button>
                                             <button type="button" class="dh-btn-icon" data-save-slot="bottom" title="Save this gas to My Gases"><span class="material-icons-round" aria-hidden="true">bookmark_border</span></button>
@@ -1025,12 +1026,12 @@
                                          same as elsewhere, since only a registered diver has anywhere to
                                          save one. --}}
                                     <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPresetBottomOC" data-slot="bottom">
-                                        <button type="button" class="dh-channel-chip" data-o2="21" data-he="0">Air</button>
-                                        <button type="button" class="dh-channel-chip" data-o2="32" data-he="0">32%</button>
-                                        <button type="button" class="dh-channel-chip" data-o2="36" data-he="0">36%</button>
-                                        <button type="button" class="dh-channel-chip" data-o2="21" data-he="35">21/35</button>
-                                        <button type="button" class="dh-channel-chip" data-o2="18" data-he="45">18/45</button>
-                                        <button type="button" class="dh-channel-chip" data-o2="10" data-he="55">10/55</button>
+                                        <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="21" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-air is-gas-label">Air</span></button>
+                                        <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="32" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">32%</span></button>
+                                        <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="36" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">36%</span></button>
+                                        <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="21" data-he="35"><span class="dh-gas-split-pill"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">21</span><span class="dh-gas-result-pill is-compact is-he is-gas-label">35</span></span></button>
+                                        <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="18" data-he="45"><span class="dh-gas-split-pill"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">18</span><span class="dh-gas-result-pill is-compact is-he is-gas-label">45</span></span></button>
+                                        <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="10" data-he="55"><span class="dh-gas-split-pill"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">10</span><span class="dh-gas-result-pill is-compact is-he is-gas-label">55</span></span></button>
                                         @if(auth()->user()->isNotGuest())
                                             <button type="button" class="dh-channel-chip dh-gas-mygases-chip" data-mygases-slot="bottom">My Gases</button>
                                             <button type="button" class="dh-btn-icon" data-save-slot="bottom" title="Save this gas to My Gases"><span class="material-icons-round" aria-hidden="true">bookmark_border</span></button>
@@ -1064,6 +1065,13 @@
                                                     <label class="dh-gas-result-pill is-he" id="bottomGasSplitHe">35</label>
                                                 </div>
                                             </div>
+
+                                            {{-- Pablo, 2026-10-17: "In the Deco planner under the tank
+                                                 template for all gases the user chooses" - one per gas
+                                                 slot, reading THAT slot's own live O2/He values. --}}
+                                            <button type="button" class="btn btn-info dh-blend-mix-btn" onclick="dhOpenGasBlending(parseInt(document.getElementById('labelBottomGasO2').value), parseInt(document.getElementById('labelBottomGasHe').value))">
+                                                <span class="material-icons-round" aria-hidden="true">colorize</span> Blend Mix
+                                            </button>
                                         </div>
 
                                         <div class="col-lg-9 col-12">
@@ -1142,10 +1150,10 @@
                                                  21/35, 18/45"). showOpenCircuit/showClosedCircuit toggle which
                                                  one is visible; both drive decoGas1's sliders via data-slot="1". -->
                                             <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPreset1" data-slot="1">
-                                                <button type="button" class="dh-channel-chip" data-o2="32" data-he="0">32%</button>
-                                                <button type="button" class="dh-channel-chip" data-o2="50" data-he="0">50%</button>
-                                                <button type="button" class="dh-channel-chip" data-o2="80" data-he="0">80%</button>
-                                                <button type="button" class="dh-channel-chip" data-o2="100" data-he="0">Oxygen</button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="32" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">32%</span></button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="50" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">50%</span></button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="80" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">80%</span></button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="100" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">Oxygen</span></button>
                                                 @if(auth()->user()->isNotGuest())
                                                     <button type="button" class="dh-channel-chip dh-gas-mygases-chip" data-mygases-slot="1">My Gases</button>
                                                     <button type="button" class="dh-btn-icon" data-save-slot="1" title="Save this gas to My Gases"><span class="material-icons-round" aria-hidden="true">bookmark_border</span></button>
@@ -1158,10 +1166,10 @@
                                                 </button>
                                             </div>
                                             <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPresetBailout" data-slot="1" hidden>
-                                                <button type="button" class="dh-channel-chip" data-o2="21" data-he="0">Air</button>
-                                                <button type="button" class="dh-channel-chip" data-o2="32" data-he="0">32%</button>
-                                                <button type="button" class="dh-channel-chip" data-o2="21" data-he="35">21/35</button>
-                                                <button type="button" class="dh-channel-chip" data-o2="18" data-he="45">18/45</button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="21" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-air is-gas-label">Air</span></button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="32" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">32%</span></button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="21" data-he="35"><span class="dh-gas-split-pill"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">21</span><span class="dh-gas-result-pill is-compact is-he is-gas-label">35</span></span></button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="18" data-he="45"><span class="dh-gas-split-pill"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">18</span><span class="dh-gas-result-pill is-compact is-he is-gas-label">45</span></span></button>
                                                 @if(auth()->user()->isNotGuest())
                                                     <button type="button" class="dh-channel-chip dh-gas-mygases-chip" data-mygases-slot="1">My Gases</button>
                                                     <button type="button" class="dh-btn-icon" data-save-slot="1" title="Save this gas to My Gases"><span class="material-icons-round" aria-hidden="true">bookmark_border</span></button>
@@ -1190,6 +1198,10 @@
                                                             <label class="dh-gas-result-pill is-he" id="decoGas1SplitHe">35</label>
                                                         </div>
                                                     </div>
+
+                                                    <button type="button" class="btn btn-info dh-blend-mix-btn" onclick="dhOpenGasBlending(parseInt(document.getElementById('labelDecoGas1O2').value), parseInt(document.getElementById('labelDecoGas1He').value))">
+                                                        <span class="material-icons-round" aria-hidden="true">colorize</span> Blend Mix
+                                                    </button>
                                                 </div>
 
                                                 <div class="col-lg-9 col-12">
@@ -1282,10 +1294,10 @@
                                         </button>
                                         <div class="col-12 dh-gas-accordion-body" id="deco2">
                                             <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPreset2" data-slot="2">
-                                                <button type="button" class="dh-channel-chip" data-o2="32" data-he="0">32%</button>
-                                                <button type="button" class="dh-channel-chip" data-o2="50" data-he="0">50%</button>
-                                                <button type="button" class="dh-channel-chip" data-o2="80" data-he="0">80%</button>
-                                                <button type="button" class="dh-channel-chip" data-o2="100" data-he="0">Oxygen</button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="32" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">32%</span></button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="50" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">50%</span></button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="80" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">80%</span></button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="100" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">Oxygen</span></button>
                                                 @if(auth()->user()->isNotGuest())
                                                     <button type="button" class="dh-channel-chip dh-gas-mygases-chip" data-mygases-slot="2">My Gases</button>
                                                     <button type="button" class="dh-btn-icon" data-save-slot="2" title="Save this gas to My Gases"><span class="material-icons-round" aria-hidden="true">bookmark_border</span></button>
@@ -1317,6 +1329,10 @@
                                                             <label class="dh-gas-result-pill is-he" id="decoGas2SplitHe">35</label>
                                                         </div>
                                                     </div>
+
+                                                    <button type="button" class="btn btn-info dh-blend-mix-btn" onclick="dhOpenGasBlending(parseInt(document.getElementById('labelDecoGas2O2').value), parseInt(document.getElementById('labelDecoGas2He').value))">
+                                                        <span class="material-icons-round" aria-hidden="true">colorize</span> Blend Mix
+                                                    </button>
                                                 </div>
 
                                                 <div class="col-lg-9 col-12">
@@ -1385,10 +1401,10 @@
                                         </button>
                                         <div class="col-12 dh-gas-accordion-body" id="deco3">
                                             <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPreset3" data-slot="3">
-                                                <button type="button" class="dh-channel-chip" data-o2="32" data-he="0">32%</button>
-                                                <button type="button" class="dh-channel-chip" data-o2="50" data-he="0">50%</button>
-                                                <button type="button" class="dh-channel-chip" data-o2="80" data-he="0">80%</button>
-                                                <button type="button" class="dh-channel-chip" data-o2="100" data-he="0">Oxygen</button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="32" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">32%</span></button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="50" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">50%</span></button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="80" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">80%</span></button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="100" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">Oxygen</span></button>
                                                 @if(auth()->user()->isNotGuest())
                                                     <button type="button" class="dh-channel-chip dh-gas-mygases-chip" data-mygases-slot="3">My Gases</button>
                                                     <button type="button" class="dh-btn-icon" data-save-slot="3" title="Save this gas to My Gases"><span class="material-icons-round" aria-hidden="true">bookmark_border</span></button>
@@ -1420,6 +1436,10 @@
                                                             <label class="dh-gas-result-pill is-he" id="decoGas3SplitHe">35</label>
                                                         </div>
                                                     </div>
+
+                                                    <button type="button" class="btn btn-info dh-blend-mix-btn" onclick="dhOpenGasBlending(parseInt(document.getElementById('labelDecoGas3O2').value), parseInt(document.getElementById('labelDecoGas3He').value))">
+                                                        <span class="material-icons-round" aria-hidden="true">colorize</span> Blend Mix
+                                                    </button>
                                                 </div>
 
                                                 <div class="col-lg-9 col-12">
@@ -1488,10 +1508,10 @@
                                         </button>
                                         <div class="col-12 dh-gas-accordion-body" id="deco4">
                                             <div class="dh-channel-picker dh-gas-picker dh-gas-preset-row" id="gasPreset4" data-slot="4">
-                                                <button type="button" class="dh-channel-chip" data-o2="32" data-he="0">32%</button>
-                                                <button type="button" class="dh-channel-chip" data-o2="50" data-he="0">50%</button>
-                                                <button type="button" class="dh-channel-chip" data-o2="80" data-he="0">80%</button>
-                                                <button type="button" class="dh-channel-chip" data-o2="100" data-he="0">Oxygen</button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="32" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">32%</span></button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="50" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">50%</span></button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="80" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">80%</span></button>
+                                                <button type="button" class="dh-channel-chip dh-gas-preset-pill" data-o2="100" data-he="0"><span class="dh-gas-result-pill is-compact is-o2 is-gas-label">Oxygen</span></button>
                                                 @if(auth()->user()->isNotGuest())
                                                     <button type="button" class="dh-channel-chip dh-gas-mygases-chip" data-mygases-slot="4">My Gases</button>
                                                     <button type="button" class="dh-btn-icon" data-save-slot="4" title="Save this gas to My Gases"><span class="material-icons-round" aria-hidden="true">bookmark_border</span></button>
@@ -1523,6 +1543,10 @@
                                                             <label class="dh-gas-result-pill is-he" id="decoGas4SplitHe">35</label>
                                                         </div>
                                                     </div>
+
+                                                    <button type="button" class="btn btn-info dh-blend-mix-btn" onclick="dhOpenGasBlending(parseInt(document.getElementById('labelDecoGas4O2').value), parseInt(document.getElementById('labelDecoGas4He').value))">
+                                                        <span class="material-icons-round" aria-hidden="true">colorize</span> Blend Mix
+                                                    </button>
                                                 </div>
 
                                                 <div class="col-lg-9 col-12">

@@ -7,6 +7,7 @@
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <script>window.dhGasBlendingUrl = "{{ route('GasBlending') }}";</script>
         <style>
             /* ------ Default Style ---------- */
             .gauge-container {
@@ -1057,6 +1058,15 @@
                                                     </div>
                                                 </div>
                                             </details>
+
+                                            {{-- Pablo, 2026-10-17: "Same thing in the SiteDetails page
+                                                 under the Gas Price collapsable" - see GasPlanning.blade.php's
+                                                 own copy of this button for the full rationale. --}}
+                                            <div class="mt-2">
+                                                <button type="button" class="btn btn-info dh-blend-mix-btn" onclick="dhOpenGasBlending(parseInt(document.getElementById('labelMixO2').textContent), parseInt(document.getElementById('labelMixHe').textContent))">
+                                                    <span class="material-icons-round" aria-hidden="true">colorize</span> Blend Mix
+                                                </button>
+                                            </div>
 
                                             @if( $site->maxDepth <= 140)
                                             <div class="dh-wx-more dh-gas-ndl-card mt-2" id="ndlResultCard" hidden>

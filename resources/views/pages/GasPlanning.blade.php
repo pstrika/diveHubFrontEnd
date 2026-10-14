@@ -5,6 +5,7 @@
     
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <script>window.dhGasBlendingUrl = "{{ route('GasBlending') }}";</script>
         <style>
             /* ------ Default Style ---------- */
             .gauge-container {
@@ -572,6 +573,18 @@
                                                         </div>
                                                     </div>
                                                 </details>
+
+                                                {{-- Pablo, 2026-10-17: "add a button 'Blend Mix' under the
+                                                     Gas Price collapsable...prepopulate the mix...into the
+                                                     target mix" - dhOpenGasBlending() (divershub.js) opens
+                                                     in a new tab on a real browser (doesn't cut off this
+                                                     calculator's state) or navigates in place inside an
+                                                     installed PWA/TWA/native shell. --}}
+                                                <div class="mt-2">
+                                                    <button type="button" class="btn btn-info dh-blend-mix-btn" onclick="dhOpenGasBlending(parseInt(document.getElementById('labelMixO2').textContent), parseInt(document.getElementById('labelMixHe').textContent))">
+                                                        <span class="material-icons-round" aria-hidden="true">colorize</span> Blend Mix
+                                                    </button>
+                                                </div>
 
                                                 <div class="dh-wx-more dh-gas-ndl-card mt-2" id="NDLContainer" style="display:none;">
                                                     <div class="dh-gas-ndl-body">

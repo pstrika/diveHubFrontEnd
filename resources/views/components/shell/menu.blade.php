@@ -129,6 +129,7 @@
         {!! $link('Multi dive planner', route('MultiDivePlanner'), 'repeat') !!}
     @endcan
     {!! $link('Best gases', route('gasplanning'), 'science') !!}
+    {!! $link('Gas blending', route('GasBlending'), 'colorize') !!}
 </div>
 
 {{-- Pablo's own personal equipment log - its own group rather than folded
