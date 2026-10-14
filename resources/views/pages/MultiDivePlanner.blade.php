@@ -231,7 +231,7 @@
 
                                                     <div class="form-check mb-2">
                                                         <input class="form-check-input dh-check" type="checkbox" id="safetyStopDive{{ $n }}" checked>
-                                                        <label class="form-check-label text-body mb-0" for="safetyStopDive{{ $n }}">3 min stop @ 15ft</label>
+                                                        <label class="form-check-label text-body mb-0" for="safetyStopDive{{ $n }}">{{ $deco_unit ? '3m stop @ 6m' : '3 min stop @ 15ft' }}</label>
                                                     </div>
 
                                                     <div class="dh-gas-input-wrap align-self-center mt-auto">
@@ -432,9 +432,13 @@
                                          chart vs time with all the results stiching all the dives
                                          together...for surface interval, we consider we are at 0
                                          feet depth") - backend now builds this whole-day array
-                                         itself (combinedProfile), same Chart.js scatter-line pattern
-                                         DecoPlanner's own renderProfileChart() uses. --}}
-                                    <div style="position: relative; height: 320px;">
+                                         itself (combinedProfile). Same look as DecoPlanner's own
+                                         #profileChart (Pablo, 2026-10-15: "same look and feel...same
+                                         colors") - the bg-gradient-info wrapper DecoPlanner's chart
+                                         sits on, white line/fill/grid/text in dhRenderMultiDiveChart()
+                                         to read against it, not the plain white card body used
+                                         elsewhere on this page. --}}
+                                    <div class="bg-gradient-info shadow-info border-radius-xl py-3 pe-1" style="position: relative; height: 320px;">
                                         <canvas id="multiDiveProfileChart"></canvas>
                                     </div>
                                 </div>

@@ -705,6 +705,10 @@
       return { x: p.time, y: -depthDisplay };
     });
 
+    // Same look as DecoPlanner's own #profileChart (Pablo, 2026-10-15:
+    // "same look and feel...same colors") - white line/fill/grid/text,
+    // since this chart sits on the same bg-gradient-info colored
+    // background DecoPlanner's chart does, not a plain white card body.
     if (dhMultiDiveChart) dhMultiDiveChart.destroy();
     dhMultiDiveChart = new Chart(canvas.getContext('2d'), {
       type: 'scatter',
@@ -712,13 +716,13 @@
         datasets: [{
           label: 'Multi dive profile',
           data: points,
-          borderColor: '#0e7c9e',
-          backgroundColor: 'rgba(14, 124, 158, 0.15)',
+          borderColor: '#ffffff',
+          backgroundColor: 'rgba(255, 255, 255, 0.5)',
           borderWidth: 2,
           showLine: true,
           fill: true,
           pointRadius: 0,
-          pointHoverRadius: 5,
+          pointHoverRadius: 6,
         }],
       },
       options: {
@@ -737,8 +741,17 @@
           },
         },
         scales: {
-          x: { type: 'linear', title: { display: true, text: 'Elapsed time (minutes)' } },
-          y: { title: { display: true, text: 'Depth (' + unit + ')' }, ticks: { callback: function (v) { return Math.abs(v); } } },
+          x: {
+            type: 'linear',
+            title: { display: true, text: 'Elapsed time (minutes)', color: 'white' },
+            ticks: { color: 'white' },
+            grid: { color: 'rgba(255, 255, 255, 0.5)' },
+          },
+          y: {
+            title: { display: true, text: 'Depth (' + unit + ')', color: 'white' },
+            ticks: { color: 'white', callback: function (v) { return Math.abs(v); } },
+            grid: { color: 'rgba(255, 255, 255, 0.5)' },
+          },
         },
       },
     });

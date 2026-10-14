@@ -457,6 +457,371 @@ h2.dh-date-title { line-height: 1.25; letter-spacing: -0.05rem; } /* was an h1 u
 .dh-pill-good { color: var(--dh-good); border-color: var(--dh-good); background: var(--dh-good-bg); }
 .dh-pill-avg  { color: var(--dh-avg);  border-color: var(--dh-avg);  background: var(--dh-avg-bg); }
 .dh-pill-poor { color: var(--dh-poor); border-color: var(--dh-poor); background: var(--dh-poor-bg); }
+/* O2%/He% field labels on the CCR Checklist (Pablo, 2026-10-15: "O2% do a
+   pill in green. He% do a pill in them light blue") - .dh-pill-good is the
+   same green already used for "good" status elsewhere, reused here for O2. */
+.dh-pill-he   { color: var(--dh-shallow); border-color: var(--dh-shallow); background: var(--dh-foam); }
+/* gap: 0 overrides .dh-pill's own 4px flex gap, meant for icon+label
+   pills elsewhere - here it was inserting a gap between the "O" text
+   node and the <sub>2</sub> element as separate flex items (Pablo,
+   2026-10-16: "there is a space between O 2... I want O2 with the 2
+   subscripted"). */
+.dh-pill.dh-pill-good, .dh-pill.dh-pill-he { font-size: .75rem; padding: 3px 10px; margin-bottom: 6px; cursor: pointer; gap: 0; }
+/* The O2%/He% pill label and the plain "Press" label above it are
+   different heights by default, so their inputs don't line up across the
+   row (Pablo, 2026-10-16: "the pressure textbox is slightly below the
+   other two") - pin both to the same height, scoped to the checklist's
+   own items so this doesn't touch .dh-gas-label's many other uses
+   elsewhere in the app. */
+.dh-ccr-item .dh-gas-label { height: 20px; display: flex; align-items: center; }
+/* .dh-pill's own base rule is inline-flex (an inline-level box, so it
+   picks up the parent's line-height spacing above it, unlike the
+   block-level .dh-gas-label) - force it block-level here too so both
+   labels' boxes sit at the exact same top, not just the same height. */
+/* width: 90px matches the number input's own inline width below it
+   (Pablo, 2026-10-16: "make sure the labels...are exactly the same
+   length of the textboxes below"). */
+.dh-ccr-item .dh-pill.dh-pill-good, .dh-ccr-item .dh-pill.dh-pill-he { height: 20px; width: 90px; box-sizing: border-box; display: flex; justify-content: center; }
+/* Bootstrap's `.input-group > .form-control { flex: 1 1 auto; }` grows
+   the input past its own declared 90px to fill any free space in the
+   input-group - pin it so it actually renders at the width it says,
+   matching the pill above it exactly. */
+.dh-ccr-alarm-wrap .input-group > .ccr-field-input { flex: 0 0 90px; }
+/* No increment/decrement spinner arrows on any number field (Pablo,
+   2026-10-16: "I dont want the increase/decrease arrows on any text
+   input"). Scoped to the checklist's own fields, not every number input
+   app-wide. */
+#ccrChecklistForm input[type="number"]::-webkit-inner-spin-button,
+#ccrChecklistForm input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+#ccrChecklistForm input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+/* Bold text in every input, not just an alarm-triggered one (Pablo,
+   2026-10-16: "the font in all text inputs need to be bold (like you
+   have pressure now)" - Pressure only looks bold when it's in an alarm
+   band, via .dh-ccr-alarm-input.is-alarm-*'s own font-weight; this makes
+   it the default everywhere, not just on red/yellow/green). */
+#ccrChecklistForm .form-control, #ccrChecklistForm .form-select { font-weight: 700; }
+.dh-pill sub { font-size: .7em; }
+
+/* rEvo CCR Checklist "modernize" pass (Pablo, 2026-10-15: "make the form
+   more modern") - a soft tinted page wash, a live progress bar pinned
+   under the topbar, a "done" state per item as it's ticked, and a sticky
+   save bar so the button + running count stay reachable on a long
+   scrolling form (same sticky-above-the-tabbar formula as
+   .dh-media-savebar, and the same sticky-under-the-topbar formula used
+   elsewhere in this file, just scoped to this page). */
+.dh-ccr-bg { background: linear-gradient(180deg, var(--dh-foam) 0%, #eef1f3 460px, #eef1f3 100%); }
+
+.dh-ccr-progress-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.dh-ccr-progress-label { font-size: .76rem; font-weight: 700; color: var(--dh-muted); letter-spacing: .02em; text-transform: uppercase; }
+.dh-ccr-progress-count { font-size: .8rem; font-weight: 800; color: var(--dh-deep); font-variant-numeric: tabular-nums; }
+.dh-ccr-progress-track { height: 7px; border-radius: 999px; background: var(--dh-foam); overflow: hidden; }
+.dh-ccr-progress-fill { height: 100%; width: 0%; border-radius: 999px; background: linear-gradient(90deg, var(--dh-shallow), var(--dh-good)); transition: width .25s ease; }
+/* The progress bar lived in its own sticky-under-the-topbar card; Pablo
+   preferred that bar's own look over the sticky save bar's plain "X/16
+   checked" text (2026-10-17), so it moved into the save bar instead of
+   existing in both places - this wrapper just lets it sit inline next to
+   the Save button there, stretching to fill the remaining width while
+   the button keeps its own size, both vertically centered via the save
+   bar's own align-items. */
+.dh-ccr-progress-inline { flex: 1 1 auto; min-width: 0; }
+
+.dh-ccr-item { border-radius: 16px; box-shadow: 0 1px 3px rgba(11,42,58,.05); transition: background .2s ease, border-color .2s ease, box-shadow .2s ease; }
+.dh-ccr-item.is-done { border-color: var(--dh-good); background: var(--dh-good-bg); box-shadow: 0 1px 3px rgba(46,125,79,.08); }
+
+.dh-ccr-step-num { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; background: var(--dh-foam); color: var(--dh-deep); font-size: .7rem; font-weight: 800; transition: background .2s ease, color .2s ease; }
+.dh-ccr-item.is-done .dh-ccr-step-num { background: var(--dh-good); color: #fff; }
+
+.ccr-item-checkbox { width: 22px; height: 22px; accent-color: var(--dh-good); cursor: pointer; }
+
+.dh-ccr-savebar { position: sticky; bottom: calc(var(--dh-tabbar-h) + env(safe-area-inset-bottom) + 8px); z-index: 15; display: flex; align-items: center; justify-content: space-between; gap: var(--dh-space-3); margin-top: var(--dh-space-3); padding: 12px 16px; background: var(--dh-foam); border: 1px solid var(--dh-shallow); border-radius: 14px; box-shadow: 0 6px 20px rgba(11,42,58,.14); }
+
+/* Signature reads as a distinct closing step, not just another item in
+   the list. */
+.dh-ccr-signature-card { border-radius: 16px; border: 1.5px dashed var(--dh-line); background: var(--dh-foam); padding: var(--dh-space-3); }
+
+/* "Gas Analysis" (steps 1-4) / "Check Electronics" (steps 6-8) section
+   headers (Pablo, 2026-10-15). */
+.dh-ccr-group-header { display: flex; align-items: center; gap: 8px; font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--dh-sea); margin: 22px 2px 10px; }
+.dh-ccr-group-header::after { content: ''; flex: 1 1 auto; height: 1px; background: var(--dh-line); }
+
+/* Alarm thresholds on pressure/cell/battery fields (Pablo, 2026-10-15) -
+   ccr-checklist.js toggles these off each field's `data-alarm` config. */
+.dh-ccr-alarm-wrap { display: flex; flex-direction: column; gap: 4px; }
+.dh-ccr-alarm-input.is-alarm-red { border-color: var(--dh-poor) !important; background: var(--dh-poor-bg); color: var(--dh-poor); font-weight: 700; }
+.dh-ccr-alarm-input.is-alarm-yellow { border-color: var(--dh-avg) !important; background: var(--dh-avg-bg); color: var(--dh-avg); font-weight: 700; }
+.dh-ccr-alarm-input.is-alarm-green { border-color: var(--dh-good) !important; background: var(--dh-good-bg); color: var(--dh-good); font-weight: 700; }
+.dh-ccr-alarm-msg { font-size: .66rem; font-weight: 700; color: var(--dh-poor); max-width: 140px; line-height: 1.25; }
+.dh-ccr-replace-check { display: flex; align-items: center; gap: 4px; font-size: .72rem; }
+.dh-ccr-replace-check .form-check-label { font-size: .72rem; margin-bottom: 0; }
+
+/* Material Dashboard's native floating-label input (Pablo, 2026-10-16:
+   "I want the inputs and labels to look like this" - .input-group-outline,
+   already used elsewhere in the app, e.g. account/settings.blade.php).
+   Its `is-focused`/`is-filled` state classes are toggled automatically,
+   app-wide, by a window.onload handler already in material-dashboard.min.js
+   (not the onfocus="focused(this)" attribute from the pasted markup -
+   that points at a different, unrelated pair of helper functions that
+   don't touch these classes at all). The component ships its own built-in
+   colored variants, `.is-valid` (green) and `.is-invalid` (red) - these
+   mirror that exact same pattern with this app's own tokens instead of
+   Material's defaults, plus a neutral "grey" variant for Pressure, which
+   Pablo wants to stay plain even when focused ("Keep it Grey for
+   Pressure") rather than Material's default blue accent. */
+.input-group.input-group-outline.dh-ccr-ig-good.is-focused .form-label + .form-control,
+.input-group.input-group-outline.dh-ccr-ig-good.is-filled .form-label + .form-control {
+    border-color: var(--dh-good) !important;
+    box-shadow: inset 1px 0 var(--dh-good), inset -1px 0 var(--dh-good), inset 0 -1px var(--dh-good);
+    border-top-color: transparent !important;
+}
+.input-group.input-group-outline.dh-ccr-ig-good.is-focused .form-label,
+.input-group.input-group-outline.dh-ccr-ig-good.is-filled .form-label { color: var(--dh-good); }
+.input-group.input-group-outline.dh-ccr-ig-good.is-focused .form-label:before,
+.input-group.input-group-outline.dh-ccr-ig-good.is-focused .form-label:after,
+.input-group.input-group-outline.dh-ccr-ig-good.is-filled .form-label:before,
+.input-group.input-group-outline.dh-ccr-ig-good.is-filled .form-label:after {
+    border-top-color: var(--dh-good); box-shadow: inset 0 1px var(--dh-good);
+}
+
+.input-group.input-group-outline.dh-ccr-ig-he.is-focused .form-label + .form-control,
+.input-group.input-group-outline.dh-ccr-ig-he.is-filled .form-label + .form-control {
+    border-color: var(--dh-shallow) !important;
+    box-shadow: inset 1px 0 var(--dh-shallow), inset -1px 0 var(--dh-shallow), inset 0 -1px var(--dh-shallow);
+    border-top-color: transparent !important;
+}
+.input-group.input-group-outline.dh-ccr-ig-he.is-focused .form-label,
+.input-group.input-group-outline.dh-ccr-ig-he.is-filled .form-label { color: var(--dh-shallow); }
+.input-group.input-group-outline.dh-ccr-ig-he.is-focused .form-label:before,
+.input-group.input-group-outline.dh-ccr-ig-he.is-focused .form-label:after,
+.input-group.input-group-outline.dh-ccr-ig-he.is-filled .form-label:before,
+.input-group.input-group-outline.dh-ccr-ig-he.is-filled .form-label:after {
+    border-top-color: var(--dh-shallow); box-shadow: inset 0 1px var(--dh-shallow);
+}
+
+.input-group.input-group-outline.dh-ccr-ig-grey.is-focused .form-label + .form-control,
+.input-group.input-group-outline.dh-ccr-ig-grey.is-filled .form-label + .form-control {
+    border-color: var(--dh-muted) !important;
+    box-shadow: inset 1px 0 var(--dh-muted), inset -1px 0 var(--dh-muted), inset 0 -1px var(--dh-muted);
+    border-top-color: transparent !important;
+}
+.input-group.input-group-outline.dh-ccr-ig-grey.is-focused .form-label,
+.input-group.input-group-outline.dh-ccr-ig-grey.is-filled .form-label { color: var(--dh-muted); }
+.input-group.input-group-outline.dh-ccr-ig-grey.is-focused .form-label:before,
+.input-group.input-group-outline.dh-ccr-ig-grey.is-focused .form-label:after,
+.input-group.input-group-outline.dh-ccr-ig-grey.is-filled .form-label:before,
+.input-group.input-group-outline.dh-ccr-ig-grey.is-filled .form-label:after {
+    border-top-color: var(--dh-muted); box-shadow: inset 0 1px var(--dh-muted);
+}
+
+/* Scrubber time's Result (Pablo, 2026-10-16: "make it bg solid blue...
+   make sure it's not the same color as the dark mode background") -
+   solid fill ONLY once it's-filled (a real computed value exists), not
+   unconditionally - applying it to the empty/resting state too put an
+   opaque background right behind the "Result" label itself (which sits
+   underneath/behind the input at rest, same as any other floating-label
+   field), hiding it completely (Pablo, 2026-10-17: "the result label
+   above the input...is partially shown"). Disabled fields never receive
+   focus, so there's no .is-focused state to cover here either.
+
+   The label staying hidden even once its own color was fixed (Pablo,
+   2026-10-17: "still hidden in dark mode and not visible at all in light
+   mode") turned out to be a paint-order issue, not a color one: the
+   label comes before the <input> in the markup, and both are positioned
+   (label absolute, input relative) with an auto z-index, so the later
+   <input> paints over the earlier <label> regardless of color - normally
+   invisible since every other field's input background is transparent
+   (the label shows straight through it), but Result's own opaque fill
+   actually blocks whatever's behind it. Lifting the label's z-index
+   above the input's auto level fixes it without touching any other
+   field. */
+.input-group.input-group-outline.dh-ccr-result-box .form-label { z-index: 2; }
+.input-group.input-group-outline.dh-ccr-result-box.is-filled .form-label + .form-control {
+    background: var(--dh-sea) !important;
+    color: #fff !important;
+    border-color: var(--dh-sea) !important;
+    cursor: default;
+}
+/* Grey in light mode, same as every other field's label - white was
+   "lost with the background" against the solid blue fill (Pablo,
+   2026-10-17). Dark mode keeps white ("in dark mode is fine"), overridden
+   below. */
+.input-group.input-group-outline.dh-ccr-result-box.is-filled .form-label {
+    color: var(--dh-muted) !important;
+}
+.input-group.input-group-outline.dh-ccr-result-box.is-filled .form-label:before,
+.input-group.input-group-outline.dh-ccr-result-box.is-filled .form-label:after {
+    border-top-color: var(--dh-sea) !important;
+}
+body.dh-ccr-bg[data-theme="dark"] .input-group.input-group-outline.dh-ccr-result-box.is-filled .form-control {
+    background: var(--dh-sea) !important;
+    color: #fff !important;
+}
+body.dh-ccr-bg[data-theme="dark"] .input-group.input-group-outline.dh-ccr-result-box.is-filled .form-label {
+    color: rgba(255,255,255,.85) !important;
+}
+
+/* A scrubber result under 60min that was then refilled (Pablo, 2026-10-17:
+   "in reality the scrubber time is 'full' after the repacking") is stale,
+   not wrong - crossed out rather than hidden so the original reading (and
+   the fact a repack happened) both stay on the record. Light red, not the
+   usual dark --dh-poor, so it still reads against the result box's own
+   solid blue fill in both themes; Show/History use --dh-poor on their
+   plain backgrounds instead, see .dh-ccr-result-stale-plain below. */
+.input-group.input-group-outline.dh-ccr-result-box.is-filled .form-control.dh-ccr-result-stale {
+    color: #ffb4a8 !important;
+    text-decoration: line-through;
+}
+.dh-ccr-result-stale-plain {
+    color: var(--dh-poor);
+    text-decoration: line-through;
+    font-weight: 700;
+}
+
+/* History table: caps at ~10 rows before scrolling, so a long build
+   history doesn't push the page itself into a long scroll (Pablo,
+   2026-10-17: "the list is going to be too long"). The header stays
+   pinned while the body scrolls underneath it, so column labels are
+   never scrolled out of view - needs its own opaque background per row
+   since position:sticky content still sits above whatever rows scroll
+   past beneath it. */
+.dh-ccr-history-scroll { max-height: 560px; overflow-y: auto; }
+.dh-ccr-history-scroll thead th {
+    position: sticky;
+    top: 0;
+    background: var(--dh-paper, #fff);
+    z-index: 1;
+}
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-history-scroll thead th {
+    background: #182530;
+}
+
+/* An alarm-triggered field (red/yellow/green, Pablo's earlier threshold
+   rules) needs to win over the grey/colored variants above once the box
+   is focused/filled - Material's own .is-focused/.is-filled border rule
+   carries 5 class selectors plus !important, so a plain
+   .dh-ccr-alarm-input.is-alarm-red rule (2 classes) loses that fight even
+   with !important of its own (higher specificity always wins when both
+   sides have !important). Matching the same selector shape here, with
+   the alarm classes added on top, is what actually outranks it. */
+.input-group.input-group-outline.is-focused .form-label + .form-control.dh-ccr-alarm-input.is-alarm-red,
+.input-group.input-group-outline.is-filled .form-label + .form-control.dh-ccr-alarm-input.is-alarm-red {
+    border-color: var(--dh-poor) !important;
+    box-shadow: inset 1px 0 var(--dh-poor), inset -1px 0 var(--dh-poor), inset 0 -1px var(--dh-poor) !important;
+    border-top-color: transparent !important;
+}
+.input-group.input-group-outline.is-focused .form-label + .form-control.dh-ccr-alarm-input.is-alarm-yellow,
+.input-group.input-group-outline.is-filled .form-label + .form-control.dh-ccr-alarm-input.is-alarm-yellow {
+    border-color: var(--dh-avg) !important;
+    box-shadow: inset 1px 0 var(--dh-avg), inset -1px 0 var(--dh-avg), inset 0 -1px var(--dh-avg) !important;
+    border-top-color: transparent !important;
+}
+.input-group.input-group-outline.is-focused .form-label + .form-control.dh-ccr-alarm-input.is-alarm-green,
+.input-group.input-group-outline.is-filled .form-label + .form-control.dh-ccr-alarm-input.is-alarm-green {
+    border-color: var(--dh-good) !important;
+    box-shadow: inset 1px 0 var(--dh-good), inset -1px 0 var(--dh-good), inset 0 -1px var(--dh-good) !important;
+    border-top-color: transparent !important;
+}
+
+/* Unit caption below the box, not an inline suffix inside it (Pablo,
+   2026-10-16: "the unit (psi, mV, V or min) will go directly below the
+   textbox or label"). */
+.dh-ccr-unit-label { font-size: .68rem; font-weight: 600; color: var(--dh-muted); text-align: right; margin-top: 1px; }
+/* Wrapper for the new floating-label field layout - deliberately NOT
+   .dh-ccr-alarm-wrap, which carries sizing/suffix rules written for the
+   older pill/bordered-box layout that don't apply here (the outline
+   component sizes and positions its own label internally). */
+.dh-ccr-field { display: flex; flex-direction: column; gap: 2px; }
+
+/* Theme toggle button, top of the page (Pablo, 2026-10-16: "add a button
+   at the top to switch between dark and light mode") - same small round
+   icon-button look as the signature's clear button. Click handling +
+   persistence (localStorage) is in ccr-theme.js, loaded on all 3 pages. */
+.dh-ccr-theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--dh-line); background: var(--dh-paper); color: var(--dh-deep); cursor: pointer; }
+.dh-ccr-theme-toggle:hover { background: var(--dh-foam); }
+.dh-ccr-theme-toggle .material-icons-round { font-size: 18px; }
+
+/* Status badges (Pablo, 2026-10-16) - a small circle pinned to a field's
+   own bottom-right corner. Step 9's sensor dates: age < 9mo = green
+   check, 9-12mo = yellow warning, > 12mo = red error, replaced this
+   session = green repeat (overrides the age read while that field's
+   "Replaced?" box stays checked). Steps 1-4's Pressure: red/yellow
+   warning, green check, off the same thresholds already driving that
+   field's border color (config `alarm.*.badge_icon`). Same red/yellow/
+   green tokens as the alarm inputs above, not theme-dependent. */
+.dh-ccr-badge-wrap { position: relative; display: inline-block; }
+.dh-ccr-badge { position: absolute; right: -6px; bottom: -6px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--dh-paper); color: #fff; }
+.dh-ccr-badge .material-icons-round { font-size: 12px; }
+.dh-ccr-badge.is-red { background: var(--dh-poor); }
+.dh-ccr-badge.is-yellow { background: var(--dh-avg); }
+.dh-ccr-badge.is-green { background: var(--dh-good); }
+
+/* Dark mode, scoped to this page only (Pablo, 2026-10-15: "a dark mode
+   format too of this form") - the shared app shell (topbar/tabbar) keeps
+   its usual light chrome; only this feature's own content follows the
+   chosen theme. Driven by a `data-theme` attribute ccr-theme.js always
+   stamps onto <body> (explicit toggle choice, else the system
+   preference), so this reads off that attribute directly rather than a
+   `prefers-color-scheme` media query. */
+body.dh-ccr-bg[data-theme="dark"] { background: linear-gradient(180deg, #0f232c 0%, #141f26 460px, #141f26 100%); }
+body.dh-ccr-bg[data-theme="dark"] .card,
+body.dh-ccr-bg[data-theme="dark"] .dh-level-panel,
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-signature-card,
+body.dh-ccr-bg[data-theme="dark"] .modal-content { background: #182530; border-color: #2a3b47; }
+/* Lighter blue, not the same tone as the page background, in both themes
+   (Pablo, 2026-10-16: "the sticky bar...right now they are the same
+   color as the background"). */
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-savebar { background: #1b3a4a; border-color: #2f5c70; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-item.is-done { background: #16281f; border-color: var(--dh-good); }
+body.dh-ccr-bg[data-theme="dark"] .dh-gas-label,
+body.dh-ccr-bg[data-theme="dark"] .form-check-label,
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-progress-label,
+body.dh-ccr-bg[data-theme="dark"] h3 { color: #c3d6e0; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-progress-count,
+body.dh-ccr-bg[data-theme="dark"] .modal-body p { color: #eaf3f7; }
+body.dh-ccr-bg[data-theme="dark"] .form-control,
+body.dh-ccr-bg[data-theme="dark"] .form-select { background: #0f1b22; border-color: #2a3b47 !important; color: #eaf3f7; }
+body.dh-ccr-bg[data-theme="dark"] .form-control::placeholder { color: #5c7682; }
+/* The floating-label input relies on its own .form-control staying
+   transparent (Material's own rule, `background: none`) so the label
+   sitting underneath it in the unfocused/empty state shows through - true
+   in light mode too, just unnoticeable there since nothing was covering
+   it. The blanket dark-mode background above gave it an opaque fill,
+   which hid most of the label behind it (Pablo, 2026-10-16: "the labels
+   on the text inputs are showing partially"). More specific than that
+   rule, so it wins. */
+body.dh-ccr-bg[data-theme="dark"] .input-group.input-group-outline .form-control { background: none; }
+body.dh-ccr-bg[data-theme="dark"] .border { border-color: #2a3b47 !important; }
+body.dh-ccr-bg[data-theme="dark"] .input-group-text { background: #0f1b22; border-color: #2a3b47; color: #9db4c0; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-progress-track { background: #0f1b22; }
+body.dh-ccr-bg[data-theme="dark"] canvas#ccrSignatureCanvas { background: #0f1b22 !important; border-color: #2a3b47 !important; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-step-num { background: #0f1b22; color: #c3d6e0; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-group-header::after { background: #2a3b47; }
+body.dh-ccr-bg[data-theme="dark"] .dh-pill { background: #0f1b22; }
+body.dh-ccr-bg[data-theme="dark"] .btn-outline-info { color: #6fd0e8; border-color: #6fd0e8; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-theme-toggle { background: #182530; border-color: #2a3b47; color: #eaf3f7; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-badge { border-color: #182530; }
+
+/* Floating-label input's default label text (Material's own grey) reads
+   fine on white but is nearly invisible on the dark card background -
+   brighter, theme-specific tones for the unfocused label and each of the
+   three colored variants once focused/filled. */
+body.dh-ccr-bg[data-theme="dark"] .input-group.input-group-outline .form-label { color: #9db4c0; }
+body.dh-ccr-bg[data-theme="dark"] .input-group.input-group-outline.dh-ccr-ig-good.is-focused .form-label,
+body.dh-ccr-bg[data-theme="dark"] .input-group.input-group-outline.dh-ccr-ig-good.is-filled .form-label { color: #6fd08f; }
+body.dh-ccr-bg[data-theme="dark"] .input-group.input-group-outline.dh-ccr-ig-he.is-focused .form-label,
+body.dh-ccr-bg[data-theme="dark"] .input-group.input-group-outline.dh-ccr-ig-he.is-filled .form-label { color: #7fd0ea; }
+body.dh-ccr-bg[data-theme="dark"] .input-group.input-group-outline.dh-ccr-ig-grey.is-focused .form-label,
+body.dh-ccr-bg[data-theme="dark"] .input-group.input-group-outline.dh-ccr-ig-grey.is-filled .form-label { color: #c3d6e0; }
+
+/* Steps 1-4's "psi" (and step 8's "V") suffix sits absolutely positioned
+   over the input's own end (Material Dashboard's .input-group-text, not
+   this app's own rule) - fine against a transparent/light input, but it
+   visibly overlaps the typed number once the input gets a real dark
+   background (Pablo, 2026-10-16: "the psi labels...are covering the text
+   box, can you just put them below"). Scoped to alarm-wrapped number
+   fields specifically (pressure/cell/battery), not the scrubber-time
+   formula's own differently-laid-out ft/mins suffixes. */
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-alarm-wrap .input-group { flex-wrap: wrap; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-alarm-wrap .input-group-text { position: static; display: block; width: 100%; background: transparent; border: 0; padding: 2px 0 0; margin-top: 2px; font-size: .68rem; }
 
 /* Saved-dive shape pills in the Deco Planner's "Open a dive" list (Pablo,
    2026-09-25: "OC: theme dark blue - CC: light dark blue - Single Level:

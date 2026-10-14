@@ -206,6 +206,17 @@ Route::get('MultiDivePlannerImperial', 'App\Http\Controllers\MultiDivePlannerCon
 Route::get('MultiDivePlannerMetric/{id}', 'App\Http\Controllers\MultiDivePlannerController@showMetric')->where('id', '[0-9]+')->middleware('auth');
 Route::get('MultiDivePlannerMetric', 'App\Http\Controllers\MultiDivePlannerController@showMetric')->middleware('auth')->name('MultiDivePlannerMetric');
 
+// rEvo CCR Build-up checklist (Pablo, 2026-10-15) - 'auth' middleware +
+// $this->authorize('ccrChecklistAccess', User::class) in every
+// CcrChecklistController action, restricted to Pablo's own account only
+// (Pablo, 2026-10-17: "make ONLY available to my user pstrika@gmail.com
+// (nobody else - not even platform admins)"), NOT the admin-only
+// enforcement MultiDivePlanner above uses.
+Route::get('CcrChecklist', 'App\Http\Controllers\CcrChecklistController@index')->middleware('auth')->name('CcrChecklist');
+Route::get('CcrChecklist/New', 'App\Http\Controllers\CcrChecklistController@create')->middleware('auth')->name('CcrChecklist.create');
+Route::post('CcrChecklist', 'App\Http\Controllers\CcrChecklistController@store')->middleware('auth')->name('CcrChecklist.store');
+Route::get('CcrChecklist/{id}', 'App\Http\Controllers\CcrChecklistController@show')->where('id', '[0-9]+')->middleware('auth')->name('CcrChecklist.show');
+
 // Saving GF Low/High + setpoint and custom gas mixes needs a real profile
 // to save them to - 'guest' alone would silently write to the shared guest
 // account (Pablo, 2026-09-18).

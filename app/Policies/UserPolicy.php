@@ -72,4 +72,17 @@ class UserPolicy
     {
         return $user->isAdmin();
     }
+
+    /**
+     * rEvo CCR Build-up checklist (Pablo, 2026-10-17: "make ONLY available
+     * to my user pstrika@gmail.com (nobody else - not even platform
+     * admins)") - deliberately NOT isAdmin()-gated like every other
+     * CcrChecklistController precedent in this app (Multi Dive Planner,
+     * etc). This is Pablo's own personal equipment log, not an admin tool,
+     * so admin status is irrelevant here on purpose.
+     */
+    public function ccrChecklistAccess(User $user)
+    {
+        return $user->email === 'pstrika@gmail.com';
+    }
 }
