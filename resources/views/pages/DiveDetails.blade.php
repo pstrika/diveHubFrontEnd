@@ -756,8 +756,18 @@
                              (tablet up). No small inline logo/pic badges next
                              to the names any more. --}}
                         @php
-                            $frameLogo = $matchedOperator['logoUrl'] ?? ($conditions['operator_logo'] ?? null);
-                            $framePic = $conditions['boat_pic'] ?? null;
+                            // Logo and picture: a live catalog match by name wins (so a
+                            // boat picked by name alone - the app's PATCH - still gets
+                            // its picture), else whatever was stored; either way
+                            // re-homed on this host (AssetPath) since stored values
+                            // used to carry the picker's own hostname.
+                            $matchedBoat = null;
+                            if ($matchedOperator && !empty($conditions['boat_name'])) {
+                                $matchedBoat = collect($boatsByOperator->get($matchedOperator['id']) ?? [])
+                                    ->first(fn ($b) => strcasecmp($b['name'], $conditions['boat_name']) === 0);
+                            }
+                            $frameLogo = \App\Support\AssetPath::absolute($matchedOperator['logoUrl'] ?? ($conditions['operator_logo'] ?? null));
+                            $framePic = \App\Support\AssetPath::absolute($matchedBoat['pic'] ?? ($conditions['boat_pic'] ?? null));
                             // Three states (Pablo, 2026-10-15): both operator and boat
                             // known to DH -> col-6 inputs + col-6 picture with the logo
                             // overlaid; operator known, boat not -> col-12 inputs, no

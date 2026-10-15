@@ -9,6 +9,7 @@ use App\Models\DiveChange;
 use App\Models\Operator;
 use App\Models\Site;
 use App\Models\User;
+use App\Support\AssetPath;
 use App\Support\LogbookConditionRules;
 use App\Support\TankCatalog;
 use Illuminate\Http\Request;
@@ -177,6 +178,31 @@ class LogbookApiController extends Controller
         }
         if (array_key_exists('notes', $flat)) $dive->notes = $validated['notes'] ?? null;
         if (array_key_exists('tags', $flat)) $dive->tags = $validated['tags'] ?? [];
+
+        // Image/link fields are stored host-free (AssetPath). When a NAME is
+        // sent without its image, resolve the image from the catalog - so
+        // changing the boat by name never leaves the previous boat's
+        // picture behind, and a catalog boat always gets its picture.
+        foreach (['operator_logo', 'boat_pic', 'operator_url'] as $k) {
+            if (isset($conditions[$k])) $conditions[$k] = AssetPath::relative($conditions[$k]);
+        }
+        $operatorSent = array_key_exists('operator_name', $flat);
+        $boatSent = array_key_exists('boat_name', $flat);
+        if (($operatorSent && !array_key_exists('operator_logo', $flat)) || ($boatSent && !array_key_exists('boat_pic', $flat))) {
+            $op = !empty($conditions['operator_name'])
+                ? Operator::whereRaw('LOWER(operatorName) = ?', [mb_strtolower($conditions['operator_name'])])->first()
+                : null;
+            if ($operatorSent && !array_key_exists('operator_logo', $flat)) {
+                $conditions['operator_logo'] = ($op && $op->logoUrl) ? AssetPath::relative('/assets' . $op->logoUrl) : null;
+                $conditions['operator_url'] = $op ? AssetPath::relative(route('OperatorDetails', ['id' => $op->slug ?? $op->id])) : null;
+            }
+            if ($boatSent && !array_key_exists('boat_pic', $flat)) {
+                $boat = ($op && !empty($conditions['boat_name']))
+                    ? Boat::where('operatorId', $op->id)->whereRaw('LOWER(name) = ?', [mb_strtolower($conditions['boat_name'])])->first()
+                    : null;
+                $conditions['boat_pic'] = ($boat && $boat->pic) ? AssetPath::relative('/assets' . $boat->pic) : null;
+            }
+        }
 
         $dive->conditions = array_filter($conditions, fn ($v) => $v !== null && $v !== '' && $v !== []);
         $dive->save();

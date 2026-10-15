@@ -241,6 +241,12 @@ class LogbookController extends Controller
                 foreach (['operator_name', 'divemaster', 'boat_name', 'boat_captain', 'operator_logo', 'operator_url', 'boat_pic'] as $field) {
                     $conditions[$field] = $data['conditions'][$field] ?? null;
                 }
+                // The picker hands these over as absolute URLs of THIS host;
+                // store the path only (App\Support\AssetPath) so the same row
+                // renders on any host - localhost, the LAN address, the app.
+                foreach (['operator_logo', 'operator_url', 'boat_pic'] as $field) {
+                    $conditions[$field] = \App\Support\AssetPath::relative($conditions[$field]);
+                }
                 break;
             case 'conditions':
                 foreach (['current', 'current_direction', 'weather', 'surface_conditions', 'visibility_m'] as $field) {

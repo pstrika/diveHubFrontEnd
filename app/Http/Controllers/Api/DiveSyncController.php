@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Dive;
 use App\Models\DiveChange;
+use App\Support\AssetPath;
 use App\Support\DiveGasStats;
 use Illuminate\Http\Request;
 
@@ -64,7 +65,7 @@ class DiveSyncController extends Controller
             'notes' => $dive->notes,
             // An empty PHP array encodes as JSON [] - a list, not the object
             // clients expect here (iOS session, 2026-10-15). Empty = null.
-            'conditions' => $dive->conditions ?: null,
+            'conditions' => $this->conditionsForApi($dive->conditions),
             'tags' => $dive->tags ?? [],
             // Effective classification (saved pick, else the depth-based
             // default) and the row title the web list shows, so the app
@@ -73,6 +74,20 @@ class DiveSyncController extends Controller
             'title' => $dive->site()->name ?? ($dive->conditions['site_name_custom'] ?? (ucfirst($dive->classification()) . ' Dive')),
             'updated_at' => optional($dive->updated_at)->toIso8601String(),
         ];
+    }
+
+    /**
+     * Stored conditions carry host-free paths for the image/link fields
+     * (App\Support\AssetPath); the app wants absolute URLs. Empty = null,
+     * never [] (a JSON list where clients expect an object).
+     */
+    private function conditionsForApi(?array $conditions): ?array
+    {
+        if (!$conditions) return null;
+        foreach (['operator_logo', 'boat_pic', 'operator_url'] as $k) {
+            if (!empty($conditions[$k])) $conditions[$k] = AssetPath::absolute($conditions[$k]);
+        }
+        return $conditions;
     }
 
     private function siteArray(Dive $dive): ?array
