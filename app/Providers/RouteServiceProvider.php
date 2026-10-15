@@ -59,5 +59,14 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
         });
+
+        // Bearer-authenticated logbook sync (routes/api.php /dives*): a fresh
+        // app install pulls every dive it doesn't hold, so a 66-dive logbook
+        // tripped the generic 60/min above (iOS session, 2026-10-15). The
+        // cost here is per-dive JSON, not authentication - the token
+        // exchange keeps its own tight limit.
+        RateLimiter::for('logbook-sync', function (Request $request) {
+            return Limit::perMinute(600)->by(optional($request->user())->id ?: $request->ip());
+        });
     }
 }

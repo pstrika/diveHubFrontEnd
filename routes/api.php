@@ -25,13 +25,19 @@ Route::middleware('auth.api:sanctum')->post('/blog-articles', [\App\Http\Control
 // 'logbook' = early-access gate (config/divehub.php logbook_allowed_emails);
 // the token exchange below stays ungated - its one-time code can only come
 // from the already-gated web AppLogin route.
-Route::middleware(['auth.api:sanctum', 'logbook'])->post('/dives', [\App\Http\Controllers\Api\DiveUploadController::class, 'store']);
+// 'throttle:logbook-sync' (600/min per user, RouteServiceProvider) replaces
+// the api group's generic 60/min on the dive routes - a fresh install pulls
+// every dive it doesn't hold, and 66 dives already tripped the default.
+Route::withoutMiddleware('throttle:api')->middleware(['auth.api:sanctum', 'logbook', 'throttle:logbook-sync'])->post('/dives', [\App\Http\Controllers\Api\DiveUploadController::class, 'store']);
+// Batch fetch for that first pull: GET /dives?uuids=a,b,c (max 20) - same
+// per-dive object as /dives/{uuid}, unknown uuids simply absent.
+Route::withoutMiddleware('throttle:api')->middleware(['auth.api:sanctum', 'logbook', 'throttle:logbook-sync'])->get('/dives', [\App\Http\Controllers\Api\DiveSyncController::class, 'index']);
 
 // Pull side of phone sync (SYNC-CONTRACT.md) - see DiveSyncController.
 // /dives/changes MUST be registered before /dives/{uuid}, or Laravel
 // would match the literal "changes" as a {uuid} param instead.
-Route::middleware(['auth.api:sanctum', 'logbook'])->get('/dives/changes', [\App\Http\Controllers\Api\DiveSyncController::class, 'changes']);
-Route::middleware(['auth.api:sanctum', 'logbook'])->get('/dives/{uuid}', [\App\Http\Controllers\Api\DiveSyncController::class, 'show'])
+Route::withoutMiddleware('throttle:api')->middleware(['auth.api:sanctum', 'logbook', 'throttle:logbook-sync'])->get('/dives/changes', [\App\Http\Controllers\Api\DiveSyncController::class, 'changes']);
+Route::withoutMiddleware('throttle:api')->middleware(['auth.api:sanctum', 'logbook', 'throttle:logbook-sync'])->get('/dives/{uuid}', [\App\Http\Controllers\Api\DiveSyncController::class, 'show'])
     ->where('uuid', '[0-9a-fA-F-]{36}');
 
 // App sign-in token exchange (docs/APP-AUTH.md) - see AppAuthController.

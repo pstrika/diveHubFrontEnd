@@ -134,4 +134,37 @@ class DiveSyncController extends Controller
 
         return response()->json($this->syncArray($dive) + ['profile' => $dive->profile]);
     }
+
+    /**
+     * GET /api/dives?uuids=a,b,c - up to 20 full records (same object as
+     * show(), profile included) in one call, so a fresh install pulls a
+     * logbook in N/20 requests rather than N (iOS session, 2026-10-15).
+     * Unknown, deleted or someone else's uuids are simply absent from the
+     * result - the client already knows which ones it asked for.
+     */
+    public function index(Request $request)
+    {
+        $raw = (string) $request->query('uuids', '');
+        $uuids = array_values(array_unique(array_filter(array_map('trim', explode(',', $raw)))));
+
+        if (!count($uuids)) {
+            return response()->json(['message' => 'uuids is required'], 422);
+        }
+        if (count($uuids) > 20) {
+            return response()->json(['message' => 'At most 20 uuids per request'], 422);
+        }
+        foreach ($uuids as $uuid) {
+            if (!preg_match('/^[0-9a-fA-F-]{36}$/', $uuid)) {
+                return response()->json(['message' => 'Invalid uuid: ' . $uuid], 422);
+            }
+        }
+
+        $dives = Dive::where('user_id', $request->user()->id)
+            ->whereIn('uuid', $uuids)
+            ->get()
+            ->map(fn (Dive $dive) => $this->syncArray($dive) + ['profile' => $dive->profile])
+            ->values();
+
+        return response()->json(['dives' => $dives]);
+    }
 }
