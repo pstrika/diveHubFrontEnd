@@ -216,6 +216,58 @@ and availability before anything is filtered. Pablo took this on the 2026-09-10
 call and it is his to fix in the backend logic. The same work makes the dashboard
 slow to load. Nothing to do on the view side.
 
+## 9. Diver logbook - future phases (Pablo, 2026-10-14)
+
+Phase 1 shipped same day: `dives` table (migration 2026_10_14_160000, +
+`conditions` in 2026_10_14_210000), `LogbookController`, the Logbook list
+and DiveDetails pages, and the depth/PPO2/temp/gas-switch chart
+(`dive-details.js`). Dives arrive via the native uploader apps posting to
+`POST /api/dives` (`DiveUploadController`) - see that controller's
+docblock for the upload contract. Everything below is explicitly deferred,
+agreed with Pablo so scope doesn't silently creep back in later.
+
+- **Calendar matching.** Try to match an uploaded dive to a trip/event the
+  diver already had booked (date + maybe site proximity), so a synced dive
+  can auto-link to the trip it came from instead of sitting unlinked.
+- **Dive pictures.** Upload photos against a dive, same storage pattern as
+  diver_photos/Site photos elsewhere in the app.
+- **Equipment tracking per dive.** Which gear was used (tank, exposure
+  suit, etc) - likely ties into the existing rEvo CCR checklist/equipment
+  work rather than a wholly separate system.
+- **SAC rate calculation.** Surface air consumption from tank
+  begin/end pressure + volume + depth profile (data already captured in
+  `dives.tanks` and `dives.profile` - this is a derived-on-read
+  calculation, not a new column).
+- **Tags.** Free-form or curated tags per dive (e.g. "wreck", "first CCR
+  dive", "shark"). Likely a simple pivot table once it's real, not a JSON
+  column, since tag filtering/browsing is the actual use case.
+- **Marine life sightings.** Structured per-dive species log, probably
+  reusing or linking to whatever species/critter data already exists
+  elsewhere in the app rather than inventing a new catalog.
+- **Manual dive entry.** Let a diver log a dive with no computer sync at
+  all - same `dives` row shape, `source = 'manual'`, profile/computer
+  fields nullable/absent for a hand-entered dive.
+- **Logbook import from other apps.** UDDF is the obvious first format -
+  DivePlanner.blade.php already has a one-off UDDF parser (used today only
+  to overlay a real log on the calculated deco chart, never persisted) -
+  porting that into a real `dives` import is most of the work already
+  proven out. Other apps' proprietary export formats would be additional,
+  separate parsers.
+- **Create own dive sites.** Right now `dives.site_id` can only point at
+  the curated `Site` catalog (mysql_trips). Letting a diver define their
+  own unlisted site (a personal wreck/reef not in the public catalog)
+  needs either a new table or a `source`/`is_user_created` flag on `Site`
+  itself - undecided, worth a real discussion before building either way
+  since it affects a catalog the rest of the app already depends on.
+- **Operator/buddy linking.** `conditions.operator_name` and
+  `conditions.buddies` are free text today. Linking operator_name to a
+  real `Operator` record (mysql_trips) would enable auto-suggesting from
+  a diver's favorites, consistent with how Gas Blending's operator
+  suggestions already work; linking buddies to real `User` records would
+  enable the social features (tagging a buddy who's also on Divers Hub).
+  Both deferred until there's a concrete reason to need the link, not
+  built speculatively now.
+
 ## Suggested order
 
 1. Ranking blend with certification cap (no migration, visible win, answers

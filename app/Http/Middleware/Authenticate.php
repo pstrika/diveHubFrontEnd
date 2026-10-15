@@ -28,8 +28,17 @@ class Authenticate extends Middleware
         // JSON endpoint - every subsequent login then landed on that JSON
         // response instead of the dashboard (found 2026-09-24: "every login
         // is forcing to go to .../messages/poll").
+        //
+        // fullUrl(), not url() (2026-10-15, the app sign-in flow: GET
+        // /app/login?state=<random> needs that query string to survive the
+        // forced-login round trip so the state can be echoed back - url()
+        // silently drops it, confirmed directly: Request::create('...?state=abc')
+        // ->url() returns the path with no query string at all, ->fullUrl()
+        // keeps it). Any other protected page with meaningful query params
+        // was quietly losing them on a forced-login redirect too; this is a
+        // strict improvement, not just a fix scoped to the new flow.
         if ($request->isMethod('GET') && !$request->expectsJson() && !$request->ajax()) {
-            $request->session()->put('url.intended', $request->url());
+            $request->session()->put('url.intended', $request->fullUrl());
         }
         if ($this->isGuest($request)) {
             //abort(403); // Unauthorized access

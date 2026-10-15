@@ -113,4 +113,37 @@ class Site extends Model
         return $this->deltaToPlainText($this->history);
     }
 
+    /**
+     * gpsLat/gpsLon are stored as degrees + decimal minutes strings
+     * ("26° 19.500' N", "80° 03.043' W"), not decimal degrees - confirmed
+     * against all 379 populated rows (2026-10-14, for the dive logbook's
+     * sync API: DiveSyncController needs plain decimal numbers so clients
+     * don't each have to parse this format). The regex tolerates the two
+     * real outliers found in that scan (a trailing comma, a missing `'`
+     * before the hemisphere letter) rather than requiring the exact
+     * well-formed pattern.
+     */
+    private function parseDms(?string $raw): ?float
+    {
+        if (!$raw || !preg_match('/(\d{1,3})\D+(\d{1,2}(?:\.\d+)?)\D*?([NSEW])/u', $raw, $m)) {
+            return null;
+        }
+        $decimal = (float) $m[1] + ((float) $m[2] / 60);
+        return in_array($m[3], ['S', 'W']) ? -$decimal : $decimal;
+    }
+
+    public function decimalLatitude(): ?float
+    {
+        return $this->parseDms($this->gpsLat);
+    }
+
+    public function decimalLongitude(): ?float
+    {
+        return $this->parseDms($this->gpsLon);
+    }
+
+    public function publicUrl(): string
+    {
+        return route('SiteDetails') . '/' . ($this->slug ?? $this->id);
+    }
 }

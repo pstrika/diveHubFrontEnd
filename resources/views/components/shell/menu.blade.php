@@ -74,6 +74,9 @@
             {!! $link('Finish setting up your profile', route('welcome'), 'tune') !!}
         @endif
         {!! $link('My Calendar', route('MyCalendar'), 'event') !!}
+        @if(in_array(strtolower((string) auth()->user()->email), config('divehub.logbook_allowed_emails', []), true))
+            {!! $link('My Logbook', route('Logbook'), 'menu_book') !!}
+        @endif
         {!! $link('My Groups', route('MyGroups'), 'groups') !!}
         {!! $link('My Visited Sites', route('MyVisitedSites'), 'check_circle') !!}
     </div>

@@ -1347,6 +1347,312 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-equip-stat.is-avg .dh-equip-stat-status { color: var(--dh-avg); }
 .dh-equip-stat.is-poor .dh-equip-stat-status { color: var(--dh-poor); }
 .dh-equip-stat-meta { font-size: .72rem; color: var(--dh-muted); }
+.dh-equip-stat-value { font-size: 1.3rem; font-weight: 700; color: var(--dh-ink); }
+
+/* ------------------------------------------------------------------ */
+/* Diver logbook list (Pablo, 2026-10-14).                             */
+/* ------------------------------------------------------------------ */
+.dh-logbook-list { display: flex; flex-direction: column; gap: 8px; }
+.dh-logbook-row { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: var(--dh-radius); background: var(--dh-paper); border: 1px solid var(--dh-line); text-decoration: none; color: inherit; transition: box-shadow .15s ease, border-color .15s ease; }
+.dh-logbook-row:hover { box-shadow: 0 2px 10px rgba(11,42,58,.1); border-color: var(--dh-sea); color: inherit; }
+.dh-logbook-row-date { flex: 0 0 56px; text-align: center; }
+.dh-logbook-row-day { font-size: 1.3rem; font-weight: 700; color: var(--dh-deep); line-height: 1; }
+.dh-logbook-row-month { font-size: .68rem; color: var(--dh-muted); text-transform: uppercase; letter-spacing: .03em; }
+.dh-logbook-row-main { flex: 1 1 auto; min-width: 0; }
+.dh-logbook-row-title { font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.dh-logbook-row-mode-icon { font-size: 18px; color: var(--dh-sea); }
+.dh-logbook-row-sub { margin-top: 2px; }
+.dh-logbook-row-stats { flex: 0 0 auto; display: flex; gap: 18px; text-align: right; }
+.dh-logbook-row-chevron { color: var(--dh-muted); flex: 0 0 auto; }
+.dh-logbook-row-number { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: var(--dh-deep); color: #fff; font-size: .82rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.dh-logbook-row-mode-icon { width: 16px; height: 16px; display: inline-flex; vertical-align: -3px; margin-right: 2px; color: var(--dh-sea); }
+.dh-logbook-row-mode-icon svg { width: 100%; height: 100%; }
+.dh-svg-icon { display: inline-flex; }
+.dh-svg-icon svg { width: 100%; height: 100%; }
+
+/* ------------------------------------------------------------------ */
+/* Dive detail chart + conditions (Pablo, 2026-10-14).                 */
+/* ------------------------------------------------------------------ */
+.dh-dive-chart-card { background: var(--dh-ink, #16232b); border-radius: var(--dh-radius); padding: 14px; }
+.dh-dive-chart-canvas-wrap { position: relative; height: 340px; }
+.dh-chart-toggles { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.dh-chart-toggle { border: 1.5px solid var(--toggle-color, #888); color: var(--toggle-color, #ccc); background: transparent; border-radius: 999px; padding: 4px 12px; font-size: .74rem; font-weight: 700; cursor: pointer; transition: background-color .15s ease, color .15s ease; }
+.dh-chart-toggle.is-active { background: var(--toggle-color, #888); color: #0b1419; }
+.dh-chart-toggle:disabled { cursor: default; opacity: .9; }
+/* Dark dashboard (Pablo, 2026-10-15: "I want the top dashboard in dive
+   details to have a dark bg") - same dark surface as the chart card
+   (--dh-ink), white text/icons for contrast, same as that card's own
+   convention rather than inventing a second dark tone. */
+.dh-dive-header-stats { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0; padding: 14px; border-radius: var(--dh-radius); background: var(--dh-ink, #16232b); }
+.dh-dive-header-stat { flex: 1 1 110px; text-align: center; padding: 10px; border-radius: var(--dh-radius); background: rgba(255,255,255,.06); }
+.dh-dive-header-stat .material-icons-round { font-size: 18px; color: var(--dh-shallow); margin-bottom: 2px; }
+.dh-dive-header-stat-value { font-size: 1.15rem; font-weight: 700; color: #fff; }
+.dh-dive-header-stat-label { font-size: .68rem; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .03em; }
+
+/* ------------------------------------------------------------------ */
+/* Dive detail header chips/tools (Pablo, 2026-10-15).                 */
+/* ------------------------------------------------------------------ */
+.dh-dive-header-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.dh-dive-header-tools { display: flex; align-items: center; gap: 8px; }
+/* .dh-btn-icon is normally white-on-dark (it lives in dark card headers
+   elsewhere, e.g. DecoPlanner's reset button) - here it's next to the
+   light dh-btn-ghost-dark unit toggle on a white page background, so it's
+   recolored to match, and sized to the same height as that button (Pablo,
+   2026-10-15: "round circle...same height as the button switch to
+   Metric"). */
+.dh-dive-header-tools .dh-btn-icon { width: 33px; height: 33px; background: #fff; color: var(--dh-ink); border: 1.5px solid var(--dh-line); }
+.dh-dive-header-tools .dh-btn-icon:hover { background: #fff; border-color: var(--dh-ink); }
+.dh-dive-header-tools .dh-btn-icon .material-icons-round { font-size: 17px; }
+
+/* Single merged chip: <icon> Open/Closed Circuit <classification text>
+   <pencil> - the OC/CC half is computer-reported and immutable, only the
+   classification text + pencil are interactive ("can only change
+   Technical or Recreational"). */
+.dh-dive-mode-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: var(--dh-deep); color: #fff; font-size: .8rem; font-weight: 700; }
+.dh-dive-mode-chip .dh-svg-icon, .dh-dive-mode-chip > .material-icons-round { width: 16px; height: 16px; font-size: 16px; flex: 0 0 auto; }
+.dh-dive-mode-chip #diveClassChipText { padding-left: 8px; margin-left: 2px; border-left: 1px solid rgba(255,255,255,.3); opacity: .9; }
+.dh-dive-mode-chip button { background: none; border: none; padding: 0; margin-left: 2px; display: inline-flex; cursor: pointer; color: rgba(255,255,255,.7); }
+.dh-dive-mode-chip button .material-icons-round { font-size: 15px; }
+.dh-dive-class-form { display: inline-flex; margin-left: 8px; }
+.dh-dive-class-form select { font-size: .78rem; padding: 3px 8px; border-radius: 999px; }
+
+/* #<number> - <site name> chip above the dashboard, dark blue (Pablo,
+   2026-10-15), also where the site-tagging pencil edit lives. */
+.dh-dive-site-chip-row { display: flex; margin-top: 10px; }
+.dh-dive-site-chip { display: flex; align-items: center; gap: 10px; padding: 16px; border-radius: var(--dh-radius); background: var(--dh-deep); color: #fff; font-size: 1.3rem; font-weight: 700; width: 100%; }
+.dh-dive-site-chip-num, .dh-dive-site-chip span[id="diveSiteChipText"] { font-size: 1.3rem; font-weight: 800; }
+.dh-dive-site-chip-num { flex: 0 0 auto; }
+.dh-dive-site-chip #diveClassChipText { flex: 1 1 auto; font-weight: 600; opacity: .95; }
+/* #diveSiteChipText's own children (the dash, the site name/link, the
+   type icon) are plain inline content by default, so they align to the
+   text BASELINE, not against the #<number> next to them - a 34px icon on
+   a 1.3rem line looks visibly low. Making this span itself a flex row
+   centers the dash/name/icon against each other, and against
+   .dh-dive-site-chip-num, the same way the outer chip row already centers
+   its own direct children (Pablo, 2026-10-15: "vertically aligned and in
+   the middle"). */
+.dh-dive-site-chip span[id="diveSiteChipText"] { display: inline-flex; align-items: center; gap: 8px; flex: 1 1 auto; font-weight: 600; opacity: .95; }
+.dh-dive-site-chip span[id="diveSiteChipText"] a { color: #fff; text-decoration: underline; text-decoration-color: rgba(255,255,255,.5); }
+.dh-dive-site-chip span[id="diveSiteChipText"] a:hover { text-decoration-color: #fff; }
+/* <x-site-type-icon> defaults to --dh-sea (its usual light-background
+   color, e.g. SiteDetails' own header) - white here instead, to match the
+   rest of this chip's white text on its dark navy background. */
+.dh-dive-site-chip .dh-site-type-icon { color: #fff; opacity: .9; flex: 0 0 auto; }
+.dh-dive-site-chip button { background: none; border: none; padding: 0; display: inline-flex; cursor: pointer; color: rgba(255,255,255,.7); flex: 0 0 auto; }
+.dh-dive-site-chip button .material-icons-round { font-size: 20px; }
+.dh-dive-site-form { position: relative; display: flex; align-items: center; gap: 8px; margin-top: 8px; max-width: 420px; }
+.dh-dive-site-form input[type="text"] { flex: 1 1 auto; padding: 8px 12px; font-size: .85rem; color: var(--dh-ink); background: #fff; border: 1px solid var(--dh-line); border-radius: 10px; }
+.dh-dive-site-form input[type="text"]:focus { outline: none; border-color: var(--dh-sea); box-shadow: 0 0 0 3px rgba(14,124,158,.15); }
+
+.dh-dive-gas-labeled { display: inline-flex; align-items: center; gap: 4px; }
+.dh-dive-gas-role { font-size: .68rem; color: var(--dh-muted); text-transform: uppercase; letter-spacing: .02em; }
+
+/* ------------------------------------------------------------------ */
+/* Per-card edit-to-unlock + view rows (Pablo, 2026-10-15).            */
+/* ------------------------------------------------------------------ */
+.dh-dive-card-edit-btn { background: none; border: none; padding: 0; margin-left: auto; display: inline-flex; cursor: pointer; color: var(--dh-sea); }
+.dh-calc-inputs-head .dh-dive-card-edit-btn .material-icons-round { font-size: 18px; }
+.dh-dive-view-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 8px 0; border-bottom: 1px solid var(--dh-line); }
+.dh-dive-view-row:last-child { border-bottom: none; }
+.dh-dive-view-label { font-size: .78rem; font-weight: 700; color: var(--dh-muted); text-transform: uppercase; letter-spacing: .03em; flex: 0 0 auto; }
+.dh-dive-view-value { font-size: .92rem; color: var(--dh-ink); text-align: right; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+/* Dive Operator card grid: the view block and the edit form are
+   display:contents so their col-* children and the one shared boat-picture
+   frame all lay out in the card body's own .row (see the blade). Guarded on
+   :not([hidden]) - an unconditional display:contents would beat the UA's
+   [hidden] { display:none } and the hidden block would show through. */
+.dh-dive-operator-grid { margin-left: 0; margin-right: 0; }
+.dh-dive-operator-block:not([hidden]) { display: contents; }
+.dh-dive-boat-frame { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: 12px; overflow: hidden; background: var(--dh-foam); }
+.dh-dive-boat-frame-pic { display: block; width: 100%; height: 100%; object-fit: cover; }
+.dh-dive-boat-frame-logo { position: absolute; right: 10px; bottom: 10px; width: 64px; height: 64px; object-fit: contain; background: #fff; border-radius: 10px; padding: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, .25); }
+/* Operator known but boat not: small logo inline after the operator name /
+   input instead of the picture frame - a rounded square, not the old
+   circle mask (Pablo, 2026-10-15). */
+.dh-dive-inline-logo { width: 24px; height: 24px; border-radius: 4px; object-fit: contain; background: #fff; margin-right: 8px; vertical-align: middle; flex: 0 0 auto; align-self: center; }
+/* Logo sits BEFORE the operator name (Pablo, 2026-10-15), on the same line. */
+.dh-dive-operator-value { display: inline-flex; align-items: center; justify-content: flex-end; }
+/* Bootstrap's .input-group squares off every non-first child's corners. */
+.input-group > .dh-dive-inline-logo { border-radius: 4px !important; }
+.input-group > .dh-dive-inline-logo { margin-left: 0; margin-right: 8px; }
+
+/* Dive Conditions pickers (Pablo, 2026-10-15: "make the dropdowns slimmer,
+   they are too tall in edit mode") - the site-wide .dh-select-btn is a
+   44px-ish field; these four sit in a tight row. */
+.dh-dive-conditions-fields .dh-select-btn { padding: 6px 12px; font-size: .85rem; min-height: 0; }
+.dh-dive-conditions-fields .dh-select-btn .material-icons-round { font-size: 18px; }
+.dh-dive-conditions-fields .dh-select-menu li { font-size: .85rem; padding: 7px 12px; }
+.dh-dive-conditions-fields .dh-field label { font-size: .72rem; margin-bottom: 4px; }
+/* Weather line in view mode carries the same icon the Weather page uses. */
+.dh-dive-weather-value { display: inline-flex; align-items: center; gap: 6px; }
+.dh-dive-weather-icon { width: 24px; height: 24px; }
+span.dh-dive-weather-icon { font-size: 22px; color: var(--dh-sea); }
+.dh-dive-card-edit-btn[hidden], [data-edit] [data-cancel-edit] { }
+[data-edit] { margin-top: 10px; }
+[data-edit] .dh-btn { margin-right: 8px; }
+
+/* Floating-label fields stacked directly as siblings (no row/col gutter
+   between them here, unlike the rEvo CCR checklist's own grid) need their
+   own gap, or the next field's floated-up label sits on top of the
+   previous field's input (Pablo, 2026-10-15: "you need more padding in
+   between the inputs...they overlap"). */
+.dh-dive-ig { margin-bottom: 22px; }
+
+/* Buddy pill with avatar, "if known by DH" (Pablo, 2026-10-15) - same
+   22px round-avatar convention as the operator/boat picks above. */
+.dh-dive-buddy-pill { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Cardless row between the dashboard and the Gases card (Pablo,
+   2026-10-15: "put a no card row in between the dashboard and the Dive
+   Setup Card"). The computer/deco-algorithm/GFs legend used to be folded
+   into that card's own title - now a small blue line of its own, right-
+   aligned above Tags. */
+.dh-dive-legend-row { margin: 0; }
+.dh-dive-computer-legend { text-align: right; font-size: .75rem; font-weight: 700; color: var(--dh-sea); margin-bottom: 4px; }
+
+.dh-dive-tags-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 0; margin: 0; }
+.dh-dive-tags-row .dh-dive-view-label { margin: 0; line-height: 1; }
+.dh-dive-tag-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.dh-dive-tag-chip { display: inline-flex; align-items: center; padding: 4px 4px 4px 12px; border-radius: 999px; background: var(--dh-foam); color: var(--dh-deep); font-size: .82rem; font-weight: 600; }
+.dh-dive-tag-chip button { border: 0; background: transparent; color: var(--dh-muted); display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: 1rem; line-height: 1; }
+.dh-dive-tag-chip button:hover { background: #fff; color: var(--dh-danger); }
+#diveTagInput { border: 1px solid var(--dh-line); border-radius: 999px; padding: 2px 12px; height: 26px; font-size: .82rem; color: var(--dh-ink); background: #fff; min-width: 160px; }
+#diveTagInput:focus { outline: none; border-color: var(--dh-sea); box-shadow: 0 0 0 3px rgba(14,124,158,.15); }
+
+/* Gases used, one row per GAS, laid out as a 4-column grid (Pablo,
+   2026-10-15: "each gas row is col-12 as follows: col-2 for gas...col-3
+   for tank with AI?...col-3 for tank size...col-4 for the total
+   consumption and Avg RMV"; follow-up: "Tank Ai? to col-2, expand tank
+   size to col-5 and reduce the last column to col-3"). One pencil for
+   the whole section, not per row ("use a pencil icon to edit the whole
+   Gases used section...show button save") - every element marked
+   [data-view]/[data-edit] toggles together, driven by the section's own
+   pencil/Save/Cancel rather than each row's own. The tank-size picker
+   itself always stays reachable in edit mode now, even for a gas with no
+   AI-tracked tank (Pablo: "allow the user to select the tank size...at
+   least he can log what size tank he used") - dive-details-form.js just
+   re-points its form field name at tank_config or the gas-keyed
+   gas_tank_size_choice fallback depending on whether a tank is picked. */
+.dh-dive-gas-rows { display: flex; flex-direction: column; gap: 4px; }
+.dh-dive-gas-row { position: relative; padding-top: 0; padding-bottom: 5px; padding-left: 26px; border-bottom: 1px solid var(--dh-line); transition: opacity .15s; }
+.dh-dive-gas-row:last-child { border-bottom: none; }
+.dh-dive-gas-row.is-deleted { opacity: .55; }
+.dh-dive-gas-row > [class^="col-"] { padding-top: 2px; }
+/* Drag-to-reorder (Pablo, 2026-10-15: "put the rows in Kanban so the
+   user can sort them...just for visuals") - plain HTML5 drag/drop, the
+   handle is a visual affordance/cursor cue only (the whole row is the
+   actual draggable element, so a grab gesture anywhere nearby still
+   works, not just pixel-perfect on the icon). */
+.dh-dive-gas-drag-handle { position: absolute; left: -2px; top: 50%; transform: translateY(-50%); font-size: 20px; color: var(--dh-line); cursor: grab; }
+.dh-dive-gas-row:hover .dh-dive-gas-drag-handle { color: var(--dh-muted); }
+.dh-dive-gas-row.is-dragging { opacity: .35; }
+.dh-dive-gas-col-gas, .dh-dive-gas-col-tank, .dh-dive-gas-col-size, .dh-dive-gas-col-computed {
+  display: flex; flex-direction: column; gap: 4px;
+}
+/* The three text/pill columns sit vertically centered against the (taller)
+   tank graphic column (Pablo, 2026-10-15) - the Bootstrap row stretches
+   every column to the row's height, so centering is just justify-content. */
+.dh-dive-gas-row > .dh-dive-gas-col-gas, .dh-dive-gas-row > .dh-dive-gas-col-tank, .dh-dive-gas-row > .dh-dive-gas-col-computed { justify-content: center; }
+/* Desktop-only column header above the Kanban (Pablo, 2026-10-15: "I want
+   a table header (not within the Kanban) but using the same column
+   sizes...hide this row in anything but desktop view") - same col-md
+   widths as the draggable rows below it, but not itself draggable and
+   not part of #diveGasRows. */
+.dh-dive-gas-rows-head { font-size: .68rem; font-weight: 700; color: var(--dh-muted); text-transform: uppercase; letter-spacing: .02em; padding: 0 0 6px 26px; border-bottom: 1px solid var(--dh-line); }
+/* Tank template + size legend + pressure pills centered as a unit
+   (Pablo, 2026-10-15: "aligne horizontally centered the tank template,
+   the legend...and the start and end pressure pills"). */
+.dh-dive-gas-col-size { align-items: center; text-align: center; }
+/* Small all-caps blue role legend under the pill (Pablo: "I'm ok with
+   the all capital blue you have now (but smaller)") - Diluent/Oxygen for
+   CCR's two fixed rows, Bottom gas/Deco/Travel (or Bailout/Deco)
+   elsewhere, editable via the select right below it in edit mode. */
+.dh-dive-gas-role-text { font-size: .65rem; font-weight: 700; color: var(--dh-sea); text-transform: uppercase; letter-spacing: .02em; }
+.dh-dive-gas-notused { font-style: italic; font-size: .85rem; color: var(--dh-muted); }
+.dh-dive-no-ai { color: var(--dh-danger); font-weight: 700; font-size: .78rem; }
+
+/* Every picker fills its column in edit mode (Pablo, 2026-10-15: "make
+   all the dropdown take full width of col when in edit mode"). */
+.dh-dive-gas-col-tank .dh-select, .dh-dive-gas-col-gas .dh-select, .dh-dive-gas-col-size .dh-select { width: 100%; }
+.dh-dive-gas-col-gas > [data-edit], .dh-dive-gas-col-tank > [data-edit] { width: 100%; }
+/* The column centers its children (for the tank graphic in view mode),
+   which also shrinks an auto-width child to its content - the edit
+   wrapper needs an explicit width or the picker's 100% resolves against
+   a content-sized box, not the column. */
+.dh-dive-gas-col-size > [data-edit] { width: 100%; }
+/* Same height as the gas pill next to it (Pablo, 2026-10-15: "I want the
+   dropdown also shorter in height. Use the height of the pills as
+   reference") - <x-gas-mix-pill> renders at .dh-gas-result-pill.is-compact,
+   a fixed 24px tall. */
+.dh-dive-gas-col-tank .dh-select-btn, .dh-dive-gas-col-size .dh-select-btn, .dh-dive-gas-col-gas .dh-select-btn { height: 24px; padding: 0 8px; font-size: .7rem; border-radius: var(--dh-radius-pill); }
+.dh-dive-gas-col-tank .dh-select-btn .material-icons-round, .dh-dive-gas-col-size .dh-select-btn .material-icons-round, .dh-dive-gas-col-gas .dh-select-btn .material-icons-round { font-size: 15px; }
+/* The OPEN dropdown list itself (Pablo, 2026-10-15: "the font in the
+   dropdown itself when expanded is too big") - .dh-select-menu li's own
+   base size (.92rem) is shared site-wide, so this only overrides it
+   inside these three compact columns. */
+.dh-dive-gas-col-tank .dh-select-menu li, .dh-dive-gas-col-size .dh-select-menu li, .dh-dive-gas-col-gas .dh-select-menu li { font-size: .78rem; padding: 7px 10px; }
+.dh-dive-tank-size-wrap { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; width: 100%; }
+.dh-dive-tank-twins, .dh-dive-gas-notused-toggle { display: inline-flex; align-items: center; gap: 4px; font-size: .75rem; color: var(--dh-muted); white-space: nowrap; cursor: pointer; }
+
+.dh-dive-tank-row-view-text { font-size: .78rem; color: var(--dh-muted); }
+/* "The font for the last column needs to be smaller" (Pablo, 2026-10-15) -
+   was inheriting the page's base 1rem, oversized next to the 24px pills
+   and shrunk dropdowns the rest of the row now uses. */
+.dh-dive-gas-col-computed { font-size: .75rem; }
+/* Grey consumption pill + blue "Avg RMV" pill (Pablo, 2026-10-15: "grey
+   pill for '155.0 cuft'...blue pill (white font) for '0.33 cuft/min'.
+   Add in front of this pill Avg RMV in same blue pill color font") - the
+   plain .dh-gas-result-pill (no color modifier) is already the theme
+   blue, so only the volume pill needs a new grey variant. */
+.dh-gas-result-pill.is-grey { background: var(--dh-muted); }
+.dh-dive-gas-rmv-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 4px; }
+/* Consumption pill + the Avg RMV row centered in their column (Pablo,
+   2026-10-15: "so it looks good on mobile", where the column is full width). */
+.dh-dive-gas-row > .dh-dive-gas-col-computed { align-items: center; }
+.dh-dive-gas-row > .dh-dive-gas-col-computed > .dh-gas-result-pill.is-grey { align-self: stretch; }
+.dh-dive-gas-rmv-label { font-size: .68rem; font-weight: 700; color: var(--dh-sea); text-transform: uppercase; letter-spacing: .02em; }
+
+/* Tank-with-fill graphic (Pablo, 2026-10-15: "the tank template needs to
+   be larger. You need to render the bar chart behind the template like
+   we do in deco planner or best gases") - same image-over-canvas
+   technique as GasPlanning.blade.php's own stackedBarChart (image on top,
+   z-index 2, pointer-events none; a Chart.js stacked bar behind it,
+   z-index 1), just a 2-segment fill/empty bar here instead of a 3-segment
+   O2/He/N2 composition, and scaled down to fit a single row. Hidden in
+   edit mode via the same [data-view] mechanism every other view-only
+   element in this section already uses; not shown on mobile at all
+   (Pablo: "you don't show it on mobile phone format"). */
+.dh-dive-tank-mini { position: relative; width: 56px; height: 96px; flex: 0 0 auto; margin: 0 auto 2px; }
+/* The image fills the whole box - GasPlanning's own 75%-height/25% top gap
+   only exists there to leave room for the % labels its chart draws, which
+   this one doesn't (Pablo, 2026-10-15: "why are you pushing the template
+   down. That space needs to be MINIMUM"). The chart sits inside the
+   cylinder body: below the valve, above the boot. */
+.dh-dive-tank-mini-img { position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); height: 100%; width: auto; z-index: 2; pointer-events: none; }
+/* Each template's transparent interior sits somewhere different in its
+   300x300 artwork (Pablo, 2026-10-15: "cover to the top of the
+   transparent part of the templates") - insets are per image, measured
+   against the 56x96 box the (square, overflowing) image is centered in:
+     ccr    - capsule, interior runs almost to the top, valve at the foot
+     single - valve on top takes the top fifth, body nearly to the bottom
+     double - manifold takes the top ~30%, the two cylinders are wider
+              than the box itself (negative insets), one bar each. */
+.dh-dive-tank-mini-chart-wrap { position: absolute; z-index: 1; }
+.dh-dive-tank-mini.is-ccr .dh-dive-tank-mini-chart-wrap { left: 24%; right: 25%; top: 7%; bottom: 10%; }
+.dh-dive-tank-mini.is-single .dh-dive-tank-mini-chart-wrap { left: 24%; right: 22%; top: 18%; bottom: 0.5%; }
+.dh-dive-tank-mini.is-double .dh-dive-tank-mini-chart-wrap { left: -13%; right: -12.5%; top: 19%; bottom: 0; }
+.dh-dive-tank-mini-chart-wrap canvas { width: 100% !important; height: 100% !important; }
+@media (max-width: 767.98px) {
+  .dh-dive-tank-mini { display: none; }
+}
+.dh-dive-tank-pressure-pills { display: flex; gap: 6px; margin-top: 4px; }
+
+.dh-chart-toggle-tank { opacity: .55; }
+.dh-chart-toggle-tank.is-active { opacity: 1; }
+
+.dh-dive-type-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.dh-dive-type-chip { cursor: pointer; user-select: none; display: inline-flex; border: 1.5px solid var(--dh-line); color: var(--dh-muted); background: transparent; border-radius: 999px; padding: 4px 14px; font-size: .78rem; font-weight: 700; transition: background-color .15s ease, color .15s ease, border-color .15s ease; }
+.dh-dive-type-chip.is-active { background: var(--dh-sea); border-color: var(--dh-sea); color: #fff; }
 .dh-equip-glance { display: flex; flex-wrap: wrap; gap: 10px; }
 .dh-equip-glance .dh-health-stat { flex: 1 1 140px; }
 .dh-equip-logo-tile { flex: 1 1 140px; display: flex; align-items: center; justify-content: center; padding: 10px; border-radius: var(--dh-radius); background: var(--dh-sand); }

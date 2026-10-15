@@ -467,17 +467,18 @@ Route::post('use-google-picture', 'App\Http\Controllers\UserController@useGoogle
 
 // Diver logbook (Pablo, 2026-10-14) - see LogbookController's docblock for
 // what's phase 1 vs. docs/roadmap.md #9's deferred phases.
-Route::get('Logbook', 'App\Http\Controllers\LogbookController@index')->middleware('auth')->name('Logbook');
-Route::get('Logbook/{id}', 'App\Http\Controllers\LogbookController@show')->where('id', '[0-9]+')->middleware('auth')->name('DiveDetails');
-Route::post('Logbook/{id}/conditions', 'App\Http\Controllers\LogbookController@updateConditions')->where('id', '[0-9]+')->middleware('auth')->name('DiveDetails.updateConditions');
-Route::get('Logbook/users/search', 'App\Http\Controllers\LogbookController@searchUsers')->middleware('auth')->name('Logbook.searchUsers');
+// 'logbook' = early-access gate (config/divehub.php logbook_allowed_emails).
+Route::get('Logbook', 'App\Http\Controllers\LogbookController@index')->middleware(['auth', 'logbook'])->name('Logbook');
+Route::get('Logbook/{id}', 'App\Http\Controllers\LogbookController@show')->where('id', '[0-9]+')->middleware(['auth', 'logbook'])->name('DiveDetails');
+Route::post('Logbook/{id}/conditions', 'App\Http\Controllers\LogbookController@updateConditions')->where('id', '[0-9]+')->middleware(['auth', 'logbook'])->name('DiveDetails.updateConditions');
+Route::get('Logbook/users/search', 'App\Http\Controllers\LogbookController@searchUsers')->middleware(['auth', 'logbook'])->name('Logbook.searchUsers');
 
 // Upload codes for the native dive-computer uploader apps (Pablo, 2026-10-14)
 // - see UploadTokenController's docblock for why this is self-service
 // token generation rather than a login screen inside the app itself.
-Route::get('upload-tokens', 'App\Http\Controllers\UploadTokenController@index')->middleware('auth')->name('UploadTokens');
-Route::post('upload-tokens', 'App\Http\Controllers\UploadTokenController@store')->middleware('auth')->name('UploadTokens.store');
-Route::delete('upload-tokens/{id}', 'App\Http\Controllers\UploadTokenController@destroy')->middleware('auth')->name('UploadTokens.destroy');
+Route::get('upload-tokens', 'App\Http\Controllers\UploadTokenController@index')->middleware(['auth', 'logbook'])->name('UploadTokens');
+Route::post('upload-tokens', 'App\Http\Controllers\UploadTokenController@store')->middleware(['auth', 'logbook'])->name('UploadTokens.store');
+Route::delete('upload-tokens/{id}', 'App\Http\Controllers\UploadTokenController@destroy')->middleware(['auth', 'logbook'])->name('UploadTokens.destroy');
 Route::post('profile/verify-phone', 'App\Http\Controllers\UserController@verifyPhone')->middleware('auth')->name('profile.verifyPhone');
 Route::post('profile/resend-phone-code', 'App\Http\Controllers\UserController@resendPhoneCode')->middleware('auth')->name('profile.resendPhoneCode');
 
@@ -517,7 +518,7 @@ Route::get('sign-in', [SessionsController::class, 'create'])->name('login');
 // 'auth' (not 'guest') deliberately: this route's whole job is to run
 // AFTER authentication, bouncing an unauthenticated visit through the
 // normal sign-in page and back here first.
-Route::get('app/login', [App\Http\Controllers\AppAuthController::class, 'login'])->middleware('auth')->name('AppLogin');
+Route::get('app/login', [App\Http\Controllers\AppAuthController::class, 'login'])->middleware(['auth', 'logbook'])->name('AppLogin');
 Route::post('sign-in', [SessionsController::class, 'store']);
 
 Route::post('sign-out', [SessionsController::class, 'destroy'])->name('logout');

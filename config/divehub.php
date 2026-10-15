@@ -14,9 +14,16 @@
 
 return [
 
-    'version' => '11.7.0',
+    'version' => '12.0.0',
 
     // Release date shown next to the version. Any human readable format.
-    'released' => '10/14/26',
+    'released' => '10/15/26',
+
+    // Early-access gate for the diver logbook (web pages + app API) - see
+    // App\Http\Middleware\LogbookGate. Lower-case emails. Pablo only for
+    // now (2026-10-15: "nobody else should have access to this feature").
+    'logbook_allowed_emails' => [
+        'pstrika@gmail.com',
+    ],
 
 ];
