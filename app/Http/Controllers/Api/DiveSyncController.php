@@ -62,7 +62,9 @@ class DiveSyncController extends Controller
             'site_id' => $dive->site_id,
             'site' => $this->siteArray($dive),
             'notes' => $dive->notes,
-            'conditions' => $dive->conditions,
+            // An empty PHP array encodes as JSON [] - a list, not the object
+            // clients expect here (iOS session, 2026-10-15). Empty = null.
+            'conditions' => $dive->conditions ?: null,
             'tags' => $dive->tags ?? [],
             // Effective classification (saved pick, else the depth-based
             // default) and the row title the web list shows, so the app
