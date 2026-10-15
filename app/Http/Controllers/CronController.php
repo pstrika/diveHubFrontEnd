@@ -248,6 +248,26 @@ class CronController extends Controller
     }
 
     /**
+     * Deploy step (main_divehub.yml, right before optimize-cache): runs
+     * pending migrations on production. Over HTTP for the same reason
+     * optimizeCache is - Kudu's command executor has no php binary, so
+     * `php artisan migrate` can't run from the workflow directly. Until
+     * 2026-10-15 nothing ran migrations on production at all; the
+     * sessions table (file sessions on the network share wedged every
+     * PHP-FPM worker that day) was the first one that had to.
+     */
+    public function migrate(Request $request)
+    {
+        if (!hash_equals((string) env('CRON_SECRET'), (string) $request->query('secret'))) {
+            abort(403);
+        }
+
+        Artisan::call('migrate', ['--force' => true]);
+
+        return response("\$ php artisan migrate --force\n" . Artisan::output(), 200, ['Content-Type' => 'text/plain']);
+    }
+
+    /**
      * Every 15 minutes, triggered by an Azure Logic App
      * (divehub-sync-trip-sites-pivot) - rebuilds trip_sites, the
      * normalized pivot SiteController@show now queries instead of a

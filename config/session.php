@@ -18,7 +18,12 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'file'),
+    // Default is database, not file (2026-10-15 outage): on App Service
+    // Linux storage/ is a network share, every bot hit left a session file
+    // there, and the 2%-lottery GC walk of that directory took >30s per
+    // request until all 5 PHP-FPM workers were stuck in it. Database GC is
+    // one DELETE. Local .env still says file; production sets nothing.
+    'driver' => env('SESSION_DRIVER', 'database'),
 
     /*
     |--------------------------------------------------------------------------

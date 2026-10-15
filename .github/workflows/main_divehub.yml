@@ -113,6 +113,14 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"command":"rm -f bootstrap/cache/config.php bootstrap/cache/routes-v7.php bootstrap/cache/packages.php bootstrap/cache/services.php","dir":"site/wwwroot"}'
 
+      # Pending migrations, over HTTP for the same no-php-in-Kudu reason as
+      # the step below. Added 2026-10-15 with the sessions table (file
+      # sessions on the network share took production down that day);
+      # before this, nothing ever ran migrations on production.
+      - name: Run pending Laravel migrations
+        continue-on-error: true
+        run: curl -sf "https://divers-hub.com/cron/migrate?secret=${{ secrets.CRON_SECRET }}"
+
       # Rebuilds what the step above just cleared, against the code that
       # was JUST deployed - a real HTTP hit, not another Kudu command,
       # because Kudu's executor has no php binary (see

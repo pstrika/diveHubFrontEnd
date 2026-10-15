@@ -65,6 +65,8 @@ Route::get('cron/backfill-group-facebook-posts', [\App\Http\Controllers\CronCont
 Route::get('cron/sync-trip-sites-pivot', [\App\Http\Controllers\CronController::class, 'syncTripSitesPivot']);
 // Hit automatically as the last step of every deploy (main_divehub.yml), not manual/scheduled - see CronController::optimizeCache().
 Route::get('cron/optimize-cache', [\App\Http\Controllers\CronController::class, 'optimizeCache']);
+// Also a deploy step (runs right before optimize-cache) - see CronController::migrate().
+Route::get('cron/migrate', [\App\Http\Controllers\CronController::class, 'migrate']);
 
 // Newsletter one-click unsubscribe/resubscribe - reached from a signed link
 // in the email itself, not a logged-in session (the diver may be reading
@@ -462,6 +464,20 @@ Route::post('overview', 'App\Http\Controllers\UserController@updateProfile')->mi
 Route::post('overview/nav-slots', 'App\Http\Controllers\UserController@updateNavSlots')->middleware('auth')->name('overview.navSlots');
 Route::post('upload-profile-pic', 'App\Http\Controllers\UserController@updateProfilePic')->middleware('auth')->name('upload-profile-pic');
 Route::post('use-google-picture', 'App\Http\Controllers\UserController@useGooglePicture')->middleware('auth')->name('use-google-picture');
+
+// Diver logbook (Pablo, 2026-10-14) - see LogbookController's docblock for
+// what's phase 1 vs. docs/roadmap.md #9's deferred phases.
+Route::get('Logbook', 'App\Http\Controllers\LogbookController@index')->middleware('auth')->name('Logbook');
+Route::get('Logbook/{id}', 'App\Http\Controllers\LogbookController@show')->where('id', '[0-9]+')->middleware('auth')->name('DiveDetails');
+Route::post('Logbook/{id}/conditions', 'App\Http\Controllers\LogbookController@updateConditions')->where('id', '[0-9]+')->middleware('auth')->name('DiveDetails.updateConditions');
+Route::get('Logbook/users/search', 'App\Http\Controllers\LogbookController@searchUsers')->middleware('auth')->name('Logbook.searchUsers');
+
+// Upload codes for the native dive-computer uploader apps (Pablo, 2026-10-14)
+// - see UploadTokenController's docblock for why this is self-service
+// token generation rather than a login screen inside the app itself.
+Route::get('upload-tokens', 'App\Http\Controllers\UploadTokenController@index')->middleware('auth')->name('UploadTokens');
+Route::post('upload-tokens', 'App\Http\Controllers\UploadTokenController@store')->middleware('auth')->name('UploadTokens.store');
+Route::delete('upload-tokens/{id}', 'App\Http\Controllers\UploadTokenController@destroy')->middleware('auth')->name('UploadTokens.destroy');
 Route::post('profile/verify-phone', 'App\Http\Controllers\UserController@verifyPhone')->middleware('auth')->name('profile.verifyPhone');
 Route::post('profile/resend-phone-code', 'App\Http\Controllers\UserController@resendPhoneCode')->middleware('auth')->name('profile.resendPhoneCode');
 
@@ -496,6 +512,12 @@ Route::post('sign-up', [RegisterController::class, 'store'])->middleware('guest'
 // next submission reached the server, bouncing the login with a stale-CSRF
 // 419 that looked like "it didn't take, try again."
 Route::get('sign-in', [SessionsController::class, 'create'])->name('login');
+
+// App sign-in (Pablo, 2026-10-15) - see AppAuthController's docblock.
+// 'auth' (not 'guest') deliberately: this route's whole job is to run
+// AFTER authentication, bouncing an unauthenticated visit through the
+// normal sign-in page and back here first.
+Route::get('app/login', [App\Http\Controllers\AppAuthController::class, 'login'])->middleware('auth')->name('AppLogin');
 Route::post('sign-in', [SessionsController::class, 'store']);
 
 Route::post('sign-out', [SessionsController::class, 'destroy'])->name('logout');
