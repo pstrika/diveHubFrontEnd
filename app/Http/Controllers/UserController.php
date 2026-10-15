@@ -200,7 +200,17 @@ class UserController extends Controller
         $navSlot1 = \App\Support\NavTabs::resolveSlot($user->nav_slot_1, \App\Support\NavTabs::DEFAULT_SLOT_1);
         $navSlot2 = \App\Support\NavTabs::resolveSlot($user->nav_slot_2, \App\Support\NavTabs::DEFAULT_SLOT_2);
 
-        return view('pages.profile.overview', compact('user', 'operators', 'favOperators', 'locations', 'favLocations', 'showLevelLow', 'showLevelHigh', 'myDiverPhotos', 'navSlot1', 'navSlot2'));
+        // Connected devices (Pablo, 2026-10-15: "add to the user profile
+        // configuration the connected devices so they can be
+        // disconnected") - the native app's sign-in tokens ("app:<device>")
+        // and self-generated upload codes ("uploader:<device>"), same set
+        // UploadTokenController lists, surfaced here for every account.
+        $connectedDevices = $user->tokens()
+            ->where(fn ($q) => $q->where('name', 'like', 'app:%')->orWhere('name', 'like', 'uploader:%'))
+            ->orderByDesc('last_used_at')->orderByDesc('created_at')
+            ->get(['id', 'name', 'last_used_at', 'created_at']);
+
+        return view('pages.profile.overview', compact('user', 'operators', 'favOperators', 'locations', 'favLocations', 'showLevelLow', 'showLevelHigh', 'myDiverPhotos', 'navSlot1', 'navSlot2', 'connectedDevices'));
     }
 
     public function updateProfile(Request $request) {

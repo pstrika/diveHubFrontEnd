@@ -575,6 +575,62 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Connected devices (Pablo, 2026-10-15: "add to the user
+                 profile configuration the connected devices so they can be
+                 disconnected"). The native app's sign-in tokens ("app:")
+                 and self-generated upload codes ("uploader:") - the same
+                 set the Dive Computer Upload page lists for the logbook
+                 early-access accounts, here for everyone, each with its
+                 own disconnect form (so, like the pictures above, outside
+                 the big preferences form). --}}
+            <div class="row">
+                <div class="col-12">
+                    <div class="dh-profile-card">
+                        <div class="dh-profile-card-head dh-profile-card-head-collapsible d-flex justify-content-between align-items-center collapsed" style="cursor: pointer;"
+                             data-bs-toggle="collapse" data-bs-target="#connectedDevicesBody" role="button"
+                             aria-expanded="false" aria-controls="connectedDevicesBody">
+                            <h6 class="dh-panel-title mb-0">Connected devices <span class="dh-region-count">{{ $connectedDevices->count() }}</span></h6>
+                            <span class="material-icons-round dh-collapse-chevron collapsed" aria-hidden="true">expand_more</span>
+                        </div>
+                        <div class="collapse" id="connectedDevicesBody">
+                            <div class="dh-profile-card-body pt-3">
+                                @if(session('status') === 'Device disconnected.')
+                                    <p class="text-sm mb-3" style="color: var(--dh-sea);">Device disconnected.</p>
+                                @endif
+                                @if($connectedDevices->isEmpty())
+                                    <p class="text-secondary text-sm mb-0">No devices are signed in. Sign in from the Divers Hub app on your phone and it will show up here.</p>
+                                @else
+                                    <p class="text-secondary text-sm mt-n2 mb-3">Devices signed in to your account from the Divers Hub app. Disconnecting one signs it out; it stops syncing until you sign in again on that device.</p>
+                                    @foreach($connectedDevices as $device)
+                                        @php
+                                            $isAppSignIn = str_starts_with($device->name, 'app:');
+                                            $deviceName = \Illuminate\Support\Str::after($device->name, $isAppSignIn ? 'app:' : 'uploader:');
+                                        @endphp
+                                        <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid var(--dh-line, #e5e5e5); gap: 12px;">
+                                            <div class="d-flex align-items-center" style="gap: 10px; min-width: 0;">
+                                                <span class="material-icons-round text-secondary" aria-hidden="true">{{ $isAppSignIn ? 'smartphone' : 'vpn_key' }}</span>
+                                                <div style="min-width: 0;">
+                                                    <div class="text-truncate">{{ $deviceName }} <span class="text-xs text-secondary">({{ $isAppSignIn ? 'app sign-in' : 'upload code' }})</span></div>
+                                                    <div class="text-xs text-secondary">
+                                                        {{ $device->last_used_at ? 'Last used ' . $device->last_used_at->diffForHumans() : 'Never used' }}
+                                                        · connected {{ $device->created_at->format('M j, Y') }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <form method="POST" action="{{ route('profile.devices.disconnect', $device->id) }}" onsubmit="return confirm('Disconnect {{ addslashes($deviceName) }}? It will be signed out and stop syncing.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="dh-btn dh-btn-ghost-dark" style="white-space: nowrap;">Disconnect</button>
+                                            </form>
+                                        </div>
+                                    @endforeach
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
     </main>

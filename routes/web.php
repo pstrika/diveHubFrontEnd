@@ -544,6 +544,10 @@ Route::get('reset-password/{token}', function ($token) {
 Route::get('user-profile', [UserController::class, 'index'])->middleware('auth')->name('user-profile');
 Route::post('user-profile', [UserController::class, 'update'])->middleware('auth')->name('user.update');
 Route::post('user-profile/password', [UserController::class, 'passwordUpdate'])->middleware('auth')->name('password.change');
+// "Connected devices" card on the profile - revoke an app sign-in / upload
+// token. Plain 'auth' (not the logbook gate): disconnecting is always the
+// owner's right.
+Route::delete('overview/devices/{id}', 'App\Http\Controllers\UploadTokenController@disconnect')->where('id', '[0-9]+')->middleware('auth')->name('profile.devices.disconnect');
 Route::get('MyVisitedSites', 'App\Http\Controllers\SiteController@getMyVisitedSites')->middleware('auth')->name('MyVisitedSites');
 Route::post('UpdateAllVisited', 'App\Http\Controllers\SiteController@updateAllVisitedSites')->middleware('auth')->name('UpdateAllVisited');
 

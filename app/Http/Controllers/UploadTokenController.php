@@ -59,4 +59,17 @@ class UploadTokenController extends Controller
 
         return redirect()->route('UploadTokens');
     }
+
+    /**
+     * Same revoke, from the profile page's "Connected devices" card
+     * (Pablo, 2026-10-15) - available to every account, not just the
+     * logbook early-access list, since a signed-in device should always
+     * be disconnectable by its owner.
+     */
+    public function disconnect(Request $request, $id)
+    {
+        $request->user()->tokens()->where('id', $id)->delete();
+
+        return redirect()->route('overview')->with('status', 'Device disconnected.');
+    }
 }
