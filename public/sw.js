@@ -25,7 +25,7 @@
 // byte-diffing this file, and activate() below deletes every cache that
 // doesn't match the current name, so a bump is what actually clears out
 // anything cached under the old logic.
-const CACHE_NAME = 'dh-cache-v2'; // v2: new PWA icon set (2026-10-15), unversioned /img/pwa/ URLs
+const CACHE_NAME = 'dh-cache-v3'; // v3: in-page /img/pwa/ roundels restored after the v2 icon swap (2026-10-15)
 const OFFLINE_URL = '/offline.html';
 
 // Separate from CACHE_NAME above (and never needs bumping alongside it) -
