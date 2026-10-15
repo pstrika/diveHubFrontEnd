@@ -41,12 +41,15 @@ class Authenticate extends Middleware
             $request->session()->put('url.intended', $request->fullUrl());
         }
         if ($this->isGuest($request)) {
-            //abort(403); // Unauthorized access
-            
-
-            // Redirect to the login page
+            // App sign-in flow (GET /app/login from the native app's in-app
+            // browser): flag the session so the sign-in page drops the
+            // "install as app" prompt - pointless inside the app (iOS
+            // session, 2026-10-15). AppAuthController::login clears it once
+            // the one-time code is issued.
+            if ($request->is('app/login')) {
+                $request->session()->put('app_login', true);
+            }
             return redirect()->route('login');
-            
         }
         return $next($request);
     }

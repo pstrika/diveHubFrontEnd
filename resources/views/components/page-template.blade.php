@@ -167,8 +167,13 @@
 {{-- Add to home screen bar (Android/desktop) and its iOS equivalent, a proper
      modal since iOS has no install API to trigger from a bar's button. Both
      shown by divershub.js. --}}
-<x-install-prompt />
-<x-ios-install-modal />
+{{-- Not inside the native app's sign-in sheet (session flag set by the
+     Authenticate middleware for a guest bounced from /app/login) - an
+     "install as app" prompt there makes no sense. --}}
+@unless (session('app_login'))
+    <x-install-prompt />
+    <x-ios-install-modal />
+@endunless
 {{-- Floating "Chat with us" button + modal - starts a real SMS/WhatsApp thread with support. --}}
 <x-chat-with-us />
 {{-- "Did you really book this?" prompt, fired when a diver returns to this tab after clicking a Book link. --}}
