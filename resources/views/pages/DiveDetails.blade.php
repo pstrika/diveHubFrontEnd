@@ -1049,6 +1049,8 @@
         <script>
             window.dhDiveProfile = @json($dive->profile);
             window.dhDiveTanks = @json($dive->tanks);
+            window.dhDiveGasMixes = @json($dive->gas_mixes ?? []);
+            window.dhDiveIsCcr = @json($isCcr);
             window.dhOperators = @json($operators);
             window.dhBoatsByOperator = @json($boatsByOperator);
             window.dhSites = @json($sites);

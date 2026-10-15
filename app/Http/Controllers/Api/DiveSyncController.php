@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Dive;
 use App\Models\DiveChange;
+use App\Support\DiveGasStats;
 use Illuminate\Http\Request;
 
 /**
@@ -36,6 +37,9 @@ class DiveSyncController extends Controller
     private function syncArray(Dive $dive): array
     {
         return [
+            // Integer id too (iOS session, 2026-10-15): the web URL is
+            // Logbook/{id}, and the dive-number tie-break is by id.
+            'id' => $dive->id,
             'uuid' => $dive->uuid,
             'computer_family' => $dive->computer_family,
             'computer_model' => $dive->computer_model,
@@ -59,6 +63,12 @@ class DiveSyncController extends Controller
             'site' => $this->siteArray($dive),
             'notes' => $dive->notes,
             'conditions' => $dive->conditions,
+            'tags' => $dive->tags ?? [],
+            // Effective classification (saved pick, else the depth-based
+            // default) and the row title the web list shows, so the app
+            // mirrors Logbook.blade.php without re-deriving either.
+            'classification' => $dive->classification(),
+            'title' => $dive->site()->name ?? ($dive->conditions['site_name_custom'] ?? (ucfirst($dive->classification()) . ' Dive')),
             'updated_at' => optional($dive->updated_at)->toIso8601String(),
         ];
     }
@@ -132,7 +142,7 @@ class DiveSyncController extends Controller
             ->where('uuid', $uuid)
             ->firstOrFail();
 
-        return response()->json($this->syncArray($dive) + ['profile' => $dive->profile]);
+        return response()->json($this->syncArray($dive) + ['profile' => $dive->profile] + DiveGasStats::block($dive));
     }
 
     /**
@@ -162,9 +172,27 @@ class DiveSyncController extends Controller
         $dives = Dive::where('user_id', $request->user()->id)
             ->whereIn('uuid', $uuids)
             ->get()
-            ->map(fn (Dive $dive) => $this->syncArray($dive) + ['profile' => $dive->profile])
+            ->map(fn (Dive $dive) => $this->syncArray($dive) + ['profile' => $dive->profile] + DiveGasStats::block($dive))
             ->values();
 
         return response()->json(['dives' => $dives]);
+    }
+
+    /**
+     * GET /api/dives/uuids - every live dive the user owns, cheapest
+     * possible: a gap detector for the change feed (iOS session,
+     * 2026-10-15), so a client can diff against what it holds and fetch
+     * whatever a missed change row would have hidden. Ordered like the
+     * logbook (started_at, then id).
+     */
+    public function uuids(Request $request)
+    {
+        $dives = Dive::where('user_id', $request->user()->id)
+            ->orderBy('started_at')->orderBy('id')
+            ->get(['id', 'uuid', 'updated_at'])
+            ->map(fn (Dive $d) => ['id' => $d->id, 'uuid' => $d->uuid, 'updated_at' => optional($d->updated_at)->toIso8601String()])
+            ->values();
+
+        return response()->json(['dives' => $dives, 'count' => $dives->count()]);
     }
 }

@@ -52,7 +52,23 @@
     var hasTemp = hasField('temperature');
     // Pablo, 2026-10-15: "it's pointless to show the setpoint, we need to
     // show the PPO2" - no setpoint toggle/dataset anymore, PPO2 only.
-    var hasPo2 = hasField('po2');
+    //
+    // No upload so far carries a measured per-sample po2 (confirmed
+    // 2026-10-15: CCR profiles have setpoint only, OC ones currentGas +
+    // depth), so until the app sends the computer's sensor PPO2 this is
+    // derived for OC: fO2 of the breathed gas x ambient pressure, with the
+    // same 1 bar per 10 m the SAC math uses. A CCR dive only gets the
+    // series once a real po2 field arrives - the setpoint is not PPO2.
+    var gasMixes = window.dhDiveGasMixes || [];
+    var isCcrDive = !!window.dhDiveIsCcr;
+    function po2At(p) {
+        if (p.po2 !== null && p.po2 !== undefined) return p.po2;
+        if (isCcrDive || p.depth === null || p.depth === undefined) return null;
+        var mix = (p.currentGas !== null && p.currentGas !== undefined) ? gasMixes[p.currentGas] : null;
+        if (!mix || mix.oxygen === null || mix.oxygen === undefined) return null;
+        return Math.round((mix.oxygen / 100) * (1 + p.depth / 10) * 100) / 100;
+    }
+    var hasPo2 = profile.some(function (p) { return po2At(p) !== null; });
     var hasNdl = hasField('ndl');
     // Deco ceiling (Pablo, 2026-10-15: "if a diver had deco, do we have
     // info to show the deco time (or tts) with the stops required? We can
@@ -219,7 +235,7 @@
         });
     }
     var po2Data = hasPo2 ? profile.map(function (p) {
-        return { x: toMinutes(p.time), y: p.po2 };
+        return { x: toMinutes(p.time), y: po2At(p) };
     }) : [];
     var ndlData = hasNdl ? profile.map(function (p) {
         return { x: toMinutes(p.time), y: p.ndl !== null && p.ndl !== undefined ? p.ndl / 60 : null };

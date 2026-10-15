@@ -6,7 +6,11 @@ Values below are pulled directly from `public/assets/css/divershub.css`
 and the two pages themselves (`resources/views/pages/Logbook.blade.php`,
 `resources/views/pages/DiveDetails.blade.php`), not approximated.
 Screenshots: `docs/screenshots/logbook-list.png`,
-`docs/screenshots/dive-detail.png` (both taken at 1200px wide, imperial
+`docs/screenshots/dive-detail-oc-imperial.png` (OC, dive 8),
+`docs/screenshots/dive-detail-ccr-imperial.png` and
+`docs/screenshots/dive-detail-ccr-metric.png` (CCR, dive 47) - all taken
+2026-10-15 at 1200px wide with every card expanded (the earlier
+`dive-detail.png` predates the Gases/Operator/Conditions work); imperial
 units, real data from Pablo's account).
 
 ## 1. Colors

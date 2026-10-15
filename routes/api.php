@@ -37,8 +37,22 @@ Route::withoutMiddleware('throttle:api')->middleware(['auth.api:sanctum', 'logbo
 // /dives/changes MUST be registered before /dives/{uuid}, or Laravel
 // would match the literal "changes" as a {uuid} param instead.
 Route::withoutMiddleware('throttle:api')->middleware(['auth.api:sanctum', 'logbook', 'throttle:logbook-sync'])->get('/dives/changes', [\App\Http\Controllers\Api\DiveSyncController::class, 'changes']);
+// Gap detector for the feed: every live dive's {id, uuid, updated_at}.
+Route::withoutMiddleware('throttle:api')->middleware(['auth.api:sanctum', 'logbook', 'throttle:logbook-sync'])->get('/dives/uuids', [\App\Http\Controllers\Api\DiveSyncController::class, 'uuids']);
 Route::withoutMiddleware('throttle:api')->middleware(['auth.api:sanctum', 'logbook', 'throttle:logbook-sync'])->get('/dives/{uuid}', [\App\Http\Controllers\Api\DiveSyncController::class, 'show'])
     ->where('uuid', '[0-9a-fA-F-]{36}');
+
+// The web logbook for the app (LogbookApiController, 2026-10-15): option
+// lists, site/operator catalogs, buddy search, and the one PATCH that logs
+// anything against a dive. Same gate + limiter as the dive routes.
+Route::withoutMiddleware('throttle:api')->middleware(['auth.api:sanctum', 'logbook', 'throttle:logbook-sync'])->group(function () {
+    Route::get('/logbook-options', [\App\Http\Controllers\Api\LogbookApiController::class, 'options']);
+    Route::get('/sites', [\App\Http\Controllers\Api\LogbookApiController::class, 'sites']);
+    Route::get('/operators', [\App\Http\Controllers\Api\LogbookApiController::class, 'operators']);
+    Route::get('/users/search', [\App\Http\Controllers\Api\LogbookApiController::class, 'searchUsers']);
+    Route::patch('/dives/{uuid}/conditions', [\App\Http\Controllers\Api\LogbookApiController::class, 'updateConditions'])
+        ->where('uuid', '[0-9a-fA-F-]{36}');
+});
 
 // App sign-in token exchange (docs/APP-AUTH.md) - see AppAuthController.
 // No auth on the exchange itself - the one-time code from AppLogin::login

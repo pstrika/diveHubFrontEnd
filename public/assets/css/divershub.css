@@ -1456,6 +1456,9 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-dive-view-row:last-child { border-bottom: none; }
 .dh-dive-view-label { font-size: .78rem; font-weight: 700; color: var(--dh-muted); text-transform: uppercase; letter-spacing: .03em; flex: 0 0 auto; }
 .dh-dive-view-value { font-size: .92rem; color: var(--dh-ink); text-align: right; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+/* Small round avatar before a buddy's name in the Other card. */
+.dh-dive-view-logo { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 6px; }
+
 /* Dive Operator card grid: the view block and the edit form are
    display:contents so their col-* children and the one shared boat-picture
    frame all lay out in the card body's own .row (see the blade). Guarded on
