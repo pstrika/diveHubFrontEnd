@@ -31,17 +31,31 @@
                                 <div class="dh-dive-header-stat"><div class="dh-dive-header-stat-value">{{ ($c['fingerprint'] ?? 0) + ($c['time'] ?? 0) + ($c['file'] ?? 0) }}</div><div class="dh-dive-header-stat-label">Duplicates</div></div>
                                 <div class="dh-dive-header-stat"><div class="dh-dive-header-stat-value">{{ $c['no_profile'] ?? 0 }}</div><div class="dh-dive-header-stat-label">Without profile</div></div>
                             </div>
-                            <div class="text-sm text-secondary mt-3">
-                                Computers in this file:
-                                @foreach ($import->summary['computers'] ?? [] as $label => $n)
-                                    <span class="dh-dive-tag-chip">{{ $label }} &middot; {{ $n }}</span>
-                                @endforeach
-                            </div>
                         </div>
                     </div>
 
                     <form method="POST" action="{{ route('Logbook.import.decisions', $import->id) }}">
                         @csrf
+                        {{-- UDDF carries no dive mode, so a rebreather computer's dives
+                             would all land as open circuit - pick per computer here. --}}
+                        <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
+                            <div class="card-body">
+                                <h3 class="h5 mb-1">Computers in this file</h3>
+                                <p class="text-sm text-secondary">The file doesn't say whether a dive was open or closed circuit. Set it per computer - a Petrel on a rebreather logs closed-circuit dives.</p>
+                                <div class="dh-import-list">
+                                    @foreach ($import->summary['computers'] ?? [] as $label => $n)
+                                        @php $current = $import->summary['modes'][$label] ?? 'open_circuit'; @endphp
+                                        <div class="dh-import-row" style="cursor: default; align-items: center; justify-content: space-between;">
+                                            <div><strong>{{ $label }}</strong> <span class="text-sm text-secondary">&middot; {{ $n }} {{ $n === 1 ? 'dive' : 'dives' }}</span></div>
+                                            <select name="mode[{{ $label }}]" class="dh-import-select">
+                                                <option value="open_circuit" @selected($current === 'open_circuit')>Open circuit</option>
+                                                <option value="closed_circuit" @selected($current === 'closed_circuit')>Closed circuit</option>
+                                            </select>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
                         @if ($dups->isEmpty())
                             <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
                                 <div class="card-body text-center py-4">

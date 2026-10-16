@@ -225,6 +225,35 @@ class LogbookImportController extends Controller
             $import->items()->whereNotNull('duplicate_kind')->whereIn('id', $chosen)->update(['decision' => 'import']);
         }
 
+        // Dive mode per computer (UDDF has none): closed circuit also tags
+        // the first gas as the diluent (usage 2), the way Shearwater does.
+        $modes = [];
+        foreach ((array) $request->input('mode', []) as $label => $mode) {
+            $modes[(string) $label] = $mode === 'closed_circuit' ? 'closed_circuit' : 'open_circuit';
+        }
+        if ($modes) {
+            $import->items()->orderBy('id')->chunkById(100, function ($items) use ($modes) {
+                foreach ($items as $item) {
+                    $label = trim(($item->computer_model ?? 'Unknown computer') . ($item->computer_serial ? ' (' . $item->computer_serial . ')' : ''));
+                    $mode = $modes[$label] ?? null;
+                    if (!$mode) continue;
+                    $p = $item->payload;
+                    if (($p['dive_mode'] ?? null) === $mode) continue;
+                    $p['dive_mode'] = $mode;
+                    if (!empty($p['gas_mixes'])) {
+                        foreach ($p['gas_mixes'] as $i => &$mix) $mix['usage'] = ($mode === 'closed_circuit' && $i === 0) ? 2 : 0;
+                        unset($mix);
+                    }
+                    $item->payload = $p;
+                    $item->save();
+                }
+            });
+            $summary = $import->summary ?? [];
+            $summary['modes'] = $modes;
+            $import->summary = $summary;
+            $import->save();
+        }
+
         return redirect()->route('Logbook.import.sites', $import->id);
     }
 
