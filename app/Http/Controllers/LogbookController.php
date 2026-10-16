@@ -402,7 +402,7 @@ class LogbookController extends Controller
      * Perdix with the AI). Samples are aligned by time into the dive, so
      * clocks set to different hours don't matter.
      *
-     * @return array{0: array, 1: array, 2: ?array, 3: ?string}
+     * @return array{0: array, 1: array, 2: ?array, 3: ?string, 4: ?string}
      */
     private function computerLogs(Dive $dive): array
     {
@@ -449,7 +449,30 @@ class LogbookController extends Controller
                 break;
             }
         }
-        return [$out, $profile, $tanks, $pressureFrom];
+        // Deco the same way (Pablo, 2026-10-16: "what about the
+        // decompression profile missing"): a logbook export (MacDive) keeps
+        // no stops; the NERD/Perdix worn on the same dive did. When the
+        // main computer has no deco data at all, its samples take stops,
+        // stop time, TTS and NDL from the attached computer that has them.
+        $mainHasDeco = collect($profile)->contains(fn ($s) => isset($s['decoKind']) || isset($s['tts']));
+        if (!$mainHasDeco && $profile) {
+            foreach ($logs as $c) {
+                $src = array_values(array_filter($c->profile ?? [], fn ($s) => isset($s['time']) && (isset($s['decoKind']) || isset($s['tts']))));
+                if (!collect($src)->contains(fn ($s) => ($s['decoKind'] ?? '') === 'deco_stop' || ($s['tts'] ?? 0) > 0)) continue;
+                $j = 0; $n = count($src);
+                foreach ($profile as &$s) {
+                    if (!isset($s['time'])) continue;
+                    while ($j < $n - 1 && $src[$j + 1]['time'] <= $s['time']) $j++;
+                    if ($src[$j]['time'] > $s['time'] + 30) continue;
+                    foreach (['decoKind', 'decoStop', 'decoTime', 'tts'] as $k) if (isset($src[$j][$k])) $s[$k] = $src[$j][$k];
+                    if (!isset($s['ndl']) && isset($src[$j]['ndl'])) $s['ndl'] = $src[$j]['ndl'];
+                }
+                unset($s);
+                $decoFrom = $c->computer_model ?: 'another computer';
+                break;
+            }
+        }
+        return [$out, $profile, $tanks, $pressureFrom, $decoFrom ?? null];
     }
 
     /** POST Logbook/{id}/computers/{log}/main - that computer becomes the dive's main one. */
@@ -498,7 +521,7 @@ class LogbookController extends Controller
         $any = Dive::withoutGlobalScope('companions')->where('user_id', $request->user()->id)->findOrFail($id);
         if ($any->isCompanion()) return redirect()->route('DiveDetails', $any->merged_into_id);
         $dive = $any;
-        [$companions, $chartProfile, $chartTanks, $pressureFrom] = $this->computerLogs($dive);
+        [$companions, $chartProfile, $chartTanks, $pressureFrom, $decoFrom] = $this->computerLogs($dive);
         $sameDive = null;
         if ($sug = ($dive->conditions['same_dive_suggestion'] ?? null)) {
             $other = Dive::where('user_id', $dive->user_id)->find($sug['dive_id'] ?? 0);
@@ -549,6 +572,7 @@ class LogbookController extends Controller
             'chartProfile' => $chartProfile,
             'chartTanks' => $chartTanks,
             'pressureFrom' => $pressureFrom,
+            'decoFrom' => $decoFrom,
             'sameDive' => $sameDive,
             'site' => $dive->site(),
             'operators' => $operators->map(fn ($o) => [

@@ -549,6 +549,9 @@
                             @if (!empty($pressureFrom))
                                 <span class="dh-computer-note">Tank pressure from the {{ $pressureFrom }}</span>
                             @endif
+                            @if (!empty($decoFrom))
+                                <span class="dh-computer-note">Deco stops from the {{ $decoFrom }}</span>
+                            @endif
                         </div>
                     @endif
 

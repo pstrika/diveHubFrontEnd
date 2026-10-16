@@ -39,7 +39,11 @@ class Dive extends Model
         // migration 2026_10_16_010000) so list views never load profiles.
         static::saving(function (Dive $dive) {
             if ($dive->isDirty('profile') || $dive->entered_deco === null) {
-                $dive->entered_deco = self::scanEnteredDeco($dive->profile ?? []);
+                // A dive went into deco if ANY computer worn on it says so
+                // (the MacDive copy of a Petrel dive has no stops; the NERD
+                // attached to it does).
+                $dive->entered_deco = self::scanEnteredDeco($dive->profile ?? [])
+                    || ($dive->exists && !$dive->merged_into_id && Dive::withoutGlobalScope('companions')->where('merged_into_id', $dive->id)->whereNull('deleted_at')->where('entered_deco', true)->exists());
             }
         });
     }
@@ -313,6 +317,7 @@ class Dive extends Model
         $c = new Dive();
         $c->forceFill($row);
         $c->save();
+        $this->refreshEnteredDeco();
         return $c;
     }
 
@@ -370,6 +375,15 @@ class Dive extends Model
             DiveChange::record($other->user_id, $other->uuid, 'deleted');
             DiveChange::record($this->user_id, $this->uuid, 'updated');
         });
+        $this->refreshEnteredDeco();
+    }
+
+    /** Re-derive entered_deco from this dive's profile and its attached logs. */
+    public function refreshEnteredDeco(): void
+    {
+        $this->entered_deco = self::scanEnteredDeco($this->profile ?? [])
+            || Dive::withoutGlobalScope('companions')->where('merged_into_id', $this->id)->whereNull('deleted_at')->where('entered_deco', true)->exists();
+        $this->saveQuietly();
     }
 
     /** Turn an attached log back into a dive of its own (a wrong match). */
