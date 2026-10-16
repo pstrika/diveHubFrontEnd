@@ -444,7 +444,34 @@ class LogbookController extends Controller
                     $s['tankPressures'] = $src[$j]['tankPressures'] ?? [$src[$j]['pressure']];
                 }
                 unset($s);
-                if (!collect($tanks ?? [])->contains(fn ($t) => isset($t['beginPressure']))) $tanks = $c->tanks;
+                // The main log's cylinders carry no real pressures (MacDive
+                // lists the diluent with 0 bar): use the other computer's
+                // cylinder list - one per transmitter - keeping the main
+                // log's role for each (diluent) and, on a rebreather, the
+                // remaining transmitter cylinder as the oxygen (Pablo's
+                // NERD: diluent + O2 sensors).
+                $mainHasPressures = collect($tanks ?? [])->contains(fn ($t) => ($t['beginPressure'] ?? 0) > 0 || ($t['endPressure'] ?? 0) > 0);
+                if (!$mainHasPressures && $c->tanks) {
+                    $borrowed = array_values($c->tanks);
+                    $width = count($src[0]['tankPressures'] ?? [1]);
+                    while (count($borrowed) < $width) $borrowed[] = ['usage' => 'none', 'volume' => 0, 'workPressure' => 0];
+                    foreach ($borrowed as $ti => &$bt) {
+                        $mainUsage = $tanks[$ti]['usage'] ?? null;
+                        if ($mainUsage && $mainUsage !== 'none') $bt['usage'] = $mainUsage;
+                        if (isset($tanks[$ti]['gasMix'])) $bt['gasMix'] = $tanks[$ti]['gasMix'];
+                    }
+                    unset($bt);
+                    if ($dive->isCcr()) {
+                        $roles = array_column($borrowed, 'usage');
+                        $hasDil = in_array('diluent', $roles, true); $hasO2 = in_array('oxygen', $roles, true);
+                        foreach ($borrowed as $ti => $bt) {
+                            if (($bt['usage'] ?? 'none') !== 'none') continue;
+                            if ($hasDil && !$hasO2) { $borrowed[$ti]['usage'] = 'oxygen'; $hasO2 = true; }
+                            elseif (!$hasDil) { $borrowed[$ti]['usage'] = 'diluent'; $hasDil = true; }
+                        }
+                    }
+                    $tanks = $borrowed;
+                }
                 $pressureFrom = $c->computer_model ?: 'another computer';
                 break;
             }
