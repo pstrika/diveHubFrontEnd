@@ -71,6 +71,11 @@ class DiveSyncController extends Controller
             // default) and the row title the web list shows, so the app
             // mirrors Logbook.blade.php without re-deriving either.
             'classification' => $dive->classification(),
+            // "Closed Circuit" / "Open Circuit Sidemount" / "Open Circuit",
+            // and the two computer facts behind mode + classification.
+            'mode_label' => $dive->modeLabel(),
+            'is_sidemount' => $dive->isSidemount(),
+            'entered_deco' => $dive->enteredDeco(),
             'title' => $dive->site()->name ?? ($dive->conditions['site_name_custom'] ?? (ucfirst($dive->classification()) . ' Dive')),
             'updated_at' => optional($dive->updated_at)->toIso8601String(),
         ];

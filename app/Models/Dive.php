@@ -89,12 +89,51 @@ class Dive extends Model
     }
 
     /**
-     * "Recreational"/"technical" (Pablo, 2026-10-15) - auto-classified by
-     * max depth against the standard 130ft/39.6m recreational limit, but
-     * a diver can override it (stored in conditions.classification, same
-     * "diver-entered facts the computer can't report" bucket as the rest
-     * of conditions). The override always wins once set; the depth rule
-     * is only ever a default for a dive nobody has touched yet.
+     * Open-circuit sidemount, straight from the computer: Shearwater tags
+     * every cylinder of a sidemount dive with tanks[].usage "sidemount"
+     * (libdivecomputer's DC_TANKUSAGE_SIDEMOUNT). Never true for CCR - a
+     * sidemount rebreather is still a rebreather dive.
+     */
+    public function isSidemount(): bool
+    {
+        if ($this->isCcr()) return false;
+        foreach ($this->tanks ?? [] as $tank) {
+            if (($tank['usage'] ?? null) === 'sidemount') return true;
+        }
+        return false;
+    }
+
+    private ?bool $enteredDecoCache = null;
+
+    /** Any sample the computer flagged as a mandatory deco stop (not an NDL/safety stop). */
+    public function enteredDeco(): bool
+    {
+        if ($this->enteredDecoCache === null) {
+            $this->enteredDecoCache = false;
+            foreach ($this->profile ?? [] as $sample) {
+                if (($sample['decoKind'] ?? null) === 'deco_stop') {
+                    $this->enteredDecoCache = true;
+                    break;
+                }
+            }
+        }
+        return $this->enteredDecoCache;
+    }
+
+    /** "Closed Circuit" / "Open Circuit Sidemount" / "Open Circuit" - computer-reported, not editable. */
+    public function modeLabel(): string
+    {
+        if ($this->isCcr()) return 'Closed Circuit';
+        return $this->isSidemount() ? 'Open Circuit Sidemount' : 'Open Circuit';
+    }
+
+    /**
+     * "Recreational"/"technical" (Pablo, 2026-10-15) - auto-classified as
+     * technical past the standard 130ft/39.6m recreational limit OR when
+     * the diver incurred a deco obligation (any mode - OC, CC or OC
+     * sidemount), but a diver can override it (stored in
+     * conditions.classification). The override always wins once set; the
+     * rules are only ever a default for a dive nobody has touched yet.
      */
     public function classification(): string
     {
@@ -103,7 +142,7 @@ class Dive extends Model
             return $override;
         }
 
-        return $this->max_depth_m > 39.624 ? 'technical' : 'recreational';
+        return ($this->max_depth_m > 39.624 || $this->enteredDeco()) ? 'technical' : 'recreational';
     }
 
     /**
@@ -120,6 +159,7 @@ class Dive extends Model
     {
         if ($this->isCcr()) return 'icons_calendar_ccr.svg';
         if ($this->dive_mode === 'freedive') return 'icons_calendar_freediving.svg';
+        if ($this->isSidemount()) return 'divetype_sidemount_upright.svg';
 
         return $this->classification() === 'technical' ? 'icons_calendar_tec.svg' : 'icons_calendar_rec.svg';
     }

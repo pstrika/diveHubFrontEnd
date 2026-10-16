@@ -55,7 +55,13 @@ final class GasTankMatcher
      */
     public static function suggest(Dive $dive): array
     {
-        [$map, $roles] = $dive->isCcr() ? self::suggestCcr($dive) : self::suggestOc($dive);
+        if ($dive->isCcr()) {
+            [$map, $roles] = self::suggestCcr($dive);
+        } elseif ($dive->isSidemount()) {
+            [$map, $roles] = self::suggestSidemount($dive);
+        } else {
+            [$map, $roles] = self::suggestOc($dive);
+        }
 
         $gasToTank = [];
         foreach ($map as $tankIdx => $gasIdx) {
@@ -70,6 +76,45 @@ final class GasTankMatcher
             'labels' => self::gasLabels($dive->gas_mixes ?? []),
             'roles' => $roles,
         ];
+    }
+
+    /**
+     * OC sidemount: every cylinder is tagged "sidemount" and they share
+     * the gas actually breathed - the one-gas-per-tank timing heuristic
+     * in suggestOc() pairs a never-breathed configured gas (Air) with one
+     * cylinder as "bottom" and the real gas as "travel" (seen on all 9 of
+     * Pablo's sidemount dives). So: only gases the computer actually
+     * switched to (profile currentGas) are candidates; the leanest of
+     * them is the bottom gas on the first cylinder, any richer breathed
+     * gas is deco; configured-but-never-breathed gases get no tank and no
+     * role.
+     *
+     * @return array{0: array<int, int|null>, 1: array<int, string>}
+     */
+    private static function suggestSidemount(Dive $dive): array
+    {
+        $mixes = $dive->gas_mixes ?? [];
+        $breathed = [];
+        foreach ($dive->profile ?? [] as $sample) {
+            $g = $sample['currentGas'] ?? null;
+            if ($g !== null && isset($mixes[$g])) $breathed[$g] = $mixes[$g];
+        }
+        if (!$breathed && isset($mixes[0])) $breathed[0] = $mixes[0];
+        uasort($breathed, fn ($a, $b) => ($a['oxygen'] ?? 0) <=> ($b['oxygen'] ?? 0));
+
+        $roles = [];
+        $first = true;
+        foreach ($breathed as $gi => $mix) {
+            $roles[$gi] = $first ? 'bottom' : 'deco';
+            $first = false;
+        }
+
+        $map = [];
+        foreach (array_keys($dive->tanks ?? []) as $ti) $map[$ti] = null;
+        $bottomGas = array_key_first($breathed);
+        if ($bottomGas !== null && array_key_exists(0, $map)) $map[0] = $bottomGas;
+
+        return [$map, $roles];
     }
 
     /** @return array{0: array<int, int|null>, 1: array<int, string>} */

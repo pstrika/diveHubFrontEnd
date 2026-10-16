@@ -79,6 +79,11 @@
         }
         // OC, ambiguous - a confirmed pick always wins over the suggestion.
         $resolvedGasIdx = array_key_exists($i, $tankGasOverride) ? $tankGasOverride[$i] : ($gasMatch['tankToGas'][$i] ?? null);
+        if ($resolvedGasIdx === null && $usage === 'sidemount') {
+            // The other sidemount cylinder: same bottom gas as its pair.
+            $resolvedGasIdx = array_search('bottom', $gasMatch['roles'] ?? [], true);
+            if ($resolvedGasIdx === false) $resolvedGasIdx = null;
+        }
         if ($resolvedGasIdx !== null && isset($dive->gas_mixes[$resolvedGasIdx])) {
             return 'Tank ' . ($i + 1) . ' ' . $chipMix($dive->gas_mixes[$resolvedGasIdx]);
         }
@@ -137,9 +142,15 @@
                 break;
             }
         }
-        if ($diluentMix && $diluentTankIdx !== null) {
+        // Diluent and oxygen rows exist on EVERY CC dive, whether or not
+        // the computer has air integration for them (Pablo, 2026-10-15:
+        // "Oxygen tank is ALWAYS present on a CC dive - even if the data
+        // from the computer does not show that"; a Petrel on a rEvo
+        // reports no tanks[] at all). tankIndex stays null without AI -
+        // the row still gets a size picker, stored under its rowKey.
+        if ($diluentMix) {
             $gasRows[] = ['mix' => $diluentMix, 'gasIndex' => null, 'tankIndex' => $diluentTankIdx, 'role' => 'Diluent', 'fixed' => true, 'deleted' => false, 'rowKey' => 'diluent'];
-            $fixedTankIndices[] = $diluentTankIdx;
+            if ($diluentTankIdx !== null) $fixedTankIndices[] = $diluentTankIdx;
         }
 
         $oxygenTankIdx = null;
@@ -149,12 +160,10 @@
                 break;
             }
         }
-        if ($oxygenTankIdx !== null) {
-            // Synthesized pill - pure O2 fed to the loop has no gas_mixes
-            // entry of its own, by design (same rule $tankLabels uses).
-            $gasRows[] = ['mix' => ['oxygen' => 100, 'helium' => 0], 'gasIndex' => null, 'tankIndex' => $oxygenTankIdx, 'role' => 'Oxygen', 'fixed' => true, 'deleted' => false, 'rowKey' => 'oxygen'];
-            $fixedTankIndices[] = $oxygenTankIdx;
-        }
+        // Synthesized pill - pure O2 fed to the loop has no gas_mixes
+        // entry of its own, by design (same rule $tankLabels uses).
+        $gasRows[] = ['mix' => ['oxygen' => 100, 'helium' => 0], 'gasIndex' => null, 'tankIndex' => $oxygenTankIdx, 'role' => 'Oxygen', 'fixed' => true, 'deleted' => false, 'rowKey' => 'oxygen'];
+        if ($oxygenTankIdx !== null) $fixedTankIndices[] = $oxygenTankIdx;
     }
 
     // Role per gas (Pablo, 2026-10-15: "below the gas pill...a small
@@ -198,6 +207,34 @@
             return $posA <=> $posB;
         });
     }
+
+    // Chart color per tank, by the role of the gas it carries (see
+    // App\Support\DiveChartPalette) - read from the same rows the Gases
+    // card shows, so a role change there recolors the chart too.
+    $tankRoles = [];
+    foreach ($tanks as $ti => $t) {
+        $tankRoles[$ti] = null;
+    }
+    foreach ($gasRows as $r) {
+        if ($r['tankIndex'] !== null && !$r['deleted'] && array_key_exists($r['tankIndex'], $tankRoles)) {
+            $tankRoles[$r['tankIndex']] = $r['role'];
+        }
+    }
+    // Sidemount cylinders carry the bottom gas between them - yellow,
+    // even the one no gas row is matched to (one gas, two cylinders).
+    foreach ($tanks as $ti => $t) {
+        if (($t['usage'] ?? null) === 'sidemount' && !in_array($tankRoles[$ti], ['deco', 'travel', 'bailout'], true)) {
+            $tankRoles[$ti] = 'bottom';
+        }
+    }
+    $tankColors = \App\Support\DiveChartPalette::forTanks($tankRoles);
+    $chartColors = [
+        'depth' => \App\Support\DiveChartPalette::DEPTH,
+        'temperature' => \App\Support\DiveChartPalette::TEMPERATURE,
+        'po2' => \App\Support\DiveChartPalette::PPO2,
+        'ndl' => \App\Support\DiveChartPalette::NDL,
+        'tanks' => (object) $tankColors,
+    ];
 
     $gasTankOptions = [];
     foreach ($tanks as $ti => $t) {
@@ -280,7 +317,7 @@
                                  another card's fields. --}}
                             <span class="dh-dive-mode-chip" id="diveModeChip">
                                 <x-svg-icon :file="$dive->iconFile()" />
-                                {{ $isCcr ? 'Closed Circuit' : 'Open Circuit' }}
+                                {{ $dive->modeLabel() }}
                                 <span id="diveClassChipText">{{ ucfirst($classification) }}</span>
                                 <button type="button" id="diveClassEditBtn" aria-label="Edit classification">
                                     <span class="material-icons-round" aria-hidden="true">edit</span>
@@ -426,7 +463,7 @@
                                 <span class="material-icons-round" aria-hidden="true">settings_suggest</span>
                             @endif
                             <h3>Gases</h3>
-                            @if (count($tanks) && count($gasRows))
+                            @if (count($gasRows))
                                 <button type="button" class="dh-dive-card-edit-btn" data-gases-edit-btn aria-label="Edit Gases">
                                     <span class="material-icons-round" aria-hidden="true">edit</span>
                                 </button>
@@ -470,17 +507,17 @@
                                  feedback, not the only guard).
 
                                  $tanks can be empty with real gas_mixes
-                                 still present (Pablo: "dive #60...the gas
-                                 is not shown" - confirmed 25 of this
-                                 diver's dives have no tanks[] at all) -
-                                 that's also exactly when there's no AI
-                                 data at all, so it falls back to the old
-                                 read-only gas-pill list with a red flag
-                                 next to each one (Pablo: "if a dive has no
-                                 AI data...red legend"), not a picker with
-                                 nothing to pick from. --}}
+                                 still present (a computer with no air
+                                 integration - e.g. a Petrel on a rEvo).
+                                 The rows still render with a size picker
+                                 (Pablo, 2026-10-15: "even if Air
+                                 integration info is not available, I would
+                                 like to be able to select the tank size for
+                                 the record"); only the Air Integr? column
+                                 says "No AI data" and consumption stays
+                                 blank, since there are no pressures. --}}
                             <div class="dh-dive-view-row" style="display: block;">
-                                @if (count($tanks) && count($gasRows))
+                                @if (count($gasRows))
                                     <form method="POST" action="{{ route('DiveDetails.updateConditions', $dive->id) }}" id="diveGasForm">
                                         @csrf
                                         <input type="hidden" name="form" value="gas_tank_choice">
@@ -497,7 +534,10 @@
                                                     // Tank-indexed config wins once a tank is resolved (it's
                                                     // what the chart/RMV math reads); otherwise fall back to
                                                     // the gas-keyed, display-only size.
-                                                    $sizeSource = $row['tankIndex'] !== null ? ($tankConfig[$row['tankIndex']] ?? null) : ($gasTankSizeChoice[$row['gasIndex']] ?? null);
+                                                    // CCR's fixed rows have no gas index - their AI-less
+                                                    // size is keyed by rowKey ('diluent'/'oxygen').
+                                                    $sizeKey = $row['gasIndex'] ?? $row['rowKey'];
+                                                    $sizeSource = $row['tankIndex'] !== null ? ($tankConfig[$row['tankIndex']] ?? null) : ($gasTankSizeChoice[$sizeKey] ?? null);
                                                     $sizeType = $sizeSource['type'] ?? null;
                                                     $sizeTwins = $sizeSource['twins'] ?? false;
                                                     $sizeText = $sizeSource
@@ -505,7 +545,7 @@
                                                         : null;
                                                     $sizeFieldName = $row['tankIndex'] !== null
                                                         ? 'conditions[tank_config][' . $row['tankIndex'] . ']'
-                                                        : 'conditions[gas_tank_size_choice][' . $row['gasIndex'] . ']';
+                                                        : 'conditions[gas_tank_size_choice][' . $sizeKey . ']';
                                                     // Which template image to show (Pablo, 2026-10-15:
                                                     // "if the user selected twin, show the twin template.
                                                     // AL-19, AL-13, ST-HP-2L and ST-HP-3L should be
@@ -564,7 +604,11 @@
                                                          nothing to ask for a fixed CCR row (diluent/oxygen
                                                          are already unambiguous). --}}
                                                     <div class="col-12 col-md-2 dh-dive-gas-col-tank">
-                                                        @if (!$row['fixed'])
+                                                        @if ($row['tankIndex'] === null && ($row['fixed'] || !count($gasTankOptions)))
+                                                            {{-- Nothing to match: the computer reported no
+                                                                 air-integrated tank for this gas. --}}
+                                                            <span class="dh-dive-no-ai">No AI data</span>
+                                                        @elseif (!$row['fixed'])
                                                             <span class="dh-dive-tank-row-view-text" data-view>
                                                                 @if ($row['deleted'])
                                                                     &mdash;
@@ -664,16 +708,6 @@
                                         <button type="submit" class="dh-btn dh-btn-primary mt-3" data-gases-save hidden>Save</button>
                                         <button type="button" class="dh-btn dh-btn-ghost-dark mt-3" data-gases-cancel hidden>Cancel</button>
                                     </form>
-                                @elseif (count($labeledGases))
-                                    <span class="dh-dive-view-value d-flex flex-wrap align-items-center" style="gap: 8px;">
-                                        @foreach ($labeledGases as $entry)
-                                            <span class="dh-dive-gas-labeled">
-                                                <x-gas-mix-pill :o2="$entry['mix']['oxygen'] ?? null" :he="$entry['mix']['helium'] ?? null" />
-                                                <span class="dh-dive-gas-role">{{ $entry['label'] }}</span>
-                                                <span class="dh-dive-no-ai">No Air Integration Data Available</span>
-                                            </span>
-                                        @endforeach
-                                    </span>
                                 @else
                                     <span class="dh-dive-view-value">&mdash;</span>
                                 @endif
@@ -692,12 +726,12 @@
                          but toggle the same way as the other series chips. --}}
                     <div class="dh-dive-chart-card mb-4">
                         <div class="dh-chart-toggles">
-                            <button type="button" class="dh-chart-toggle is-active" data-series="depth" style="--toggle-color: #ffffff;">Depth</button>
-                            <button type="button" class="dh-chart-toggle" data-series="temperature" style="--toggle-color: #ff8a65;">Temperature</button>
-                            <button type="button" class="dh-chart-toggle" data-series="po2" style="--toggle-color: #4fc3f7;">PPO2</button>
-                            <button type="button" class="dh-chart-toggle" data-series="ndl" style="--toggle-color: #ba68c8;">NDL</button>
+                            <button type="button" class="dh-chart-toggle is-active" data-series="depth" style="--toggle-color: {{ \App\Support\DiveChartPalette::DEPTH }};">Depth</button>
+                            <button type="button" class="dh-chart-toggle" data-series="temperature" style="--toggle-color: {{ \App\Support\DiveChartPalette::TEMPERATURE }};">Temperature</button>
+                            <button type="button" class="dh-chart-toggle" data-series="po2" style="--toggle-color: {{ \App\Support\DiveChartPalette::PPO2 }};">PPO2</button>
+                            <button type="button" class="dh-chart-toggle" data-series="ndl" style="--toggle-color: {{ \App\Support\DiveChartPalette::NDL }};">NDL</button>
                             @foreach ($tankLabels as $i => $label)
-                                <button type="button" class="dh-chart-toggle dh-chart-toggle-tank" data-series="tank{{ $i }}" style="--toggle-color: {{ ['#ffd54f', '#f06292', '#4db6ac', '#90a4ae'][$i % 4] }};">{{ $label }}</button>
+                                <button type="button" class="dh-chart-toggle dh-chart-toggle-tank" data-series="tank{{ $i }}" style="--toggle-color: {{ $tankColors[$i]['pressure'] }};">{{ $label }}</button>
                                 {{-- Instant consumption rate (Pablo, 2026-10-15: "can you
                                      calculate instant SAC using the pressure and the
                                      depth"). Genuinely NOT true SAC in L/min - tanks[].volume
@@ -711,7 +745,7 @@
                                      sense...just show the chip for the pressure") - the
                                      loop meters those, not the diver's breathing. --}}
                                 @if (!in_array($tanks[$i]['usage'] ?? null, ['diluent', 'oxygen'], true))
-                                    <button type="button" class="dh-chart-toggle dh-chart-toggle-tank" data-series="sac{{ $i }}" style="--toggle-color: {{ ['#ffd54f', '#f06292', '#4db6ac', '#90a4ae'][$i % 4] }};">{{ $label }} SAC</button>
+                                    <button type="button" class="dh-chart-toggle dh-chart-toggle-tank" data-series="sac{{ $i }}" style="--toggle-color: {{ $tankColors[$i]['sac'] }};">{{ $label }} SAC</button>
                                 @endif
                             @endforeach
                         </div>
@@ -1061,6 +1095,7 @@
             window.dhDiveTanks = @json($dive->tanks);
             window.dhDiveGasMixes = @json($dive->gas_mixes ?? []);
             window.dhDiveIsCcr = @json($isCcr);
+            window.dhDiveChartColors = @json($chartColors);
             window.dhOperators = @json($operators);
             window.dhBoatsByOperator = @json($boatsByOperator);
             window.dhSites = @json($sites);

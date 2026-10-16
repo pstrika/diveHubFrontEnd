@@ -272,7 +272,22 @@
         };
     });
 
-    var tankColors = ['#ffd54f', '#f06292', '#4db6ac', '#90a4ae'];
+    // One color convention for every dive (Pablo, 2026-10-15), computed
+    // server-side by App\Support\DiveChartPalette so the toggle chips and
+    // these lines always agree: Depth/Temperature/PPO2/NDL fixed; each
+    // tank's pressure/SAC/RMV in tones of its gas role's family (oxygen
+    // green, diluent/bottom yellow, deco/travel/bailout red, unmatched grey).
+    var palette = window.dhDiveChartColors || {};
+    var seriesColors = {
+        depth: palette.depth || '#ffffff',
+        temperature: palette.temperature || '#ff8a65',
+        po2: palette.po2 || '#4fc3f7',
+        ndl: palette.ndl || '#ba68c8',
+    };
+    function tankColor(tankIndex, series) {
+        var t = (palette.tanks || {})[tankIndex];
+        return (t && t[series]) || '#90a4ae';
+    }
     var initialUnit = currentUnit();
 
     var datasets = [
@@ -280,7 +295,7 @@
             key: 'depth',
             label: 'Depth',
             data: depthSeries(initialUnit),
-            borderColor: '#ffffff',
+            borderColor: seriesColors.depth,
             backgroundColor: 'rgba(255, 255, 255, 0.5)',
             borderWidth: 2,
             fill: true,
@@ -296,7 +311,7 @@
             key: 'temperature',
             label: 'Temperature',
             data: tempSeries(initialUnit),
-            borderColor: '#ff8a65',
+            borderColor: seriesColors.temperature,
             backgroundColor: 'rgba(255, 138, 101, 0.15)',
             borderWidth: 2,
             fill: false,
@@ -312,7 +327,7 @@
             key: 'po2',
             label: 'PPO2',
             data: po2Data,
-            borderColor: '#4fc3f7',
+            borderColor: seriesColors.po2,
             backgroundColor: 'rgba(79, 195, 247, 0.15)',
             borderWidth: 2,
             fill: false,
@@ -328,7 +343,7 @@
             key: 'ndl',
             label: 'NDL (minutes)',
             data: ndlData,
-            borderColor: '#ba68c8',
+            borderColor: seriesColors.ndl,
             backgroundColor: 'rgba(186, 104, 200, 0.15)',
             borderWidth: 2,
             fill: false,
@@ -371,7 +386,7 @@
             key: 'tank' + i,
             label: 'Tank pressure',
             data: tankSeries(i, initialUnit),
-            borderColor: tankColors[i % tankColors.length],
+            borderColor: tankColor(i, 'pressure'),
             backgroundColor: 'transparent',
             borderWidth: 2,
             fill: false,
@@ -390,7 +405,7 @@
             key: 'sac' + i,
             label: 'SAC',
             data: sacSeries(i, initialUnit),
-            borderColor: tankColors[i % tankColors.length],
+            borderColor: tankColor(i, 'sac'),
             backgroundColor: 'transparent',
             borderWidth: 1.5,
             borderDash: [2, 2],
@@ -430,7 +445,9 @@
                             var ds = context.dataset;
                             var v = context.parsed.y;
                             if (ds.key === 'depth' || ds.isDecoStop) v = Math.abs(v);
-                            var text = ds.label + ': ' + (typeof v === 'number' ? v.toFixed(1) : v);
+                            // PPO2 to the hundredth (Pablo, 2026-10-15) - the computer reports it
+                            // that way and 1.25 vs 1.3 matters on a loop; everything else 1 decimal.
+                            var text = ds.label + ': ' + (typeof v === 'number' ? v.toFixed(ds.key === 'po2' ? 2 : 1) : v);
                             if (ds.isDecoStop) {
                                 var tts = profile[context.dataIndex] && profile[context.dataIndex].tts;
                                 if (tts !== null && tts !== undefined) text += ' (TTS ' + Math.ceil(tts / 60) + ' min)';
@@ -463,22 +480,22 @@
                 },
                 yTemp: {
                     position: 'right',
-                    title: { display: true, text: '°C', color: '#ff8a65' },
-                    ticks: { color: '#ff8a65' },
+                    title: { display: true, text: '°C', color: seriesColors.temperature },
+                    ticks: { color: seriesColors.temperature },
                     grid: { display: false },
                     display: false,
                 },
                 yPo2: {
                     position: 'right',
-                    title: { display: true, text: 'bar', color: '#4fc3f7' },
-                    ticks: { color: '#4fc3f7' },
+                    title: { display: true, text: 'bar', color: seriesColors.po2 },
+                    ticks: { color: seriesColors.po2, callback: function (v) { return Number(v).toFixed(2); } },
                     grid: { display: false },
                     display: false,
                 },
                 yNdl: {
                     position: 'right',
-                    title: { display: true, text: 'min', color: '#ba68c8' },
-                    ticks: { color: '#ba68c8' },
+                    title: { display: true, text: 'min', color: seriesColors.ndl },
+                    ticks: { color: seriesColors.ndl },
                     grid: { display: false },
                     display: false,
                 },
@@ -575,8 +592,9 @@
         if (rmvAxisAdded) return;
         chart.options.scales.yRmv = {
             position: 'right',
-            title: { display: true, text: currentUnit() === 'imperial' ? 'RMV (cuft/min)' : 'RMV (L/min)', color: '#81c784' },
-            ticks: { color: '#81c784' },
+            // Neutral axis: it's shared by every tank's RMV line, each in its own family color.
+            title: { display: true, text: currentUnit() === 'imperial' ? 'RMV (cuft/min)' : 'RMV (L/min)', color: '#cfd8dc' },
+            ticks: { color: '#cfd8dc' },
             grid: { display: false },
             display: false,
         };
@@ -610,7 +628,7 @@
                 key: key,
                 label: 'RMV',
                 data: rmvSeries(tankIndex, unit),
-                borderColor: '#81c784',
+                borderColor: tankColor(tankIndex, 'rmv'),
                 backgroundColor: 'transparent',
                 borderWidth: 2,
                 fill: false,
@@ -635,7 +653,7 @@
                 chip.type = 'button';
                 chip.className = 'dh-chart-toggle dh-chart-toggle-tank';
                 chip.setAttribute('data-series', key);
-                chip.style.setProperty('--toggle-color', '#81c784');
+                chip.style.setProperty('--toggle-color', tankColor(tankIndex, 'rmv'));
                 chip.textContent = label + ' RMV';
                 toggleRow.appendChild(chip);
                 wireToggleChip(chip, key);

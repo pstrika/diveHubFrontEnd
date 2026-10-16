@@ -40,18 +40,22 @@ class DiveGasStats
             foreach ($mixes as $gi => $m) {
                 if (($m['usage'] ?? null) === 2) { $diluentMix = $m; $diluentGasIdx = $gi; break; }
             }
+            // Diluent and oxygen rows on EVERY CC dive, with or without air
+            // integration (a Petrel on a rEvo reports no tanks[] at all) -
+            // same rule as the web Gases card. tank_index null without AI.
+            $diluentTank = null;
+            $oxygenTank = null;
             foreach ($tanks as $ti => $t) {
                 $usage = $t['usage'] ?? null;
-                if ($usage === 'diluent' && $diluentMix) {
-                    $rows[] = self::row('diluent', $diluentGasIdx, $diluentMix, $ti, 'Tank D', 'diluent', 'Diluent', true, false);
-                    $fixedTankIndices[] = $ti;
-                } elseif ($usage === 'oxygen') {
-                    $rows[] = self::row('oxygen', null, ['oxygen' => 100, 'helium' => 0], $ti, 'Tank O', 'oxygen', 'Oxygen', true, false);
-                    $fixedTankIndices[] = $ti;
-                }
+                if ($usage === 'diluent' && $diluentTank === null) $diluentTank = $ti;
+                if ($usage === 'oxygen' && $oxygenTank === null) $oxygenTank = $ti;
             }
-            // Diluent first, oxygen second, like the web.
-            usort($rows, fn ($a, $b) => ($a['row_key'] === 'diluent' ? 0 : 1) <=> ($b['row_key'] === 'diluent' ? 0 : 1));
+            if ($diluentMix) {
+                $rows[] = self::row('diluent', $diluentGasIdx, $diluentMix, $diluentTank, $diluentTank !== null ? 'Tank D' : null, 'diluent', 'Diluent', true, false);
+                if ($diluentTank !== null) $fixedTankIndices[] = $diluentTank;
+            }
+            $rows[] = self::row('oxygen', null, ['oxygen' => 100, 'helium' => 0], $oxygenTank, $oxygenTank !== null ? 'Tank O' : null, 'oxygen', 'Oxygen', true, false);
+            if ($oxygenTank !== null) $fixedTankIndices[] = $oxygenTank;
         }
 
         foreach ($mixes as $gi => $mix) {
@@ -79,9 +83,13 @@ class DiveGasStats
         // Fill tank + stats now that fixed/non-fixed is settled.
         foreach ($rows as &$row) {
             $tankIdx = $row['tank_index'];
+            // Without AI the size is keyed by gas index - or, for CCR's fixed
+            // rows, by row_key ('diluent'/'oxygen'), exactly as the web saves it.
+            $sizeKey = $row['fixed'] ? $row['row_key'] : $row['gas_index'];
             $size = $tankIdx !== null
                 ? ($tankConfig[$tankIdx] ?? null)
-                : ($row['gas_index'] !== null ? ($sizeChoice[$row['gas_index']] ?? null) : null);
+                : ($sizeKey !== null ? ($sizeChoice[$sizeKey] ?? null) : null);
+            $row['size_key'] = $sizeKey;
             $type = $size['type'] ?? null;
             $twins = (bool) ($size['twins'] ?? false);
             $liters = TankCatalog::waterVolumeLiters($type, $twins);
@@ -119,7 +127,24 @@ class DiveGasStats
             if ((($mixes[$gi]['usage'] ?? null) !== 2)) $suggestRoles[(string) $gi] = $role;
         }
 
+        // Chart color convention (DiveChartPalette), same as the web chart.
+        $tankRoles = [];
+        foreach ($tanks as $ti => $t) $tankRoles[$ti] = null;
+        foreach ($rows as $r) {
+            if ($r['tank_index'] !== null && !$r['deleted'] && array_key_exists($r['tank_index'], $tankRoles)) $tankRoles[$r['tank_index']] = $r['role'];
+        }
+        foreach ($tanks as $ti => $t) {
+            if (($t['usage'] ?? null) === 'sidemount' && !in_array($tankRoles[$ti], ['deco', 'travel', 'bailout'], true)) $tankRoles[$ti] = 'bottom';
+        }
+
         return [
+            'chart_colors' => [
+                'depth' => DiveChartPalette::DEPTH,
+                'temperature' => DiveChartPalette::TEMPERATURE,
+                'po2' => DiveChartPalette::PPO2,
+                'ndl' => DiveChartPalette::NDL,
+                'tanks' => (object) DiveChartPalette::forTanks($tankRoles),
+            ],
             'gas_stats' => array_values($rows),
             'gas_tank_suggestion' => (object) $suggestTanks,
             'gas_role_suggestion' => (object) $suggestRoles,
