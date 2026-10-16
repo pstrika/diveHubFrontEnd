@@ -342,9 +342,168 @@ class LogbookController extends Controller
         return redirect()->route('Logbook')->with('status', 'Your logbook has been deleted.');
     }
 
-    public function show(Request $request, $id)
+    /**
+     * GET Logbook/duplicates - every pair of dives in the logbook that look
+     * like one dive logged by two computers (strong: clocks agree;
+     * possible: clocks hours apart but depth, time and profile agree).
+     * Light columns first, profiles only for candidate pairs.
+     */
+    public function duplicates(Request $request)
+    {
+        $userId = $request->user()->id;
+        $dives = Dive::where('user_id', $userId)->orderBy('started_at')
+            ->get(['id', 'started_at', 'duration_seconds', 'max_depth_m', 'computer_model', 'computer_serial', 'conditions', 'site_id', 'user_site_id']);
+        $pairs = [];
+        $n = $dives->count();
+        for ($a = 0; $a < $n; $a++) {
+            $da = $dives[$a];
+            $dismissed = $da->conditions['same_dive_dismissed'] ?? [];
+            for ($b = $a + 1; $b < $n; $b++) {
+                $db = $dives[$b];
+                if ($db->started_at->getTimestamp() - $da->started_at->getTimestamp() > \App\Support\SameDiveMatcher::CLOCK_WINDOW) break;
+                if (!\App\Support\SameDiveMatcher::differentComputers($da->computer_serial, $db->computer_serial)) continue;
+                if (!\App\Support\SameDiveMatcher::depthsAgree((float) $da->max_depth_m, (float) $db->max_depth_m)) continue;
+                if (!\App\Support\SameDiveMatcher::durationsAgree((int) $da->duration_seconds, (int) $db->duration_seconds)) continue;
+                if (in_array($db->id, $dismissed) || in_array($da->id, $db->conditions['same_dive_dismissed'] ?? [])) continue;
+                $pairs[] = [$da->id, $db->id];
+            }
+        }
+        $ids = collect($pairs)->flatten()->unique();
+        $full = $ids->isEmpty() ? collect() : Dive::whereIn('id', $ids)->get()->keyBy('id');
+        Dive::preloadSites($full->values());
+        $out = [];
+        foreach ($pairs as [$x, $y]) {
+            $a = $full[$x] ?? null; $b = $full[$y] ?? null;
+            if (!$a || !$b) continue;
+            $m = \App\Support\SameDiveMatcher::compare(['started_at' => $a->started_at->format('Y-m-d H:i:s'), 'duration_seconds' => $a->duration_seconds, 'max_depth_m' => $a->max_depth_m, 'profile' => $a->profile], $b);
+            if ($m) $out[] = ['a' => $a, 'b' => $b] + $m;
+        }
+        usort($out, fn ($p, $q) => [$p['level'] !== 'strong', $q['a']->started_at->getTimestamp()] <=> [$q['level'] !== 'strong', $p['a']->started_at->getTimestamp()]);
+        return view('pages.logbook.duplicates', ['pairs' => $out]);
+    }
+
+    /** POST - "not the same dive" from the duplicates page. */
+    public function dismissPair(Request $request, $id, $other)
     {
         $dive = Dive::where('user_id', $request->user()->id)->findOrFail($id);
+        Dive::where('user_id', $request->user()->id)->findOrFail($other);
+        $c = $dive->conditions ?? [];
+        $c['same_dive_dismissed'] = array_values(array_unique(array_merge($c['same_dive_dismissed'] ?? [], [(int) $other])));
+        $dive->conditions = $c;
+        $dive->save();
+        return redirect()->route('Logbook.duplicates');
+    }
+
+    /**
+     * The other computers' logs of a dive, for the page: a label and a
+     * thinned depth trace each, plus the profile/tanks the chart uses -
+     * the main computer's, with tank pressure filled in from another
+     * computer when the main one had no transmitter (Petrel on the loop,
+     * Perdix with the AI). Samples are aligned by time into the dive, so
+     * clocks set to different hours don't matter.
+     *
+     * @return array{0: array, 1: array, 2: ?array, 3: ?string}
+     */
+    private function computerLogs(Dive $dive): array
+    {
+        $profile = $dive->profile ?? [];
+        $tanks = $dive->tanks;
+        $logs = $dive->companions()->get();
+        $colors = ['#ffb74d', '#4dd0e1', '#ba68c8', '#aed581'];
+        $out = [];
+        foreach ($logs as $i => $c) {
+            $pts = [];
+            $prof = $c->profile ?? [];
+            $step = max(1, (int) ceil(count($prof) / 600));
+            foreach ($prof as $k => $s) if ($k % $step === 0 && isset($s['time'], $s['depth'])) $pts[] = [(int) $s['time'], round((float) $s['depth'], 2)];
+            $out[] = [
+                'id' => $c->id,
+                'label' => $c->computer_model ?: 'Computer ' . ($i + 2),
+                'serial' => $c->computer_serial,
+                'source' => $c->source,
+                'max_depth_m' => $c->max_depth_m,
+                'duration_seconds' => $c->duration_seconds,
+                'started_at' => $c->started_at,
+                'has_pressure' => collect($prof)->contains(fn ($s) => isset($s['tankPressures']) || isset($s['pressure'])),
+                'color' => $colors[$i % count($colors)],
+                'points' => $pts,
+            ];
+        }
+
+        $pressureFrom = null;
+        $mainHasPressure = collect($profile)->contains(fn ($s) => isset($s['tankPressures']) || isset($s['pressure']));
+        if (!$mainHasPressure && $profile) {
+            foreach ($logs as $c) {
+                $src = array_values(array_filter($c->profile ?? [], fn ($s) => isset($s['time']) && (isset($s['tankPressures']) || isset($s['pressure']))));
+                if (!$src) continue;
+                $j = 0; $n = count($src);
+                foreach ($profile as &$s) {
+                    if (!isset($s['time'])) continue;
+                    while ($j < $n - 1 && $src[$j + 1]['time'] <= $s['time']) $j++;
+                    if ($src[$j]['time'] > $s['time'] + 30) continue; // before the other computer's first reading
+                    $s['tankPressures'] = $src[$j]['tankPressures'] ?? [$src[$j]['pressure']];
+                }
+                unset($s);
+                if (!collect($tanks ?? [])->contains(fn ($t) => isset($t['beginPressure']))) $tanks = $c->tanks;
+                $pressureFrom = $c->computer_model ?: 'another computer';
+                break;
+            }
+        }
+        return [$out, $profile, $tanks, $pressureFrom];
+    }
+
+    /** POST Logbook/{id}/computers/{log}/main - that computer becomes the dive's main one. */
+    public function computerMain(Request $request, $id, $log)
+    {
+        $dive = Dive::where('user_id', $request->user()->id)->findOrFail($id);
+        $c = $dive->companions()->findOrFail($log);
+        $dive->promoteCompanion($c);
+        return redirect()->route('DiveDetails', $dive->id)->with('status', ($dive->computer_model ?: 'That computer') . ' is now this dive\'s main computer.');
+    }
+
+    /** POST Logbook/{id}/computers/{log}/detach - a wrong match becomes a dive of its own. */
+    public function computerDetach(Request $request, $id, $log)
+    {
+        $dive = Dive::where('user_id', $request->user()->id)->findOrFail($id);
+        $c = $dive->companions()->findOrFail($log);
+        $dive->detachCompanion($c);
+        return redirect()->route('DiveDetails', $c->id)->with('status', 'Separated: this is now a dive of its own.');
+    }
+
+    /** POST Logbook/{id}/combine/{other} - $other's computer log joins this dive. */
+    public function combine(Request $request, $id, $other)
+    {
+        $dive = Dive::where('user_id', $request->user()->id)->findOrFail($id);
+        $o = Dive::where('user_id', $request->user()->id)->findOrFail($other);
+        $dive->absorb($o);
+        $back = $request->input('back');
+        return ($back === 'duplicates' ? redirect()->route('Logbook.duplicates') : redirect()->route('DiveDetails', $dive->id))
+            ->with('status', 'Combined: the ' . ($o->computer_model ?: 'other') . ' log is now part of this dive.');
+    }
+
+    /** POST Logbook/{id}/same-dive/dismiss - "not the same dive". */
+    public function dismissSameDive(Request $request, $id)
+    {
+        $dive = Dive::where('user_id', $request->user()->id)->findOrFail($id);
+        $c = $dive->conditions ?? [];
+        if ($sug = ($c['same_dive_suggestion'] ?? null)) $c['same_dive_dismissed'][] = (int) ($sug['dive_id'] ?? 0);
+        unset($c['same_dive_suggestion']);
+        $dive->conditions = $c ?: null;
+        $dive->save();
+        return redirect()->route('DiveDetails', $dive->id);
+    }
+
+    public function show(Request $request, $id)
+    {
+        $any = Dive::withoutGlobalScope('companions')->where('user_id', $request->user()->id)->findOrFail($id);
+        if ($any->isCompanion()) return redirect()->route('DiveDetails', $any->merged_into_id);
+        $dive = $any;
+        [$companions, $chartProfile, $chartTanks, $pressureFrom] = $this->computerLogs($dive);
+        $sameDive = null;
+        if ($sug = ($dive->conditions['same_dive_suggestion'] ?? null)) {
+            $other = Dive::where('user_id', $dive->user_id)->find($sug['dive_id'] ?? 0);
+            if ($other) $sameDive = ['dive' => $other, 'offset' => (int) ($sug['offset'] ?? 0), 'shape' => $sug['shape'] ?? null];
+        }
 
         // Operator search + its boats (Pablo, 2026-10-15: "if the user
         // chooses an operator, we can show the Boat names...can type
@@ -386,6 +545,11 @@ class LogbookController extends Controller
 
         return view('pages.DiveDetails', [
             'dive' => $dive,
+            'companions' => $companions,
+            'chartProfile' => $chartProfile,
+            'chartTanks' => $chartTanks,
+            'pressureFrom' => $pressureFrom,
+            'sameDive' => $sameDive,
             'site' => $dive->site(),
             'operators' => $operators->map(fn ($o) => [
                 'id' => $o->id,

@@ -31,6 +31,10 @@
                                 <span class="material-icons-round" aria-hidden="true">place</span>
                                 My sites
                             </a>
+                            <a href="{{ route('Logbook.duplicates') }}" class="dh-btn dh-btn-ghost-dark" title="Dives logged by more than one computer">
+                                <span class="material-icons-round" aria-hidden="true">devices</span>
+                                Duplicates
+                            </a>
                             <a href="{{ route('Logbook.settings') }}" class="dh-btn dh-btn-ghost-dark" title="Logbook settings">
                                 <span class="material-icons-round" aria-hidden="true">settings</span>
                             </a>

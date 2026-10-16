@@ -4588,3 +4588,32 @@ body.dh-logbook main .input-group-outline:has(> input.form-control):not(.is-fill
 .dh-import-steps li strong { font-weight: 700; }
 /* Five sources in a two-column grid: the catch-all spans the last row. */
 .dh-import-source:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.dh-import-clock { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: rgba(230, 145, 56, .14); color: #a35a0b; font-size: .75rem; font-weight: 700; }
+
+/* Same dive, several computers (Pablo, 2026-10-16: the "dedup suite"). */
+.dh-dup-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.dh-dup-level { font-weight: 800; color: var(--dh-ink); }
+.dh-dup-pair.is-strong { border-left: 4px solid var(--dh-good, #2e7d32); }
+.dh-dup-pair.is-possible { border-left: 4px solid #e69138; }
+.dh-dup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dh-dup-dive { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; background: rgba(11, 110, 138, .06); color: var(--dh-ink); font-size: .87rem; text-decoration: none; }
+.dh-dup-dive:hover { background: rgba(11, 110, 138, .12); }
+.dh-dup-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.dh-dup-actions form { margin: 0; }
+@media (max-width: 575px) { .dh-dup-grid { grid-template-columns: 1fr; } }
+.dh-dive-computers { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0 10px; }
+.dh-dive-computers-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--dh-muted, #5b6b78); }
+.dh-computer-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 10px; border-radius: 999px; background: rgba(11, 110, 138, .08); font-size: .82rem; color: var(--dh-ink); }
+.dh-computer-chip.is-main { background: var(--dh-sea, #0b6e8a); color: #fff; padding-right: 10px; }
+.dh-computer-swatch { width: 14px; height: 0; border-top: 2px dashed var(--swatch); }
+.dh-computer-chip details { position: relative; }
+.dh-computer-chip summary { list-style: none; cursor: pointer; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; }
+.dh-computer-chip summary::-webkit-details-marker { display: none; }
+.dh-computer-chip summary:hover { background: rgba(0, 0, 0, .08); }
+.dh-computer-menu { position: absolute; right: 0; top: 26px; z-index: 20; min-width: 220px; background: #fff; border-radius: 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, .16); padding: 6px; }
+.dh-computer-menu form { margin: 0; }
+.dh-computer-menu button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 8px 10px; border-radius: 6px; font-size: .85rem; color: var(--dh-ink); }
+.dh-computer-menu button:hover { background: rgba(11, 110, 138, .08); }
+.dh-computer-note { font-size: .78rem; color: var(--dh-muted, #5b6b78); }
+.dh-same-dive-banner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border-radius: 12px; background: rgba(230, 145, 56, .12); margin-bottom: 12px; font-size: .88rem; color: var(--dh-ink); }
+.dh-same-dive-banner form { margin: 0; }

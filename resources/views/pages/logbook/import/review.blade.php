@@ -114,6 +114,47 @@
                             </div>
                         @endif
 
+                        {{-- Same dive, another computer (Pablo, 2026-10-16: "we can always ask
+                             the user if they want the dedup or enrich existent dive"). --}}
+                        @if ($companions->isNotEmpty())
+                            <div class="card p-0 position-relative mt-3 z-index-2 mb-4 dh-import-group is-high">
+                                <div class="card-body">
+                                    <h3 class="h5 mb-1 d-flex align-items-center gap-2"><span class="material-icons-round" aria-hidden="true">devices</span> Same dive, another computer &middot; {{ $companions->count() }}</h3>
+                                    <p class="text-sm text-secondary">You wore more than one computer on these dives. Ticked: this computer's log is <strong>added to the dive</strong> you already have - one dive, every computer's data (a second profile, transmitter pressure, PPO2). Unticked: it's imported as a separate dive.</p>
+                                    <div class="dh-import-list">
+                                        @foreach ($companions as $c)
+                                            @php
+                                                $m = $c->payload['_match'] ?? [];
+                                                $other = $c->duplicateOfDive;
+                                                $otherItem = $c->duplicate_of_item_id ? ($itemsById[$c->duplicate_of_item_id] ?? null) : null;
+                                                $offset = (int) ($m['offset'] ?? 0);
+                                            @endphp
+                                            <label class="dh-import-row">
+                                                <input type="checkbox" name="attach_ids[]" value="{{ $c->id }}" @checked($c->decision === 'attach')>
+                                                <div class="dh-import-row-main">
+                                                    <strong>{{ $c->started_at->format('M j, Y g:i A') }}</strong>
+                                                    &middot; {{ $c->computer_model ?: 'Computer' }} &middot; <span data-unit-value="depth" data-metric="{{ $c->max_depth_m }}"></span> &middot; {{ gmdate('H:i', $c->duration_seconds) }}
+                                                    <div class="text-sm text-secondary">
+                                                        @if ($other)
+                                                            &rarr; add to <a href="{{ route('DiveDetails', $other->id) }}" target="_blank" rel="noopener">{{ $other->title() }}</a> ({{ $other->computer_model ?: 'no computer named' }})
+                                                        @elseif ($otherItem)
+                                                            &rarr; add to the {{ $otherItem->computer_model ?: 'other' }} log of this dive in this import
+                                                        @endif
+                                                        @if (($m['level'] ?? '') === 'possible')
+                                                            <span class="dh-import-clock">clocks {{ \App\Support\SameDiveMatcher::offsetLabel($offset) }} apart</span>
+                                                        @endif
+                                                        @if (isset($m['shape']) && $m['shape'] !== null)
+                                                            &middot; profiles {{ (int) round($m['shape'] * 100) }}% alike
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         @if ($dups->isEmpty())
                             <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
                                 <div class="card-body text-center py-4">

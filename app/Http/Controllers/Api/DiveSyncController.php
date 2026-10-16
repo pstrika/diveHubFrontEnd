@@ -177,7 +177,9 @@ class DiveSyncController extends Controller
             ->get();
 
         $uuids = $rows->pluck('dive_uuid')->unique();
-        $dives = Dive::withTrashed()
+        // Attached logs included: a dive combined into another later still
+        // replays its older created/updated entries, then its 'deleted'.
+        $dives = Dive::withTrashed()->withoutGlobalScope('companions')
             ->where('user_id', $user->id)
             ->whereIn('uuid', $uuids)
             ->get()

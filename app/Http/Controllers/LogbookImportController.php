@@ -8,6 +8,7 @@ use App\Models\DiveImport;
 use App\Models\DiveImportItem;
 use App\Models\Site;
 use App\Models\UserSite;
+use App\Support\SameDiveMatcher;
 use App\Support\UddfParser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -203,15 +204,18 @@ class LogbookImportController extends Controller
 
         $userId = $request->user()->id;
 
-        // Existing dives (tombstones too) for duplicate detection.
-        $existing = Dive::withTrashed()->where('user_id', $userId)
-            ->get(['id', 'computer_serial', 'fingerprint', 'started_at', 'deleted_at', 'duration_seconds', 'max_depth_m', 'source']);
+        // Existing dives (tombstones and attached logs too) for duplicate
+        // detection. Light columns only; profiles load per candidate.
+        $existing = Dive::withTrashed()->withoutGlobalScope('companions')->where('user_id', $userId)
+            ->get(['id', 'computer_serial', 'fingerprint', 'started_at', 'deleted_at', 'duration_seconds', 'max_depth_m', 'source', 'merged_into_id']);
         $byKey = [];
         $byTime = [];
         foreach ($existing as $e) {
             if ($e->fingerprint) $byKey[strtolower((string) $e->computer_serial) . '|' . $e->fingerprint] = $e;
             $byTime[] = $e;
         }
+        // An attached log stands for the dive it's attached to.
+        $mainOf = fn ($e) => ($e->merged_into_id && !$e->deleted_at) ? $e->merged_into_id : $e->id;
 
         $import = DiveImport::create([
             'user_id' => $userId,
@@ -225,25 +229,37 @@ class LogbookImportController extends Controller
         $dives = $parsed->dives;
         usort($dives, fn ($a, $b) => strcmp($a['started_at'], $b['started_at']));
 
-        $counts = ['total' => count($dives), 'new' => 0, 'fingerprint' => 0, 'time' => 0, 'file' => 0, 'upgrade' => 0, 'no_profile' => 0];
+        $counts = ['total' => count($dives), 'new' => 0, 'fingerprint' => 0, 'time' => 0, 'file' => 0, 'upgrade' => 0, 'companion' => 0, 'no_profile' => 0];
         $computers = [];
         $items = [];
         $prev = null;
         foreach ($dives as $i => $d) {
-            $kind = null; $ofDive = null; $ofItemPos = null;
+            $kind = null; $ofDive = null; $ofItemPos = null; $decision = null;
             $key = strtolower((string) $d['computer_serial']) . '|' . $d['fingerprint'];
             if ($d['computer_serial'] && isset($byKey[$key])) {
-                $kind = 'fingerprint'; $ofDive = $byKey[$key]->id;
+                $kind = 'fingerprint'; $ofDive = $mainOf($byKey[$key]);
             } else {
+                // Same dive already on file from THIS computer (or from one
+                // that named no computer): +-3 min. Another computer's log
+                // of it is not a duplicate - see the companion check below.
                 $ts = strtotime($d['started_at']);
                 foreach ($byTime as $e) {
-                    if (abs($e->started_at->getTimestamp() - $ts) <= self::TIME_WINDOW) { $kind = 'time'; $ofDive = $e->id; break; }
+                    if (abs($e->started_at->getTimestamp() - $ts) > self::TIME_WINDOW) continue;
+                    if (SameDiveMatcher::differentComputers($d['computer_serial'], $e->computer_serial)) continue;
+                    $kind = 'time'; $ofDive = $mainOf($e); break;
                 }
             }
+            // Two computers' logs of one dive in this same file (MacDive
+            // holding both, or a folder of Petrel + Perdix files).
             if ($kind === null && $prev !== null && abs(strtotime($d['started_at']) - strtotime($prev['started_at'])) <= self::TIME_WINDOW) {
-                // Same dive from a second computer in the same file: keep the
-                // copy with a profile (or the earlier one), skip the other.
-                if (!count($prev['profile']) && count($d['profile'])) {
+                if (SameDiveMatcher::differentComputers($d['computer_serial'], $prev['serial'])
+                    && SameDiveMatcher::depthsAgree((float) $d['max_depth_m'], (float) $prev['depth'])
+                    && SameDiveMatcher::durationsAgree((int) $d['duration_seconds'], (int) $prev['duration'])) {
+                    $kind = 'companion'; $ofItemPos = $prev['pos']; $decision = 'attach';
+                    $d['_match'] = ['level' => 'strong', 'offset' => strtotime($prev['started_at']) - strtotime($d['started_at']), 'shape' => SameDiveMatcher::shapeSimilarity($d['profile'], $items[$prev['pos']]['payload']['profile'] ?? [])];
+                } elseif (!count($prev['profile']) && count($d['profile'])) {
+                    // Same dive, same computer twice: keep the copy with a
+                    // profile (or the earlier one), skip the other.
                     $items[$prev['pos']]['duplicate_kind'] = 'file';
                     $items[$prev['pos']]['duplicate_of_item_pos'] = $i;
                     $items[$prev['pos']]['decision'] = 'skip';
@@ -252,12 +268,24 @@ class LogbookImportController extends Controller
                     $kind = 'file'; $ofItemPos = $prev['pos'];
                 }
             }
-            // A computer's own file for a dive that was imported from a
-            // logbook: offer to upgrade it (deco, PPO2, cells) instead of
-            // skipping it as a duplicate.
+            // Another computer already logged this dive: attach this log to
+            // it (enrich) rather than add a twin. Clocks that agree are
+            // pre-ticked; clocks hours apart only when the profiles agree.
+            if ($kind === null && $d['computer_serial']) {
+                $m = SameDiveMatcher::find($userId, $d);
+                if ($m) {
+                    $kind = 'companion'; $ofDive = $m['dive']->id;
+                    $decision = ($m['level'] === 'strong' || ($m['shape'] ?? 0) >= 0.85) ? 'attach' : 'import';
+                    $d['_match'] = ['level' => $m['level'], 'offset' => $m['offset'], 'shape' => $m['shape']];
+                }
+            }
+            // A computer's own file for a dive imported from a logbook (same
+            // computer, or a logbook copy that named none): offer to upgrade
+            // it (deco, PPO2, cells) instead of skipping it as a duplicate.
             if (!empty($d['computer_native']) && $ofDive && in_array($kind, ['fingerprint', 'time'], true)) {
                 $match = $existing->firstWhere('id', $ofDive);
-                if ($match && !$match->trashed() && $match->source === 'uddf-import') $kind = 'upgrade';
+                if ($match && !$match->deleted_at && $match->source === 'uddf-import'
+                    && !SameDiveMatcher::differentComputers($d['computer_serial'], $match->computer_serial)) $kind = 'upgrade';
             }
             $hasProfile = count($d['profile']) > 1;
             if (!$hasProfile) $counts['no_profile']++;
@@ -278,10 +306,10 @@ class LogbookImportController extends Controller
                 'duplicate_kind' => $kind,
                 'duplicate_of_dive_id' => $ofDive,
                 'duplicate_of_item_pos' => $ofItemPos,
-                'decision' => $kind === 'upgrade' ? 'upgrade' : ($kind ? 'skip' : 'import'),
+                'decision' => $decision ?? ($kind === 'upgrade' ? 'upgrade' : ($kind ? 'skip' : 'import')),
                 'payload' => $d,
             ];
-            $prev = ['started_at' => $d['started_at'], 'profile' => $d['profile'], 'pos' => $i];
+            $prev = ['started_at' => $d['started_at'], 'profile' => $d['profile'], 'pos' => $i, 'serial' => $d['computer_serial'], 'depth' => $d['max_depth_m'], 'duration' => $d['duration_seconds']];
         }
 
         // Multi-row inserts in chunks (one statement per 40 dives, not one
@@ -367,7 +395,8 @@ class LogbookImportController extends Controller
             $import->delete();
             return redirect()->route('Logbook.import.index')->withErrors(['file' => 'That upload did not finish. Please upload the file again.']);
         }
-        $dups = $import->items()->whereNotNull('duplicate_kind')->where('duplicate_kind', '!=', 'upgrade')->with('duplicateOfDive')->get();
+        $dups = $import->items()->whereNotNull('duplicate_kind')->whereNotIn('duplicate_kind', ['upgrade', 'companion'])->with('duplicateOfDive')->get();
+        $companions = $import->items()->where('duplicate_kind', 'companion')->with('duplicateOfDive')->orderBy('position')->get();
         $upgrades = $import->items()->where('duplicate_kind', 'upgrade')->with('duplicateOfDive')->get(['id', 'dive_import_id', 'started_at', 'computer_model', 'max_depth_m', 'duration_seconds', 'decision', 'duplicate_of_dive_id']);
         $itemsById = $import->items()->get(['id', 'started_at', 'computer_model', 'has_profile'])->keyBy('id');
 
@@ -375,6 +404,7 @@ class LogbookImportController extends Controller
             'import' => $import,
             'dups' => $dups,
             'upgrades' => $upgrades,
+            'companions' => $companions,
             'itemsById' => $itemsById,
         ]);
     }
@@ -383,13 +413,18 @@ class LogbookImportController extends Controller
     {
         $import = $this->load($request, $id);
         $chosen = array_map('intval', (array) $request->input('import_ids', []));
-        $dupes = fn () => $import->items()->whereNotNull('duplicate_kind')->where('duplicate_kind', '!=', 'upgrade');
+        $dupes = fn () => $import->items()->whereNotNull('duplicate_kind')->whereNotIn('duplicate_kind', ['upgrade', 'companion']);
         $dupes()->update(['decision' => 'skip']);
         if ($chosen) $dupes()->whereIn('id', $chosen)->update(['decision' => 'import']);
         // Upgrades of already-imported dives: on unless unticked.
         $upgrades = array_map('intval', (array) $request->input('upgrade_ids', []));
         $import->items()->where('duplicate_kind', 'upgrade')->update(['decision' => 'skip']);
         if ($upgrades) $import->items()->where('duplicate_kind', 'upgrade')->whereIn('id', $upgrades)->update(['decision' => 'upgrade']);
+        // Same dive, another computer: ticked = attach to that dive (enrich
+        // it), unticked = keep as a dive of its own.
+        $attach = array_map('intval', (array) $request->input('attach_ids', []));
+        $import->items()->where('duplicate_kind', 'companion')->update(['decision' => 'import']);
+        if ($attach) $import->items()->where('duplicate_kind', 'companion')->whereIn('id', $attach)->update(['decision' => 'attach']);
 
         // Dive mode per DIVE (Pablo, 2026-10-16: "a Petrel 2 can be used as
         // OC too... this is for the general public"): only dives whose mode
@@ -569,7 +604,7 @@ class LogbookImportController extends Controller
     public function progress(Request $request, $id)
     {
         $import = $this->load($request, $id);
-        $remaining = $import->items()->whereIn('decision', ['import', 'upgrade'])->whereNull('imported_dive_id')->count();
+        $remaining = $import->items()->whereIn('decision', ['import', 'upgrade', 'attach'])->whereNull('imported_dive_id')->count();
         $done = $import->items()->whereNotNull('imported_dive_id')->count();
 
         return view('pages.logbook.import.progress', ['import' => $import, 'remaining' => $remaining, 'done' => $done]);
@@ -592,8 +627,11 @@ class LogbookImportController extends Controller
         $ownIds = UserSite::where('user_id', $user->id)->pluck('id')->flip();
         $created = 0; $skipped = 0;
 
-        $batch = $import->items()->whereIn('decision', ['import', 'upgrade'])->whereNull('imported_dive_id')->orderBy('position')->limit(self::RUN_BATCH)->get();
-        $upgraded = 0;
+        // Attachments last, so the dive they attach to (maybe from this same
+        // file) already exists.
+        $batch = $import->items()->whereIn('decision', ['import', 'upgrade', 'attach'])->whereNull('imported_dive_id')
+            ->orderByRaw("decision = 'attach'")->orderBy('position')->limit(self::RUN_BATCH)->get();
+        $upgraded = 0; $attached = 0;
         foreach ([$batch] as $items) {
                 foreach ($items as $item) {
                     $p = $item->payload;
@@ -618,8 +656,27 @@ class LogbookImportController extends Controller
                         }
                         continue;
                     }
+                    if ($item->decision === 'attach') {
+                        $target = null;
+                        if ($item->duplicate_of_dive_id) {
+                            $target = Dive::where('user_id', $user->id)->find($item->duplicate_of_dive_id);
+                        } elseif ($item->duplicate_of_item_id) {
+                            $tid = DiveImportItem::where('id', $item->duplicate_of_item_id)->value('imported_dive_id');
+                            $target = $tid ? Dive::where('user_id', $user->id)->find($tid) : null;
+                        }
+                        if ($target) {
+                            $facts = $p; unset($facts['conditions'], $facts['tags']);
+                            $log = $target->attachComputerLog($facts);
+                            $item->update(['imported_dive_id' => $log->id]);
+                            $attached++;
+                            continue;
+                        }
+                        // The dive it belonged with wasn't imported: this log
+                        // becomes the dive instead.
+                        $item->decision = 'import';
+                    }
                     // Last-second duplicate guard (the same file imported twice).
-                    if ($p['computer_serial'] && Dive::withTrashed()->where('user_id', $user->id)->where('computer_serial', $p['computer_serial'])->where('fingerprint', $p['fingerprint'])->exists()) {
+                    if ($p['computer_serial'] && Dive::withTrashed()->withoutGlobalScope('companions')->where('user_id', $user->id)->where('computer_serial', $p['computer_serial'])->where('fingerprint', $p['fingerprint'])->exists()) {
                         $item->update(['decision' => 'skip', 'duplicate_kind' => $item->duplicate_kind ?? 'fingerprint']);
                         $skipped++;
                         continue;
@@ -699,6 +756,7 @@ class LogbookImportController extends Controller
                             'dive_mode' => $p['dive_mode'] ?? 'open_circuit',
                             'gas_mixes' => $p['gas_mixes'] ?? null,
                             'tanks' => $p['tanks'] ?? null,
+                            'location' => $p['location'] ?? null,
                             'profile' => $p['profile'] ?? [],
                             'site_id' => $siteId,
                             'user_site_id' => $userSiteId,
@@ -717,13 +775,14 @@ class LogbookImportController extends Controller
         // Persist the site map (newly created own sites are now 'own')
         // and running totals, then either continue or finish.
         $summary = $import->summary ?? [];
-        $result = ($summary['result'] ?? []) + ['created' => 0, 'skipped' => 0, 'sites_created' => 0, 'upgraded' => 0];
+        $result = ($summary['result'] ?? []) + ['created' => 0, 'skipped' => 0, 'sites_created' => 0, 'upgraded' => 0, 'attached' => 0];
         $result['created'] += $created;
+        $result['attached'] += $attached;
         $result['upgraded'] += $upgraded;
         $result['sites_created'] += count($createdSites);
         $import->sites = $siteMap;
 
-        $remaining = $import->items()->whereIn('decision', ['import', 'upgrade'])->whereNull('imported_dive_id')->count();
+        $remaining = $import->items()->whereIn('decision', ['import', 'upgrade', 'attach'])->whereNull('imported_dive_id')->count();
         if ($remaining > 0) {
             $summary['result'] = $result;
             $import->summary = $summary;
@@ -737,7 +796,7 @@ class LogbookImportController extends Controller
         $import->status = 'done';
         $import->save();
 
-        return redirect()->route('Logbook')->with('status', 'Imported ' . $result['created'] . ' dive' . ($result['created'] === 1 ? '' : 's') . ($result['upgraded'] ? ', upgraded ' . $result['upgraded'] . ' with computer data' : '') . ' from ' . $import->filename . ($result['skipped'] ? ' (' . $result['skipped'] . ' skipped as duplicates)' : '') . ($result['sites_created'] ? ', created ' . $result['sites_created'] . ' of your own sites' : '') . '.');
+        return redirect()->route('Logbook')->with('status', 'Imported ' . $result['created'] . ' dive' . ($result['created'] === 1 ? '' : 's') . ($result['upgraded'] ? ', upgraded ' . $result['upgraded'] . ' with computer data' : '') . ($result['attached'] ? ', added ' . $result['attached'] . ' second-computer log' . ($result['attached'] === 1 ? '' : 's') . ' to dives you already had' : '') . ' from ' . $import->filename . ($result['skipped'] ? ' (' . $result['skipped'] . ' skipped as duplicates)' : '') . ($result['sites_created'] ? ', created ' . $result['sites_created'] . ' of your own sites' : '') . '.');
     }
 
     /** Catalog operator by name (case-insensitive), with its boats - cached per run. */

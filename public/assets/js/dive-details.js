@@ -422,6 +422,36 @@
         });
     }
 
+    // Other computers worn on this dive (Pablo, 2026-10-16 - the "dedup
+    // suite"): each one's depth as a thin dashed line, by time into the
+    // dive, so a Petrel and a Perdix can be compared on one chart even when
+    // their clocks were set to different hours. window.dhDiveCompanions =
+    // [{label, color, points: [[seconds, meters], ...]}].
+    var companions = window.dhDiveCompanions || [];
+    function companionSeries(ci, unit) {
+        var toFt = unit === 'imperial';
+        return (companions[ci].points || []).map(function (pt) {
+            return { x: toMinutes(pt[0]), y: -(toFt ? window.dhUnits.mToFt(pt[1]) : pt[1]) };
+        });
+    }
+    companions.forEach(function (c, ci) {
+        datasets.push({
+            key: 'computer' + ci,
+            label: c.label + ' depth',
+            data: companionSeries(ci, initialUnit),
+            borderColor: c.color,
+            backgroundColor: 'transparent',
+            borderWidth: 1.5,
+            borderDash: [5, 4],
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 3,
+            yAxisID: 'yDepth',
+            isCompanion: true,
+            companionIndex: ci,
+        });
+    });
+
     tanks.forEach(function (tank, i) {
         var hasData = profile.some(function (p) { return tankPressureAt(p, i) !== null; });
         if (!hasData) return;
@@ -572,6 +602,7 @@
             if (ds.isSac) chart.data.datasets[i].data = sacSeries(ds.tankIndex, unit);
             if (ds.isDecoStop) chart.data.datasets[i].data = decoStopSeries(unit);
             if (ds.isRmv) chart.data.datasets[i].data = rmvSeries(ds.tankIndex, unit);
+            if (ds.isCompanion) chart.data.datasets[i].data = companionSeries(ds.companionIndex, unit);
         });
         if (rmvAxisAdded) chart.options.scales.yRmv.title.text = unit === 'imperial' ? 'RMV (cuft/min)' : 'RMV (L/min)';
         chart.update();

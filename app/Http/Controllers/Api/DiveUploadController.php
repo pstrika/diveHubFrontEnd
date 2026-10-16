@@ -77,24 +77,45 @@ class DiveUploadController extends Controller
             $fingerprint = $diveData['fingerprint'] ?? null;
 
             DB::transaction(function () use ($data, $diveData, $user, $serial, $fingerprint, $i, &$created, &$duplicates, &$deleted) {
+                $facts = [
+                    'computer_family' => $data['computer']['family'],
+                    'computer_model' => $data['computer']['model'],
+                    'computer_serial' => $serial,
+                    'fingerprint' => $fingerprint,
+                    'dive_number' => $diveData['dive_number'] ?? null,
+                    'started_at' => $diveData['datetime'],
+                    'duration_seconds' => $diveData['duration_seconds'],
+                    'max_depth_m' => $diveData['max_depth_m'],
+                    'avg_depth_m' => $diveData['avg_depth_m'] ?? null,
+                    'surface_temp_c' => $diveData['surface_temp_c'] ?? null,
+                    'min_water_temp_c' => $diveData['min_water_temp_c'] ?? null,
+                    'max_water_temp_c' => $diveData['max_water_temp_c'] ?? null,
+                    'dive_mode' => $diveData['dive_mode'] ?? null,
+                    'gas_mixes' => $diveData['gas_mixes'] ?? null,
+                    'tanks' => $diveData['tanks'] ?? null,
+                    'deco_model' => $diveData['deco_model'] ?? null,
+                    'location' => $diveData['location'] ?? null,
+                    'sensor_data' => $diveData['sensor_data'] ?? null,
+                    'profile' => $diveData['profile'],
+                    'source' => 'ios-uploader',
+                ];
+
+                // 1. Exact identity: this computer's log of this dive, as a
+                //    dive or as a log attached to another computer's dive.
                 $existing = $fingerprint
-                    ? Dive::withTrashed()
+                    ? Dive::withTrashed()->withoutGlobalScope('companions')
                         ->where('user_id', $user->id)
                         ->where('computer_serial', $serial)
                         ->where('fingerprint', $fingerprint)
                         ->first()
                     : null;
 
-                // An imported (UDDF) copy of this same dive: matched by the
-                // exact key above for Shearwater, otherwise by start time
-                // (+-3 min) on the same computer, or on an import that named
-                // no computer. Never matched against another computer's
-                // synced dive - two computers on one dive stay two rows.
+                // 2. A logbook import of this dive from THIS computer (or one
+                //    that named no computer): matched by start time +-3 min.
+                //    computer-file too: a Garmin .FIT has no fingerprint the
+                //    app reproduces.
                 if (!$existing) {
                     $ts = strtotime($diveData['datetime']);
-                    // computer-file too: a Garmin .FIT import has no
-                    // fingerprint the app would reproduce, so the app's
-                    // later sync of that dive is matched by time instead.
                     $existing = Dive::where('user_id', $user->id)
                         ->whereIn('source', ['uddf-import', 'computer-file'])
                         ->whereBetween('started_at', [date('Y-m-d H:i:s', $ts - 180), date('Y-m-d H:i:s', $ts + 180)])
@@ -103,32 +124,21 @@ class DiveUploadController extends Controller
                         ->first();
                 }
 
+                if ($existing && $existing->isCompanion()) {
+                    // Already attached to a dive: that dive is the identity.
+                    $main = Dive::withTrashed()->find($existing->merged_into_id);
+                    $duplicates[] = ['index' => $i, 'uuid' => $main?->uuid ?? $existing->uuid, 'id' => $main?->id ?? $existing->id, 'dive_number' => $main?->dive_number, 'attached' => true];
+                    return;
+                }
+
                 if ($existing && !$existing->trashed() && in_array($existing->source, ['uddf-import', 'computer-file'], true)) {
                     // The computer wins (Pablo, 2026-10-16): its depth/time/
                     // mode/gases/tanks/PPO2 replace what the import guessed;
                     // everything the diver added - site, notes, buddies,
                     // tags, operator, conditions - stays. Gas pairings were
                     // keyed to the import's gas list, so they reset.
-                    $existing->replaceComputerFacts([
-                        'computer_family' => $data['computer']['family'],
-                        'computer_model' => $data['computer']['model'],
-                        'computer_serial' => $serial,
-                        'fingerprint' => $fingerprint,
-                        'started_at' => $diveData['datetime'],
-                        'duration_seconds' => $diveData['duration_seconds'],
-                        'max_depth_m' => $diveData['max_depth_m'],
-                        'avg_depth_m' => $diveData['avg_depth_m'] ?? null,
-                        'surface_temp_c' => $diveData['surface_temp_c'] ?? null,
-                        'min_water_temp_c' => $diveData['min_water_temp_c'] ?? null,
-                        'max_water_temp_c' => $diveData['max_water_temp_c'] ?? null,
-                        'dive_mode' => $diveData['dive_mode'] ?? null,
-                        'gas_mixes' => $diveData['gas_mixes'] ?? null,
-                        'tanks' => $diveData['tanks'] ?? null,
-                        'deco_model' => $diveData['deco_model'] ?? null,
-                        'location' => $diveData['location'] ?? null,
-                        'sensor_data' => $diveData['sensor_data'] ?? null,
-                        'profile' => $diveData['profile'],
-                    ], 'ios-uploader');
+                    $f = $facts; unset($f['source'], $f['dive_number']);
+                    $existing->replaceComputerFacts($f, 'ios-uploader');
                     // Reported as a duplicate (server uuid wins), flagged so
                     // the app knows to refetch the full record.
                     $duplicates[] = ['index' => $i, 'uuid' => $existing->uuid, 'id' => $existing->id, 'dive_number' => $existing->dive_number, 'replaced_import' => true];
@@ -145,6 +155,20 @@ class DiveUploadController extends Controller
                     // different one - this is what lets two phones that
                     // downloaded the same dive converge on one identity.
                     $duplicates[] = ['index' => $i, 'uuid' => $existing->uuid, 'id' => $existing->id, 'dive_number' => $existing->dive_number];
+                    return;
+                }
+
+                // 3. Another computer already logged this dive (Petrel and
+                //    Perdix on one dive). Clocks agree -> attached to that
+                //    dive, so it gains this computer's data (transmitter
+                //    pressure, a second profile) instead of a twin row.
+                $match = \App\Support\SameDiveMatcher::find($user->id, [
+                    'started_at' => $diveData['datetime'], 'duration_seconds' => $diveData['duration_seconds'],
+                    'max_depth_m' => $diveData['max_depth_m'], 'computer_serial' => $serial, 'profile' => $diveData['profile'],
+                ]);
+                if ($match && $match['level'] === 'strong') {
+                    $match['dive']->attachComputerLog($facts);
+                    $duplicates[] = ['index' => $i, 'uuid' => $match['dive']->uuid, 'id' => $match['dive']->id, 'dive_number' => $match['dive']->dive_number, 'attached' => true];
                     return;
                 }
 
@@ -174,6 +198,13 @@ class DiveUploadController extends Controller
                 ]);
 
                 DiveChange::record($user->id, $dive->uuid, 'created');
+
+                // 4. Looks like another computer's dive but the clocks are
+                //    hours apart: never assumed - the dive page asks.
+                if ($match) {
+                    $dive->conditions = ['same_dive_suggestion' => ['dive_id' => $match['dive']->id, 'offset' => $match['offset'], 'shape' => $match['shape']]];
+                    $dive->save();
+                }
 
                 $created[] = ['index' => $i, 'uuid' => $dive->uuid, 'id' => $dive->id, 'dive_number' => $dive->dive_number];
             });

@@ -20,6 +20,18 @@ class Dive extends Model
 
     protected static function booted()
     {
+        // A second (third...) computer's log of a dive is stored as its own
+        // row with merged_into_id pointing at the dive it belongs to, and
+        // stays out of every list, count, feed and lookup (Pablo,
+        // 2026-10-16: "implement the full dedup suite"). Merged halves of
+        // a split dive also carry merged_into_id but are soft-deleted, and
+        // those must stay visible to withTrashed() queries (the app's
+        // tombstone feed) - so only LIVE linked rows are hidden.
+        // Code that needs them: withoutGlobalScope('companions').
+        static::addGlobalScope('companions', function ($q) {
+            $t = $q->getModel()->getTable();
+            $q->where(fn ($w) => $w->whereNull($t . '.merged_into_id')->orWhereNotNull($t . '.deleted_at'));
+        });
         static::creating(function (Dive $dive) {
             $dive->uuid ??= (string) Str::uuid();
         });
@@ -262,8 +274,111 @@ class Dive extends Model
      */
     public function deleteAndLog(): void
     {
+        // The other computers' logs of this dive go with it; they stay as
+        // tombstones so a re-sync of any of them isn't resurrected either.
+        foreach ($this->companions()->get() as $c) $c->delete();
         $this->delete();
         DiveChange::record($this->user_id, $this->uuid, 'deleted');
+    }
+
+    /** Other computers' logs of this same dive (live only). */
+    public function companions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Dive::class, 'merged_into_id')->withoutGlobalScope('companions')->orderBy('id');
+    }
+
+    /** This row is another computer's log, attached to a dive. */
+    public function isCompanion(): bool
+    {
+        return $this->merged_into_id !== null && !$this->trashed();
+    }
+
+    /** The fact columns a computer owns (vs the diver's annotations). */
+    public const COMPUTER_FACTS = ['computer_family', 'computer_model', 'computer_serial', 'fingerprint', 'dive_number',
+        'started_at', 'duration_seconds', 'max_depth_m', 'avg_depth_m', 'surface_temp_c', 'min_water_temp_c',
+        'max_water_temp_c', 'dive_mode', 'gas_mixes', 'tanks', 'deco_model', 'location', 'sensor_data', 'profile', 'source'];
+
+    /**
+     * Attach another computer's log of this dive. Only computer facts are
+     * copied - the dive's site, notes, tags and conditions stay on this
+     * (main) row. Not logged to the change feed: phones only know the
+     * main dive.
+     */
+    public function attachComputerLog(array $facts): Dive
+    {
+        $row = ['user_id' => $this->user_id, 'merged_into_id' => $this->id];
+        foreach (self::COMPUTER_FACTS as $k) if (array_key_exists($k, $facts)) $row[$k] = $facts[$k];
+        $row['profile'] ??= [];
+        $row['dive_mode'] ??= 'open_circuit';
+        $c = new Dive();
+        $c->forceFill($row);
+        $c->save();
+        return $c;
+    }
+
+    /**
+     * Make a companion's computer the dive's main one: the two rows swap
+     * their computer facts (identity included, so each computer's re-sync
+     * still finds its own log); the diver's annotations stay here. Gas
+     * pairings were keyed to the old gas list, so they reset.
+     */
+    public function promoteCompanion(Dive $companion): void
+    {
+        if ($companion->merged_into_id !== $this->id) throw new \InvalidArgumentException('Not a log of this dive.');
+        \Illuminate\Support\Facades\DB::transaction(function () use ($companion) {
+            $mine = []; $theirs = [];
+            foreach (self::COMPUTER_FACTS as $k) { $mine[$k] = $this->getAttribute($k); $theirs[$k] = $companion->getAttribute($k); }
+            // Unique-ish identity (serial + fingerprint) moves in two steps.
+            $companion->forceFill(['fingerprint' => null])->save();
+            $this->forceFill($theirs);
+            $conditions = $this->conditions ?? [];
+            foreach (['gas_tank_choice', 'gas_role_choice', 'deleted_gas_mixes', 'gas_row_order', 'tank_config', 'gas_tank_size_choice'] as $k) unset($conditions[$k]);
+            $this->conditions = $conditions ?: null;
+            $this->save();
+            $companion->forceFill($mine)->save();
+            DiveChange::record($this->user_id, $this->uuid, 'updated');
+        });
+    }
+
+    /**
+     * Combine: $other (another computer's log of this same dive, until now
+     * a dive of its own) becomes an attached log of this one. What the
+     * diver wrote on $other that this dive lacks (site, notes, tags, each
+     * conditions field) is carried over first; $other's own attached logs
+     * move here too. Phones drop $other (change feed 'deleted'); a re-sync
+     * of its computer then finds the attached log and reports this dive.
+     */
+    public function absorb(Dive $other): void
+    {
+        if ($other->id === $this->id || $other->user_id !== $this->user_id) throw new \InvalidArgumentException('Not combinable.');
+        \Illuminate\Support\Facades\DB::transaction(function () use ($other) {
+            if (!$this->site_id && !$this->user_site_id) { $this->site_id = $other->site_id; $this->user_site_id = $other->user_site_id; }
+            if (!trim((string) $this->notes) && trim((string) $other->notes)) $this->notes = $other->notes;
+            $this->tags = array_values(array_unique(array_merge($this->tags ?? [], $other->tags ?? [])));
+            $c = $this->conditions ?? [];
+            foreach (($other->conditions ?? []) as $k => $v) {
+                if (str_starts_with($k, 'same_dive_')) continue;
+                if (!array_key_exists($k, $c) || $c[$k] === null || $c[$k] === '') $c[$k] = $v;
+            }
+            unset($c['same_dive_suggestion']);
+            $this->conditions = $c ?: null;
+            $this->save();
+            Dive::withoutGlobalScope('companions')->where('merged_into_id', $other->id)->whereNull('deleted_at')->update(['merged_into_id' => $this->id]);
+            $oc = $other->conditions ?? [];
+            unset($oc['same_dive_suggestion']);
+            $other->forceFill(['merged_into_id' => $this->id, 'conditions' => $oc ?: null])->save();
+            DiveChange::record($other->user_id, $other->uuid, 'deleted');
+            DiveChange::record($this->user_id, $this->uuid, 'updated');
+        });
+    }
+
+    /** Turn an attached log back into a dive of its own (a wrong match). */
+    public function detachCompanion(Dive $companion): Dive
+    {
+        if ($companion->merged_into_id !== $this->id) throw new \InvalidArgumentException('Not a log of this dive.');
+        $companion->forceFill(['merged_into_id' => null])->save();
+        DiveChange::record($companion->user_id, $companion->uuid, 'created');
+        return $companion;
     }
 
     public function isCcr(): bool

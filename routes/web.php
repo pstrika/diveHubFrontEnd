@@ -482,6 +482,12 @@ Route::middleware(['auth', 'logbook'])->group(function () {
     Route::get('Logbook/{id}/print', 'App\Http\Controllers\LogbookPrintController@show')->where('id', '[0-9]+')->name('DiveDetails.print');
     Route::get('Logbook/settings', 'App\Http\Controllers\LogbookController@settings')->name('Logbook.settings');
     Route::delete('Logbook/settings/all', 'App\Http\Controllers\LogbookController@destroyAll')->name('Logbook.destroyAll');
+    Route::get('Logbook/duplicates', 'App\Http\Controllers\LogbookController@duplicates')->name('Logbook.duplicates');
+    Route::post('Logbook/{id}/computers/{log}/main', 'App\Http\Controllers\LogbookController@computerMain')->where(['id' => '[0-9]+', 'log' => '[0-9]+'])->name('Logbook.computerMain');
+    Route::post('Logbook/{id}/computers/{log}/detach', 'App\Http\Controllers\LogbookController@computerDetach')->where(['id' => '[0-9]+', 'log' => '[0-9]+'])->name('Logbook.computerDetach');
+    Route::post('Logbook/{id}/combine/{other}', 'App\Http\Controllers\LogbookController@combine')->where(['id' => '[0-9]+', 'other' => '[0-9]+'])->name('Logbook.combine');
+    Route::post('Logbook/{id}/not-same/{other}', 'App\\Http\\Controllers\\LogbookController@dismissPair')->where(['id' => '[0-9]+', 'other' => '[0-9]+'])->name('Logbook.dismissPair');
+    Route::post('Logbook/{id}/same-dive/dismiss', 'App\Http\Controllers\LogbookController@dismissSameDive')->where('id', '[0-9]+')->name('Logbook.sameDiveDismiss');
     Route::get('Logbook/import', 'App\Http\Controllers\LogbookImportController@index')->name('Logbook.import.index');
     Route::post('Logbook/import', 'App\Http\Controllers\LogbookImportController@upload')->name('Logbook.import.upload');
     Route::post('Logbook/import/chunk', 'App\Http\Controllers\LogbookImportController@chunk')->name('Logbook.import.chunk');

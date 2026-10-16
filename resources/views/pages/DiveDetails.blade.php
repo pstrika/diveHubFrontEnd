@@ -41,7 +41,9 @@
     // per-tank pressure-drop timing; a diver's own confirmed pick in
     // conditions.gas_tank_map always wins over that suggestion.
     $diluentMix = collect($dive->gas_mixes ?? [])->firstWhere('usage', 2);
-    $tanks = $dive->tanks ?? [];
+    // Tanks from another computer on this dive when the main one had none
+    // with pressure (LogbookController::computerLogs).
+    $tanks = ($chartTanks ?? null) ?: ($dive->tanks ?? []);
     $gasMatch = \App\Support\GasTankMatcher::suggest($dive);
     $deletedGasMixes = $conditions['deleted_gas_mixes'] ?? [];
     // conditions.gas_tank_choice is keyed by GAS index (Pablo, 2026-10-15:
@@ -438,6 +440,22 @@
                             {{ session('status') }}
                         </div>
                     @endif
+                    {{-- A synced dive that looks like another computer's dive but
+                         whose clock was hours off: asked, never assumed (Pablo,
+                         2026-10-16: "we can always ask the user"). --}}
+                    @if (!empty($sameDive))
+                        @php $od = $sameDive['dive']; @endphp
+                        <div class="dh-same-dive-banner" role="status">
+                            <span class="material-icons-round" aria-hidden="true">devices</span>
+                            <span>
+                                Same dive as <a href="{{ route('DiveDetails', $od->id) }}">{{ $od->title() }}</a> on the {{ $od->computer_model ?: 'other computer' }}?
+                                <span class="dh-import-clock">clocks {{ \App\Support\SameDiveMatcher::offsetLabel($sameDive['offset']) }} apart</span>
+                                @if ($sameDive['shape'] !== null) <span class="text-xs text-secondary">profiles {{ (int) round($sameDive['shape'] * 100) }}% alike</span> @endif
+                            </span>
+                            <form method="POST" action="{{ route('Logbook.combine', [$od->id, $dive->id]) }}">@csrf<button type="submit" class="dh-btn dh-btn-primary">Combine</button></form>
+                            <form method="POST" action="{{ route('Logbook.sameDiveDismiss', $dive->id) }}">@csrf<button type="submit" class="dh-btn dh-btn-ghost-dark">Not the same dive</button></form>
+                        </div>
+                    @endif
                     @if (session('error'))
                         <div class="dh-logbook-flash" role="alert" style="background: rgba(211,47,47,.08); color: var(--dh-danger);">
                             <span class="material-icons-round" aria-hidden="true">error</span>
@@ -507,6 +525,33 @@
                          title) above Tags, its own small save, not gated
                          behind a pencil like the bigger cards - low-stakes,
                          quick-access data. --}}
+                    {{-- Every computer worn on this dive (Pablo, 2026-10-16: the "dedup
+                         suite"): the main one plus attached logs, each with Make main /
+                         Separate. Pressure from a transmitter on another computer is
+                         used on the chart when the main computer had none. --}}
+                    @if (!empty($companions))
+                        <div class="dh-dive-computers">
+                            <span class="dh-dive-computers-label">Computers</span>
+                            <span class="dh-computer-chip is-main" title="Main computer: its profile is the dive">{{ $dive->computer_model ?: 'Main computer' }} &middot; main</span>
+                            @foreach ($companions as $c)
+                                <span class="dh-computer-chip">
+                                    <span class="dh-computer-swatch" style="--swatch: {{ $c['color'] }};" aria-hidden="true"></span>
+                                    {{ $c['label'] }}
+                                    <details>
+                                        <summary aria-label="Options for {{ $c['label'] }}"><span class="material-icons-round" style="font-size: 16px;" aria-hidden="true">more_vert</span></summary>
+                                        <div class="dh-computer-menu">
+                                            <form method="POST" action="{{ route('Logbook.computerMain', [$dive->id, $c['id']]) }}">@csrf<button type="submit">Make {{ $c['label'] }} the main computer</button></form>
+                                            <form method="POST" action="{{ route('Logbook.computerDetach', [$dive->id, $c['id']]) }}" onsubmit="return confirm('Make the {{ $c['label'] }} log a separate dive?');">@csrf<button type="submit">Not this dive - separate it</button></form>
+                                        </div>
+                                    </details>
+                                </span>
+                            @endforeach
+                            @if (!empty($pressureFrom))
+                                <span class="dh-computer-note">Tank pressure from the {{ $pressureFrom }}</span>
+                            @endif
+                        </div>
+                    @endif
+
                     <div class="dh-dive-legend-row">
                         @if ($diveComputerLegend)
                             <div class="dh-dive-computer-legend">{{ $diveComputerLegend }}</div>
@@ -834,6 +879,9 @@
                             <button type="button" class="dh-chart-toggle" data-series="temperature" style="--toggle-color: {{ \App\Support\DiveChartPalette::TEMPERATURE }};">Temperature</button>
                             <button type="button" class="dh-chart-toggle" data-series="po2" style="--toggle-color: {{ \App\Support\DiveChartPalette::PPO2 }};">PPO2</button>
                             <button type="button" class="dh-chart-toggle" data-series="ndl" style="--toggle-color: {{ \App\Support\DiveChartPalette::NDL }};">NDL</button>
+                            @foreach (($companions ?? []) as $ci => $c)
+                                <button type="button" class="dh-chart-toggle is-active" data-series="computer{{ $ci }}" style="--toggle-color: {{ $c['color'] }};">{{ $c['label'] }}</button>
+                            @endforeach
                             @foreach ($tankLabels as $i => $label)
                                 <button type="button" class="dh-chart-toggle dh-chart-toggle-tank" data-series="tank{{ $i }}" style="--toggle-color: {{ $tankColors[$i]['pressure'] }};">{{ $label }}</button>
                                 {{-- Instant consumption rate (Pablo, 2026-10-15: "can you
@@ -1196,8 +1244,9 @@
         <script src="{{ asset('assets') }}/js/plugins/nouislider.js"></script>
         <link href="{{ asset('assets') }}/css/nouislider.css" rel="stylesheet">
         <script>
-            window.dhDiveProfile = @json($dive->profile);
-            window.dhDiveTanks = @json($dive->tanks);
+            window.dhDiveProfile = @json($chartProfile ?? $dive->profile);
+            window.dhDiveTanks = @json($tanks);
+            window.dhDiveCompanions = @json(collect($companions ?? [])->map(fn ($c) => ['label' => $c['label'], 'color' => $c['color'], 'points' => $c['points']])->values());
             window.dhDiveGasMixes = @json($dive->gas_mixes ?? []);
             window.dhDiveIsCcr = @json($isCcr);
             window.dhDiveChartColors = @json($chartColors);
