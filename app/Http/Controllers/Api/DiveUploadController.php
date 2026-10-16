@@ -106,13 +106,11 @@ class DiveUploadController extends Controller
                     // everything the diver added - site, notes, buddies,
                     // tags, operator, conditions - stays. Gas pairings were
                     // keyed to the import's gas list, so they reset.
-                    $conditions = $existing->conditions ?? [];
-                    foreach (['gas_tank_choice', 'gas_role_choice', 'deleted_gas_mixes', 'gas_row_order', 'tank_config', 'gas_tank_size_choice'] as $k) unset($conditions[$k]);
-                    $existing->fill([
+                    $existing->replaceComputerFacts([
                         'computer_family' => $data['computer']['family'],
                         'computer_model' => $data['computer']['model'],
                         'computer_serial' => $serial,
-                        'fingerprint' => $fingerprint ?? $existing->fingerprint,
+                        'fingerprint' => $fingerprint,
                         'started_at' => $diveData['datetime'],
                         'duration_seconds' => $diveData['duration_seconds'],
                         'max_depth_m' => $diveData['max_depth_m'],
@@ -124,14 +122,10 @@ class DiveUploadController extends Controller
                         'gas_mixes' => $diveData['gas_mixes'] ?? null,
                         'tanks' => $diveData['tanks'] ?? null,
                         'deco_model' => $diveData['deco_model'] ?? null,
-                        'location' => $diveData['location'] ?? $existing->location,
+                        'location' => $diveData['location'] ?? null,
                         'sensor_data' => $diveData['sensor_data'] ?? null,
                         'profile' => $diveData['profile'],
-                        'source' => 'ios-uploader',
-                    ]);
-                    $existing->conditions = $conditions ?: null;
-                    $existing->save();
-                    DiveChange::record($user->id, $existing->uuid, 'updated');
+                    ], 'ios-uploader');
                     // Reported as a duplicate (server uuid wins), flagged so
                     // the app knows to refetch the full record.
                     $duplicates[] = ['index' => $i, 'uuid' => $existing->uuid, 'id' => $existing->id, 'dive_number' => $existing->dive_number, 'replaced_import' => true];

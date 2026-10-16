@@ -197,6 +197,36 @@ class Dive extends Model
         return $this->source === 'uddf-import' && !$this->hasProfile();
     }
 
+    /**
+     * "The computer wins" (Pablo, 2026-10-16): replace an IMPORTED dive's
+     * computer-owned facts with a computer's own record of the same dive
+     * (app sync, or a computer-native export like Shearwater XML), keeping
+     * everything the diver added - site, notes, buddies, tags, operator,
+     * conditions - except the gas pairings, which were keyed to the old
+     * gas list. Logs 'updated' to the change feed.
+     *
+     * @param array $facts keys as in the dives table (computer_*, started_at,
+     *                     duration_seconds, depths, temps, dive_mode,
+     *                     gas_mixes, tanks, deco_model, sensor_data, profile)
+     */
+    public function replaceComputerFacts(array $facts, string $newSource): void
+    {
+        $conditions = $this->conditions ?? [];
+        foreach (['gas_tank_choice', 'gas_role_choice', 'deleted_gas_mixes', 'gas_row_order', 'tank_config', 'gas_tank_size_choice'] as $k) unset($conditions[$k]);
+        $keep = ['computer_family', 'computer_model', 'computer_serial', 'fingerprint', 'started_at', 'duration_seconds',
+            'max_depth_m', 'avg_depth_m', 'surface_temp_c', 'min_water_temp_c', 'max_water_temp_c', 'dive_mode',
+            'gas_mixes', 'tanks', 'deco_model', 'location', 'sensor_data', 'profile'];
+        foreach ($keep as $k) {
+            if (array_key_exists($k, $facts) && ($facts[$k] !== null || !in_array($k, ['fingerprint', 'location', 'computer_serial'], true))) {
+                $this->$k = $facts[$k];
+            }
+        }
+        $this->source = $newSource;
+        $this->conditions = $conditions ?: null;
+        $this->save();
+        DiveChange::record($this->user_id, $this->uuid, 'updated');
+    }
+
     /** OC/CC is the diver's call only when no computer sync recorded it. */
     public function modeEditable(): bool
     {

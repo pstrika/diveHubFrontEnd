@@ -115,6 +115,30 @@
         }
     });
 
+    // Setpoint switches (Pablo, 2026-10-16: "if you have the gas switches
+    // and the setpoint switches, also mark them in the chart as a badge") -
+    // any change in the sample's setpoint, from the computer sync or an
+    // import (MacDive setpoint events, Shearwater low/high).
+    var setpointSwitches = [];
+    var lastSp = null;
+    profile.forEach(function (p) {
+        if (p.setpoint === null || p.setpoint === undefined) return;
+        var sp = Math.round(p.setpoint * 100) / 100;
+        if (lastSp !== null && sp !== lastSp) setpointSwitches.push({ time: p.time, sp: sp });
+        lastSp = sp;
+    });
+
+    // "EAN50" / "Air" / "21/35" / "O2" - the mix itself on the badge.
+    function mixBadge(gi) {
+        var m = (gi !== null && gi !== undefined) ? gasMixes[gi] : null;
+        if (!m) return 'Gas ' + (gi !== null && gi !== undefined ? gi + 1 : '?');
+        var o2 = Math.round(m.oxygen || 0), he = Math.round(m.helium || 0);
+        if (he > 0) return o2 + '/' + he;
+        if (o2 >= 99) return 'O2';
+        if (o2 === 21) return 'Air';
+        return 'EAN' + o2;
+    }
+
     function toMinutes(seconds) {
         return seconds / 60;
     }
@@ -263,11 +287,30 @@
             borderDash: [4, 4],
             label: {
                 display: true,
-                content: 'Gas ' + (g.gas !== null && g.gas !== undefined ? (g.gas + 1) : '?'),
+                content: mixBadge(g.gas),
                 position: 'start',
                 backgroundColor: 'rgba(255, 193, 7, 0.85)',
                 color: '#1a1a1a',
                 font: { size: 10 },
+            },
+        };
+    });
+
+    setpointSwitches.forEach(function (s, i) {
+        gasAnnotations['spSwitch' + i] = {
+            type: 'line',
+            xMin: toMinutes(s.time),
+            xMax: toMinutes(s.time),
+            borderColor: 'rgba(79, 195, 247, 0.6)',
+            borderWidth: 1,
+            borderDash: [2, 4],
+            label: {
+                display: true,
+                content: 'SP ' + s.sp.toFixed(1),
+                position: 'end',
+                backgroundColor: 'rgba(79, 195, 247, 0.9)',
+                color: '#0b2a3a',
+                font: { size: 10, weight: 'bold' },
             },
         };
     });
@@ -429,7 +472,7 @@
             interaction: { mode: 'nearest', intersect: false, axis: 'x' },
             plugins: {
                 legend: { display: false },
-                annotation: { annotations: gasSwitches.length ? gasAnnotations : {} },
+                annotation: { annotations: (gasSwitches.length || setpointSwitches.length) ? gasAnnotations : {} },
                 tooltip: {
                     mode: 'nearest',
                     intersect: false,

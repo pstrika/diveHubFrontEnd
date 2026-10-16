@@ -17,7 +17,7 @@
             <div class="row">
                 <div class="col-lg-9 col-12 m-auto pt-4">
 
-                    <div class="dh-import-steps"><span class="is-active">1 Review</span><span>2 Sites</span><span>3 Done</span></div>
+                    <x-import-progress :step="2" />
 
                     <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
                         <div class="card-body">
@@ -69,8 +69,8 @@
                                         <div class="input-group input-group-outline dh-dive-ig dh-ig-compact is-filled"><label class="form-label" for="modeFilterFrom">From</label><input type="date" class="form-control" id="modeFilterFrom"></div>
                                         <div class="input-group input-group-outline dh-dive-ig dh-ig-compact is-filled"><label class="form-label" for="modeFilterTo">To</label><input type="date" class="form-control" id="modeFilterTo"></div>
                                         <div class="input-group input-group-outline dh-dive-ig dh-ig-compact"><label class="form-label" for="modeFilterGas">Gas, e.g. 10/55</label><input type="text" class="form-control" id="modeFilterGas"></div>
-                                        <button type="button" class="dh-btn dh-btn-ghost-dark" id="modeTickVisible">Tick shown</button>
-                                        <button type="button" class="dh-btn dh-btn-ghost-dark" id="modeUntickVisible">Untick shown</button>
+                                        <button type="button" class="dh-btn dh-btn-ghost-dark" id="modeTickVisible">Select all</button>
+                                        <button type="button" class="dh-btn dh-btn-ghost-dark" id="modeUntickVisible">Unselect all</button>
                                         <span class="text-sm text-secondary" id="modeCount"></span>
                                     </div>
                                     <div class="dh-import-mode-list" id="modeList">
@@ -90,6 +90,29 @@
                                 @endif
                             </div>
                         </div>
+
+                        @if ($upgrades->isNotEmpty())
+                            <div class="card p-0 position-relative mt-3 z-index-2 mb-4 dh-import-group is-high">
+                                <div class="card-body">
+                                    <h3 class="h5 mb-1">Upgrade {{ $upgrades->count() }} {{ $upgrades->count() === 1 ? 'dive' : 'dives' }} you already have</h3>
+                                    <p class="text-sm text-secondary">These dives are in your logbook from an earlier import. This file is the dive computer's own record of them, so it replaces the profile, deco stops, PPO2, mode and gases - your site, notes, buddies, operator and tags stay. Untick any you'd rather leave alone.</p>
+                                    <div class="dh-import-list">
+                                        @foreach ($upgrades as $u)
+                                            <label class="dh-import-row">
+                                                <input type="checkbox" name="upgrade_ids[]" value="{{ $u->id }}" @checked($u->decision === 'upgrade')>
+                                                <div class="dh-import-row-main">
+                                                    <strong>{{ $u->started_at->format('M j, Y g:i A') }}</strong>
+                                                    &middot; {{ $u->computer_model }} &middot; <span data-unit-value="depth" data-metric="{{ $u->max_depth_m }}"></span> &middot; {{ gmdate('H:i', $u->duration_seconds) }}
+                                                    @if ($u->duplicateOfDive)
+                                                        <div class="text-sm text-secondary">&rarr; <a href="{{ route('DiveDetails', $u->duplicateOfDive->id) }}" target="_blank" rel="noopener">{{ $u->duplicateOfDive->title() }}</a></div>
+                                                    @endif
+                                                </div>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
 
                         @if ($dups->isEmpty())
                             <div class="card p-0 position-relative mt-3 z-index-2 mb-4">

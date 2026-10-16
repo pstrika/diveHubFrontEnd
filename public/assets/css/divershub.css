@@ -4511,3 +4511,35 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
 .dh-import-site-choices label:has(input:checked) { background: var(--dh-ink); border-color: var(--dh-ink); color: #fff; }
 .dh-import-site-choices label input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; }
 .dh-import-mode-filters .dh-select-btn { height: 40px; }
+/* Import wizard progress bar (replaces the step pills) */
+.dh-wizard-progress { margin: 0 0 18px; }
+.dh-wizard-progress-track { height: 8px; border-radius: 999px; background: rgba(11, 42, 58, .1); overflow: hidden; }
+.dh-wizard-progress-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--dh-sea), #4fc3f7); transition: width .4s ease; }
+.dh-wizard-progress-steps { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 8px; font-size: .78rem; font-weight: 700; color: var(--dh-muted); }
+.dh-wizard-progress-steps > span { display: flex; align-items: center; gap: 6px; }
+.dh-wizard-progress-steps > span:nth-child(n+2) { justify-content: center; }
+.dh-wizard-progress-steps > span:last-child { justify-content: flex-end; }
+.dh-wizard-progress-steps .is-active { color: var(--dh-ink); }
+.dh-wizard-progress-steps .is-done { color: var(--dh-sea); }
+.dh-wizard-progress-dot { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: .7rem; background: rgba(11,42,58,.1); color: var(--dh-muted); }
+.dh-wizard-progress-steps .is-active .dh-wizard-progress-dot { background: var(--dh-ink); color: #fff; }
+.dh-wizard-progress-steps .is-done .dh-wizard-progress-dot { background: var(--dh-sea); color: #fff; }
+.dh-wizard-progress-dot .material-icons-round { font-size: 14px; }
+.dh-import-group.is-high { border-left: 4px solid var(--dh-good, #2e7d32); }
+.dh-import-group.is-check { border-left: 4px solid #f2a541; }
+.dh-import-group.is-none { border-left: 4px solid var(--dh-line); }
+.dh-import-group h3 .material-icons-round { font-size: 20px; color: var(--dh-sea); }
+/* Import dropzone */
+.dh-dropzone { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 34px 20px; border: 2px dashed var(--dh-line); border-radius: 16px; background: rgba(14, 124, 158, .03); cursor: pointer; transition: border-color .15s, background .15s; margin: 0; }
+.dh-dropzone:hover, .dh-dropzone.is-over { border-color: var(--dh-sea); background: rgba(14, 124, 158, .08); }
+.dh-dropzone.has-files { border-style: solid; border-color: var(--dh-sea); }
+.dh-dropzone-icon { font-size: 42px; color: var(--dh-sea); }
+.dh-dropzone-files { font-weight: 700; color: var(--dh-ink); }
+.dh-upload-progress { margin-top: 14px; }
+.dh-wizard-progress-fill.is-working { background-size: 40px 40px; background-image: linear-gradient(45deg, rgba(255,255,255,.25) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.25) 50%, rgba(255,255,255,.25) 75%, transparent 75%, transparent), linear-gradient(90deg, var(--dh-sea), #4fc3f7); animation: dh-progress-stripes 1s linear infinite; }
+@keyframes dh-progress-stripes { from { background-position: 40px 0, 0 0; } to { background-position: 0 0, 0 0; } }
+@media (prefers-reduced-motion: reduce) { .dh-wizard-progress-fill.is-working { animation: none; } }
+.dh-import-help h4 { font-size: .95rem; font-weight: 800; margin: 14px 0 4px; color: var(--dh-ink); }
+.dh-import-help h4:first-of-type { margin-top: 0; }
+.dh-import-help p { font-size: .9rem; margin-bottom: 6px; }
+.dh-import-badge { font-size: .62rem; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 999px; background: var(--dh-good, #2e7d32); color: #fff; vertical-align: middle; }

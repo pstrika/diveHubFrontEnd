@@ -56,38 +56,61 @@ class LogbookImportController extends Controller
 
     public function upload(Request $request)
     {
+        // One logbook file, or many single-dive files at once (Pablo,
+        // 2026-10-16: Shearwater Cloud exports one XML per dive).
         $request->validate([
-            'file' => 'required|file|max:140000', // KB
+            'files' => 'required_without:file|array|max:2000',
+            'files.*' => 'file|max:140000', // KB
+            'file' => 'required_without:files|file|max:140000',
         ]);
         @set_time_limit(900);
         @ini_set('memory_limit', '1024M');
 
-        $file = $request->file('file');
-        $name = $file->getClientOriginalName();
-        $ext = strtolower($file->getClientOriginalExtension());
-        if (!in_array($ext, ['uddf', 'xml'], true)) {
-            return back()->withErrors(['file' => 'Please upload a MacDive XML (.xml) or UDDF (.uddf) export.']);
+        $uploads = $request->file('files') ?: [$request->file('file')];
+        $logbooks = []; $shearwater = []; $names = [];
+        foreach ($uploads as $file) {
+            $ext = strtolower($file->getClientOriginalExtension());
+            if (!in_array($ext, ['uddf', 'xml'], true)) {
+                return $this->uploadError($request, $file->getClientOriginalName() . ' is not a .xml or .uddf export.');
+            }
+            $names[] = $file->getClientOriginalName();
+            if (\App\Support\ShearwaterXmlParser::sniff($file->getRealPath())) {
+                $shearwater[] = ['path' => $file->getRealPath(), 'name' => $file->getClientOriginalName()];
+            } else {
+                $logbooks[] = $file;
+            }
         }
 
-        // Two formats, sniffed from the file itself: MacDive's own XML (the
-        // richer one - PPO2, setpoints, operator, conditions, tanks) or UDDF.
-        $isMacDive = \App\Support\MacDiveXmlParser::sniff($file->getRealPath());
+        // Sniffed from each file's content: MacDive XML (richest logbook),
+        // UDDF (any app), or Shearwater per-dive XML (the computer's log).
+        $dives = []; $sites = []; $generators = [];
         try {
-            $parsed = $isMacDive
-                ? \App\Support\MacDiveXmlParser::parse($file->getRealPath())
-                : UddfParser::parse($file->getRealPath());
+            foreach ($logbooks as $file) {
+                $isMacDive = \App\Support\MacDiveXmlParser::sniff($file->getRealPath());
+                $parsed = $isMacDive ? \App\Support\MacDiveXmlParser::parse($file->getRealPath()) : UddfParser::parse($file->getRealPath());
+                array_push($dives, ...$parsed->dives);
+                $sites += $parsed->sites;
+                $generators[] = $parsed->generator ?: 'UDDF';
+            }
+            if ($shearwater) {
+                $parsed = \App\Support\ShearwaterXmlParser::parseMany($shearwater);
+                array_push($dives, ...$parsed->dives);
+                $generators[] = $parsed->generator;
+            }
         } catch (\Throwable $e) {
-            return back()->withErrors(['file' => 'That file could not be read as ' . ($isMacDive ? 'MacDive XML' : 'UDDF') . ': ' . $e->getMessage()]);
+            return $this->uploadError($request, 'A file could not be read: ' . $e->getMessage());
         }
-        if (!count($parsed->dives)) {
-            return back()->withErrors(['file' => 'No dives found in that file.']);
+        if (!count($dives)) {
+            return $this->uploadError($request, 'No dives found in ' . (count($names) === 1 ? 'that file.' : 'those files.'));
         }
+        $name = count($names) === 1 ? $names[0] : count($names) . ' files';
+        $parsed = (object) ['dives' => $dives, 'sites' => $sites, 'generator' => implode(' + ', array_unique($generators))];
 
         $userId = $request->user()->id;
 
         // Existing dives (tombstones too) for duplicate detection.
         $existing = Dive::withTrashed()->where('user_id', $userId)
-            ->get(['id', 'computer_serial', 'fingerprint', 'started_at', 'deleted_at', 'duration_seconds', 'max_depth_m']);
+            ->get(['id', 'computer_serial', 'fingerprint', 'started_at', 'deleted_at', 'duration_seconds', 'max_depth_m', 'source']);
         $byKey = [];
         $byTime = [];
         foreach ($existing as $e) {
@@ -107,7 +130,7 @@ class LogbookImportController extends Controller
         $dives = $parsed->dives;
         usort($dives, fn ($a, $b) => strcmp($a['started_at'], $b['started_at']));
 
-        $counts = ['total' => count($dives), 'new' => 0, 'fingerprint' => 0, 'time' => 0, 'file' => 0, 'no_profile' => 0];
+        $counts = ['total' => count($dives), 'new' => 0, 'fingerprint' => 0, 'time' => 0, 'file' => 0, 'upgrade' => 0, 'no_profile' => 0];
         $computers = [];
         $items = [];
         $prev = null;
@@ -134,6 +157,13 @@ class LogbookImportController extends Controller
                     $kind = 'file'; $ofItemPos = $prev['pos'];
                 }
             }
+            // A computer's own file for a dive that was imported from a
+            // logbook: offer to upgrade it (deco, PPO2, cells) instead of
+            // skipping it as a duplicate.
+            if (!empty($d['computer_native']) && $ofDive && in_array($kind, ['fingerprint', 'time'], true)) {
+                $match = $existing->firstWhere('id', $ofDive);
+                if ($match && !$match->trashed() && $match->source === 'uddf-import') $kind = 'upgrade';
+            }
             $hasProfile = count($d['profile']) > 1;
             if (!$hasProfile) $counts['no_profile']++;
             if ($kind) $counts[$kind]++; else $counts['new']++;
@@ -153,7 +183,7 @@ class LogbookImportController extends Controller
                 'duplicate_kind' => $kind,
                 'duplicate_of_dive_id' => $ofDive,
                 'duplicate_of_item_pos' => $ofItemPos,
-                'decision' => $kind ? 'skip' : 'import',
+                'decision' => $kind === 'upgrade' ? 'upgrade' : ($kind ? 'skip' : 'import'),
                 'payload' => $d,
             ];
             $prev = ['started_at' => $d['started_at'], 'profile' => $d['profile'], 'pos' => $i];
@@ -216,7 +246,16 @@ class LogbookImportController extends Controller
         ];
         $import->save();
 
-        return redirect()->route('Logbook.import.review', $import->id);
+        $next = route('Logbook.import.review', $import->id);
+        // The dropzone uploads with XHR (for its progress bar) and follows this.
+        return $request->expectsJson() ? response()->json(['redirect' => $next]) : redirect($next);
+    }
+
+    private function uploadError(Request $request, string $message)
+    {
+        return $request->expectsJson()
+            ? response()->json(['message' => $message], 422)
+            : back()->withErrors(['file' => $message]);
     }
 
     private function load(Request $request, $id): DiveImport
@@ -233,12 +272,14 @@ class LogbookImportController extends Controller
             $import->delete();
             return redirect()->route('Logbook.import.index')->withErrors(['file' => 'That upload did not finish. Please upload the file again.']);
         }
-        $dups = $import->items()->whereNotNull('duplicate_kind')->with('duplicateOfDive')->get();
+        $dups = $import->items()->whereNotNull('duplicate_kind')->where('duplicate_kind', '!=', 'upgrade')->with('duplicateOfDive')->get();
+        $upgrades = $import->items()->where('duplicate_kind', 'upgrade')->with('duplicateOfDive')->get(['id', 'dive_import_id', 'started_at', 'computer_model', 'max_depth_m', 'duration_seconds', 'decision', 'duplicate_of_dive_id']);
         $itemsById = $import->items()->get(['id', 'started_at', 'computer_model', 'has_profile'])->keyBy('id');
 
         return view('pages.logbook.import.review', [
             'import' => $import,
             'dups' => $dups,
+            'upgrades' => $upgrades,
             'itemsById' => $itemsById,
         ]);
     }
@@ -247,10 +288,13 @@ class LogbookImportController extends Controller
     {
         $import = $this->load($request, $id);
         $chosen = array_map('intval', (array) $request->input('import_ids', []));
-        $import->items()->whereNotNull('duplicate_kind')->update(['decision' => 'skip']);
-        if ($chosen) {
-            $import->items()->whereNotNull('duplicate_kind')->whereIn('id', $chosen)->update(['decision' => 'import']);
-        }
+        $dupes = fn () => $import->items()->whereNotNull('duplicate_kind')->where('duplicate_kind', '!=', 'upgrade');
+        $dupes()->update(['decision' => 'skip']);
+        if ($chosen) $dupes()->whereIn('id', $chosen)->update(['decision' => 'import']);
+        // Upgrades of already-imported dives: on unless unticked.
+        $upgrades = array_map('intval', (array) $request->input('upgrade_ids', []));
+        $import->items()->where('duplicate_kind', 'upgrade')->update(['decision' => 'skip']);
+        if ($upgrades) $import->items()->where('duplicate_kind', 'upgrade')->whereIn('id', $upgrades)->update(['decision' => 'upgrade']);
 
         // Dive mode per DIVE (Pablo, 2026-10-16: "a Petrel 2 can be used as
         // OC too... this is for the general public"): only dives whose mode
@@ -314,38 +358,68 @@ class LogbookImportController extends Controller
         ]);
     }
 
-    /** Best match for a file site: ['kind' => catalog|own|create, 'id' => ?, 'why' => text]. */
+    /** Countries the Divers Hub catalog covers (all Florida today). */
+    private const CATALOG_COUNTRIES = ['us', 'usa', 'u.s.', 'u.s.a.', 'united states', 'united states of america', 'florida'];
+
+    private static function nameScore(string $a, string $b): int
+    {
+        $a = mb_strtolower(trim(preg_replace('/\b(reef|wreck|ledge|site|the)\b/i', '', $a)));
+        $b = mb_strtolower(trim(preg_replace('/\b(reef|wreck|ledge|site|the)\b/i', '', $b)));
+        if ($a === '' || $b === '') return 0;
+        if ($a === $b) return 100;
+        if (mb_strlen($a) >= 4 && mb_strlen($b) >= 4 && (str_contains($a, $b) || str_contains($b, $a))) return 90;
+        similar_text($a, $b, $pct);
+        return (int) $pct;
+    }
+
+    /**
+     * Best match for a file site (Pablo, 2026-10-16):
+     *  - a different country than the catalog's -> never a Divers Hub site,
+     *    whatever the name says;
+     *  - high: name matches (same or partial) AND within 2 km;
+     *  - check: within 1 km but another name, same name 2-25 km away, or
+     *    same name where either side has no GPS;
+     *  - none: create it as the diver's own site.
+     * One of the diver's own sites with the same name always wins (high).
+     *
+     * @return array{kind:string, id:?int, confidence:string, why:string, distance_m:?int, weak?:bool}
+     */
     public static function suggest(array $s, $catalog, $own): array
     {
-        $name = mb_strtolower(trim($s['name'] ?? ''));
-        // The diver's own site with the same name wins - they made it on purpose.
+        $name = trim($s['name'] ?? '');
         foreach ($own as $o) {
-            if (mb_strtolower($o->name) === $name) return ['kind' => 'own', 'id' => $o->id, 'why' => 'Same name as one of your sites'];
-        }
-        $best = null; $bestKm = null;
-        if (($s['latitude'] ?? null) !== null && ($s['longitude'] ?? null) !== null) {
-            foreach ($catalog as $c) {
-                if ($c['lat'] === null || $c['lon'] === null) continue;
-                $km = self::km($s['latitude'], $s['longitude'], $c['lat'], $c['lon']);
-                if ($bestKm === null || $km < $bestKm) { $best = $c; $bestKm = $km; }
+            if (mb_strtolower($o->name) === mb_strtolower($name)) {
+                return ['kind' => 'own', 'id' => $o->id, 'confidence' => 'high', 'why' => 'Same name as one of your sites', 'distance_m' => null];
             }
         }
-        if ($best && $bestKm <= 1.0) {
-            return ['kind' => 'catalog', 'id' => $best['id'], 'why' => number_format($bestKm * 1000) . ' m from ' . $best['name']];
+        $country = mb_strtolower(trim($s['country'] ?? ''));
+        if ($country !== '' && !in_array($country, self::CATALOG_COUNTRIES, true)) {
+            return ['kind' => 'create', 'id' => null, 'confidence' => 'none', 'why' => 'Divers Hub has no sites in ' . trim($s['country']) . ' yet', 'distance_m' => null];
         }
+
+        $hasGps = ($s['latitude'] ?? null) !== null && ($s['longitude'] ?? null) !== null;
+        $nearest = null; $nearestM = null; $bestName = null; $bestNameScore = 0; $bestNameM = null;
         foreach ($catalog as $c) {
-            $cn = mb_strtolower($c['name']);
-            if ($cn === $name) return ['kind' => 'catalog', 'id' => $c['id'], 'why' => 'Same name'];
-        }
-        foreach ($catalog as $c) {
-            $cn = mb_strtolower($c['name']);
-            if (mb_strlen($name) >= 5 && (str_contains($cn, $name) || str_contains($name, $cn))) {
-                return ['kind' => 'catalog', 'id' => $c['id'], 'why' => 'Name looks like ' . $c['name'], 'weak' => true];
+            $dm = ($hasGps && $c['lat'] !== null && $c['lon'] !== null) ? self::km($s['latitude'], $s['longitude'], $c['lat'], $c['lon']) * 1000 : null;
+            if ($dm !== null && ($nearestM === null || $dm < $nearestM)) { $nearest = $c; $nearestM = $dm; }
+            $score = self::nameScore($name, $c['name']);
+            if ($score >= 85 && ($score > $bestNameScore || ($score === $bestNameScore && $dm !== null && ($bestNameM === null || $dm < $bestNameM)))) {
+                $bestName = $c; $bestNameScore = $score; $bestNameM = $dm;
             }
-            similar_text($cn, $name, $pct);
-            if ($pct >= 88) return ['kind' => 'catalog', 'id' => $c['id'], 'why' => 'Name looks like ' . $c['name'], 'weak' => true];
         }
-        return ['kind' => 'create', 'id' => null, 'why' => $best ? 'Nearest catalog site is ' . number_format($bestKm, 1) . ' km away (' . $best['name'] . ')' : 'Nothing close in the catalog'];
+
+        if ($bestName && $bestNameM !== null && $bestNameM <= 2000) {
+            return ['kind' => 'catalog', 'id' => $bestName['id'], 'confidence' => 'high', 'why' => ($bestNameScore === 100 ? 'Same name' : 'Name matches ' . $bestName['name']) . ', ', 'distance_m' => (int) round($bestNameM)];
+        }
+        if ($nearest && $nearestM <= 1000) {
+            return ['kind' => 'catalog', 'id' => $nearest['id'], 'confidence' => 'check', 'why' => 'Different name, but ' . $nearest['name'] . ' is ', 'distance_m' => (int) round($nearestM), 'suffix' => ' away'];
+        }
+        if ($bestName && ($bestNameM === null || $bestNameM <= 25000)) {
+            return ['kind' => 'catalog', 'id' => $bestName['id'], 'confidence' => 'check',
+                'why' => 'Name matches ' . $bestName['name'] . ($bestNameM === null ? ' (no GPS to compare)' : ', but '), 'distance_m' => $bestNameM !== null ? (int) round($bestNameM) : null, 'suffix' => $bestNameM !== null ? ' apart' : ''];
+        }
+        return ['kind' => 'create', 'id' => null, 'confidence' => 'none',
+            'why' => $nearest ? 'Nearest Divers Hub site, ' . $nearest['name'] . ', is ' : 'Nothing close in Divers Hub', 'distance_m' => $nearest ? (int) round($nearestM) : null, 'suffix' => $nearest ? ' away' : ''];
     }
 
     private static function km(float $lat1, float $lon1, float $lat2, float $lon2): float
@@ -383,7 +457,7 @@ class LogbookImportController extends Controller
     public function progress(Request $request, $id)
     {
         $import = $this->load($request, $id);
-        $remaining = $import->items()->where('decision', 'import')->whereNull('imported_dive_id')->count();
+        $remaining = $import->items()->whereIn('decision', ['import', 'upgrade'])->whereNull('imported_dive_id')->count();
         $done = $import->items()->whereNotNull('imported_dive_id')->count();
 
         return view('pages.logbook.import.progress', ['import' => $import, 'remaining' => $remaining, 'done' => $done]);
@@ -406,10 +480,32 @@ class LogbookImportController extends Controller
         $ownIds = UserSite::where('user_id', $user->id)->pluck('id')->flip();
         $created = 0; $skipped = 0;
 
-        $batch = $import->items()->where('decision', 'import')->whereNull('imported_dive_id')->orderBy('position')->limit(self::RUN_BATCH)->get();
+        $batch = $import->items()->whereIn('decision', ['import', 'upgrade'])->whereNull('imported_dive_id')->orderBy('position')->limit(self::RUN_BATCH)->get();
+        $upgraded = 0;
         foreach ([$batch] as $items) {
                 foreach ($items as $item) {
                     $p = $item->payload;
+                    if ($item->decision === 'upgrade') {
+                        // The computer's file replaces what the logbook guessed.
+                        $target = Dive::where('user_id', $user->id)->find($item->duplicate_of_dive_id);
+                        if ($target) {
+                            // The file knows low/high but not the values; the
+                            // logbook copy may (MacDive setpoint events).
+                            $known = collect($target->profile ?? [])->pluck('setpoint')->filter(fn ($v) => $v > 0)->map(fn ($v) => round($v, 2))->unique()->sort()->values();
+                            if ($known->count() >= 2) {
+                                foreach ($p['profile'] as &$smp) {
+                                    if (isset($smp['setpointLevel'])) $smp['setpoint'] = $smp['setpointLevel'] === 'high' ? $known->last() : $known->first();
+                                }
+                                unset($smp);
+                            }
+                            $target->replaceComputerFacts($p, $p['source'] ?? 'computer-file');
+                            $item->update(['imported_dive_id' => $target->id]);
+                            $upgraded++;
+                        } else {
+                            $item->update(['decision' => 'skip']);
+                        }
+                        continue;
+                    }
                     // Last-second duplicate guard (the same file imported twice).
                     if ($p['computer_serial'] && Dive::withTrashed()->where('user_id', $user->id)->where('computer_serial', $p['computer_serial'])->where('fingerprint', $p['fingerprint'])->exists()) {
                         $item->update(['decision' => 'skip', 'duplicate_kind' => $item->duplicate_kind ?? 'fingerprint']);
@@ -454,6 +550,19 @@ class LogbookImportController extends Controller
                     $conditions = $p['conditions'] ?? [];
                     if ($siteName) $conditions['site_name_custom'] = $siteName;
                     if (!empty($p['buddies'])) $conditions['buddies'] = implode(', ', $p['buddies']);
+                    // A known operator that runs a single boat: that's the
+                    // boat (Pablo, 2026-10-16), with its picture and logo.
+                    if (!empty($conditions['operator_name'])) {
+                        $op = $this->catalogOperator($conditions['operator_name']);
+                        if ($op) {
+                            if ($op['logo']) $conditions['operator_logo'] ??= $op['logo'];
+                            $conditions['operator_url'] ??= $op['url'];
+                            if (empty($conditions['boat_name']) && count($op['boats']) === 1) {
+                                $conditions['boat_name'] = $op['boats'][0]['name'];
+                                if ($op['boats'][0]['pic']) $conditions['boat_pic'] = $op['boats'][0]['pic'];
+                            }
+                        }
+                    }
                     if (!empty($p['rating'])) $conditions['rating'] = (int) $p['rating'];
 
                     $dive = DB::transaction(function () use ($p, $user, $siteId, $userSiteId, $conditions) {
@@ -483,7 +592,7 @@ class LogbookImportController extends Controller
                             'user_site_id' => $userSiteId,
                             'notes' => $p['notes'] ?? null,
                             'conditions' => $conditions ?: null,
-                            'source' => 'uddf-import',
+                            'source' => $p['source'] ?? 'uddf-import',
                         ]);
                         DiveChange::record($user->id, $dive->uuid, 'created');
                         return $dive;
@@ -496,12 +605,13 @@ class LogbookImportController extends Controller
         // Persist the site map (newly created own sites are now 'own')
         // and running totals, then either continue or finish.
         $summary = $import->summary ?? [];
-        $result = $summary['result'] ?? ['created' => 0, 'skipped' => 0, 'sites_created' => 0];
+        $result = ($summary['result'] ?? []) + ['created' => 0, 'skipped' => 0, 'sites_created' => 0, 'upgraded' => 0];
         $result['created'] += $created;
+        $result['upgraded'] += $upgraded;
         $result['sites_created'] += count($createdSites);
         $import->sites = $siteMap;
 
-        $remaining = $import->items()->where('decision', 'import')->whereNull('imported_dive_id')->count();
+        $remaining = $import->items()->whereIn('decision', ['import', 'upgrade'])->whereNull('imported_dive_id')->count();
         if ($remaining > 0) {
             $summary['result'] = $result;
             $import->summary = $summary;
@@ -515,7 +625,25 @@ class LogbookImportController extends Controller
         $import->status = 'done';
         $import->save();
 
-        return redirect()->route('Logbook')->with('status', 'Imported ' . $result['created'] . ' dive' . ($result['created'] === 1 ? '' : 's') . ' from ' . $import->filename . ($result['skipped'] ? ' (' . $result['skipped'] . ' skipped as duplicates)' : '') . ($result['sites_created'] ? ', created ' . $result['sites_created'] . ' of your own sites' : '') . '.');
+        return redirect()->route('Logbook')->with('status', 'Imported ' . $result['created'] . ' dive' . ($result['created'] === 1 ? '' : 's') . ($result['upgraded'] ? ', upgraded ' . $result['upgraded'] . ' with computer data' : '') . ' from ' . $import->filename . ($result['skipped'] ? ' (' . $result['skipped'] . ' skipped as duplicates)' : '') . ($result['sites_created'] ? ', created ' . $result['sites_created'] . ' of your own sites' : '') . '.');
+    }
+
+    /** Catalog operator by name (case-insensitive), with its boats - cached per run. */
+    private array $operatorCache = [];
+
+    private function catalogOperator(string $name): ?array
+    {
+        $key = mb_strtolower(trim($name));
+        if (!array_key_exists($key, $this->operatorCache)) {
+            $op = \App\Models\Operator::whereRaw('LOWER(operatorName) = ?', [$key])->first();
+            $this->operatorCache[$key] = $op ? [
+                'logo' => $op->logoUrl ? \App\Support\AssetPath::relative('/assets' . $op->logoUrl) : null,
+                'url' => \App\Support\AssetPath::relative(route('OperatorDetails', ['id' => $op->slug ?? $op->id])),
+                'boats' => \App\Models\Boat::where('operatorId', $op->id)->get(['name', 'pic'])
+                    ->map(fn ($b) => ['name' => $b->name, 'pic' => $b->pic ? \App\Support\AssetPath::relative('/assets' . $b->pic) : null])->all(),
+            ] : null;
+        }
+        return $this->operatorCache[$key];
     }
 
     public function cancel(Request $request, $id)

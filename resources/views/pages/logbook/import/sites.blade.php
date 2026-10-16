@@ -8,20 +8,38 @@
             <div class="row">
                 <div class="col-lg-9 col-12 m-auto pt-4">
 
-                    <div class="dh-import-steps"><span>1 Review</span><span class="is-active">2 Sites</span><span>3 Done</span></div>
+                    <x-import-progress :step="3" />
 
                     <p class="text-sm text-secondary mt-3">
-                        {{ $fileSites->count() }} sites are used by the dives you're importing. For each one: link it to a Divers Hub site, to one of your own sites, create it as one of your own sites (name, GPS, location and country come from the file), or just keep the name on the dives.
+                        {{ $fileSites->count() }} sites are used by the dives you're importing. Each one is pre-set: linked to a Divers Hub site when the name and position agree, otherwise created as one of your own sites (name, GPS, town and country come from the file). Change any of them below.
                     </p>
 
                     <form method="POST" action="{{ route('Logbook.import.saveSites', $import->id) }}" id="importSitesForm">
                         @csrf
-                        <div class="card p-0 position-relative mt-2 z-index-2 mb-4">
-                            <div class="card-body">
-                                <div class="dh-import-list">
-                                    @foreach ($fileSites as $key => $s)
+                        @php
+                            $groups = ['high' => [], 'check' => [], 'none' => []];
+                            foreach ($fileSites as $key => $s) $groups[$suggestions[$key]['confidence'] ?? 'none'][$key] = $s;
+                            $groupMeta = [
+                                'high' => ['High confidence', 'Same name as one of your sites, or the same (or nearly the same) name within 2 km of a Divers Hub site.', 'verified'],
+                                'check' => ['Check these', 'Either the position or the name agrees, not both - take a look.', 'help'],
+                                'none' => ['No Divers Hub match', 'These become your own sites unless you pick otherwise.', 'add_location_alt'],
+                            ];
+                            $rowIndex = 0;
+                        @endphp
+                        @foreach ($groups as $g => $sitesInGroup)
+                            @continue(!count($sitesInGroup))
+                            <div class="card p-0 position-relative mt-2 z-index-2 mb-4 dh-import-group is-{{ $g }}">
+                                <div class="card-body">
+                                    <h3 class="h5 mb-1 d-flex align-items-center gap-2">
+                                        <span class="material-icons-round" aria-hidden="true">{{ $groupMeta[$g][2] }}</span>
+                                        {{ $groupMeta[$g][0] }} <span class="text-sm text-secondary fw-normal">&middot; {{ count($sitesInGroup) }}</span>
+                                    </h3>
+                                    <p class="text-sm text-secondary">{{ $groupMeta[$g][1] }}</p>
+                                    <div class="dh-import-list">
+                                    @foreach ($sitesInGroup as $key => $s)
                                         @php
-                                            $sug = $suggestions[$key] ?? ['kind' => 'create', 'id' => null, 'why' => ''];
+                                            $rowIndex++;
+                                            $sug = $suggestions[$key] ?? ['kind' => 'create', 'id' => null, 'why' => '', 'distance_m' => null];
                                             $kind = $s['decision'] ?? $sug['kind'];
                                             $catalogId = $s['catalog_site_id'] ?? ($sug['kind'] === 'catalog' ? $sug['id'] : null);
                                             $ownId = $s['user_site_id'] ?? ($sug['kind'] === 'own' ? $sug['id'] : null);
@@ -33,17 +51,14 @@
                                                     <span class="text-sm text-secondary">
                                                         &middot; {{ $s['uses'] }} {{ $s['uses'] === 1 ? 'dive' : 'dives' }}
                                                         @if (($s['location'] ?? '') || ($s['country'] ?? '')) &middot; {{ collect([$s['location'] ?? null, $s['country'] ?? null])->filter()->implode(', ') }} @endif
-                                                        @if (($s['latitude'] ?? null) !== null) &middot; {{ number_format($s['latitude'], 4) }}, {{ number_format($s['longitude'], 4) }} @endif
                                                     </span>
                                                 </div>
                                                 @if ($sug['why'])
-                                                    <span class="text-xs {{ !empty($sug['weak']) ? 'text-warning' : 'text-secondary' }}">{{ $sug['why'] }}</span>
+                                                    <span class="text-xs text-secondary">{{ $sug['why'] }}@if ($sug['distance_m'] !== null)<span data-unit-value="distance" data-metric="{{ $sug['distance_m'] }}"></span>@endif{{ $sug['suffix'] ?? '' }}</span>
                                                 @endif
                                             </div>
                                             <div class="dh-import-site-choices">
                                                 <label><input type="radio" name="site[{{ $key }}][kind]" value="catalog" @checked($kind === 'catalog')> Divers Hub site</label>
-                                                {{-- Search box over the catalog (window.dhCatalog), not a
-                                                     <select>: 300 sites x 380 options is too much DOM. --}}
                                                 @php $catalogPick = $catalogId ? $catalog->firstWhere('id', (int) $catalogId) : null; @endphp
                                                 <span class="dh-import-search-wrap">
                                                     <input type="hidden" name="site[{{ $key }}][catalog_site_id]" value="{{ $catalogPick['id'] ?? '' }}" data-catalog-id>
@@ -52,8 +67,11 @@
                                                 </span>
                                                 @if ($own->isNotEmpty())
                                                     <label><input type="radio" name="site[{{ $key }}][kind]" value="own" @checked($kind === 'own')> One of my sites</label>
-                                                    <span class="dh-import-select-wrap" data-for="own">
-                                                        <x-dh-select :id="'ownSite' . $loop->index" :name="'site[' . $key . '][user_site_id]'" :options="$own->pluck('name', 'id')->all()" :selected="$ownId" placeholder="Choose…" :disabled="false" />
+                                                    @php $ownPick = $ownId ? $own->firstWhere('id', (int) $ownId) : null; @endphp
+                                                    <span class="dh-import-search-wrap">
+                                                        <input type="hidden" name="site[{{ $key }}][user_site_id]" value="{{ $ownPick->id ?? '' }}" data-catalog-id>
+                                                        <input type="text" class="dh-import-search" data-for="own" placeholder="Search my sites" aria-label="Search my sites" autocomplete="off" value="{{ $ownPick->name ?? '' }}">
+                                                        <div class="dh-search-list dh-import-results" hidden></div>
                                                     </span>
                                                 @endif
                                                 <label><input type="radio" name="site[{{ $key }}][kind]" value="create" @checked($kind === 'create')> Create as my site</label>
@@ -61,9 +79,10 @@
                                             </div>
                                         </div>
                                     @endforeach
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        @endforeach
 
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <a href="{{ route('Logbook.import.review', $import->id) }}" class="dh-btn dh-btn-ghost-dark">Back</a>
@@ -78,8 +97,12 @@
     </main>
 
     @push('js')
+        <script src="{{ asset('assets') }}/js/dh-units.js?v={{ config('divehub.version') }}"></script>
         <script src="{{ asset('assets') }}/js/dh-select.js?v={{ config('divehub.version') }}"></script>
-        <script>window.dhCatalog = @json($catalog->map(fn ($c) => ['id' => $c['id'], 'name' => $c['name'], 'city' => $c['city']])->values());</script>
+        <script>
+            window.dhCatalog = @json($catalog->map(fn ($c) => ['id' => $c['id'], 'name' => $c['name'], 'city' => $c['city']])->values());
+            window.dhOwnSites = @json($own->map(fn ($o) => ['id' => $o->id, 'name' => $o->name, 'city' => null])->values());
+        </script>
         <script>
             (function () {
                 function checkRadio(el, kind) {
@@ -94,8 +117,8 @@
                     });
                 });
                 // Catalog search boxes: client-side filter over window.dhCatalog.
-                var catalog = window.dhCatalog || [];
                 document.querySelectorAll('.dh-import-search').forEach(function (input) {
+                    var catalog = input.getAttribute('data-for') === 'own' ? (window.dhOwnSites || []) : (window.dhCatalog || []);
                     var wrap = input.closest('.dh-import-search-wrap');
                     var hidden = wrap.querySelector('[data-catalog-id]');
                     var results = wrap.querySelector('.dh-import-results');
@@ -115,7 +138,7 @@
                                 input.value = a.textContent;
                                 hidden.value = s.id;
                                 results.hidden = true;
-                                checkRadio(input, 'catalog');
+                                checkRadio(input, input.getAttribute('data-for'));
                             });
                             results.appendChild(a);
                         });

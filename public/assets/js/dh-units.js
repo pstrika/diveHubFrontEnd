@@ -38,6 +38,14 @@
         // Visibility is logged on a 10 ft / 3 m slider, so it's shown on
         // that grid in either unit (Pablo, 2026-10-15) - a value saved in
         // one unit rounds to the nearest step of the other.
+        // Distances between dive sites (import wizard): m/km or ft/mi.
+        if (kind === 'distance') {
+            if (unit === 'imperial') {
+                var ft = mToFt(metric);
+                return ft < 1000 ? Math.round(ft) + ' ft' : (metric / 1609.344).toFixed(metric < 16093 ? 1 : 0) + ' mi';
+            }
+            return metric < 1000 ? Math.round(metric) + ' m' : (metric / 1000).toFixed(metric < 10000 ? 1 : 0) + ' km';
+        }
         if (unit === 'imperial') {
             if (kind === 'depth') return mToFt(metric).toFixed(1) + ' ft';
             if (kind === 'visibility') return Math.round(mToFt(metric) / 10) * 10 + ' ft';

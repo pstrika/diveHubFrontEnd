@@ -275,6 +275,13 @@
             $diveComputerLegendParts[] = 'GF ' . $dive->deco_model['gfLow'] . '/' . $dive->deco_model['gfHigh'];
         }
     }
+    // Setpoints Low/High on a rebreather dive (Pablo, 2026-10-16), from the
+    // samples' own setpoint values.
+    if ($isCcr) {
+        $sps = collect($dive->profile ?? [])->pluck('setpoint')->filter(fn ($v) => $v !== null && $v > 0)->map(fn ($v) => round($v, 1))->unique()->sort()->values();
+        if ($sps->count() === 1) $diveComputerLegendParts[] = 'SP ' . number_format($sps[0], 1);
+        elseif ($sps->count() > 1) $diveComputerLegendParts[] = 'SP ' . number_format($sps->first(), 1) . '/' . number_format($sps->last(), 1);
+    }
     $diveComputerLegend = implode(' · ', $diveComputerLegendParts);
 @endphp
 <x-page-template bodyClass='dh-shell'>
