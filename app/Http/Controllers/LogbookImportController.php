@@ -90,8 +90,8 @@ class LogbookImportController extends Controller
         $n = count(glob($dir . '/*'));
         foreach ($files as $file) {
             $ext = strtolower($file->getClientOriginalExtension());
-            if (!in_array($ext, ['uddf', 'xml'], true)) {
-                return response()->json(['message' => $file->getClientOriginalName() . ' is not a .xml or .uddf export.'], 422);
+            if (!in_array($ext, ['uddf', 'xml', 'fit'], true)) {
+                return response()->json(['message' => $file->getClientOriginalName() . ' is not a .xml, .uddf or .fit export.'], 422);
             }
             // Index prefix keeps two same-named files (from different
             // subfolders) apart; the original name follows it.
@@ -151,14 +151,18 @@ class LogbookImportController extends Controller
     /** @param array<int, array{path:string, name:string}> $uploads */
     private function stage(Request $request, array $uploads)
     {
-        $logbooks = []; $shearwater = []; $names = [];
+        $logbooks = []; $shearwater = []; $garmin = []; $names = [];
         foreach ($uploads as $file) {
             $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            if (!in_array($ext, ['uddf', 'xml'], true)) {
-                return $this->uploadError($request, $file['name'] . ' is not a .xml or .uddf export.');
+            if (!in_array($ext, ['uddf', 'xml', 'fit'], true)) {
+                return $this->uploadError($request, $file['name'] . ' is not a .xml, .uddf or .fit export.');
             }
             $names[] = $file['name'];
-            if (\App\Support\ShearwaterXmlParser::sniff($file['path'])) {
+            if (\App\Support\GarminFitParser::sniff($file['path'])) {
+                $garmin[] = $file;
+            } elseif ($ext === 'fit') {
+                return $this->uploadError($request, $file['name'] . ' is not a Garmin FIT file.');
+            } elseif (\App\Support\ShearwaterXmlParser::sniff($file['path'])) {
                 $shearwater[] = $file;
             } else {
                 $logbooks[] = $file;
@@ -179,6 +183,13 @@ class LogbookImportController extends Controller
             if ($shearwater) {
                 $parsed = \App\Support\ShearwaterXmlParser::parseMany($shearwater);
                 array_push($dives, ...$parsed->dives);
+                $generators[] = $parsed->generator;
+            }
+            if ($garmin) {
+                // Garmin Descent .FIT: no site names, but GPS entry points.
+                $parsed = \App\Support\GarminFitParser::parseMany($garmin);
+                array_push($dives, ...$parsed->dives);
+                $sites += $parsed->sites;
                 $generators[] = $parsed->generator;
             }
         } catch (\Throwable $e) {
@@ -482,6 +493,23 @@ class LogbookImportController extends Controller
         }
 
         $hasGps = ($s['latitude'] ?? null) !== null && ($s['longitude'] ?? null) !== null;
+        if (!empty($s['gps_only']) && $hasGps) {
+            // Only coordinates (a Garmin watch's GPS fix as the diver went
+            // in): position is the whole match. The fix is taken at the
+            // surface, so anything within ~300 m is the same site.
+            $best = null; $bestM = null;
+            foreach ($catalog as $c) {
+                if ($c['lat'] === null || $c['lon'] === null) continue;
+                $dm = self::km($s['latitude'], $s['longitude'], $c['lat'], $c['lon']) * 1000;
+                if ($bestM === null || $dm < $bestM) { $best = $c; $bestM = $dm; }
+            }
+            if ($best && $bestM <= 1000) {
+                return ['kind' => 'catalog', 'id' => $best['id'], 'confidence' => $bestM <= 300 ? 'high' : 'check',
+                    'why' => $best['name'] . ' is ', 'distance_m' => (int) round($bestM), 'suffix' => ' from the GPS entry point'];
+            }
+            return ['kind' => 'create', 'id' => null, 'confidence' => 'none',
+                'why' => $best ? 'Nearest Divers Hub site, ' . $best['name'] . ', is ' : 'Nothing close in Divers Hub', 'distance_m' => $best ? (int) round($bestM) : null, 'suffix' => $best ? ' away' : ''];
+        }
         $nearest = null; $nearestM = null; $bestName = null; $bestNameScore = 0; $bestNameM = null;
         foreach ($catalog as $c) {
             $dm = ($hasGps && $c['lat'] !== null && $c['lon'] !== null) ? self::km($s['latitude'], $s['longitude'], $c['lat'], $c['lon']) * 1000 : null;

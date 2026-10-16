@@ -92,15 +92,18 @@ class DiveUploadController extends Controller
                 // synced dive - two computers on one dive stay two rows.
                 if (!$existing) {
                     $ts = strtotime($diveData['datetime']);
+                    // computer-file too: a Garmin .FIT import has no
+                    // fingerprint the app would reproduce, so the app's
+                    // later sync of that dive is matched by time instead.
                     $existing = Dive::where('user_id', $user->id)
-                        ->where('source', 'uddf-import')
+                        ->whereIn('source', ['uddf-import', 'computer-file'])
                         ->whereBetween('started_at', [date('Y-m-d H:i:s', $ts - 180), date('Y-m-d H:i:s', $ts + 180)])
                         ->where(fn ($q) => $q->whereNull('computer_serial')->orWhere('computer_serial', $serial))
                         ->orderByRaw('ABS(TIMESTAMPDIFF(SECOND, started_at, ?))', [date('Y-m-d H:i:s', $ts)])
                         ->first();
                 }
 
-                if ($existing && !$existing->trashed() && $existing->source === 'uddf-import') {
+                if ($existing && !$existing->trashed() && in_array($existing->source, ['uddf-import', 'computer-file'], true)) {
                     // The computer wins (Pablo, 2026-10-16): its depth/time/
                     // mode/gases/tanks/PPO2 replace what the import guessed;
                     // everything the diver added - site, notes, buddies,

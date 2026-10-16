@@ -20,7 +20,7 @@
                             $groups = ['high' => [], 'check' => [], 'none' => []];
                             foreach ($fileSites as $key => $s) $groups[$suggestions[$key]['confidence'] ?? 'none'][$key] = $s;
                             $groupMeta = [
-                                'high' => ['High confidence', 'Same name as one of your sites, or the same (or nearly the same) name within 2 km of a Divers Hub site.', 'verified'],
+                                'high' => ['High confidence', 'Same name as one of your sites, the same (or nearly the same) name within 2 km of a Divers Hub site, or a watch GPS entry point within 300 m of one.', 'verified'],
                                 'check' => ['Check these', 'Either the position or the name agrees, not both - take a look.', 'help'],
                                 'none' => ['No Divers Hub match', 'These become your own sites unless you pick otherwise.', 'add_location_alt'],
                             ];

@@ -56,13 +56,13 @@
                                 <label class="dh-dropzone" id="importDrop" for="importFile">
                                     <span class="material-icons-round dh-dropzone-icon" aria-hidden="true">cloud_upload</span>
                                     <strong>Drop your logbook here</strong>
-                                    <span class="text-sm text-secondary">or click to choose files · MacDive XML, UDDF, or Shearwater dive files (.xml) - any number at once</span>
+                                    <span class="text-sm text-secondary">or click to choose files · MacDive XML, UDDF, Shearwater (.xml) or Garmin (.fit) dive files - any number at once</span>
                                     <button type="button" class="dh-btn dh-btn-ghost-dark dh-dropzone-folder" id="importFolderBtn">
                                         <span class="material-icons-round" aria-hidden="true">folder_open</span>
                                         Choose a folder
                                     </button>
                                     <span class="dh-dropzone-files text-sm" id="importFileName"></span>
-                                    <input type="file" id="importFile" name="files[]" accept=".uddf,.xml,application/xml,text/xml" multiple class="dh-visually-hidden">
+                                    <input type="file" id="importFile" name="files[]" accept=".uddf,.xml,.fit,application/xml,text/xml" multiple class="dh-visually-hidden">
                                 </label>
                                 {{-- Outside the label so picking a folder doesn't also open the file picker. --}}
                                 <input type="file" id="importFolder" webkitdirectory directory multiple class="dh-visually-hidden" tabindex="-1" aria-hidden="true">
@@ -98,6 +98,9 @@
                             <p>On the desktop app, select the dives and export them as <strong>XML</strong> - you get one file per dive, into a folder. Drop the folder here, or use <strong>Choose a folder</strong>; any number of dives is fine. These are the computer's own logs: full deco stops, PPO2 per cell, setpoints and circuit mode, but no sites or notes. If you already imported those dives from MacDive, they're upgraded in place and keep your sites and notes.</p>
                             <p class="text-secondary">Easiest of all for Shearwater: sync the computer with the Divers Hub app - same data, no files.</p>
 
+                            <h4>Garmin Descent</h4>
+                            <p>In Garmin Connect on the web, open a dive and choose <strong>⚙ &rsaquo; Export Original</strong> - you get a .zip with one <strong>.fit</strong> file; unzip it and drop the .fit here (several dives: put them in one folder and drop the folder). You get the 1-second profile, NDL, next stop, CNS, gases and tank pressure from a transmitter, plus the GPS point where you went in - used to find the Divers Hub site. No site names or notes.</p>
+
                             <h4>Subsurface, DiveMate, Diving Log and others</h4>
                             <p>Export as <strong>UDDF</strong> (File &rsaquo; Export &rsaquo; UDDF in most apps). You'll get the profile, gases, sites and notes; rebreather dives are recognised when the app exports setpoints or PPO2 - otherwise you mark them in the review step.</p>
                         </div>
@@ -118,7 +121,7 @@
                 var label = document.getElementById('importProgressLabel'), pct = document.getElementById('importProgressPct'), err = document.getElementById('importError');
                 var CHUNK_FILES = {{ \App\Http\Controllers\LogbookImportController::CHUNK_FILES }}, CHUNK_BYTES = 60 * 1048576;
                 var files = [];
-                function isDiveFile(f) { return /\.(xml|uddf)$/i.test(f.name); }
+                function isDiveFile(f) { return /\.(xml|uddf|fit)$/i.test(f.name); }
                 function fail(text) { prog.hidden = true; submit.disabled = false; fill.classList.remove('is-working'); err.textContent = text; err.hidden = false; }
                 function show() {
                     var total = files.reduce(function (a, f) { return a + f.size; }, 0);
@@ -126,7 +129,7 @@
                     drop.classList.toggle('has-files', files.length > 0);
                     submit.disabled = !files.length;
                     err.hidden = true;
-                    if (!files.length) { err.textContent = 'No .xml or .uddf files there.'; err.hidden = false; }
+                    if (!files.length) { err.textContent = 'No .xml, .uddf or .fit files there.'; err.hidden = false; }
                 }
                 input.addEventListener('change', function () { files = Array.prototype.slice.call(input.files).filter(isDiveFile); show(); });
                 // A whole folder (Shearwater Cloud exports one file per dive).
