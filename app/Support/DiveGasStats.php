@@ -64,14 +64,21 @@ class DiveGasStats
             $tankIdx = array_key_exists($gi, $tankChoice) ? $tankChoice[$gi] : ($match['gasToTank'][$gi] ?? null);
             $tankIdx = $tankIdx === null || $tankIdx === '' ? null : (int) $tankIdx;
             if ($tankIdx !== null && in_array($tankIdx, $fixedTankIndices, true)) $tankIdx = null;
+            // A sidemount pair: both cylinders on this gas (web Gases card rule).
+            $pair = array_values($match['gasToTanks'][$gi] ?? []);
+            $isPair = count($pair) > 1;
+            if ($isPair) $tankIdx = $pair[0];
             $role = array_key_exists($gi, $roleChoice) ? $roleChoice[$gi] : ($match['roles'][$gi] ?? null);
-            $rows[] = self::row(
+            $row = self::row(
                 (string) $gi, $gi, $mix,
                 $isDeleted ? null : $tankIdx,
-                $isDeleted ? null : ($tankIdx !== null ? 'Tank ' . ($tankIdx + 1) : null),
+                $isDeleted ? null : ($isPair ? 'Tank ' . implode(' + Tank ', array_map(fn ($t) => $t + 1, $pair)) : ($tankIdx !== null ? 'Tank ' . ($tankIdx + 1) : null)),
                 $role, $role ? ($roleOptions[$role] ?? ucfirst($role)) : null,
                 false, $isDeleted
             );
+            $row['tank_indices'] = $isDeleted ? [] : ($isPair ? $pair : ($tankIdx !== null ? [$tankIdx] : []));
+            $row['pair'] = $isPair;
+            $rows[] = $row;
         }
 
         $order = $conditions['gas_row_order'] ?? [];
@@ -99,9 +106,24 @@ class DiveGasStats
                 'twins' => $twins,
                 'water_volume_l' => $liters !== null ? round($liters, 2) : null,
                 'working_pressure_bar' => TankCatalog::workingPressureBar($type) !== null ? round(TankCatalog::workingPressureBar($type), 1) : null,
-                'template' => TankCatalog::template($type, $twins, $row['fixed']),
+                // A sidemount pair draws as two cylinders, like twins.
+                'template' => TankCatalog::template($type, $twins || !empty($row['pair']), $row['fixed']),
             ] : null;
-            $row['stats'] = (!$row['deleted'] && $tankIdx !== null) ? self::stats($dive, $tankIdx, $liters) : null;
+            $indices = $row['tank_indices'] ?? ($tankIdx !== null ? [$tankIdx] : []);
+            if (!$row['deleted'] && count($indices) > 1) {
+                // Sidemount pair: per-cylinder start/end, totals added up.
+                $perTank = [];
+                $consumed = 0; $rmv = 0; $any = false;
+                foreach ($indices as $ti) {
+                    $s = self::stats($dive, $ti, $liters);
+                    $perTank[] = ['tank_index' => $ti] + ($s ?? []);
+                    if ($s) { $any = true; $consumed += $s['consumed_l'] ?? 0; $rmv += $s['rmv_l_min'] ?? 0; }
+                }
+                $row['stats'] = $any ? ['per_tank' => $perTank, 'consumed_l' => round($consumed, 1), 'rmv_l_min' => round($rmv, 2), 'start_bar' => $perTank[0]['start_bar'] ?? null, 'end_bar' => $perTank[0]['end_bar'] ?? null, 'sac_bar_min' => null] : null;
+                if ($row['tank'] && $liters !== null) $row['tank']['water_volume_l'] = round($liters * count($indices), 2);
+            } else {
+                $row['stats'] = (!$row['deleted'] && $tankIdx !== null) ? self::stats($dive, $tankIdx, $liters) : null;
+            }
             // Flat copies of the fields the app asked for by name.
             $row['start_bar'] = $row['stats']['start_bar'] ?? null;
             $row['end_bar'] = $row['stats']['end_bar'] ?? null;
@@ -166,6 +188,8 @@ class DiveGasStats
             'fixed' => $fixed,
             'deleted' => $deleted,
             'tank_index' => $tankIndex,
+            'tank_indices' => $tankIndex !== null ? [$tankIndex] : [],
+            'pair' => false,
             'tank_label' => $tankLabel,
         ];
     }

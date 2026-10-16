@@ -53,6 +53,11 @@ class LogbookConditionRules
             'conditions.tank_config' => 'nullable|array',
             'conditions.tank_config.*.type' => 'nullable|string|max:40',
             'conditions.tank_config.*.twins' => 'nullable|boolean',
+            // One size for a sidemount pair - the server copies it onto
+            // every tank tagged "sidemount" in tank_config.
+            'conditions.sidemount_size' => 'nullable|array',
+            'conditions.sidemount_size.type' => 'nullable|string|max:40',
+            'conditions.sidemount_size.twins' => 'nullable|boolean',
             'conditions.gas_tank_size_choice' => 'nullable|array',
             'conditions.gas_tank_size_choice.*.type' => 'nullable|string|max:40',
             'conditions.gas_tank_size_choice.*.twins' => 'nullable|boolean',

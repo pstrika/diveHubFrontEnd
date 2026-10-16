@@ -149,7 +149,7 @@
         // reports no tanks[] at all). tankIndex stays null without AI -
         // the row still gets a size picker, stored under its rowKey.
         if ($diluentMix) {
-            $gasRows[] = ['mix' => $diluentMix, 'gasIndex' => null, 'tankIndex' => $diluentTankIdx, 'role' => 'Diluent', 'fixed' => true, 'deleted' => false, 'rowKey' => 'diluent'];
+            $gasRows[] = ['mix' => $diluentMix, 'gasIndex' => null, 'tankIndex' => $diluentTankIdx, 'tankIndices' => $diluentTankIdx !== null ? [$diluentTankIdx] : [], 'pair' => false, 'role' => 'Diluent', 'fixed' => true, 'deleted' => false, 'rowKey' => 'diluent'];
             if ($diluentTankIdx !== null) $fixedTankIndices[] = $diluentTankIdx;
         }
 
@@ -162,7 +162,7 @@
         }
         // Synthesized pill - pure O2 fed to the loop has no gas_mixes
         // entry of its own, by design (same rule $tankLabels uses).
-        $gasRows[] = ['mix' => ['oxygen' => 100, 'helium' => 0], 'gasIndex' => null, 'tankIndex' => $oxygenTankIdx, 'role' => 'Oxygen', 'fixed' => true, 'deleted' => false, 'rowKey' => 'oxygen'];
+        $gasRows[] = ['mix' => ['oxygen' => 100, 'helium' => 0], 'gasIndex' => null, 'tankIndex' => $oxygenTankIdx, 'tankIndices' => $oxygenTankIdx !== null ? [$oxygenTankIdx] : [], 'pair' => false, 'role' => 'Oxygen', 'fixed' => true, 'deleted' => false, 'rowKey' => 'oxygen'];
         if ($oxygenTankIdx !== null) $fixedTankIndices[] = $oxygenTankIdx;
     }
 
@@ -181,10 +181,17 @@
         $deleted = in_array($gi, $deletedGasMixes);
         $resolvedTankIdx = array_key_exists($gi, $gasTankChoice) ? $gasTankChoice[$gi] : ($gasMatch['gasToTank'][$gi] ?? null);
         $resolvedRole = array_key_exists($gi, $gasRoleChoice) ? $gasRoleChoice[$gi] : ($gasMatch['roles'][$gi] ?? null);
+        // A sidemount pair is two AI cylinders on one gas (Pablo,
+        // 2026-10-15): the matcher hands both back, the row carries them
+        // both and no tank picker is offered for it.
+        $pair = ($gasMatch['gasToTanks'][$gi] ?? []);
+        $isPair = count($pair) > 1;
         $gasRows[] = [
             'mix' => $mix,
             'gasIndex' => $gi,
-            'tankIndex' => $deleted ? null : $resolvedTankIdx,
+            'tankIndex' => $deleted ? null : ($isPair ? $pair[0] : $resolvedTankIdx),
+            'tankIndices' => $deleted ? [] : ($isPair ? array_values($pair) : ($resolvedTankIdx !== null ? [$resolvedTankIdx] : [])),
+            'pair' => $isPair,
             'role' => $resolvedRole,
             'fixed' => false,
             'deleted' => $deleted,
@@ -236,6 +243,11 @@
         'tanks' => (object) $tankColors,
     ];
 
+    // A sidemount pair is spoken for - its two cylinders never show in
+    // another gas's "Tank with AI?" picker.
+    foreach ($gasRows as $r) {
+        if ($r['pair']) $fixedTankIndices = array_merge($fixedTankIndices, $r['tankIndices']);
+    }
     $gasTankOptions = [];
     foreach ($tanks as $ti => $t) {
         if (!in_array($ti, $fixedTankIndices, true)) {
@@ -543,9 +555,13 @@
                                                     $sizeText = $sizeSource
                                                         ? trim(($sizeType !== null ? ($tankTypeOptions[$sizeType] ?? $sizeType) : 'Tank size not set') . ($sizeTwins ? ' (Twins)' : ''))
                                                         : null;
-                                                    $sizeFieldName = $row['tankIndex'] !== null
-                                                        ? 'conditions[tank_config][' . $row['tankIndex'] . ']'
-                                                        : 'conditions[gas_tank_size_choice][' . $sizeKey . ']';
+                                                    // A sidemount pair takes ONE size (both cylinders) -
+                                                    // the server copies it onto every sidemount tank.
+                                                    $sizeFieldName = $row['pair']
+                                                        ? 'conditions[sidemount_size]'
+                                                        : ($row['tankIndex'] !== null
+                                                            ? 'conditions[tank_config][' . $row['tankIndex'] . ']'
+                                                            : 'conditions[gas_tank_size_choice][' . $sizeKey . ']');
                                                     // Which template image to show (Pablo, 2026-10-15:
                                                     // "if the user selected twin, show the twin template.
                                                     // AL-19, AL-13, ST-HP-2L and ST-HP-3L should be
@@ -557,7 +573,8 @@
                                                     // type; the 2-3 L bottles get the CCR look; a fixed
                                                     // CCR row with nothing picked yet defaults to
                                                     // tank_ccr.png rather than showing nothing.
-                                                    if ($sizeTwins) {
+                                                    if ($sizeTwins || $row['pair']) {
+                                                        // Twins, or a sidemount pair - two cylinders either way.
                                                         $tankImage = 'tank_double.png';
                                                     } elseif (in_array($sizeType, $ccrTemplateTankTypes, true)) {
                                                         $tankImage = 'tank_ccr.png';
@@ -604,7 +621,10 @@
                                                          nothing to ask for a fixed CCR row (diluent/oxygen
                                                          are already unambiguous). --}}
                                                     <div class="col-12 col-md-2 dh-dive-gas-col-tank">
-                                                        @if ($row['tankIndex'] === null && ($row['fixed'] || !count($gasTankOptions)))
+                                                        @if ($row['pair'])
+                                                            {{-- Sidemount: both cylinders, no picker. --}}
+                                                            <span class="dh-dive-tank-row-view-text">Tank {{ implode(' + Tank ', array_map(fn ($t) => $t + 1, $row['tankIndices'])) }}</span>
+                                                        @elseif ($row['tankIndex'] === null && ($row['fixed'] || !count($gasTankOptions)))
                                                             {{-- Nothing to match: the computer reported no
                                                                  air-integrated tank for this gas. --}}
                                                             <span class="dh-dive-no-ai">No AI data</span>
@@ -661,13 +681,17 @@
                                                         @endif
                                                         <span class="dh-dive-tank-row-view-text" data-view>{{ $sizeText }}</span>
                                                         @if ($row['tankIndex'] !== null && !$row['deleted'])
-                                                            <div class="dh-dive-tank-pressure-pills" data-view>
-                                                                <span class="dh-gas-result-pill is-compact is-grey" id="tankStartPressure{{ $loop->index }}">&nbsp;</span>
-                                                                <span class="dh-gas-result-pill is-compact is-grey" id="tankEndPressure{{ $loop->index }}">&nbsp;</span>
-                                                            </div>
+                                                            {{-- One start/end pair per cylinder - two for sidemount. --}}
+                                                            @foreach ($row['tankIndices'] as $ti)
+                                                                <div class="dh-dive-tank-pressure-pills" data-view>
+                                                                    @if ($row['pair'])<span class="dh-dive-tank-pressure-tag">T{{ $ti + 1 }}</span>@endif
+                                                                    <span class="dh-gas-result-pill is-compact is-grey" id="tankStartPressure{{ $loop->parent->index }}_{{ $ti }}">&nbsp;</span>
+                                                                    <span class="dh-gas-result-pill is-compact is-grey" id="tankEndPressure{{ $loop->parent->index }}_{{ $ti }}">&nbsp;</span>
+                                                                </div>
+                                                            @endforeach
                                                         @endif
                                                         <div data-edit hidden>
-                                                            <div class="dh-dive-tank-size-wrap" data-tank-size-wrap data-tank-index="{{ $row['tankIndex'] ?? '' }}">
+                                                            <div class="dh-dive-tank-size-wrap" data-tank-size-wrap data-tank-index="{{ $row['tankIndex'] ?? '' }}" data-tank-indices="{{ implode(',', $row['tankIndices']) }}">
                                                                 <x-dh-select
                                                                     id="tankSizeRow{{ $loop->index }}"
                                                                     name="{{ $sizeFieldName }}[type]"

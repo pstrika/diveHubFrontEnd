@@ -64,15 +64,21 @@ final class GasTankMatcher
         }
 
         $gasToTank = [];
+        $gasToTanks = [];
         foreach ($map as $tankIdx => $gasIdx) {
             if ($gasIdx !== null) {
-                $gasToTank[$gasIdx] = $tankIdx;
+                if (!isset($gasToTank[$gasIdx])) $gasToTank[$gasIdx] = $tankIdx;
+                $gasToTanks[$gasIdx][] = $tankIdx;
             }
         }
 
         return [
             'tankToGas' => $map,
             'gasToTank' => $gasToTank,
+            // Every tank a gas is matched to - more than one only for a
+            // sidemount pair (Pablo, 2026-10-15: "if we have sidemount, we
+            // should attach two tanks to the same gas").
+            'gasToTanks' => $gasToTanks,
             'labels' => self::gasLabels($dive->gas_mixes ?? []),
             'roles' => $roles,
         ];
@@ -109,10 +115,14 @@ final class GasTankMatcher
             $first = false;
         }
 
+        // Both sidemount cylinders carry the bottom gas (Shearwater's
+        // sidemount mode tags exactly two tanks "sidemount"; any further
+        // cylinder is tagged otherwise and is matched like OC).
         $map = [];
-        foreach (array_keys($dive->tanks ?? []) as $ti) $map[$ti] = null;
         $bottomGas = array_key_first($breathed);
-        if ($bottomGas !== null && array_key_exists(0, $map)) $map[0] = $bottomGas;
+        foreach ($dive->tanks ?? [] as $ti => $tank) {
+            $map[$ti] = (($tank['usage'] ?? null) === 'sidemount') ? $bottomGas : null;
+        }
 
         return [$map, $roles];
     }

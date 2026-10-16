@@ -25,22 +25,95 @@ use Illuminate\Http\Request;
  */
 class LogbookController extends Controller
 {
-    /** Most recent dives first, paginated. */
+    /**
+     * Most recent dives first, with filter chips (Pablo, 2026-10-15:
+     * circuit, recreational/technical, tags, dive type - each shown only
+     * when the diver's own logbook has something to filter by) and
+     * paginated. Filtering happens in PHP over the diver's whole logbook
+     * rather than in SQL: classification and mode are derived (depth,
+     * deco samples, tank usage tags) and tags/dive types live in JSON -
+     * a personal logbook is a few hundred rows at most, so loading it
+     * whole is cheaper than teaching SQL about those rules.
+     */
     public function index(Request $request)
     {
-        $dives = Dive::where('user_id', $request->user()->id)
-            ->orderByDesc('started_at')
-            ->paginate(20);
+        $userId = $request->user()->id;
+        $all = Dive::where('user_id', $userId)->orderByDesc('started_at')->orderByDesc('id')->get();
+        $total = $all->count();
+
+        // Chronological number (oldest = 1) before any filtering, so a
+        // filtered list still shows each dive's real number.
+        $seq = $total;
+        foreach ($all as $dive) {
+            $dive->listSeq = $seq--;
+        }
 
         $stats = [
-            'total' => Dive::where('user_id', $request->user()->id)->count(),
-            'total_time_seconds' => (int) Dive::where('user_id', $request->user()->id)->sum('duration_seconds'),
-            'max_depth_m' => Dive::where('user_id', $request->user()->id)->max('max_depth_m'),
+            'total' => $total,
+            'total_time_seconds' => (int) $all->sum('duration_seconds'),
+            'max_depth_m' => $all->max('max_depth_m'),
         ];
+
+        // What this diver can filter by - a chip row only appears when
+        // there is more than one value in play.
+        $tagCounts = [];
+        $typeCounts = [];
+        $hasCcr = false; $hasOc = false; $hasTec = false; $hasRec = false;
+        foreach ($all as $dive) {
+            $dive->isCcr() ? $hasCcr = true : $hasOc = true;
+            $dive->classification() === 'technical' ? $hasTec = true : $hasRec = true;
+            foreach ($dive->tags ?? [] as $t) $tagCounts[$t] = ($tagCounts[$t] ?? 0) + 1;
+            foreach ($dive->conditions['dive_type'] ?? [] as $t) $typeCounts[$t] = ($typeCounts[$t] ?? 0) + 1;
+        }
+        ksort($tagCounts);
+        $diveTypeLabels = ['drift' => 'Drift', 'training' => 'Training', 'photo_video' => 'Photo/Video', 'cave' => 'Cave', 'cavern' => 'Cavern', 'wall' => 'Wall', 'reef' => 'Reef', 'wreck' => 'Wreck'];
+        $typeOptions = [];
+        foreach ($diveTypeLabels as $k => $label) if (isset($typeCounts[$k])) $typeOptions[$k] = $label;
+        $tagOptions = [];
+        foreach ($tagCounts as $t => $n) $tagOptions[$t] = $t;
+
+        $filters = [
+            'circuit' => in_array($request->query('circuit'), ['cc', 'oc'], true) ? $request->query('circuit') : null,
+            'class' => in_array($request->query('class'), ['recreational', 'technical'], true) ? $request->query('class') : null,
+            'tag' => isset($tagOptions[$request->query('tag')]) ? $request->query('tag') : null,
+            'type' => isset($typeOptions[$request->query('type')]) ? $request->query('type') : null,
+        ];
+
+        $filtered = $all->filter(function (Dive $dive) use ($filters) {
+            if ($filters['circuit'] === 'cc' && !$dive->isCcr()) return false;
+            if ($filters['circuit'] === 'oc' && $dive->isCcr()) return false;
+            if ($filters['class'] && $dive->classification() !== $filters['class']) return false;
+            if ($filters['tag'] && !in_array($filters['tag'], $dive->tags ?? [], true)) return false;
+            if ($filters['type'] && !in_array($filters['type'], $dive->conditions['dive_type'] ?? [], true)) return false;
+            return true;
+        })->values();
+
+        $perPage = 20;
+        $page = max(1, (int) $request->query('page', 1));
+        $dives = new \Illuminate\Pagination\LengthAwarePaginator(
+            $filtered->forPage($page, $perPage)->values(),
+            $filtered->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        // Row decorations: operator logo (live catalog match by name, like
+        // DiveDetails), the site's city, and the wishlist bookmark.
+        $operatorLogos = Operator::whereNotNull('logoUrl')->get(['operatorName', 'logoUrl'])
+            ->mapWithKeys(fn ($o) => [mb_strtolower($o->operatorName) => asset('assets') . $o->logoUrl]);
+        $wishedSiteIds = \App\Models\WishedSite::where('userId', $userId)->pluck('siteId')->map(fn ($v) => (int) $v)->flip();
 
         return view('pages.Logbook', [
             'dives' => $dives,
             'stats' => $stats,
+            'filters' => $filters,
+            'showCircuitFilter' => $hasCcr && $hasOc,
+            'showClassFilter' => $hasTec && $hasRec,
+            'tagOptions' => $tagOptions,
+            'typeOptions' => $typeOptions,
+            'operatorLogos' => $operatorLogos,
+            'wishedSiteIds' => $wishedSiteIds,
         ]);
     }
 
@@ -191,6 +264,10 @@ class LogbookController extends Controller
             'conditions.gas_tank_size_choice' => 'nullable|array',
             'conditions.gas_tank_size_choice.*.type' => 'nullable|string|max:40',
             'conditions.gas_tank_size_choice.*.twins' => 'nullable|boolean',
+            // One size for a sidemount pair (see the gas_tank_choice case).
+            'conditions.sidemount_size' => 'nullable|array',
+            'conditions.sidemount_size.type' => 'nullable|string|max:40',
+            'conditions.sidemount_size.twins' => 'nullable|boolean',
             // Gas<->tank pairing overrides, keyed by GAS index (Pablo,
             // 2026-10-15: "I want the gases in each row, not the tank.
             // Then we can associate the tanks to the gases") - a whole
@@ -284,6 +361,15 @@ class LogbookController extends Controller
                 $conditions['deleted_gas_mixes'] = $data['conditions']['deleted_gas_mixes'] ?? [];
                 if (array_key_exists('tank_config', $data['conditions'] ?? [])) {
                     $conditions['tank_config'] = $data['conditions']['tank_config'];
+                }
+                // One size for a sidemount pair, copied onto every tank
+                // the computer tagged "sidemount" (Pablo, 2026-10-15).
+                if (!empty($data['conditions']['sidemount_size'])) {
+                    foreach ($dive->tanks ?? [] as $ti => $tank) {
+                        if (($tank['usage'] ?? null) === 'sidemount') {
+                            $conditions['tank_config'][$ti] = $data['conditions']['sidemount_size'];
+                        }
+                    }
                 }
                 if (array_key_exists('gas_tank_size_choice', $data['conditions'] ?? [])) {
                     $conditions['gas_tank_size_choice'] = $data['conditions']['gas_tank_size_choice'];

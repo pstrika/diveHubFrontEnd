@@ -612,21 +612,38 @@
                 }
 
                 if (!tankIndex) return;
+                // One row can carry two cylinders (a sidemount pair) - each
+                // gets its own start/end pills; volume and RMV add up.
+                var tankIndices = (sizeWrap.dataset.tankIndices || String(tankIndex)).split(',').filter(Boolean);
                 var volumeEl = document.getElementById('tankVolumeView' + idx);
                 var rmvEl = document.getElementById('tankAvgRmvView' + idx);
-                var startEl = document.getElementById('tankStartPressure' + idx);
-                var endEl = document.getElementById('tankEndPressure' + idx);
-                var range = tankPressureRange(tankIndex);
-                if (range) {
-                    if (startEl) startEl.textContent = formatPressure(range.first);
-                    if (endEl) endEl.textContent = formatPressure(range.last);
-                }
+                tankIndices.forEach(function (ti) {
+                    var range = tankPressureRange(ti);
+                    var startEl = document.getElementById('tankStartPressure' + idx + '_' + ti);
+                    var endEl = document.getElementById('tankEndPressure' + idx + '_' + ti);
+                    if (range) {
+                        if (startEl) startEl.textContent = formatPressure(range.first);
+                        if (endEl) endEl.textContent = formatPressure(range.last);
+                    }
+                });
 
                 if (!type) return;
                 var liters = window.dhTankWaterVolumeLiters(type, twins);
-                if (volumeEl && liters) volumeEl.textContent = formatVolume(type, twins);
-                var sac = avgSacBar(tankIndex);
-                if (rmvEl && liters && sac !== null) rmvEl.textContent = formatRmv(sac * liters);
+                if (!liters) return;
+                var cylinders = tankIndices.length;
+                if (volumeEl) {
+                    var unitNow = window.dhUnits.getUnit();
+                    var t = window.DH_TANK_TYPES[type];
+                    volumeEl.textContent = unitNow === 'imperial'
+                        ? (t.cuft * (twins ? 2 : 1) * cylinders).toFixed(1) + ' cuft'
+                        : (liters * cylinders).toFixed(1) + ' L';
+                }
+                var rmvTotal = 0, rmvKnown = false;
+                tankIndices.forEach(function (ti) {
+                    var sac = avgSacBar(ti);
+                    if (sac !== null) { rmvTotal += sac * liters; rmvKnown = true; }
+                });
+                if (rmvEl && rmvKnown) rmvEl.textContent = formatRmv(rmvTotal);
             });
 
             // Sets a <x-dh-select>'s value/label/selection the same way

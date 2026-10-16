@@ -1365,8 +1365,22 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-logbook-row-stats { flex: 0 0 auto; display: flex; gap: 18px; text-align: right; }
 .dh-logbook-row-chevron { color: var(--dh-muted); flex: 0 0 auto; }
 .dh-logbook-row-number { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: var(--dh-deep); color: #fff; font-size: .82rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
-.dh-logbook-row-mode-icon { width: 16px; height: 16px; display: inline-flex; vertical-align: -3px; margin-right: 2px; color: var(--dh-sea); }
+/* Dive mode column (Pablo, 2026-10-15: "a third column after the date,
+   same size as the date") - the icon fills the date column's footprint,
+   the classification sits under it where the month sits under the day. */
+.dh-logbook-row-mode { flex: 0 0 56px; text-align: center; }
+.dh-logbook-row-mode-icon { width: 30px; height: 30px; display: inline-flex; color: var(--dh-sea); }
 .dh-logbook-row-mode-icon svg { width: 100%; height: 100%; }
+.dh-logbook-row-mode-label { font-size: .62rem; color: var(--dh-muted); text-transform: uppercase; letter-spacing: .03em; line-height: 1.1; }
+.dh-logbook-row-title { min-width: 0; }
+.dh-logbook-row-wished { font-size: 18px; color: var(--dh-sea); flex: 0 0 auto; }
+.dh-logbook-row-operator-logo { width: 18px; height: 18px; border-radius: 4px; object-fit: contain; background: #fff; vertical-align: -4px; margin-right: 2px; }
+.dh-logbook-filters { display: flex; flex-direction: column; gap: 8px; margin: 0 0 14px; }
+.dh-logbook-filters .dive-filter-chips { flex-wrap: wrap; }
+@media (max-width: 575.98px) {
+  .dh-logbook-row-mode { flex-basis: 44px; }
+  .dh-logbook-row-mode-icon { width: 24px; height: 24px; }
+}
 .dh-svg-icon { display: inline-flex; }
 .dh-svg-icon svg { width: 100%; height: 100%; }
 
@@ -1648,7 +1662,9 @@ span.dh-dive-weather-icon { font-size: 22px; color: var(--dh-sea); }
 @media (max-width: 767.98px) {
   .dh-dive-tank-mini { display: none; }
 }
-.dh-dive-tank-pressure-pills { display: flex; gap: 6px; margin-top: 4px; }
+.dh-dive-tank-pressure-pills { display: flex; gap: 6px; margin-top: 4px; align-items: center; }
+/* "T1"/"T2" in front of a sidemount cylinder's own start/end pills. */
+.dh-dive-tank-pressure-tag { font-size: .65rem; font-weight: 700; color: var(--dh-muted); }
 
 .dh-chart-toggle-tank { opacity: .55; }
 .dh-chart-toggle-tank.is-active { opacity: 1; }

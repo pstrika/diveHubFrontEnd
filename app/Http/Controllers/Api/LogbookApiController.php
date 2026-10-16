@@ -147,7 +147,7 @@ class LogbookApiController extends Controller
             'classification', 'site_name_custom', 'operator_name', 'operator_logo', 'operator_url', 'boat_name', 'boat_pic',
             'boat_captain', 'divemaster', 'current', 'current_direction', 'surface_conditions', 'weather', 'visibility_m',
             'buddies', 'dive_type', 'tank_config', 'gas_tank_size_choice', 'gas_tank_choice', 'gas_role_choice',
-            'deleted_gas_mixes', 'gas_row_order',
+            'deleted_gas_mixes', 'gas_row_order', 'sidemount_size',
         ];
         $columnKeys = ['site_id', 'notes', 'tags'];
 
@@ -169,6 +169,16 @@ class LogbookApiController extends Controller
             if (!array_key_exists($k, $flat)) continue;
             $v = $validated['conditions'][$k] ?? null;
             if ($k === 'gas_tank_choice' && is_array($v)) $v = LogbookConditionRules::dedupeTankChoice($v);
+            if ($k === 'sidemount_size') {
+                // Not stored itself: one size copied onto every tank the
+                // computer tagged "sidemount" in tank_config.
+                if (is_array($v)) {
+                    foreach ($dive->tanks ?? [] as $ti => $tank) {
+                        if (($tank['usage'] ?? null) === 'sidemount') $conditions['tank_config'][$ti] = $v;
+                    }
+                }
+                continue;
+            }
             $conditions[$k] = $v;
         }
         if (array_key_exists('site_id', $flat)) {
