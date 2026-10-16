@@ -45,15 +45,17 @@
 
                     <div class="card p-0 position-relative mt-2 z-index-2 mb-4">
                         <div class="card-body">
-                            <h3 class="h5 mb-2">Upload a UDDF file</h3>
+                            <h3 class="h5 mb-2">Upload your logbook</h3>
                             <p class="text-sm text-secondary">
-                                Export your logbook from MacDive, Subsurface, Shearwater Cloud or any app that writes UDDF, then upload it here.
-                                Nothing is added until you've reviewed duplicates and matched the sites - that's the next two steps.
+                                <strong>MacDive users:</strong> export as <strong>XML</strong> (File &rsaquo; Export &rsaquo; XML), not UDDF - the XML keeps PPO2, setpoints, gas switches,
+                                operator, boat, conditions, tags and tank sizes, so rebreather dives are recognised on their own.
+                                Any other app: upload its UDDF export.
                             </p>
+                            <p class="text-sm text-secondary">Nothing is added until you've reviewed duplicates, dive modes and site matches - that's the next two steps.</p>
                             <form method="POST" action="{{ route('Logbook.import.upload') }}" enctype="multipart/form-data" id="importForm">
                                 @csrf
                                 <div class="dh-field">
-                                    <label for="importFile">Logbook file (.uddf)</label>
+                                    <label for="importFile">Logbook file (.xml or .uddf)</label>
                                     <input type="file" id="importFile" name="file" accept=".uddf,.xml,application/xml,text/xml" required>
                                 </div>
                                 <div class="d-flex justify-content-end">

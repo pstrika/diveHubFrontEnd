@@ -66,13 +66,18 @@ class LogbookImportController extends Controller
         $name = $file->getClientOriginalName();
         $ext = strtolower($file->getClientOriginalExtension());
         if (!in_array($ext, ['uddf', 'xml'], true)) {
-            return back()->withErrors(['file' => 'Please upload a UDDF (.uddf) export.']);
+            return back()->withErrors(['file' => 'Please upload a MacDive XML (.xml) or UDDF (.uddf) export.']);
         }
 
+        // Two formats, sniffed from the file itself: MacDive's own XML (the
+        // richer one - PPO2, setpoints, operator, conditions, tanks) or UDDF.
+        $isMacDive = \App\Support\MacDiveXmlParser::sniff($file->getRealPath());
         try {
-            $parsed = UddfParser::parse($file->getRealPath());
+            $parsed = $isMacDive
+                ? \App\Support\MacDiveXmlParser::parse($file->getRealPath())
+                : UddfParser::parse($file->getRealPath());
         } catch (\Throwable $e) {
-            return back()->withErrors(['file' => 'That file could not be read as UDDF: ' . $e->getMessage()]);
+            return back()->withErrors(['file' => 'That file could not be read as ' . ($isMacDive ? 'MacDive XML' : 'UDDF') . ': ' . $e->getMessage()]);
         }
         if (!count($parsed->dives)) {
             return back()->withErrors(['file' => 'No dives found in that file.']);
@@ -188,7 +193,7 @@ class LogbookImportController extends Controller
         foreach ($items as $pos => $row) {
             $d = $row['payload'];
             if ($row['decision'] !== 'import') continue;
-            if (($d['mode_source'] ?? null) === 'file') { $fromFile[$d['dive_mode']] = ($fromFile[$d['dive_mode']] ?? 0) + 1; continue; }
+            if (in_array($d['mode_source'] ?? null, ['file', 'inferred'], true)) { $fromFile[$d['dive_mode']] = ($fromFile[$d['dive_mode']] ?? 0) + 1; continue; }
             $modeRows[] = [
                 'pos' => $pos,
                 'date' => $d['started_at'],
@@ -425,11 +430,14 @@ class LogbookImportController extends Controller
                                     $createdSites[$item->site_key] = UserSite::create([
                                         'user_id' => $user->id,
                                         'name' => Str::limit($s['name'] ?: 'Imported site', 150, ''),
-                                        'type' => 'other',
+                                        'type' => \App\Support\MacDiveXmlParser::siteType($s),
+                                        'min_cert' => $s['min_cert'] ?? null,
+                                        'water_type' => $s['water_type'] ?? null,
+                                        'altitude_m' => $s['altitude_m'] ?? null,
                                         'latitude' => $s['latitude'] ?? null,
                                         'longitude' => $s['longitude'] ?? null,
-                                        'location' => $s['location'] ?: null,
-                                        'country' => $s['country'] ?: null,
+                                        'location' => ($s['location'] ?? '') ?: null,
+                                        'country' => ($s['country'] ?? '') ?: null,
                                     ])->id;
                                     $siteMap[$item->site_key]['user_site_id'] = $createdSites[$item->site_key];
                                     $siteMap[$item->site_key]['decision'] = 'own';
@@ -441,7 +449,9 @@ class LogbookImportController extends Controller
                         if (!$siteId && !$userSiteId && !$siteName) $siteName = $s['name'] ?: null;
                     }
 
-                    $conditions = [];
+                    // Conditions the file carried (MacDive XML: operator, boat,
+                    // weather, current, dive types, tank sizes...) first.
+                    $conditions = $p['conditions'] ?? [];
                     if ($siteName) $conditions['site_name_custom'] = $siteName;
                     if (!empty($p['buddies'])) $conditions['buddies'] = implode(', ', $p['buddies']);
                     if (!empty($p['rating'])) $conditions['rating'] = (int) $p['rating'];
@@ -460,6 +470,11 @@ class LogbookImportController extends Controller
                             'max_depth_m' => $p['max_depth_m'],
                             'avg_depth_m' => $p['avg_depth_m'] ?? null,
                             'min_water_temp_c' => $p['min_water_temp_c'] ?? null,
+                            'max_water_temp_c' => $p['max_water_temp_c'] ?? null,
+                            'surface_temp_c' => $p['surface_temp_c'] ?? null,
+                            'deco_model' => $p['deco_model'] ?? null,
+                            'sensor_data' => $p['sensor_data'] ?? null,
+                            'tags' => $p['tags'] ?? [],
                             'dive_mode' => $p['dive_mode'] ?? 'open_circuit',
                             'gas_mixes' => $p['gas_mixes'] ?? null,
                             'tanks' => $p['tanks'] ?? null,

@@ -52,14 +52,14 @@
                                 <h3 class="h5 mb-1">Dive mode</h3>
                                 @if ($fromFile)
                                     <p class="text-sm text-secondary mb-2">
-                                        From the file:
+                                        Worked out from the file (setpoint switches, a CCR tag, or how PPO2 tracks depth):
                                         {{ collect($fromFile)->map(fn ($n, $m) => $n . ' ' . ($modeNames[$m] ?? $m))->implode(', ') }}.
                                     </p>
                                 @endif
                                 @if (count($unknownRows))
                                     <p class="text-sm text-secondary">
                                         {{ count($unknownRows) }} {{ count($unknownRows) === 1 ? 'dive doesn\'t' : 'dives don\'t' }} say whether {{ count($unknownRows) === 1 ? 'it was' : 'they were' }} open or closed circuit
-                                        ({{ $import->generator ?: 'this app' }} doesn't export it). They'll be imported as open circuit - tick the rebreather dives below.
+                                        (no setpoint or PPO2 data to tell from). They'll be imported as open circuit - tick the rebreather dives below.
                                         You can also change the mode on each dive's page later.
                                     </p>
                                     <div class="dh-import-mode-filters">
