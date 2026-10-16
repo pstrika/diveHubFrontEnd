@@ -150,7 +150,7 @@ class LogbookApiController extends Controller
             'buddies', 'dive_type', 'tank_config', 'gas_tank_size_choice', 'gas_tank_choice', 'gas_role_choice',
             'deleted_gas_mixes', 'gas_row_order', 'sidemount_size',
         ];
-        $columnKeys = ['site_id', 'notes', 'tags'];
+        $columnKeys = ['site_id', 'user_site_id', 'notes', 'tags'];
 
         $unknown = array_diff(array_keys($flat), $conditionKeys, $columnKeys);
         if (count($unknown)) {
@@ -162,7 +162,7 @@ class LogbookApiController extends Controller
         foreach ($flat as $k => $v) {
             if (in_array($k, $columnKeys, true)) $toValidate[$k] = $v; else $toValidate['conditions'][$k] = $v;
         }
-        $rules = LogbookConditionRules::rules();
+        $rules = LogbookConditionRules::rules() + ['user_site_id' => 'nullable|integer'];
         $validated = validator($toValidate, $rules)->validate();
 
         $conditions = $dive->conditions ?? [];
@@ -185,7 +185,15 @@ class LogbookApiController extends Controller
         if (array_key_exists('site_id', $flat)) {
             $dive->site_id = $validated['site_id'] ?? null;
             // A catalog pick clears any free-typed name - a dive has one site.
-            if ($dive->site_id) $conditions['site_name_custom'] = null;
+            if ($dive->site_id) { $conditions['site_name_custom'] = null; $dive->user_site_id = null; }
+        }
+        if (array_key_exists('user_site_id', $flat)) {
+            $usId = $validated['user_site_id'] ?? null;
+            if ($usId && !\App\Models\UserSite::where('user_id', $dive->user_id)->where('id', $usId)->exists()) {
+                return response()->json(['message' => 'Unknown site', 'errors' => ['user_site_id' => ['Not one of your sites']]], 422);
+            }
+            $dive->user_site_id = $usId ? (int) $usId : null;
+            if ($dive->user_site_id) { $conditions['site_name_custom'] = null; $dive->site_id = null; }
         }
         if (array_key_exists('notes', $flat)) $dive->notes = $validated['notes'] ?? null;
         if (array_key_exists('tags', $flat)) $dive->tags = $validated['tags'] ?? [];
@@ -225,6 +233,19 @@ class LogbookApiController extends Controller
         unset($full['profile']);
 
         return response()->json($full + ['seq' => $seq]);
+    }
+
+    /**
+     * DELETE /api/dives/{uuid} - same soft delete + change-feed row as the
+     * web's Delete button (Dive::deleteAndLog). 204 on success; a dive that
+     * is already deleted is a 404 like any other unknown uuid.
+     */
+    public function destroy(Request $request, string $uuid)
+    {
+        $dive = Dive::where('user_id', $request->user()->id)->where('uuid', $uuid)->firstOrFail();
+        $dive->deleteAndLog();
+
+        return response()->noContent();
     }
 
     private function etagJson(Request $request, array $payload)

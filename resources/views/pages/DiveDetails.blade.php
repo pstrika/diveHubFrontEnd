@@ -11,8 +11,10 @@
     // exist, so this is read regardless of $tanks.
     $labeledGases = $dive->labeledGasMixes();
     $seq = $dive->sequenceNumber();
-    $site = $dive->site();
-    $siteName = $site->name ?? ($conditions['site_name_custom'] ?? null);
+    // Catalog site / the diver's own site / free-typed name (Dive::siteInfo).
+    $siteInfo = $dive->siteInfo();
+    $site = $siteInfo['site'] ?? null;
+    $siteName = $siteInfo['name'] ?? null;
 
     // Live catalog match for the Operator view row (Pablo, 2026-10-15: "if
     // operator is known by DH, you can link to OperatorDetails page" - then
@@ -310,9 +312,27 @@
                                      .dh-dive-header-tools scope in divershub.css
                                      recolors it to match the light
                                      dh-btn-ghost-dark button right next to it. --}}
-                                <button type="button" class="dh-btn-icon" id="divePrintBtn" title="Print (coming soon)">
+                                {{-- One-page PDF of this dive (Pablo, 2026-10-16),
+                                     in whichever units the page is showing. --}}
+                                <a href="{{ route('DiveDetails.print', $dive->id) }}" class="dh-btn-icon" id="divePrintBtn" title="Print dive log (PDF)" target="_blank" rel="noopener" data-print-base="{{ route('DiveDetails.print', $dive->id) }}">
                                     <span class="material-icons-round" aria-hidden="true">print</span>
-                                </button>
+                                </a>
+                                @if ($dive->factsEditable())
+                                    <a href="{{ route('DiveDetails.edit', $dive->id) }}" class="dh-btn-icon" title="Edit depth, duration, gases...">
+                                        <span class="material-icons-round" aria-hidden="true">tune</span>
+                                    </a>
+                                @endif
+                                {{-- Delete (Pablo, 2026-10-16). Soft delete + change
+                                     feed (Dive::deleteAndLog) - the computer's copy
+                                     can't re-create it on the next sync. --}}
+                                <form method="POST" action="{{ route('DiveDetails.destroy', $dive->id) }}" class="d-inline"
+                                      onsubmit="return confirm('Delete this dive from your logbook?\n\nIt will disappear from the app too, and syncing your computer again will not bring it back.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="dh-btn-icon dh-btn-icon-danger" title="Delete dive">
+                                        <span class="material-icons-round" aria-hidden="true">delete</span>
+                                    </button>
+                                </form>
                             </div>
 
                             {{-- Single chip (Pablo, 2026-10-15: "a single chip <icon>
@@ -359,13 +379,16 @@
                             <span id="diveSiteChipText">
                                 @if ($siteName)
                                     -
-                                    @if ($site)
-                                        <a href="{{ $site->publicUrl() }}">{{ $siteName }}</a>
+                                    @if ($siteInfo['url'])
+                                        <a href="{{ $siteInfo['url'] }}">{{ $siteName }}</a>
                                     @else
                                         {{ $siteName }}
                                     @endif
-                                    @if ($site && $site->type)
-                                        <x-site-type-icon :type="$site->type" size="34" />
+                                    @if ($siteInfo['type'])
+                                        <x-site-type-icon :type="$siteInfo['type']" size="34" />
+                                    @endif
+                                    @if ($siteInfo['custom'] && $siteInfo['user_site'])
+                                        <span class="dh-dive-site-chip-own" title="One of your own sites">yours</span>
                                     @endif
                                 @else
                                     - Add dive site
@@ -379,13 +402,55 @@
                             @csrf
                             <input type="hidden" name="form" value="site">
                             <input type="hidden" name="site_id" id="diveSiteIdInput" value="{{ $dive->site_id }}">
+                            <input type="hidden" name="user_site_id" id="diveUserSiteIdInput" value="{{ $dive->user_site_id }}">
                             <div style="position: relative;">
-                                <input type="text" id="diveSiteSearch" name="conditions[site_name_custom]" value="{{ $siteName }}" placeholder="Search our sites or type your own" autocomplete="off">
+                                <input type="text" id="diveSiteSearch" name="conditions[site_name_custom]" value="{{ $siteName }}" placeholder="Search our sites, your sites, or type a name" autocomplete="off">
                                 <div id="diveSiteResults" class="dh-search-list dh-related-site-results" hidden></div>
                             </div>
                             <button type="submit" class="dh-btn dh-btn-primary dh-dive-site-save">Save</button>
+                            {{-- A site that's in neither catalog: make it one of the
+                                 diver's own, tagged on this dive right away
+                                 (Pablo, 2026-10-16: custom user sites). --}}
+                            <a href="{{ route('Logbook.sites.create', ['dive' => $dive->id]) }}" class="dh-btn dh-btn-ghost-dark dh-dive-site-create" id="diveSiteCreateLink" title="Create one of your own sites and tag this dive with it">
+                                <span class="material-icons-round" aria-hidden="true">add_location_alt</span>
+                                New site
+                            </a>
                         </form>
                     </div>
+
+                    @if (session('status'))
+                        <div class="dh-logbook-flash" role="status">
+                            <span class="material-icons-round" aria-hidden="true">check_circle</span>
+                            {{ session('status') }}
+                        </div>
+                    @endif
+                    @if (session('error'))
+                        <div class="dh-logbook-flash" role="alert" style="background: rgba(211,47,47,.08); color: var(--dh-danger);">
+                            <span class="material-icons-round" aria-hidden="true">error</span>
+                            {{ session('error') }}
+                        </div>
+                    @endif
+
+                    {{-- Surface-break halves (Pablo, 2026-10-16: "the diver
+                         comes to the surface, the computer considers it the
+                         end of the dive and then goes back again") - offer to
+                         fold the next dive into this one. DiveMerger decides
+                         what counts as "next". --}}
+                    @if ($mergeCandidate)
+                        @php $mergeGap = \App\Support\DiveMerger::gapSeconds($dive, $mergeCandidate); @endphp
+                        <div class="dh-dive-merge-banner">
+                            <span>
+                                <span class="material-icons-round" aria-hidden="true">call_merge</span>
+                                Dive #{{ $mergeCandidate->sequenceNumber() }} started {{ $mergeGap < 60 ? 'right' : intdiv($mergeGap, 60) . ' min' }} after this one ended
+                                ({{ $mergeCandidate->started_at->format('g:i A') }}, {{ gmdate('H:i', $mergeCandidate->duration_seconds) }}). Same dive?
+                            </span>
+                            <form method="POST" action="{{ route('DiveDetails.merge', $dive->id) }}" onsubmit="return confirm('Merge dive #{{ $mergeCandidate->sequenceNumber() }} into this one? The surface interval is kept as part of the dive and the second entry is removed.');">
+                                @csrf
+                                <input type="hidden" name="with_id" value="{{ $mergeCandidate->id }}">
+                                <button type="submit" class="dh-btn dh-btn-ghost-dark">Merge into this dive</button>
+                            </form>
+                        </div>
+                    @endif
 
                     {{-- Dark header dashboard (Pablo, 2026-10-15) - dive number
                          moved to the title/chip above instead of its own tile. --}}
@@ -748,6 +813,7 @@
                          clicked show pressure on the chart vs time") are built
                          here since the label needs the tanks[] usage mapping,
                          but toggle the same way as the other series chips. --}}
+                    @if ($dive->hasProfile())
                     <div class="dh-dive-chart-card mb-4">
                         <div class="dh-chart-toggles">
                             <button type="button" class="dh-chart-toggle is-active" data-series="depth" style="--toggle-color: {{ \App\Support\DiveChartPalette::DEPTH }};">Depth</button>
@@ -777,6 +843,7 @@
                             <canvas id="diveProfileChart"></canvas>
                         </div>
                     </div>
+                    @endif
 
                     {{-- Dive Operator (Pablo, 2026-10-15, renamed from "Dive
                          Logistics"): who ran the trip. View state is plain
@@ -1126,11 +1193,80 @@
             window.dhBuddySearchUrl = "{{ route('Logbook.searchUsers') }}";
             window.dhDiveTankConfig = @json($tankConfig);
             window.dhDiveConditionsUrl = "{{ route('DiveDetails.updateConditions', $dive->id) }}";
+            // One-page PDF export (dive-print.js), planner-style page
+            // snapshot in portrait (Pablo, 2026-10-16: "something similar to
+            // what we created for the pdf of the deco planning, portrait").
+            @php
+                $printLabel = fn ($k) => $k ? ucfirst(str_replace('_', ' ', $k)) : null;
+                $printGases = [];
+                foreach ($gasRows as $pi => $r) {
+                    $printGases[] = [
+                        'rowIdx' => $pi,
+                        'o2' => (int) round($r['mix']['oxygen'] ?? 0),
+                        'he' => (int) round($r['mix']['helium'] ?? 0),
+                        'label' => $chipMix($r['mix']),
+                        'role' => $roleOptions[$r['role']] ?? ($r['role'] ? ucfirst($r['role']) : ''),
+                        'tankIndices' => array_values($r['tankIndices']),
+                        'deleted' => (bool) $r['deleted'],
+                    ];
+                }
+            @endphp
+            @php
+                // Blade's @json splits an inline array literal on commas - build it first.
+                $printData = [
+                'seq' => $seq,
+                'dateLong' => $dive->started_at->format('l, F j, Y'),
+                'dateShort' => $dive->started_at->format('Y-m-d'),
+                'timeIn' => $dive->started_at->format('g:i A'),
+                'timeOut' => $dive->started_at->copy()->addSeconds($dive->duration_seconds)->format('g:i A'),
+                'siteName' => $siteName,
+                'siteCity' => $siteInfo['city'] ?? null,
+                'siteCountry' => ($siteInfo['user_site'] ?? null)?->country,
+                'lat' => $siteInfo['latitude'] ?? null,
+                'lon' => $siteInfo['longitude'] ?? null,
+                'modeLabel' => $dive->modeLabel(),
+                'isCcr' => $isCcr,
+                'classification' => ucfirst($classification),
+                'userName' => auth()->user()->name ?? '',
+                'legend' => $diveComputerLegend,
+                'assetsUrl' => asset('assets'),
+                'maxDepthM' => (float) $dive->max_depth_m,
+                'avgDepthM' => $dive->avg_depth_m !== null ? (float) $dive->avg_depth_m : null,
+                'durationSeconds' => (int) $dive->duration_seconds,
+                'minTempC' => $dive->min_water_temp_c !== null ? (float) $dive->min_water_temp_c : null,
+                'tags' => $dive->tags ?? [],
+                'conditions' => [
+                    'current' => $printLabel($conditions['current'] ?? null),
+                    'currentDirection' => $conditions['current_direction'] ?? null,
+                    'surface' => $printLabel($conditions['surface_conditions'] ?? null),
+                    'weather' => $printLabel($conditions['weather'] ?? null),
+                    'visibilityM' => isset($conditions['visibility_m']) ? (float) $conditions['visibility_m'] : null,
+                    'diveTypes' => collect($selectedDiveTypes)->map(fn ($t) => $diveTypeOptions[$t] ?? $t)->values()->all(),
+                ],
+                'operator' => [
+                    'name' => $conditions['operator_name'] ?? null,
+                    'boat' => $conditions['boat_name'] ?? null,
+                    'captain' => $conditions['boat_captain'] ?? null,
+                    'divemaster' => $conditions['divemaster'] ?? null,
+                    'logoUrl' => $matchedOperator['logoUrl'] ?? null,
+                ],
+                'buddies' => array_values(array_filter(array_map('trim', explode(',', $conditions['buddies'] ?? '')))),
+                'notes' => $dive->notes,
+                'gases' => $printGases,
+                'hasProfile' => $dive->hasProfile(),
+                'serverPdfUrl' => route('DiveDetails.print', $dive->id),
+            ];
+            @endphp
+            window.dhDivePrint = @json($printData);
         </script>
         <script src="{{ asset('assets') }}/js/dh-select.js?v={{ config('divehub.version') }}"></script>
         <script src="{{ asset('assets') }}/js/dh-units.js?v={{ config('divehub.version') }}"></script>
         <script src="{{ asset('assets') }}/js/dh-tanks.js?v={{ config('divehub.version') }}"></script>
         <script src="{{ asset('assets') }}/js/dive-details.js?v={{ config('divehub.version') }}"></script>
         <script src="{{ asset('assets') }}/js/dive-details-form.js?v={{ config('divehub.version') }}"></script>
+        {{-- PDF export, same libraries + approach as DivePlanner's own export. --}}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+        <script src="{{ asset('assets') }}/js/dive-print.js?v={{ config('divehub.version') }}"></script>
     @endpush
 </x-page-template>

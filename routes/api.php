@@ -52,6 +52,15 @@ Route::withoutMiddleware('throttle:api')->middleware(['auth.api:sanctum', 'logbo
     Route::get('/users/search', [\App\Http\Controllers\Api\LogbookApiController::class, 'searchUsers']);
     Route::patch('/dives/{uuid}/conditions', [\App\Http\Controllers\Api\LogbookApiController::class, 'updateConditions'])
         ->where('uuid', '[0-9a-fA-F-]{36}');
+    // Web-style delete from the app (Pablo, 2026-10-16): soft delete +
+    // change feed, so every other phone drops it too.
+    Route::delete('/dives/{uuid}', [\App\Http\Controllers\Api\LogbookApiController::class, 'destroy'])
+        ->where('uuid', '[0-9a-fA-F-]{36}');
+    // The diver's own sites (UserSiteApiController).
+    Route::get('/user-sites', [\App\Http\Controllers\Api\UserSiteApiController::class, 'index']);
+    Route::post('/user-sites', [\App\Http\Controllers\Api\UserSiteApiController::class, 'store']);
+    Route::patch('/user-sites/{id}', [\App\Http\Controllers\Api\UserSiteApiController::class, 'update'])->where('id', '[0-9]+');
+    Route::delete('/user-sites/{id}', [\App\Http\Controllers\Api\UserSiteApiController::class, 'destroy'])->where('id', '[0-9]+');
 });
 
 // App sign-in token exchange (docs/APP-AUTH.md) - see AppAuthController.

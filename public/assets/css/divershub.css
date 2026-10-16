@@ -4439,3 +4439,54 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
 .dh-wizard-actions .dh-btn-primary { margin-left: auto; }
 .dh-wizard-status { font-size: .78rem; color: var(--dh-muted); margin-top: 10px; min-height: 1em; }
 .dh-wizard-rate { text-align: center; padding: 10px 0 4px; }
+
+/* Logbook phase 2 (2026-10-16): delete / add / import / my sites */
+.dh-dive-header-tools .dh-btn-icon-danger:hover { border-color: var(--dh-danger); color: var(--dh-danger); }
+.dh-logbook-flash { display: flex; align-items: center; gap: 8px; padding: 10px 14px; margin: 0 0 12px; border-radius: 12px; background: rgba(46, 125, 50, .08); color: var(--dh-good, #2e7d32); font-size: .9rem; font-weight: 600; }
+.dh-logbook-flash .material-icons-round { font-size: 20px; }
+.dh-logbook-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.dh-logbook-actions .dh-btn .material-icons-round { font-size: 18px; }
+.dh-dive-site-chip-own { font-size: .62rem; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 999px; background: rgba(0, 94, 125, .1); color: var(--dh-sea); margin-left: 4px; vertical-align: middle; }
+.dh-dive-site-create { margin-left: 6px; white-space: nowrap; }
+.dh-dive-site-create .material-icons-round { font-size: 18px; }
+.dh-search-list .dh-search-item-own { font-size: .62rem; text-transform: uppercase; letter-spacing: .05em; padding: 1px 6px; border-radius: 999px; background: rgba(0, 94, 125, .1); color: var(--dh-sea); margin-left: 6px; }
+.dh-site-form .dh-field select, .dh-site-textarea { width: 100%; padding: 12px 14px; font-size: 1rem; color: var(--dh-ink); background: #fff; border: 1px solid var(--dh-line); border-radius: 12px; }
+.dh-site-textarea { resize: vertical; font-family: inherit; }
+.dh-site-unit { flex: 0 0 72px; padding: 0 10px; border: 1px solid var(--dh-line); border-radius: 12px; background: #fff; color: var(--dh-ink); }
+.dh-user-site-row { cursor: default; }
+.dh-user-site-row.is-highlight { box-shadow: 0 0 0 2px var(--dh-sea); }
+.dh-user-site-actions { display: flex; gap: 6px; align-items: center; }
+.dh-user-site-actions .dh-btn-icon { width: 33px; height: 33px; background: #fff; color: var(--dh-ink); border: 1.5px solid var(--dh-line); }
+.dh-user-site-actions .dh-btn-icon:hover { border-color: var(--dh-ink); }
+.dh-user-site-actions .dh-btn-icon-danger:hover { border-color: var(--dh-danger); color: var(--dh-danger); }
+.dh-danger-zone { border: 1px solid rgba(211, 47, 47, .35); }
+.dh-btn-danger { background: var(--dh-danger); color: #fff; border: 1.5px solid var(--dh-danger); }
+.dh-btn-danger:hover { background: #b71c1c; color: #fff; }
+.dh-check-inline { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; text-transform: none; letter-spacing: 0; font-size: .95rem; color: var(--dh-ink); cursor: pointer; padding: 12px 0; }
+.dh-check-inline input { width: 18px; height: 18px; }
+.dh-md-gases { display: flex; flex-direction: column; gap: 8px; }
+.dh-md-gas-row { display: flex; align-items: center; gap: 8px; }
+.dh-md-gas-row input { width: 90px; padding: 10px 12px; font-size: 1rem; border: 1px solid var(--dh-line); border-radius: 12px; }
+.dh-md-gas-row .dh-btn-icon { width: 30px; height: 30px; background: #fff; color: var(--dh-muted); border: 1.5px solid var(--dh-line); }
+.dh-md-gas-row .dh-btn-icon:hover { color: var(--dh-danger); border-color: var(--dh-danger); }
+.dh-dive-merge-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 14px; margin: 10px 0 0; border-radius: 12px; background: rgba(0, 94, 125, .07); border: 1px dashed var(--dh-sea); font-size: .9rem; }
+.dh-dive-merge-banner .material-icons-round { font-size: 20px; color: var(--dh-sea); vertical-align: -5px; }
+.dh-dive-facts-edit { font-size: .8rem; margin-left: 8px; }
+.dh-import-steps { display: flex; gap: 8px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--dh-muted); }
+.dh-import-steps span { padding: 4px 10px; border-radius: 999px; background: rgba(0,0,0,.05); }
+.dh-import-steps span.is-active { background: var(--dh-ink); color: #fff; }
+.dh-import-list { display: flex; flex-direction: column; gap: 10px; }
+.dh-import-row { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--dh-line); border-radius: 12px; cursor: pointer; }
+.dh-import-row input { margin-top: 4px; width: 18px; height: 18px; flex: 0 0 auto; }
+.dh-import-row-main { min-width: 0; }
+.dh-import-site { padding: 12px; border: 1px solid var(--dh-line); border-radius: 12px; }
+.dh-import-site-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.dh-import-site-choices { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: .9rem; }
+.dh-import-site-choices label { display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; }
+.dh-import-select { max-width: 260px; padding: 6px 10px; border: 1px solid var(--dh-line); border-radius: 10px; background: #fff; font-size: .9rem; }
+.dh-import-search-wrap { position: relative; display: inline-block; width: 260px; max-width: 100%; }
+.dh-import-search { width: 100%; padding: 6px 10px; border: 1px solid var(--dh-line); border-radius: 10px; background: #fff; font-size: .9rem; }
+.dh-import-results { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; }
+.dh-import-site { position: relative; }
+.dh-import-progress { height: 10px; border-radius: 999px; background: rgba(0,0,0,.08); overflow: hidden; }
+.dh-import-progress-bar { height: 100%; background: var(--dh-sea); transition: width .3s; }

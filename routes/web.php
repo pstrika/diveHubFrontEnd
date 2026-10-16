@@ -470,6 +470,34 @@ Route::post('use-google-picture', 'App\Http\Controllers\UserController@useGoogle
 // 'logbook' = early-access gate (config/divehub.php logbook_allowed_emails).
 Route::get('Logbook', 'App\Http\Controllers\LogbookController@index')->middleware(['auth', 'logbook'])->name('Logbook');
 Route::get('Logbook/{id}', 'App\Http\Controllers\LogbookController@show')->where('id', '[0-9]+')->middleware(['auth', 'logbook'])->name('DiveDetails');
+Route::delete('Logbook/{id}', 'App\Http\Controllers\LogbookController@destroy')->where('id', '[0-9]+')->middleware(['auth', 'logbook'])->name('DiveDetails.destroy');
+// Logbook phase 2 (2026-10-16): manual entry, merge, settings + wipe,
+// print, import wizard, the diver's own sites. Static paths before Logbook/{id}.
+Route::middleware(['auth', 'logbook'])->group(function () {
+    Route::get('Logbook/new', 'App\Http\Controllers\LogbookController@create')->name('Logbook.create');
+    Route::post('Logbook', 'App\Http\Controllers\LogbookController@store')->name('Logbook.store');
+    Route::get('Logbook/{id}/edit', 'App\Http\Controllers\LogbookController@edit')->where('id', '[0-9]+')->name('DiveDetails.edit');
+    Route::put('Logbook/{id}', 'App\Http\Controllers\LogbookController@update')->where('id', '[0-9]+')->name('DiveDetails.update');
+    Route::post('Logbook/{id}/merge', 'App\Http\Controllers\LogbookController@merge')->where('id', '[0-9]+')->name('DiveDetails.merge');
+    Route::get('Logbook/{id}/print', 'App\Http\Controllers\LogbookPrintController@show')->where('id', '[0-9]+')->name('DiveDetails.print');
+    Route::get('Logbook/settings', 'App\Http\Controllers\LogbookController@settings')->name('Logbook.settings');
+    Route::delete('Logbook/settings/all', 'App\Http\Controllers\LogbookController@destroyAll')->name('Logbook.destroyAll');
+    Route::get('Logbook/import', 'App\Http\Controllers\LogbookImportController@index')->name('Logbook.import.index');
+    Route::post('Logbook/import', 'App\Http\Controllers\LogbookImportController@upload')->name('Logbook.import.upload');
+    Route::get('Logbook/import/{import}', 'App\Http\Controllers\LogbookImportController@review')->where('import', '[0-9]+')->name('Logbook.import.review');
+    Route::post('Logbook/import/{import}/decisions', 'App\Http\Controllers\LogbookImportController@decisions')->where('import', '[0-9]+')->name('Logbook.import.decisions');
+    Route::get('Logbook/import/{import}/sites', 'App\Http\Controllers\LogbookImportController@sites')->where('import', '[0-9]+')->name('Logbook.import.sites');
+    Route::post('Logbook/import/{import}/sites', 'App\Http\Controllers\LogbookImportController@saveSites')->where('import', '[0-9]+')->name('Logbook.import.saveSites');
+    Route::get('Logbook/import/{import}/run', 'App\Http\Controllers\LogbookImportController@progress')->where('import', '[0-9]+')->name('Logbook.import.progress');
+    Route::post('Logbook/import/{import}/run', 'App\Http\Controllers\LogbookImportController@run')->where('import', '[0-9]+')->name('Logbook.import.run');
+    Route::delete('Logbook/import/{import}', 'App\Http\Controllers\LogbookImportController@cancel')->where('import', '[0-9]+')->name('Logbook.import.cancel');
+    Route::get('Logbook/sites', 'App\Http\Controllers\UserSiteController@index')->name('Logbook.sites.index');
+    Route::get('Logbook/sites/new', 'App\Http\Controllers\UserSiteController@create')->name('Logbook.sites.create');
+    Route::post('Logbook/sites', 'App\Http\Controllers\UserSiteController@store')->name('Logbook.sites.store');
+    Route::get('Logbook/sites/{id}/edit', 'App\Http\Controllers\UserSiteController@edit')->where('id', '[0-9]+')->name('Logbook.sites.edit');
+    Route::put('Logbook/sites/{id}', 'App\Http\Controllers\UserSiteController@update')->where('id', '[0-9]+')->name('Logbook.sites.update');
+    Route::delete('Logbook/sites/{id}', 'App\Http\Controllers\UserSiteController@destroy')->where('id', '[0-9]+')->name('Logbook.sites.destroy');
+});
 Route::post('Logbook/{id}/conditions', 'App\Http\Controllers\LogbookController@updateConditions')->where('id', '[0-9]+')->middleware(['auth', 'logbook'])->name('DiveDetails.updateConditions');
 Route::get('Logbook/users/search', 'App\Http\Controllers\LogbookController@searchUsers')->middleware(['auth', 'logbook'])->name('Logbook.searchUsers');
 

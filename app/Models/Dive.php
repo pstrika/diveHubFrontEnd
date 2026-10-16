@@ -23,6 +23,48 @@ class Dive extends Model
         static::creating(function (Dive $dive) {
             $dive->uuid ??= (string) Str::uuid();
         });
+        // entered_deco is derived from the profile once, at write time (see
+        // migration 2026_10_16_010000) so list views never load profiles.
+        static::saving(function (Dive $dive) {
+            if ($dive->isDirty('profile') || $dive->entered_deco === null) {
+                $dive->entered_deco = self::scanEnteredDeco($dive->profile ?? []);
+            }
+        });
+    }
+
+    public static function scanEnteredDeco(array $profile): bool
+    {
+        foreach ($profile as $sample) {
+            if (($sample['decoKind'] ?? null) === 'deco_stop') return true;
+        }
+        return false;
+    }
+
+    /** Columns a list view needs - everything but the (large) profile JSON. */
+    public const LIST_COLUMNS = [
+        'id', 'uuid', 'user_id', 'computer_family', 'computer_model', 'computer_serial', 'fingerprint', 'dive_number',
+        'started_at', 'duration_seconds', 'max_depth_m', 'avg_depth_m', 'min_water_temp_c', 'max_water_temp_c',
+        'dive_mode', 'entered_deco', 'gas_mixes', 'tanks', 'site_id', 'user_site_id', 'notes', 'conditions', 'tags',
+        'source', 'merged_into_id', 'created_at', 'updated_at', 'deleted_at',
+    ];
+
+    /** Catalog sites already looked up this request (id => Site|null), so a list makes one query, not one per row. */
+    private static array $siteCache = [];
+
+    /** Look up every catalog site these dives reference in one query. */
+    public static function preloadSites(iterable $dives): void
+    {
+        $ids = [];
+        foreach ($dives as $d) {
+            if ($d->site_id && !array_key_exists((int) $d->site_id, self::$siteCache)) $ids[(int) $d->site_id] = true;
+        }
+        if (!$ids) return;
+        foreach (Site::whereIn('id', array_keys($ids))->get() as $site) {
+            self::$siteCache[(int) $site->id] = $site;
+        }
+        foreach (array_keys($ids) as $id) {
+            self::$siteCache[$id] ??= null;
+        }
     }
 
     protected $fillable = [
@@ -48,12 +90,17 @@ class Dive extends Model
         'sensor_data',
         'profile',
         'site_id',
+        'user_site_id',
         'deco_plan_id',
         'notes',
         'conditions',
         'tags',
         'source',
+        'merged_into_id',
     ];
+
+    /** Sources whose computer-owned facts (depth, duration, gases...) a diver may edit by hand. */
+    public const EDITABLE_SOURCES = ['manual', 'uddf-import'];
 
     protected $casts = [
         'started_at' => 'datetime',
@@ -80,7 +127,91 @@ class Dive extends Model
     /** No DB-level relation - Site lives on the separate mysql_trips connection. */
     public function site(): ?Site
     {
-        return $this->site_id ? Site::find($this->site_id) : null;
+        if (!$this->site_id) return null;
+        $id = (int) $this->site_id;
+        if (!array_key_exists($id, self::$siteCache)) {
+            self::$siteCache[$id] = Site::find($id);
+        }
+        return self::$siteCache[$id];
+    }
+
+    public function userSite(): BelongsTo
+    {
+        return $this->belongsTo(UserSite::class);
+    }
+
+    /**
+     * Where this dive happened, whichever of the three ways it was tagged:
+     * a catalog site (site_id), one of the diver's own sites
+     * (user_site_id), or a free-typed name (conditions.site_name_custom).
+     * One shape for the list rows, the details chip, the PDF and the API
+     * so none of them re-derive the precedence. Null when untagged.
+     *
+     * @return array{name:string, city:?string, url:?string, type:?string, latitude:?float, longitude:?float, custom:bool, site:?Site, user_site:?UserSite}|null
+     */
+    public function siteInfo(): ?array
+    {
+        if ($this->site_id && ($site = $this->site())) {
+            return [
+                'name' => $site->name,
+                'city' => \App\Support\SiteLocations::name($site->location),
+                'url' => $site->publicUrl(),
+                'type' => $site->type,
+                'latitude' => $site->decimalLatitude(),
+                'longitude' => $site->decimalLongitude(),
+                'custom' => false,
+                'site' => $site,
+                'user_site' => null,
+            ];
+        }
+        if ($this->user_site_id && ($us = $this->userSite)) {
+            return [
+                'name' => $us->name,
+                'city' => $us->cityLabel(),
+                'url' => $us->publicUrl(),
+                'type' => $us->iconType(),
+                'latitude' => $us->latitude,
+                'longitude' => $us->longitude,
+                'custom' => true,
+                'site' => null,
+                'user_site' => $us,
+            ];
+        }
+        $name = $this->conditions['site_name_custom'] ?? null;
+        if ($name) {
+            return ['name' => $name, 'city' => null, 'url' => null, 'type' => null, 'latitude' => null, 'longitude' => null, 'custom' => true, 'site' => null, 'user_site' => null];
+        }
+        return null;
+    }
+
+    /** Row title: the site's name, else "{Recreational|Technical} Dive". */
+    public function title(): string
+    {
+        return $this->siteInfo()['name'] ?? (ucfirst($this->classification()) . ' Dive');
+    }
+
+    /** True when the computer-owned facts can be edited by hand (manual entry, or an import that carried no profile). */
+    public function factsEditable(): bool
+    {
+        if ($this->source === 'manual') return true;
+        return $this->source === 'uddf-import' && !$this->hasProfile();
+    }
+
+    public function hasProfile(): bool
+    {
+        return count($this->profile ?? []) > 1;
+    }
+
+    /**
+     * Web-side delete (SYNC-CONTRACT.md "Web delete"): soft delete + a
+     * `deleted` row in the change feed so phones drop their copy, and a
+     * re-upload of the same fingerprint lands in DiveUploadController's
+     * `deleted` bucket instead of resurrecting it.
+     */
+    public function deleteAndLog(): void
+    {
+        $this->delete();
+        DiveChange::record($this->user_id, $this->uuid, 'deleted');
     }
 
     public function isCcr(): bool
@@ -108,14 +239,13 @@ class Dive extends Model
     /** Any sample the computer flagged as a mandatory deco stop (not an NDL/safety stop). */
     public function enteredDeco(): bool
     {
+        // Stored column first (set on save, backfilled); a row loaded
+        // without it - or from before the column - scans the profile.
+        if (array_key_exists('entered_deco', $this->attributes) && $this->attributes['entered_deco'] !== null) {
+            return (bool) $this->attributes['entered_deco'];
+        }
         if ($this->enteredDecoCache === null) {
-            $this->enteredDecoCache = false;
-            foreach ($this->profile ?? [] as $sample) {
-                if (($sample['decoKind'] ?? null) === 'deco_stop') {
-                    $this->enteredDecoCache = true;
-                    break;
-                }
-            }
+            $this->enteredDecoCache = self::scanEnteredDeco($this->profile ?? []);
         }
         return $this->enteredDecoCache;
     }

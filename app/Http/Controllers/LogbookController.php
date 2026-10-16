@@ -38,7 +38,9 @@ class LogbookController extends Controller
     public function index(Request $request)
     {
         $userId = $request->user()->id;
-        $all = Dive::where('user_id', $userId)->orderByDesc('started_at')->orderByDesc('id')->get();
+        // No profile JSON here (Dive::LIST_COLUMNS): classification reads the
+        // stored entered_deco flag, and a full logbook is ~900 rows.
+        $all = Dive::where('user_id', $userId)->select(Dive::LIST_COLUMNS)->orderByDesc('started_at')->orderByDesc('id')->get();
         $total = $all->count();
 
         // Chronological number (oldest = 1) before any filtering, so a
@@ -102,8 +104,12 @@ class LogbookController extends Controller
 
         $perPage = 20;
         $page = max(1, (int) $request->query('page', 1));
+        $pageDives = $filtered->forPage($page, $perPage)->values();
+        // One catalog query for the page's sites, one for the diver's own.
+        Dive::preloadSites($pageDives);
+        $pageDives->load('userSite');
         $dives = new \Illuminate\Pagination\LengthAwarePaginator(
-            $filtered->forPage($page, $perPage)->values(),
+            $pageDives,
             $filtered->count(),
             $perPage,
             $page,
@@ -127,6 +133,213 @@ class LogbookController extends Controller
             'operatorLogos' => $operatorLogos,
             'wishedSiteIds' => $wishedSiteIds,
         ]);
+    }
+
+    /**
+     * Delete a dive (Pablo, 2026-10-16). Soft delete + change-feed row via
+     * Dive::deleteAndLog(); the row stays as a tombstone so a later
+     * re-sync from the computer can't bring it back.
+     */
+    public function destroy(Request $request, $id)
+    {
+        $dive = Dive::where('user_id', $request->user()->id)->findOrFail($id);
+        $title = $dive->title();
+        $dive->deleteAndLog();
+
+        return redirect()->route('Logbook')->with('status', 'Deleted "' . $title . '" (' . $dive->started_at->format('M j, Y') . ').');
+    }
+
+    /**
+     * Merge the next dive into this one (Pablo, 2026-10-16) - see
+     * App\Support\DiveMerger for what "merge" means.
+     */
+    public function merge(Request $request, $id)
+    {
+        $dive = Dive::where('user_id', $request->user()->id)->findOrFail($id);
+        $data = $request->validate(['with_id' => 'required|integer']);
+        $other = Dive::where('user_id', $request->user()->id)->findOrFail($data['with_id']);
+
+        $candidate = \App\Support\DiveMerger::nextCandidate($dive);
+        if (!$candidate || $candidate->id !== $other->id) {
+            return redirect()->route('DiveDetails', $dive->id)->with('error', 'That dive is not right after this one any more.');
+        }
+
+        $merged = \App\Support\DiveMerger::merge($dive, $other);
+
+        return redirect()->route('DiveDetails', $merged->id)->with('status', 'Merged into one dive of ' . gmdate('H:i', $merged->duration_seconds) . '.');
+    }
+
+    // ----- Manual entry (Pablo, 2026-10-16: "add a dive manually, with no
+    // depth vs time chart - just the rest of the information") -----
+
+    private function factRules(): array
+    {
+        return [
+            'date' => 'required|date_format:Y-m-d',
+            'time' => 'required|date_format:H:i',
+            'duration_min' => 'required|integer|min:1|max:1440',
+            'units' => 'required|in:metric,imperial',
+            'max_depth' => 'required|numeric|min:0|max:1000',
+            'avg_depth' => 'nullable|numeric|min:0|max:1000',
+            'min_water_temp' => 'nullable|numeric|min:-5|max:150',
+            'dive_mode' => 'required|in:open_circuit,closed_circuit',
+            'sidemount' => 'nullable|boolean',
+            'gases' => 'nullable|array|max:6',
+            'gases.*.o2' => 'nullable|integer|min:4|max:100',
+            'gases.*.he' => 'nullable|integer|min:0|max:96',
+            'computer_model' => 'nullable|string|max:100',
+            'site_id' => 'nullable|integer',
+            'user_site_id' => 'nullable|integer',
+            'site_name_custom' => 'nullable|string|max:150',
+            'notes' => 'nullable|string|max:5000',
+            'classification' => 'nullable|in:recreational,technical',
+        ];
+    }
+
+    /** Validated manual-entry input -> the computer-owned columns, metric. */
+    private function factAttributes(array $d): array
+    {
+        $imperial = $d['units'] === 'imperial';
+        $depth = fn ($v) => $v === null || $v === '' ? null : round($imperial ? $v * 0.3048 : $v, 2);
+        $temp = fn ($v) => $v === null || $v === '' ? null : round($imperial ? ($v - 32) * 5 / 9 : $v, 1);
+
+        $mixes = [];
+        foreach ($d['gases'] ?? [] as $i => $g) {
+            $o2 = (int) ($g['o2'] ?? 0);
+            if ($o2 <= 0) continue;
+            $he = (int) ($g['he'] ?? 0);
+            // Closed circuit: the first gas is the diluent (usage 2, the
+            // same tag Shearwater reports), the rest bailout/deco.
+            $mixes[] = ['oxygen' => $o2, 'helium' => $he, 'nitrogen' => max(0, 100 - $o2 - $he), 'usage' => ($d['dive_mode'] === 'closed_circuit' && count($mixes) === 0) ? 2 : 0];
+        }
+        $tanks = null;
+        if (!empty($d['sidemount']) && $d['dive_mode'] === 'open_circuit') {
+            // Two cylinders tagged the way the computer would tag them, so
+            // Dive::isSidemount() and the Gases card pair them up.
+            $tanks = [
+                ['usage' => 'sidemount', 'volume' => 0, 'workPressure' => 0, 'beginPressure' => 0, 'endPressure' => 0, 'gasMix' => 0],
+                ['usage' => 'sidemount', 'volume' => 0, 'workPressure' => 0, 'beginPressure' => 0, 'endPressure' => 0, 'gasMix' => 0],
+            ];
+        }
+
+        return [
+            'started_at' => $d['date'] . ' ' . $d['time'] . ':00',
+            'duration_seconds' => (int) $d['duration_min'] * 60,
+            'max_depth_m' => $depth($d['max_depth']),
+            'avg_depth_m' => $depth($d['avg_depth'] ?? null),
+            'min_water_temp_c' => $temp($d['min_water_temp'] ?? null),
+            'dive_mode' => $d['dive_mode'],
+            'gas_mixes' => $mixes ?: null,
+            'tanks' => $tanks,
+            'computer_model' => $d['computer_model'] ?? null,
+        ];
+    }
+
+    private function applySiteChoice(Dive $dive, array $d): void
+    {
+        $userId = $dive->user_id;
+        $dive->site_id = !empty($d['site_id']) ? (int) $d['site_id'] : null;
+        $usId = !empty($d['user_site_id']) ? (int) $d['user_site_id'] : null;
+        $dive->user_site_id = (!$dive->site_id && $usId && \App\Models\UserSite::where('user_id', $userId)->where('id', $usId)->exists()) ? $usId : null;
+        $conditions = $dive->conditions ?? [];
+        $conditions['site_name_custom'] = ($dive->site_id || $dive->user_site_id) ? null : ($d['site_name_custom'] ?? null);
+        $conditions['classification'] = $d['classification'] ?? null;
+        $dive->conditions = array_filter($conditions, fn ($v) => $v !== null && $v !== '' && $v !== []) ?: null;
+    }
+
+    private function siteOptions(int $userId)
+    {
+        return Site::orderBy('name')->get(['id', 'name'])
+            ->map(fn ($s) => ['id' => $s->id, 'name' => $s->name, 'custom' => false])
+            ->concat(\App\Models\UserSite::where('user_id', $userId)->orderBy('name')->get(['id', 'name'])
+                ->map(fn ($s) => ['id' => $s->id, 'name' => $s->name, 'custom' => true]))
+            ->values();
+    }
+
+    public function create(Request $request)
+    {
+        return view('pages.logbook.dive-form', [
+            'dive' => null,
+            'sites' => $this->siteOptions($request->user()->id),
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $d = $request->validate($this->factRules());
+        $dive = new Dive($this->factAttributes($d) + [
+            'user_id' => $request->user()->id,
+            'computer_family' => 'manual',
+            'profile' => [],
+            'source' => 'manual',
+            'notes' => $d['notes'] ?? null,
+        ]);
+        $this->applySiteChoice($dive, $d);
+        $dive->save();
+        DiveChange::record($dive->user_id, $dive->uuid, 'created');
+
+        return redirect()->route('DiveDetails', $dive->id)->with('status', 'Dive added. Fill in the rest below.');
+    }
+
+    public function edit(Request $request, $id)
+    {
+        $dive = Dive::where('user_id', $request->user()->id)->findOrFail($id);
+        abort_unless($dive->factsEditable(), 403, 'This dive came from a dive computer; its facts are not editable.');
+
+        return view('pages.logbook.dive-form', [
+            'dive' => $dive,
+            'sites' => $this->siteOptions($request->user()->id),
+        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $dive = Dive::where('user_id', $request->user()->id)->findOrFail($id);
+        abort_unless($dive->factsEditable(), 403);
+        $d = $request->validate($this->factRules());
+        $dive->fill($this->factAttributes($d));
+        $dive->notes = $d['notes'] ?? null;
+        $this->applySiteChoice($dive, $d);
+        $dive->save();
+        DiveChange::record($dive->user_id, $dive->uuid, 'updated');
+
+        return redirect()->route('DiveDetails', $dive->id)->with('status', 'Dive saved.');
+    }
+
+    // ----- Settings: the whole-logbook wipe (Pablo, 2026-10-16: "a way to
+    // delete the whole logbook for a user - data removal and data privacy
+    // related. Bury it in the configuration for the logbook") -----
+
+    public function settings(Request $request)
+    {
+        $userId = $request->user()->id;
+        return view('pages.logbook.settings', [
+            'diveCount' => Dive::where('user_id', $userId)->count(),
+            'siteCount' => \App\Models\UserSite::where('user_id', $userId)->count(),
+            'importCount' => \App\Models\DiveImport::where('user_id', $userId)->count(),
+        ]);
+    }
+
+    /**
+     * Hard delete, not soft: this is data removal. Every dive (including
+     * already-deleted tombstones), the change log, staged imports and the
+     * diver's own sites. Phones notice through GET /api/dives/uuids coming
+     * back empty and drop their copies; a later computer sync would
+     * re-create dives from scratch, which is the diver's call.
+     */
+    public function destroyAll(Request $request)
+    {
+        $request->validate(['confirm' => 'required|in:DELETE']);
+        $userId = $request->user()->id;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($userId) {
+            Dive::withTrashed()->where('user_id', $userId)->forceDelete();
+            DiveChange::where('user_id', $userId)->delete();
+            \App\Models\DiveImport::where('user_id', $userId)->delete(); // items cascade
+            \App\Models\UserSite::where('user_id', $userId)->delete();
+        });
+
+        return redirect()->route('Logbook')->with('status', 'Your logbook has been deleted.');
     }
 
     public function show(Request $request, $id)
@@ -185,7 +398,16 @@ class LogbookController extends Controller
             // Site-tagging pencil edit (Pablo, 2026-10-15: "search within
             // our database or free type") - same client-side-filtered
             // pattern, not a new search endpoint, for the same reason.
-            'sites' => Site::orderBy('name')->get(['id', 'name', 'slug']),
+            // The diver's own sites ride along, flagged custom:true.
+            'sites' => Site::orderBy('name')->get(['id', 'name', 'slug'])
+                ->map(fn ($s) => ['id' => $s->id, 'name' => $s->name, 'custom' => false])
+                ->concat(\App\Models\UserSite::where('user_id', $request->user()->id)->orderBy('name')->get(['id', 'name'])
+                    ->map(fn ($s) => ['id' => $s->id, 'name' => $s->name, 'custom' => true]))
+                ->values(),
+            // Surface-break halves the computer logged as two dives (Pablo,
+            // 2026-10-16): the next dive by this diver that starts within an
+            // hour of this one's end can be merged into it.
+            'mergeCandidate' => \App\Support\DiveMerger::nextCandidate($dive),
         ]);
     }
 
@@ -225,6 +447,7 @@ class LogbookController extends Controller
             'form' => 'required|in:classification,site,operator,conditions,other,tags,gas_tank_choice,gas_row_order',
             'notes' => 'nullable|string|max:5000',
             'site_id' => 'nullable|integer',
+            'user_site_id' => 'nullable|integer',
             'conditions' => 'nullable|array',
             'conditions.operator_name' => 'nullable|string|max:150',
             'conditions.divemaster' => 'nullable|string|max:150',
@@ -317,9 +540,13 @@ class LogbookController extends Controller
                 break;
             case 'site':
                 $dive->site_id = $data['site_id'] ?? null;
-                // A real catalog pick always wins over and clears any
-                // earlier free-typed name - a dive has one site, not both.
-                $conditions['site_name_custom'] = $dive->site_id ? null : ($data['conditions']['site_name_custom'] ?? null);
+                // One of the diver's own sites (must be theirs) - exclusive
+                // with a catalog site.
+                $userSiteId = $data['user_site_id'] ?? null;
+                $dive->user_site_id = (!$dive->site_id && $userSiteId && \App\Models\UserSite::where('user_id', $dive->user_id)->where('id', $userSiteId)->exists()) ? (int) $userSiteId : null;
+                // A real pick always wins over and clears any earlier
+                // free-typed name - a dive has one site, not several.
+                $conditions['site_name_custom'] = ($dive->site_id || $dive->user_site_id) ? null : ($data['conditions']['site_name_custom'] ?? null);
                 break;
             case 'operator':
                 // operator_logo/boat_pic (Pablo, 2026-10-15: "a small logo

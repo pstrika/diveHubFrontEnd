@@ -8,7 +8,33 @@
             <div class="row">
                 <div class="col-lg-9 col-12 m-auto pt-4">
 
-                    <div class="d-flex justify-content-end mb-2">
+                    @if (session('status'))
+                        <div class="dh-logbook-flash" role="status">
+                            <span class="material-icons-round" aria-hidden="true">check_circle</span>
+                            {{ session('status') }}
+                        </div>
+                    @endif
+
+                    {{-- Add a dive by hand / import a logbook / your own sites
+                         (Pablo, 2026-10-16), beside the unit toggle. --}}
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                        <div class="dh-logbook-actions">
+                            <a href="{{ route('Logbook.create') }}" class="dh-btn dh-btn-ghost-dark">
+                                <span class="material-icons-round" aria-hidden="true">add</span>
+                                Add dive
+                            </a>
+                            <a href="{{ route('Logbook.import.index') }}" class="dh-btn dh-btn-ghost-dark">
+                                <span class="material-icons-round" aria-hidden="true">upload_file</span>
+                                Import
+                            </a>
+                            <a href="{{ route('Logbook.sites.index') }}" class="dh-btn dh-btn-ghost-dark">
+                                <span class="material-icons-round" aria-hidden="true">place</span>
+                                My sites
+                            </a>
+                            <a href="{{ route('Logbook.settings') }}" class="dh-btn dh-btn-ghost-dark" title="Logbook settings">
+                                <span class="material-icons-round" aria-hidden="true">settings</span>
+                            </a>
+                        </div>
                         <button type="button" class="dh-btn dh-btn-ghost-dark dh-unit-toggle" id="switchUnitsLogbook"></button>
                     </div>
 
@@ -89,14 +115,14 @@
                         <div class="dh-logbook-list">
                             @foreach ($dives as $dive)
                                 @php
-                                    $site = $dive->site();
+                                    // Catalog site, the diver's own site, or a free-typed
+                                    // name - Dive::siteInfo() resolves the precedence.
+                                    $siteInfo = $dive->siteInfo();
                                     $operatorName = $dive->conditions['operator_name'] ?? null;
                                     $operatorLogo = $operatorName ? ($operatorLogos[mb_strtolower($operatorName)] ?? null) : null;
-                                    $city = $site ? \App\Support\SiteLocations::name($site->location) : null;
-                                    $wished = $site && isset($wishedSiteIds[(int) $site->id]);
-                                @endphp
-                                @php
-                                    $siteTitle = $site->name ?? $dive->conditions['site_name_custom'] ?? ucfirst($dive->classification()) . ' Dive';
+                                    $city = $siteInfo['city'] ?? null;
+                                    $wished = $siteInfo && $siteInfo['site'] && isset($wishedSiteIds[(int) $siteInfo['site']->id]);
+                                    $siteTitle = $dive->title();
                                 @endphp
                                 <a href="{{ route('DiveDetails', $dive->id) }}" class="dh-logbook-row">
                                     {{-- Phone only: the site + city and the time as a full-width

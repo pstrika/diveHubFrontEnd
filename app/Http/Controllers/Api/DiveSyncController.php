@@ -76,7 +76,15 @@ class DiveSyncController extends Controller
             'mode_label' => $dive->modeLabel(),
             'is_sidemount' => $dive->isSidemount(),
             'entered_deco' => $dive->enteredDeco(),
-            'title' => $dive->site()->name ?? ($dive->conditions['site_name_custom'] ?? (ucfirst($dive->classification()) . ' Dive')),
+            'title' => $dive->title(),
+            // The diver's own site, when the dive is tagged with one (Pablo,
+            // 2026-10-16) - `site` below then carries it with custom:true.
+            'user_site_id' => $dive->user_site_id,
+            // Manual entries / imports without a profile: the app has no
+            // chart to draw and the facts are editable there too.
+            'source' => $dive->source,
+            'has_profile' => $dive->hasProfile(),
+            'facts_editable' => $dive->factsEditable(),
             'updated_at' => optional($dive->updated_at)->toIso8601String(),
         ];
     }
@@ -101,7 +109,28 @@ class DiveSyncController extends Controller
     private function siteArray(Dive $dive): ?array
     {
         $site = $dive->site();
-        if (!$site) return null;
+        if (!$site) {
+            // One of the diver's own sites (user_sites) - same keys, plus
+            // custom:true and the extra fields a custom site carries.
+            $us = $dive->user_site_id ? $dive->userSite : null;
+            if (!$us) return null;
+            return [
+                'id' => $us->id,
+                'name' => $us->name,
+                'city' => $us->cityLabel(),
+                'latitude' => $us->latitude,
+                'longitude' => $us->longitude,
+                'url' => $us->publicUrl(),
+                'wished' => false,
+                'custom' => true,
+                'type' => $us->type,
+                'min_cert' => $us->min_cert,
+                'water_type' => $us->water_type,
+                'altitude_m' => $us->altitude_m,
+                'location' => $us->location,
+                'country' => $us->country,
+            ];
+        }
 
         if ($this->wishedSiteIds === null) {
             $this->wishedSiteIds = \App\Models\WishedSite::where('userId', $dive->user_id)->pluck('siteId')->map(fn ($v) => (int) $v)->flip()->all();
@@ -119,6 +148,7 @@ class DiveSyncController extends Controller
             // On the diver's wishlist (wishedSites) - the bookmark on a
             // logbook row.
             'wished' => isset($this->wishedSiteIds[(int) $site->id]),
+            'custom' => false,
         ];
     }
 

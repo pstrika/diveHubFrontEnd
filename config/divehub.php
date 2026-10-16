@@ -14,10 +14,10 @@
 
 return [
 
-    'version' => '12.7.0',
+    'version' => '12.8.0',
 
     // Release date shown next to the version. Any human readable format.
-    'released' => '10/15/26',
+    'released' => '10/16/26',
 
     // Early-access gate for the diver logbook (web pages + app API) - see
     // App\Http\Middleware\LogbookGate. Lower-case emails. Pablo only for

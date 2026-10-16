@@ -64,6 +64,7 @@
                 var a = document.createElement('a');
                 a.href = '#';
                 a.textContent = opts.getLabel(item);
+                if (opts.decorate) opts.decorate(item, a);
                 a.addEventListener('mousedown', function (e) {
                     e.preventDefault();
                     input.value = opts.getLabel(item);
@@ -182,14 +183,31 @@
         // catalog match); typing free text clears it, so the save goes
         // through conditions.site_name_custom instead (see
         // LogbookController::updateConditions).
+        // Items carry custom:true for the diver's own sites (user_sites) -
+        // those fill user_site_id instead of site_id; the two are exclusive.
         var siteIdInput = document.getElementById('diveSiteIdInput');
+        var userSiteIdInput = document.getElementById('diveUserSiteIdInput');
         setupSearchPicker({
             input: document.getElementById('diveSiteSearch'),
             results: document.getElementById('diveSiteResults'),
             items: window.dhSites || [],
             getLabel: function (s) { return s.name; },
-            onPick: function (s) { if (siteIdInput) siteIdInput.value = s.id; },
-            onTypeFree: function () { if (siteIdInput) siteIdInput.value = ''; },
+            decorate: function (s, a) {
+                if (s.custom) {
+                    var tag = document.createElement('span');
+                    tag.className = 'dh-search-item-own';
+                    tag.textContent = 'yours';
+                    a.appendChild(tag);
+                }
+            },
+            onPick: function (s) {
+                if (siteIdInput) siteIdInput.value = s.custom ? '' : s.id;
+                if (userSiteIdInput) userSiteIdInput.value = s.custom ? s.id : '';
+            },
+            onTypeFree: function () {
+                if (siteIdInput) siteIdInput.value = '';
+                if (userSiteIdInput) userSiteIdInput.value = '';
+            },
         });
 
         // Operator search - picking a real operator shows its logo
@@ -630,19 +648,29 @@
                 if (!type) return;
                 var liters = window.dhTankWaterVolumeLiters(type, twins);
                 if (!liters) return;
-                var cylinders = tankIndices.length;
-                if (volumeEl) {
-                    var unitNow = window.dhUnits.getUnit();
-                    var t = window.DH_TANK_TYPES[type];
-                    volumeEl.textContent = unitNow === 'imperial'
-                        ? (t.cuft * (twins ? 2 : 1) * cylinders).toFixed(1) + ' cuft'
-                        : (liters * cylinders).toFixed(1) + ' L';
-                }
+                // Gas actually consumed (Pablo, 2026-10-16: "subtract the
+                // end pressure from the start pressure and then, depending
+                // on the tank, calculate the actual consumption") - delta
+                // bar x the cylinder's water volume, summed over a pair;
+                // the same figure DiveGasStats::stats() hands the app.
+                // Imperial shows it as free-gas cuft (liters / 28.3168).
+                var consumedL = 0, consumedKnown = false;
                 var rmvTotal = 0, rmvKnown = false;
                 tankIndices.forEach(function (ti) {
+                    var range = tankPressureRange(ti);
+                    if (range) { consumedL += Math.max(0, range.first - range.last) * liters; consumedKnown = true; }
                     var sac = avgSacBar(ti);
                     if (sac !== null) { rmvTotal += sac * liters; rmvKnown = true; }
                 });
+                if (volumeEl) {
+                    if (consumedKnown) {
+                        volumeEl.textContent = window.dhUnits.getUnit() === 'imperial'
+                            ? window.dhTankLitersToCuft(consumedL).toFixed(1) + ' cuft'
+                            : Math.round(consumedL) + ' L';
+                    } else {
+                        volumeEl.textContent = '—';
+                    }
+                }
                 if (rmvEl && rmvKnown) rmvEl.textContent = formatRmv(rmvTotal);
             });
 
