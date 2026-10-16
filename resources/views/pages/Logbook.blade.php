@@ -24,7 +24,8 @@
                         @endphp
                         <div class="dh-dive-header-stats">
                             <div class="dh-dive-header-stat">
-                                <span class="material-icons-round" aria-hidden="true">pool</span>
+                                {{-- Same glyph as the Dives tab in the bottom bar (Pablo, 2026-10-15). --}}
+                                <span class="material-icons-round" aria-hidden="true">scuba_diving</span>
                                 <div class="dh-dive-header-stat-value">{{ $stats['total'] }}</div>
                                 <div class="dh-dive-header-stat-label">Total dives</div>
                             </div>
@@ -94,7 +95,21 @@
                                     $city = $site ? \App\Support\SiteLocations::name($site->location) : null;
                                     $wished = $site && isset($wishedSiteIds[(int) $site->id]);
                                 @endphp
+                                @php
+                                    $siteTitle = $site->name ?? $dive->conditions['site_name_custom'] ?? ucfirst($dive->classification()) . ' Dive';
+                                @endphp
                                 <a href="{{ route('DiveDetails', $dive->id) }}" class="dh-logbook-row">
+                                    {{-- Phone only: the site + city and the time as a full-width
+                                         block above the number/date/mode/stats line (Pablo,
+                                         2026-10-15); on tablet/desktop this is the 4th column
+                                         below instead. --}}
+                                    <div class="dh-logbook-row-top d-md-none">
+                                        <div class="dh-logbook-row-title">
+                                            <span class="text-truncate">{{ $siteTitle }}@if ($city) &middot; {{ $city }}@endif</span>
+                                            @if ($wished)<span class="material-icons-round dh-logbook-row-wished" title="On your wishlist">bookmark</span>@endif
+                                        </div>
+                                        <div class="dh-logbook-row-sub text-sm text-secondary">{{ $dive->started_at->format('g:i A') }}</div>
+                                    </div>
                                     <div class="dh-logbook-row-number" title="Dive #{{ $dive->listSeq }}">{{ $dive->listSeq }}</div>
                                     <div class="dh-logbook-row-date">
                                         <div class="dh-logbook-row-day">{{ $dive->started_at->format('d') }}</div>
@@ -106,14 +121,16 @@
                                          date. Same size as the date"). --}}
                                     <div class="dh-logbook-row-mode" title="{{ $dive->modeLabel() }} · {{ ucfirst($dive->classification()) }}">
                                         <x-svg-icon :file="$dive->iconFile()" class="dh-logbook-row-mode-icon" />
-                                        <div class="dh-logbook-row-mode-label">{{ ucfirst($dive->classification()) }}</div>
+                                        <div class="dh-logbook-row-mode-label">{{ $dive->classification() === 'technical' ? 'Tec' : 'Rec' }}</div>
                                     </div>
-                                    <div class="dh-logbook-row-main">
+                                    {{-- Tablet/desktop 4th column, three lines: site, time ·
+                                         city, operator. A catalog site (site_id) wins; otherwise
+                                         a free-typed name (conditions.site_name_custom); falls
+                                         back to the classification only when no site was ever
+                                         tagged. --}}
+                                    <div class="dh-logbook-row-main d-none d-md-block">
                                         <div class="dh-logbook-row-title">
-                                            {{-- A catalog site (site_id) wins; otherwise a free-typed name
-                                                 (conditions.site_name_custom); falls back to the
-                                                 classification only when no site was ever tagged. --}}
-                                            <span class="text-truncate">{{ $site->name ?? $dive->conditions['site_name_custom'] ?? ucfirst($dive->classification()) . ' Dive' }}</span>
+                                            <span class="text-truncate">{{ $siteTitle }}</span>
                                             @if ($wished)
                                                 {{-- Same bookmark the dashboard's trip cards use for a
                                                      wishlisted site. --}}
@@ -121,16 +138,14 @@
                                             @endif
                                         </div>
                                         <div class="dh-logbook-row-sub text-sm text-secondary">
-                                            {{ $dive->started_at->format('g:i A') }}
-                                            @if ($operatorName)
-                                                &middot;
+                                            {{ $dive->started_at->format('g:i A') }}@if ($city) &middot; {{ $city }}@endif
+                                        </div>
+                                        @if ($operatorName)
+                                            <div class="dh-logbook-row-sub text-sm text-secondary">
                                                 @if ($operatorLogo)<img src="{{ $operatorLogo }}" alt="" class="dh-logbook-row-operator-logo">@endif
                                                 {{ $operatorName }}
-                                            @endif
-                                            @if ($city)
-                                                &middot; {{ $city }}
-                                            @endif
-                                        </div>
+                                            </div>
+                                        @endif
                                     </div>
                                     <div class="dh-logbook-row-stats">
                                         <div><strong><span data-unit-value="depth" data-metric="{{ $dive->max_depth_m }}"></span></strong><span class="text-xs text-secondary d-block">max depth</span></div>

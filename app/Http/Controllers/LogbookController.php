@@ -54,39 +54,51 @@ class LogbookController extends Controller
             'max_depth_m' => $all->max('max_depth_m'),
         ];
 
-        // What this diver can filter by - a chip row only appears when
-        // there is more than one value in play.
-        $tagCounts = [];
-        $typeCounts = [];
-        $hasCcr = false; $hasOc = false; $hasTec = false; $hasRec = false;
-        foreach ($all as $dive) {
-            $dive->isCcr() ? $hasCcr = true : $hasOc = true;
-            $dive->classification() === 'technical' ? $hasTec = true : $hasRec = true;
-            foreach ($dive->tags ?? [] as $t) $tagCounts[$t] = ($tagCounts[$t] ?? 0) + 1;
-            foreach ($dive->conditions['dive_type'] ?? [] as $t) $typeCounts[$t] = ($typeCounts[$t] ?? 0) + 1;
-        }
-        ksort($tagCounts);
         $diveTypeLabels = ['drift' => 'Drift', 'training' => 'Training', 'photo_video' => 'Photo/Video', 'cave' => 'Cave', 'cavern' => 'Cavern', 'wall' => 'Wall', 'reef' => 'Reef', 'wreck' => 'Wreck'];
-        $typeOptions = [];
-        foreach ($diveTypeLabels as $k => $label) if (isset($typeCounts[$k])) $typeOptions[$k] = $label;
-        $tagOptions = [];
-        foreach ($tagCounts as $t => $n) $tagOptions[$t] = $t;
 
         $filters = [
             'circuit' => in_array($request->query('circuit'), ['cc', 'oc'], true) ? $request->query('circuit') : null,
             'class' => in_array($request->query('class'), ['recreational', 'technical'], true) ? $request->query('class') : null,
-            'tag' => isset($tagOptions[$request->query('tag')]) ? $request->query('tag') : null,
-            'type' => isset($typeOptions[$request->query('type')]) ? $request->query('type') : null,
+            'tag' => (string) $request->query('tag', '') !== '' ? (string) $request->query('tag') : null,
+            'type' => isset($diveTypeLabels[$request->query('type')]) ? $request->query('type') : null,
         ];
 
-        $filtered = $all->filter(function (Dive $dive) use ($filters) {
-            if ($filters['circuit'] === 'cc' && !$dive->isCcr()) return false;
-            if ($filters['circuit'] === 'oc' && $dive->isCcr()) return false;
-            if ($filters['class'] && $dive->classification() !== $filters['class']) return false;
-            if ($filters['tag'] && !in_array($filters['tag'], $dive->tags ?? [], true)) return false;
-            if ($filters['type'] && !in_array($filters['type'], $dive->conditions['dive_type'] ?? [], true)) return false;
+        $matches = function (Dive $dive, array $f): bool {
+            if ($f['circuit'] === 'cc' && !$dive->isCcr()) return false;
+            if ($f['circuit'] === 'oc' && $dive->isCcr()) return false;
+            if ($f['class'] && $dive->classification() !== $f['class']) return false;
+            if ($f['tag'] && !in_array($f['tag'], $dive->tags ?? [], true)) return false;
+            if ($f['type'] && !in_array($f['type'], $dive->conditions['dive_type'] ?? [], true)) return false;
             return true;
-        })->values();
+        };
+
+        $filtered = $all->filter(fn (Dive $dive) => $matches($dive, $filters))->values();
+
+        // Chip options are computed against the dives that pass the OTHER
+        // active filters, so no chip is ever offered that would return
+        // nothing (Pablo, 2026-10-15: "do not show dive types, tags or
+        // anything to filter that will return no dives at all"). A chip
+        // row with nothing to choose between is dropped entirely.
+        $within = function (string $except) use ($all, $filters, $matches) {
+            $others = $filters; $others[$except] = null;
+            return $all->filter(fn (Dive $dive) => $matches($dive, $others));
+        };
+        $hasCcr = false; $hasOc = false;
+        foreach ($within('circuit') as $dive) { $dive->isCcr() ? $hasCcr = true : $hasOc = true; }
+        $hasTec = false; $hasRec = false;
+        foreach ($within('class') as $dive) { $dive->classification() === 'technical' ? $hasTec = true : $hasRec = true; }
+        $typeCounts = [];
+        foreach ($within('type') as $dive) foreach ($dive->conditions['dive_type'] ?? [] as $t) $typeCounts[$t] = ($typeCounts[$t] ?? 0) + 1;
+        $typeOptions = [];
+        foreach ($diveTypeLabels as $k => $label) if (isset($typeCounts[$k])) $typeOptions[$k] = $label;
+        $tagCounts = [];
+        foreach ($within('tag') as $dive) foreach ($dive->tags ?? [] as $t) $tagCounts[$t] = ($tagCounts[$t] ?? 0) + 1;
+        ksort($tagCounts);
+        $tagOptions = [];
+        foreach ($tagCounts as $t => $n) $tagOptions[$t] = $t;
+        // Keep an active chip visible even if it is the only one left.
+        if ($filters['tag'] && !isset($tagOptions[$filters['tag']])) $tagOptions[$filters['tag']] = $filters['tag'];
+        if ($filters['type'] && !isset($typeOptions[$filters['type']])) $typeOptions[$filters['type']] = $diveTypeLabels[$filters['type']];
 
         $perPage = 20;
         $page = max(1, (int) $request->query('page', 1));
