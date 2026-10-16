@@ -75,6 +75,7 @@ class LogbookApiController extends Controller
             'name' => $s->name,
             'slug' => $s->slug,
             'type' => $s->type,
+            'city' => \App\Support\SiteLocations::name($s->location),
             'latitude' => $s->decimalLatitude(),
             'longitude' => $s->decimalLongitude(),
             'url' => $s->publicUrl(),

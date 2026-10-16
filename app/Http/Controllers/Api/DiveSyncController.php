@@ -95,17 +95,30 @@ class DiveSyncController extends Controller
         return $conditions;
     }
 
+    /** The requesting diver's wishlisted site ids, fetched once per request. */
+    private ?array $wishedSiteIds = null;
+
     private function siteArray(Dive $dive): ?array
     {
         $site = $dive->site();
         if (!$site) return null;
 
+        if ($this->wishedSiteIds === null) {
+            $this->wishedSiteIds = \App\Models\WishedSite::where('userId', $dive->user_id)->pluck('siteId')->map(fn ($v) => (int) $v)->flip()->all();
+        }
+
         return [
             'id' => $site->id,
             'name' => $site->name,
+            // Coast code (sites.location, e.g. FLL) as the city the web
+            // logbook list shows after the operator name.
+            'city' => \App\Support\SiteLocations::name($site->location),
             'latitude' => $site->decimalLatitude(),
             'longitude' => $site->decimalLongitude(),
             'url' => $site->publicUrl(),
+            // On the diver's wishlist (wishedSites) - the bookmark on a
+            // logbook row.
+            'wished' => isset($this->wishedSiteIds[(int) $site->id]),
         ];
     }
 
