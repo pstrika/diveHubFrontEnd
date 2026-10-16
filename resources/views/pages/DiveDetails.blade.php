@@ -358,6 +358,13 @@
                             <form method="POST" action="{{ route('DiveDetails.updateConditions', $dive->id) }}" id="diveClassForm" class="dh-dive-class-form" hidden>
                                 @csrf
                                 <input type="hidden" name="form" value="classification">
+                                @if ($dive->modeEditable())
+                                    {{-- Not from a computer sync, so OC/CC is the diver's call. --}}
+                                    <select name="dive_mode" onchange="this.form.submit()" aria-label="Dive mode">
+                                        <option value="open_circuit" @selected(!$isCcr)>Open Circuit</option>
+                                        <option value="closed_circuit" @selected($isCcr)>Closed Circuit</option>
+                                    </select>
+                                @endif
                                 <select name="conditions[classification]" onchange="this.form.submit()">
                                     <option value="recreational" @selected($classification === 'recreational')>Recreational</option>
                                     <option value="technical" @selected($classification === 'technical')>Technical</option>

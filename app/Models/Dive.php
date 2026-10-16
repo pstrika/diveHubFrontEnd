@@ -197,6 +197,28 @@ class Dive extends Model
         return $this->source === 'uddf-import' && !$this->hasProfile();
     }
 
+    /** OC/CC is the diver's call only when no computer sync recorded it. */
+    public function modeEditable(): bool
+    {
+        return in_array($this->source, self::EDITABLE_SOURCES, true);
+    }
+
+    /**
+     * Switch a hand-logged or imported dive between open and closed
+     * circuit. Closed circuit tags the gas breathed at the start as the
+     * diluent (usage 2, as Shearwater reports it); open circuit clears it.
+     */
+    public function setModeByHand(string $mode): void
+    {
+        $this->dive_mode = $mode;
+        $mixes = $this->gas_mixes ?? [];
+        $dil = ($this->profile[0]['currentGas'] ?? null) ?? 0;
+        foreach ($mixes as $gi => $mix) {
+            $mixes[$gi]['usage'] = ($mode === 'closed_circuit' && $gi === $dil) ? 2 : 0;
+        }
+        $this->gas_mixes = $mixes ?: null;
+    }
+
     public function hasProfile(): bool
     {
         return count($this->profile ?? []) > 1;

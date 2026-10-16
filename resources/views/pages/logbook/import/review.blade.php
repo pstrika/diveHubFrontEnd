@@ -36,26 +36,62 @@
 
                     <form method="POST" action="{{ route('Logbook.import.decisions', $import->id) }}">
                         @csrf
-                        {{-- UDDF carries no dive mode, so a rebreather computer's dives
-                             would all land as open circuit - pick per computer here. --}}
+                        {{-- Dive mode (Pablo, 2026-10-16: per dive, not per computer -
+                             "a Petrel 2 can be used as OC too"). Dives whose mode the
+                             file recorded are settled; the rest default to open
+                             circuit and can be ticked as closed circuit here. --}}
+                        @php
+                            $fromFile = $import->summary['mode_from_file'] ?? [];
+                            $unknownRows = $import->summary['mode_unknown'] ?? [];
+                            $ccChecked = array_flip($import->summary['cc_positions'] ?? []);
+                            $modeNames = ['closed_circuit' => 'closed circuit', 'semi_closed_circuit' => 'semi-closed', 'open_circuit' => 'open circuit', 'freedive' => 'freedive'];
+                            $unknownComputers = collect($unknownRows)->pluck('computer')->map(fn ($c) => $c ?: 'No computer')->unique()->sort()->values();
+                        @endphp
                         <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
                             <div class="card-body">
-                                <h3 class="h5 mb-1">Computers in this file</h3>
-                                <p class="text-sm text-secondary">The file doesn't say whether a dive was open or closed circuit. Set it per computer - a Petrel on a rebreather logs closed-circuit dives.</p>
-                                <div class="dh-import-list">
-                                    @foreach ($import->summary['computers'] ?? [] as $label => $n)
-                                        @php $current = $import->summary['modes'][$label] ?? 'open_circuit'; @endphp
-                                        <div class="dh-import-row" style="cursor: default; align-items: center; justify-content: space-between;">
-                                            <div><strong>{{ $label }}</strong> <span class="text-sm text-secondary">&middot; {{ $n }} {{ $n === 1 ? 'dive' : 'dives' }}</span></div>
-                                            <select name="mode[{{ $label }}]" class="dh-import-select">
-                                                <option value="open_circuit" @selected($current === 'open_circuit')>Open circuit</option>
-                                                <option value="closed_circuit" @selected($current === 'closed_circuit')>Closed circuit</option>
-                                            </select>
-                                        </div>
-                                    @endforeach
-                                </div>
+                                <h3 class="h5 mb-1">Dive mode</h3>
+                                @if ($fromFile)
+                                    <p class="text-sm text-secondary mb-2">
+                                        From the file:
+                                        {{ collect($fromFile)->map(fn ($n, $m) => $n . ' ' . ($modeNames[$m] ?? $m))->implode(', ') }}.
+                                    </p>
+                                @endif
+                                @if (count($unknownRows))
+                                    <p class="text-sm text-secondary">
+                                        {{ count($unknownRows) }} {{ count($unknownRows) === 1 ? 'dive doesn\'t' : 'dives don\'t' }} say whether {{ count($unknownRows) === 1 ? 'it was' : 'they were' }} open or closed circuit
+                                        ({{ $import->generator ?: 'this app' }} doesn't export it). They'll be imported as open circuit - tick the rebreather dives below.
+                                        You can also change the mode on each dive's page later.
+                                    </p>
+                                    <div class="dh-import-mode-filters">
+                                        <select id="modeFilterComputer" class="dh-import-select" aria-label="Computer">
+                                            <option value="">All computers</option>
+                                            @foreach ($unknownComputers as $c)<option value="{{ $c }}">{{ $c }}</option>@endforeach
+                                        </select>
+                                        <input type="date" id="modeFilterFrom" class="dh-import-select" aria-label="From">
+                                        <input type="date" id="modeFilterTo" class="dh-import-select" aria-label="To">
+                                        <input type="text" id="modeFilterGas" class="dh-import-select" placeholder="Gas, e.g. 10/55" aria-label="Gas">
+                                        <button type="button" class="dh-btn dh-btn-ghost-dark" id="modeTickVisible">Tick shown</button>
+                                        <button type="button" class="dh-btn dh-btn-ghost-dark" id="modeUntickVisible">Untick shown</button>
+                                        <span class="text-sm text-secondary" id="modeCount"></span>
+                                    </div>
+                                    <div class="dh-import-mode-list" id="modeList">
+                                        @foreach ($unknownRows as $r)
+                                            <label class="dh-import-mode-row" data-computer="{{ $r['computer'] ?: 'No computer' }}" data-date="{{ substr($r['date'], 0, 10) }}" data-gases="{{ implode(' ', $r['gases']) }}">
+                                                <input type="checkbox" name="cc_positions[]" value="{{ $r['pos'] }}" @checked(isset($ccChecked[$r['pos']]))>
+                                                <span class="dh-import-mode-date">{{ \Carbon\Carbon::parse($r['date'])->format('M j, Y g:i A') }}</span>
+                                                <span>{{ $r['computer'] ?: 'No computer' }}</span>
+                                                <span data-unit-value="depth" data-metric="{{ $r['depth'] }}"></span>
+                                                <span>{{ gmdate('H:i', $r['dur']) }}</span>
+                                                <span class="text-secondary">{{ implode(', ', $r['gases']) ?: '—' }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <p class="text-sm text-secondary mb-0">Every dive's mode came from the file.</p>
+                                @endif
                             </div>
                         </div>
+
                         @if ($dups->isEmpty())
                             <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
                                 <div class="card-body text-center py-4">
@@ -111,6 +147,31 @@
     </main>
 
     @push('js')
+        <script>
+            (function () {
+                var list = document.getElementById('modeList');
+                if (!list) return;
+                var rows = Array.prototype.slice.call(list.querySelectorAll('.dh-import-mode-row'));
+                var comp = document.getElementById('modeFilterComputer'), from = document.getElementById('modeFilterFrom'),
+                    to = document.getElementById('modeFilterTo'), gas = document.getElementById('modeFilterGas'), count = document.getElementById('modeCount');
+                function apply() {
+                    var c = comp.value, f = from.value, t = to.value, g = gas.value.trim().toLowerCase(), shown = 0;
+                    rows.forEach(function (r) {
+                        var ok = (!c || r.dataset.computer === c) && (!f || r.dataset.date >= f) && (!t || r.dataset.date <= t) && (!g || r.dataset.gases.toLowerCase().indexOf(g) !== -1);
+                        r.hidden = !ok; if (ok) shown++;
+                    });
+                    var ticked = rows.filter(function (r) { return r.querySelector('input').checked; }).length;
+                    count.textContent = shown + ' shown · ' + ticked + ' closed circuit';
+                }
+                function tick(v) { rows.forEach(function (r) { if (!r.hidden) r.querySelector('input').checked = v; }); apply(); }
+                [comp, from, to].forEach(function (e) { e.addEventListener('change', apply); });
+                gas.addEventListener('input', apply);
+                list.addEventListener('change', apply);
+                document.getElementById('modeTickVisible').addEventListener('click', function () { tick(true); });
+                document.getElementById('modeUntickVisible').addEventListener('click', function () { tick(false); });
+                apply();
+            })();
+        </script>
         <script src="{{ asset('assets') }}/js/dh-units.js?v={{ config('divehub.version') }}"></script>
     @endpush
 </x-page-template>

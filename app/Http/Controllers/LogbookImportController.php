@@ -180,12 +180,34 @@ class LogbookImportController extends Controller
             }
         }
 
+        // Compact per-dive rows for the review step's dive-mode list, so it
+        // never has to load ~850 payloads (profiles) to render. Only dives
+        // that will be imported and whose mode the file didn't record.
+        $modeRows = [];
+        $fromFile = ['closed_circuit' => 0, 'semi_closed_circuit' => 0, 'open_circuit' => 0, 'freedive' => 0];
+        foreach ($items as $pos => $row) {
+            $d = $row['payload'];
+            if ($row['decision'] !== 'import') continue;
+            if (($d['mode_source'] ?? null) === 'file') { $fromFile[$d['dive_mode']] = ($fromFile[$d['dive_mode']] ?? 0) + 1; continue; }
+            $modeRows[] = [
+                'pos' => $pos,
+                'date' => $d['started_at'],
+                'computer' => $d['computer_model'] ?? null,
+                'depth' => $d['max_depth_m'],
+                'dur' => $d['duration_seconds'],
+                'gases' => array_map(fn ($g) => $g['helium'] > 0 ? $g['oxygen'] . '/' . $g['helium'] : ($g['oxygen'] == 21 ? 'Air' : $g['oxygen'] . '%'), $d['gas_mixes'] ?? []),
+            ];
+        }
+
         $import->summary = [
             'counts' => $counts,
             'computers' => $computers,
             'from' => $dives[0]['started_at'],
             'to' => end($dives)['started_at'],
             'sites' => count($parsed->sites),
+            'mode_from_file' => array_filter($fromFile),
+            'mode_unknown' => $modeRows,
+            'cc_positions' => [],
         ];
         $import->save();
 
@@ -225,31 +247,32 @@ class LogbookImportController extends Controller
             $import->items()->whereNotNull('duplicate_kind')->whereIn('id', $chosen)->update(['decision' => 'import']);
         }
 
-        // Dive mode per computer (UDDF has none): closed circuit also tags
-        // the first gas as the diluent (usage 2), the way Shearwater does.
-        $modes = [];
-        foreach ((array) $request->input('mode', []) as $label => $mode) {
-            $modes[(string) $label] = $mode === 'closed_circuit' ? 'closed_circuit' : 'open_circuit';
-        }
-        if ($modes) {
-            $import->items()->orderBy('id')->chunkById(100, function ($items) use ($modes) {
+        // Dive mode per DIVE (Pablo, 2026-10-16: "a Petrel 2 can be used as
+        // OC too... this is for the general public"): only dives whose mode
+        // the file didn't record are offered, all open circuit unless the
+        // diver ticks them as closed circuit. Applied to the staged payload
+        // (diluent = the gas breathed at the start, usage 2) and remembered
+        // so going Back keeps the ticks.
+        $unknown = array_column($import->summary['mode_unknown'] ?? [], 'pos');
+        $cc = array_values(array_intersect($unknown, array_map('intval', (array) $request->input('cc_positions', []))));
+        if ($unknown) {
+            $ccSet = array_flip($cc);
+            $import->items()->whereIn('position', $unknown)->orderBy('id')->chunkById(100, function ($items) use ($ccSet) {
                 foreach ($items as $item) {
-                    $label = trim(($item->computer_model ?? 'Unknown computer') . ($item->computer_serial ? ' (' . $item->computer_serial . ')' : ''));
-                    $mode = $modes[$label] ?? null;
-                    if (!$mode) continue;
                     $p = $item->payload;
+                    $mode = isset($ccSet[$item->position]) ? 'closed_circuit' : 'open_circuit';
                     if (($p['dive_mode'] ?? null) === $mode) continue;
                     $p['dive_mode'] = $mode;
-                    if (!empty($p['gas_mixes'])) {
-                        foreach ($p['gas_mixes'] as $i => &$mix) $mix['usage'] = ($mode === 'closed_circuit' && $i === 0) ? 2 : 0;
-                        unset($mix);
+                    $dil = $p['profile'][0]['currentGas'] ?? 0;
+                    foreach ($p['gas_mixes'] ?? [] as $gi => $mix) {
+                        $p['gas_mixes'][$gi]['usage'] = ($mode === 'closed_circuit' && $gi === $dil) ? 2 : 0;
                     }
                     $item->payload = $p;
                     $item->save();
                 }
             });
-            $summary = $import->summary ?? [];
-            $summary['modes'] = $modes;
+            $summary = $import->summary;
+            $summary['cc_positions'] = $cc;
             $import->summary = $summary;
             $import->save();
         }

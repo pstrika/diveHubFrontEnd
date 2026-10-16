@@ -85,6 +85,59 @@ class DiveUploadController extends Controller
                         ->first()
                     : null;
 
+                // An imported (UDDF) copy of this same dive: matched by the
+                // exact key above for Shearwater, otherwise by start time
+                // (+-3 min) on the same computer, or on an import that named
+                // no computer. Never matched against another computer's
+                // synced dive - two computers on one dive stay two rows.
+                if (!$existing) {
+                    $ts = strtotime($diveData['datetime']);
+                    $existing = Dive::where('user_id', $user->id)
+                        ->where('source', 'uddf-import')
+                        ->whereBetween('started_at', [date('Y-m-d H:i:s', $ts - 180), date('Y-m-d H:i:s', $ts + 180)])
+                        ->where(fn ($q) => $q->whereNull('computer_serial')->orWhere('computer_serial', $serial))
+                        ->orderByRaw('ABS(TIMESTAMPDIFF(SECOND, started_at, ?))', [date('Y-m-d H:i:s', $ts)])
+                        ->first();
+                }
+
+                if ($existing && !$existing->trashed() && $existing->source === 'uddf-import') {
+                    // The computer wins (Pablo, 2026-10-16): its depth/time/
+                    // mode/gases/tanks/PPO2 replace what the import guessed;
+                    // everything the diver added - site, notes, buddies,
+                    // tags, operator, conditions - stays. Gas pairings were
+                    // keyed to the import's gas list, so they reset.
+                    $conditions = $existing->conditions ?? [];
+                    foreach (['gas_tank_choice', 'gas_role_choice', 'deleted_gas_mixes', 'gas_row_order', 'tank_config', 'gas_tank_size_choice'] as $k) unset($conditions[$k]);
+                    $existing->fill([
+                        'computer_family' => $data['computer']['family'],
+                        'computer_model' => $data['computer']['model'],
+                        'computer_serial' => $serial,
+                        'fingerprint' => $fingerprint ?? $existing->fingerprint,
+                        'started_at' => $diveData['datetime'],
+                        'duration_seconds' => $diveData['duration_seconds'],
+                        'max_depth_m' => $diveData['max_depth_m'],
+                        'avg_depth_m' => $diveData['avg_depth_m'] ?? null,
+                        'surface_temp_c' => $diveData['surface_temp_c'] ?? null,
+                        'min_water_temp_c' => $diveData['min_water_temp_c'] ?? null,
+                        'max_water_temp_c' => $diveData['max_water_temp_c'] ?? null,
+                        'dive_mode' => $diveData['dive_mode'] ?? null,
+                        'gas_mixes' => $diveData['gas_mixes'] ?? null,
+                        'tanks' => $diveData['tanks'] ?? null,
+                        'deco_model' => $diveData['deco_model'] ?? null,
+                        'location' => $diveData['location'] ?? $existing->location,
+                        'sensor_data' => $diveData['sensor_data'] ?? null,
+                        'profile' => $diveData['profile'],
+                        'source' => 'ios-uploader',
+                    ]);
+                    $existing->conditions = $conditions ?: null;
+                    $existing->save();
+                    DiveChange::record($user->id, $existing->uuid, 'updated');
+                    // Reported as a duplicate (server uuid wins), flagged so
+                    // the app knows to refetch the full record.
+                    $duplicates[] = ['index' => $i, 'uuid' => $existing->uuid, 'id' => $existing->id, 'dive_number' => $existing->dive_number, 'replaced_import' => true];
+                    return;
+                }
+
                 if ($existing && $existing->trashed()) {
                     $deleted[] = ['index' => $i, 'uuid' => $existing->uuid, 'id' => $existing->id];
                     return;

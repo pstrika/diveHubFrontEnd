@@ -471,6 +471,9 @@ class LogbookController extends Controller
             'conditions.dive_type' => 'nullable|array',
             'conditions.dive_type.*' => 'in:drift,training,photo_video,cave,cavern,wall,reef,wreck',
             'conditions.classification' => 'nullable|in:recreational,technical',
+            // OC/CC for dives whose mode didn't come from a computer sync
+            // (Dive::modeEditable) - ignored for synced dives.
+            'dive_mode' => 'nullable|in:open_circuit,closed_circuit',
             // Free-typed site name when nothing in our catalog matches
             // (Pablo, 2026-10-15: "search within our database or free
             // type") - site_id above covers the catalog-match case.
@@ -537,6 +540,11 @@ class LogbookController extends Controller
         switch ($data['form']) {
             case 'classification':
                 $conditions['classification'] = $data['conditions']['classification'] ?? null;
+                if (!empty($data['dive_mode']) && $dive->modeEditable() && $dive->dive_mode !== $data['dive_mode']) {
+                    $dive->setModeByHand($data['dive_mode']);
+                    // Gas pairings/roles were keyed to the old reading.
+                    foreach (['gas_tank_choice', 'gas_role_choice', 'deleted_gas_mixes', 'gas_row_order'] as $k) unset($conditions[$k]);
+                }
                 break;
             case 'site':
                 $dive->site_id = $data['site_id'] ?? null;

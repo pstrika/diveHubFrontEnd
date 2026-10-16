@@ -229,11 +229,40 @@ class UddfParser
         $currentGas = null;
         $firstPressure = null;
         $lastPressure = null;
+        // Rebreather evidence (Pablo, 2026-10-16: "there should be some
+        // indication in the UDDF that speaks on CCR"). UDDF 3.2 puts it on
+        // waypoints: <divemode type="closedcircuit|semiclosedcircuit|
+        // opencircuit|apnoe"/>, <setpo2> (the active setpoint) and
+        // <measuredpo2>/<calculatedpo2> - all pressures in Pa. Any of
+        // them settles the mode; MacDive writes none of them, other
+        // exporters may.
+        $modeFromFile = null;
+        $currentMode = null;
+        $currentSetpoint = null;
         foreach ($this->all($this->el($x, 'samples'), 'waypoint') as $w) {
             $sw = $this->el($w, 'switchmix');
             if ($sw !== null) {
                 $gi = $addMix($this->attr($sw, 'ref'));
                 if ($gi !== null) $currentGas = $gi;
+            }
+            $dm = $this->el($w, 'divemode');
+            if ($dm !== null) {
+                $type = strtolower($this->attr($dm, 'type'));
+                $currentMode = ['closedcircuit' => 'closed_circuit', 'semiclosedcircuit' => 'semi_closed_circuit', 'opencircuit' => 'open_circuit', 'apnoe' => 'freedive', 'apnea' => 'freedive'][$type] ?? $currentMode;
+                if ($currentMode && $currentMode !== 'open_circuit') $modeFromFile = $currentMode;
+                elseif ($currentMode === 'open_circuit') $modeFromFile ??= 'open_circuit';
+            }
+            $sp = $this->num($this->txt($w, 'setpo2'));
+            if ($sp !== null) {
+                $currentSetpoint = round($sp > 10 ? $sp / 100000 : $sp, 2);
+                if ($currentSetpoint > 0) $modeFromFile = $modeFromFile === 'semi_closed_circuit' ? $modeFromFile : 'closed_circuit';
+            }
+            $po2Readings = [];
+            foreach (['measuredpo2', 'calculatedpo2'] as $tag) {
+                foreach ($this->all($w, $tag) as $pe) {
+                    $v = $this->num(trim((string) $pe));
+                    if ($v !== null && $v > 0) $po2Readings[] = round($v > 10 ? $v / 100000 : $v, 2);
+                }
             }
             $time = (int) round((float) $this->txt($w, 'divetime'));
             $depth = (float) $this->txt($w, 'depth');
@@ -249,6 +278,16 @@ class UddfParser
                 $lastPressure = $bar;
             }
             if ($currentGas !== null) $s['currentGas'] = $currentGas;
+            // Same sample keys the uploader app sends for a CCR dive.
+            if ($currentSetpoint !== null && $currentMode !== 'open_circuit') $s['setpoint'] = $currentSetpoint;
+            if ($po2Readings) {
+                // Several cells: the voted (middle) value, like the app's po2.
+                sort($po2Readings);
+                $s['po2'] = $po2Readings[intdiv(count($po2Readings), 2)];
+                if (count($po2Readings) > 1) $s['po2_sensors'] = $po2Readings;
+                $modeFromFile ??= 'closed_circuit';
+                if ($modeFromFile === 'open_circuit') $modeFromFile = 'closed_circuit';
+            }
             $profile[] = $s;
         }
         if (count($profile) && !isset($profile[0]['currentGas']) && count($gasMixes)) {
@@ -292,6 +331,15 @@ class UddfParser
             ? base64_encode(pack('N', $wallClockAsUtc))
             : 'sha256:' . hash('sha256', $started->format('Y-m-d\TH:i:s') . '|' . $duration . '|' . number_format((float) $maxDepth, 2, '.', ''));
 
+        // A rebreather dive: the gas breathed at the start is the diluent
+        // (usage 2 - the tag Shearwater reports and the Gases card reads).
+        $mode = $modeFromFile ?? 'open_circuit';
+        if (in_array($mode, ['closed_circuit', 'semi_closed_circuit'], true) && $gasMixes) {
+            $dil = $profile[0]['currentGas'] ?? 0;
+            foreach ($gasMixes as $gi => &$gm) $gm['usage'] = $gi === $dil ? 2 : 0;
+            unset($gm);
+        }
+
         $notes = $this->txt($this->el($after, 'notes'), 'para');
         $notes = self::cleanNotes($notes);
         $rating = $this->txt($this->el($after, 'rating'), 'ratingvalue');
@@ -307,7 +355,10 @@ class UddfParser
             'max_depth_m' => round((float) $maxDepth, 2),
             'avg_depth_m' => $avgDepth,
             'min_water_temp_c' => $minTemp,
-            'dive_mode' => 'open_circuit',
+            'dive_mode' => $mode,
+            // 'file' = the export said so; null = not recorded, defaulted to
+            // open circuit and left for the diver to confirm in the wizard.
+            'mode_source' => $modeFromFile !== null ? 'file' : null,
             'gas_mixes' => $gasMixes ?: null,
             'tanks' => $tanks ?: null,
             'profile' => $profile,
