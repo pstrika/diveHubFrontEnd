@@ -165,6 +165,7 @@
 
     @push('js')
         <script>window.dhSites = @json($sites);</script>
+        <script src="{{ asset('assets') }}/js/dh-select.js?v={{ config('divehub.version') }}"></script>
         <script src="{{ asset('assets') }}/js/dh-units.js?v={{ config('divehub.version') }}"></script>
         <script src="{{ asset('assets') }}/js/manual-dive-form.js?v={{ config('divehub.version') }}"></script>
     @endpush

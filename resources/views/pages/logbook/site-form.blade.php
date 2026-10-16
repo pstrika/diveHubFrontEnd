@@ -130,6 +130,7 @@
     </main>
 
     @push('js')
+        <script src="{{ asset('assets') }}/js/dh-select.js?v={{ config('divehub.version') }}"></script>
         <script>
             (function () {
                 var btn = document.getElementById('siteUseLocation');
