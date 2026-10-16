@@ -4544,3 +4544,47 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
 .dh-import-help h4:first-of-type { margin-top: 0; }
 .dh-import-help p { font-size: .9rem; margin-bottom: 6px; }
 .dh-import-badge { font-size: .62rem; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 999px; background: var(--dh-good, #2e7d32); color: #fff; vertical-align: middle; }
+
+/* Add/edit dive form (Pablo, 2026-10-16: "the date and starttime inputs
+   are too tall... same with the mode and level dropdown"). */
+#manualDiveForm .dh-dive-ig .form-control[type="date"],
+#manualDiveForm .dh-dive-ig .form-control[type="time"] { height: 36px; padding-top: 4px; padding-bottom: 4px; }
+#manualDiveForm .dh-field .dh-select-btn { padding: 6px 12px; min-height: 0; height: 36px; font-size: .9rem; }
+#manualDiveForm .dh-field .dh-select-btn .material-icons-round { font-size: 18px; }
+
+/* One control height across the logbook (Pablo, 2026-10-16: "make ALL the
+   inputs and dropdown the same height in all the logbook"). Every text,
+   date, time and number field, every dropdown and every numeric pill is
+   36px on pages tagged body.dh-logbook. */
+body.dh-logbook { --dh-lb-control-h: 36px; }
+body.dh-logbook main .input-group-outline .form-control:not(textarea),
+body.dh-logbook main input.form-control:not([type=checkbox]):not([type=radio]):not([type=file]),
+body.dh-logbook main select,
+body.dh-logbook main .dh-import-search,
+body.dh-logbook main #diveTagInput,
+body.dh-logbook main #diveSiteSearch {
+    height: var(--dh-lb-control-h); min-height: 0; padding-top: 4px; padding-bottom: 4px; box-sizing: border-box;
+}
+body.dh-logbook main .dh-select-btn {
+    height: var(--dh-lb-control-h); min-height: 0; padding-top: 0; padding-bottom: 0; display: flex; align-items: center;
+}
+body.dh-logbook main .dh-select-btn .material-icons-round { font-size: 18px; }
+body.dh-logbook main .dh-gas-input { height: var(--dh-lb-control-h); }
+/* Floating labels sit centered in the shorter outline fields until filled. */
+body.dh-logbook main .input-group-outline:has(> input.form-control):not(.is-filled):not(.is-focused) .form-label { top: 50%; transform: translateY(-50%); margin-top: 0; line-height: 1; }
+
+/* Import page: one card per source (Pablo, 2026-10-16). */
+.dh-import-sources { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.dh-import-source { padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+.dh-import-source-head { display: flex; align-items: center; gap: 12px; }
+.dh-import-source h4 { font-size: 1rem; font-weight: 800; margin: 0; color: var(--dh-ink); }
+.dh-import-logo { position: relative; flex: 0 0 44px; width: 44px; height: 44px; border-radius: 11px; overflow: hidden; background: var(--dh-sea, #0b6e8a); display: grid; place-items: center; }
+.dh-import-logo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+.dh-import-logo-mono { color: #fff; font-weight: 800; font-size: .72rem; letter-spacing: .04em; }
+.dh-import-filetype { font-size: .72rem; font-family: ui-monospace, Menlo, monospace; color: var(--dh-muted, #5b6b78); }
+.dh-import-steps { margin: 0; padding-left: 1.2em; font-size: .87rem; display: grid; gap: 3px; }
+.dh-import-gets { font-size: .8rem; color: var(--dh-muted, #5b6b78); margin: auto 0 0; border-top: 1px solid rgba(0,0,0,.07); padding-top: 8px; }
+.dh-import-steps li { text-transform: none; font-weight: 400; letter-spacing: normal; color: var(--dh-ink); line-height: 1.4; }
+.dh-import-steps li strong { font-weight: 700; }
+/* Five sources in a two-column grid: the catch-all spans the last row. */
+.dh-import-source:last-child:nth-child(odd) { grid-column: 1 / -1; }

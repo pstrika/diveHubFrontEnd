@@ -7,7 +7,7 @@
         'file' => 'Another dive in this file starts within 3 minutes - usually two computers on one dive.',
     ];
 @endphp
-<x-page-template bodyClass='dh-shell'>
+<x-page-template bodyClass='dh-shell dh-logbook'>
     <x-shell.nav active="me" />
 
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">

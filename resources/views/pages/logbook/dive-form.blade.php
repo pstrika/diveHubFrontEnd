@@ -13,7 +13,7 @@
     $modeOptions = ['open_circuit' => 'Open Circuit', 'closed_circuit' => 'Closed Circuit'];
     $classOptions = ['' => 'Automatic', 'recreational' => 'Recreational', 'technical' => 'Technical'];
 @endphp
-<x-page-template bodyClass='dh-shell'>
+<x-page-template bodyClass='dh-shell dh-logbook'>
     <x-shell.nav active="me" />
 
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">

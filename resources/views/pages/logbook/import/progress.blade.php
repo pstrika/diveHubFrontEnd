@@ -1,5 +1,5 @@
 @php $total = $done + $remaining; $pct = $total ? (int) round($done * 100 / $total) : 100; @endphp
-<x-page-template bodyClass='dh-shell'>
+<x-page-template bodyClass='dh-shell dh-logbook'>
     <x-shell.nav active="me" />
 
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">

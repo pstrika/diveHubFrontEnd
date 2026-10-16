@@ -34,6 +34,8 @@ class UddfParser
     public array $buddies = [];    // id => name
     public array $mixes = [];      // id => ['oxygen' => %, 'helium' => %, 'name' => ]
     public ?string $generator = null;
+    /** Export from the Oceanic+ app (Apple Watch Ultra). */
+    private bool $oceanicPlus = false;
     public array $dives = [];
 
     public static function parse(string $path): self
@@ -59,7 +61,16 @@ class UddfParser
             switch ($name) {
                 case 'generator':
                     $x = $this->expand($r);
-                    if ($x) $this->generator = trim($this->txt($x, 'name') . ' ' . $this->txt($x, 'version'));
+                    if ($x) {
+                        $this->generator = trim($this->txt($x, 'name') . ' ' . $this->txt($x, 'version'));
+                        // Oceanic+ (Apple Watch Ultra) leaves <name> empty and
+                        // only names itself through the homepage.
+                        $home = $this->txt($this->el($this->el($x, 'manufacturer'), 'contact'), 'homepage');
+                        if (stripos($home, 'oceanic-plus') !== false || stripos($home, 'oceanicplus') !== false) {
+                            $this->oceanicPlus = true;
+                            $this->generator = 'Oceanic+';
+                        }
+                    }
                     $r->next();
                     break;
                 case 'divecomputer':
@@ -77,11 +88,17 @@ class UddfParser
                     $x = $this->expand($r);
                     if ($x) {
                         $g = $this->el($x, 'geography');
+                        $siteName = $this->txt($x, 'name');
+                        $lat = $this->num($this->txt($g, 'latitude')); $lon = $this->num($this->txt($g, 'longitude'));
+                        // Oceanic+ names every site by its internal id
+                        // ("site_6aadadf5..."): only the GPS point is real.
+                        $gpsOnly = $lat !== null && $lon !== null && ($siteName === '' || $siteName === (string) $x['id'] || preg_match('/^site_[0-9a-f]{16,}$/i', $siteName));
                         $this->sites[(string) $x['id']] = [
-                            'name' => $this->txt($x, 'name'),
+                            'name' => $gpsOnly ? sprintf('GPS %.4f, %.4f', $lat, $lon) : $siteName,
+                            'gps_only' => (bool) $gpsOnly,
                             'latitude' => $this->num($this->txt($g, 'latitude')),
                             'longitude' => $this->num($this->txt($g, 'longitude')),
-                            'location' => $this->txt($g, 'location'),
+                            'location' => $gpsOnly ? '' : $this->txt($g, 'location'),
                             'country' => $this->txt($this->el($g, 'address'), 'country'),
                         ];
                     }
@@ -327,6 +344,21 @@ class UddfParser
         $family = self::family($model, $comp['manufacturer'] ?? '');
         // Shearwater: the wall-clock start time read as if it were UTC.
         $wallClockAsUtc = (new \DateTimeImmutable($started->format('Y-m-d H:i:s'), new \DateTimeZone('UTC')))->getTimestamp();
+        if ($this->oceanicPlus) {
+            if ($model === '') $model = 'Apple Watch (Oceanic+)';
+            // An empty record (0 m, 0 s) is a session that never went in.
+            if ((float) $maxDepth <= 0 && $duration <= 0) return null;
+            // Snorkel/freedive sessions and dives Oceanic+ only has a
+            // summary for come as two waypoints (start, deepest point) all
+            // tagged "apnoe". Two points aren't a profile, and an
+            // "apnoe" session below 10 m is a scuba dive logged without
+            // one (Pablo's 23 m / 70 min dives in June 2025).
+            if (count($profile) <= 2) {
+                $profile = [];
+                if ($modeFromFile === 'freedive' && (float) $maxDepth > 10) $modeFromFile = 'open_circuit';
+            }
+        }
+
         $fingerprint = ($family === 'shearwaterPetrel' && $serial !== '')
             ? base64_encode(pack('N', $wallClockAsUtc))
             : 'sha256:' . hash('sha256', $started->format('Y-m-d\TH:i:s') . '|' . $duration . '|' . number_format((float) $maxDepth, 2, '.', ''));

@@ -1,4 +1,4 @@
-<x-page-template bodyClass='dh-shell'>
+<x-page-template bodyClass='dh-shell dh-logbook'>
     <x-shell.nav active="me" />
 
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
@@ -85,26 +85,51 @@
                         </div>
                     </div>
 
-                    {{-- How to export (Pablo, 2026-10-16: "add some instructions on
-                         how to export from other systems. Explain that XML is richer"). --}}
-                    <div class="card p-0 position-relative mt-2 z-index-2 mb-4">
-                        <div class="card-body dh-import-help">
-                            <h3 class="h5 mb-3">How to export your dives</h3>
-
-                            <h4>MacDive <span class="dh-import-badge">best</span></h4>
-                            <p>File &rsaquo; Export &rsaquo; choose <strong>XML</strong> (not UDDF), all dives. MacDive's XML keeps PPO2, setpoint switches, gas switches, operator, boat, divemaster, weather, current, tags, tank sizes and GF settings - so rebreather dives are recognised on their own. Its UDDF export drops all of that.</p>
-
-                            <h4>Shearwater Cloud</h4>
-                            <p>On the desktop app, select the dives and export them as <strong>XML</strong> - you get one file per dive, into a folder. Drop the folder here, or use <strong>Choose a folder</strong>; any number of dives is fine. These are the computer's own logs: full deco stops, PPO2 per cell, setpoints and circuit mode, but no sites or notes. If you already imported those dives from MacDive, they're upgraded in place and keep your sites and notes.</p>
-                            <p class="text-secondary">Easiest of all for Shearwater: sync the computer with the Divers Hub app - same data, no files.</p>
-
-                            <h4>Garmin Descent</h4>
-                            <p>In Garmin Connect on the web, open a dive and choose <strong>⚙ &rsaquo; Export Original</strong> - you get a .zip with one <strong>.fit</strong> file; unzip it and drop the .fit here (several dives: put them in one folder and drop the folder). You get the 1-second profile, NDL, next stop, CNS, gases and tank pressure from a transmitter, plus the GPS point where you went in - used to find the Divers Hub site. No site names or notes.</p>
-
-                            <h4>Subsurface, DiveMate, Diving Log and others</h4>
-                            <p>Export as <strong>UDDF</strong> (File &rsaquo; Export &rsaquo; UDDF in most apps). You'll get the profile, gases, sites and notes; rebreather dives are recognised when the app exports setpoints or PPO2 - otherwise you mark them in the review step.</p>
-                        </div>
+                    {{-- One card per source (Pablo, 2026-10-16: "Given the instructions are
+                         complex, I want to have a card per source... use these logos").
+                         Logos live in public/assets/img/import/<key>.png; until a file is
+                         there the card shows the source's initials instead. --}}
+                    @php
+                        $sources = [
+                            ['key' => 'macdive', 'name' => 'MacDive', 'badge' => 'Best', 'file' => '.xml', 'mono' => 'MD',
+                             'steps' => ['In MacDive, choose <strong>File &rsaquo; Export</strong>.', 'Pick <strong>XML</strong> (not UDDF) and all dives.', 'Drop the .xml file above.'],
+                             'gets' => 'Everything: sites, notes, buddies, operator, boat, tags, tanks, gas and setpoint switches, PPO2 - rebreather dives are recognised on their own.'],
+                            ['key' => 'shearwater', 'name' => 'Shearwater Cloud', 'badge' => null, 'file' => 'folder of .xml', 'mono' => 'SW',
+                             'steps' => ['In the Shearwater Cloud desktop app, select the dives.', 'Export them as <strong>XML</strong> into an empty folder - one file per dive.', 'Drop the folder above, or use <strong>Choose a folder</strong>.'],
+                             'gets' => 'The computer\'s own log: deco stops, TTS, PPO2 per cell, setpoints. No sites or notes - dives you already imported from MacDive are upgraded and keep them.'],
+                            ['key' => 'garmin', 'name' => 'Garmin Connect', 'badge' => null, 'file' => '.fit', 'mono' => 'G',
+                             'steps' => ['On connect.garmin.com, open a dive.', 'Click <strong>⚙ &rsaquo; Export Original</strong> and unzip the download.', 'Drop the .fit file (or a folder of them) above.'],
+                             'gets' => 'Descent watches: 1-second profile, NDL, stops, CNS, gases, transmitter pressure, and the GPS entry point used to find the site.'],
+                            ['key' => 'oceanic', 'name' => 'Oceanic+ · Apple Watch', 'badge' => null, 'file' => '.uddf', 'mono' => 'O+',
+                             'steps' => ['In the Oceanic+ app on your iPhone, open your dive log.', 'Use the app\'s export and choose <strong>UDDF</strong>.', 'Drop the .uddf file above.'],
+                             'gets' => 'Scuba dives with a profile, snorkel sessions as freedives, and each dive\'s GPS point. Sessions saved without a profile come in as summaries.'],
+                            ['key' => 'uddf', 'name' => 'Other apps', 'badge' => null, 'file' => '.uddf', 'mono' => 'UDDF',
+                             'steps' => ['Subsurface, DiveMate, Diving Log and most others: <strong>File &rsaquo; Export &rsaquo; UDDF</strong>.', 'Drop the .uddf file above.'],
+                             'gets' => 'Profile, gases, sites and notes. Rebreather dives are recognised when the app exports setpoints or PPO2; otherwise you tick them in the review step.'],
+                        ];
+                    @endphp
+                    <h3 class="h5 mt-2 mb-3">Where are your dives?</h3>
+                    <div class="dh-import-sources mb-4">
+                        @foreach ($sources as $src)
+                            <section class="card dh-import-source" aria-labelledby="src-{{ $src['key'] }}">
+                                <div class="dh-import-source-head">
+                                    <span class="dh-import-logo">
+                                        <img src="{{ asset('assets/img/import/' . $src['key'] . '.png') }}" alt="" width="44" height="44" loading="lazy" onerror="this.remove()">
+                                        <span class="dh-import-logo-mono" aria-hidden="true">{{ $src['mono'] }}</span>
+                                    </span>
+                                    <div>
+                                        <h4 id="src-{{ $src['key'] }}">{{ $src['name'] }} @if ($src['badge'])<span class="dh-import-badge">{{ $src['badge'] }}</span>@endif</h4>
+                                        <span class="dh-import-filetype">{{ $src['file'] }}</span>
+                                    </div>
+                                </div>
+                                <ol class="dh-import-steps">
+                                    @foreach ($src['steps'] as $step)<li>{!! $step !!}</li>@endforeach
+                                </ol>
+                                <p class="dh-import-gets">{{ $src['gets'] }}</p>
+                            </section>
+                        @endforeach
                     </div>
+                    <p class="text-xs text-secondary mb-4">Shearwater or Garmin computer? Syncing it with the Divers Hub app gets the same data with no files at all.</p>
 
                 </div>
             </div>
