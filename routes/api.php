@@ -56,6 +56,11 @@ Route::withoutMiddleware('throttle:api')->middleware(['auth.api:sanctum', 'logbo
     // change feed, so every other phone drops it too.
     Route::delete('/dives/{uuid}', [\App\Http\Controllers\Api\LogbookApiController::class, 'destroy'])
         ->where('uuid', '[0-9a-fA-F-]{36}');
+    // Same dive, another computer (web 12.14.0): the diver's answer.
+    Route::post('/dives/{uuid}/combine', [\App\Http\Controllers\Api\LogbookApiController::class, 'combine'])
+        ->where('uuid', '[0-9a-fA-F-]{36}');
+    Route::post('/dives/{uuid}/not-same', [\App\Http\Controllers\Api\LogbookApiController::class, 'notSame'])
+        ->where('uuid', '[0-9a-fA-F-]{36}');
     // The diver's own sites (UserSiteApiController).
     Route::get('/user-sites', [\App\Http\Controllers\Api\UserSiteApiController::class, 'index']);
     Route::post('/user-sites', [\App\Http\Controllers\Api\UserSiteApiController::class, 'store']);

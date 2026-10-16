@@ -120,7 +120,11 @@
                             <div class="card p-0 position-relative mt-3 z-index-2 mb-4 dh-import-group is-high">
                                 <div class="card-body">
                                     <h3 class="h5 mb-1 d-flex align-items-center gap-2"><span class="material-icons-round" aria-hidden="true">devices</span> Same dive, another computer &middot; {{ $companions->count() }}</h3>
-                                    <p class="text-sm text-secondary">You wore more than one computer on these dives. Ticked: this computer's log is <strong>added to the dive</strong> you already have - one dive, every computer's data (a second profile, transmitter pressure, PPO2). Unticked: it's imported as a separate dive.</p>
+                                    <p class="text-sm text-secondary">You wore more than one computer on these dives - same duration, same depth profile. Ticked: this computer's log is <strong>combined into the dive</strong> - one dive, every computer's data (deco stops, transmitter pressure, a second profile). Unticked: it's imported next to that dive as <strong>844.b</strong>, highlighted in your logbook, and you decide later.</p>
+                                    <div class="dh-import-tickbar mb-2">
+                                        <button type="button" class="dh-btn dh-btn-ghost-dark" data-tick-all="attach_ids[]">Select all</button>
+                                        <button type="button" class="dh-btn dh-btn-ghost-dark" data-untick-all="attach_ids[]">Unselect all</button>
+                                    </div>
                                     <div class="dh-import-list">
                                         @foreach ($companions as $c)
                                             @php
@@ -238,4 +242,15 @@
         </script>
         <script src="{{ asset('assets') }}/js/dh-units.js?v={{ config('divehub.version') }}"></script>
     @endpush
+@push('js')
+    <script>
+        document.querySelectorAll('[data-tick-all],[data-untick-all]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                var name = b.getAttribute('data-tick-all') || b.getAttribute('data-untick-all');
+                var on = b.hasAttribute('data-tick-all');
+                document.querySelectorAll('input[name="' + name + '"]').forEach(function (c) { c.checked = on; });
+            });
+        });
+    </script>
+@endpush
 </x-page-template>

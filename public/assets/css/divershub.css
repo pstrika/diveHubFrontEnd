@@ -4617,3 +4617,24 @@ body.dh-logbook main .input-group-outline:has(> input.form-control):not(.is-fill
 .dh-computer-note { font-size: .78rem; color: var(--dh-muted, #5b6b78); }
 .dh-same-dive-banner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border-radius: 12px; background: rgba(230, 145, 56, .12); margin-bottom: 12px; font-size: .88rem; color: var(--dh-ink); }
 .dh-same-dive-banner form { margin: 0; }
+/* Dives still asking "same dive, another computer?" (Pablo, 2026-10-16). */
+.dh-logbook-row.is-same-dive-pending { background: rgba(230, 145, 56, .10); box-shadow: inset 4px 0 0 #e69138; }
+.dh-logbook-row.is-same-dive-pending:hover { background: rgba(230, 145, 56, .16); }
+.dh-same-dive-badge { display: block; margin-top: 2px; font-size: .6rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: #a35a0b; white-space: nowrap; }
+.dh-same-dive-text { flex: 1 1 260px; }
+.dh-same-dive-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Site editor under the blue #number - site title, never squeezed beside it
+   (Pablo, 2026-10-16: "in mobile view it looks really bad"). */
+.dh-dive-site-chip-row { flex-wrap: wrap; }
+.dh-dive-site-form { flex: 1 1 100%; }
+.dh-dive-site-form > div { flex: 1 1 auto; min-width: 0; }
+@media (max-width: 767px) {
+  .dh-dive-site-form { max-width: none; flex-wrap: wrap; }
+  .dh-dive-site-form > div { flex: 1 1 100%; }
+  .dh-dive-site-form .dh-dive-site-save, .dh-dive-site-form .dh-dive-site-create { flex: 1 1 0; justify-content: center; margin-left: 0; }
+}
+.dh-dive-site-form > div > input[type="text"] { width: 100%; box-sizing: border-box; }
+.dh-logbook-row-number { position: relative; }
+.dh-row-number-letter { position: absolute; right: -7px; bottom: -5px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: #e69138; color: #fff; font-size: .62rem; font-weight: 800; line-height: 16px; text-align: center; box-shadow: 0 0 0 2px #fff; }
+.dh-logbook-row-title .dh-same-dive-badge { display: inline-block; margin: 0 0 0 8px; padding: 1px 8px; border-radius: 999px; background: rgba(230, 145, 56, .18); flex: 0 0 auto; }

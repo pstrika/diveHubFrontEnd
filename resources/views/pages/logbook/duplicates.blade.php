@@ -22,6 +22,14 @@
                         Computers whose clocks were set to different hours are matched on date, depth, duration and the shape of the profile.
                     </p>
 
+                    @php $sure = collect($pairs)->where('level', 'strong')->count(); @endphp
+                    @if ($sure > 1)
+                        <form method="POST" action="{{ route('Logbook.combineAll') }}" class="mb-3" onsubmit="return confirm('Combine all {{ $sure }} sure matches? Each stays one dive with every computer\'s data; you can separate any of them later.');">
+                            @csrf
+                            <button type="submit" class="dh-btn dh-btn-primary"><span class="material-icons-round" aria-hidden="true">merge</span> Combine all {{ $sure }} sure matches</button>
+                        </form>
+                    @endif
+
                     @forelse ($pairs as $p)
                         @php
                             $a = $p['a']; $b = $p['b'];
@@ -41,7 +49,7 @@
                                 <div class="dh-dup-grid">
                                     @foreach ([[$a, $sa], [$b, $sb]] as [$d, $si])
                                         <a class="dh-dup-dive" href="{{ route('DiveDetails', $d->id) }}" target="_blank" rel="noopener">
-                                            <strong>{{ $d->computer_model ?: 'Unknown computer' }}</strong>
+                                            <strong>#{{ $d->logbookNumber() }} &middot; {{ $d->computer_model ?: 'Unknown computer' }}</strong>
                                             <span>{{ $d->started_at->format('M j, Y g:i A') }}</span>
                                             <span><span data-unit-value="depth" data-metric="{{ $d->max_depth_m }}"></span> &middot; {{ intdiv((int) $d->duration_seconds, 60) }} min</span>
                                             <span class="text-secondary">{{ $si['name'] ?? 'No site' }}</span>

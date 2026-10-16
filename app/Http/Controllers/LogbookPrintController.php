@@ -41,7 +41,7 @@ class LogbookPrintController extends Controller
         $pdf = Pdf::loadView('pdf.dive-log', [
             'dive' => $dive,
             'user' => $request->user(),
-            'seq' => $dive->sequenceNumber(),
+            'seq' => $dive->logbookNumber(),
             'siteInfo' => $siteInfo,
             'conditions' => $conditions,
             'gasRows' => $gas['gas_stats'] ?? [],
@@ -55,7 +55,7 @@ class LogbookPrintController extends Controller
             'logoPath' => public_path('assets/img/pwa/app-icon-192.png'),
         ])->setPaper('letter', 'portrait');
 
-        $name = 'dive-' . $seqSafe = $dive->sequenceNumber() . '-' . $dive->started_at->format('Y-m-d') . '.pdf';
+        $name = 'dive-' . $seqSafe = $dive->logbookNumber() . '-' . $dive->started_at->format('Y-m-d') . '.pdf';
         return $pdf->stream($name);
     }
 

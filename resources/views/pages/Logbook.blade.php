@@ -128,7 +128,7 @@
                                     $wished = $siteInfo && $siteInfo['site'] && isset($wishedSiteIds[(int) $siteInfo['site']->id]);
                                     $siteTitle = $dive->title();
                                 @endphp
-                                <a href="{{ route('DiveDetails', $dive->id) }}" class="dh-logbook-row">
+                                <a href="{{ route('DiveDetails', $dive->id) }}" class="dh-logbook-row{{ isset($dive->pendingGroup) ? ' is-same-dive-pending' : '' }}">
                                     {{-- Phone only: the site + city and the time as a full-width
                                          block above the number/date/mode/stats line (Pablo,
                                          2026-10-15); on tablet/desktop this is the 4th column
@@ -136,11 +136,13 @@
                                     <div class="dh-logbook-row-top d-md-none">
                                         <div class="dh-logbook-row-title">
                                             <span class="text-truncate">{{ $siteTitle }}@if ($city) &middot; {{ $city }}@endif</span>
+                                            @if (isset($dive->pendingGroup))<span class="dh-same-dive-badge" title="Logged by more than one computer - open it to combine or keep apart">Same dive?</span>@endif
                                             @if ($wished)<span class="material-icons-round dh-logbook-row-wished" title="On your wishlist">bookmark</span>@endif
                                         </div>
                                         <div class="dh-logbook-row-sub text-sm text-secondary">{{ $dive->started_at->format('g:i A') }}</div>
                                     </div>
-                                    <div class="dh-logbook-row-number" title="Dive #{{ $dive->listSeq }}">{{ $dive->listSeq }}</div>
+                                    @php [$numBase, $numLetter] = array_pad(explode('.', (string) $dive->listSeq, 2), 2, null); @endphp
+                                    <div class="dh-logbook-row-number" title="Dive #{{ $dive->listSeq }}">{{ $numBase }}@if ($numLetter)<span class="dh-row-number-letter">{{ $numLetter }}</span>@endif</div>
                                     <div class="dh-logbook-row-date">
                                         <div class="dh-logbook-row-day">{{ $dive->started_at->format('d') }}</div>
                                         <div class="dh-logbook-row-month">{{ $dive->started_at->format('M Y') }}</div>
@@ -161,6 +163,7 @@
                                     <div class="dh-logbook-row-main d-none d-md-block">
                                         <div class="dh-logbook-row-title">
                                             <span class="text-truncate">{{ $siteTitle }}</span>
+                                            @if (isset($dive->pendingGroup))<span class="dh-same-dive-badge" title="Logged by more than one computer - open it to combine or keep apart">Same dive?</span>@endif
                                             @if ($wished)
                                                 {{-- Same bookmark the dashboard's trip cards use for a
                                                      wishlisted site. --}}

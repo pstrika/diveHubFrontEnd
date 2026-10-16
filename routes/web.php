@@ -482,6 +482,8 @@ Route::middleware(['auth', 'logbook'])->group(function () {
     Route::get('Logbook/{id}/print', 'App\Http\Controllers\LogbookPrintController@show')->where('id', '[0-9]+')->name('DiveDetails.print');
     Route::get('Logbook/settings', 'App\Http\Controllers\LogbookController@settings')->name('Logbook.settings');
     Route::delete('Logbook/settings/all', 'App\Http\Controllers\LogbookController@destroyAll')->name('Logbook.destroyAll');
+    Route::post('Logbook/settings/auto-merge', 'App\\Http\\Controllers\\LogbookController@updateAutoMerge')->name('Logbook.autoMerge');
+    Route::post('Logbook/duplicates/combine-all', 'App\\Http\\Controllers\\LogbookController@combineAll')->name('Logbook.combineAll');
     Route::get('Logbook/duplicates', 'App\Http\Controllers\LogbookController@duplicates')->name('Logbook.duplicates');
     Route::post('Logbook/{id}/computers/{log}/main', 'App\Http\Controllers\LogbookController@computerMain')->where(['id' => '[0-9]+', 'log' => '[0-9]+'])->name('Logbook.computerMain');
     Route::post('Logbook/{id}/computers/{log}/detach', 'App\Http\Controllers\LogbookController@computerDetach')->where(['id' => '[0-9]+', 'log' => '[0-9]+'])->name('Logbook.computerDetach');

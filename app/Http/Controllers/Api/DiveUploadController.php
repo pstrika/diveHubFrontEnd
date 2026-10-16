@@ -166,7 +166,9 @@ class DiveUploadController extends Controller
                     'started_at' => $diveData['datetime'], 'duration_seconds' => $diveData['duration_seconds'],
                     'max_depth_m' => $diveData['max_depth_m'], 'computer_serial' => $serial, 'profile' => $diveData['profile'],
                 ]);
-                if ($match && $match['level'] === 'strong') {
+                // Only with the diver's "Auto-merge dives" setting on (off by
+                // default - Pablo, 2026-10-16: keep asking).
+                if ($match && $match['level'] === 'strong' && ($user->logbook_auto_merge ?? false)) {
                     $match['dive']->attachComputerLog($facts);
                     $duplicates[] = ['index' => $i, 'uuid' => $match['dive']->uuid, 'id' => $match['dive']->id, 'dive_number' => $match['dive']->dive_number, 'attached' => true];
                     return;
@@ -202,11 +204,12 @@ class DiveUploadController extends Controller
                 // 4. Looks like another computer's dive but the clocks are
                 //    hours apart: never assumed - the dive page asks.
                 if ($match) {
-                    $dive->conditions = ['same_dive_suggestion' => ['dive_id' => $match['dive']->id, 'offset' => $match['offset'], 'shape' => $match['shape']]];
+                    $dive->conditions = ['same_dive_suggestion' => ['dive_id' => $match['dive']->id, 'offset' => $match['offset'], 'shape' => $match['shape'], 'corr' => $match['corr'] ?? null, 'level' => $match['level']]];
                     $dive->save();
                 }
 
-                $created[] = ['index' => $i, 'uuid' => $dive->uuid, 'id' => $dive->id, 'dive_number' => $dive->dive_number];
+                $created[] = ['index' => $i, 'uuid' => $dive->uuid, 'id' => $dive->id, 'dive_number' => $dive->dive_number]
+                    + ($match ? ['same_dive_as' => $match['dive']->uuid] : []);
             });
         }
 

@@ -34,6 +34,37 @@
                         </div>
                     </div>
 
+                    @if (session('status'))
+                        <div class="dh-logbook-flash" role="status"><span class="material-icons-round" aria-hidden="true">check_circle</span> {{ session('status') }}</div>
+                    @endif
+
+                    {{-- Same dive, several computers (Pablo, 2026-10-16: "an 'Auto-merge'
+                         option in the settings... By default... Auto-merge false"). --}}
+                    <div class="card p-0 position-relative mt-2 z-index-2 mb-4">
+                        <div class="card-body">
+                            <h3 class="h5 mb-1">Dives logged by more than one computer</h3>
+                            <p class="text-sm text-secondary mb-3">
+                                When you wear two or three computers - a rebreather controller, a backup, one with transmitters - each one logs the same dive.
+                                Divers Hub recognises them by duration and depth profile, even when their clocks are set differently.
+                            </p>
+                            <form method="POST" action="{{ route('Logbook.autoMerge') }}" id="autoMergeForm">
+                                @csrf
+                                <label class="dh-comms-label">
+                                    <input type="hidden" name="logbook_auto_merge" value="0">
+                                    <input name="logbook_auto_merge" class="form-check-input" type="checkbox" value="1" @checked($autoMerge) onchange="this.form.submit()">
+                                    <span><strong>Auto-merge dives</strong> - combine them into one dive without asking</span>
+                                </label>
+                            </form>
+                            <p class="text-xs text-secondary mt-2 mb-0">
+                                Off: they stay as separate dives sharing one number (844.a, 844.b), highlighted in your logbook, until you choose <em>Combine</em> or <em>Different dives</em>.
+                                Combined, the dive shows every computer's data - deco stops, each transmitter's pressure, a profile overlay.
+                            </p>
+                            @if ($pendingCount)
+                                <a href="{{ route('Logbook.duplicates') }}" class="dh-btn dh-btn-ghost-dark mt-3"><span class="material-icons-round" aria-hidden="true">devices</span> {{ $pendingCount }} {{ $pendingCount === 1 ? 'dive is' : 'dives are' }} waiting for your answer</a>
+                            @endif
+                        </div>
+                    </div>
+
                     {{-- Data removal (Pablo, 2026-10-16). Hard delete, no undo. --}}
                     <div class="card p-0 position-relative mt-3 z-index-2 mb-4 dh-danger-zone">
                         <div class="card-body">

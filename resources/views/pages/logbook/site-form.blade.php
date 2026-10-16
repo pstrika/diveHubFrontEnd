@@ -16,7 +16,7 @@
 
                     <a href="{{ $dive ? route('DiveDetails', $dive->id) : route('Logbook.sites.index') }}" class="dh-btn dh-btn-ghost-dark mb-3">
                         <span class="material-icons-round" aria-hidden="true">arrow_back</span>
-                        {{ $dive ? 'Back to dive #' . $dive->sequenceNumber() : 'My sites' }}
+                        {{ $dive ? 'Back to dive #' . $dive->logbookNumber() : 'My sites' }}
                     </a>
 
                     @if ($dive)

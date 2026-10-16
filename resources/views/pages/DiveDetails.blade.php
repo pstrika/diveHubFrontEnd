@@ -10,7 +10,7 @@
     // silently showed nothing). gas_mixes doesn't need a real tank to
     // exist, so this is read regardless of $tanks.
     $labeledGases = $dive->labeledGasMixes();
-    $seq = $dive->sequenceNumber();
+    $seq = $dive->logbookNumber();
     // Catalog site / the diver's own site / free-typed name (Dive::siteInfo).
     $siteInfo = $dive->siteInfo();
     $site = $siteInfo['site'] ?? null;
@@ -443,19 +443,24 @@
                     {{-- A synced dive that looks like another computer's dive but
                          whose clock was hours off: asked, never assumed (Pablo,
                          2026-10-16: "we can always ask the user"). --}}
-                    @if (!empty($sameDive))
-                        @php $od = $sameDive['dive']; @endphp
+                    @foreach (($sameDive ?? []) as $sd)
+                        @php $od = $sd['dive']; @endphp
                         <div class="dh-same-dive-banner" role="status">
                             <span class="material-icons-round" aria-hidden="true">devices</span>
-                            <span>
-                                Same dive as <a href="{{ route('DiveDetails', $od->id) }}">{{ $od->title() }}</a> on the {{ $od->computer_model ?: 'other computer' }}?
-                                <span class="dh-import-clock">clocks {{ \App\Support\SameDiveMatcher::offsetLabel($sameDive['offset']) }} apart</span>
-                                @if ($sameDive['shape'] !== null) <span class="text-xs text-secondary">profiles {{ (int) round($sameDive['shape'] * 100) }}% alike</span> @endif
+                            <span class="dh-same-dive-text">
+                                <strong>Same dive as <a href="{{ route('DiveDetails', $od->id) }}">#{{ $sd['label'] }}</a>?</strong>
+                                Logged by the {{ $od->computer_model ?: 'other computer' }} &middot;
+                                {{ intdiv((int) $od->duration_seconds, 60) }} min, <span data-unit-value="depth" data-metric="{{ $od->max_depth_m }}"></span>
+                                @if ($sd['corr'] !== null) &middot; profiles {{ (int) round(max(0, $sd['corr']) * 100) }}% alike @endif
+                                @if (abs($sd['offset']) > 300) <span class="dh-import-clock">clocks {{ \App\Support\SameDiveMatcher::offsetLabel($sd['offset']) }} apart</span> @endif
                             </span>
-                            <form method="POST" action="{{ route('Logbook.combine', [$od->id, $dive->id]) }}">@csrf<button type="submit" class="dh-btn dh-btn-primary">Combine</button></form>
-                            <form method="POST" action="{{ route('Logbook.sameDiveDismiss', $dive->id) }}">@csrf<button type="submit" class="dh-btn dh-btn-ghost-dark">Not the same dive</button></form>
+                            <span class="dh-same-dive-actions">
+                                <form method="POST" action="{{ route('Logbook.combine', [$dive->id, $od->id]) }}">@csrf<button type="submit" class="dh-btn dh-btn-primary">Combine, keep {{ $dive->computer_model ?: 'this' }} as main</button></form>
+                                <form method="POST" action="{{ route('Logbook.combine', [$od->id, $dive->id]) }}">@csrf<button type="submit" class="dh-btn dh-btn-ghost-dark">Keep {{ $od->computer_model ?: 'the other' }} as main</button></form>
+                                <form method="POST" action="{{ route('Logbook.dismissPair', [$dive->id, $od->id]) }}">@csrf<input type="hidden" name="back" value="dive"><button type="submit" class="dh-btn dh-btn-ghost-dark">Different dives</button></form>
+                            </span>
                         </div>
-                    @endif
+                    @endforeach
                     @if (session('error'))
                         <div class="dh-logbook-flash" role="alert" style="background: rgba(211,47,47,.08); color: var(--dh-danger);">
                             <span class="material-icons-round" aria-hidden="true">error</span>

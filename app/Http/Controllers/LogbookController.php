@@ -41,18 +41,47 @@ class LogbookController extends Controller
         // No profile JSON here (Dive::LIST_COLUMNS): classification reads the
         // stored entered_deco flag, and a full logbook is ~900 rows.
         $all = Dive::where('user_id', $userId)->select(Dive::LIST_COLUMNS)->orderByDesc('started_at')->orderByDesc('id')->get();
-        $total = $all->count();
+        // Same-dive questions still open (Pablo, 2026-10-16): the asking
+        // dive shares the number of the dive it asks about - 844.a, 844.b -
+        // sits right after it in the list, and isn't counted twice.
+        $pending = \App\Support\SameDivePending::forUser($userId);
+        $asks = $pending['asks']; $groups = $pending['groups'];
 
         // Chronological number (oldest = 1) before any filtering, so a
         // filtered list still shows each dive's real number.
-        $seq = $total;
-        foreach ($all as $dive) {
-            $dive->listSeq = $seq--;
+        $num = 0; $base = [];
+        foreach ($all->reverse() as $dive) {
+            if (!isset($asks[$dive->id])) $base[$dive->id] = ++$num;
         }
+        foreach ($all as $dive) {
+            if (isset($asks[$dive->id])) {
+                $t = $asks[$dive->id];
+                $i = array_search($dive->id, array_merge([$t], $groups[$t] ?? []), true);
+                $dive->listSeq = ($base[$t] ?? '?') . '.' . \App\Support\SameDivePending::letter((int) $i);
+                $dive->pendingGroup = $t;
+            } elseif (isset($groups[$dive->id])) {
+                $dive->listSeq = $base[$dive->id] . '.a';
+                $dive->pendingGroup = $dive->id;
+            } else {
+                $dive->listSeq = $base[$dive->id];
+            }
+        }
+        if ($asks) {
+            $byId = $all->keyBy('id');
+            $ordered = new \Illuminate\Database\Eloquent\Collection();
+            foreach ($all as $dive) {
+                if (isset($asks[$dive->id])) continue;
+                $ordered->push($dive);
+                foreach ($groups[$dive->id] ?? [] as $a) if (isset($byId[$a])) $ordered->push($byId[$a]);
+            }
+            $all = $ordered;
+        }
+        $counted = $all->reject(fn ($d) => isset($asks[$d->id]));
+        $total = $counted->count();
 
         $stats = [
             'total' => $total,
-            'total_time_seconds' => (int) $all->sum('duration_seconds'),
+            'total_time_seconds' => (int) $counted->sum('duration_seconds'),
             'max_depth_m' => $all->max('max_depth_m'),
         ];
 
@@ -317,7 +346,20 @@ class LogbookController extends Controller
             'diveCount' => Dive::where('user_id', $userId)->count(),
             'siteCount' => \App\Models\UserSite::where('user_id', $userId)->count(),
             'importCount' => \App\Models\DiveImport::where('user_id', $userId)->count(),
+            'autoMerge' => (bool) ($request->user()->logbook_auto_merge ?? false),
+            'pendingCount' => count(\App\Support\SameDivePending::forUser($userId)['asks']),
         ]);
+    }
+
+    /** POST Logbook/settings/auto-merge - the "Auto-merge dives" switch. */
+    public function updateAutoMerge(Request $request)
+    {
+        $user = $request->user();
+        $user->logbook_auto_merge = $request->boolean('logbook_auto_merge');
+        $user->save();
+        return redirect()->route('Logbook.settings')->with('status', $user->logbook_auto_merge
+            ? 'Auto-merge is on: dives another computer already logged are combined without asking.'
+            : 'Auto-merge is off: you\'ll be asked before dives are combined.');
     }
 
     /**
@@ -350,7 +392,32 @@ class LogbookController extends Controller
      */
     public function duplicates(Request $request)
     {
+        return view('pages.logbook.duplicates', ['pairs' => $this->sameDivePairs($request->user()->id)]);
+    }
+
+    /**
+     * POST Logbook/duplicates/combine-all - every SURE pair, combined. The
+     * dive that was asked about (the first one, 844.a) stays the main one.
+     */
+    public function combineAll(Request $request)
+    {
         $userId = $request->user()->id;
+        $pending = \App\Support\SameDivePending::forUser($userId);
+        $n = 0;
+        foreach ($this->sameDivePairs($userId) as $p) {
+            if ($p['level'] !== 'strong') continue;
+            $a = Dive::where('user_id', $userId)->find($p['a']->id);
+            $b = Dive::where('user_id', $userId)->find($p['b']->id);
+            if (!$a || !$b) continue; // already combined into another
+            if (isset($pending['asks'][$a->id]) && !isset($pending['asks'][$b->id])) [$a, $b] = [$b, $a];
+            $a->absorb($b);
+            $n++;
+        }
+        return redirect()->route('Logbook.duplicates')->with('status', 'Combined ' . $n . ' dive' . ($n === 1 ? '' : 's') . '.');
+    }
+
+    private function sameDivePairs(int $userId): array
+    {
         $dives = Dive::where('user_id', $userId)->orderBy('started_at')
             ->get(['id', 'started_at', 'duration_seconds', 'max_depth_m', 'computer_model', 'computer_serial', 'conditions', 'site_id', 'user_site_id']);
         $pairs = [];
@@ -379,7 +446,20 @@ class LogbookController extends Controller
             if ($m) $out[] = ['a' => $a, 'b' => $b] + $m;
         }
         usort($out, fn ($p, $q) => [$p['level'] !== 'strong', $q['a']->started_at->getTimestamp()] <=> [$q['level'] !== 'strong', $p['a']->started_at->getTimestamp()]);
-        return view('pages.logbook.duplicates', ['pairs' => $out]);
+        return $out;
+    }
+
+    /** Two dives the diver says are different: never asked about again. */
+    public static function markDifferent(Dive $a, Dive $b): void
+    {
+        foreach ([[$a, $b], [$b, $a]] as [$x, $y]) {
+            $c = $x->conditions ?? [];
+            $c['same_dive_dismissed'] = array_values(array_unique(array_merge($c['same_dive_dismissed'] ?? [], [(int) $y->id])));
+            if ((int) ($c['same_dive_suggestion']['dive_id'] ?? 0) === $y->id) unset($c['same_dive_suggestion']);
+            $x->conditions = $c;
+            $x->save();
+        }
+        \App\Support\SameDivePending::forget();
     }
 
     /** POST - "not the same dive" from the duplicates page. */
@@ -387,11 +467,11 @@ class LogbookController extends Controller
     {
         $dive = Dive::where('user_id', $request->user()->id)->findOrFail($id);
         Dive::where('user_id', $request->user()->id)->findOrFail($other);
-        $c = $dive->conditions ?? [];
-        $c['same_dive_dismissed'] = array_values(array_unique(array_merge($c['same_dive_dismissed'] ?? [], [(int) $other])));
-        $dive->conditions = $c;
-        $dive->save();
-        return redirect()->route('Logbook.duplicates');
+        $o = Dive::where('user_id', $request->user()->id)->findOrFail($other);
+        self::markDifferent($dive, $o);
+        return $request->input('back') === 'dive'
+            ? redirect()->route('DiveDetails', $dive->id)->with('status', 'Kept as two different dives.')
+            : redirect()->route('Logbook.duplicates');
     }
 
     /**
@@ -549,10 +629,21 @@ class LogbookController extends Controller
         if ($any->isCompanion()) return redirect()->route('DiveDetails', $any->merged_into_id);
         $dive = $any;
         [$companions, $chartProfile, $chartTanks, $pressureFrom, $decoFrom] = $this->computerLogs($dive);
-        $sameDive = null;
-        if ($sug = ($dive->conditions['same_dive_suggestion'] ?? null)) {
-            $other = Dive::where('user_id', $dive->user_id)->find($sug['dive_id'] ?? 0);
-            if ($other) $sameDive = ['dive' => $other, 'offset' => (int) ($sug['offset'] ?? 0), 'shape' => $sug['shape'] ?? null];
+        // Open "same dive?" questions this dive is part of - as the dive
+        // that asks, or as the dive being asked about (844.a / 844.b).
+        $sameDive = [];
+        $pending = \App\Support\SameDivePending::forUser($dive->user_id);
+        $others = [];
+        if (isset($pending['asks'][$dive->id])) $others[] = $pending['asks'][$dive->id];
+        foreach ($pending['groups'][$dive->id] ?? [] as $a) $others[] = $a;
+        foreach ($others as $oid) {
+            $other = Dive::where('user_id', $dive->user_id)->find($oid);
+            if (!$other) continue;
+            $asker = isset($pending['asks'][$dive->id]) && $pending['asks'][$dive->id] === $oid ? $dive : $other;
+            $sug = $asker->conditions['same_dive_suggestion'] ?? [];
+            $offset = (int) ($sug['offset'] ?? 0);
+            if ($asker->id === $dive->id) $offset = -$offset;
+            $sameDive[] = ['dive' => $other, 'label' => $other->logbookNumber(), 'offset' => $offset, 'shape' => $sug['shape'] ?? null, 'corr' => $sug['corr'] ?? null];
         }
 
         // Operator search + its boats (Pablo, 2026-10-15: "if the user

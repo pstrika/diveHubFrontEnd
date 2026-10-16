@@ -26,7 +26,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <a href="{{ $editing ? route('DiveDetails', $dive->id) : route('Logbook') }}" class="dh-btn dh-btn-ghost-dark">
                             <span class="material-icons-round" aria-hidden="true">arrow_back</span>
-                            {{ $editing ? 'Dive #' . $dive->sequenceNumber() : 'Logbook' }}
+                            {{ $editing ? 'Dive #' . $dive->logbookNumber() : 'Logbook' }}
                         </a>
                         <button type="button" class="dh-btn dh-btn-ghost-dark dh-unit-toggle" id="switchUnitsForm"></button>
                     </div>

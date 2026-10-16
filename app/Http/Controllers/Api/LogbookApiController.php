@@ -257,4 +257,37 @@ class LogbookApiController extends Controller
         }
         return response($json, 200, ['Content-Type' => 'application/json', 'ETag' => $etag, 'Cache-Control' => 'private, max-age=0, must-revalidate']);
     }
+
+    /**
+     * POST /api/dives/{uuid}/combine {with_uuid, main: "this"|"other"} -
+     * the diver says it's the same dive: the server combines them (the
+     * other computer's log is attached to the main dive, which gains its
+     * deco stops, transmitter pressure and profile overlay). Response: the
+     * main dive's uuid; the change feed carries 'deleted' for the other
+     * uuid and 'updated' for the main one.
+     */
+    public function combine(Request $request, string $uuid)
+    {
+        $data = $request->validate(['with_uuid' => 'required|uuid', 'main' => 'nullable|in:this,other']);
+        $userId = $request->user()->id;
+        $dive = Dive::where('user_id', $userId)->where('uuid', $uuid)->firstOrFail();
+        $other = Dive::where('user_id', $userId)->where('uuid', $data['with_uuid'])->firstOrFail();
+        if ($dive->id === $other->id) return response()->json(['message' => 'Same dive.'], 422);
+        [$main, $log] = ($data['main'] ?? 'this') === 'other' ? [$other, $dive] : [$dive, $other];
+        $main->absorb($log);
+        return response()->json(['main_uuid' => $main->uuid, 'removed_uuid' => $log->uuid]);
+    }
+
+    /** POST /api/dives/{uuid}/not-same {with_uuid} - two different dives; never asked again. */
+    public function notSame(Request $request, string $uuid)
+    {
+        $data = $request->validate(['with_uuid' => 'required|uuid']);
+        $userId = $request->user()->id;
+        $dive = Dive::where('user_id', $userId)->where('uuid', $uuid)->firstOrFail();
+        $other = Dive::where('user_id', $userId)->where('uuid', $data['with_uuid'])->firstOrFail();
+        \App\Http\Controllers\LogbookController::markDifferent($dive, $other);
+        DiveChange::record($userId, $dive->uuid, 'updated');
+        DiveChange::record($userId, $other->uuid, 'updated');
+        return response()->noContent();
+    }
 }

@@ -85,6 +85,13 @@ class DiveSyncController extends Controller
             'source' => $dive->source,
             'has_profile' => $dive->hasProfile(),
             'facts_editable' => $dive->factsEditable(),
+            // Open "same dive, another computer?" question (web 12.14.0):
+            // null, or {label: "844.b", with: [{uuid, label, computer_model}],
+            // asking: bool}. The app shows the dive highlighted and offers
+            // POST /api/dives/{uuid}/combine and /not-same.
+            'same_dive' => \App\Support\SameDivePending::syncBlock($dive),
+            // Other computers already combined into this dive.
+            'computers' => $dive->companions()->get(['computer_model', 'computer_serial'])->map(fn ($c) => ['model' => $c->computer_model, 'serial' => $c->computer_serial])->values(),
             'updated_at' => optional($dive->updated_at)->toIso8601String(),
         ];
     }

@@ -375,6 +375,7 @@ class Dive extends Model
             DiveChange::record($other->user_id, $other->uuid, 'deleted');
             DiveChange::record($this->user_id, $this->uuid, 'updated');
         });
+        \App\Support\SameDivePending::forget();
         $this->refreshEnteredDeco();
     }
 
@@ -484,9 +485,19 @@ class Dive extends Model
      * uploader session's note, 2026-10-14), so it's unreliable as "the
      * diver's Nth dive" and is display-only trivia, never used for this.
      */
+    /** The number the diver sees: "844", or "844.b" while a same-dive question is open. */
+    public function logbookNumber(): string
+    {
+        return \App\Support\SameDivePending::label($this);
+    }
+
     public function sequenceNumber(): int
     {
+        // Dives still asking "same dive as...?" share the number of the
+        // dive they ask about (844.b) and don't use one up.
+        $asking = array_keys(\App\Support\SameDivePending::forUser($this->user_id)['asks']);
         return static::where('user_id', $this->user_id)
+            ->when($asking, fn ($q) => $q->whereNotIn('id', $asking))
             ->where(function ($q) {
                 $q->where('started_at', '<', $this->started_at)
                     ->orWhere(function ($q2) {

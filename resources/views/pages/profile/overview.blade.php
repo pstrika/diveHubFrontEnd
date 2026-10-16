@@ -455,6 +455,22 @@
                             </div>
                         </div>
 
+                        {{-- Logbook settings live on their own page (Pablo, 2026-10-16:
+                             "a link from the user profile setting to the logbook setting.
+                             Putting all the settings in one place is overkilling"). Only for
+                             accounts the logbook is open to (LogbookGate). --}}
+                        @if (in_array(strtolower($user->email), array_map('strtolower', config('divehub.logbook_allowed_emails', [])), true))
+                            <div class="dh-profile-card">
+                                <div class="dh-profile-card-head">
+                                    <h6 class="dh-panel-title">Logbook</h6>
+                                </div>
+                                <div class="dh-profile-card-body">
+                                    <p class="text-sm text-secondary mb-2">Auto-merging dives from several computers, your own dive sites, imports and deleting your logbook.</p>
+                                    <a href="{{ route('Logbook.settings') }}" class="dh-btn dh-btn-ghost-dark"><span class="material-icons-round" aria-hidden="true">settings</span> Logbook settings</a>
+                                </div>
+                            </div>
+                        @endif
+
                     </div>
                 </div>
 

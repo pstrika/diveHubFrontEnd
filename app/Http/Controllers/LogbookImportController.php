@@ -229,6 +229,9 @@ class LogbookImportController extends Controller
         $dives = $parsed->dives;
         usort($dives, fn ($a, $b) => strcmp($a['started_at'], $b['started_at']));
 
+        // "Auto-merge dives" (logbook settings, off by default): pre-tick
+        // attaching sure matches; otherwise they import as dives that ask.
+        $autoMerge = (bool) ($request->user()->logbook_auto_merge ?? false);
         $counts = ['total' => count($dives), 'new' => 0, 'fingerprint' => 0, 'time' => 0, 'file' => 0, 'upgrade' => 0, 'companion' => 0, 'no_profile' => 0];
         $computers = [];
         $items = [];
@@ -255,7 +258,7 @@ class LogbookImportController extends Controller
                 if (SameDiveMatcher::differentComputers($d['computer_serial'], $prev['serial'])
                     && SameDiveMatcher::depthsAgree((float) $d['max_depth_m'], (float) $prev['depth'])
                     && SameDiveMatcher::durationsAgree((int) $d['duration_seconds'], (int) $prev['duration'])) {
-                    $kind = 'companion'; $ofItemPos = $prev['pos']; $decision = 'attach';
+                    $kind = 'companion'; $ofItemPos = $prev['pos']; $decision = $autoMerge ? 'attach' : 'import';
                     $d['_match'] = ['level' => 'strong', 'offset' => strtotime($prev['started_at']) - strtotime($d['started_at']), 'shape' => SameDiveMatcher::shapeSimilarity($d['profile'], $items[$prev['pos']]['payload']['profile'] ?? [])];
                 } elseif (!count($prev['profile']) && count($d['profile'])) {
                     // Same dive, same computer twice: keep the copy with a
@@ -275,8 +278,8 @@ class LogbookImportController extends Controller
                 $m = SameDiveMatcher::find($userId, $d);
                 if ($m) {
                     $kind = 'companion'; $ofDive = $m['dive']->id;
-                    $decision = ($m['level'] === 'strong' || ($m['shape'] ?? 0) >= 0.85) ? 'attach' : 'import';
-                    $d['_match'] = ['level' => $m['level'], 'offset' => $m['offset'], 'shape' => $m['shape']];
+                    $decision = ($autoMerge && $m['level'] === 'strong') ? 'attach' : 'import';
+                    $d['_match'] = ['level' => $m['level'], 'offset' => $m['offset'], 'shape' => $m['shape'], 'corr' => $m['corr'] ?? null];
                 }
             }
             // A computer's own file for a dive imported from a logbook (same
@@ -734,6 +737,16 @@ class LogbookImportController extends Controller
                     }
                     if (!empty($p['rating'])) $conditions['rating'] = (int) $p['rating'];
 
+                    // Same dive as another computer's, not attached: imported
+                    // as its own dive that asks (844.b) until the diver answers.
+                    if ($item->duplicate_kind === 'companion') {
+                        $askAbout = $item->duplicate_of_dive_id;
+                        if (!$askAbout && $item->duplicate_of_item_id) $askAbout = DiveImportItem::where('id', $item->duplicate_of_item_id)->value('imported_dive_id');
+                        if ($askAbout) {
+                            $m = $p['_match'] ?? [];
+                            $conditions['same_dive_suggestion'] = ['dive_id' => (int) $askAbout, 'offset' => (int) ($m['offset'] ?? 0), 'shape' => $m['shape'] ?? null, 'corr' => $m['corr'] ?? null, 'level' => $m['level'] ?? 'strong'];
+                        }
+                    }
                     $dive = DB::transaction(function () use ($p, $user, $siteId, $userSiteId, $conditions) {
                         $dive = Dive::create([
                             'user_id' => $user->id,
