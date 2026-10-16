@@ -275,7 +275,9 @@ class UddfParser
                 if ($currentSetpoint > 0) $modeFromFile = $modeFromFile === 'semi_closed_circuit' ? $modeFromFile : 'closed_circuit';
             }
             $po2Readings = [];
-            foreach (['measuredpo2', 'calculatedpo2'] as $tag) {
+            // Only <measuredpo2> is the computer's cells; <calculatedpo2> is
+            // the exporting app's own math - never shown as PPO2.
+            foreach (['measuredpo2'] as $tag) {
                 foreach ($this->all($w, $tag) as $pe) {
                     $v = $this->num(trim((string) $pe));
                     if ($v !== null && $v > 0) $po2Readings[] = round($v > 10 ? $v / 100000 : $v, 2);

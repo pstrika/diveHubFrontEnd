@@ -61,7 +61,23 @@
     // series once a real po2 field arrives - the setpoint is not PPO2.
     var gasMixes = window.dhDiveGasMixes || [];
     var isCcrDive = !!window.dhDiveIsCcr;
+    // A rebreather's PPO2 is only shown when the computer measured it
+    // (Pablo, 2026-10-16: "if the dive is CCR, do not show an 'artificial'
+    // PPO2 if it was not actually imported"). A logbook that had no cell
+    // readings (MacDive, a Perdix carried as backup) fills PPO2 with the
+    // setpoint - a series that sits on the setpoint, or has only a couple
+    // of distinct values, is that filler, not a measurement.
+    var po2IsFiller = (function () {
+        if (!isCcrDive) return false;
+        var withPo2 = profile.filter(function (p) { return p.po2 !== null && p.po2 !== undefined; });
+        if (withPo2.length < 10) return false;
+        var onSetpoint = withPo2.filter(function (p) { return p.setpoint !== null && p.setpoint !== undefined && Math.abs(p.po2 - p.setpoint) < 0.011; }).length;
+        var distinct = {};
+        withPo2.forEach(function (p) { distinct[p.po2] = 1; });
+        return onSetpoint / withPo2.length >= 0.9 || Object.keys(distinct).length <= 3;
+    })();
     function po2At(p) {
+        if (po2IsFiller) return null;
         if (p.po2 !== null && p.po2 !== undefined) return p.po2;
         if (isCcrDive || p.depth === null || p.depth === undefined) return null;
         var mix = (p.currentGas !== null && p.currentGas !== undefined) ? gasMixes[p.currentGas] : null;

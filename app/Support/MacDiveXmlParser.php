@@ -219,6 +219,12 @@ class MacDiveXmlParser
             if ($s['ndt'] !== null && $s['ndt'] > 0 && $s['ndt'] < 99) $p['ndl'] = (int) ($s['ndt'] * 60);
             $profile[] = $p;
         }
+        // MacDive fills PPO2 with the setpoint when the computer measured
+        // nothing (a backup computer on the loop): that's not data.
+        if ($isCc && self::po2IsSetpointFiller($profile)) {
+            foreach ($profile as &$pp) unset($pp['po2']);
+            unset($pp);
+        }
         if ($first !== null && $tanks) {
             // The single pressure stream belongs to the first cylinder.
             if (!$tanks[0]['beginPressure']) $tanks[0]['beginPressure'] = $first;
@@ -443,5 +449,15 @@ class MacDiveXmlParser
             (bool) preg_match('/medium|wave|surge|chop/', $v) => 'choppy',
             default => null,
         };
+    }
+
+    /** PPO2 that just repeats the setpoint (>= 90% of samples) or has <= 3 values. */
+    public static function po2IsSetpointFiller(array $profile): bool
+    {
+        $with = array_values(array_filter($profile, fn ($p) => isset($p['po2'])));
+        if (count($with) < 10) return false;
+        $on = count(array_filter($with, fn ($p) => isset($p['setpoint']) && abs($p['po2'] - $p['setpoint']) < 0.011));
+        $distinct = count(array_unique(array_map(fn ($p) => (string) $p['po2'], $with)));
+        return $on / count($with) >= 0.9 || $distinct <= 3;
     }
 }
