@@ -63,13 +63,12 @@
                                         You can also change the mode on each dive's page later.
                                     </p>
                                     <div class="dh-import-mode-filters">
-                                        <select id="modeFilterComputer" class="dh-import-select" aria-label="Computer">
-                                            <option value="">All computers</option>
-                                            @foreach ($unknownComputers as $c)<option value="{{ $c }}">{{ $c }}</option>@endforeach
-                                        </select>
-                                        <input type="date" id="modeFilterFrom" class="dh-import-select" aria-label="From">
-                                        <input type="date" id="modeFilterTo" class="dh-import-select" aria-label="To">
-                                        <input type="text" id="modeFilterGas" class="dh-import-select" placeholder="Gas, e.g. 10/55" aria-label="Gas">
+                                        <div class="dh-import-filter-select">
+                                            <x-dh-select id="modeFilterComputer" name="mode_filter_computer" :options="$unknownComputers->mapWithKeys(fn ($c) => [$c => $c])->all()" placeholder="All computers" :disabled="false" />
+                                        </div>
+                                        <div class="input-group input-group-outline dh-dive-ig dh-ig-compact is-filled"><label class="form-label" for="modeFilterFrom">From</label><input type="date" class="form-control" id="modeFilterFrom"></div>
+                                        <div class="input-group input-group-outline dh-dive-ig dh-ig-compact is-filled"><label class="form-label" for="modeFilterTo">To</label><input type="date" class="form-control" id="modeFilterTo"></div>
+                                        <div class="input-group input-group-outline dh-dive-ig dh-ig-compact"><label class="form-label" for="modeFilterGas">Gas, e.g. 10/55</label><input type="text" class="form-control" id="modeFilterGas"></div>
                                         <button type="button" class="dh-btn dh-btn-ghost-dark" id="modeTickVisible">Tick shown</button>
                                         <button type="button" class="dh-btn dh-btn-ghost-dark" id="modeUntickVisible">Untick shown</button>
                                         <span class="text-sm text-secondary" id="modeCount"></span>
@@ -147,6 +146,7 @@
     </main>
 
     @push('js')
+        <script src="{{ asset('assets') }}/js/dh-select.js?v={{ config('divehub.version') }}"></script>
         <script>
             (function () {
                 var list = document.getElementById('modeList');

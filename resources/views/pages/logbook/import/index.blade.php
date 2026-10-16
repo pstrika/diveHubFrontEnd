@@ -54,9 +54,13 @@
                             <p class="text-sm text-secondary">Nothing is added until you've reviewed duplicates, dive modes and site matches - that's the next two steps.</p>
                             <form method="POST" action="{{ route('Logbook.import.upload') }}" enctype="multipart/form-data" id="importForm">
                                 @csrf
-                                <div class="dh-field">
-                                    <label for="importFile">Logbook file (.xml or .uddf)</label>
-                                    <input type="file" id="importFile" name="file" accept=".uddf,.xml,application/xml,text/xml" required>
+                                <div class="dh-import-file mb-3">
+                                    <label class="dh-btn dh-btn-ghost-dark mb-0" for="importFile">
+                                        <span class="material-icons-round" aria-hidden="true">folder_open</span>
+                                        Choose file
+                                    </label>
+                                    <input type="file" id="importFile" name="file" accept=".uddf,.xml,application/xml,text/xml" required class="dh-visually-hidden">
+                                    <span class="text-sm text-secondary" id="importFileName">No file chosen (.xml or .uddf)</span>
                                 </div>
                                 <div class="d-flex justify-content-end">
                                     <button type="submit" class="dh-btn dh-btn-primary" id="importSubmit">
@@ -76,6 +80,10 @@
 
     @push('js')
         <script>
+            document.getElementById('importFile').addEventListener('change', function () {
+                var f = this.files && this.files[0];
+                document.getElementById('importFileName').textContent = f ? f.name + ' · ' + (f.size / 1048576).toFixed(1) + ' MB' : 'No file chosen (.xml or .uddf)';
+            });
             document.getElementById('importForm').addEventListener('submit', function () {
                 document.getElementById('importSubmit').disabled = true;
                 document.getElementById('importBusy').hidden = false;

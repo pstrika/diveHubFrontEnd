@@ -4465,8 +4465,9 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
 .dh-check-inline { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; text-transform: none; letter-spacing: 0; font-size: .95rem; color: var(--dh-ink); cursor: pointer; padding: 12px 0; }
 .dh-check-inline input { width: 18px; height: 18px; }
 .dh-md-gases { display: flex; flex-direction: column; gap: 8px; }
-.dh-md-gas-row { display: flex; align-items: center; gap: 8px; }
-.dh-md-gas-row input { width: 90px; padding: 10px 12px; font-size: 1rem; border: 1px solid var(--dh-line); border-radius: 12px; }
+.dh-md-gas-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.dh-md-check { font-size: .85rem; padding-bottom: 8px; }
+.dh-md-check input { width: 16px; height: 16px; }
 .dh-md-gas-row .dh-btn-icon { width: 30px; height: 30px; background: #fff; color: var(--dh-muted); border: 1.5px solid var(--dh-line); }
 .dh-md-gas-row .dh-btn-icon:hover { color: var(--dh-danger); border-color: var(--dh-danger); }
 .dh-dive-merge-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 14px; margin: 10px 0 0; border-radius: 12px; background: rgba(0, 94, 125, .07); border: 1px dashed var(--dh-sea); font-size: .9rem; }
@@ -4485,7 +4486,8 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
 .dh-import-site-choices label { display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; }
 .dh-import-select { max-width: 260px; padding: 6px 10px; border: 1px solid var(--dh-line); border-radius: 10px; background: #fff; font-size: .9rem; }
 .dh-import-search-wrap { position: relative; display: inline-block; width: 260px; max-width: 100%; }
-.dh-import-search { width: 100%; padding: 6px 10px; border: 1px solid var(--dh-line); border-radius: 10px; background: #fff; font-size: .9rem; }
+.dh-import-search { width: 100%; padding: 12px 14px; font-size: 1rem; font-family: inherit; color: var(--dh-ink); background: #fff; border: 1px solid var(--dh-line); border-radius: 12px; }
+.dh-import-search:focus { outline: none; border-color: var(--dh-sea); box-shadow: 0 0 0 3px rgba(14,124,158,.15); }
 .dh-import-results { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; }
 .dh-import-site { position: relative; }
 .dh-import-progress { height: 10px; border-radius: 999px; background: rgba(0,0,0,.08); overflow: hidden; }
@@ -4496,3 +4498,16 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
 .dh-import-mode-row[hidden] { display: none; }
 .dh-import-mode-row input { width: 16px; height: 16px; }
 @media (max-width: 575.98px) { .dh-import-mode-row { grid-template-columns: 20px 1fr 1fr; } .dh-import-mode-row > span:nth-child(n+4) { display: none; } }
+.dh-site-unit-select { width: 74px; }
+.dh-site-unit-select .dh-select-btn { height: 32px; }
+/* Logbook forms: same field language as the dive page's edit cards */
+.dh-ig-compact { margin-bottom: 0; width: auto; min-width: 150px; display: inline-flex; }
+.dh-ig-compact .form-control { padding-top: 6px; padding-bottom: 6px; }
+.dh-import-filter-select { min-width: 190px; }
+.dh-import-select-wrap { display: inline-block; min-width: 200px; }
+.dh-import-file { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.dh-visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.dh-import-site-choices label { padding: 4px 12px; border: 1.5px solid var(--dh-line); border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--dh-ink); }
+.dh-import-site-choices label:has(input:checked) { background: var(--dh-ink); border-color: var(--dh-ink); color: #fff; }
+.dh-import-site-choices label input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; }
+.dh-import-mode-filters .dh-select-btn { height: 40px; }

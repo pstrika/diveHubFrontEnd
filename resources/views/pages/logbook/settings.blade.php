@@ -46,9 +46,9 @@
                             <form method="POST" action="{{ route('Logbook.destroyAll') }}" onsubmit="return confirm('Really delete your whole logbook? This cannot be undone.');">
                                 @csrf
                                 @method('DELETE')
-                                <div class="dh-field">
-                                    <label for="wipeConfirm">Type DELETE to confirm</label>
-                                    <input type="text" id="wipeConfirm" name="confirm" autocomplete="off" placeholder="DELETE" pattern="DELETE" required>
+                                <div class="input-group input-group-outline dh-dive-ig">
+                                    <label class="form-label" for="wipeConfirm">Type DELETE to confirm</label>
+                                    <input type="text" class="form-control" id="wipeConfirm" name="confirm" autocomplete="off" pattern="DELETE" required>
                                 </div>
                                 <button type="submit" class="dh-btn dh-btn-danger">
                                     <span class="material-icons-round" aria-hidden="true">delete_forever</span>

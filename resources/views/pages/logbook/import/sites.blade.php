@@ -47,17 +47,14 @@
                                                 @php $catalogPick = $catalogId ? $catalog->firstWhere('id', (int) $catalogId) : null; @endphp
                                                 <span class="dh-import-search-wrap">
                                                     <input type="hidden" name="site[{{ $key }}][catalog_site_id]" value="{{ $catalogPick['id'] ?? '' }}" data-catalog-id>
-                                                    <input type="text" class="dh-import-search" data-for="catalog" placeholder="Search Divers Hub sites…" autocomplete="off" value="{{ $catalogPick ? $catalogPick['name'] . ($catalogPick['city'] ? ' · ' . $catalogPick['city'] : '') : '' }}">
+                                                    <input type="text" class="dh-import-search" data-for="catalog" placeholder="Search Divers Hub sites" aria-label="Search Divers Hub sites" autocomplete="off" value="{{ $catalogPick ? $catalogPick['name'] . ($catalogPick['city'] ? ' · ' . $catalogPick['city'] : '') : '' }}">
                                                     <div class="dh-search-list dh-import-results" hidden></div>
                                                 </span>
                                                 @if ($own->isNotEmpty())
                                                     <label><input type="radio" name="site[{{ $key }}][kind]" value="own" @checked($kind === 'own')> One of my sites</label>
-                                                    <select name="site[{{ $key }}][user_site_id]" class="dh-import-select" data-for="own">
-                                                        <option value="">Choose…</option>
-                                                        @foreach ($own as $o)
-                                                            <option value="{{ $o->id }}" @selected((int) $ownId === (int) $o->id)>{{ $o->name }}</option>
-                                                        @endforeach
-                                                    </select>
+                                                    <span class="dh-import-select-wrap" data-for="own">
+                                                        <x-dh-select :id="'ownSite' . $loop->index" :name="'site[' . $key . '][user_site_id]'" :options="$own->pluck('name', 'id')->all()" :selected="$ownId" placeholder="Choose…" :disabled="false" />
+                                                    </span>
                                                 @endif
                                                 <label><input type="radio" name="site[{{ $key }}][kind]" value="create" @checked($kind === 'create')> Create as my site</label>
                                                 <label><input type="radio" name="site[{{ $key }}][kind]" value="name" @checked($kind === 'name')> Just keep the name</label>
@@ -81,6 +78,7 @@
     </main>
 
     @push('js')
+        <script src="{{ asset('assets') }}/js/dh-select.js?v={{ config('divehub.version') }}"></script>
         <script>window.dhCatalog = @json($catalog->map(fn ($c) => ['id' => $c['id'], 'name' => $c['name'], 'city' => $c['city']])->values());</script>
         <script>
             (function () {
@@ -89,9 +87,10 @@
                     if (radio) radio.checked = true;
                 }
                 // Picking from a dropdown selects that option's radio.
-                document.querySelectorAll('.dh-import-select').forEach(function (sel) {
-                    sel.addEventListener('change', function () {
-                        if (sel.value) checkRadio(sel, sel.getAttribute('data-for'));
+                // Our dropdown fires 'change' on its hidden input; it bubbles here.
+                document.querySelectorAll('.dh-import-select-wrap').forEach(function (wrap) {
+                    wrap.addEventListener('change', function (e) {
+                        if (e.target.value) checkRadio(wrap, wrap.getAttribute('data-for'));
                     });
                 });
                 // Catalog search boxes: client-side filter over window.dhCatalog.
