@@ -150,7 +150,7 @@
   <link href="{{ asset('assets') }}/css/divershub.css?v={{ config('divehub.version') }}" rel="stylesheet" />
   @endunless
 </head>
-<body class="{{ $bodyClass }}" data-dh-pinch-zoom-enabled="{{ auth()->check() && auth()->user()->pinch_zoom_enabled ? '1' : '0' }}">
+<body class="{{ $bodyClass }}" data-dh-pinch-zoom-enabled="{{ auth()->check() && auth()->user()->pinch_zoom_enabled ? '1' : '0' }}" data-dh-tablet-month="{{ (auth()->check() && (auth()->user()->calendar_month_on_tablet ?? true) == false) ? '0' : '1' }}">
 
 @unless($dhFrozen)
 {{-- session()->pull removes the flag as it's read, so this only fires once

@@ -197,8 +197,8 @@ class UserController extends Controller
         // Customizable mobile nav bar (Pablo, 2026-09-24) - resolved to a
         // real key here so the picker always shows something selected,
         // same fallback the nav bar itself uses.
-        $navSlot1 = \App\Support\NavTabs::resolveSlot($user->nav_slot_1, \App\Support\NavTabs::DEFAULT_SLOT_1);
-        $navSlot2 = \App\Support\NavTabs::resolveSlot($user->nav_slot_2, \App\Support\NavTabs::DEFAULT_SLOT_2);
+        $navSlot1 = \App\Support\NavTabs::resolveSlot($user->nav_slot_1, \App\Support\NavTabs::DEFAULT_SLOT_1, $user);
+        $navSlot2 = \App\Support\NavTabs::resolveSlot($user->nav_slot_2, \App\Support\NavTabs::DEFAULT_SLOT_2, $user);
 
         // Connected devices (Pablo, 2026-10-15: "add to the user profile
         // configuration the connected devices so they can be
@@ -386,6 +386,11 @@ class UserController extends Controller
             $user->pinch_zoom_enabled = 0;
         }
 
+        // Month calendar on tablets (Pablo, 2026-10-16), on by default.
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'calendar_month_on_tablet')) {
+            $user->calendar_month_on_tablet = $request->has('calendar_month_on_tablet') ? 1 : 0;
+        }
+
         // Customizable mobile nav bar slots (Pablo, 2026-09-24) - null falls
         // back to the default (Weather / Groups) in App\Support\NavTabs, so
         // Nav bar slots have their own small form/endpoint now (Pablo,
@@ -502,8 +507,8 @@ class UserController extends Controller
 
         // An invalid/blank pick is just left unset (falls back to the
         // default in App\Support\NavTabs) rather than rejecting the save.
-        $user->nav_slot_1 = \App\Support\NavTabs::isValid($request->input('nav_slot_1')) ? $request->input('nav_slot_1') : null;
-        $user->nav_slot_2 = \App\Support\NavTabs::isValid($request->input('nav_slot_2')) ? $request->input('nav_slot_2') : null;
+        $user->nav_slot_1 = \App\Support\NavTabs::isValid($request->input('nav_slot_1'), $user) ? $request->input('nav_slot_1') : null;
+        $user->nav_slot_2 = \App\Support\NavTabs::isValid($request->input('nav_slot_2'), $user) ? $request->input('nav_slot_2') : null;
         $user->save();
 
         return redirect()->route('overview')->with('msg', 'Navigation bar updated.');

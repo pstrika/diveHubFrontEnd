@@ -490,7 +490,7 @@
                             <div class="mb-3">
                                 <label class="dh-comms-label d-block mb-2">{{ $slotNum === 1 ? 'First spot' : 'Second spot' }}</label>
                                 <div class="d-flex flex-wrap gap-2" id="wizardNavSlot{{ $slotNum }}Chips">
-                                    @foreach(\App\Support\NavTabs::OPTIONS as $key => $opt)
+                                    @foreach(\App\Support\NavTabs::optionsFor(auth()->user()) as $key => $opt)
                                         <button type="button" class="chip {{ $slotValue === $key ? 'chip-on' : '' }}" data-nav-slot-option="{{ $key }}">{!! $wizardNavIconHtml($opt['icon']) !!} {{ $opt['short'] }}</button>
                                     @endforeach
                                 </div>

@@ -80,8 +80,8 @@
             ['key' => 'operators', 'short' => 'Operators', 'icon' => 'directions_boat',    'href' => route('Operators')],
         ];
     } else {
-        $slot1Key = \App\Support\NavTabs::resolveSlot($user->nav_slot_1, \App\Support\NavTabs::DEFAULT_SLOT_1);
-        $slot2Key = \App\Support\NavTabs::resolveSlot($user->nav_slot_2, \App\Support\NavTabs::DEFAULT_SLOT_2);
+        $slot1Key = \App\Support\NavTabs::resolveSlot($user->nav_slot_1, \App\Support\NavTabs::DEFAULT_SLOT_1, $user);
+        $slot2Key = \App\Support\NavTabs::resolveSlot($user->nav_slot_2, \App\Support\NavTabs::DEFAULT_SLOT_2, $user);
         $slot1 = \App\Support\NavTabs::OPTIONS[$slot1Key];
         $slot2 = \App\Support\NavTabs::OPTIONS[$slot2Key];
         $mobileTabs = [

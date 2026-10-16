@@ -89,8 +89,8 @@ class OnboardingController extends Controller
 
         $SEO = ['title' => 'Welcome to Divers Hub', 'robots' => 'noindex, nofollow'];
 
-        $navSlot1 = \App\Support\NavTabs::resolveSlot($user->nav_slot_1, \App\Support\NavTabs::DEFAULT_SLOT_1);
-        $navSlot2 = \App\Support\NavTabs::resolveSlot($user->nav_slot_2, \App\Support\NavTabs::DEFAULT_SLOT_2);
+        $navSlot1 = \App\Support\NavTabs::resolveSlot($user->nav_slot_1, \App\Support\NavTabs::DEFAULT_SLOT_1, $user);
+        $navSlot2 = \App\Support\NavTabs::resolveSlot($user->nav_slot_2, \App\Support\NavTabs::DEFAULT_SLOT_2, $user);
 
         return view('pages.Welcome', [
             'user' => $user, 'step' => $step, 'steps' => self::STEPS,
@@ -254,8 +254,8 @@ class OnboardingController extends Controller
                 // (App\Support\NavTabs) - an invalid/blank pick is just left
                 // unset rather than blocking the wizard on it.
                 $data = $request->validate(['nav_slot_1' => 'nullable|string', 'nav_slot_2' => 'nullable|string']);
-                $user->nav_slot_1 = \App\Support\NavTabs::isValid($data['nav_slot_1'] ?? null) ? $data['nav_slot_1'] : null;
-                $user->nav_slot_2 = \App\Support\NavTabs::isValid($data['nav_slot_2'] ?? null) ? $data['nav_slot_2'] : null;
+                $user->nav_slot_1 = \App\Support\NavTabs::isValid($data['nav_slot_1'] ?? null, $user) ? $data['nav_slot_1'] : null;
+                $user->nav_slot_2 = \App\Support\NavTabs::isValid($data['nav_slot_2'] ?? null, $user) ? $data['nav_slot_2'] : null;
                 break;
         }
         $user->save();

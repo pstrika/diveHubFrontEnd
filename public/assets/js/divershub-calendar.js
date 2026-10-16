@@ -1,7 +1,8 @@
 /*
  * Shared FullCalendar setup for every calendar in the app (My Dashboard, an
  * operator's page, a group's calendar, the themed trip calendars): phones get
- * a 3 day view, tablets a week, desktop a month, so a diver sees the same
+ * a 3 day view, tablets a month (or a week, by profile setting), desktop a
+ * month, so a diver sees the same
  * shape of calendar wherever one shows up.
  *
  * Colors: events are colored with FullCalendar's own `color`/`backgroundColor`
@@ -11,10 +12,23 @@
  * a full-width background - keep using that per-event `color`, not a
  * bg-gradient-* utility class, when adding a new calendar.
  */
+/*
+ * Same breakpoints as the rest of the site (Pablo, 2026-10-16: "fix the
+ * render of the calendar to really match the switching point between
+ * desktop, tablet and mobile"): desktop is 992px and up (top nav), tablet
+ * 768-991px (bottom tab bar), phone below 768px. Tablets get the month view
+ * too unless the diver turned off Profile > "Show the month calendar on
+ * tablet" (body data-dh-tablet-month="0", set by page-template), then a week.
+ * Was 1200px for the month, so 992-1199px (an iPad in landscape) showed a
+ * week while the page around it was already the desktop layout.
+ */
 function getResponsiveView() {
     var width = window.innerWidth;
-    if (width >= 1200) return 'dayGridMonth';  // desktop
-    if (width >= 768) return 'dayGridWeek';    // tablet
+    if (width >= 992) return 'dayGridMonth';   // desktop
+    if (width >= 768) {                        // tablet
+        var monthOnTablet = !(document.body && document.body.getAttribute('data-dh-tablet-month') === '0');
+        return monthOnTablet ? 'dayGridMonth' : 'dayGridWeek';
+    }
     return 'dayGridThreeDay';                  // phone
 }
 

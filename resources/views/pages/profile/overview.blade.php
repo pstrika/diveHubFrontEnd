@@ -421,6 +421,13 @@
                                     </div>
                                     <div class="dh-comms-row">
                                         <label class="dh-comms-label">
+                                            <input name="calendar_month_on_tablet" class="form-check-input" type="checkbox"
+                                                id="calendar_month_on_tablet" {{ ($user->calendar_month_on_tablet ?? true) ? "checked" : ""}} value="1">
+                                            <span>Show the month calendar on tablet (off: a 7 day week)</span>
+                                        </label>
+                                    </div>
+                                    <div class="dh-comms-row">
+                                        <label class="dh-comms-label">
                                             <input name="show_visited" class="form-check-input" type="checkbox"
                                                 id="show_visited" {{ $user->show_visited ? "checked" : ""}} value="1">
                                             <span>Highlight sites already visited in upcoming trips</span>
@@ -527,7 +534,7 @@
                                         <div class="mb-3">
                                             <label class="dh-comms-label d-block mb-2">{{ $slotNum === 1 ? 'First spot' : 'Second spot' }}</label>
                                             <div class="d-flex flex-wrap gap-2" id="navSlot{{ $slotNum }}Chips">
-                                                @foreach(\App\Support\NavTabs::OPTIONS as $key => $opt)
+                                                @foreach(\App\Support\NavTabs::optionsFor($user) as $key => $opt)
                                                     <button type="button" class="chip {{ $slotValue === $key ? 'chip-on' : '' }}" data-nav-slot-option="{{ $key }}">{!! $navIconHtml($opt['icon']) !!} {{ $opt['short'] }}</button>
                                                 @endforeach
                                             </div>
@@ -885,7 +892,7 @@
     <script>
         [
             'prefersLocation', 'firstDayOfWeek', 'email_notifications', 'sms_notifications',
-            'whatsapp_notifications', 'newsletter_subscribed', 'show_visited', 'deco_unit', 'pinch_zoom_enabled',
+            'whatsapp_notifications', 'newsletter_subscribed', 'show_visited', 'deco_unit', 'pinch_zoom_enabled', 'calendar_month_on_tablet',
         ].forEach(function (id) {
             var el = document.getElementById(id);
             if (el) el.addEventListener('click', revealSave);

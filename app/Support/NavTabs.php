@@ -34,17 +34,43 @@ final class NavTabs
         'calendar_wreck'   => ['label' => 'Wreck Calendar', 'short' => 'Wreck', 'icon' => 'svg:wreck_icon.svg'],
         'calendar_shark'   => ['label' => 'Shark Calendar', 'short' => 'Shark', 'icon' => 'svg:icons_calendar_shark.svg'],
         'calendar_lobster' => ['label' => 'Lobster Calendar', 'short' => 'Lobster', 'icon' => 'svg:icons_calendar_lobster.svg'],
+        // Added 2026-10-16 (Pablo: "add the Dive Log... the multi dive planner
+        // and gas blending (all the new functionalities we have created since
+        // you built that)"). 'gate' = who can open it (see canUse()).
+        'logbook'          => ['label' => 'Dive Log', 'short' => 'Log', 'icon' => 'menu_book', 'gate' => 'logbook'],
+        'multidive'        => ['label' => 'Multi Dive Planner', 'short' => 'Multi', 'icon' => 'repeat', 'gate' => 'manage-users'],
+        'blending'         => ['label' => 'Gas Blending', 'short' => 'Blend', 'icon' => 'colorize'],
+        'ccr_checklist'    => ['label' => 'rEvo CCR Checklist', 'short' => 'CCR', 'icon' => 'checklist', 'gate' => 'ccrChecklistAccess'],
     ];
 
-    public static function isValid(?string $key): bool
+    /** Can this user open the page behind $key? (Same gates as the menu.) */
+    public static function canUse(string $key, $user = null): bool
     {
-        return $key !== null && array_key_exists($key, self::OPTIONS);
+        $gate = self::OPTIONS[$key]['gate'] ?? null;
+        if ($gate === null) return true;
+        if (!$user) return false;
+        if ($gate === 'logbook') {
+            return in_array(strtolower((string) $user->email), array_map('strtolower', config('divehub.logbook_allowed_emails', [])), true);
+        }
+        return $user->can($gate, \App\Models\User::class);
     }
 
-    /** Falls back to the default when null, invalid, or (rare) also picked in the other slot. */
-    public static function resolveSlot(?string $key, string $default): string
+    /** The options this user may pick. */
+    public static function optionsFor($user = null): array
     {
-        return self::isValid($key) ? $key : $default;
+        return array_filter(self::OPTIONS, fn ($o, $k) => self::canUse($k, $user), ARRAY_FILTER_USE_BOTH);
+    }
+
+    public static function isValid(?string $key, $user = null): bool
+    {
+        if ($key === null || !array_key_exists($key, self::OPTIONS)) return false;
+        return $user === null || self::canUse($key, $user);
+    }
+
+    /** Falls back to the default when null, invalid, no longer allowed, or (rare) also picked in the other slot. */
+    public static function resolveSlot(?string $key, string $default, $user = null): string
+    {
+        return self::isValid($key, $user) ? $key : $default;
     }
 
     public static function href(string $key): string
@@ -63,6 +89,10 @@ final class NavTabs
             'calendar_wreck' => route('CalendarWreck'),
             'calendar_shark' => route('CalendarShark'),
             'calendar_lobster' => route('CalendarLobster'),
+            'logbook' => route('Logbook'),
+            'multidive' => route('MultiDivePlanner'),
+            'blending' => route('GasBlending'),
+            'ccr_checklist' => route('CcrChecklist'),
             default => route('Weather'),
         };
     }
