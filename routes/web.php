@@ -484,6 +484,7 @@ Route::middleware(['auth', 'logbook'])->group(function () {
     Route::delete('Logbook/settings/all', 'App\Http\Controllers\LogbookController@destroyAll')->name('Logbook.destroyAll');
     Route::get('Logbook/import', 'App\Http\Controllers\LogbookImportController@index')->name('Logbook.import.index');
     Route::post('Logbook/import', 'App\Http\Controllers\LogbookImportController@upload')->name('Logbook.import.upload');
+    Route::post('Logbook/import/chunk', 'App\Http\Controllers\LogbookImportController@chunk')->name('Logbook.import.chunk');
     Route::get('Logbook/import/{import}', 'App\Http\Controllers\LogbookImportController@review')->where('import', '[0-9]+')->name('Logbook.import.review');
     Route::post('Logbook/import/{import}/decisions', 'App\Http\Controllers\LogbookImportController@decisions')->where('import', '[0-9]+')->name('Logbook.import.decisions');
     Route::get('Logbook/import/{import}/sites', 'App\Http\Controllers\LogbookImportController@sites')->where('import', '[0-9]+')->name('Logbook.import.sites');

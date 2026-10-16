@@ -56,10 +56,16 @@
                                 <label class="dh-dropzone" id="importDrop" for="importFile">
                                     <span class="material-icons-round dh-dropzone-icon" aria-hidden="true">cloud_upload</span>
                                     <strong>Drop your logbook here</strong>
-                                    <span class="text-sm text-secondary">or click to choose · MacDive XML, UDDF, or Shearwater dive files (.xml) - several at once is fine</span>
+                                    <span class="text-sm text-secondary">or click to choose files · MacDive XML, UDDF, or Shearwater dive files (.xml) - any number at once</span>
+                                    <button type="button" class="dh-btn dh-btn-ghost-dark dh-dropzone-folder" id="importFolderBtn">
+                                        <span class="material-icons-round" aria-hidden="true">folder_open</span>
+                                        Choose a folder
+                                    </button>
                                     <span class="dh-dropzone-files text-sm" id="importFileName"></span>
-                                    <input type="file" id="importFile" name="files[]" accept=".uddf,.xml,application/xml,text/xml" multiple required class="dh-visually-hidden">
+                                    <input type="file" id="importFile" name="files[]" accept=".uddf,.xml,application/xml,text/xml" multiple class="dh-visually-hidden">
                                 </label>
+                                {{-- Outside the label so picking a folder doesn't also open the file picker. --}}
+                                <input type="file" id="importFolder" webkitdirectory directory multiple class="dh-visually-hidden" tabindex="-1" aria-hidden="true">
                                 <div class="dh-upload-progress" id="importProgress" hidden>
                                     <div class="d-flex justify-content-between text-sm mb-1">
                                         <span id="importProgressLabel">Uploading…</span>
@@ -89,7 +95,7 @@
                             <p>File &rsaquo; Export &rsaquo; choose <strong>XML</strong> (not UDDF), all dives. MacDive's XML keeps PPO2, setpoint switches, gas switches, operator, boat, divemaster, weather, current, tags, tank sizes and GF settings - so rebreather dives are recognised on their own. Its UDDF export drops all of that.</p>
 
                             <h4>Shearwater Cloud</h4>
-                            <p>On the desktop app, select the dives and export them as <strong>XML</strong> - you get one file per dive. Drop them all here at once. These are the computer's own logs: full deco stops, PPO2 per cell, setpoints and circuit mode, but no sites or notes. If you already imported those dives from MacDive, they're upgraded in place and keep your sites and notes.</p>
+                            <p>On the desktop app, select the dives and export them as <strong>XML</strong> - you get one file per dive, into a folder. Drop the folder here, or use <strong>Choose a folder</strong>; any number of dives is fine. These are the computer's own logs: full deco stops, PPO2 per cell, setpoints and circuit mode, but no sites or notes. If you already imported those dives from MacDive, they're upgraded in place and keep your sites and notes.</p>
                             <p class="text-secondary">Easiest of all for Shearwater: sync the computer with the Divers Hub app - same data, no files.</p>
 
                             <h4>Subsurface, DiveMate, Diving Log and others</h4>
@@ -106,48 +112,116 @@
         <script>
             (function () {
                 var form = document.getElementById('importForm'), input = document.getElementById('importFile'), drop = document.getElementById('importDrop');
+                var folderInput = document.getElementById('importFolder'), folderBtn = document.getElementById('importFolderBtn');
                 var names = document.getElementById('importFileName'), submit = document.getElementById('importSubmit');
                 var prog = document.getElementById('importProgress'), fill = document.getElementById('importProgressFill');
                 var label = document.getElementById('importProgressLabel'), pct = document.getElementById('importProgressPct'), err = document.getElementById('importError');
+                var CHUNK_FILES = {{ \App\Http\Controllers\LogbookImportController::CHUNK_FILES }}, CHUNK_BYTES = 60 * 1048576;
                 var files = [];
+                function isDiveFile(f) { return /\.(xml|uddf)$/i.test(f.name); }
+                function fail(text) { prog.hidden = true; submit.disabled = false; fill.classList.remove('is-working'); err.textContent = text; err.hidden = false; }
                 function show() {
                     var total = files.reduce(function (a, f) { return a + f.size; }, 0);
                     names.textContent = files.length ? (files.length === 1 ? files[0].name : files.length + ' files') + ' · ' + (total / 1048576).toFixed(1) + ' MB' : '';
                     drop.classList.toggle('has-files', files.length > 0);
                     submit.disabled = !files.length;
                     err.hidden = true;
+                    if (!files.length) { err.textContent = 'No .xml or .uddf files there.'; err.hidden = false; }
                 }
-                input.addEventListener('change', function () { files = Array.prototype.slice.call(input.files); show(); });
+                input.addEventListener('change', function () { files = Array.prototype.slice.call(input.files).filter(isDiveFile); show(); });
+                // A whole folder (Shearwater Cloud exports one file per dive).
+                folderBtn.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); folderInput.click(); });
+                folderInput.addEventListener('change', function () { files = Array.prototype.slice.call(folderInput.files).filter(isDiveFile); show(); });
+
+                // Dropped folders are walked too; readEntries returns at most
+                // 100 entries per call, so it's called until empty.
+                function readEntry(entry) {
+                    return new Promise(function (resolve) {
+                        if (entry.isFile) { entry.file(function (f) { resolve([f]); }, function () { resolve([]); }); return; }
+                        if (!entry.isDirectory) { resolve([]); return; }
+                        var reader = entry.createReader(), out = [];
+                        (function next() {
+                            reader.readEntries(function (batch) {
+                                if (!batch.length) { Promise.all(out).then(function (lists) { resolve([].concat.apply([], lists)); }); return; }
+                                batch.forEach(function (en) { out.push(readEntry(en)); });
+                                next();
+                            }, function () { resolve([]); });
+                        })();
+                    });
+                }
                 ['dragenter', 'dragover'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('is-over'); }); });
                 ['dragleave', 'drop'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('is-over'); }); });
                 drop.addEventListener('drop', function (e) {
-                    files = Array.prototype.slice.call(e.dataTransfer.files).filter(function (f) { return /\.(xml|uddf)$/i.test(f.name); });
-                    show();
-                    if (!files.length) { err.textContent = 'Drop .xml or .uddf files.'; err.hidden = false; }
+                    var items = e.dataTransfer.items, entries = [];
+                    for (var i = 0; items && i < items.length; i++) {
+                        var en = items[i].webkitGetAsEntry ? items[i].webkitGetAsEntry() : null;
+                        if (en) entries.push(en);
+                    }
+                    if (!entries.length) { files = Array.prototype.slice.call(e.dataTransfer.files).filter(isDiveFile); show(); return; }
+                    names.textContent = 'Reading the folder…';
+                    Promise.all(entries.map(readEntry)).then(function (lists) { files = [].concat.apply([], lists).filter(isDiveFile); show(); });
                 });
+
                 function setProgress(p, text) { fill.style.width = p + '%'; pct.textContent = Math.round(p) + '%'; if (text) label.textContent = text; }
+                function uuid() {
+                    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+                    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); });
+                }
+                function post(url, data, onProgress) {
+                    return new Promise(function (resolve, reject) {
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('POST', url);
+                        xhr.setRequestHeader('Accept', 'application/json');
+                        if (onProgress) xhr.upload.onprogress = function (ev) { if (ev.lengthComputable) onProgress(ev.loaded); };
+                        xhr.onload = function () {
+                            var res = {}; try { res = JSON.parse(xhr.responseText); } catch (x) {}
+                            if (xhr.status === 200) resolve(res);
+                            else reject(res.message || (xhr.status === 413 ? 'A file is too big for the server.' : 'The upload failed (' + xhr.status + '). Please try again.'));
+                        };
+                        xhr.onerror = function () { reject('The upload was interrupted. Please try again.'); };
+                        xhr.send(data);
+                    });
+                }
+                // Batches of up to CHUNK_FILES files (and ~60 MB; a big
+                // logbook file goes on its own), then one call reads them all.
+                function batches() {
+                    var out = [], cur = [], bytes = 0;
+                    files.forEach(function (f) {
+                        if (cur.length && (cur.length >= CHUNK_FILES || bytes + f.size > CHUNK_BYTES)) { out.push(cur); cur = []; bytes = 0; }
+                        cur.push(f); bytes += f.size;
+                    });
+                    if (cur.length) out.push(cur);
+                    return out;
+                }
                 form.addEventListener('submit', function (e) {
                     e.preventDefault();
                     if (!files.length) return;
-                    var data = new FormData();
-                    data.append('_token', form.querySelector('input[name=_token]').value);
-                    files.forEach(function (f) { data.append('files[]', f, f.name); });
-                    var xhr = new XMLHttpRequest();
-                    xhr.open('POST', form.action);
-                    xhr.setRequestHeader('Accept', 'application/json');
-                    xhr.upload.onprogress = function (ev) { if (ev.lengthComputable) setProgress(ev.loaded / ev.total * 100, 'Uploading…'); };
-                    // Upload done; the server now reads every dive.
-                    xhr.upload.onload = function () { setProgress(100, 'Reading your dives - a full logbook takes up to a minute…'); fill.classList.add('is-working'); };
-                    xhr.onload = function () {
-                        var res = {}; try { res = JSON.parse(xhr.responseText); } catch (x) {}
-                        if (xhr.status === 200 && res.redirect) { window.location = res.redirect; return; }
-                        prog.hidden = true; submit.disabled = false; fill.classList.remove('is-working');
-                        err.textContent = res.message || (xhr.status === 413 ? 'That file is too big for the server.' : 'The upload failed (' + xhr.status + '). Please try again.');
-                        err.hidden = false;
-                    };
-                    xhr.onerror = function () { prog.hidden = true; submit.disabled = false; err.textContent = 'The upload was interrupted. Please try again.'; err.hidden = false; };
-                    prog.hidden = false; submit.disabled = true; setProgress(0, 'Uploading…');
-                    xhr.send(data);
+                    var token = form.querySelector('input[name=_token]').value, batch = uuid();
+                    var total = files.reduce(function (a, f) { return a + f.size; }, 0) || 1, sent = 0;
+                    var groups = batches(), many = files.length > 1;
+                    prog.hidden = false; submit.disabled = true; err.hidden = true; setProgress(0, 'Uploading…');
+                    groups.reduce(function (p, group) {
+                        return p.then(function () {
+                            var data = new FormData();
+                            data.append('_token', token);
+                            data.append('batch', batch);
+                            group.forEach(function (f) { data.append('files[]', f, f.name); });
+                            data.append('file_count', group.length);
+                            var base = sent;
+                            return post('{{ route('Logbook.import.chunk') }}', data, function (loaded) {
+                                setProgress((base + loaded) / total * 100, many ? 'Uploading ' + files.length + ' files…' : 'Uploading…');
+                            }).then(function () { sent = base + group.reduce(function (a, f) { return a + f.size; }, 0); });
+                        });
+                    }, Promise.resolve()).then(function () {
+                        setProgress(100, 'Reading your dives - a full logbook takes up to a minute…');
+                        fill.classList.add('is-working');
+                        var data = new FormData();
+                        data.append('_token', token);
+                        data.append('batch', batch);
+                        return post(form.action, data);
+                    }).then(function (res) {
+                        if (res.redirect) window.location = res.redirect; else fail('The upload failed. Please try again.');
+                    }).catch(function (msg) { fail(typeof msg === 'string' ? msg : 'The upload failed. Please try again.'); });
                 });
             })();
         </script>

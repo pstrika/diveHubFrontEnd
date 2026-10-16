@@ -54,28 +54,112 @@ class LogbookImportController extends Controller
         return view('pages.logbook.import.index', ['imports' => $imports]);
     }
 
+    /** Files per chunk request - under PHP's default max_file_uploads (20). */
+    public const CHUNK_FILES = 20;
+
+    private function chunkDir(int $userId, string $batch): string
+    {
+        return storage_path('app/import-chunks/' . $userId . '/' . $batch);
+    }
+
+    /**
+     * One batch of files from the dropzone (Pablo, 2026-10-16: "logbook can
+     * be VERY long... I'm not sure if we can drag and drop 1000 files at
+     * once"). A Shearwater Cloud export is one XML per dive, and PHP takes
+     * at most max_file_uploads files per request and drops the rest
+     * silently - so the page sends them CHUNK_FILES at a time into a
+     * per-batch folder, then calls upload() with the batch id to read them
+     * all as one import.
+     */
+    public function chunk(Request $request)
+    {
+        $request->validate([
+            'batch' => 'required|uuid',
+            'files' => 'required|array|max:' . self::CHUNK_FILES,
+            'files.*' => 'file|max:140000', // KB
+            'file_count' => 'required|integer|min:1',
+        ]);
+        $files = $request->file('files');
+        if ((int) $request->input('file_count') > count($files)) {
+            return response()->json(['message' => 'The server received ' . count($files) . ' of ' . (int) $request->input('file_count') . ' files in a batch. Please try again.'], 422);
+        }
+        $userId = $request->user()->id;
+        $this->sweepOldChunks($userId);
+        $dir = $this->chunkDir($userId, $request->input('batch'));
+        if (!is_dir($dir)) mkdir($dir, 0775, true);
+        $n = count(glob($dir . '/*'));
+        foreach ($files as $file) {
+            $ext = strtolower($file->getClientOriginalExtension());
+            if (!in_array($ext, ['uddf', 'xml'], true)) {
+                return response()->json(['message' => $file->getClientOriginalName() . ' is not a .xml or .uddf export.'], 422);
+            }
+            // Index prefix keeps two same-named files (from different
+            // subfolders) apart; the original name follows it.
+            $safe = preg_replace('/[^\w\[\]#.\- ]+/u', '_', $file->getClientOriginalName());
+            $file->move($dir, sprintf('%05d_', $n++) . $safe);
+        }
+        return response()->json(['stored' => $n]);
+    }
+
+    /** Batches abandoned mid-upload (closed tab) are removed after a day. */
+    private function sweepOldChunks(int $userId): void
+    {
+        foreach (glob(storage_path('app/import-chunks/' . $userId . '/*'), GLOB_ONLYDIR) ?: [] as $d) {
+            if (filemtime($d) < time() - 86400) $this->removeDir($d);
+        }
+    }
+
+    private function removeDir(string $dir): void
+    {
+        foreach (glob($dir . '/*') ?: [] as $f) @unlink($f);
+        @rmdir($dir);
+    }
+
     public function upload(Request $request)
     {
         // One logbook file, or many single-dive files at once (Pablo,
-        // 2026-10-16: Shearwater Cloud exports one XML per dive).
+        // 2026-10-16: Shearwater Cloud exports one XML per dive). The
+        // dropzone sends files ahead through chunk() and passes `batch`;
+        // a plain form post (no JS) sends them here directly.
         $request->validate([
-            'files' => 'required_without:file|array|max:2000',
+            'batch' => 'nullable|uuid',
+            'files' => 'required_without_all:file,batch|array|max:2000',
             'files.*' => 'file|max:140000', // KB
-            'file' => 'required_without:files|file|max:140000',
+            'file' => 'required_without_all:files,batch|file|max:140000',
         ]);
         @set_time_limit(900);
         @ini_set('memory_limit', '1024M');
 
-        $uploads = $request->file('files') ?: [$request->file('file')];
+        $batchDir = null;
+        if ($request->filled('batch')) {
+            $batchDir = $this->chunkDir($request->user()->id, $request->input('batch'));
+            $uploads = [];
+            foreach (glob($batchDir . '/*') ?: [] as $p) {
+                $uploads[] = ['path' => $p, 'name' => preg_replace('/^\d{5}_/', '', basename($p))];
+            }
+            if (!$uploads) return $this->uploadError($request, 'The upload didn\'t arrive. Please try again.');
+        } else {
+            $uploads = array_map(fn ($f) => ['path' => $f->getRealPath(), 'name' => $f->getClientOriginalName()], $request->file('files') ?: [$request->file('file')]);
+        }
+        try {
+            return $this->stage($request, $uploads);
+        } finally {
+            if ($batchDir) $this->removeDir($batchDir);
+        }
+    }
+
+    /** @param array<int, array{path:string, name:string}> $uploads */
+    private function stage(Request $request, array $uploads)
+    {
         $logbooks = []; $shearwater = []; $names = [];
         foreach ($uploads as $file) {
-            $ext = strtolower($file->getClientOriginalExtension());
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
             if (!in_array($ext, ['uddf', 'xml'], true)) {
-                return $this->uploadError($request, $file->getClientOriginalName() . ' is not a .xml or .uddf export.');
+                return $this->uploadError($request, $file['name'] . ' is not a .xml or .uddf export.');
             }
-            $names[] = $file->getClientOriginalName();
-            if (\App\Support\ShearwaterXmlParser::sniff($file->getRealPath())) {
-                $shearwater[] = ['path' => $file->getRealPath(), 'name' => $file->getClientOriginalName()];
+            $names[] = $file['name'];
+            if (\App\Support\ShearwaterXmlParser::sniff($file['path'])) {
+                $shearwater[] = $file;
             } else {
                 $logbooks[] = $file;
             }
@@ -86,8 +170,8 @@ class LogbookImportController extends Controller
         $dives = []; $sites = []; $generators = [];
         try {
             foreach ($logbooks as $file) {
-                $isMacDive = \App\Support\MacDiveXmlParser::sniff($file->getRealPath());
-                $parsed = $isMacDive ? \App\Support\MacDiveXmlParser::parse($file->getRealPath()) : UddfParser::parse($file->getRealPath());
+                $isMacDive = \App\Support\MacDiveXmlParser::sniff($file['path']);
+                $parsed = $isMacDive ? \App\Support\MacDiveXmlParser::parse($file['path']) : UddfParser::parse($file['path']);
                 array_push($dives, ...$parsed->dives);
                 $sites += $parsed->sites;
                 $generators[] = $parsed->generator ?: 'UDDF';
