@@ -49,11 +49,17 @@
                             </p>
                             <form method="POST" action="{{ route('Logbook.autoMerge') }}" id="autoMergeForm">
                                 @csrf
-                                <label class="dh-comms-label">
-                                    <input type="hidden" name="logbook_auto_merge" value="0">
-                                    <input name="logbook_auto_merge" class="form-check-input" type="checkbox" value="1" @checked($autoMerge) onchange="this.form.submit()">
-                                    <span><strong>Auto-merge dives</strong> - combine them into one dive without asking</span>
-                                </label>
+                                {{-- Same wrapper as Profile > Preferences, for the theme's blue
+                                     checked state and a visible outline when unchecked. --}}
+                                <div class="dh-comms">
+                                    <div class="dh-comms-row">
+                                        <label class="dh-comms-label">
+                                            <input type="hidden" name="logbook_auto_merge" value="0">
+                                            <input name="logbook_auto_merge" class="form-check-input" type="checkbox" value="1" @checked($autoMerge) onchange="this.form.submit()">
+                                            <span><strong>Auto-merge dives</strong> Combine them into one dive without asking</span>
+                                        </label>
+                                    </div>
+                                </div>
                             </form>
                             <p class="text-xs text-secondary mt-2 mb-0">
                                 Off: they stay as separate dives sharing one number (844.a, 844.b), highlighted in your logbook, until you choose <em>Combine</em> or <em>Different dives</em>.

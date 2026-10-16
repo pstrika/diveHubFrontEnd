@@ -4588,13 +4588,13 @@ body.dh-logbook main .input-group-outline:has(> input.form-control):not(.is-fill
 .dh-import-steps li strong { font-weight: 700; }
 /* Five sources in a two-column grid: the catch-all spans the last row. */
 .dh-import-source:last-child:nth-child(odd) { grid-column: 1 / -1; }
-.dh-import-clock { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: rgba(230, 145, 56, .14); color: #a35a0b; font-size: .75rem; font-weight: 700; }
+.dh-import-clock { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--dh-foam); color: var(--dh-sea); font-size: .75rem; font-weight: 700; }
 
 /* Same dive, several computers (Pablo, 2026-10-16: the "dedup suite"). */
 .dh-dup-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 .dh-dup-level { font-weight: 800; color: var(--dh-ink); }
 .dh-dup-pair.is-strong { border-left: 4px solid var(--dh-good, #2e7d32); }
-.dh-dup-pair.is-possible { border-left: 4px solid #e69138; }
+.dh-dup-pair.is-possible { border-left: 4px solid var(--dh-shallow); }
 .dh-dup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .dh-dup-dive { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; background: rgba(11, 110, 138, .06); color: var(--dh-ink); font-size: .87rem; text-decoration: none; }
 .dh-dup-dive:hover { background: rgba(11, 110, 138, .12); }
@@ -4615,12 +4615,13 @@ body.dh-logbook main .input-group-outline:has(> input.form-control):not(.is-fill
 .dh-computer-menu button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 8px 10px; border-radius: 6px; font-size: .85rem; color: var(--dh-ink); }
 .dh-computer-menu button:hover { background: rgba(11, 110, 138, .08); }
 .dh-computer-note { font-size: .78rem; color: var(--dh-muted, #5b6b78); }
-.dh-same-dive-banner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border-radius: 12px; background: rgba(230, 145, 56, .12); margin-bottom: 12px; font-size: .88rem; color: var(--dh-ink); }
+.dh-same-dive-banner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border-radius: 12px; background: var(--dh-foam); margin-bottom: 12px; font-size: .88rem; color: var(--dh-ink); }
 .dh-same-dive-banner form { margin: 0; }
-/* Dives still asking "same dive, another computer?" (Pablo, 2026-10-16). */
-.dh-logbook-row.is-same-dive-pending { background: rgba(230, 145, 56, .10); box-shadow: inset 4px 0 0 #e69138; }
-.dh-logbook-row.is-same-dive-pending:hover { background: rgba(230, 145, 56, .16); }
-.dh-same-dive-badge { display: block; margin-top: 2px; font-size: .6rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: #a35a0b; white-space: nowrap; }
+/* Dives still asking "same dive, another computer?" (Pablo, 2026-10-16) -
+   the theme's light blue (foam fill, shallow accent), not orange. */
+.dh-logbook-row.is-same-dive-pending { background: var(--dh-foam); box-shadow: inset 4px 0 0 var(--dh-shallow); }
+.dh-logbook-row.is-same-dive-pending:hover { background: #d6eaf2; }
+.dh-same-dive-badge { display: block; margin-top: 2px; font-size: .6rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: var(--dh-sea); white-space: nowrap; }
 .dh-same-dive-text { flex: 1 1 260px; }
 .dh-same-dive-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
@@ -4636,5 +4637,19 @@ body.dh-logbook main .input-group-outline:has(> input.form-control):not(.is-fill
 }
 .dh-dive-site-form > div > input[type="text"] { width: 100%; box-sizing: border-box; }
 .dh-logbook-row-number { position: relative; }
-.dh-row-number-letter { position: absolute; right: -7px; bottom: -5px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: #e69138; color: #fff; font-size: .62rem; font-weight: 800; line-height: 16px; text-align: center; box-shadow: 0 0 0 2px #fff; }
-.dh-logbook-row-title .dh-same-dive-badge { display: inline-block; margin: 0 0 0 8px; padding: 1px 8px; border-radius: 999px; background: rgba(230, 145, 56, .18); flex: 0 0 auto; }
+.dh-row-number-letter { position: absolute; right: -7px; bottom: -5px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--dh-shallow); color: #fff; font-size: .62rem; font-weight: 800; line-height: 16px; text-align: center; box-shadow: 0 0 0 2px #fff; }
+.dh-logbook-row-title .dh-same-dive-badge { display: inline-block; margin: 0 0 0 8px; padding: 1px 8px; border-radius: 999px; background: var(--dh-paper); box-shadow: inset 0 0 0 1px var(--dh-shallow); flex: 0 0 auto; }
+
+/* Logbook filter rows (tags, dive types...): one line that scrolls sideways
+   with the Trips filters' arrows, at every screen size (Pablo, 2026-10-16:
+   "they should show in a single line and then allow for scroll"). */
+.dh-logbook-filters .dive-filter-chips { flex-wrap: nowrap !important; min-width: 0; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; }
+.dh-logbook-filters .dive-filter-chips::-webkit-scrollbar { display: none; }
+.dh-logbook-filters .dive-filter-chips > .chip, .dh-logbook-filters .dive-filter-chips > span { flex: 0 0 auto; }
+.dh-logbook-filters .dh-chip-scroll { position: relative; min-width: 0; }
+.dh-logbook-filters .dh-chip-scroll .dive-filter-chips { padding-right: 48px; }
+.dh-logbook-filters .dh-chip-more { position: absolute; top: 0; bottom: 2px; width: 48px; border: 0; padding: 0; display: flex; align-items: center; color: var(--dh-deep); cursor: pointer; }
+.dh-logbook-filters .dh-chip-more-right { right: 0; justify-content: flex-end; background: linear-gradient(to right, rgba(243,244,246,0), var(--dh-sand) 22%); }
+.dh-logbook-filters .dh-chip-more-left { left: 0; justify-content: flex-start; background: linear-gradient(to left, rgba(243,244,246,0), var(--dh-sand) 22%); }
+.dh-logbook-filters .dh-chip-more .material-icons-round { font-size: 22px; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 50%; box-shadow: 0 1px 3px rgba(11,42,58,.15); }
+.dh-logbook-filters .dh-chip-more[hidden] { display: none; }

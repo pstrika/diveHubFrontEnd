@@ -489,7 +489,7 @@ class LogbookController extends Controller
         $profile = $dive->profile ?? [];
         $tanks = $dive->tanks;
         $logs = $dive->companions()->get();
-        $colors = ['#ffb74d', '#4dd0e1', '#ba68c8', '#aed581'];
+        $colors = ['#5fb4cf', '#4dd0e1', '#ba68c8', '#aed581']; // theme's shallow blue first
         $out = [];
         foreach ($logs as $i => $c) {
             $pts = [];

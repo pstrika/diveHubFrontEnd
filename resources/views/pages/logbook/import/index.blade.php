@@ -101,7 +101,7 @@
                              'steps' => ['On connect.garmin.com, open a dive.', 'Click <strong>⚙ &rsaquo; Export Original</strong> and unzip the download.', 'Drop the .fit file (or a folder of them) above.'],
                              'gets' => 'Descent watches: 1-second profile, NDL, stops, CNS, gases, transmitter pressure, and the GPS entry point used to find the site.'],
                             ['key' => 'oceanic', 'name' => 'Oceanic+ · Apple Watch', 'badge' => null, 'file' => '.uddf', 'mono' => 'O+',
-                             'steps' => ['In the Oceanic+ app on your iPhone, open your dive log.', 'Use the app\'s export and choose <strong>UDDF</strong>.', 'Drop the .uddf file above.'],
+                             'steps' => ['In the Oceanic+ app, open <strong>Logbook</strong>.', 'Tap the <strong>&middot;&middot;&middot;</strong> at the top right, then <strong>Export Dives</strong>.', 'Oceanic+ emails you a link: download the .zip, unzip it and drop the .uddf file above.'],
                              'gets' => 'Scuba dives with a profile, snorkel sessions as freedives, and each dive\'s GPS point. Sessions saved without a profile come in as summaries.'],
                             ['key' => 'uddf', 'name' => 'Other apps', 'badge' => null, 'file' => '.uddf', 'mono' => 'UDDF',
                              'steps' => ['Subsurface, DiveMate, Diving Log and most others: <strong>File &rsaquo; Export &rsaquo; UDDF</strong>.', 'Drop the .uddf file above.'],
