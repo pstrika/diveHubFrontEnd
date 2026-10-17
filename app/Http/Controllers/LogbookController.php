@@ -452,6 +452,7 @@ class LogbookController extends Controller
     /** Two dives the diver says are different: never asked about again. */
     public static function markDifferent(Dive $a, Dive $b): void
     {
+        $group = array_merge($a->sameDiveGroupIds(), $b->sameDiveGroupIds(), [$a->id, $b->id]);
         foreach ([[$a, $b], [$b, $a]] as [$x, $y]) {
             $c = $x->conditions ?? [];
             $c['same_dive_dismissed'] = array_values(array_unique(array_merge($c['same_dive_dismissed'] ?? [], [(int) $y->id])));
@@ -460,6 +461,8 @@ class LogbookController extends Controller
             $x->save();
         }
         \App\Support\SameDivePending::forget();
+        // Both dives (and any third computer in the group) lost same_dive.
+        Dive::logUpdatedIds($group);
     }
 
     /** POST - "not the same dive" from the duplicates page. */

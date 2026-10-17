@@ -781,6 +781,11 @@ class LogbookImportController extends Controller
                         return $dive;
                     });
                     $item->update(['imported_dive_id' => $dive->id]);
+                    // A dive that asks "same dive as...?": the dive it asks
+                    // about gained same_dive - phones refetch it.
+                    if (!empty($conditions['same_dive_suggestion']['dive_id'])) {
+                        Dive::logUpdatedIds([(int) $conditions['same_dive_suggestion']['dive_id']]);
+                    }
                     $created++;
                 }
         }

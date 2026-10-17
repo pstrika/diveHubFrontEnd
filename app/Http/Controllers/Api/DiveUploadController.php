@@ -204,6 +204,8 @@ class DiveUploadController extends Controller
                 // 4. Looks like another computer's dive but the clocks are
                 //    hours apart: never assumed - the dive page asks.
                 if ($match) {
+                    // The dive it asks about now shows same_dive too.
+                    $match['dive']->logUpdated();
                     $dive->conditions = ['same_dive_suggestion' => ['dive_id' => $match['dive']->id, 'offset' => $match['offset'], 'shape' => $match['shape'], 'corr' => $match['corr'] ?? null, 'level' => $match['level']]];
                     $dive->save();
                 }

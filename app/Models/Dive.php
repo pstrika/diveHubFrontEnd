@@ -285,6 +285,35 @@ class Dive extends Model
         DiveChange::record($this->user_id, $this->uuid, 'deleted');
     }
 
+    /**
+     * The app's dive JSON carries computed fields (same_dive, computers)
+     * that change without the row's own columns changing: bump updated_at
+     * and log 'updated' so phones refetch it (uploader session, 2026-10-16:
+     * "log 'updated' for every dive whose computed fields change").
+     */
+    public function logUpdated(): void
+    {
+        if (!$this->exists || $this->trashed() || $this->isCompanion()) return;
+        $this->touch();
+        DiveChange::record($this->user_id, $this->uuid, 'updated');
+    }
+
+    /** logUpdated() for every live dive of an open same-dive group (ids), but $except. */
+    public static function logUpdatedIds(array $ids, array $except = []): void
+    {
+        $ids = array_values(array_diff(array_unique(array_map('intval', $ids)), array_map('intval', $except)));
+        if (!$ids) return;
+        foreach (Dive::whereIn('id', $ids)->get() as $d) $d->logUpdated();
+    }
+
+    /** Ids of the open same-dive group this dive belongs to (itself included), or []. */
+    public function sameDiveGroupIds(): array
+    {
+        $p = \App\Support\SameDivePending::forUser($this->user_id);
+        $target = $p['asks'][$this->id] ?? (isset($p['groups'][$this->id]) ? $this->id : null);
+        return $target === null ? [] : array_merge([$target], $p['groups'][$target] ?? []);
+    }
+
     /** Other computers' logs of this same dive (live only). */
     public function companions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
@@ -318,6 +347,7 @@ class Dive extends Model
         $c->forceFill($row);
         $c->save();
         $this->refreshEnteredDeco();
+        $this->logUpdated();
         return $c;
     }
 
@@ -356,6 +386,7 @@ class Dive extends Model
     public function absorb(Dive $other): void
     {
         if ($other->id === $this->id || $other->user_id !== $this->user_id) throw new \InvalidArgumentException('Not combinable.');
+        $group = array_merge($this->sameDiveGroupIds(), $other->sameDiveGroupIds());
         \Illuminate\Support\Facades\DB::transaction(function () use ($other) {
             if (!$this->site_id && !$this->user_site_id) { $this->site_id = $other->site_id; $this->user_site_id = $other->user_site_id; }
             if (!trim((string) $this->notes) && trim((string) $other->notes)) $this->notes = $other->notes;
@@ -377,6 +408,8 @@ class Dive extends Model
         });
         \App\Support\SameDivePending::forget();
         $this->refreshEnteredDeco();
+        // A third computer still asking about either dive: its same_dive changed.
+        self::logUpdatedIds($group, [$this->id, $other->id]);
     }
 
     /** Re-derive entered_deco from this dive's profile and its attached logs. */
@@ -393,6 +426,7 @@ class Dive extends Model
         if ($companion->merged_into_id !== $this->id) throw new \InvalidArgumentException('Not a log of this dive.');
         $companion->forceFill(['merged_into_id' => null])->save();
         DiveChange::record($companion->user_id, $companion->uuid, 'created');
+        $this->logUpdated();
         return $companion;
     }
 

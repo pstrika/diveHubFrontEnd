@@ -285,9 +285,7 @@ class LogbookApiController extends Controller
         $userId = $request->user()->id;
         $dive = Dive::where('user_id', $userId)->where('uuid', $uuid)->firstOrFail();
         $other = Dive::where('user_id', $userId)->where('uuid', $data['with_uuid'])->firstOrFail();
-        \App\Http\Controllers\LogbookController::markDifferent($dive, $other);
-        DiveChange::record($userId, $dive->uuid, 'updated');
-        DiveChange::record($userId, $other->uuid, 'updated');
+        \App\Http\Controllers\LogbookController::markDifferent($dive, $other); // logs 'updated' for both
         return response()->noContent();
     }
 }
