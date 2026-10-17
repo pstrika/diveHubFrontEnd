@@ -386,6 +386,14 @@
                                                     </div>
                                                 </div>
                                             </details>
+
+                                            {{-- Blend Mix for the recommended diluent, same as the open
+                                                 circuit card (Pablo, 2026-10-16). --}}
+                                            <div class="mt-2">
+                                                <button type="button" class="btn btn-info dh-blend-mix-btn" onclick="dhOpenGasBlending(parseInt(document.getElementById('labelMixO2CCR').textContent), parseInt(document.getElementById('labelMixHeCCR').textContent))">
+                                                    <span class="material-icons-round" aria-hidden="true">colorize</span> Blend Mix
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
