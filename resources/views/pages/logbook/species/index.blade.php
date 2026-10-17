@@ -14,7 +14,12 @@
 
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                         <a href="{{ route('Logbook') }}" class="dh-btn dh-btn-ghost-dark"><span class="material-icons-round" aria-hidden="true">arrow_back</span> Logbook</a>
-                        <a href="{{ route('Species.create') }}" class="dh-btn dh-btn-primary"><span class="material-icons-round" aria-hidden="true">add</span> Add a species</a>
+                        <div class="d-flex gap-2 flex-wrap">
+                            @if (auth()->user()->isAdmin())
+                                <a href="{{ route('Species.photoReview') }}" class="dh-btn dh-btn-ghost-dark"><span class="material-icons-round" aria-hidden="true">photo_library</span> Review pictures</a>
+                            @endif
+                            <a href="{{ route('Species.create') }}" class="dh-btn dh-btn-primary"><span class="material-icons-round" aria-hidden="true">add</span> Add a species</a>
+                        </div>
                     </div>
 
                     <p class="text-sm text-secondary">
@@ -53,6 +58,11 @@
                                     <a href="{{ route('Species.show', $s->uuid) }}" class="dh-species-row"
                                        data-species-row data-seen="{{ $sn ? 1 : 0 }}"
                                        data-text="{{ mb_strtolower(implode(' ', array_filter([$s->common_name, $s->scientific_name, $s->family, $s->genus, $s->taxon_order, implode(' ', $s->other_names ?? [])]))) }}">
+                                        @if ($s->photoUrl())
+                                            <img src="{{ $s->photoUrl() }}" alt="" class="dh-eq-thumb" loading="lazy">
+                                        @else
+                                            <span class="dh-eq-thumb is-icon"><span class="material-icons-round" aria-hidden="true">set_meal</span></span>
+                                        @endif
                                         <span class="dh-species-name">
                                             <strong>{{ $s->common_name }}</strong>
                                             @if ($s->isCustom())<span class="dh-species-mine">Yours</span>@endif

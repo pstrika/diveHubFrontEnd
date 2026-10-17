@@ -65,6 +65,20 @@ class Species extends Model
         return $this->user_id !== null;
     }
 
+    /** The shown picture: the diver's own species' photo, or an approved catalog one. */
+    public function photoUrl(): ?string
+    {
+        if (!$this->photo || ($this->user_id === null && $this->photo_status !== 'approved')) return null;
+        return asset('assets/img/species/' . $this->photo);
+    }
+
+    /** "Photo: Jane Doe, CC BY-SA 4.0, Wikimedia Commons". */
+    public function creditLine(): ?string
+    {
+        if (!$this->photo_credit && !$this->photo_license) return null;
+        return 'Photo: ' . collect([$this->photo_credit, $this->photo_license, $this->photo_source_url ? 'Wikimedia Commons' : null])->filter()->implode(', ');
+    }
+
     public function categoryLabel(): string
     {
         return self::CATEGORIES[$this->category] ?? ucfirst((string) $this->category);
@@ -81,7 +95,11 @@ class Species extends Model
             'division' => $this->division, 'order' => $this->taxon_order, 'family' => $this->family, 'genus' => $this->genus,
             'scientific_name' => $this->scientific_name,
             'description' => $this->description,
-            'photo_url' => $this->photo ? asset('assets/img/species/' . $this->photo) : null,
+            // Only pictures Pablo kept (photo_status approved), with the
+            // credit their free license requires.
+            'photo_url' => $this->photoUrl(),
+            'photo_credit' => $this->photoUrl() ? $this->creditLine() : null,
+            'photo_source_url' => $this->photoUrl() ? $this->photo_source_url : null,
             'custom' => $this->isCustom(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

@@ -33,8 +33,15 @@
                                     @if ($species->scientific_name)<p class="dh-species-binomial"><em>{{ $species->scientific_name }}</em></p>@endif
                                     @if ($species->other_names)<p class="text-sm text-secondary mb-0">Also: {{ implode(', ', $species->other_names) }}</p>@endif
                                 </div>
-                                @if ($species->photo)
-                                    <img src="{{ asset('assets/img/species/' . $species->photo) }}" alt="{{ $species->common_name }}" class="dh-species-photo">
+                                @if ($species->photoUrl())
+                                    <figure class="dh-species-figure">
+                                        <img src="{{ $species->photoUrl() }}" alt="{{ $species->common_name }}" class="dh-species-photo">
+                                        @if ($species->creditLine())
+                                            <figcaption>
+                                                @if ($species->photo_source_url)<a href="{{ $species->photo_source_url }}" target="_blank" rel="noopener">{{ $species->creditLine() }}</a>@else{{ $species->creditLine() }}@endif
+                                            </figcaption>
+                                        @endif
+                                    </figure>
                                 @endif
                             </div>
                             @if ($species->description)<p class="mt-3 mb-0">{{ $species->description }}</p>@endif

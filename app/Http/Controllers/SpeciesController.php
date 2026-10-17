@@ -96,6 +96,30 @@ class SpeciesController extends Controller
         return redirect()->route('Species.index')->with('status', 'Species deleted.');
     }
 
+    /**
+     * Review the Wikimedia Commons candidates (species:fetch-photos): keep
+     * or skip each. Catalog-wide, so admins only.
+     */
+    public function photoReview(Request $request)
+    {
+        abort_unless($request->user()->isAdmin(), 403);
+        $filter = in_array($request->query('show'), ['candidate', 'approved', 'rejected', 'missing'], true) ? $request->query('show') : 'candidate';
+        $q = Species::whereNull('user_id')->orderBy('category')->orderBy('common_name');
+        $filter === 'missing' ? $q->whereNull('photo_status') : $q->where('photo_status', $filter);
+        $counts = Species::whereNull('user_id')->selectRaw("COALESCE(photo_status, 'missing') st, COUNT(*) n")->groupBy('st')->pluck('n', 'st');
+        return view('pages.logbook.species.photos', ['species' => $q->get(), 'filter' => $filter, 'counts' => $counts]);
+    }
+
+    public function photoDecide(Request $request, string $uuid)
+    {
+        abort_unless($request->user()->isAdmin(), 403);
+        $s = Species::whereNull('user_id')->where('uuid', $uuid)->firstOrFail();
+        $decision = $request->validate(['decision' => 'required|in:approved,rejected,candidate'])['decision'];
+        abort_unless($s->photo, 422);
+        $s->forceFill(['photo_status' => $decision])->save();
+        return $request->wantsJson() ? response()->json(['status' => $decision]) : back();
+    }
+
     private function own(Request $request, string $uuid): Species
     {
         return Species::where('user_id', $request->user()->id)->where('uuid', $uuid)->firstOrFail();

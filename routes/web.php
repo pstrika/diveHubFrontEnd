@@ -537,6 +537,8 @@ Route::middleware(['auth', 'logbook', 'early:equipment'])->group(function () {
 Route::middleware(['auth', 'logbook', 'early:species'])->group(function () {
     Route::get('Logbook/species', 'App\Http\Controllers\SpeciesController@index')->name('Species.index');
     Route::get('Logbook/species/new', 'App\Http\Controllers\SpeciesController@create')->name('Species.create');
+    Route::get('Logbook/species/photos', 'App\Http\Controllers\SpeciesController@photoReview')->name('Species.photoReview');
+    Route::post('Logbook/species/{uuid}/photo-review', 'App\Http\Controllers\SpeciesController@photoDecide')->name('Species.photoDecide');
     Route::post('Logbook/species', 'App\Http\Controllers\SpeciesController@store')->name('Species.store');
     Route::get('Logbook/species/{uuid}', 'App\Http\Controllers\SpeciesController@show')->name('Species.show');
     Route::get('Logbook/species/{uuid}/edit', 'App\Http\Controllers\SpeciesController@edit')->name('Species.edit');
