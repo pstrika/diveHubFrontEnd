@@ -503,6 +503,9 @@ Route::middleware(['auth', 'logbook'])->group(function () {
     Route::get('Logbook/sites/{id}/edit', 'App\Http\Controllers\UserSiteController@edit')->where('id', '[0-9]+')->name('Logbook.sites.edit');
     Route::put('Logbook/sites/{id}', 'App\Http\Controllers\UserSiteController@update')->where('id', '[0-9]+')->name('Logbook.sites.update');
     Route::delete('Logbook/sites/{id}', 'App\Http\Controllers\UserSiteController@destroy')->where('id', '[0-9]+')->name('Logbook.sites.destroy');
+    // Site journal (Pablo, 2026-10-17): your dives, photos, species per site.
+    Route::get('Logbook/journal', 'App\Http\Controllers\SiteJournalController@index')->name('SiteJournal.index');
+    Route::get('Logbook/journal/{kind}/{id}', 'App\Http\Controllers\SiteJournalController@show')->where(['kind' => 'site|mine', 'id' => '[0-9]+'])->name('SiteJournal.show');
     // Dive photos (Pablo, 2026-10-17) - private, owner-only files.
     Route::post('Logbook/{id}/photos', 'App\Http\Controllers\DivePhotoController@store')->where('id', '[0-9]+')->name('DivePhotos.store');
     Route::post('Logbook/{id}/photos/order', 'App\Http\Controllers\DivePhotoController@reorder')->where('id', '[0-9]+')->name('DivePhotos.reorder');

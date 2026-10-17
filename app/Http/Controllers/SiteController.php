@@ -476,15 +476,15 @@ class SiteController extends Controller
         $boardContent = json_decode($request->input('boardContent'), true);
 
         if (is_array($boardContent)) {
-            // Delete all entries where userId matches the authenticated user's ID
-            VisitedSite::where('userId', auth()->id())->delete();
-
-            foreach($boardContent as $site) {
-                VisitedSite::create([
-                    'siteId' => $site,
-                    'userId' => auth()->id(),
-                    // Add other relevant fields as needed
-                ]);    
+            // Keep the date of every site that stays visited (filled in from
+            // the logbook since 2026-10-17); add the new ones, drop the rest.
+            $keep = array_map('intval', $boardContent);
+            VisitedSite::where('userId', auth()->id())->whereNotIn('siteId', $keep ?: [0])->delete();
+            $have = VisitedSite::where('userId', auth()->id())->pluck('siteId')->map(fn ($v) => (int) $v)->flip();
+            foreach ($keep as $site) {
+                if (!isset($have[$site])) {
+                    VisitedSite::create(['siteId' => $site, 'userId' => auth()->id()]);
+                }
             }
         }
 

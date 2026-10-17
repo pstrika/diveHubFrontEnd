@@ -20,6 +20,10 @@
                             <span class="material-icons-round" aria-hidden="true">arrow_back</span>
                             Logbook
                         </a>
+                        <a href="{{ route('SiteJournal.index') }}" class="dh-btn dh-btn-ghost-dark ms-auto">
+                            <span class="material-icons-round" aria-hidden="true">auto_stories</span>
+                            Site journal
+                        </a>
                         <a href="{{ route('Logbook.sites.create') }}" class="dh-btn dh-btn-primary">
                             <span class="material-icons-round" aria-hidden="true">add_location_alt</span>
                             New site
@@ -69,6 +73,9 @@
                                         <div><strong>{{ $s->dives_count }}</strong><span class="text-xs text-secondary d-block">{{ $s->dives_count === 1 ? 'dive' : 'dives' }}</span></div>
                                     </div>
                                     <div class="dh-user-site-actions">
+                                        @if ($s->dives_count)
+                                            <a href="{{ route('SiteJournal.show', ['mine', $s->id]) }}" class="dh-btn-icon" title="Photos and marine life here"><span class="material-icons-round" aria-hidden="true">auto_stories</span></a>
+                                        @endif
                                         <a href="{{ route('Logbook.sites.edit', $s->id) }}" class="dh-btn-icon" title="Edit"><span class="material-icons-round" aria-hidden="true">edit</span></a>
                                         <form method="POST" action="{{ route('Logbook.sites.destroy', $s->id) }}" class="d-inline" onsubmit="return confirm('Delete this site? Dives tagged with it keep the name as plain text.');">
                                             @csrf

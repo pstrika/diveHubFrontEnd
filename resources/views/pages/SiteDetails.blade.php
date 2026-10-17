@@ -432,7 +432,7 @@
                             </form>
                             @if($myDiveCount > 0)
                                 {{-- The viewer's own dives here (Pablo, 2026-10-17). --}}
-                                <a class="dh-btn dh-btn-ghost-dark" href="{{ route('Logbook', ['site' => $site->id]) }}">
+                                <a class="dh-btn dh-btn-ghost-dark" href="{{ route('SiteJournal.show', ['site', $site->id]) }}">
                                     <span class="material-icons-round">menu_book</span>{{ $myDiveCount === 1 ? 'Your dive here' : "Your $myDiveCount dives here" }}
                                 </a>
                             @endif

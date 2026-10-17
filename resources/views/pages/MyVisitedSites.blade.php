@@ -16,6 +16,10 @@
             --}}
             <section class="dh-panel">
                 <h2 class="dh-panel-title">Visited or not?</h2>
+                @if (\App\Http\Middleware\LogbookGate::allows(auth()->user()))
+                    {{-- Photos and marine life per site live in the site journal (Pablo, 2026-10-17). --}}
+                    <p class="dh-note"><a href="{{ route('SiteJournal.index') }}"><span class="material-icons-round" aria-hidden="true" style="font-size:16px;vertical-align:-3px">auto_stories</span> Open your site journal</a> - your photos and the marine life you saw at each site you've logged.</p>
+                @endif
                 <p class="dh-note">Click or drag-and-drop a site to move it between lanes, then submit your changes.</p>
                 <form method="POST" action="{{ route('UpdateAllVisited') }}" id="boardForm">
                     @csrf
