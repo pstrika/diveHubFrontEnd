@@ -4673,3 +4673,14 @@ body.dh-logbook main .input-group-outline:has(> input.form-control):not(.is-fill
 .dh-app-card-close { flex: none; border: 0; background: none; padding: 4px; color: var(--dh-muted); line-height: 0; cursor: pointer; }
 @media (max-width: 575.98px) { .dh-app-card { flex-wrap: wrap; } .dh-app-card-text { flex-basis: calc(100% - 80px); } .dh-app-card .dh-btn { margin-left: 40px; } }
 #dhAppModal .dh-app-steps { margin-top: 0; }
+
+/* Logbook search bar (Pablo, 2026-10-17). 36px like every logbook control. */
+.dh-logbook-search { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 6px 0 12px; margin: 0 0 12px; border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill); background: var(--dh-paper); }
+.dh-logbook-search:focus-within { border-color: var(--dh-sea); }
+.dh-logbook-search > .material-icons-round { color: var(--dh-muted); font-size: 20px; }
+.dh-logbook-search input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font-size: .9rem; color: var(--dh-ink); }
+.dh-logbook-search-clear { display: inline-flex; color: var(--dh-muted); padding: 4px; }
+.dh-logbook-search-clear .material-icons-round { font-size: 18px; }
+.dh-logbook-site-filter { display: inline-flex; align-items: center; gap: 6px; margin: -4px 0 12px; padding: 4px 6px 4px 10px; border-radius: var(--dh-radius-pill); background: var(--dh-foam); color: var(--dh-ink); font-size: .85rem; }
+.dh-logbook-site-filter .material-icons-round { font-size: 18px; color: var(--dh-sea); }
+.dh-logbook-site-filter a { display: inline-flex; color: var(--dh-muted); }

@@ -97,6 +97,28 @@
                          are shareable. A row only appears when this logbook has
                          more than one value for it - a diver with no CC dives
                          never sees a circuit filter at all. --}}
+                    {{-- Search (Pablo, 2026-10-17): site, city, operator, buddies,
+                         notes, tags, computer or dive number. Keeps the chips. --}}
+                    @if ($stats['total'] > 0)
+                        <form method="GET" action="{{ route('Logbook') }}" class="dh-logbook-search" role="search">
+                            @foreach (['circuit', 'class', 'type', 'tag', 'site'] as $k)
+                                @if ($filters[$k])<input type="hidden" name="{{ $k }}" value="{{ $filters[$k] }}">@endif
+                            @endforeach
+                            <span class="material-icons-round" aria-hidden="true">search</span>
+                            <input type="search" name="q" value="{{ $filters['q'] }}" placeholder="Search site, buddy, notes, dive #" aria-label="Search your dives">
+                            @if ($filters['q'])
+                                <a href="{{ route('Logbook', array_filter(array_diff_key($filters, ['q' => 1]))) }}" class="dh-logbook-search-clear" aria-label="Clear search"><span class="material-icons-round" aria-hidden="true">close</span></a>
+                            @endif
+                        </form>
+                        @if ($siteFilterName)
+                            <div class="dh-logbook-site-filter">
+                                <span class="material-icons-round" aria-hidden="true">place</span>
+                                Dives at <strong>{{ $siteFilterName }}</strong>
+                                <a href="{{ route('Logbook', array_filter(array_diff_key($filters, ['site' => 1]))) }}" aria-label="Show all dives"><span class="material-icons-round" aria-hidden="true">close</span></a>
+                            </div>
+                        @endif
+                    @endif
+
                     @if ($showCircuitFilter || $showClassFilter || count($tagOptions) || count($typeOptions))
                         <div class="dh-logbook-filters">
                             @if ($showCircuitFilter)

@@ -17,7 +17,8 @@
             --}}
             @php
                 $hasAnyResults = $results->isNotEmpty() || $resultsWreckType->isNotEmpty()
-                    || count($resultsDescription) || count($resultsHistoryA) || $resultsOperator->isNotEmpty();
+                    || count($resultsDescription) || count($resultsHistoryA) || $resultsOperator->isNotEmpty()
+                    || $myDives->isNotEmpty();
             @endphp
 
             @if(!$hasAnyResults)
@@ -27,6 +28,23 @@
                     <a class="dh-btn dh-btn-primary" href="{{ route('DiveSites') }}">Browse all sites</a>
                 </div>
             @else
+                {{-- The diver's own dives at matching sites - only ever theirs. --}}
+                @if($myDives->isNotEmpty())
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Your dives <span class="dh-region-count">{{ $myDives->count() }}</span></h2>
+                        <ul class="dh-search-list">
+                            @foreach($myDives as $d)
+                                <li><a href="{{ route('DiveDetails', $d->id) }}">
+                                    <span class="dh-search-type">{{ $d->started_at->format('M j, Y') }}</span>
+                                    <span class="dh-search-name">{{ $d->siteInfo()['name'] ?? 'Dive' }}</span>
+                                    <span class="dh-search-loc">{{ (auth()->user()->deco_unit ?? 0) ? round($d->max_depth_m) . ' m' : round($d->max_depth_m * 3.28084) . ' ft' }} &middot; {{ intdiv((int) $d->duration_seconds, 60) }} min</span>
+                                </a></li>
+                            @endforeach
+                        </ul>
+                        <a class="dh-btn dh-btn-ghost-dark mt-2" href="{{ route('Logbook', ['q' => $searchString]) }}"><span class="material-icons-round" aria-hidden="true">menu_book</span>See all in your logbook</a>
+                    </section>
+                @endif
+
                 @if($results->isNotEmpty())
                     <section class="dh-panel">
                         <h2 class="dh-panel-title">Sites <span class="dh-region-count">{{ $results->count() }}</span></h2>

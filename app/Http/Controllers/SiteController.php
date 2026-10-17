@@ -449,7 +449,13 @@ class SiteController extends Controller
         $operatorsById = Operator::select('id', 'location', 'phone')->get()->keyBy('id')->all();
         $nextTrips = $trips->take(8)->map(fn ($t) => \App\Support\TripBoard::card($t, $now, $operatorsById))->values()->all();
 
-        return view('pages.SiteDetails', compact('site','photos', 'diverPhotos', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'gasMixes', 'forecast', 'nextTrips'));
+        // "Your N dives here" (Pablo, 2026-10-17) - the viewer's own logbook
+        // only, never anyone else's.
+        $myDiveCount = auth()->check() && auth()->user()->isNotGuest()
+            ? \App\Models\Dive::where('user_id', auth()->id())->where('site_id', $site->id)->count()
+            : 0;
+
+        return view('pages.SiteDetails', compact('site','photos', 'diverPhotos', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'gasMixes', 'forecast', 'nextTrips', 'myDiveCount'));
 
     }
     public function getMyVisitedSites() {
@@ -1055,7 +1061,11 @@ class SiteController extends Controller
         $matchedSiteIds = collect([$results, $resultsWreckType, $resultsDesc, $resultsHistory])
             ->flatten()->pluck('id')->unique();
 
-        if ($matchedSiteIds->count() === 1 && $resultsOperator->isEmpty()) {
+        // One site and nothing else: straight to it (its page has "Your
+        // dives here"), unless the diver also has dives at other sites by
+        // that name (their own sites) to show.
+        if ($matchedSiteIds->count() === 1 && $resultsOperator->isEmpty()
+            && $this->myDivesMatching($searchString)->every(fn ($d) => (int) $d->site_id === (int) $matchedSiteIds->first())) {
             $site = Site::find($matchedSiteIds->first());
             return redirect(route('SiteDetails') . '/' . ($site->slug ?? $site->id));
         }
@@ -1065,9 +1075,31 @@ class SiteController extends Controller
             'robots' => 'noindex, nofollow',
         ];
 
+        $myDives = $this->myDivesMatching($searchString);
+
         return view('pages.DiveSitesSearch', compact(
-            'searchString', 'results', 'resultsDescription', 'resultsHistoryA', 'resultsWreckType', 'resultsOperator', 'SEO'
+            'searchString', 'results', 'resultsDescription', 'resultsHistoryA', 'resultsWreckType', 'resultsOperator', 'SEO', 'myDives'
         ));
+    }
+
+    /**
+     * The signed-in diver's own dives at a site whose name matches the
+     * header search (Pablo, 2026-10-17: "add to the global search dives
+     * made to that site ... we never share dive information among users").
+     * Catalog site, their own site or a typed-in name. Newest first, 20 max.
+     */
+    private function myDivesMatching(string $searchString)
+    {
+        if (!auth()->check() || !auth()->user()->isNotGuest() || !\App\Http\Middleware\LogbookGate::allows(auth()->user())) {
+            return collect();
+        }
+        $needle = mb_strtolower($searchString);
+        $dives = \App\Models\Dive::where('user_id', auth()->id())->select(\App\Models\Dive::LIST_COLUMNS)
+            ->where(fn ($q) => $q->whereNotNull('site_id')->orWhereNotNull('user_site_id')->orWhereNotNull('conditions'))
+            ->orderByDesc('started_at')->get();
+        \App\Models\Dive::preloadSites($dives);
+        $dives->load('userSite');
+        return $dives->filter(fn ($d) => str_contains(mb_strtolower($d->siteInfo()['name'] ?? ''), $needle))->take(20)->values();
     }
 
     /**

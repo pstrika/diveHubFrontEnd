@@ -92,14 +92,33 @@ class LogbookController extends Controller
             'class' => in_array($request->query('class'), ['recreational', 'technical'], true) ? $request->query('class') : null,
             'tag' => (string) $request->query('tag', '') !== '' ? (string) $request->query('tag') : null,
             'type' => isset($diveTypeLabels[$request->query('type')]) ? $request->query('type') : null,
+            'q' => trim(mb_substr((string) $request->query('q', ''), 0, 100)) ?: null,
+            // "All your dives here" from a site page.
+            'site' => ctype_digit((string) $request->query('site')) ? (int) $request->query('site') : null,
         ];
 
-        $matches = function (Dive $dive, array $f): bool {
+        // Search bar (Pablo, 2026-10-17: "at least to find dives made on a
+        // given site"): every word has to appear somewhere in the dive's
+        // site, city, operator, buddies, notes, tags or computer; a bare
+        // number is also the dive number.
+        $terms = $filters['q'] ? preg_split('/\s+/', mb_strtolower($filters['q'])) : [];
+        if ($terms) {
+            Dive::preloadSites($all);
+            $all->load('userSite');
+        }
+
+        $matches = function (Dive $dive, array $f) use ($terms): bool {
             if ($f['circuit'] === 'cc' && !$dive->isCcr()) return false;
             if ($f['circuit'] === 'oc' && $dive->isCcr()) return false;
             if ($f['class'] && $dive->classification() !== $f['class']) return false;
             if ($f['tag'] && !in_array($f['tag'], $dive->tags ?? [], true)) return false;
             if ($f['type'] && !in_array($f['type'], $dive->conditions['dive_type'] ?? [], true)) return false;
+            if ($f['site'] && (int) $dive->site_id !== $f['site']) return false;
+            if ($terms) {
+                if (count($terms) === 1 && ctype_digit($terms[0]) && (string) $dive->listSeq === $terms[0]) return true;
+                $text = $dive->searchHaystack();
+                foreach ($terms as $t) if (!str_contains($text, $t)) return false;
+            }
             return true;
         };
 
@@ -165,6 +184,7 @@ class LogbookController extends Controller
             // computer log) came from the app, or the diver closed it.
             'usesApp' => Dive::withoutGlobalScope('companions')->where('user_id', $userId)->where('source', 'ios-uploader')->exists(),
             'appCardHidden' => (bool) $request->cookie('dh_app_card_hidden'),
+            'siteFilterName' => $filters['site'] ? \App\Models\Site::whereKey($filters['site'])->value('name') : null,
         ]);
     }
 

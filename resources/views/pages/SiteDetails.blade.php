@@ -430,6 +430,12 @@
                                     <span class="material-icons-round">check_circle</span>{{ $visited ? 'Dived it' : 'Dived it?' }}
                                 </label>
                             </form>
+                            @if($myDiveCount > 0)
+                                {{-- The viewer's own dives here (Pablo, 2026-10-17). --}}
+                                <a class="dh-btn dh-btn-ghost-dark" href="{{ route('Logbook', ['site' => $site->id]) }}">
+                                    <span class="material-icons-round">menu_book</span>{{ $myDiveCount === 1 ? 'Your dive here' : "Your $myDiveCount dives here" }}
+                                </a>
+                            @endif
                         @else
                             {{-- Show, then gate (F-04): the actions are visible and ask for an account on click. --}}
                             <a class="dh-btn dh-btn-ghost-dark" href="#" onclick="event.preventDefault();showModalGuest();"><span class="material-icons-round">bookmark_border</span>Wishlist</a>

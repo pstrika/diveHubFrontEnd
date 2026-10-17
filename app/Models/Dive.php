@@ -188,6 +188,24 @@ class Dive extends Model
      *
      * @return array{name:string, city:?string, url:?string, type:?string, latitude:?float, longitude:?float, custom:bool, site:?Site, user_site:?UserSite}|null
      */
+    /**
+     * Lower-case text the logbook search looks through (Pablo, 2026-10-17):
+     * site and city, operator, buddies, notes, tags and computer. Built
+     * once per dive per request.
+     */
+    public function searchHaystack(): string
+    {
+        if (isset($this->searchHaystackCache)) return $this->searchHaystackCache;
+        $si = $this->siteInfo();
+        $c = $this->conditions ?? [];
+        return $this->searchHaystackCache = mb_strtolower(implode(' ', array_filter([
+            $si['name'] ?? null, $si['city'] ?? null, $c['operator_name'] ?? null, $c['buddies'] ?? null,
+            $this->notes, implode(' ', $this->tags ?? []), $this->computer_model,
+        ])));
+    }
+
+    private ?string $searchHaystackCache = null;
+
     public function siteInfo(): ?array
     {
         if ($this->site_id && ($site = $this->site())) {
