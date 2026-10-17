@@ -29,7 +29,7 @@
                             <div class="d-flex flex-wrap gap-2 mt-3">
                                 <a href="{{ route('UploadTokens') }}" class="dh-btn dh-btn-ghost-dark"><span class="material-icons-round" aria-hidden="true">watch</span> Dive computer upload</a>
                                 <a href="{{ route('Logbook.sites.index') }}" class="dh-btn dh-btn-ghost-dark"><span class="material-icons-round" aria-hidden="true">place</span> My sites</a>
-                                <a href="{{ route('Logbook.import.index') }}" class="dh-btn dh-btn-ghost-dark"><span class="material-icons-round" aria-hidden="true">upload_file</span> Import a logbook</a>
+
                             </div>
                         </div>
                     </div>
@@ -40,6 +40,16 @@
 
                     {{-- Same dive, several computers (Pablo, 2026-10-16: "an 'Auto-merge'
                          option in the settings... By default... Auto-merge false"). --}}
+                    {{-- The once-in-a-lifetime move (Pablo, 2026-10-17); the logbook's
+                         own Import button is for a few dives at a time. --}}
+                    <div class="card p-0 position-relative mt-2 z-index-2 mb-4">
+                        <div class="card-body">
+                            <h3 class="h5 mb-1">Import your logbook</h3>
+                            <p class="text-sm text-secondary mb-3">Bring your whole dive history from MacDive, Shearwater Cloud, Garmin Connect, Oceanic+ or any app that exports UDDF. You review duplicates, dive modes and sites before anything is added.</p>
+                            <a href="{{ route('Logbook.import.index', ['full' => 1]) }}" class="dh-btn dh-btn-primary"><span class="material-icons-round" aria-hidden="true">drive_folder_upload</span> Import your logbook</a>
+                        </div>
+                    </div>
+
                     <div class="card p-0 position-relative mt-2 z-index-2 mb-4">
                         <div class="card-body">
                             <h3 class="h5 mb-1">Dives logged by more than one computer</h3>

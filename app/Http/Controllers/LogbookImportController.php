@@ -52,7 +52,11 @@ class LogbookImportController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        return view('pages.logbook.import.index', ['imports' => $imports]);
+        // Two doors, one workflow (Pablo, 2026-10-17): the logbook's Import
+        // button adds a few dives from computers that can't sync over
+        // Bluetooth (Garmin .fit, Apple Watch via Oceanic+); moving a whole
+        // logbook in - done once - lives under Logbook settings (?full=1).
+        return view('pages.logbook.import.index', ['imports' => $imports, 'full' => $request->boolean('full')]);
     }
 
     /** Files per chunk request - under PHP's default max_file_uploads (20). */

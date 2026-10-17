@@ -23,12 +23,13 @@
             <div class="row">
                 <div class="col-lg-7 col-md-9 col-12 m-auto pt-4">
 
+{{-- Units switch: always alone on its own line, top right (Pablo, 2026-10-17). --}}
+                    <div class="dh-unit-row"><button type="button" class="dh-btn dh-btn-ghost-dark dh-unit-toggle" id="switchUnitsForm"></button></div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <a href="{{ $editing ? route('DiveDetails', $dive->id) : route('Logbook') }}" class="dh-btn dh-btn-ghost-dark">
                             <span class="material-icons-round" aria-hidden="true">arrow_back</span>
                             {{ $editing ? 'Dive #' . $dive->logbookNumber() : 'Logbook' }}
                         </a>
-                        <button type="button" class="dh-btn dh-btn-ghost-dark dh-unit-toggle" id="switchUnitsForm"></button>
                     </div>
 
                     @if (!$editing)

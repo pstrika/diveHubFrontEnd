@@ -15,15 +15,20 @@
                         </div>
                     @endif
 
+{{-- Units switch: always alone on its own line, top right (Pablo, 2026-10-17). --}}
+                    <div class="dh-unit-row"><button type="button" class="dh-btn dh-btn-ghost-dark dh-unit-toggle" id="switchUnitsLogbook"></button></div>
+
                     {{-- Add a dive by hand / import a logbook / your own sites
-                         (Pablo, 2026-10-16), beside the unit toggle. --}}
+                         (Pablo, 2026-10-16). --}}
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                         <div class="dh-logbook-actions">
                             <a href="{{ route('Logbook.create') }}" class="dh-btn dh-btn-ghost-dark">
                                 <span class="material-icons-round" aria-hidden="true">add</span>
                                 Add dive
                             </a>
-                            <a href="{{ route('Logbook.import.index') }}" class="dh-btn dh-btn-ghost-dark">
+                            {{-- A few dives from a file (Garmin, Apple Watch). The whole-
+                                 logbook import lives in Logbook settings. --}}
+                            <a href="{{ route('Logbook.import.index') }}" class="dh-btn dh-btn-ghost-dark" title="Add dives from a Garmin or Apple Watch file">
                                 <span class="material-icons-round" aria-hidden="true">upload_file</span>
                                 Import
                             </a>
@@ -54,7 +59,6 @@
                                 <span class="material-icons-round" aria-hidden="true">settings</span>
                             </a>
                         </div>
-                        <button type="button" class="dh-btn dh-btn-ghost-dark dh-unit-toggle" id="switchUnitsLogbook"></button>
                     </div>
 
                     {{-- "Get the app" card: dives in the logbook but none synced
@@ -166,9 +170,9 @@
                                 @include('pages.logbook.app-steps')
                                 <div class="dh-app-empty-alt">
                                     <span class="text-sm text-secondary">Already keep a logbook? Bring it with you from MacDive, Shearwater Cloud, Garmin or Oceanic+.</span>
-                                    <a href="{{ route('Logbook.import.index') }}" class="dh-btn dh-btn-ghost-dark">
+                                    <a href="{{ route('Logbook.import.index', ['full' => 1]) }}" class="dh-btn dh-btn-ghost-dark">
                                         <span class="material-icons-round" aria-hidden="true">upload_file</span>
-                                        Import
+                                        Import your logbook
                                     </a>
                                 </div>
                             </div>

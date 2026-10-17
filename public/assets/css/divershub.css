@@ -4818,3 +4818,6 @@ body.dh-photo-viewer-open { overflow: hidden; }
 .dh-species-figure figcaption { font-size: .7rem; color: var(--dh-muted); margin-top: 4px; line-height: 1.3; }
 .dh-species-figure figcaption a { color: var(--dh-muted); }
 @media (max-width: 575.98px) { .dh-species-figure { width: 100%; } }
+
+/* Metric/imperial switch: its own line, top right, above every other button (Pablo, 2026-10-17). */
+.dh-unit-row { display: flex; justify-content: flex-end; margin: 0 0 8px; }

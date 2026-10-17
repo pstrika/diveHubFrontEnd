@@ -298,6 +298,10 @@
             <div class="row">
                 <div class="col-lg-9 col-12 m-auto pt-4">
 
+                    {{-- One button, "Switch to {opposite unit}" - the exact DecoPlanner
+                         convention (Pablo, 2026-10-15), toggled client-side; always
+                         alone on its own line, top right (Pablo, 2026-10-17). --}}
+                    <div class="dh-unit-row"><button type="button" class="dh-btn dh-btn-ghost-dark dh-unit-toggle" id="switchUnits"></button></div>
                     <div class="d-flex justify-content-between align-items-start">
                         <a href="{{ route('Logbook') }}" class="dh-btn dh-btn-ghost-dark">
                             <span class="material-icons-round" aria-hidden="true">arrow_back</span>
@@ -305,14 +309,6 @@
                         </a>
                         <div class="dh-dive-header-actions">
                             <div class="dh-dive-header-tools">
-                                {{-- One button, "Switch to {opposite unit}" - the
-                                     exact DecoPlanner convention (DivePlanner.blade.php's
-                                     own #switchUnits link), not a two-segment picker
-                                     (Pablo, 2026-10-15: "exactly like we have it in the
-                                     blade DecoPlanner"). DecoPlanner reloads a whole
-                                     separate route per unit; this toggles client-side
-                                     instead since nothing here needs a server round trip. --}}
-                                <button type="button" class="dh-btn dh-btn-ghost-dark dh-unit-toggle" id="switchUnits"></button>
                                 {{-- Round icon button (Pablo, 2026-10-15: "like
                                      we have in other parts of the site, same
                                      height as the button switch to Metric") -

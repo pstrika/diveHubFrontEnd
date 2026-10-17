@@ -2,16 +2,19 @@
     <x-shell.nav active="me" />
 
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
-        <x-shell.header title="Import a logbook" icon="upload_file" :h1="true" />
+        <x-shell.header :title="$full ? 'Import your logbook' : 'Add dives from a file'" icon="upload_file" :h1="true" />
 
         <div class="container-fluid py-0">
             <div class="row">
                 <div class="col-lg-7 col-md-9 col-12 m-auto pt-4">
 
-                    <a href="{{ route('Logbook') }}" class="dh-btn dh-btn-ghost-dark mb-3">
+                    <a href="{{ $full ? route('Logbook.settings') : route('Logbook') }}" class="dh-btn dh-btn-ghost-dark mb-3">
                         <span class="material-icons-round" aria-hidden="true">arrow_back</span>
-                        Logbook
+                        {{ $full ? 'Logbook settings' : 'Logbook' }}
                     </a>
+                    @unless ($full)
+                        <p class="text-sm text-secondary">For dives your computer can't send to the Divers Hub app over Bluetooth - a Garmin watch, or an Apple Watch with Oceanic+. Bluetooth computers like Shearwater sync straight from the app, no files needed.</p>
+                    @endunless
 
                     @if (session('status'))
                         <div class="dh-logbook-flash" role="status"><span class="material-icons-round" aria-hidden="true">check_circle</span> {{ session('status') }}</div>
@@ -55,8 +58,13 @@
                                 @csrf
                                 <label class="dh-dropzone" id="importDrop" for="importFile">
                                     <span class="material-icons-round dh-dropzone-icon" aria-hidden="true">cloud_upload</span>
-                                    <strong>Drop your logbook here</strong>
-                                    <span class="text-sm text-secondary">or click to choose files · MacDive XML, UDDF, Shearwater (.xml) or Garmin (.fit) dive files - any number at once</span>
+                                    @if ($full)
+                                        <strong>Drop your logbook here</strong>
+                                        <span class="text-sm text-secondary">or click to choose files · MacDive XML, UDDF, Shearwater (.xml) or Garmin (.fit) dive files - any number at once</span>
+                                    @else
+                                        <strong>Drop your dive files here</strong>
+                                        <span class="text-sm text-secondary">or click to choose · Garmin (.fit), Oceanic+ (.uddf) or other single-dive files</span>
+                                    @endif
                                     <button type="button" class="dh-btn dh-btn-ghost-dark dh-dropzone-folder" id="importFolderBtn">
                                         <span class="material-icons-round" aria-hidden="true">folder_open</span>
                                         Choose a folder
@@ -90,6 +98,18 @@
                          Logos live in public/assets/img/import/<key>.png; until a file is
                          there the card shows the source's initials instead. --}}
                     @php
+                        // Adding a few dives: the computers that can't sync over Bluetooth.
+                        $diveSources = [
+                            ['key' => 'garmin', 'name' => 'Garmin', 'badge' => null, 'file' => '.fit, one per dive', 'mono' => 'G',
+                             'steps' => ['On connect.garmin.com (on a computer), open the dive.', 'Click <strong>⚙ &rsaquo; Export Original</strong> and unzip the download.', 'Drop the .fit file above. Several dives? Drop them all at once.'],
+                             'gets' => 'Descent watches: 1-second profile, NDL, stops, CNS, gases, transmitter pressure, and the GPS entry point used to find the site.'],
+                            ['key' => 'oceanic', 'name' => 'Apple Watch · Oceanic+', 'badge' => null, 'file' => '.uddf, whole logbook', 'mono' => 'O+',
+                             'steps' => ['In the Oceanic+ app, open <strong>Logbook</strong>, tap the <strong>&middot;&middot;&middot;</strong> at the top right, then <strong>Export Dives</strong>.', 'Oceanic+ emails you a link: download the .zip, unzip it and drop the .uddf file above.', 'Oceanic+ always exports every dive. That\'s fine - dives already in your logbook are recognised in the review step, so only the new ones are added.'],
+                             'gets' => 'Scuba dives with a profile, snorkel sessions as freedives, and each dive\'s GPS point.'],
+                            ['key' => 'uddf', 'name' => 'Other computers', 'badge' => null, 'file' => '.uddf', 'mono' => 'UDDF',
+                             'steps' => ['From your computer\'s own app (or Subsurface): export the dive as <strong>UDDF</strong>.', 'Drop the .uddf file above.'],
+                             'gets' => 'Profile and gases. Already in your logbook? It\'s recognised in the review step and not added twice.'],
+                        ];
                         $sources = [
                             ['key' => 'macdive', 'name' => 'MacDive', 'badge' => 'Best', 'file' => '.xml', 'mono' => 'MD',
                              'steps' => ['In MacDive, choose <strong>File &rsaquo; Export</strong>.', 'Pick <strong>XML</strong> (not UDDF) and all dives.', 'Drop the .xml file above.'],
@@ -108,9 +128,9 @@
                              'gets' => 'Profile, gases, sites and notes. Rebreather dives are recognised when the app exports setpoints or PPO2; otherwise you tick them in the review step.'],
                         ];
                     @endphp
-                    <h3 class="h5 mt-2 mb-3">Where are your dives?</h3>
+                    <h3 class="h5 mt-2 mb-3">{{ $full ? 'Where are your dives?' : 'Which computer?' }}</h3>
                     <div class="dh-import-sources mb-4">
-                        @foreach ($sources as $src)
+                        @foreach ($full ? $sources : $diveSources as $src)
                             <section class="card dh-import-source" aria-labelledby="src-{{ $src['key'] }}">
                                 <div class="dh-import-source-head">
                                     <span class="dh-import-logo">
@@ -129,7 +149,11 @@
                             </section>
                         @endforeach
                     </div>
-                    <p class="text-xs text-secondary mb-4">Shearwater or Garmin computer? Syncing it with the Divers Hub app gets the same data with no files at all.</p>
+                    @if ($full)
+                        <p class="text-xs text-secondary mb-4">Shearwater or another Bluetooth computer? Syncing it with the Divers Hub app gets the same data with no files at all.</p>
+                    @else
+                        <p class="text-sm text-secondary mb-4">Moving your whole logbook from MacDive, Shearwater Cloud or another app? Use <a href="{{ route('Logbook.import.index', ['full' => 1]) }}">Import your logbook</a> in Logbook settings.</p>
+                    @endif
 
                 </div>
             </div>
