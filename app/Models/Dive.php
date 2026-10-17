@@ -46,6 +46,29 @@ class Dive extends Model
                     || ($dive->exists && !$dive->merged_into_id && Dive::withoutGlobalScope('companions')->where('merged_into_id', $dive->id)->whereNull('deleted_at')->where('entered_deco', true)->exists());
             }
         });
+        // A dive at a catalog site marks that site visited (Pablo,
+        // 2026-10-17: "if a dive has a site we know, we should mark that
+        // site as visited"). Only when the site is set or changed, so a
+        // diver who un-ticks a site by hand isn't overridden on every save.
+        static::saved(function (Dive $dive) {
+            if ($dive->site_id && !$dive->merged_into_id && !$dive->trashed()
+                && ($dive->wasRecentlyCreated || $dive->wasChanged('site_id'))) {
+                self::markSiteVisited((int) $dive->user_id, (int) $dive->site_id, $dive->started_at);
+            }
+        });
+    }
+
+    /** Visited, dated with the earliest dive there. Never un-visits. */
+    public static function markSiteVisited(int $userId, int $siteId, $when = null): void
+    {
+        $when = $when ? \Carbon\Carbon::parse($when) : now();
+        $row = VisitedSite::where('userId', $userId)->where('siteId', $siteId)->first();
+        if (!$row) {
+            VisitedSite::create(['userId' => $userId, 'siteId' => $siteId, 'date' => $when]);
+        } elseif (!$row->date || $when->lt($row->date)) {
+            $row->date = $when;
+            $row->save();
+        }
     }
 
     public static function scanEnteredDeco(array $profile): bool
