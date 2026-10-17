@@ -42,7 +42,10 @@ class DiveMerger
         if ($dive->computer_serial) {
             $q->where(fn ($w) => $w->whereNull('computer_serial')->orWhere('computer_serial', $dive->computer_serial));
         }
-        return $q->first();
+        // Id first, then the row: sorting whole rows (profile JSON) can
+        // overflow MySQL's sort buffer (2026-10-17).
+        $id = $q->value('id');
+        return $id ? Dive::find($id) : null;
     }
 
     /** Seconds between the first dive's end and the second's start (never negative). */

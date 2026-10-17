@@ -116,12 +116,16 @@ class DiveUploadController extends Controller
                 //    app reproduces.
                 if (!$existing) {
                     $ts = strtotime($diveData['datetime']);
-                    $existing = Dive::where('user_id', $user->id)
+                    // Sort ids only, then load: sorting whole rows (profile
+                    // JSON up to ~350 KB) overflows MySQL's 256 KB sort
+                    // buffer - "Out of sort memory" (2026-10-17).
+                    $existingId = Dive::where('user_id', $user->id)
                         ->whereIn('source', ['uddf-import', 'computer-file'])
                         ->whereBetween('started_at', [date('Y-m-d H:i:s', $ts - 180), date('Y-m-d H:i:s', $ts + 180)])
                         ->where(fn ($q) => $q->whereNull('computer_serial')->orWhere('computer_serial', $serial))
                         ->orderByRaw('ABS(TIMESTAMPDIFF(SECOND, started_at, ?))', [date('Y-m-d H:i:s', $ts)])
-                        ->first();
+                        ->value('id');
+                    $existing = $existingId ? Dive::find($existingId) : null;
                 }
 
                 if ($existing && $existing->isCompanion()) {
