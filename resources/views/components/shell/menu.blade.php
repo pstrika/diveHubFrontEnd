@@ -126,14 +126,10 @@
 <div class="dh-menu-group">
     <h6>Planning tools</h6>
     {!! $link('Deco planner', route('DecoPlanner'), 'timer') !!}
-    {{-- Gated to platform admins only for its initial production rollout
-         (Pablo, 2026-10-15) - MultiDivePlannerController itself also
-         enforces this (routes/web.php switched to 'auth' middleware +
-         $this->authorize('manage-users', ...) in every action), this is
-         just keeping a non-admin from seeing a link that would 403. --}}
-    @can('manage-users', App\Models\User::class)
-        {!! $link('Multi dive planner', route('MultiDivePlanner'), 'repeat') !!}
-    @endcan
+    {{-- Registered members only (Pablo, 2026-10-16; admins only before).
+         Signed-out visitors and guest accounts see it locked, which opens
+         the sign-up prompt. MultiDivePlannerController enforces it too. --}}
+    {!! $link('Multi dive planner', route('MultiDivePlanner'), 'repeat', $isGuest) !!}
     {!! $link('Best gases', route('gasplanning'), 'science') !!}
     {!! $link('Gas blending', route('GasBlending'), 'colorize') !!}
 </div>

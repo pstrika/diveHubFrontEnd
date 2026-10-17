@@ -13,11 +13,10 @@ use App\Models\User;
  * as of 2026-10-14 - deliberately no CC/Trimix anywhere in this planner,
  * every dive is Open Circuit, gas is picked by PPO2 alone.
  *
- * Gated to platform admins only (2026-10-15, initial production rollout) -
- * every action below starts with $this->authorize('manage-users',
- * User::class), same enforcement UserManagementController/RolesController
- * use (not just hiding the drawer link - routes/web.php also switched from
- * 'guest' middleware to 'auth' so a non-admin direct URL hit still 403s).
+ * Registered members only, no guest accounts (Pablo, 2026-10-16; was
+ * platform admins only from 2026-10-15 for the initial rollout). 'auth'
+ * middleware on the routes sends signed-out visitors to sign in; every
+ * action below also refuses guest accounts.
  *
  * Same imperial/metric/site-id URL pattern as DecoPlanner (NDLController),
  * for the same reason: one plain canonical URL regardless of units, see
@@ -73,7 +72,7 @@ class MultiDivePlannerController extends Controller
 
     public function show($id = null)
     {
-        $this->authorize('manage-users', User::class);
+        abort_unless(auth()->user()->isNotGuest(), 403);
 
         $deco_unit = auth()->user()->deco_unit ?? 0;
         $currentSite = $id ? Site::findOrFail((int) $id) : null;
@@ -89,7 +88,7 @@ class MultiDivePlannerController extends Controller
 
     public function showImperial($id = null)
     {
-        $this->authorize('manage-users', User::class);
+        abort_unless(auth()->user()->isNotGuest(), 403);
 
         $currentSite = $id ? Site::findOrFail((int) $id) : null;
 
@@ -104,7 +103,7 @@ class MultiDivePlannerController extends Controller
 
     public function showMetric($id = null)
     {
-        $this->authorize('manage-users', User::class);
+        abort_unless(auth()->user()->isNotGuest(), 403);
 
         $currentSite = $id ? Site::findOrFail((int) $id) : null;
 

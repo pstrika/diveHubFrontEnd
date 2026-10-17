@@ -38,7 +38,7 @@ final class NavTabs
         // and gas blending (all the new functionalities we have created since
         // you built that)"). 'gate' = who can open it (see canUse()).
         'logbook'          => ['label' => 'Dive Log', 'short' => 'Log', 'icon' => 'menu_book', 'gate' => 'logbook'],
-        'multidive'        => ['label' => 'Multi Dive Planner', 'short' => 'Multi', 'icon' => 'repeat', 'gate' => 'manage-users'],
+        'multidive'        => ['label' => 'Multi Dive Planner', 'short' => 'Multi', 'icon' => 'repeat', 'gate' => 'member'],
         'blending'         => ['label' => 'Gas Blending', 'short' => 'Blend', 'icon' => 'colorize'],
         'ccr_checklist'    => ['label' => 'rEvo CCR Checklist', 'short' => 'CCR', 'icon' => 'checklist', 'gate' => 'ccrChecklistAccess'],
     ];
@@ -49,6 +49,9 @@ final class NavTabs
         $gate = self::OPTIONS[$key]['gate'] ?? null;
         if ($gate === null) return true;
         if (!$user) return false;
+        if ($gate === 'member') {
+            return $user->isNotGuest();
+        }
         if ($gate === 'logbook') {
             return \App\Http\Middleware\LogbookGate::allows($user);
         }
