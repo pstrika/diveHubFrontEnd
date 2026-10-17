@@ -21,7 +21,7 @@ use Illuminate\Validation\Rule;
 /**
  * Photos, marine life and equipment for the app (Pablo, 2026-10-17: "allow
  * for upload pictures ... allow from the app the tagging of species on
- * pictures and dives"). Contract: DiversHub-Uploader docs/PHOTOS-SPECIES-
+ * pictures and dives"). Contract: docs/app-api/PHOTOS-SPECIES-
  * EQUIPMENT.md (sent to the iOS session). Every change to a dive's photos,
  * species or gear logs 'updated' for that dive in the change feed.
  * Species and equipment are early access: 404 for accounts without it,

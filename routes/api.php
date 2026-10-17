@@ -68,7 +68,7 @@ Route::withoutMiddleware('throttle:api')->middleware(['auth.api:sanctum', 'logbo
     Route::delete('/user-sites/{id}', [\App\Http\Controllers\Api\UserSiteApiController::class, 'destroy'])->where('id', '[0-9]+');
 
     // Photos, marine life, equipment (2026-10-17) - LogbookExtrasApiController,
-    // contract in DiversHub-Uploader docs/PHOTOS-SPECIES-EQUIPMENT.md.
+    // contract in docs/app-api/PHOTOS-SPECIES-EQUIPMENT.md.
     $x = \App\Http\Controllers\Api\LogbookExtrasApiController::class;
     $u = '[0-9a-fA-F-]{36}';
     Route::get('/me/features', [$x, 'features']);
