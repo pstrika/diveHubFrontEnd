@@ -1241,6 +1241,43 @@
                         </div>
                     </div>
 
+                    @if ($equipmentEnabled)
+                        {{-- Equipment (Pablo, 2026-10-17): the gear on this dive. A
+                             configuration adds its items; computers whose serial
+                             matches this dive's are listed automatically. --}}
+                        <div class="card p-0 position-relative mt-3 z-index-2 mb-4" id="diveEquipmentCard">
+                            <div class="dh-calc-inputs-head" data-collapsible-toggle role="button" tabindex="0" aria-expanded="true" aria-controls="diveEquipmentBody">
+                                <span class="material-icons-round" aria-hidden="true">handyman</span>
+                                <h3>Equipment</h3>
+                                <span class="material-icons-round dh-calc-inputs-chevron" aria-hidden="true">expand_less</span>
+                            </div>
+                            <div class="card-body" id="diveEquipmentBody">
+                                <div class="dh-species-chips" id="diveEquipmentChips"></div>
+                                @if ($equipmentItems->isEmpty())
+                                    <p class="text-sm text-secondary mb-0">Your gear list is empty. <a href="{{ route('Equipment.index') }}">Add your equipment</a> to record what you used on each dive.</p>
+                                @else
+                                    <div class="dh-eq-add">
+                                        @if ($equipmentConfigs->isNotEmpty())
+                                            <select id="diveEquipmentConfig" aria-label="Add a configuration">
+                                                <option value="">Add a configuration...</option>
+                                                @foreach ($equipmentConfigs as $c)<option value="{{ $c->uuid }}">{{ $c->name }}</option>@endforeach
+                                            </select>
+                                        @endif
+                                        <select id="diveEquipmentItem" aria-label="Add one piece of gear">
+                                            <option value="">Add one piece of gear...</option>
+                                            @foreach ($equipmentItems->groupBy('category') as $cat => $list)
+                                                <optgroup label="{{ \App\Models\EquipmentItem::CATEGORIES[$cat][0] ?? 'Other' }}">
+                                                    @foreach ($list as $i)<option value="{{ $i->uuid }}">{{ $i->name }}</option>@endforeach
+                                                </optgroup>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <a href="{{ route('Equipment.index') }}" class="text-sm d-inline-block mt-2">My equipment</a>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+
                     @if ($speciesEnabled)
                         {{-- Marine life (Pablo, 2026-10-17): species seen on this dive.
                              dive-species.js. Early access. --}}
@@ -1425,6 +1462,45 @@
                 };
             </script>
             <script src="{{ asset('assets') }}/js/dive-species.js?v={{ config('divehub.version') }}"></script>
+        @endif
+        @if ($equipmentEnabled)
+            <script>
+                (function () {
+                    var list = @json($diveEquipment);
+                    var addUrl = "{{ route('DiveEquipment.add', $dive->id) }}";
+                    var removeUrl = "{{ url('Logbook/' . $dive->id . '/equipment') }}/";
+                    var csrf = "{{ csrf_token() }}";
+                    var chips = document.getElementById('diveEquipmentChips');
+                    function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+                    function send(method, url, body) {
+                        return fetch(url, { method: method, credentials: 'same-origin', headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined })
+                            .then(function (r) { if (!r.ok) throw new Error('Could not save'); return r.json(); });
+                    }
+                    function render() {
+                        chips.innerHTML = list.length ? '' : '<p class="text-sm text-secondary mb-2">No gear recorded on this dive yet.</p>';
+                        list.forEach(function (i) {
+                            var c = document.createElement('span');
+                            c.className = 'dh-species-chip';
+                            c.title = i.category + (i.auto ? ' - matched by serial number' : '');
+                            c.innerHTML = '<span class="material-icons-round" aria-hidden="true" style="color:var(--dh-sea)">' + i.icon + '</span><a href="' + i.url + '">' + esc(i.name) + '</a>'
+                                + (i.auto ? '<span class="dh-species-mine ms-1">auto</span>&nbsp;' : '<button type="button" aria-label="Remove ' + esc(i.name) + '"><span class="material-icons-round" aria-hidden="true">close</span></button>');
+                            var x = c.querySelector('button');
+                            if (x) x.addEventListener('click', function () { send('DELETE', removeUrl + i.uuid).then(function (d) { list = d.equipment; render(); }).catch(function (e) { alert(e.message); }); });
+                            chips.appendChild(c);
+                        });
+                    }
+                    [['diveEquipmentConfig', 'config'], ['diveEquipmentItem', 'item']].forEach(function (pair) {
+                        var sel = document.getElementById(pair[0]);
+                        if (!sel) return;
+                        sel.addEventListener('change', function () {
+                            if (!sel.value) return;
+                            var body = {}; body[pair[1]] = sel.value;
+                            send('POST', addUrl, body).then(function (d) { list = d.equipment; render(); sel.value = ''; }).catch(function (e) { alert(e.message); });
+                        });
+                    });
+                    render();
+                })();
+            </script>
         @endif
         <script src="{{ asset('assets') }}/js/dive-photos.js?v={{ config('divehub.version') }}"></script>
         {{-- PDF export, same libraries + approach as DivePlanner's own export. --}}

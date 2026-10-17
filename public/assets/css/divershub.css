@@ -4770,3 +4770,20 @@ body.dh-photo-viewer-open { overflow: hidden; }
 .dh-species-consent-card h4 { margin: 0 0 8px; color: var(--dh-ink); }
 .dh-species-consent-card p { font-size: .9rem; color: var(--dh-muted); }
 .dh-species-consent-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Equipment (Pablo, 2026-10-17): pages/logbook/equipment/*, dive card. */
+.dh-eq-suggested-list { display: flex; flex-direction: column; gap: 8px; }
+.dh-eq-suggested-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 12px; border-radius: 12px; background: var(--dh-foam); margin: 0; }
+.dh-eq-suggested-item > .material-icons-round { color: var(--dh-sea); }
+.dh-eq-suggested-text { flex: 1; min-width: 0; display: flex; flex-direction: column; color: var(--dh-ink); }
+.dh-eq-thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex: none; }
+.dh-eq-thumb.is-icon { display: inline-flex; align-items: center; justify-content: center; background: var(--dh-foam); color: var(--dh-sea); }
+.dh-eq-row.is-retired { opacity: .6; }
+.dh-eq-service { display: inline-flex; align-items: center; gap: 4px; font-size: .75rem; font-weight: 600; color: var(--dh-muted); }
+.dh-eq-service .material-icons-round { font-size: 14px; }
+.dh-eq-service.is-due { color: var(--dh-warn); }
+.dh-eq-add { display: flex; gap: 8px; flex-wrap: wrap; }
+.dh-eq-add select { height: 36px; border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill); padding: 0 12px; font-size: .85rem; color: var(--dh-ink); background: var(--dh-paper); max-width: 100%; }
+.dh-eq-pick { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.dh-eq-pick legend { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.dh-eq-pick legend .material-icons-round { font-size: 18px; color: var(--dh-sea); }

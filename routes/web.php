@@ -511,6 +511,25 @@ Route::middleware(['auth', 'logbook'])->group(function () {
     Route::post('Logbook/photos/{uuid}/share', 'App\Http\Controllers\DivePhotoController@share')->name('DivePhotos.share');
     Route::get('Logbook/photos/{uuid}/{size}', 'App\Http\Controllers\DivePhotoController@file')->where('size', 'web|thumb')->name('DivePhotos.file');
 });
+// Equipment (Pablo, 2026-10-17) - early access, Pablo only for now.
+Route::middleware(['auth', 'logbook', 'early:equipment'])->group(function () {
+    Route::get('Logbook/equipment', 'App\Http\Controllers\EquipmentController@index')->name('Equipment.index');
+    Route::get('Logbook/equipment/new', 'App\Http\Controllers\EquipmentController@create')->name('Equipment.create');
+    Route::post('Logbook/equipment', 'App\Http\Controllers\EquipmentController@store')->name('Equipment.store');
+    Route::post('Logbook/equipment/suggested', 'App\Http\Controllers\EquipmentController@addSuggested')->name('Equipment.addSuggested');
+    Route::get('Logbook/equipment/configs/new', 'App\Http\Controllers\EquipmentController@configCreate')->name('Equipment.configCreate');
+    Route::post('Logbook/equipment/configs', 'App\Http\Controllers\EquipmentController@configStore')->name('Equipment.configStore');
+    Route::get('Logbook/equipment/configs/{uuid}/edit', 'App\Http\Controllers\EquipmentController@configEdit')->name('Equipment.configEdit');
+    Route::put('Logbook/equipment/configs/{uuid}', 'App\Http\Controllers\EquipmentController@configUpdate')->name('Equipment.configUpdate');
+    Route::delete('Logbook/equipment/configs/{uuid}', 'App\Http\Controllers\EquipmentController@configDestroy')->name('Equipment.configDestroy');
+    Route::get('Logbook/equipment/{uuid}', 'App\Http\Controllers\EquipmentController@show')->name('Equipment.show');
+    Route::get('Logbook/equipment/{uuid}/edit', 'App\Http\Controllers\EquipmentController@edit')->name('Equipment.edit');
+    Route::get('Logbook/equipment/{uuid}/photo', 'App\Http\Controllers\EquipmentController@photo')->name('Equipment.photo');
+    Route::put('Logbook/equipment/{uuid}', 'App\Http\Controllers\EquipmentController@update')->name('Equipment.update');
+    Route::delete('Logbook/equipment/{uuid}', 'App\Http\Controllers\EquipmentController@destroy')->name('Equipment.destroy');
+    Route::post('Logbook/{id}/equipment', 'App\Http\Controllers\EquipmentController@diveAdd')->where('id', '[0-9]+')->name('DiveEquipment.add');
+    Route::delete('Logbook/{id}/equipment/{uuid}', 'App\Http\Controllers\EquipmentController@diveRemove')->where('id', '[0-9]+')->name('DiveEquipment.remove');
+});
 // Marine life (Pablo, 2026-10-17) - early access, Pablo only for now.
 Route::middleware(['auth', 'logbook', 'early:species'])->group(function () {
     Route::get('Logbook/species', 'App\Http\Controllers\SpeciesController@index')->name('Species.index');

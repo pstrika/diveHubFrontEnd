@@ -748,7 +748,10 @@ class LogbookController extends Controller
             'speciesAll' => $speciesOn ? \App\Models\Species::visibleTo($request->user()->id)->orderBy('common_name')->get()
                 ->map(fn ($s) => ['uuid' => $s->uuid, 'name' => $s->common_name, 'sci' => $s->scientific_name, 'cat' => $s->categoryLabel(),
                     'alt' => implode(' ', $s->other_names ?? [])])->values() : [],
-            'equipmentEnabled' => \App\Support\EarlyAccess::allows($request->user(), 'equipment'),
+            'equipmentEnabled' => $eqOn = \App\Support\EarlyAccess::allows($request->user(), 'equipment'),
+            'diveEquipment' => $eqOn ? \App\Http\Controllers\EquipmentController::diveList($dive) : [],
+            'equipmentItems' => $eqOn ? \App\Models\EquipmentItem::where('user_id', $request->user()->id)->whereNull('retired_at')->orderBy('name')->get(['uuid', 'name', 'category']) : collect(),
+            'equipmentConfigs' => $eqOn ? \App\Models\EquipmentConfig::where('user_id', $request->user()->id)->orderBy('name')->get(['uuid', 'name']) : collect(),
         ]);
     }
 

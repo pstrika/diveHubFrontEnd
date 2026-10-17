@@ -31,6 +31,12 @@
                                 <span class="material-icons-round" aria-hidden="true">place</span>
                                 My sites
                             </a>
+                            @if (\App\Support\EarlyAccess::allows(auth()->user(), 'equipment'))
+                                <a href="{{ route('Equipment.index') }}" class="dh-btn dh-btn-ghost-dark">
+                                    <span class="material-icons-round" aria-hidden="true">handyman</span>
+                                    Equipment
+                                </a>
+                            @endif
                             @if (\App\Support\EarlyAccess::allows(auth()->user(), 'species'))
                                 <a href="{{ route('Species.index') }}" class="dh-btn dh-btn-ghost-dark">
                                     <span class="material-icons-round" aria-hidden="true">set_meal</span>
