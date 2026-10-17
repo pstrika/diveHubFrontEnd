@@ -85,7 +85,10 @@ class GoogleController extends Controller
 
                 Auth::login($newUser, true);
                 session()->put('dh_show_splash', true);
-                return redirect()->intended('MyDashboard');
+                // New account from the app's sign-in sheet: the welcome
+                // wizard first, then back to the app.
+                return \App\Http\Controllers\OnboardingController::appSignUpRedirect()
+                    ?? redirect()->intended('MyDashboard');
             }
         } catch (\Exception $e) {
             dd($e->getMessage());

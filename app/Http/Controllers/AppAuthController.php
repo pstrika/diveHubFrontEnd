@@ -36,7 +36,7 @@ class AppAuthController extends Controller
         $code = AppLoginCode::issue($request->user()->id);
         // Set by the Authenticate middleware when a guest was bounced from
         // here to the sign-in page (hides the install-as-app prompt there).
-        $request->session()->forget('app_login');
+        $request->session()->forget(['app_login', 'app_return']);
 
         return redirect()->away(
             'divershub://auth?code=' . urlencode($code->code) . '&state=' . urlencode($state)

@@ -571,9 +571,15 @@
                     <h1 class="dh-wizard-title">You are set, {{ Str::before($user->name, ' ') }}</h1>
                     <p class="dh-wizard-lead">Everything you picked can be changed any time under My Profile. Here is where to start.</p>
                     <div class="dh-wizard-actions dh-wizard-actions-stack">
+                        @if (session('app_return'))
+                            {{-- Signed up from the app (OnboardingController::appSignUpRedirect):
+                                 this finishes the app's sign-in. --}}
+                            <a class="dh-btn dh-btn-primary" href="{{ session('app_return') }}"><span class="material-icons-round">phone_iphone</span>Back to the app</a>
+                        @else
                         <a class="dh-btn dh-btn-primary" href="{{ route('MyDashboard') }}"><span class="material-icons-round">dashboard</span>My dashboard</a>
                         <a class="dh-btn dh-btn-ghost-dark" href="{{ route('Trips') }}?range=weekend{{ $favOperators ? '&op=' . implode(',', $favOperators) : '' }}"><span class="material-icons-round">directions_boat</span>Boats this weekend</a>
                         <a class="dh-btn dh-btn-ghost-dark" href="{{ route('MyGroups') }}"><span class="material-icons-round">groups</span>My groups</a>
+                        @endif
                         <button type="button" class="dh-btn dh-btn-ghost-dark" id="dhTourOpen"><span class="material-icons-round">tour</span>Take a quick tour</button>
                     </div>
 

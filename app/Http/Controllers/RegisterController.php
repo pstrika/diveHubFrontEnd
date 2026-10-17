@@ -90,15 +90,8 @@ class RegisterController extends Controller
     
         $response = GA4::sendEvent($eventData);*/
 
-        // Signed up from the app's sign-in sheet (Authenticate flagged the
-        // session app_login and remembered /app/login?state=... as the
-        // intended URL): finish the app's sign-in instead of the profile
-        // page, so the app gets its divershub://auth callback (Pablo, via
-        // the uploader session, 2026-10-16: "make sign-up return to the
-        // app"). Google sign-up already returns there via intended().
-        if (session('app_login') && str_contains((string) session('url.intended'), '/app/login')) {
-            return redirect()->intended(route('AppLogin'));
-        }
-        return redirect('/user-profile');
+        // Signed up from the app's sign-in sheet: the welcome wizard, then
+        // back to the app (OnboardingController::appSignUpRedirect).
+        return OnboardingController::appSignUpRedirect() ?? redirect('/user-profile');
     } 
 }

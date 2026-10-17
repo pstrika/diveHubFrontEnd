@@ -57,6 +57,24 @@ class OnboardingController extends Controller
         return self::needs($user) && !$request->cookie(self::SKIP_COOKIE) && !$request->session()->get('welcome_seen');
     }
 
+    /**
+     * A new account made from the app's sign-in sheet (Authenticate flagged
+     * the session app_login and remembered /app/login?state=... as the
+     * intended URL): run the wizard first, then hand back to the app
+     * (Pablo, 2026-10-16: signing up in the app shouldn't skip the welcome
+     * wizard). The /app/login URL is parked as app_return; the wizard's
+     * last step and "Skip for now" send the diver there, which issues the
+     * app's code. Null when this sign-up didn't come from the app.
+     */
+    public static function appSignUpRedirect(): ?\Illuminate\Http\RedirectResponse
+    {
+        if (!session('app_login') || !str_contains((string) session('url.intended'), '/app/login')) {
+            return null;
+        }
+        session()->put('app_return', session()->pull('url.intended'));
+        return redirect()->route('welcome');
+    }
+
     public function show(Request $request)
     {
         $user = User::findOrFail(auth()->id());
@@ -267,7 +285,9 @@ class OnboardingController extends Controller
     /** "Skip for now": two weeks of quiet, then offer once more if still incomplete. */
     public function skip(Request $request)
     {
-        return redirect()->route('MyDashboard')
+        // Started from the app: back to it, not the dashboard.
+        $to = $request->session()->get('app_return') ?: route('MyDashboard');
+        return redirect($to)
             ->withCookie(cookie(self::SKIP_COOKIE, '1', self::SKIP_DAYS * 24 * 60));
     }
 }
