@@ -23,4 +23,11 @@ return [
     // while it's in TestFlight: the Logbook page then says "coming soon".
     'app_store_url' => null,
 
+    // Features open to a few accounts only (App\Support\EarlyAccess).
+    // Lower-case emails; '*' opens a feature to every logbook user.
+    'early_access' => [
+        'equipment' => ['pstrika@gmail.com'],
+        'species' => ['pstrika@gmail.com'],
+    ],
+
 ];

@@ -1241,6 +1241,56 @@
                         </div>
                     </div>
 
+                    {{-- Photos (Pablo, 2026-10-17): up to 20, private to the diver;
+                         each can be offered to the site's public page, which goes
+                         through the normal photo review. dive-photos.js. --}}
+                    <div class="card p-0 position-relative mt-3 z-index-2 mb-4" id="divePhotosCard">
+                        <div class="dh-calc-inputs-head" data-collapsible-toggle role="button" tabindex="0" aria-expanded="true" aria-controls="divePhotosBody">
+                            <span class="material-icons-round" aria-hidden="true">photo_library</span>
+                            <h3>Photos <span class="dh-dive-photos-count" id="divePhotosCount">{{ count($photos) }}/{{ \App\Models\DivePhoto::MAX_PER_DIVE }}</span></h3>
+                            <span class="material-icons-round dh-calc-inputs-chevron" aria-hidden="true">expand_less</span>
+                        </div>
+                        <div class="card-body" id="divePhotosBody">
+                            <div class="dh-dive-photos-grid" id="divePhotosGrid"></div>
+                            <p class="text-sm text-secondary mb-2" id="divePhotosEmpty" @if(count($photos)) hidden @endif>
+                                No photos yet. They stay private to you{{ $dive->site_id ? ' - you can choose to share any of them on the site page' : '' }}.
+                            </p>
+                            <label class="dh-btn dh-btn-ghost-dark mb-0" id="divePhotosAdd">
+                                <span class="material-icons-round" aria-hidden="true">add_a_photo</span>
+                                Add photos
+                                <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden id="divePhotosInput">
+                            </label>
+                            <span class="text-sm text-secondary ms-2" id="divePhotosStatus" role="status"></span>
+                        </div>
+                    </div>
+
+                    {{-- Photo viewer: caption, share to the site page, species, delete. --}}
+                    <div class="dh-photo-viewer" id="dhPhotoViewer" hidden role="dialog" aria-modal="true" aria-label="Photo">
+                        <button type="button" class="dh-photo-viewer-close" data-pv-close aria-label="Close"><span class="material-icons-round" aria-hidden="true">close</span></button>
+                        <button type="button" class="dh-photo-viewer-nav is-prev" data-pv-prev aria-label="Previous photo"><span class="material-icons-round" aria-hidden="true">chevron_left</span></button>
+                        <button type="button" class="dh-photo-viewer-nav is-next" data-pv-next aria-label="Next photo"><span class="material-icons-round" aria-hidden="true">chevron_right</span></button>
+                        <figure class="dh-photo-viewer-figure"><img alt="" id="dhPhotoViewerImg"></figure>
+                        <div class="dh-photo-viewer-panel">
+                            <div class="dh-photo-viewer-meta text-xs" id="dhPhotoViewerMeta"></div>
+                            <div class="dh-photo-viewer-caption">
+                                <input type="text" maxlength="500" placeholder="Add a caption" id="dhPhotoViewerCaption" aria-label="Caption">
+                            </div>
+                            @if ($speciesEnabled)
+                                <div class="dh-photo-viewer-species" id="dhPhotoViewerSpecies"></div>
+                            @endif
+                            <div class="dh-photo-viewer-actions">
+                                @if ($dive->site_id)
+                                    <label class="dh-photo-share">
+                                        <input type="checkbox" id="dhPhotoViewerShare">
+                                        <span>Show on <strong>{{ $siteName }}</strong>'s page</span>
+                                        <span class="dh-photo-share-status" id="dhPhotoViewerShareStatus"></span>
+                                    </label>
+                                @endif
+                                <button type="button" class="dh-btn dh-btn-ghost-dark" id="dhPhotoViewerDelete"><span class="material-icons-round" aria-hidden="true">delete</span>Delete</button>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -1329,12 +1379,21 @@
             ];
             @endphp
             window.dhDivePrint = @json($printData);
+            window.dhDivePhotos = {
+                photos: @json($photos),
+                max: {{ \App\Models\DivePhoto::MAX_PER_DIVE }},
+                uploadUrl: "{{ route('DivePhotos.store', $dive->id) }}",
+                orderUrl: "{{ route('DivePhotos.reorder', $dive->id) }}",
+                deleteUrl: "{{ url('Logbook/photos') }}/",
+                csrf: "{{ csrf_token() }}",
+            };
         </script>
         <script src="{{ asset('assets') }}/js/dh-select.js?v={{ config('divehub.version') }}"></script>
         <script src="{{ asset('assets') }}/js/dh-units.js?v={{ config('divehub.version') }}"></script>
         <script src="{{ asset('assets') }}/js/dh-tanks.js?v={{ config('divehub.version') }}"></script>
         <script src="{{ asset('assets') }}/js/dive-details.js?v={{ config('divehub.version') }}"></script>
         <script src="{{ asset('assets') }}/js/dive-details-form.js?v={{ config('divehub.version') }}"></script>
+        <script src="{{ asset('assets') }}/js/dive-photos.js?v={{ config('divehub.version') }}"></script>
         {{-- PDF export, same libraries + approach as DivePlanner's own export. --}}
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

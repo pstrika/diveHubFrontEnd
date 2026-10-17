@@ -55,7 +55,7 @@ class DiverPhotoController extends Controller
             'status' => 'pending',
         ]);
 
-        $this->notifyAdmins($site);
+        self::notifyAdmins($site);
 
         return back()->with('msg', "Thanks! Your picture is pending review and will show on {$site->name}'s page once approved.");
     }
@@ -71,7 +71,7 @@ class DiverPhotoController extends Controller
     }
 
     /** Same "notify every admin" pattern as App\Support\ConversationLog - the Picture Management console otherwise has no other "someone submitted a photo" alert. */
-    private function notifyAdmins(Site $site): void
+    public static function notifyAdmins(Site $site): void
     {
         $adminIds = User::where('role_id', 1)->pluck('id');
         if ($adminIds->isEmpty()) {

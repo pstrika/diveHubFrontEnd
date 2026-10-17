@@ -1,0 +1,92 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
+
+/**
+ * One piece of the diver's gear (Pablo, 2026-10-17). A computer whose
+ * serial_number matches a dive's computer_serial counts as used on that
+ * dive automatically; everything else is recorded in dive_equipment.
+ * Photo files live in storage/app/equipment/{user_id}/ (private).
+ */
+class EquipmentItem extends Model
+{
+    use SoftDeletes;
+
+    protected $fillable = [
+        'uuid', 'user_id', 'category', 'name', 'manufacturer', 'model', 'serial_number',
+        'purchased_on', 'last_service_on', 'notes', 'photo', 'retired_at',
+    ];
+
+    protected $casts = ['purchased_on' => 'date', 'last_service_on' => 'date', 'retired_at' => 'datetime'];
+
+    public const CATEGORIES = [
+        'regulator' => ['Regulators', 'air'],
+        'computer' => ['Computers', 'watch'],
+        'bcd' => ['BCDs', 'checkroom'],
+        'tank' => ['Tanks', 'propane_tank'],
+        'mask' => ['Masks', 'visibility'],
+        'fins' => ['Fins', 'water'],
+        'camera' => ['Cameras', 'photo_camera'],
+        'other' => ['Other', 'category'],
+    ];
+
+    protected static function booted()
+    {
+        static::creating(fn (EquipmentItem $i) => $i->uuid ??= (string) Str::uuid());
+    }
+
+    public function categoryLabel(): string
+    {
+        return self::CATEGORIES[$this->category][0] ?? 'Other';
+    }
+
+    public function icon(): string
+    {
+        return self::CATEGORIES[$this->category][1] ?? 'category';
+    }
+
+    public function photoPath(): ?string
+    {
+        return $this->photo ? storage_path('app/equipment/' . $this->user_id . '/' . $this->photo) : null;
+    }
+
+    public function photoUrl(): ?string
+    {
+        return $this->photo ? route('Equipment.photo', $this->uuid) . '?v=' . substr(md5($this->photo), 0, 6) : null;
+    }
+
+    /** "Shearwater Perdix 2" - what lists show. */
+    public function label(): string
+    {
+        return $this->name;
+    }
+
+    /** Ids of the diver's dives that used this item (explicit, or the computer's serial). */
+    public function diveIds(): array
+    {
+        $ids = \DB::table('dive_equipment')->where('equipment_item_id', $this->id)->pluck('dive_id')->all();
+        if ($this->category === 'computer' && $this->serial_number) {
+            $bySerial = Dive::withoutGlobalScope('companions')->where('user_id', $this->user_id)
+                ->where('computer_serial', $this->serial_number)
+                ->get(['id', 'merged_into_id'])
+                ->map(fn ($d) => $d->merged_into_id ?: $d->id)->all();
+            $ids = array_merge($ids, $bySerial);
+        }
+        return array_values(array_unique(array_map('intval', $ids)));
+    }
+
+    public function toApi(): array
+    {
+        return [
+            'uuid' => $this->uuid, 'category' => $this->category, 'name' => $this->name,
+            'manufacturer' => $this->manufacturer, 'model' => $this->model, 'serial_number' => $this->serial_number,
+            'purchased_on' => $this->purchased_on?->toDateString(), 'last_service_on' => $this->last_service_on?->toDateString(),
+            'notes' => $this->notes, 'photo_url' => $this->photoUrl(), 'retired' => (bool) $this->retired_at,
+            'updated_at' => $this->updated_at?->toIso8601String(),
+        ];
+    }
+}

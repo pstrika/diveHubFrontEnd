@@ -179,6 +179,24 @@ class Dive extends Model
         return $this->belongsTo(UserSite::class);
     }
 
+    /** Photos on this dive, in the diver's order (Pablo, 2026-10-17). */
+    public function photos(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(DivePhoto::class)->orderBy('position')->orderBy('id');
+    }
+
+    /** Species seen on this dive. */
+    public function species(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Species::class, 'dive_species')->withPivot('count', 'notes')->withTimestamps();
+    }
+
+    /** Gear recorded on this dive (computers matched by serial aren't rows here). */
+    public function equipment(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(EquipmentItem::class, 'dive_equipment')->withPivot('equipment_config_id')->withTimestamps();
+    }
+
     /**
      * Where this dive happened, whichever of the three ways it was tagged:
      * a catalog site (site_id), one of the diver's own sites

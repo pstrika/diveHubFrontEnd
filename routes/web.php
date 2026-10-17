@@ -503,6 +503,13 @@ Route::middleware(['auth', 'logbook'])->group(function () {
     Route::get('Logbook/sites/{id}/edit', 'App\Http\Controllers\UserSiteController@edit')->where('id', '[0-9]+')->name('Logbook.sites.edit');
     Route::put('Logbook/sites/{id}', 'App\Http\Controllers\UserSiteController@update')->where('id', '[0-9]+')->name('Logbook.sites.update');
     Route::delete('Logbook/sites/{id}', 'App\Http\Controllers\UserSiteController@destroy')->where('id', '[0-9]+')->name('Logbook.sites.destroy');
+    // Dive photos (Pablo, 2026-10-17) - private, owner-only files.
+    Route::post('Logbook/{id}/photos', 'App\Http\Controllers\DivePhotoController@store')->where('id', '[0-9]+')->name('DivePhotos.store');
+    Route::post('Logbook/{id}/photos/order', 'App\Http\Controllers\DivePhotoController@reorder')->where('id', '[0-9]+')->name('DivePhotos.reorder');
+    Route::patch('Logbook/photos/{uuid}', 'App\Http\Controllers\DivePhotoController@update')->name('DivePhotos.update');
+    Route::delete('Logbook/photos/{uuid}', 'App\Http\Controllers\DivePhotoController@destroy')->name('DivePhotos.destroy');
+    Route::post('Logbook/photos/{uuid}/share', 'App\Http\Controllers\DivePhotoController@share')->name('DivePhotos.share');
+    Route::get('Logbook/photos/{uuid}/{size}', 'App\Http\Controllers\DivePhotoController@file')->where('size', 'web|thumb')->name('DivePhotos.file');
 });
 Route::post('Logbook/{id}/conditions', 'App\Http\Controllers\LogbookController@updateConditions')->where('id', '[0-9]+')->middleware(['auth', 'logbook'])->name('DiveDetails.updateConditions');
 Route::get('Logbook/users/search', 'App\Http\Controllers\LogbookController@searchUsers')->middleware(['auth', 'logbook'])->name('Logbook.searchUsers');

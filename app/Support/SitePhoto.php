@@ -261,6 +261,29 @@ final class SitePhoto
         return $useImagick ? self::makeCopiesWithImagick($src, $file, $pending) : self::makeCopiesWithGd($src, $file, $size, $pending);
     }
 
+    /**
+     * Resized WebP copies of any image file to any paths (dest => max
+     * width), rotation baked in - what makeCopies() does for img/sites,
+     * for callers that keep their files elsewhere (DivePhoto, private).
+     * Never throws; false on failure (logged).
+     *
+     * @param array<string,int> $pending dest path => max width
+     */
+    public static function resizeTo(string $src, array $pending): bool
+    {
+        $useImagick = self::canUseImagick();
+        if (!$useImagick && !self::canUseGd()) {
+            Log::warning("SitePhoto: no WebP-capable backend (GD or Imagick) for $src");
+            return false;
+        }
+        $size = @getimagesize($src);
+        if (!$size || $size[0] * $size[1] > self::MAX_PIXELS) {
+            Log::warning("SitePhoto: can't resize $src (" . ($size ? "{$size[0]}x{$size[1]}" : 'unreadable') . ')');
+            return false;
+        }
+        return $useImagick ? self::makeCopiesWithImagick($src, basename($src), $pending) : self::makeCopiesWithGd($src, basename($src), $size, $pending);
+    }
+
     /** @param array<string,int> $pending dest path => max width */
     private static function makeCopiesWithImagick(string $src, string $file, array $pending): bool
     {
@@ -368,7 +391,9 @@ final class SitePhoto
         if ($w <= $maxWidth) {
             return $image;
         }
-        $copy = imagescale($image, $maxWidth, -1, IMG_BICUBIC);
+        // Some GD builds return false for IMG_BICUBIC (seen locally,
+        // 2026-10-17: every "thumb" came out full size); bilinear always works.
+        $copy = @imagescale($image, $maxWidth, -1, IMG_BICUBIC) ?: @imagescale($image, $maxWidth, -1, IMG_BILINEAR_FIXED);
         return $copy ?: $image;
     }
 
