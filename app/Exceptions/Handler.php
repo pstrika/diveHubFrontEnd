@@ -48,4 +48,18 @@ class Handler extends ExceptionHandler
 
         return parent::render($request, $exception);
     }
+
+    /**
+     * API routes always answer a missing/expired token with a JSON 401,
+     * never a redirect to the sign-in page - even an image request that
+     * doesn't ask for JSON (iOS session, 2026-10-17: GET /api/photos/{uuid}/web
+     * without a token got a 302).
+     */
+    protected function unauthenticated($request, \Illuminate\Auth\AuthenticationException $exception)
+    {
+        if ($request->is('api/*')) {
+            return response()->json(['message' => $exception->getMessage()], 401);
+        }
+        return parent::unauthenticated($request, $exception);
+    }
 }
