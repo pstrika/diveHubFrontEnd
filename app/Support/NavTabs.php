@@ -50,7 +50,7 @@ final class NavTabs
         if ($gate === null) return true;
         if (!$user) return false;
         if ($gate === 'logbook') {
-            return in_array(strtolower((string) $user->email), array_map('strtolower', config('divehub.logbook_allowed_emails', [])), true);
+            return \App\Http\Middleware\LogbookGate::allows($user);
         }
         return $user->can($gate, \App\Models\User::class);
     }

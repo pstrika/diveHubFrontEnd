@@ -1148,6 +1148,7 @@ body.dh-ccr-bg[data-theme="dark"] .dh-ccr-alarm-wrap .input-group-text { positio
 
 /* Drawer extras: unread badge, translator block. */
 .dh-menu-badge { margin-left: auto; background: var(--dh-poor); color: #fff; font-size: .7rem; font-weight: 700; border-radius: var(--dh-radius-pill); padding: 2px 8px; }
+.dh-menu-badge.is-beta { background: var(--dh-sea); font-size: .6rem; letter-spacing: .05em; text-transform: uppercase; }
 .dh-menu-translate { padding: 0 12px; }
 .dh-trip-hour-tbd { font-size: .9rem; color: var(--dh-muted); }
 

@@ -466,7 +466,7 @@
                              "a link from the user profile setting to the logbook setting.
                              Putting all the settings in one place is overkilling"). Only for
                              accounts the logbook is open to (LogbookGate). --}}
-                        @if (in_array(strtolower($user->email), array_map('strtolower', config('divehub.logbook_allowed_emails', [])), true))
+                        @if (\App\Http\Middleware\LogbookGate::allows($user))
                             <div class="dh-profile-card">
                                 <div class="dh-profile-card-head">
                                     <h6 class="dh-panel-title">Logbook</h6>

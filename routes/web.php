@@ -467,7 +467,7 @@ Route::post('use-google-picture', 'App\Http\Controllers\UserController@useGoogle
 
 // Diver logbook (Pablo, 2026-10-14) - see LogbookController's docblock for
 // what's phase 1 vs. docs/roadmap.md #9's deferred phases.
-// 'logbook' = early-access gate (config/divehub.php logbook_allowed_emails).
+// 'logbook' = registered members only, no guest accounts (LogbookGate).
 Route::get('Logbook', 'App\Http\Controllers\LogbookController@index')->middleware(['auth', 'logbook'])->name('Logbook');
 Route::get('Logbook/{id}', 'App\Http\Controllers\LogbookController@show')->where('id', '[0-9]+')->middleware(['auth', 'logbook'])->name('DiveDetails');
 Route::delete('Logbook/{id}', 'App\Http\Controllers\LogbookController@destroy')->where('id', '[0-9]+')->middleware(['auth', 'logbook'])->name('DiveDetails.destroy');

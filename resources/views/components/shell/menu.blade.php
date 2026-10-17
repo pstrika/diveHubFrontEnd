@@ -36,7 +36,7 @@
         }
         return '<span class="material-icons-round" aria-hidden="true">' . $icon . '</span>';
     };
-    $link = function (string $label, string $href, string $icon, bool $locked = false) use ($iconHtml) {
+    $link = function (string $label, string $href, string $icon, bool $locked = false, ?string $badge = null) use ($iconHtml) {
         if ($locked) {
             return '<a class="dh-menu-link is-locked" href="#" onclick="event.preventDefault();showModalGuest();">'
                 . $iconHtml($icon)
@@ -45,7 +45,9 @@
         }
         return '<a class="dh-menu-link" href="' . $href . '">'
             . $iconHtml($icon)
-            . '<span>' . e($label) . '</span></a>';
+            . '<span>' . e($label) . '</span>'
+            . ($badge ? '<span class="dh-menu-badge is-beta">' . e($badge) . '</span>' : '')
+            . '</a>';
     };
 @endphp
 
@@ -74,8 +76,9 @@
             {!! $link('Finish setting up your profile', route('welcome'), 'tune') !!}
         @endif
         {!! $link('My Calendar', route('MyCalendar'), 'event') !!}
-        @if(in_array(strtolower((string) auth()->user()->email), config('divehub.logbook_allowed_emails', []), true))
-            {!! $link('My Logbook', route('Logbook'), 'menu_book') !!}
+        @if(\App\Http\Middleware\LogbookGate::allows(auth()->user()))
+            {{-- Beta badge (Pablo, 2026-10-16) now the logbook is open to every member. --}}
+            {!! $link('My Logbook', route('Logbook'), 'menu_book', false, 'Beta') !!}
         @endif
         {!! $link('My Groups', route('MyGroups'), 'groups') !!}
         {!! $link('My Visited Sites', route('MyVisitedSites'), 'check_circle') !!}

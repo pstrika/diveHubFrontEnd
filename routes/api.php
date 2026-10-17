@@ -22,7 +22,7 @@ Route::middleware('auth.api:sanctum')->post('/blog-articles', [\App\Http\Control
 
 // Native dive-computer uploader apps (iOS first) - see DiveUploadController's
 // docblock for the batch/idempotency contract.
-// 'logbook' = early-access gate (config/divehub.php logbook_allowed_emails);
+// 'logbook' = registered members only, no guest accounts (LogbookGate);
 // the token exchange below stays ungated - its one-time code can only come
 // from the already-gated web AppLogin route.
 // 'throttle:logbook-sync' (600/min per user, RouteServiceProvider) replaces
