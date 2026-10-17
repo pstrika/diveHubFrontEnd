@@ -1241,6 +1241,23 @@
                         </div>
                     </div>
 
+                    @if ($speciesEnabled)
+                        {{-- Marine life (Pablo, 2026-10-17): species seen on this dive.
+                             dive-species.js. Early access. --}}
+                        <div class="card p-0 position-relative mt-3 z-index-2 mb-4" id="diveSpeciesCard">
+                            <div class="dh-calc-inputs-head" data-collapsible-toggle role="button" tabindex="0" aria-expanded="true" aria-controls="diveSpeciesBody">
+                                <span class="material-icons-round" aria-hidden="true">set_meal</span>
+                                <h3>Marine life</h3>
+                                <span class="material-icons-round dh-calc-inputs-chevron" aria-hidden="true">expand_less</span>
+                            </div>
+                            <div class="card-body" id="diveSpeciesBody">
+                                <div class="dh-species-chips" id="diveSpeciesChips"></div>
+                                <div class="dh-species-picker" id="diveSpeciesPicker"></div>
+                                <a href="{{ route('Species.index') }}" class="text-sm">All marine life</a>
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- Photos (Pablo, 2026-10-17): up to 20, private to the diver;
                          each can be offered to the site's public page, which goes
                          through the normal photo review. dive-photos.js. --}}
@@ -1393,6 +1410,22 @@
         <script src="{{ asset('assets') }}/js/dh-tanks.js?v={{ config('divehub.version') }}"></script>
         <script src="{{ asset('assets') }}/js/dive-details.js?v={{ config('divehub.version') }}"></script>
         <script src="{{ asset('assets') }}/js/dive-details-form.js?v={{ config('divehub.version') }}"></script>
+        @if ($speciesEnabled)
+            <script>
+                window.dhDiveSpecies = {
+                    all: @json($speciesAll),
+                    tagged: @json($speciesTagged),
+                    tagUrl: "{{ route('DiveSpecies.tag', $dive->id) }}",
+                    untagUrl: "{{ url('Logbook/' . $dive->id . '/species') }}/",
+                    photoUrl: "{{ url('Logbook/photos') }}/",
+                    shareSightings: @json($dive->user?->share_sightings ?? auth()->user()->share_sightings),
+                    shareUrl: "{{ route('Species.shareSightings') }}",
+                    newUrl: "{{ route('Species.create') }}",
+                    csrf: "{{ csrf_token() }}",
+                };
+            </script>
+            <script src="{{ asset('assets') }}/js/dive-species.js?v={{ config('divehub.version') }}"></script>
+        @endif
         <script src="{{ asset('assets') }}/js/dive-photos.js?v={{ config('divehub.version') }}"></script>
         {{-- PDF export, same libraries + approach as DivePlanner's own export. --}}
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

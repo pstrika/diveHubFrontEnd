@@ -511,6 +511,21 @@ Route::middleware(['auth', 'logbook'])->group(function () {
     Route::post('Logbook/photos/{uuid}/share', 'App\Http\Controllers\DivePhotoController@share')->name('DivePhotos.share');
     Route::get('Logbook/photos/{uuid}/{size}', 'App\Http\Controllers\DivePhotoController@file')->where('size', 'web|thumb')->name('DivePhotos.file');
 });
+// Marine life (Pablo, 2026-10-17) - early access, Pablo only for now.
+Route::middleware(['auth', 'logbook', 'early:species'])->group(function () {
+    Route::get('Logbook/species', 'App\Http\Controllers\SpeciesController@index')->name('Species.index');
+    Route::get('Logbook/species/new', 'App\Http\Controllers\SpeciesController@create')->name('Species.create');
+    Route::post('Logbook/species', 'App\Http\Controllers\SpeciesController@store')->name('Species.store');
+    Route::get('Logbook/species/{uuid}', 'App\Http\Controllers\SpeciesController@show')->name('Species.show');
+    Route::get('Logbook/species/{uuid}/edit', 'App\Http\Controllers\SpeciesController@edit')->name('Species.edit');
+    Route::put('Logbook/species/{uuid}', 'App\Http\Controllers\SpeciesController@update')->name('Species.update');
+    Route::delete('Logbook/species/{uuid}', 'App\Http\Controllers\SpeciesController@destroy')->name('Species.destroy');
+    Route::post('Logbook/{id}/species', 'App\Http\Controllers\DiveSpeciesController@tagDive')->where('id', '[0-9]+')->name('DiveSpecies.tag');
+    Route::delete('Logbook/{id}/species/{uuid}', 'App\Http\Controllers\DiveSpeciesController@untagDive')->where('id', '[0-9]+')->name('DiveSpecies.untag');
+    Route::post('Logbook/photos/{photo}/species', 'App\Http\Controllers\DiveSpeciesController@tagPhoto')->name('PhotoSpecies.tag');
+    Route::delete('Logbook/photos/{photo}/species/{uuid}', 'App\Http\Controllers\DiveSpeciesController@untagPhoto')->name('PhotoSpecies.untag');
+    Route::post('Logbook/settings/share-sightings', 'App\Http\Controllers\DiveSpeciesController@shareSightings')->name('Species.shareSightings');
+});
 Route::post('Logbook/{id}/conditions', 'App\Http\Controllers\LogbookController@updateConditions')->where('id', '[0-9]+')->middleware(['auth', 'logbook'])->name('DiveDetails.updateConditions');
 Route::get('Logbook/users/search', 'App\Http\Controllers\LogbookController@searchUsers')->middleware(['auth', 'logbook'])->name('Logbook.searchUsers');
 

@@ -31,6 +31,12 @@
                                 <span class="material-icons-round" aria-hidden="true">place</span>
                                 My sites
                             </a>
+                            @if (\App\Support\EarlyAccess::allows(auth()->user(), 'species'))
+                                <a href="{{ route('Species.index') }}" class="dh-btn dh-btn-ghost-dark">
+                                    <span class="material-icons-round" aria-hidden="true">set_meal</span>
+                                    Marine life
+                                </a>
+                            @endif
                             <a href="{{ route('Logbook.duplicates') }}" class="dh-btn dh-btn-ghost-dark" title="Dives logged by more than one computer">
                                 <span class="material-icons-round" aria-hidden="true">devices</span>
                                 Duplicates

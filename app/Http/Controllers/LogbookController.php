@@ -743,7 +743,11 @@ class LogbookController extends Controller
             'mergeCandidate' => \App\Support\DiveMerger::nextCandidate($dive),
             // Photos card (Pablo, 2026-10-17).
             'photos' => $dive->photos()->with('species')->get()->map(fn ($p) => \App\Http\Controllers\DivePhotoController::card($p))->values(),
-            'speciesEnabled' => \App\Support\EarlyAccess::allows($request->user(), 'species'),
+            'speciesEnabled' => $speciesOn = \App\Support\EarlyAccess::allows($request->user(), 'species'),
+            'speciesTagged' => $speciesOn ? \App\Http\Controllers\DiveSpeciesController::diveList($dive) : [],
+            'speciesAll' => $speciesOn ? \App\Models\Species::visibleTo($request->user()->id)->orderBy('common_name')->get()
+                ->map(fn ($s) => ['uuid' => $s->uuid, 'name' => $s->common_name, 'sci' => $s->scientific_name, 'cat' => $s->categoryLabel(),
+                    'alt' => implode(' ', $s->other_names ?? [])])->values() : [],
             'equipmentEnabled' => \App\Support\EarlyAccess::allows($request->user(), 'equipment'),
         ]);
     }
