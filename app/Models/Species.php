@@ -76,6 +76,7 @@ class Species extends Model
     public function creditLine(): ?string
     {
         if (!$this->photo_credit && !$this->photo_license) return null;
+        if ($this->photo_origin === 'own') return 'Photo: ' . $this->photo_credit;
         return 'Photo: ' . collect([$this->photo_credit, $this->photo_license, $this->photo_source_url ? 'Wikimedia Commons' : null])->filter()->implode(', ');
     }
 

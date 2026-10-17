@@ -103,10 +103,18 @@ class SpeciesController extends Controller
     public function photoReview(Request $request)
     {
         abort_unless($request->user()->isAdmin(), 403);
-        $filter = in_array($request->query('show'), ['candidate', 'approved', 'rejected', 'missing'], true) ? $request->query('show') : 'candidate';
+        $filter = in_array($request->query('show'), ['candidate', 'approved', 'rejected', 'missing', 'own', 'not_own'], true) ? $request->query('show') : 'candidate';
         $q = Species::whereNull('user_id')->orderBy('category')->orderBy('common_name');
-        $filter === 'missing' ? $q->whereNull('photo_status') : $q->where('photo_status', $filter);
+        match ($filter) {
+            'missing' => $q->whereNull('photo_status'),
+            // Pablo's own photos, and the species still without one (2026-10-17).
+            'own' => $q->where('photo_origin', 'own'),
+            'not_own' => $q->where(fn ($w) => $w->whereNull('photo_origin')->orWhere('photo_origin', '!=', 'own')),
+            default => $q->where('photo_status', $filter),
+        };
         $counts = Species::whereNull('user_id')->selectRaw("COALESCE(photo_status, 'missing') st, COUNT(*) n")->groupBy('st')->pluck('n', 'st');
+        $counts['own'] = Species::whereNull('user_id')->where('photo_origin', 'own')->count();
+        $counts['not_own'] = Species::whereNull('user_id')->count() - $counts['own'];
         return view('pages.logbook.species.photos', ['species' => $q->get(), 'filter' => $filter, 'counts' => $counts]);
     }
 

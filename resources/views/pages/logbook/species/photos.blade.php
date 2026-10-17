@@ -15,7 +15,7 @@
                     </p>
 
                     <nav class="dh-sp-tabs mb-3" aria-label="Filter">
-                        @foreach (['candidate' => 'To review', 'approved' => 'Kept', 'rejected' => 'Skipped', 'missing' => 'No picture found'] as $k => $label)
+                        @foreach (['candidate' => 'To review', 'approved' => 'Kept', 'rejected' => 'Skipped', 'missing' => 'No picture found', 'own' => 'My photos', 'not_own' => 'Without my photo'] as $k => $label)
                             <a href="{{ route('Species.photoReview', ['show' => $k]) }}" class="{{ $filter === $k ? 'is-active' : '' }}">{{ $label }} <span>{{ $counts[$k] ?? 0 }}</span></a>
                         @endforeach
                     </nav>
@@ -33,9 +33,9 @@
                                     <div class="dh-sp-card-empty"><span class="material-icons-round" aria-hidden="true">image_not_supported</span></div>
                                 @endif
                                 <div class="dh-sp-card-body">
-                                    <strong>{{ $s->common_name }}</strong>
+                                    <strong>{{ $s->common_name }} @if ($s->photo_origin === 'own')<span class="dh-species-mine">Your photo</span>@endif</strong>
                                     <em>{{ $s->scientific_name }}</em>
-                                    @if ($s->photo_credit || $s->photo_license)
+                                    @if ($s->photo_origin !== 'own' && ($s->photo_credit || $s->photo_license))
                                         <a class="dh-sp-card-credit" href="{{ $s->photo_source_url }}" target="_blank" rel="noopener">{{ $s->photo_credit }} &middot; {{ $s->photo_license }}</a>
                                     @endif
                                 </div>
