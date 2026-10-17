@@ -12,6 +12,8 @@ class EncryptCookies extends Middleware
      * @var array
      */
     protected $except = [
-        //
+        // Set by the Logbook page's own JS when the diver closes the "get
+        // the app" card, so it can't be encrypted.
+        'dh_app_card_hidden',
     ];
 }

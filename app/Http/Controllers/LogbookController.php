@@ -161,6 +161,10 @@ class LogbookController extends Controller
             'typeOptions' => $typeOptions,
             'operatorLogos' => $operatorLogos,
             'wishedSiteIds' => $wishedSiteIds,
+            // "Get the app" card: hidden once any dive (or attached
+            // computer log) came from the app, or the diver closed it.
+            'usesApp' => Dive::withoutGlobalScope('companions')->where('user_id', $userId)->where('source', 'ios-uploader')->exists(),
+            'appCardHidden' => (bool) $request->cookie('dh_app_card_hidden'),
         ]);
     }
 

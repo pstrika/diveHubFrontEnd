@@ -35,12 +35,32 @@
                                 <span class="material-icons-round" aria-hidden="true">devices</span>
                                 Duplicates
                             </a>
+                            <button type="button" class="dh-btn dh-btn-ghost-dark" title="Sync from your dive computer with the app" data-bs-toggle="modal" data-bs-target="#dhAppModal">
+                                <span class="material-icons-round" aria-hidden="true">phone_iphone</span>
+                            </button>
                             <a href="{{ route('Logbook.settings') }}" class="dh-btn dh-btn-ghost-dark" title="Logbook settings">
                                 <span class="material-icons-round" aria-hidden="true">settings</span>
                             </a>
                         </div>
                         <button type="button" class="dh-btn dh-btn-ghost-dark dh-unit-toggle" id="switchUnitsLogbook"></button>
                     </div>
+
+                    {{-- "Get the app" card: dives in the logbook but none synced
+                         from the app yet. Gone for good once they sync one or
+                         close it (cookie, a year). --}}
+                    @if ($stats['total'] > 0 && !$usesApp && !$appCardHidden)
+                        <div class="dh-app-card" id="dhAppCard">
+                            <span class="material-icons-round" aria-hidden="true">phone_iphone</span>
+                            <div class="dh-app-card-text">
+                                <strong>Sync straight from your dive computer</strong>
+                                <span class="text-sm text-secondary">Logbook by Divers Hub, our iPhone app, downloads your dives over Bluetooth.</span>
+                            </div>
+                            <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-toggle="modal" data-bs-target="#dhAppModal">How it works</button>
+                            <button type="button" class="dh-app-card-close" id="dhAppCardClose" aria-label="Hide this">
+                                <span class="material-icons-round" aria-hidden="true">close</span>
+                            </button>
+                        </div>
+                    @endif
 
                     {{-- Same dark tile dashboard as DiveDetails' own header
                          (Pablo, 2026-10-15: "the dashboard in the logbook landing
@@ -96,16 +116,20 @@
 
                     @if ($stats['total'] === 0)
                         <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
-                            <div class="card-body text-center py-5">
-                                <span class="material-icons-round" aria-hidden="true" style="font-size: 40px; color: var(--dh-shallow, #9bb);">menu_book</span>
-                                <h3 class="mt-3">No dives yet</h3>
-                                <p class="text-sm text-secondary">
-                                    Sync your dive computer with the Divers Hub uploader app to see your dives here.
-                                </p>
-                                <a href="{{ route('UploadTokens') }}" class="dh-btn dh-btn-ghost-dark mt-2">
-                                    <span class="material-icons-round" aria-hidden="true">watch</span>
-                                    Set up dive computer upload
-                                </a>
+                            <div class="card-body py-4">
+                                <div class="text-center">
+                                    <span class="material-icons-round" aria-hidden="true" style="font-size: 40px; color: var(--dh-shallow, #9bb);">menu_book</span>
+                                    <h3 class="mt-2">No dives yet</h3>
+                                    <p class="text-sm text-secondary">Three steps and your dive computer fills this in for you.</p>
+                                </div>
+                                @include('pages.logbook.app-steps')
+                                <div class="dh-app-empty-alt">
+                                    <span class="text-sm text-secondary">Already keep a logbook? Bring it with you from MacDive, Shearwater Cloud, Garmin or Oceanic+.</span>
+                                    <a href="{{ route('Logbook.import.index') }}" class="dh-btn dh-btn-ghost-dark">
+                                        <span class="material-icons-round" aria-hidden="true">upload_file</span>
+                                        Import
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     @elseif ($dives->isEmpty())
@@ -206,7 +230,31 @@
         </div>
     </main>
 
+    <div class="modal fade" id="dhAppModal" tabindex="-1" aria-labelledby="dhAppModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dhAppModalTitle">Sync from your dive computer</h5>
+                    <button type="button" class="btn-close text-dark" data-bs-dismiss="modal" aria-label="Close"><span class="material-icons-round" aria-hidden="true">close</span></button>
+                </div>
+                <div class="modal-body">
+                    @include('pages.logbook.app-steps')
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('js')
         <script src="{{ asset('assets') }}/js/dh-units.js?v={{ config('divehub.version') }}"></script>
+        <script>
+            (function () {
+                var close = document.getElementById('dhAppCardClose');
+                if (!close) return;
+                close.addEventListener('click', function () {
+                    document.cookie = 'dh_app_card_hidden=1; max-age=31536000; path=/; samesite=lax';
+                    document.getElementById('dhAppCard').remove();
+                });
+            })();
+        </script>
     @endpush
 </x-page-template>

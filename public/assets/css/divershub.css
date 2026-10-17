@@ -4654,3 +4654,22 @@ body.dh-logbook main .input-group-outline:has(> input.form-control):not(.is-fill
 .dh-logbook-filters .dh-chip-more-left { left: 0; justify-content: flex-start; background: linear-gradient(to left, rgba(243,244,246,0), var(--dh-sand) 22%); }
 .dh-logbook-filters .dh-chip-more .material-icons-round { font-size: 22px; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 50%; box-shadow: 0 1px 3px rgba(11,42,58,.15); }
 .dh-logbook-filters .dh-chip-more[hidden] { display: none; }
+
+/* Companion app explainer on the Logbook landing (Pablo, 2026-10-16):
+   pages/logbook/app-steps.blade.php, the "get the app" card, the pop-up. */
+.dh-app-steps { display: flex; flex-direction: column; gap: 14px; max-width: 520px; margin: 16px auto 0; text-align: left; }
+.dh-app-steps-head strong { color: var(--dh-ink); }
+.dh-app-steps-head { display: flex; align-items: center; gap: 12px; }
+.dh-app-steps-icon { flex: none; width: 44px; height: 44px; border-radius: 12px; background: var(--dh-foam); color: var(--dh-sea); display: inline-flex; align-items: center; justify-content: center; font-size: 26px; }
+.dh-app-steps-list { list-style: none; counter-reset: dh-app-step; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.dh-app-steps-list li { counter-increment: dh-app-step; position: relative; padding-left: 38px; display: flex; flex-direction: column; gap: 2px; font-size: .9rem; color: var(--dh-muted); }
+.dh-app-steps-list li strong { color: var(--dh-ink); }
+.dh-app-steps-list li::before { content: counter(dh-app-step); position: absolute; left: 0; top: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--dh-sea); color: #fff; font-weight: 700; font-size: .8rem; display: inline-flex; align-items: center; justify-content: center; }
+.dh-app-empty-alt { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; max-width: 520px; margin: 20px auto 0; padding-top: 16px; border-top: 1px solid var(--dh-line); }
+.dh-app-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin: 0 0 12px; border-radius: 12px; background: var(--dh-foam); }
+.dh-app-card > .material-icons-round { color: var(--dh-sea); font-size: 28px; flex: none; }
+.dh-app-card-text { display: flex; flex-direction: column; flex: 1; min-width: 0; color: var(--dh-ink); }
+.dh-app-card .dh-btn { flex: none; }
+.dh-app-card-close { flex: none; border: 0; background: none; padding: 4px; color: var(--dh-muted); line-height: 0; cursor: pointer; }
+@media (max-width: 575.98px) { .dh-app-card { flex-wrap: wrap; } .dh-app-card-text { flex-basis: calc(100% - 80px); } .dh-app-card .dh-btn { margin-left: 40px; } }
+#dhAppModal .dh-app-steps { margin-top: 0; }
