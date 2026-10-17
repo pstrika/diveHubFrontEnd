@@ -4787,3 +4787,10 @@ body.dh-photo-viewer-open { overflow: hidden; }
 .dh-eq-pick { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
 .dh-eq-pick legend { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
 .dh-eq-pick legend .material-icons-round { font-size: 18px; color: var(--dh-sea); }
+.dh-eq-most { display: flex; flex-direction: column; gap: 6px; }
+.dh-eq-most-row { display: grid; grid-template-columns: minmax(120px, 34%) 1fr 48px; align-items: center; gap: 10px; color: var(--dh-ink); text-decoration: none; font-size: .9rem; }
+.dh-eq-most-row:hover { color: var(--dh-sea); }
+.dh-eq-most-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.dh-eq-most-bar { height: 10px; border-radius: 5px; background: var(--dh-foam); overflow: hidden; }
+.dh-eq-most-bar span { display: block; height: 100%; background: var(--dh-sea); border-radius: 5px; }
+.dh-eq-most-n { text-align: right; font-variant-numeric: tabular-nums; color: var(--dh-muted); font-weight: 600; }

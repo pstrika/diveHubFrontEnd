@@ -52,7 +52,9 @@
                     </div>
 
                     <section class="mb-4">
-                        <h2 class="dh-panel-title">Your sightings <span class="dh-region-count">{{ $dives->count() }}</span></h2>
+                        <h2 class="dh-panel-title">Your sightings <span class="dh-region-count">{{ $dives->count() }}</span>
+                            @if ($dives->isNotEmpty())<a href="{{ route('Logbook', ['species' => $species->uuid]) }}" class="text-sm ms-2" style="font-weight:600">Filter the logbook</a>@endif
+                        </h2>
                         @if ($dives->isEmpty())
                             <p class="text-sm text-secondary">Not on any of your dives yet. Tag it from a dive's Marine life card.</p>
                         @else

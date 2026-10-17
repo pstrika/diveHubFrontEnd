@@ -113,7 +113,7 @@
                          notes, tags, computer or dive number. Keeps the chips. --}}
                     @if ($stats['total'] > 0)
                         <form method="GET" action="{{ route('Logbook') }}" class="dh-logbook-search" role="search">
-                            @foreach (['circuit', 'class', 'type', 'tag', 'site'] as $k)
+                            @foreach (['circuit', 'class', 'type', 'tag', 'site', 'gear', 'species'] as $k)
                                 @if ($filters[$k])<input type="hidden" name="{{ $k }}" value="{{ $filters[$k] }}">@endif
                             @endforeach
                             <span class="material-icons-round" aria-hidden="true">search</span>
@@ -122,6 +122,13 @@
                                 <a href="{{ route('Logbook', array_filter(array_diff_key($filters, ['q' => 1]))) }}" class="dh-logbook-search-clear" aria-label="Clear search"><span class="material-icons-round" aria-hidden="true">close</span></a>
                             @endif
                         </form>
+                        @if ($filterLabel)
+                            <div class="dh-logbook-site-filter">
+                                <span class="material-icons-round" aria-hidden="true">{{ $filterLabel[0] }}</span>
+                                {{ $filterLabel[1] }} <strong>{{ $filterLabel[2] }}</strong>
+                                <a href="{{ route('Logbook', array_filter(array_diff_key($filters, [$filterLabel[3] => 1]))) }}" aria-label="Show all dives"><span class="material-icons-round" aria-hidden="true">close</span></a>
+                            </div>
+                        @endif
                         @if ($siteFilterName)
                             <div class="dh-logbook-site-filter">
                                 <span class="material-icons-round" aria-hidden="true">place</span>

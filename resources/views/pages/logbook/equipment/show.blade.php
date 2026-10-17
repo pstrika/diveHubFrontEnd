@@ -51,7 +51,9 @@
                     </div>
 
                     <section class="mb-4">
-                        <h2 class="dh-panel-title">Dives with it <span class="dh-region-count">{{ $dives->count() }}</span></h2>
+                        <h2 class="dh-panel-title">Dives with it <span class="dh-region-count">{{ $dives->count() }}</span>
+                            @if ($dives->isNotEmpty())<a href="{{ route('Logbook', ['gear' => $item->uuid]) }}" class="text-sm ms-2" style="font-weight:600">Filter the logbook</a>@endif
+                        </h2>
                         @if ($dives->isEmpty())
                             <p class="text-sm text-secondary">Not on any dive yet. Add it from a dive's Equipment card, or as part of a configuration.</p>
                         @else

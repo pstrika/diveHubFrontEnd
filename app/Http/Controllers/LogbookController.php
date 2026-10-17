@@ -95,7 +95,21 @@ class LogbookController extends Controller
             'q' => trim(mb_substr((string) $request->query('q', ''), 0, 100)) ?: null,
             // "All your dives here" from a site page.
             'site' => ctype_digit((string) $request->query('site')) ? (int) $request->query('site') : null,
+            // Dives with a piece of gear / a species (Pablo, 2026-10-17:
+            // "which equipment was used the most, in which dives").
+            'gear' => preg_match('/^[0-9a-f-]{36}$/i', (string) $request->query('gear')) ? $request->query('gear') : null,
+            'species' => preg_match('/^[0-9a-f-]{36}$/i', (string) $request->query('species')) ? $request->query('species') : null,
         ];
+        $onlyIds = null; $filterLabel = null;
+        if ($filters['gear'] && \App\Support\EarlyAccess::allows($request->user(), 'equipment')
+            && ($item = \App\Models\EquipmentItem::where('user_id', $userId)->where('uuid', $filters['gear'])->first())) {
+            $onlyIds = array_flip($item->diveIds()); $filterLabel = ['handyman', 'Dives with', $item->name, 'gear'];
+        } elseif ($filters['species'] && \App\Support\EarlyAccess::allows($request->user(), 'species')
+            && ($sp = \App\Models\Species::visibleTo($userId)->where('uuid', $filters['species'])->first())) {
+            $onlyIds = array_flip(\DB::table('dive_species')->where('species_id', $sp->id)->pluck('dive_id')->all()); $filterLabel = ['set_meal', 'Dives with', $sp->common_name, 'species'];
+        } else {
+            $filters['gear'] = $filters['species'] = null;
+        }
 
         // Search bar (Pablo, 2026-10-17: "at least to find dives made on a
         // given site"): every word has to appear somewhere in the dive's
@@ -107,13 +121,14 @@ class LogbookController extends Controller
             $all->load('userSite');
         }
 
-        $matches = function (Dive $dive, array $f) use ($terms): bool {
+        $matches = function (Dive $dive, array $f) use ($terms, $onlyIds): bool {
             if ($f['circuit'] === 'cc' && !$dive->isCcr()) return false;
             if ($f['circuit'] === 'oc' && $dive->isCcr()) return false;
             if ($f['class'] && $dive->classification() !== $f['class']) return false;
             if ($f['tag'] && !in_array($f['tag'], $dive->tags ?? [], true)) return false;
             if ($f['type'] && !in_array($f['type'], $dive->conditions['dive_type'] ?? [], true)) return false;
             if ($f['site'] && (int) $dive->site_id !== $f['site']) return false;
+            if ($onlyIds !== null && !isset($onlyIds[$dive->id])) return false;
             if ($terms) {
                 if (count($terms) === 1 && ctype_digit($terms[0]) && (string) $dive->listSeq === $terms[0]) return true;
                 $text = $dive->searchHaystack();
@@ -185,6 +200,7 @@ class LogbookController extends Controller
             'usesApp' => Dive::withoutGlobalScope('companions')->where('user_id', $userId)->where('source', 'ios-uploader')->exists(),
             'appCardHidden' => (bool) $request->cookie('dh_app_card_hidden'),
             'siteFilterName' => $filters['site'] ? \App\Models\Site::whereKey($filters['site'])->value('name') : null,
+            'filterLabel' => $filterLabel,
         ]);
     }
 

@@ -43,6 +43,26 @@
                         </section>
                     @endif
 
+                    @php
+                        $allItems = collect($groups)->flatMap(fn ($g) => $g['list']);
+                        $mostUsed = $allItems->filter(fn ($i) => ($diveCounts[$i->id] ?? 0) > 0)->sortByDesc(fn ($i) => $diveCounts[$i->id])->take(5);
+                    @endphp
+                    @if ($mostUsed->isNotEmpty())
+                        <section class="mb-4">
+                            <h2 class="dh-panel-title">Most used</h2>
+                            <div class="dh-eq-most">
+                                @foreach ($mostUsed as $i)
+                                    @php $max = max(1, $diveCounts[$mostUsed->first()->id]); @endphp
+                                    <a href="{{ route('Logbook', ['gear' => $i->uuid]) }}" class="dh-eq-most-row" title="See these dives in your logbook">
+                                        <span class="dh-eq-most-name">{{ $i->name }}</span>
+                                        <span class="dh-eq-most-bar"><span style="width: {{ round(100 * $diveCounts[$i->id] / $max) }}%"></span></span>
+                                        <span class="dh-eq-most-n">{{ $diveCounts[$i->id] }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </section>
+                    @endif
+
                     <section class="mb-4">
                         <h2 class="dh-panel-title">Configurations <span class="dh-region-count">{{ $configs->count() }}</span></h2>
                         @if ($configs->isEmpty())
