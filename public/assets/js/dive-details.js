@@ -135,13 +135,30 @@
     // and the setpoint switches, also mark them in the chart as a badge") -
     // any change in the sample's setpoint, from the computer sync or an
     // import (MacDive setpoint events, Shearwater low/high).
+    //
+    // Only real switches: a setpoint held for at least 2 minutes and at
+    // least 0.1 away from the last one marked. Some computers (Divesoft
+    // Liberty, 2026-10-17) adjust the setpoint by themselves - a 0.53-0.70
+    // ramp on descent, 1.22-1.44 wobble on shallow stops - which marked
+    // 70 "switches" on one dive.
     var setpointSwitches = [];
-    var lastSp = null;
+    var runs = [];
     profile.forEach(function (p) {
         if (p.setpoint === null || p.setpoint === undefined) return;
         var sp = Math.round(p.setpoint * 100) / 100;
-        if (lastSp !== null && sp !== lastSp) setpointSwitches.push({ time: p.time, sp: sp });
-        lastSp = sp;
+        var run = runs[runs.length - 1];
+        if (run && run.sp === sp) run.end = p.time;
+        else runs.push({ sp: sp, start: p.time, end: p.time });
+    });
+    var markedSp = null;
+    runs.forEach(function (r, i) {
+        var until = runs[i + 1] ? runs[i + 1].start : r.end;
+        if (until - r.start < 120) return;
+        if (markedSp === null) { markedSp = r.sp; return; } // the starting setpoint
+        if (Math.abs(r.sp - markedSp) >= 0.1) {
+            setpointSwitches.push({ time: r.start, sp: r.sp });
+            markedSp = r.sp;
+        }
     });
 
     // "EAN50" / "Air" / "21/35" / "O2" - the mix itself on the badge.
@@ -277,18 +294,29 @@
     var po2Data = hasPo2 ? profile.map(function (p) {
         return { x: toMinutes(p.time), y: po2At(p) };
     }) : [];
-    var ndlData = hasNdl ? profile.map(function (p) {
-        return { x: toMinutes(p.time), y: p.ndl !== null && p.ndl !== undefined ? p.ndl / 60 : null };
-    }) : [];
+    // Some computers (Divesoft Liberty, 2026-10-17) only write deco status on
+    // every few samples - the ones in between carry depth alone. Those keep
+    // the last reported state, so the NDL and ceiling draw as continuous
+    // lines instead of scattered dots. A sample that does report a status
+    // (ndl or deco_stop) still switches the lines on/off right there.
+    var ndlData = [];
+    if (hasNdl) {
+        var lastNdl = null;
+        profile.forEach(function (p) {
+            if (p.decoKind && p.decoKind !== 'ndl') lastNdl = null;
+            else if (p.ndl !== null && p.ndl !== undefined) lastNdl = p.ndl / 60;
+            ndlData.push({ x: toMinutes(p.time), y: lastNdl });
+        });
+    }
 
     function decoStopSeries(unit) {
         var toFt = unit === 'imperial';
+        var last = null;
         return profile.map(function (p) {
-            if (!p.decoKind || p.decoKind === 'ndl' || p.decoStop === null || p.decoStop === undefined) {
-                return { x: toMinutes(p.time), y: null };
-            }
-            var v = toFt ? window.dhUnits.mToFt(p.decoStop) : p.decoStop;
-            return { x: toMinutes(p.time), y: -v };
+            if (p.decoKind === 'ndl') last = null;
+            else if (p.decoKind && p.decoStop !== null && p.decoStop !== undefined) last = p.decoStop;
+            if (last === null) return { x: toMinutes(p.time), y: null };
+            return { x: toMinutes(p.time), y: -(toFt ? window.dhUnits.mToFt(last) : last) };
         });
     }
 
