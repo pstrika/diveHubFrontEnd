@@ -66,6 +66,34 @@ Route::withoutMiddleware('throttle:api')->middleware(['auth.api:sanctum', 'logbo
     Route::post('/user-sites', [\App\Http\Controllers\Api\UserSiteApiController::class, 'store']);
     Route::patch('/user-sites/{id}', [\App\Http\Controllers\Api\UserSiteApiController::class, 'update'])->where('id', '[0-9]+');
     Route::delete('/user-sites/{id}', [\App\Http\Controllers\Api\UserSiteApiController::class, 'destroy'])->where('id', '[0-9]+');
+
+    // Photos, marine life, equipment (2026-10-17) - LogbookExtrasApiController,
+    // contract in DiversHub-Uploader docs/PHOTOS-SPECIES-EQUIPMENT.md.
+    $x = \App\Http\Controllers\Api\LogbookExtrasApiController::class;
+    $u = '[0-9a-fA-F-]{36}';
+    Route::get('/me/features', [$x, 'features']);
+    Route::post('/me/share-sightings', [$x, 'shareSightings']);
+    Route::get('/dives/{dive}/photos', [$x, 'photos'])->where('dive', $u);
+    Route::post('/dives/{dive}/photos', [$x, 'upload'])->where('dive', $u);
+    Route::patch('/photos/{photo}', [$x, 'updatePhoto'])->where('photo', $u);
+    Route::delete('/photos/{photo}', [$x, 'deletePhoto'])->where('photo', $u);
+    Route::post('/photos/{photo}/share', [$x, 'sharePhoto'])->where('photo', $u);
+    Route::put('/photos/{photo}/species', [$x, 'setPhotoSpecies'])->where('photo', $u);
+    Route::get('/photos/{photo}/{size}', [$x, 'photoFile'])->where(['photo' => $u, 'size' => 'web|thumb']);
+    Route::get('/species', [$x, 'species']);
+    Route::post('/species', [$x, 'createSpecies']);
+    Route::patch('/species/{uuid}', [$x, 'updateSpecies'])->where('uuid', $u);
+    Route::delete('/species/{uuid}', [$x, 'deleteSpecies'])->where('uuid', $u);
+    Route::put('/dives/{dive}/species', [$x, 'setDiveSpecies'])->where('dive', $u);
+    Route::get('/equipment', [$x, 'equipment']);
+    Route::post('/equipment/items', [$x, 'createItem']);
+    Route::match(['post', 'patch'], '/equipment/items/{uuid}', [$x, 'updateItem'])->where('uuid', $u);
+    Route::delete('/equipment/items/{uuid}', [$x, 'deleteItem'])->where('uuid', $u);
+    Route::get('/equipment/items/{uuid}/photo', [$x, 'itemPhotoFile'])->where('uuid', $u);
+    Route::post('/equipment/configs', [$x, 'saveConfig']);
+    Route::patch('/equipment/configs/{uuid}', [$x, 'saveConfig'])->where('uuid', $u);
+    Route::delete('/equipment/configs/{uuid}', [$x, 'deleteConfig'])->where('uuid', $u);
+    Route::put('/dives/{dive}/equipment', [$x, 'setDiveEquipment'])->where('dive', $u);
 });
 
 // App sign-in token exchange (docs/APP-AUTH.md) - see AppAuthController.

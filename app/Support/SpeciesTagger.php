@@ -57,4 +57,31 @@ class SpeciesTagger
         $photo->touch();
         $photo->dive?->logUpdated();
     }
+
+    /**
+     * The app's PUT: the dive's whole species list ({uuid => count|null}).
+     * Species only on photos of this dive that aren't in the list come off
+     * those photos too.
+     */
+    public static function syncDive(Dive $dive, array $countsByUuid): void
+    {
+        $ids = [];
+        foreach ($countsByUuid as $uuid => $count) {
+            $ids[self::find($dive->user_id, (string) $uuid)->id] = ['count' => $count ? (int) $count : null];
+        }
+        $dive->species()->sync($ids);
+        DB::table('dive_photo_species')->whereIn('dive_photo_id', $dive->photos()->pluck('id'))
+            ->whereNotIn('species_id', array_keys($ids))->delete();
+        $dive->logUpdated();
+    }
+
+    /** The app's PUT: a photo's whole species list; each also lands on the dive. */
+    public static function syncPhoto(DivePhoto $photo, array $uuids): void
+    {
+        $ids = array_map(fn ($u) => self::find($photo->user_id, (string) $u)->id, $uuids);
+        $photo->species()->sync($ids);
+        if ($photo->dive) $photo->dive->species()->syncWithoutDetaching($ids);
+        $photo->touch();
+        $photo->dive?->logUpdated();
+    }
 }

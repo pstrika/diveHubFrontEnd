@@ -85,7 +85,7 @@ class EquipmentItem extends Model
             'uuid' => $this->uuid, 'category' => $this->category, 'name' => $this->name,
             'manufacturer' => $this->manufacturer, 'model' => $this->model, 'serial_number' => $this->serial_number,
             'purchased_on' => $this->purchased_on?->toDateString(), 'last_service_on' => $this->last_service_on?->toDateString(),
-            'notes' => $this->notes, 'photo_url' => $this->photoUrl(), 'retired' => (bool) $this->retired_at,
+            'notes' => $this->notes, 'photo_url' => $this->photo ? url('api/equipment/items/' . $this->uuid . '/photo') . '?v=' . substr(md5($this->photo), 0, 6) : null, 'retired' => (bool) $this->retired_at,
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
     }

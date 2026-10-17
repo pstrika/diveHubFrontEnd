@@ -71,8 +71,9 @@ class DivePhoto extends Model
         return [
             'uuid' => $this->uuid,
             'dive_uuid' => $this->dive?->uuid,
-            'url' => $this->url('web'),
-            'thumb_url' => $this->url('thumb'),
+            // Bearer-token URLs (GET /api/photos/{uuid}/{size}).
+            'url' => url('api/photos/' . $this->uuid . '/web'),
+            'thumb_url' => url('api/photos/' . $this->uuid . '/thumb'),
             'width' => $this->width,
             'height' => $this->height,
             'caption' => $this->caption,

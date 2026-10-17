@@ -92,6 +92,13 @@ class DiveSyncController extends Controller
             'same_dive' => \App\Support\SameDivePending::syncBlock($dive),
             // Other computers already combined into this dive.
             'computers' => $dive->companions()->get(['computer_model', 'computer_serial'])->map(fn ($c) => ['model' => $c->computer_model, 'serial' => $c->computer_serial])->values(),
+            // Photos on the dive (web 12.17.0) - URLs need the bearer token.
+            'photos' => $dive->photos()->with('species')->get()->map->toApi()->values(),
+            // Early-access blocks: null when the account doesn't have the
+            // feature (GET /api/me/features), else the dive's list.
+            'species' => \App\Support\EarlyAccess::allows($dive->user, 'species') ? \App\Http\Controllers\Api\LogbookExtrasApiController::diveSpecies($dive) : null,
+            'equipment' => \App\Support\EarlyAccess::allows($dive->user, 'equipment')
+                ? collect(\App\Http\Controllers\EquipmentController::diveList($dive))->map(fn ($i) => ['uuid' => $i['uuid'], 'auto' => $i['auto']])->values() : null,
             'updated_at' => optional($dive->updated_at)->toIso8601String(),
         ];
     }
