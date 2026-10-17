@@ -1478,7 +1478,7 @@
                             var c = document.createElement('span');
                             c.className = 'dh-species-chip';
                             c.title = i.category + (i.auto ? ' - matched by serial number' : '');
-                            c.innerHTML = '<span class="material-icons-round" aria-hidden="true" style="color:var(--dh-sea)">' + i.icon + '</span><a href="' + i.url + '">' + esc(i.name) + '</a>'
+                            c.innerHTML = '<span class="dh-cat-icon" aria-hidden="true" style="color:var(--dh-sea);--icon:url(\'' + i.icon_url + '\')"></span><a href="' + i.url + '">' + esc(i.name) + '</a>'
                                 + (i.auto ? '<span class="dh-species-mine ms-1">auto</span>&nbsp;' : '<button type="button" aria-label="Remove ' + esc(i.name) + '"><span class="material-icons-round" aria-hidden="true">close</span></button>');
                             var x = c.querySelector('button');
                             if (x) x.addEventListener('click', function () { send('DELETE', removeUrl + i.uuid).then(function (d) { list = d.equipment; render(); }).catch(function (e) { alert(e.message); }); });

@@ -31,7 +31,7 @@
                                         <input type="hidden" name="manufacturer" value="{{ $s['manufacturer'] }}">
                                         <input type="hidden" name="model" value="{{ $s['model'] }}">
                                         <input type="hidden" name="serial" value="{{ $s['serial'] }}">
-                                        <span class="material-icons-round" aria-hidden="true">watch</span>
+                                        <span class="dh-cat-icon" style="--icon:url('{{ \App\Models\EquipmentItem::categoryIconUrl('computer') }}'); width:26px; height:26px; color: var(--dh-sea)" aria-hidden="true"></span>
                                         <span class="dh-eq-suggested-text">
                                             <strong>{{ $s['manufacturer'] && stripos($s['model'], $s['manufacturer']) === false ? $s['manufacturer'] . ' ' : '' }}{{ $s['model'] }}</strong>
                                             <span class="text-xs text-secondary">{{ $s['serial'] ? 'Serial ' . $s['serial'] . ' · ' : '' }}{{ $s['dives'] }} {{ $s['dives'] === 1 ? 'dive' : 'dives' }}</span>
@@ -82,14 +82,14 @@
 
                     @forelse ($groups as $slug => $g)
                         <section class="mb-4">
-                            <h2 class="dh-panel-title">{{ $g['label'] }} <span class="dh-region-count">{{ $g['list']->count() }}</span></h2>
+                            <h2 class="dh-panel-title"><span class="dh-cat-icon" style="--icon:url('{{ \App\Models\EquipmentItem::categoryIconUrl($slug) }}')" aria-hidden="true"></span>{{ $g['label'] }} <span class="dh-region-count">{{ $g['list']->count() }}</span></h2>
                             <div class="dh-species-list">
                                 @foreach ($g['list'] as $i)
                                     <a href="{{ route('Equipment.show', $i->uuid) }}" class="dh-species-row dh-eq-row {{ $i->retired_at ? 'is-retired' : '' }}">
                                         @if ($i->photoUrl())
                                             <img src="{{ $i->photoUrl() }}" alt="" class="dh-eq-thumb">
                                         @else
-                                            <span class="dh-eq-thumb is-icon"><span class="material-icons-round" aria-hidden="true">{{ $g['icon'] }}</span></span>
+                                            <span class="dh-eq-thumb is-icon"><span class="dh-cat-icon" style="--icon:url('{{ $i->iconUrl() }}')" aria-hidden="true"></span></span>
                                         @endif
                                         <span class="dh-species-name">
                                             <strong>{{ $i->name }}</strong>

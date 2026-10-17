@@ -51,7 +51,7 @@
 
                     @foreach ($groups as $slug => $g)
                         <section class="dh-species-group" data-species-group>
-                            <h2 class="dh-panel-title">{{ $g['label'] }} <span class="dh-region-count" data-group-count>{{ $g['species']->count() }}</span></h2>
+                            <h2 class="dh-panel-title"><span class="dh-cat-icon" style="--icon:url('{{ \App\Models\Species::categoryIconUrl($slug) }}')" aria-hidden="true"></span>{{ $g['label'] }} <span class="dh-region-count" data-group-count>{{ $g['species']->count() }}</span></h2>
                             <div class="dh-species-list">
                                 @foreach ($g['species'] as $s)
                                     @php $sn = $seen[$s->id] ?? null; @endphp
@@ -61,7 +61,7 @@
                                         @if ($s->photoUrl())
                                             <img src="{{ $s->photoUrl() }}" alt="" class="dh-eq-thumb" loading="lazy">
                                         @else
-                                            <span class="dh-eq-thumb is-icon"><span class="material-icons-round" aria-hidden="true">set_meal</span></span>
+                                            <span class="dh-eq-thumb is-icon"><span class="dh-cat-icon" style="--icon:url('{{ $s->iconUrl() }}')" aria-hidden="true"></span></span>
                                         @endif
                                         <span class="dh-species-name">
                                             <strong>{{ $s->common_name }}</strong>

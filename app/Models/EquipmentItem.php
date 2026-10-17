@@ -49,6 +49,18 @@ class EquipmentItem extends Model
         return self::CATEGORIES[$this->category][1] ?? 'category';
     }
 
+    /** The type's icon (public/assets/img/icons/logbook, 2026-10-17). */
+    public static function categoryIconUrl(?string $category): string
+    {
+        $c = array_key_exists((string) $category, self::CATEGORIES) ? $category : 'other';
+        return asset('assets/img/icons/logbook/equipment_' . $c . '.svg');
+    }
+
+    public function iconUrl(): string
+    {
+        return self::categoryIconUrl($this->category);
+    }
+
     public function photoPath(): ?string
     {
         return $this->photo ? storage_path('app/equipment/' . $this->user_id . '/' . $this->photo) : null;
@@ -85,7 +97,7 @@ class EquipmentItem extends Model
             'uuid' => $this->uuid, 'category' => $this->category, 'name' => $this->name,
             'manufacturer' => $this->manufacturer, 'model' => $this->model, 'serial_number' => $this->serial_number,
             'purchased_on' => $this->purchased_on?->toDateString(), 'last_service_on' => $this->last_service_on?->toDateString(),
-            'notes' => $this->notes, 'photo_url' => $this->photo ? url('api/equipment/items/' . $this->uuid . '/photo') . '?v=' . substr(md5($this->photo), 0, 6) : null, 'retired' => (bool) $this->retired_at,
+            'notes' => $this->notes, 'photo_url' => $this->photo ? url('api/equipment/items/' . $this->uuid . '/photo') . '?v=' . substr(md5($this->photo), 0, 6) : null, 'retired' => (bool) $this->retired_at, 'icon_url' => $this->iconUrl(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
     }

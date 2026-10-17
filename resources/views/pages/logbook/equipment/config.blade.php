@@ -27,7 +27,7 @@
                             @foreach (\App\Models\EquipmentItem::CATEGORIES as $slug => [$label, $icon])
                                 @if ($items->has($slug))
                                     <fieldset class="dh-eq-pick">
-                                        <legend class="text-sm font-weight-bold"><span class="material-icons-round" aria-hidden="true">{{ $icon }}</span> {{ $label }}</legend>
+                                        <legend class="text-sm font-weight-bold"><span class="dh-cat-icon" style="--icon:url('{{ \App\Models\EquipmentItem::categoryIconUrl($slug) }}'); color: var(--dh-sea)" aria-hidden="true"></span> {{ $label }}</legend>
                                         @foreach ($items[$slug] as $i)
                                             <label class="dh-species-seen-toggle">
                                                 <input type="checkbox" name="items[]" value="{{ $i->uuid }}" @checked(in_array($i->uuid, old('items', $selected), true))>

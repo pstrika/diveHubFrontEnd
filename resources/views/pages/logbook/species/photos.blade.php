@@ -10,8 +10,8 @@
                     <a href="{{ route('Species.index') }}" class="dh-btn dh-btn-ghost-dark mb-3"><span class="material-icons-round" aria-hidden="true">arrow_back</span> Marine life</a>
 
                     <p class="text-sm text-secondary">
-                        Freely licensed pictures from Wikimedia Commons, one per species - commercial use allowed, credit shown under the picture.
-                        <strong>Keep</strong> the good ones; <strong>skip</strong> aquarium, market or museum shots, and that species stays blank until a diver's photo replaces it.
+                        The picture each species shows: your own photo, or a freely licensed one from Wikimedia Commons (commercial use allowed, credit shown under it) until you have yours.
+                        <strong>Keep</strong> the good Commons ones; <strong>skip</strong> aquarium, market or museum shots and the species stays blank. Divers tag species on their dives and photos, but never set these pictures.
                     </p>
 
                     <nav class="dh-sp-tabs mb-3" aria-label="Filter">

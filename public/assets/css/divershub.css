@@ -4821,3 +4821,10 @@ body.dh-photo-viewer-open { overflow: hidden; }
 
 /* Metric/imperial switch: its own line, top right, above every other button (Pablo, 2026-10-17). */
 .dh-unit-row { display: flex; justify-content: flex-end; margin: 0 0 8px; }
+
+/* Logbook category icons (species and gear, 2026-10-17): the white SVGs in
+   img/icons/logbook used as a mask, so they take the current text colour
+   like Material icons. <span class="dh-cat-icon" style="--icon:url(...)"> */
+.dh-cat-icon { display: inline-block; flex: none; width: 1.25em; height: 1.25em; background-color: currentColor; -webkit-mask: var(--icon) center / contain no-repeat; mask: var(--icon) center / contain no-repeat; vertical-align: -.25em; }
+.dh-eq-thumb.is-icon .dh-cat-icon { width: 26px; height: 26px; }
+.dh-panel-title .dh-cat-icon { width: 22px; height: 22px; margin-right: 6px; color: var(--dh-sea); }

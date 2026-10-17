@@ -80,6 +80,18 @@ class Species extends Model
         return 'Photo: ' . collect([$this->photo_credit, $this->photo_license, $this->photo_source_url ? 'Wikimedia Commons' : null])->filter()->implode(', ');
     }
 
+    /** The group's icon (public/assets/img/icons/logbook, 2026-10-17). */
+    public static function categoryIconUrl(?string $category): string
+    {
+        $c = array_key_exists((string) $category, self::CATEGORIES) ? $category : 'other';
+        return asset('assets/img/icons/logbook/species_' . $c . '.svg');
+    }
+
+    public function iconUrl(): string
+    {
+        return self::categoryIconUrl($this->category);
+    }
+
     public function categoryLabel(): string
     {
         return self::CATEGORIES[$this->category] ?? ucfirst((string) $this->category);
@@ -101,6 +113,7 @@ class Species extends Model
             'photo_url' => $this->photoUrl(),
             'photo_credit' => $this->photoUrl() ? $this->creditLine() : null,
             'photo_source_url' => $this->photoUrl() ? $this->photo_source_url : null,
+            'icon_url' => $this->iconUrl(),
             'custom' => $this->isCustom(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

@@ -29,7 +29,7 @@
                         <div class="card-body">
                             <div class="dh-species-head">
                                 <div>
-                                    <span class="dh-species-cat">{{ $species->categoryLabel() }}@if ($species->isCustom()) &middot; added by you @endif</span>
+                                    <span class="dh-species-cat"><span class="dh-cat-icon" style="--icon:url('{{ $species->iconUrl() }}')" aria-hidden="true"></span> {{ $species->categoryLabel() }}@if ($species->isCustom()) &middot; added by you @endif</span>
                                     @if ($species->scientific_name)<p class="dh-species-binomial"><em>{{ $species->scientific_name }}</em></p>@endif
                                     @if ($species->other_names)<p class="text-sm text-secondary mb-0">Also: {{ implode(', ', $species->other_names) }}</p>@endif
                                 </div>

@@ -214,7 +214,7 @@ class EquipmentController extends Controller
     public static function diveList(Dive $dive): array
     {
         $list = $dive->equipment()->get()->map(fn ($i) => [
-            'uuid' => $i->uuid, 'name' => $i->name, 'category' => $i->categoryLabel(), 'icon' => $i->icon(),
+            'uuid' => $i->uuid, 'name' => $i->name, 'category' => $i->categoryLabel(), 'icon' => $i->icon(), 'icon_url' => $i->iconUrl(),
             'auto' => false, 'url' => route('Equipment.show', $i->uuid),
         ])->keyBy('uuid');
         $serials = Dive::withoutGlobalScope('companions')->where(fn ($q) => $q->where('id', $dive->id)->orWhere('merged_into_id', $dive->id))
@@ -222,7 +222,7 @@ class EquipmentController extends Controller
         if ($serials->isNotEmpty()) {
             EquipmentItem::where('user_id', $dive->user_id)->where('category', 'computer')->whereIn('serial_number', $serials)->get()
                 ->each(function ($i) use ($list) {
-                    if (!$list->has($i->uuid)) $list[$i->uuid] = ['uuid' => $i->uuid, 'name' => $i->name, 'category' => $i->categoryLabel(), 'icon' => $i->icon(), 'auto' => true, 'url' => route('Equipment.show', $i->uuid)];
+                    if (!$list->has($i->uuid)) $list[$i->uuid] = ['uuid' => $i->uuid, 'name' => $i->name, 'category' => $i->categoryLabel(), 'icon' => $i->icon(), 'icon_url' => $i->iconUrl(), 'auto' => true, 'url' => route('Equipment.show', $i->uuid)];
                 });
         }
         return $list->values()->all();
