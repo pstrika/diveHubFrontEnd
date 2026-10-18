@@ -51,7 +51,7 @@ class SpeciesIdentifier
             $list[] = ($i + 1) . ' | ' . $s->common_name . ' | ' . ($s->scientific_name ?: '-') . ' | ' . $s->categoryLabel();
         }
 
-        $model = config('services.anthropic.species_model', 'claude-haiku-5-5');
+        $model = config('services.anthropic.species_model', 'claude-sonnet-5-5');
         $headers = ['x-api-key' => config('services.anthropic.key'), 'anthropic-version' => '2023-06-01'];
         if ($ws = config('services.anthropic.workspace_id')) $headers['anthropic-workspace-id'] = $ws;
         $response = Http::withHeaders($headers)->timeout(60)->post('https://api.anthropic.com/v1/messages', [
@@ -60,7 +60,9 @@ class SpeciesIdentifier
             // 400-token answer (2026-10-18: empty replies). Picking from a
             // list doesn't need it.
             'max_tokens' => 1024,
-            'thinking' => ['type' => 'disabled'],
+            // "No thinking" is spelled differently per model: Sonnet 5.5
+            // takes between_tools, Haiku 5.5 takes disabled.
+            'thinking' => ['type' => str_contains($model, 'haiku') ? 'disabled' : 'between_tools'],
             'system' => 'You identify marine life in underwater photos taken by scuba divers, mostly in South Florida and the Caribbean. '
                 . 'Only name animals or corals that are clearly visible. Pick from the numbered catalog the user gives you. '
                 . 'Reply with JSON only, no other text: {"candidates":[{"n":<catalog number>,"confidence":"high"|"medium"|"low"}],"not_in_catalog":<short common name or null>}. '

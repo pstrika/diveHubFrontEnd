@@ -163,13 +163,14 @@ return [
 
     // "What's this?" species identification on dive photos (Pablo,
     // 2026-10-18). Off until ANTHROPIC_API_KEY is set in the App Service
-    // settings. Haiku: cheap and fast, enough to pick from our catalog.
+    // settings. Sonnet 5.5: on Pablo's photos Haiku called a hogfish a
+    // Spanish hogfish, Sonnet got it right (2026-10-18); ~2-3 cents a photo.
     'anthropic' => [
         'key' => env('ANTHROPIC_API_KEY'),
         // Only for a key created outside a workspace (organization-level):
         // Anthropic then needs the workspace to bill (2026-10-18).
         'workspace_id' => env('ANTHROPIC_WORKSPACE_ID'),
-        'species_model' => env('ANTHROPIC_SPECIES_MODEL', 'claude-haiku-5-5'),
+        'species_model' => env('ANTHROPIC_SPECIES_MODEL', 'claude-sonnet-5-5'),
         'species_daily_limit' => (int) env('ANTHROPIC_SPECIES_DAILY_LIMIT', 50),
     ],
 
