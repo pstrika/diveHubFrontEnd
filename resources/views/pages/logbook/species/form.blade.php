@@ -2,7 +2,7 @@
     <x-shell.nav active="me" />
 
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
-        <x-shell.header :title="$species->exists ? 'Edit species' : 'Add a species'" icon="set_meal" :h1="true" />
+        <x-shell.header :title="$species->exists ? 'Edit species' : 'Add a species'" icon="logbook/species_reef_fish.svg" :h1="true" />
 
         <div class="container-fluid py-0">
             <div class="row">

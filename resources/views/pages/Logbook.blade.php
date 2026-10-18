@@ -44,7 +44,7 @@
                             @endif
                             @if (\App\Support\EarlyAccess::allows(auth()->user(), 'species'))
                                 <a href="{{ route('Species.index') }}" class="dh-btn dh-btn-ghost-dark">
-                                    <span class="material-icons-round" aria-hidden="true">set_meal</span>
+                                    <span class="dh-cat-icon" style="--icon:url('{{ asset('assets/img/icons/logbook/species_reef_fish.svg') }}')" aria-hidden="true"></span>
                                     Marine life
                                 </a>
                             @endif

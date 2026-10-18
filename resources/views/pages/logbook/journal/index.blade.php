@@ -30,7 +30,7 @@
                                         <em>{{ $r['city'] }}{{ $r['city'] ? ' · ' : '' }}last {{ $r['last']->format('M j, Y') }}</em>
                                     </span>
                                     @if ($r['photos'])<span class="dh-species-seen" title="Photos"><span class="material-icons-round" aria-hidden="true">photo_library</span>{{ $r['photos'] }}</span>@endif
-                                    @if ($speciesOn && $r['species'])<span class="dh-species-seen" title="Species seen"><span class="material-icons-round" aria-hidden="true">set_meal</span>{{ $r['species'] }}</span>@endif
+                                    @if ($speciesOn && $r['species'])<span class="dh-species-seen" title="Species seen"><span class="dh-cat-icon" style="--icon:url('{{ asset('assets/img/icons/logbook/species_reef_fish.svg') }}')" aria-hidden="true"></span>{{ $r['species'] }}</span>@endif
                                     <span class="dh-species-seen" title="Dives"><span class="material-icons-round" aria-hidden="true">scuba_diving</span>{{ $r['dives'] }}</span>
                                     <span class="material-icons-round dh-logbook-row-chevron" aria-hidden="true">chevron_right</span>
                                 </a>

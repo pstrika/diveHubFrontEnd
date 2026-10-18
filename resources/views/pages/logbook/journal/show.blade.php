@@ -27,7 +27,7 @@
                         </div>
                         @if ($speciesOn)
                             <div class="dh-dive-header-stat">
-                                <span class="material-icons-round" aria-hidden="true">set_meal</span>
+                                <span class="dh-cat-icon" style="--icon:url('{{ asset('assets/img/icons/logbook/species_reef_fish.svg') }}')" aria-hidden="true"></span>
                                 <div class="dh-dive-header-stat-value">{{ $species->count() }}</div>
                                 <div class="dh-dive-header-stat-label">Species</div>
                             </div>

@@ -1279,7 +1279,7 @@
                              dive-species.js. Early access. --}}
                         <div class="card p-0 position-relative mt-3 z-index-2 mb-4" id="diveSpeciesCard">
                             <div class="dh-calc-inputs-head" data-collapsible-toggle role="button" tabindex="0" aria-expanded="true" aria-controls="diveSpeciesBody">
-                                <span class="material-icons-round" aria-hidden="true">set_meal</span>
+                                <span class="dh-cat-icon" style="--icon:url('{{ asset('assets/img/icons/logbook/species_reef_fish.svg') }}')" aria-hidden="true"></span>
                                 <h3>Marine life</h3>
                                 <span class="material-icons-round dh-calc-inputs-chevron" aria-hidden="true">expand_less</span>
                             </div>
