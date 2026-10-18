@@ -171,6 +171,9 @@ class LogbookController extends Controller
         // One catalog query for the page's sites, one for the diver's own.
         Dive::preloadSites($pageDives);
         $pageDives->load('userSite');
+        // Photo badge on each row (Pablo, 2026-10-18): one count query per page.
+        $photoCounts = \App\Models\DivePhoto::whereIn('dive_id', $pageDives->pluck('id'))
+            ->groupBy('dive_id')->selectRaw('dive_id, COUNT(*) n')->pluck('n', 'dive_id');
         $dives = new \Illuminate\Pagination\LengthAwarePaginator(
             $pageDives,
             $filtered->count(),
@@ -201,6 +204,7 @@ class LogbookController extends Controller
             'appCardHidden' => (bool) $request->cookie('dh_app_card_hidden'),
             'siteFilterName' => $filters['site'] ? \App\Models\Site::whereKey($filters['site'])->value('name') : null,
             'filterLabel' => $filterLabel,
+            'photoCounts' => $photoCounts,
         ]);
     }
 

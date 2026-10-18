@@ -206,6 +206,7 @@
                                         <div class="dh-logbook-row-title">
                                             <span class="text-truncate">{{ $siteTitle }}@if ($city) &middot; {{ $city }}@endif</span>
                                             @if (isset($dive->pendingGroup))<span class="dh-same-dive-badge" title="Logged by more than one computer - open it to combine or keep apart">Same dive?</span>@endif
+                                            @if (!empty($photoCounts[$dive->id]))<span class="dh-logbook-photo-badge" title="{{ $photoCounts[$dive->id] }} {{ $photoCounts[$dive->id] == 1 ? 'photo' : 'photos' }}"><span class="material-icons-round" aria-hidden="true">photo_camera</span>{{ $photoCounts[$dive->id] }}</span>@endif
                                             @if ($wished)<span class="material-icons-round dh-logbook-row-wished" title="On your wishlist">bookmark</span>@endif
                                         </div>
                                         <div class="dh-logbook-row-sub text-sm text-secondary">{{ $dive->started_at->format('g:i A') }}</div>
@@ -233,6 +234,7 @@
                                         <div class="dh-logbook-row-title">
                                             <span class="text-truncate">{{ $siteTitle }}</span>
                                             @if (isset($dive->pendingGroup))<span class="dh-same-dive-badge" title="Logged by more than one computer - open it to combine or keep apart">Same dive?</span>@endif
+                                            @if (!empty($photoCounts[$dive->id]))<span class="dh-logbook-photo-badge" title="{{ $photoCounts[$dive->id] }} {{ $photoCounts[$dive->id] == 1 ? 'photo' : 'photos' }}"><span class="material-icons-round" aria-hidden="true">photo_camera</span>{{ $photoCounts[$dive->id] }}</span>@endif
                                             @if ($wished)
                                                 {{-- Same bookmark the dashboard's trip cards use for a
                                                      wishlisted site. --}}

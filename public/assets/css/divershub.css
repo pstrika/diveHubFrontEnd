@@ -4844,3 +4844,7 @@ body.dh-photo-viewer-open { overflow: hidden; }
 .dh-whats-this-conf.is-high { color: var(--dh-good); }
 .dh-whats-this-conf.is-medium { color: var(--dh-sea); }
 .dh-whats-this-card.is-tagged { border-color: var(--dh-sea); background: var(--dh-foam); cursor: default; }
+
+/* Photo badge on logbook rows (Pablo, 2026-10-18). */
+.dh-logbook-photo-badge { display: inline-flex; align-items: center; gap: 2px; flex: none; margin-left: 6px; padding: 1px 7px 1px 5px; border-radius: var(--dh-radius-pill); background: var(--dh-foam); color: var(--dh-sea); font-size: .72rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.5; }
+.dh-logbook-photo-badge .material-icons-round { font-size: 14px; }
