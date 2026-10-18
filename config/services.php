@@ -166,6 +166,9 @@ return [
     // settings. Haiku: cheap and fast, enough to pick from our catalog.
     'anthropic' => [
         'key' => env('ANTHROPIC_API_KEY'),
+        // Only for a key created outside a workspace (organization-level):
+        // Anthropic then needs the workspace to bill (2026-10-18).
+        'workspace_id' => env('ANTHROPIC_WORKSPACE_ID'),
         'species_model' => env('ANTHROPIC_SPECIES_MODEL', 'claude-haiku-5-5'),
         'species_daily_limit' => (int) env('ANTHROPIC_SPECIES_DAILY_LIMIT', 50),
     ],

@@ -52,10 +52,9 @@ class SpeciesIdentifier
         }
 
         $model = config('services.anthropic.species_model', 'claude-haiku-5-5');
-        $response = Http::withHeaders([
-            'x-api-key' => config('services.anthropic.key'),
-            'anthropic-version' => '2023-06-01',
-        ])->timeout(60)->post('https://api.anthropic.com/v1/messages', [
+        $headers = ['x-api-key' => config('services.anthropic.key'), 'anthropic-version' => '2023-06-01'];
+        if ($ws = config('services.anthropic.workspace_id')) $headers['anthropic-workspace-id'] = $ws;
+        $response = Http::withHeaders($headers)->timeout(60)->post('https://api.anthropic.com/v1/messages', [
             'model' => $model,
             'max_tokens' => 400,
             'system' => 'You identify marine life in underwater photos taken by scuba divers, mostly in South Florida and the Caribbean. '
