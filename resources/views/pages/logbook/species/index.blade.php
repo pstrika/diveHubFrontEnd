@@ -15,9 +15,6 @@
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                         <a href="{{ route('Logbook') }}" class="dh-btn dh-btn-ghost-dark"><span class="material-icons-round" aria-hidden="true">arrow_back</span> Logbook</a>
                         <div class="d-flex gap-2 flex-wrap">
-                            @if (auth()->user()->isAdmin())
-                                <a href="{{ route('Species.photoReview') }}" class="dh-btn dh-btn-ghost-dark"><span class="material-icons-round" aria-hidden="true">photo_library</span> Review pictures</a>
-                            @endif
                             <a href="{{ route('Species.create') }}" class="dh-btn dh-btn-primary"><span class="material-icons-round" aria-hidden="true">add</span> Add a species</a>
                         </div>
                     </div>

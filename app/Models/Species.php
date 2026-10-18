@@ -77,7 +77,7 @@ class Species extends Model
     {
         if (!$this->photo_credit && !$this->photo_license) return null;
         if ($this->photo_origin === 'own') return 'Photo: ' . $this->photo_credit;
-        return 'Photo: ' . collect([$this->photo_credit, $this->photo_license, $this->photo_source_url ? 'Wikimedia Commons' : null])->filter()->implode(', ');
+        return 'Photo: ' . collect([$this->photo_credit, $this->photo_license, $this->photo_source_url ? 'Wikimedia Commons' : null, $this->photo_mirrored ? 'mirrored' : null])->filter()->implode(', ');
     }
 
     /** The group's icon (public/assets/img/icons/logbook, 2026-10-17). */

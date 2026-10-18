@@ -102,7 +102,7 @@ class SpeciesController extends Controller
      */
     public function photoReview(Request $request)
     {
-        abort_unless($request->user()->isAdmin(), 403);
+        $this->authorize('manage-items', \App\Models\User::class);
         $filter = in_array($request->query('show'), ['candidate', 'approved', 'rejected', 'missing', 'own', 'not_own'], true) ? $request->query('show') : 'candidate';
         $q = Species::whereNull('user_id')->orderBy('category')->orderBy('common_name');
         match ($filter) {
@@ -120,12 +120,23 @@ class SpeciesController extends Controller
 
     public function photoDecide(Request $request, string $uuid)
     {
-        abort_unless($request->user()->isAdmin(), 403);
+        $this->authorize('manage-items', \App\Models\User::class);
         $s = Species::whereNull('user_id')->where('uuid', $uuid)->firstOrFail();
         $decision = $request->validate(['decision' => 'required|in:approved,rejected,candidate'])['decision'];
         abort_unless($s->photo, 422);
         $s->forceFill(['photo_status' => $decision])->save();
         return $request->wantsJson() ? response()->json(['status' => $decision]) : back();
+    }
+
+    /** Mirror the picture left-right (fish facing right, Pablo 2026-10-18). */
+    public function photoFlip(Request $request, string $uuid)
+    {
+        $this->authorize('manage-items', \App\Models\User::class);
+        $s = Species::whereNull('user_id')->where('uuid', $uuid)->firstOrFail();
+        abort_unless($s->photo && \App\Support\SpeciesPhoto::mirror($s), 422);
+        return $request->wantsJson()
+            ? response()->json(['url' => asset('assets/img/species/' . $s->photo), 'mirrored' => (bool) $s->photo_mirrored, 'credit' => $s->creditLine()])
+            : back();
     }
 
     private function own(Request $request, string $uuid): Species

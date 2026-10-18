@@ -2,12 +2,16 @@
     <x-shell.nav active="me" />
 
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
-        <x-shell.header title="Species pictures" icon="photo_library" :h1="true" />
+        <x-shell.header title="Picture Management" icon="photo_camera" />
 
         <div class="container-fluid py-0">
             <div class="row">
                 <div class="col-lg-10 col-12 m-auto pt-4">
-                    <a href="{{ route('Species.index') }}" class="dh-btn dh-btn-ghost-dark mb-3"><span class="material-icons-round" aria-hidden="true">arrow_back</span> Marine life</a>
+            {{-- Picture Management: diver site photos | species pictures (Pablo, 2026-10-18). --}}
+            <nav class="dh-sp-tabs mb-3" aria-label="Picture type">
+                <a href="{{ route('DiverPhotos.manage.index') }}" class="{{ request()->routeIs('DiverPhotos.manage.index') ? 'is-active' : '' }}">Diver site photos</a>
+                <a href="{{ route('Species.photoReview') }}" class="{{ request()->routeIs('Species.photoReview') ? 'is-active' : '' }}">Species pictures</a>
+            </nav>
 
                     <p class="text-sm text-secondary">
                         The picture each species shows: your own photo, or a freely licensed one from Wikimedia Commons (commercial use allowed, credit shown under it) until you have yours.
@@ -41,6 +45,7 @@
                                 </div>
                                 @if ($s->photo)
                                     <div class="dh-sp-card-actions">
+                                        <button type="button" class="dh-btn dh-btn-ghost-dark dh-sp-flip" data-flip title="Mirror left-right"><span class="material-icons-round" aria-hidden="true">flip</span></button>
                                         <button type="button" class="dh-btn {{ $s->photo_status === 'approved' ? 'dh-btn-primary' : 'dh-btn-ghost-dark' }}" data-decision="approved"><span class="material-icons-round" aria-hidden="true">check</span>Keep</button>
                                         <button type="button" class="dh-btn {{ $s->photo_status === 'rejected' ? 'dh-btn-primary' : 'dh-btn-ghost-dark' }}" data-decision="rejected"><span class="material-icons-round" aria-hidden="true">close</span>Skip</button>
                                     </div>
@@ -56,14 +61,27 @@
     @push('js')
         <script>
             (function () {
-                var url = "{{ url('Logbook/species') }}/";
+                var url = "{{ url('DiverPhotos-Admin/species') }}/";
                 var csrf = "{{ csrf_token() }}";
+                // Mirror left-right (fish face right, Pablo 2026-10-18).
+                document.querySelectorAll('.dh-sp-card [data-flip]').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var card = btn.closest('.dh-sp-card');
+                        card.classList.add('is-busy');
+                        fetch(url + card.dataset.uuid + '/flip', {
+                            method: 'POST', credentials: 'same-origin',
+                            headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                        }).then(function (r) { if (!r.ok) throw new Error('Could not mirror'); return r.json(); })
+                          .then(function (d) { card.querySelector('img').src = d.url; card.classList.remove('is-busy'); })
+                          .catch(function (e) { card.classList.remove('is-busy'); alert(e.message); });
+                    });
+                });
                 document.querySelectorAll('.dh-sp-card [data-decision]').forEach(function (btn) {
                     btn.addEventListener('click', function () {
                         var card = btn.closest('.dh-sp-card');
                         var decision = btn.getAttribute('data-decision');
                         card.classList.add('is-busy');
-                        fetch(url + card.dataset.uuid + '/photo-review', {
+                        fetch(url + card.dataset.uuid + '/decide', {
                             method: 'POST', credentials: 'same-origin',
                             headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'Content-Type': 'application/json' },
                             body: JSON.stringify({ decision: decision }),

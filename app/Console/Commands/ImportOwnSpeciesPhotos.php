@@ -56,11 +56,16 @@ class ImportOwnSpeciesPhotos extends Command
                 if (!SitePhoto::resizeTo($path, [public_path('assets/img/species/' . $file) => 1200])) {
                     $skipped[] = "$stem (couldn't resize)"; continue;
                 }
+                // A picture you had mirrored (fish facing right) stays mirrored.
+                $wasMirrored = $s->photo_origin === 'own' && $s->photo_mirrored;
+                // Replace your own earlier (mirrored) file; a Commons copy stays on disk.
+                if ($s->photo && $s->photo !== $file && str_contains($s->photo, '_own')) @unlink(public_path('assets/img/species/' . $s->photo));
                 $s->forceFill([
-                    'photo' => $file, 'photo_status' => 'approved', 'photo_origin' => 'own',
+                    'photo' => $file, 'photo_status' => 'approved', 'photo_origin' => 'own', 'photo_mirrored' => false,
                     'photo_credit' => $this->option('credit'), 'photo_license' => null,
                     'photo_license_url' => null, 'photo_source_url' => null,
                 ])->save();
+                if ($wasMirrored) \App\Support\SpeciesPhoto::mirror($s);
             }
             $done++;
             $this->line("ok  $stem -> {$s->common_name}");

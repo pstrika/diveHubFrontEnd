@@ -53,6 +53,12 @@
                 </p>
             @endif
 
+{{-- Picture Management: diver site photos | species pictures (Pablo, 2026-10-18). --}}
+            <nav class="dh-sp-tabs mb-3" aria-label="Picture type">
+                <a href="{{ route('DiverPhotos.manage.index') }}" class="{{ request()->routeIs('DiverPhotos.manage.index') ? 'is-active' : '' }}">Diver site photos</a>
+                <a href="{{ route('Species.photoReview') }}" class="{{ request()->routeIs('Species.photoReview') ? 'is-active' : '' }}">Species pictures</a>
+            </nav>
+
             <div class="dh-panel-head-row mb-3">
                 <h2 class="dh-panel-title mb-0">Pending review <span class="dh-region-count">{{ $pending->count() }}</span></h2>
             </div>

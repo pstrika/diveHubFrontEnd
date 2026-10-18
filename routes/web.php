@@ -439,6 +439,10 @@ Route::get('DiveSitesAdmin', 'App\Http\Controllers\SiteController@showAllAdmin')
 // Picture Management admin console (Pablo, 2026-09-23) - approve/reject
 // diver-uploaded site pictures, and a history to remove any of them later.
 Route::get('DiverPhotos-Admin', 'App\Http\Controllers\DiverPhotoAdminController@index')->middleware('auth')->name('DiverPhotos.manage.index');
+// Species pictures review lives in Picture Management, not the logbook (Pablo, 2026-10-18).
+Route::get('DiverPhotos-Admin/species', 'App\Http\Controllers\SpeciesController@photoReview')->middleware('auth')->name('Species.photoReview');
+Route::post('DiverPhotos-Admin/species/{uuid}/decide', 'App\Http\Controllers\SpeciesController@photoDecide')->middleware('auth')->name('Species.photoDecide');
+Route::post('DiverPhotos-Admin/species/{uuid}/flip', 'App\Http\Controllers\SpeciesController@photoFlip')->middleware('auth')->name('Species.photoFlip');
 Route::post('DiverPhotos-Admin/{photo}/approve', 'App\Http\Controllers\DiverPhotoAdminController@approve')->middleware('auth')->name('DiverPhotos.manage.approve');
 Route::post('DiverPhotos-Admin/{photo}/reject', 'App\Http\Controllers\DiverPhotoAdminController@reject')->middleware('auth')->name('DiverPhotos.manage.reject');
 Route::delete('DiverPhotos-Admin/{photo}', 'App\Http\Controllers\DiverPhotoAdminController@destroy')->middleware('auth')->name('DiverPhotos.manage.destroy');
@@ -537,8 +541,6 @@ Route::middleware(['auth', 'logbook', 'early:equipment'])->group(function () {
 Route::middleware(['auth', 'logbook', 'early:species'])->group(function () {
     Route::get('Logbook/species', 'App\Http\Controllers\SpeciesController@index')->name('Species.index');
     Route::get('Logbook/species/new', 'App\Http\Controllers\SpeciesController@create')->name('Species.create');
-    Route::get('Logbook/species/photos', 'App\Http\Controllers\SpeciesController@photoReview')->name('Species.photoReview');
-    Route::post('Logbook/species/{uuid}/photo-review', 'App\Http\Controllers\SpeciesController@photoDecide')->name('Species.photoDecide');
     Route::post('Logbook/species', 'App\Http\Controllers\SpeciesController@store')->name('Species.store');
     Route::get('Logbook/species/{uuid}', 'App\Http\Controllers\SpeciesController@show')->name('Species.show');
     Route::get('Logbook/species/{uuid}/edit', 'App\Http\Controllers\SpeciesController@edit')->name('Species.edit');
