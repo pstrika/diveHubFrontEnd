@@ -50,21 +50,25 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single'],
+            // One file per day, 14 kept (2026-10-18: the single laravel.log
+            // had grown to 9.7 GB of per-request debug lines).
+            'channels' => [env('LOG_STACK', 'daily')],
             'ignore_exceptions' => false,
         ],
 
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => env('LOG_LEVEL', 'warning'),
         ],
 
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
-            'level' => env('LOG_LEVEL', 'debug'),
-            'days' => 14,
+            // Warnings and errors only unless LOG_LEVEL says otherwise -
+            // production never set it, so every Log::debug() was written.
+            'level' => env('LOG_LEVEL', 'warning'),
+            'days' => (int) env('LOG_DAILY_DAYS', 14),
         ],
 
         'slack' => [
