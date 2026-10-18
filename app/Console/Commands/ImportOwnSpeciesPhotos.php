@@ -26,6 +26,8 @@ class ImportOwnSpeciesPhotos extends Command
         'LongSpinnedSeaUrchin' => 'Long-spined sea urchin',
         'Lionfish' => 'Red lionfish',
         'Smooth trunkfish' => null,                 // the sharper Smooth_trunkfish.jpg is used instead
+        'Atlantic Salefish' => 'Atlantic sailfish',  // spelling
+        'Bonnethead shark' => 'Bonnethead',
     ];
 
     public function handle(): int
@@ -40,7 +42,7 @@ class ImportOwnSpeciesPhotos extends Command
         }
 
         $done = 0; $skipped = [];
-        foreach (glob($dir . '/*.{jpg,jpeg,JPG,JPEG,png,PNG}', GLOB_BRACE) as $path) {
+        foreach (glob($dir . '/*.{jpg,jpeg,JPG,JPEG,png,PNG,webp,WEBP}', GLOB_BRACE) as $path) {
             $stem = pathinfo($path, PATHINFO_FILENAME);
             if (array_key_exists($stem, self::MANUAL)) {
                 $name = self::MANUAL[$stem];
