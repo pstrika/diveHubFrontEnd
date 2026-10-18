@@ -418,8 +418,19 @@ class LogbookController extends Controller
         $request->validate(['confirm' => 'required|in:DELETE']);
         $userId = $request->user()->id;
 
+        // Photos (files + any site-page copies), species and gear on the
+        // dives go with them (2026-10-18). Your gear list, your own
+        // species and your sites' visited marks stay.
+        foreach (\App\Models\DivePhoto::where('user_id', $userId)->get() as $photo) {
+            \App\Support\DivePhotoStore::delete($photo);
+        }
         \Illuminate\Support\Facades\DB::transaction(function () use ($userId) {
-            Dive::withTrashed()->where('user_id', $userId)->forceDelete();
+            $diveIds = Dive::withTrashed()->withoutGlobalScope('companions')->where('user_id', $userId)->pluck('id');
+            foreach ($diveIds->chunk(500) as $chunk) {
+                \Illuminate\Support\Facades\DB::table('dive_species')->whereIn('dive_id', $chunk)->delete();
+                \Illuminate\Support\Facades\DB::table('dive_equipment')->whereIn('dive_id', $chunk)->delete();
+            }
+            Dive::withTrashed()->withoutGlobalScope('companions')->where('user_id', $userId)->forceDelete();
             DiveChange::where('user_id', $userId)->delete();
             \App\Models\DiveImport::where('user_id', $userId)->delete(); // items cascade
             \App\Models\UserSite::where('user_id', $userId)->delete();

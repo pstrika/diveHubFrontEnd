@@ -86,7 +86,8 @@
                         <div class="card-body">
                             <h3 class="h5 mb-2 text-danger">Delete my entire logbook</h3>
                             <p class="text-sm text-secondary mb-3">
-                                Permanently removes every dive, your own dive sites, staged imports and the sync history from Divers Hub.
+                                Permanently removes every dive with its photos, marine life tags and gear, your own dive sites, staged imports and the sync history from Divers Hub.
+                                Your equipment list, your own species and the sites marked as visited are kept.
                                 The Divers Hub app will drop its copies at its next sync. This cannot be undone. Your dive computer still has your dives;
                                 syncing it again later would upload them afresh.
                             </p>
