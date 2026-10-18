@@ -1061,11 +1061,15 @@ class SiteController extends Controller
         $matchedSiteIds = collect([$results, $resultsWreckType, $resultsDesc, $resultsHistory])
             ->flatten()->pluck('id')->unique();
 
-        // One site and nothing else: straight to it (its page has "Your
-        // dives here"), unless the diver also has dives at other sites by
-        // that name (their own sites) to show.
-        if ($matchedSiteIds->count() === 1 && $resultsOperator->isEmpty()
-            && $this->myDivesMatching($searchString)->every(fn ($d) => (int) $d->site_id === (int) $matchedSiteIds->first())) {
+        // The diver's own dives at matching sites, and marine life
+        // (Pablo, 2026-10-18: "in the global search bar we can search for
+        // dives made to a given site (return results) and for species").
+        $myDives = $this->myDivesMatching($searchString);
+        $species = $this->speciesMatching($searchString);
+
+        // One site and nothing else: straight to it. With your dives or
+        // species to show, the results page instead.
+        if ($matchedSiteIds->count() === 1 && $resultsOperator->isEmpty() && $myDives->isEmpty() && $species->isEmpty()) {
             $site = Site::find($matchedSiteIds->first());
             return redirect(route('SiteDetails') . '/' . ($site->slug ?? $site->id));
         }
@@ -1075,11 +1079,32 @@ class SiteController extends Controller
             'robots' => 'noindex, nofollow',
         ];
 
-        $myDives = $this->myDivesMatching($searchString);
-
         return view('pages.DiveSitesSearch', compact(
-            'searchString', 'results', 'resultsDescription', 'resultsHistoryA', 'resultsWreckType', 'resultsOperator', 'SEO', 'myDives'
+            'searchString', 'results', 'resultsDescription', 'resultsHistoryA', 'resultsWreckType', 'resultsOperator', 'SEO', 'myDives', 'species'
         ));
+    }
+
+    /**
+     * Marine life matching the search - common, other or scientific name -
+     * for divers who have the species guide (early access). The catalog
+     * plus their own species; how many of their dives each was seen on.
+     */
+    private function speciesMatching(string $searchString)
+    {
+        $user = auth()->user();
+        if (!$user || !$user->isNotGuest() || !\App\Support\EarlyAccess::allows($user, 'species') || mb_strlen($searchString) < 3) {
+            return collect();
+        }
+        $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $searchString) . '%';
+        $species = \App\Models\Species::visibleTo($user->id)
+            ->where(fn ($q) => $q->where('common_name', 'like', $like)->orWhere('scientific_name', 'like', $like)
+                ->orWhere('other_names', 'like', $like)->orWhere('family', 'like', $like)->orWhere('genus', 'like', $like))
+            ->orderBy('common_name')->take(12)->get();
+        if ($species->isEmpty()) return $species;
+        $seen = \Illuminate\Support\Facades\DB::table('dive_species')->join('dives', 'dives.id', '=', 'dive_species.dive_id')
+            ->where('dives.user_id', $user->id)->whereNull('dives.deleted_at')->whereIn('dive_species.species_id', $species->pluck('id'))
+            ->groupBy('dive_species.species_id')->selectRaw('dive_species.species_id, COUNT(*) n')->pluck('n', 'species_id');
+        return $species->each(fn ($s) => $s->seenCount = (int) ($seen[$s->id] ?? 0));
     }
 
     /**

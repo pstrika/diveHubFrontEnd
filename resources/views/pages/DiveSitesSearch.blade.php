@@ -18,7 +18,7 @@
             @php
                 $hasAnyResults = $results->isNotEmpty() || $resultsWreckType->isNotEmpty()
                     || count($resultsDescription) || count($resultsHistoryA) || $resultsOperator->isNotEmpty()
-                    || $myDives->isNotEmpty();
+                    || $myDives->isNotEmpty() || $species->isNotEmpty();
             @endphp
 
             @if(!$hasAnyResults)
@@ -42,6 +42,22 @@
                             @endforeach
                         </ul>
                         <a class="dh-btn dh-btn-ghost-dark mt-2" href="{{ route('Logbook', ['q' => $searchString]) }}"><span class="material-icons-round" aria-hidden="true">menu_book</span>See all in your logbook</a>
+                    </section>
+                @endif
+
+                {{-- Marine life (early access): the guide's species pages. --}}
+                @if($species->isNotEmpty())
+                    <section class="dh-panel">
+                        <h2 class="dh-panel-title">Marine life <span class="dh-region-count">{{ $species->count() }}</span></h2>
+                        <ul class="dh-search-list">
+                            @foreach($species as $sp)
+                                <li><a href="{{ route('Species.show', $sp->uuid) }}">
+                                    <span class="dh-search-type">{{ $sp->categoryLabel() }}</span>
+                                    <span class="dh-search-name">{{ $sp->common_name }} <em class="text-secondary" style="font-weight:400">{{ $sp->scientific_name }}</em></span>
+                                    <span class="dh-search-loc">{{ $sp->seenCount ? 'Seen on ' . $sp->seenCount . ' of your dives' : '' }}</span>
+                                </a></li>
+                            @endforeach
+                        </ul>
                     </section>
                 @endif
 
