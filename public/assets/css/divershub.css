@@ -4489,7 +4489,9 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
 .dh-import-search-wrap { position: relative; display: inline-block; width: 260px; max-width: 100%; }
 .dh-import-search { width: 100%; padding: 12px 14px; font-size: 1rem; font-family: inherit; color: var(--dh-ink); background: #fff; border: 1px solid var(--dh-line); border-radius: 12px; }
 .dh-import-search:focus { outline: none; border-color: var(--dh-sea); box-shadow: 0 0 0 3px rgba(14,124,158,.15); }
-.dh-import-results { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; }
+.dh-import-results { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 50; min-width: 260px; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: var(--dh-radius); box-shadow: 0 8px 20px rgba(11,42,58,.16); max-height: 260px; overflow-y: auto; padding: 0 6px; }
+/* Import Sites step: the open dropdown sits above the rows below it (2026-10-18: results showed through). */
+.dh-import-search-wrap:focus-within { z-index: 60; }
 .dh-import-site { position: relative; }
 .dh-import-progress { height: 10px; border-radius: 999px; background: rgba(0,0,0,.08); overflow: hidden; }
 .dh-import-progress-bar { height: 100%; background: var(--dh-sea); transition: width .3s; }
