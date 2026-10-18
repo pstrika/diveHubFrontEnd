@@ -1454,6 +1454,8 @@
                     shareSightings: @json($dive->user?->share_sightings ?? auth()->user()->share_sightings),
                     shareUrl: "{{ route('Species.shareSightings') }}",
                     newUrl: "{{ route('Species.create') }}",
+                    // "What's this?" - only when the AI key is configured.
+                    identify: @json(\App\Support\SpeciesIdentifier::enabled(auth()->user())),
                     csrf: "{{ csrf_token() }}",
                 };
             </script>

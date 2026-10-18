@@ -4829,3 +4829,18 @@ body.dh-photo-viewer-open { overflow: hidden; }
 .dh-eq-thumb.is-icon .dh-cat-icon { width: 26px; height: 26px; }
 .dh-panel-title .dh-cat-icon { width: 22px; height: 22px; margin-right: 6px; color: var(--dh-sea); }
 .dh-sp-card-actions .dh-sp-flip { flex: 0 0 auto; padding-inline: 10px; }
+
+/* "What's this?" species suggestions in the photo viewer (2026-10-18). */
+.dh-whats-this { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.dh-whats-this > .dh-btn { align-self: flex-start; }
+.dh-whats-this-out { display: flex; flex-direction: column; gap: 6px; }
+.dh-whats-this-out:empty { display: none; }
+.dh-whats-this-card { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 6px 10px 6px 6px; border: 1px solid var(--dh-line); border-radius: 12px; background: var(--dh-paper); color: var(--dh-ink); cursor: pointer; }
+.dh-whats-this-card:hover { border-color: var(--dh-sea); }
+.dh-whats-this-card img, .dh-whats-this-card > .dh-cat-icon { width: 48px; height: 36px; object-fit: cover; border-radius: 6px; flex: none; color: var(--dh-sea); }
+.dh-whats-this-card > span:nth-child(2) { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.dh-whats-this-card em { font-size: .75rem; color: var(--dh-muted); }
+.dh-whats-this-conf { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--dh-muted); }
+.dh-whats-this-conf.is-high { color: var(--dh-good); }
+.dh-whats-this-conf.is-medium { color: var(--dh-sea); }
+.dh-whats-this-card.is-tagged { border-color: var(--dh-sea); background: var(--dh-foam); cursor: default; }

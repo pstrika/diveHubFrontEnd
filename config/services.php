@@ -161,4 +161,13 @@ return [
         'post_dive_feedback_content_sid' => env('TWILIO_WHATSAPP_POST_DIVE_FEEDBACK_SID', 'HXc5211c3214c96878266651fb96b3262c'),
     ],
 
+    // "What's this?" species identification on dive photos (Pablo,
+    // 2026-10-18). Off until ANTHROPIC_API_KEY is set in the App Service
+    // settings. Haiku: cheap and fast, enough to pick from our catalog.
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+        'species_model' => env('ANTHROPIC_SPECIES_MODEL', 'claude-haiku-5-5'),
+        'species_daily_limit' => (int) env('ANTHROPIC_SPECIES_DAILY_LIMIT', 50),
+    ],
+
 ];

@@ -40,6 +40,14 @@ class DiveSpeciesController extends Controller
         return response()->json(['photo' => DivePhotoController::card($p->fresh('species')), 'species' => self::diveList($p->dive)]);
     }
 
+    /** "What's this?" - AI species suggestions for one of the diver's photos (2026-10-18). */
+    public function identify(Request $request, string $photo)
+    {
+        abort_unless(\App\Support\SpeciesIdentifier::enabled($request->user()), 404);
+        $p = DivePhoto::where('user_id', $request->user()->id)->where('uuid', $photo)->firstOrFail();
+        return response()->json(\App\Support\SpeciesIdentifier::identify($p, $request->boolean('fresh')));
+    }
+
     /** The diver's answer to "share your sightings with the community?". */
     public function shareSightings(Request $request)
     {

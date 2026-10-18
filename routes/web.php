@@ -550,6 +550,7 @@ Route::middleware(['auth', 'logbook', 'early:species'])->group(function () {
     Route::delete('Logbook/{id}/species/{uuid}', 'App\Http\Controllers\DiveSpeciesController@untagDive')->where('id', '[0-9]+')->name('DiveSpecies.untag');
     Route::post('Logbook/photos/{photo}/species', 'App\Http\Controllers\DiveSpeciesController@tagPhoto')->name('PhotoSpecies.tag');
     Route::delete('Logbook/photos/{photo}/species/{uuid}', 'App\Http\Controllers\DiveSpeciesController@untagPhoto')->name('PhotoSpecies.untag');
+    Route::post('Logbook/photos/{photo}/identify', 'App\Http\Controllers\DiveSpeciesController@identify')->middleware('throttle:20,1')->name('PhotoSpecies.identify');
     Route::post('Logbook/settings/share-sightings', 'App\Http\Controllers\DiveSpeciesController@shareSightings')->name('Species.shareSightings');
 });
 Route::post('Logbook/{id}/conditions', 'App\Http\Controllers\LogbookController@updateConditions')->where('id', '[0-9]+')->middleware(['auth', 'logbook'])->name('DiveDetails.updateConditions');

@@ -79,6 +79,7 @@ Route::withoutMiddleware('throttle:api')->middleware(['auth.api:sanctum', 'logbo
     Route::delete('/photos/{photo}', [$x, 'deletePhoto'])->where('photo', $u);
     Route::post('/photos/{photo}/share', [$x, 'sharePhoto'])->where('photo', $u);
     Route::put('/photos/{photo}/species', [$x, 'setPhotoSpecies'])->where('photo', $u);
+    Route::post('/photos/{photo}/identify', [$x, 'identifyPhoto'])->where('photo', $u);
     Route::get('/photos/{photo}/{size}', [$x, 'photoFile'])->where(['photo' => $u, 'size' => 'web|thumb']);
     Route::get('/species', [$x, 'species']);
     Route::post('/species', [$x, 'createSpecies']);

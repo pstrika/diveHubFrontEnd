@@ -22,7 +22,7 @@ class DivePhoto extends Model
 
     protected $fillable = ['uuid', 'user_id', 'dive_id', 'width', 'height', 'caption', 'taken_at', 'position', 'shared_diver_photo_id'];
 
-    protected $casts = ['taken_at' => 'datetime'];
+    protected $casts = ['taken_at' => 'datetime', 'ai_suggestions' => 'array'];
 
     protected static function booted()
     {

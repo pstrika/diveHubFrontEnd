@@ -52,6 +52,8 @@ class LogbookExtrasApiController extends Controller
             'max_photos_per_dive' => DivePhoto::MAX_PER_DIVE,
             'species' => EarlyAccess::allows($u, 'species'),
             'equipment' => EarlyAccess::allows($u, 'equipment'),
+            // "What's this?" on photos: POST /api/photos/{uuid}/identify.
+            'species_id' => \App\Support\SpeciesIdentifier::enabled($u),
             // null = never asked; ask before the first species tag.
             'share_sightings' => $u->share_sightings === null ? null : (bool) $u->share_sightings,
         ]);
@@ -170,6 +172,13 @@ class LogbookExtrasApiController extends Controller
         $data = $request->validate(['species' => 'present|array', 'species.*' => 'string']);
         SpeciesTagger::syncPhoto($p, $data['species']);
         return response()->json(['photo' => $p->fresh('species')->toApi(), 'dive_species' => self::diveSpecies($p->dive)]);
+    }
+
+    /** "What's this?" - AI species suggestions for a photo; the app then PUTs the photo's species as usual. */
+    public function identifyPhoto(Request $request, string $photo)
+    {
+        abort_unless(\App\Support\SpeciesIdentifier::enabled($request->user()), 404);
+        return response()->json(\App\Support\SpeciesIdentifier::identify($this->photo($request, $photo), $request->boolean('fresh')));
     }
 
     /** {share: bool} - the answer to "share your sightings with the community?". */

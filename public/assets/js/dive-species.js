@@ -120,8 +120,50 @@
   window.dhPhotoSpecies = function (photo, onChange) {
     var host = document.getElementById('dhPhotoViewerSpecies');
     if (!host) return;
-    host.innerHTML = '<div class="dh-species-chips"></div><div class="dh-species-picker"></div>';
+    host.innerHTML = '<div class="dh-species-chips"></div>'
+      + (cfg.identify ? '<div class="dh-whats-this"><button type="button" class="dh-btn dh-btn-ghost-dark" data-identify><span class="material-icons-round" aria-hidden="true">auto_awesome</span>What\'s this?</button><div class="dh-whats-this-out" aria-live="polite"></div></div>' : '')
+      + '<div class="dh-species-picker"></div>';
     var box = host.querySelector('.dh-species-chips');
+
+    // "What's this?" (2026-10-18): AI suggestions from our catalog; the
+    // diver taps one to tag it - nothing is tagged on its own.
+    var idBtn = host.querySelector('[data-identify]');
+    if (idBtn) {
+      var out = host.querySelector('.dh-whats-this-out');
+      var CONF = { high: 'Likely', medium: 'Possibly', low: 'Maybe' };
+      idBtn.addEventListener('click', function () {
+        idBtn.disabled = true;
+        out.innerHTML = '<span class="text-sm text-secondary">Looking at the photo...</span>';
+        send('POST', cfg.photoUrl + photo.uuid + '/identify').then(function (d) {
+          idBtn.disabled = false;
+          var have = {}; photo.species.forEach(function (s) { have[s.uuid] = 1; });
+          if (!d.candidates.length) {
+            out.innerHTML = '<span class="text-sm text-secondary">No species recognised in this photo'
+              + (d.not_in_catalog ? ' from the guide. It might be: <strong>' + esc(d.not_in_catalog) + '</strong> - <a href="' + cfg.newUrl + '">add it as your own species</a>' : '') + '.</span>';
+            return;
+          }
+          out.innerHTML = d.candidates.map(function (c) {
+            var pic = c.photo_url ? '<img src="' + c.photo_url + '" alt="">' : '<span class="dh-cat-icon" style="--icon:url(\'' + c.icon_url + '\')"></span>';
+            return '<button type="button" class="dh-whats-this-card' + (have[c.uuid] ? ' is-tagged' : '') + '" data-uuid="' + c.uuid + '">' + pic
+              + '<span><strong>' + esc(c.name) + '</strong><em>' + esc(c.scientific || '') + '</em></span>'
+              + '<span class="dh-whats-this-conf is-' + c.confidence + '">' + (have[c.uuid] ? 'Tagged' : CONF[c.confidence]) + '</span></button>';
+          }).join('') + (d.not_in_catalog ? '<span class="text-xs text-secondary">Also possibly: ' + esc(d.not_in_catalog) + ' (not in the guide)</span>' : '')
+            + '<span class="text-xs text-secondary">Suggestions by AI - tap the right one to tag it.</span>';
+          out.querySelectorAll('[data-uuid]').forEach(function (b) {
+            if (b.classList.contains('is-tagged')) return;
+            b.addEventListener('click', function () {
+              askShareOnce().then(function () {
+                return send('POST', cfg.photoUrl + photo.uuid + '/species', { species: b.getAttribute('data-uuid') });
+              }).then(function (r) {
+                apply(r);
+                b.classList.add('is-tagged');
+                b.querySelector('.dh-whats-this-conf').textContent = 'Tagged';
+              }).catch(function (e) { alert(e.message); });
+            });
+          });
+        }).catch(function (e) { idBtn.disabled = false; out.innerHTML = '<span class="text-sm text-danger">' + esc(e.message) + '</span>'; });
+      });
+    }
     function draw() {
       box.innerHTML = '';
       photo.species.forEach(function (s) {
