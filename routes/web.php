@@ -532,6 +532,7 @@ Route::middleware(['auth', 'logbook', 'early:equipment'])->group(function () {
     Route::get('Logbook/equipment/{uuid}', 'App\Http\Controllers\EquipmentController@show')->name('Equipment.show');
     Route::get('Logbook/equipment/{uuid}/edit', 'App\Http\Controllers\EquipmentController@edit')->name('Equipment.edit');
     Route::get('Logbook/equipment/{uuid}/photo', 'App\Http\Controllers\EquipmentController@photo')->name('Equipment.photo');
+    Route::post('Logbook/equipment/{uuid}/photo', 'App\Http\Controllers\EquipmentController@photoUpload')->name('Equipment.photoUpload');
     Route::put('Logbook/equipment/{uuid}', 'App\Http\Controllers\EquipmentController@update')->name('Equipment.update');
     Route::delete('Logbook/equipment/{uuid}', 'App\Http\Controllers\EquipmentController@destroy')->name('Equipment.destroy');
     Route::post('Logbook/{id}/equipment', 'App\Http\Controllers\EquipmentController@diveAdd')->where('id', '[0-9]+')->name('DiveEquipment.add');

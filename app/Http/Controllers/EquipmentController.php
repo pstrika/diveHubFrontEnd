@@ -140,6 +140,15 @@ class EquipmentController extends Controller
         return redirect()->route('Equipment.index')->with('status', 'Removed from your gear.');
     }
 
+    /** Hero picture straight from the gear page (no trip through Edit). */
+    public function photoUpload(Request $request, string $uuid)
+    {
+        $item = $this->own($request, $uuid);
+        $request->validate(['photo' => 'required|image|mimes:jpg,jpeg,png,webp|max:20480']);
+        $this->savePhoto($request, $item);
+        return redirect()->route('Equipment.show', $item->uuid)->with('status', 'Picture saved.');
+    }
+
     public function photo(Request $request, string $uuid)
     {
         $item = $this->own($request, $uuid);

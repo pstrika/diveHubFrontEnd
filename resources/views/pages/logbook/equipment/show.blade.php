@@ -23,6 +23,22 @@
                         </div>
                     </div>
 
+                    {{-- The gear's hero picture (Pablo, 2026-10-18): the diver's own
+                         photo of this piece - Divers Hub never supplies one. Private. --}}
+                    <form method="POST" action="{{ route('Equipment.photoUpload', $item->uuid) }}" enctype="multipart/form-data" class="dh-eq-hero {{ $item->photoUrl() ? '' : 'is-empty' }}" id="eqHeroForm">
+                        @csrf
+                        @if ($item->photoUrl())
+                            <img src="{{ $item->photoUrl() }}" alt="{{ $item->name }}">
+                        @else
+                            <span class="dh-cat-icon" style="--icon:url('{{ $item->iconUrl() }}')" aria-hidden="true"></span>
+                            <span class="text-sm text-secondary">Add a photo of your {{ mb_strtolower($item->categoryLabel()) === 'other' ? 'gear' : rtrim(mb_strtolower($item->categoryLabel()), 's') }} so you can tell it apart at a glance.</span>
+                        @endif
+                        <label class="dh-btn {{ $item->photoUrl() ? 'dh-btn-ghost-dark dh-eq-hero-change' : 'dh-btn-primary' }}">
+                            <span class="material-icons-round" aria-hidden="true">add_a_photo</span>{{ $item->photoUrl() ? 'Change picture' : 'Add a picture' }}
+                            <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" hidden onchange="this.form.submit()">
+                        </label>
+                    </form>
+
                     <div class="card p-0 position-relative z-index-2 mb-4">
                         <div class="card-body">
                             <div class="dh-species-head">
@@ -43,9 +59,6 @@
                                         <dt>Dives</dt><dd>{{ $dives->count() }}@if ($dives->isNotEmpty()) &middot; last {{ $dives->first()->started_at->format('M j, Y') }} @endif</dd>
                                     </dl>
                                 </div>
-                                @if ($item->photoUrl())
-                                    <img src="{{ $item->photoUrl() }}" alt="{{ $item->name }}" class="dh-species-photo">
-                                @endif
                             </div>
                             @if ($item->notes)<p class="mt-3 mb-0" style="white-space: pre-line">{{ $item->notes }}</p>@endif
                         </div>
