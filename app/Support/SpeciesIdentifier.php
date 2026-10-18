@@ -56,7 +56,11 @@ class SpeciesIdentifier
         if ($ws = config('services.anthropic.workspace_id')) $headers['anthropic-workspace-id'] = $ws;
         $response = Http::withHeaders($headers)->timeout(60)->post('https://api.anthropic.com/v1/messages', [
             'model' => $model,
-            'max_tokens' => 400,
+            // Haiku 5.5 thinks by default, and thinking alone used up the
+            // 400-token answer (2026-10-18: empty replies). Picking from a
+            // list doesn't need it.
+            'max_tokens' => 1024,
+            'thinking' => ['type' => 'disabled'],
             'system' => 'You identify marine life in underwater photos taken by scuba divers, mostly in South Florida and the Caribbean. '
                 . 'Only name animals or corals that are clearly visible. Pick from the numbered catalog the user gives you. '
                 . 'Reply with JSON only, no other text: {"candidates":[{"n":<catalog number>,"confidence":"high"|"medium"|"low"}],"not_in_catalog":<short common name or null>}. '
@@ -117,9 +121,11 @@ class SpeciesIdentifier
         return ['candidates' => $out, 'not_in_catalog' => $stored['not_in_catalog'] ?? null];
     }
 
+    /** The answer object - the model sometimes writes a sentence before it. */
     private static function firstJsonObject(string $text): string
     {
-        $start = strpos($text, '{');
+        $start = strpos($text, '{"candidates"');
+        if ($start === false) $start = strpos($text, '{');
         $end = strrpos($text, '}');
         return ($start !== false && $end !== false && $end > $start) ? substr($text, $start, $end - $start + 1) : '{}';
     }
