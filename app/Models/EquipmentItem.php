@@ -21,7 +21,7 @@ class EquipmentItem extends Model
         'purchased_on', 'last_service_on', 'notes', 'photo', 'retired_at',
     ];
 
-    protected $casts = ['purchased_on' => 'date', 'last_service_on' => 'date', 'retired_at' => 'datetime'];
+    protected $casts = ['purchased_on' => 'date', 'last_service_on' => 'date', 'retired_at' => 'date'];
 
     public const CATEGORIES = [
         'regulator' => ['Regulators', 'air'],
@@ -61,6 +61,16 @@ class EquipmentItem extends Model
         return self::categoryIconUrl($this->category);
     }
 
+    /**
+     * Gear you could have used on a dive that day: still in use, or retired
+     * after it (Pablo, 2026-10-18: a retire date for gear no longer used
+     * or no longer owned).
+     */
+    public function scopeUsableOn($q, $date)
+    {
+        return $q->where(fn ($w) => $w->whereNull('retired_at')->orWhereDate('retired_at', '>=', \Carbon\Carbon::parse($date)->toDateString()));
+    }
+
     public function photoPath(): ?string
     {
         return $this->photo ? storage_path('app/equipment/' . $this->user_id . '/' . $this->photo) : null;
@@ -97,7 +107,7 @@ class EquipmentItem extends Model
             'uuid' => $this->uuid, 'category' => $this->category, 'name' => $this->name,
             'manufacturer' => $this->manufacturer, 'model' => $this->model, 'serial_number' => $this->serial_number,
             'purchased_on' => $this->purchased_on?->toDateString(), 'last_service_on' => $this->last_service_on?->toDateString(),
-            'notes' => $this->notes, 'photo_url' => $this->photo ? url('api/equipment/items/' . $this->uuid . '/photo') . '?v=' . substr(md5($this->photo), 0, 6) : null, 'retired' => (bool) $this->retired_at, 'icon_url' => $this->iconUrl(),
+            'notes' => $this->notes, 'photo_url' => $this->photo ? url('api/equipment/items/' . $this->uuid . '/photo') . '?v=' . substr(md5($this->photo), 0, 6) : null, 'retired' => (bool) $this->retired_at, 'retired_on' => $this->retired_at?->toDateString(), 'icon_url' => $this->iconUrl(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
     }

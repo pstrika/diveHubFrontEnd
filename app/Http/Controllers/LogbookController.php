@@ -770,7 +770,7 @@ class LogbookController extends Controller
                     'alt' => implode(' ', $s->other_names ?? [])])->values() : [],
             'equipmentEnabled' => $eqOn = \App\Support\EarlyAccess::allows($request->user(), 'equipment'),
             'diveEquipment' => $eqOn ? \App\Http\Controllers\EquipmentController::diveList($dive) : [],
-            'equipmentItems' => $eqOn ? \App\Models\EquipmentItem::where('user_id', $request->user()->id)->whereNull('retired_at')->orderBy('name')->get(['uuid', 'name', 'category']) : collect(),
+            'equipmentItems' => $eqOn ? \App\Models\EquipmentItem::where('user_id', $request->user()->id)->usableOn($dive->started_at)->orderBy('name')->get(['uuid', 'name', 'category']) : collect(),
             'equipmentConfigs' => $eqOn ? \App\Models\EquipmentConfig::where('user_id', $request->user()->id)->orderBy('name')->get(['uuid', 'name']) : collect(),
         ]);
     }

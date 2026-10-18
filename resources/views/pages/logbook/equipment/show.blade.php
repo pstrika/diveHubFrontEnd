@@ -27,16 +27,17 @@
                         <div class="card-body">
                             <div class="dh-species-head">
                                 <div>
-                                    <span class="dh-species-cat">{{ $item->categoryLabel() }}@if ($item->retired_at) &middot; retired {{ $item->retired_at->format('M Y') }} @endif</span>
+                                    <span class="dh-species-cat">{{ $item->categoryLabel() }}@if ($item->retired_at) &middot; retired {{ $item->retired_at->format('M j, Y') }} @endif</span>
                                     <dl class="dh-taxobox mt-2">
                                         @foreach (['manufacturer' => 'Manufacturer', 'model' => 'Model', 'serial_number' => 'Serial number'] as $f => $l)
                                             @if ($item->$f)<dt>{{ $l }}</dt><dd>{{ $item->$f }}</dd>@endif
                                         @endforeach
                                         @if ($item->purchased_on)<dt>Purchased</dt><dd>{{ $item->purchased_on->format('M j, Y') }}</dd>@endif
+                                        @if ($item->retired_at)<dt>Retired</dt><dd>{{ $item->retired_at->format('M j, Y') }}</dd>@endif
                                         @if ($item->last_service_on)
                                             <dt>Last service</dt>
                                             <dd>{{ $item->last_service_on->format('M j, Y') }}
-                                                @if ($item->last_service_on->lt(now()->subYear()))<span class="dh-eq-service is-due ms-2">Over a year ago</span>@endif
+                                                @if (!$item->retired_at && $item->last_service_on->lt(now()->subYear()))<span class="dh-eq-service is-due ms-2">Over a year ago</span>@endif
                                             </dd>
                                         @endif
                                         <dt>Dives</dt><dd>{{ $dives->count() }}@if ($dives->isNotEmpty()) &middot; last {{ $dives->first()->started_at->format('M j, Y') }} @endif</dd>

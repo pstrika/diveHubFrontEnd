@@ -209,6 +209,7 @@ class LogbookExtrasApiController extends Controller
         $this->early($request, 'equipment');
         $item = new EquipmentItem($this->itemData($request));
         $item->user_id = $request->user()->id;
+        $item->retired_at = $request->input('retired_on') ?: null;
         $item->save();
         $this->itemPhoto($request, $item);
         return response()->json(['item' => $item->toApi()], 201);
@@ -220,7 +221,9 @@ class LogbookExtrasApiController extends Controller
         $this->early($request, 'equipment');
         $item = EquipmentItem::where('user_id', $request->user()->id)->where('uuid', $uuid)->firstOrFail();
         $item->fill($this->itemData($request, true));
-        if ($request->has('retired')) $item->retired_at = $request->boolean('retired') ? ($item->retired_at ?? now()) : null;
+        // retired_on (YYYY-MM-DD or null) wins; the older boolean still works.
+        if ($request->has('retired_on')) $item->retired_at = $request->input('retired_on') ?: null;
+        elseif ($request->has('retired')) $item->retired_at = $request->boolean('retired') ? ($item->retired_at ?? now()->toDateString()) : null;
         $item->save();
         $this->itemPhoto($request, $item);
         return response()->json(['item' => $item->toApi()]);
@@ -309,10 +312,10 @@ class LogbookExtrasApiController extends Controller
             'category' => [$partial ? 'sometimes' : 'required', Rule::in(array_keys(EquipmentItem::CATEGORIES))],
             'name' => "$req|string|max:120",
             'manufacturer' => 'nullable|string|max:120', 'model' => 'nullable|string|max:120', 'serial_number' => 'nullable|string|max:120',
-            'purchased_on' => 'nullable|date', 'last_service_on' => 'nullable|date', 'notes' => 'nullable|string|max:5000',
+            'purchased_on' => 'nullable|date', 'last_service_on' => 'nullable|date', 'retired_on' => 'nullable|date', 'notes' => 'nullable|string|max:5000',
             'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:20480',
         ]);
-        unset($d['photo']);
+        unset($d['photo'], $d['retired_on']);
         return $d;
     }
 

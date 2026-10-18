@@ -107,6 +107,7 @@ class EquipmentController extends Controller
     {
         $item = new EquipmentItem($this->validated($request));
         $item->user_id = $request->user()->id;
+        $item->retired_at = $request->input('retired_on') ?: null;
         $item->save();
         $this->savePhoto($request, $item);
         return redirect()->route('Equipment.show', $item->uuid)->with('status', 'Added to your gear.');
@@ -121,7 +122,8 @@ class EquipmentController extends Controller
     {
         $item = $this->own($request, $uuid);
         $item->fill($this->validated($request));
-        $item->retired_at = $request->boolean('retired') ? ($item->retired_at ?? now()) : null;
+        // Retire date (Pablo, 2026-10-18): any day, empty = still in use.
+        $item->retired_at = $request->input('retired_on') ?: null;
         $item->save();
         $this->savePhoto($request, $item);
         return redirect()->route('Equipment.show', $item->uuid)->with('status', 'Saved.');
@@ -258,10 +260,11 @@ class EquipmentController extends Controller
             'serial_number' => 'nullable|string|max:120',
             'purchased_on' => 'nullable|date',
             'last_service_on' => 'nullable|date',
+            'retired_on' => 'nullable|date',
             'notes' => 'nullable|string|max:5000',
             'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:20480',
         ]);
-        unset($data['photo']); // saved separately (savePhoto)
+        unset($data['photo'], $data['retired_on']); // saved separately
         return $data;
     }
 

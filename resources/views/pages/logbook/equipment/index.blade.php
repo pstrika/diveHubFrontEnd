@@ -93,11 +93,11 @@
                                         @endif
                                         <span class="dh-species-name">
                                             <strong>{{ $i->name }}</strong>
-                                            @if ($i->retired_at)<span class="dh-species-mine">Retired</span>@endif
+                                            @if ($i->retired_at)<span class="dh-species-mine" title="Retired {{ $i->retired_at->format('M j, Y') }}">Retired {{ $i->retired_at->format('M Y') }}</span>@endif
                                             <em>{{ collect([$i->manufacturer, $i->model, $i->serial_number ? 'S/N ' . $i->serial_number : null])->filter()->implode(' · ') }}</em>
                                         </span>
                                         @if ($i->last_service_on)
-                                            @php $overdue = $i->last_service_on->lt(now()->subYear()); @endphp
+                                            @php $overdue = !$i->retired_at && $i->last_service_on->lt(now()->subYear()); @endphp
                                             <span class="dh-eq-service {{ $overdue ? 'is-due' : '' }}" title="Last service">
                                                 <span class="material-icons-round" aria-hidden="true">build</span>{{ $i->last_service_on->format('M Y') }}
                                             </span>

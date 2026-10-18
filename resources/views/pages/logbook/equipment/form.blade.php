@@ -45,9 +45,13 @@
                                 @if ($item->photoUrl())<img src="{{ $item->photoUrl() }}" alt="" class="dh-species-photo mb-1">@endif
                                 <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" style="height:auto;padding:6px 0;border:0">
                             </label>
-                            @if ($item->exists)
-                                <label class="dh-species-seen-toggle"><input type="checkbox" name="retired" value="1" @checked($item->retired_at)> Retired - no longer in use (kept for history)</label>
-                            @endif
+                            {{-- Retire date (Pablo, 2026-10-18): gear you no longer use or no
+                                 longer have. It stays in your history and on past dives. --}}
+                            <label class="dh-sp-field">
+                                <span>Retire date</span>
+                                <input type="date" name="retired_on" value="{{ old('retired_on', $item->retired_at?->toDateString()) }}">
+                                <small class="text-secondary" style="font-weight:400">Leave empty while you still use it. Retired gear stays on your past dives and in your history.</small>
+                            </label>
                             <button type="submit" class="dh-btn dh-btn-primary">{{ $item->exists ? 'Save' : 'Add to my gear' }}</button>
                         </div>
                     </form>
