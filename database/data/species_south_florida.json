@@ -2946,5 +2946,20 @@
   "species": "Pseudupeneus maculatus",
   "other_names": [],
   "description": "Goatfish with three dark blotches along its side that can flush reddish; usually alone or in pairs, rooting through sand and rubble with its chin barbels while other fish follow to grab what it stirs up."
+ },
+ {
+  "common_name": "Roughback batfish",
+  "category": "reef_fish",
+  "kingdom": "Animalia",
+  "phylum": "Chordata",
+  "class": "Actinopterygii",
+  "subclass": null,
+  "division": "Teleostei",
+  "order": "Lophiiformes",
+  "family": "Ogcocephalidae",
+  "genus": "Ogcocephalus",
+  "species": "Ogcocephalus parvus",
+  "other_names": [],
+  "description": "Small, flattened batfish that 'walks' over sand and rubble on its stiff pectoral and pelvic fins. Rough, warty skin and a short snout with a tiny lure; a lucky find on South Florida sand flats near reefs."
  }
 ]
