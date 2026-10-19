@@ -20,7 +20,7 @@ class SpeciesIdentifier
 {
     public static function enabled(?object $user): bool
     {
-        return (bool) config('services.anthropic.key') && EarlyAccess::allows($user, 'species');
+        return (bool) config('services.anthropic.key') && EarlyAccess::allows($user, 'species_id');
     }
 
     /**
