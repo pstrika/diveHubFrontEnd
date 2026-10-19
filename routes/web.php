@@ -154,7 +154,12 @@ Route::get('login/google', [GoogleController::class, 'redirectToGoogle'])->name(
 Route::get('login/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 // Sign in with Apple (2026-10-19). Apple POSTs the answer; that bounces to the GET.
 Route::get('login/apple', [App\Http\Controllers\Auth\AppleController::class, 'redirect'])->name('login.apple');
-Route::post('login/apple/callback', [App\Http\Controllers\Auth\AppleController::class, 'callbackPost']);
+// Apple's cross-site form_post arrives without our (SameSite=Lax) session
+// cookie; no session here, or a fresh one would overwrite the real one
+// before the bounce to the GET below.
+Route::post('login/apple/callback', [App\Http\Controllers\Auth\AppleController::class, 'callbackPost'])
+    ->withoutMiddleware([\Illuminate\Session\Middleware\StartSession::class, \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        \App\Http\Middleware\VerifyCsrfToken::class, \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class]);
 Route::get('login/apple/callback', [App\Http\Controllers\Auth\AppleController::class, 'callback'])->name('login.apple.callback');
 
 /* Routes for diveHub */
