@@ -29,8 +29,12 @@ class EquipmentController extends Controller
             ->groupBy('equipment_item_id')->selectRaw('equipment_item_id, COUNT(*) n')->pluck('n', 'equipment_item_id');
         $bySerial = Dive::withoutGlobalScope('companions')->where('user_id', $userId)->whereNotNull('computer_serial')
             ->groupBy('computer_serial')->selectRaw('computer_serial, COUNT(*) n')->pluck('n', 'computer_serial');
-        $diveCounts = $items->mapWithKeys(fn ($i) => [$i->id => (int) ($explicit[$i->id] ?? 0)
-            + ($i->category === 'computer' && $i->serial_number ? (int) ($bySerial[$i->serial_number] ?? 0) : 0)]);
+        $bySerial = $bySerial->mapWithKeys(fn ($n, $s) => [mb_strtolower((string) $s) => $n]);
+        $noSerialByModel = Dive::withoutGlobalScope('companions')->where('user_id', $userId)->whereNull('computer_serial')->whereNotNull('computer_model')
+            ->groupBy('computer_model')->selectRaw('computer_model, COUNT(*) n')->pluck('n', 'computer_model')->mapWithKeys(fn ($n, $m) => [mb_strtolower($m) => $n]);
+        $diveCounts = $items->mapWithKeys(fn ($i) => [$i->id => (int) ($explicit[$i->id] ?? 0) + ($i->category !== 'computer' ? 0
+            : ($i->serial_number ? (int) ($bySerial[mb_strtolower($i->serial_number)] ?? 0)
+                : (int) ($noSerialByModel[mb_strtolower((string) ($i->model ?: $i->name))] ?? 0)))]);
 
         $groups = [];
         foreach (EquipmentItem::CATEGORIES as $slug => [$label, $icon]) {
@@ -54,7 +58,9 @@ class EquipmentController extends Controller
     public static function suggestedComputers(int $userId, $items): array
     {
         $have = $items->where('category', 'computer')->pluck('serial_number')->filter()->map(fn ($s) => mb_strtolower((string) $s))->flip();
-        $haveModels = $items->where('category', 'computer')->whereNull('serial_number')->pluck('model')->filter()->map(fn ($m) => mb_strtolower($m))->flip();
+        // No serial: match on model or name ("MK1" from a MacDive gear list).
+        $haveModels = $items->where('category', 'computer')->whereNull('serial_number')
+            ->flatMap(fn ($i) => [$i->model, $i->name])->filter()->map(fn ($m) => mb_strtolower($m))->flip();
         return Dive::withoutGlobalScope('companions')->where('user_id', $userId)->whereNotNull('computer_model')
             ->groupBy('computer_family', 'computer_model', 'computer_serial')
             ->selectRaw('computer_family, computer_model, computer_serial, COUNT(*) n, MIN(started_at) first_at')

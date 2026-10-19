@@ -91,6 +91,12 @@ class EquipmentItem extends Model
     public function diveIds(): array
     {
         $ids = \DB::table('dive_equipment')->where('equipment_item_id', $this->id)->pluck('dive_id')->all();
+        if ($this->category === 'computer' && !$this->serial_number && ($names = array_filter([$this->model, $this->name]))) {
+            // No serial (an old watch): its dives that also have no serial, by model.
+            $byModel = Dive::withoutGlobalScope('companions')->where('user_id', $this->user_id)->whereNull('computer_serial')
+                ->whereIn('computer_model', $names)->get(['id', 'merged_into_id'])->map(fn ($d) => $d->merged_into_id ?: $d->id)->all();
+            $ids = array_merge($ids, $byModel);
+        }
         if ($this->category === 'computer' && $this->serial_number) {
             $bySerial = Dive::withoutGlobalScope('companions')->where('user_id', $this->user_id)
                 ->where('computer_serial', $this->serial_number)
