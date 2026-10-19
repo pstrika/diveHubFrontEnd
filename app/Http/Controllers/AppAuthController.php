@@ -84,6 +84,34 @@ class AppAuthController extends Controller
         ], 201);
     }
 
+    /**
+     * POST /api/app/apple {identity_token, name?, device_name} - the iOS
+     * app's native Sign in with Apple (2026-10-19, App Review 4.8). The
+     * identity token is verified against Apple's keys and our ids, then the
+     * account is found, linked by email, or created - same as the website's
+     * Apple button - and a token is issued exactly like exchangeToken().
+     * Apple sends the name only on the first authorization, so the app
+     * passes it along when it has it.
+     */
+    public function appleSignIn(Request $request)
+    {
+        $data = $request->validate([
+            'identity_token' => 'required|string|max:5000',
+            'name' => 'nullable|string|max:120',
+            'device_name' => 'required|string|max:60',
+        ]);
+        $claims = \App\Support\AppleSignIn::verifyIdentityToken($data['identity_token']);
+        [$user, $isNew] = \App\Support\AppleSignIn::findOrCreate($claims['sub'], $claims['email'] ?? null, $data['name'] ?? null);
+
+        $token = $user->createToken('app:' . $data['device_name']);
+
+        return response()->json([
+            'token' => $token->plainTextToken,
+            'user' => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
+            'new_account' => $isNew,
+        ], 201);
+    }
+
     /** DELETE /api/app/token - sign out, revokes only the bearer token this request authenticated with. */
     public function revokeToken(Request $request)
     {

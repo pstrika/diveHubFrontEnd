@@ -102,4 +102,6 @@ Route::withoutMiddleware('throttle:api')->middleware(['auth.api:sanctum', 'logbo
 // IS the credential; throttled tighter than the route-wide 'api' limiter
 // since it's reachable without a token at all.
 Route::middleware('throttle:10,1')->post('/app/token', [\App\Http\Controllers\AppAuthController::class, 'exchangeToken']);
+// Native Sign in with Apple from the iOS app (2026-10-19) - the identity token is the credential.
+Route::middleware('throttle:10,1')->post('/app/apple', [\App\Http\Controllers\AppAuthController::class, 'appleSignIn']);
 Route::middleware('auth.api:sanctum')->delete('/app/token', [\App\Http\Controllers\AppAuthController::class, 'revokeToken']);

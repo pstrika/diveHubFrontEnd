@@ -85,7 +85,7 @@ class AccountDeleter
             'email' => 'deleted-' . $id . '-' . Str::random(8) . '@deleted.divers-hub.com',
             'password' => Hash::make(Str::random(64)),
             'remember_token' => null, 'email_verified_at' => null,
-            'picture' => null, 'location' => null, 'google_id' => null, 'google_avatar_url' => null,
+            'picture' => null, 'location' => null, 'google_id' => null, 'google_avatar_url' => null, 'apple_id' => null,
             'phone' => null, 'phone_verified_at' => null, 'pending_phone' => null,
             'phone_verification_code_hash' => null, 'phone_verification_sent_at' => null,
             'favOperators' => null, 'favLocations' => null, 'calendar_token' => null,

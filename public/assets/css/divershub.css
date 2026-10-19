@@ -4863,3 +4863,6 @@ body.dh-photo-viewer-open { overflow: hidden; }
 .dh-pw-wrap input { padding-right: 48px; }
 .dh-pw-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border: 0; background: none; color: var(--dh-muted); display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; }
 .dh-pw-toggle:hover, .dh-pw-toggle:focus-visible { color: var(--dh-sea); background: var(--dh-foam); outline: none; }
+/* Sign in with Apple (2026-10-19): Apple's black button style. */
+.dh-btn-apple { background: #000; color: #fff; border: 1px solid #000; gap: 10px; margin-top: 10px; }
+.dh-btn-apple:hover, .dh-btn-apple:focus { background: #1c1c1e; color: #fff; }

@@ -15,5 +15,8 @@ class VerifyCsrfToken extends Middleware
         // Twilio's own webhook POST - it has no CSRF token to send, and
         // isn't the browser session this protection is for.
         'webhooks/twilio/inbound',
+        // Sign in with Apple posts its answer from appleid.apple.com (no
+        // token to send); the handler only bounces it to a same-site GET.
+        'login/apple/callback',
     ];
 }

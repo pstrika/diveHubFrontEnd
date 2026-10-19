@@ -18,6 +18,10 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+        // Sign in with Apple (2026-10-19): the socialiteproviders/apple driver.
+        \SocialiteProviders\Manager\SocialiteWasCalled::class => [
+            \SocialiteProviders\Apple\AppleExtendSocialite::class . '@handle',
+        ],
     ];
 
     /**

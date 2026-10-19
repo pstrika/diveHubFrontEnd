@@ -152,6 +152,10 @@ Route::get('Landing', [App\Http\Controllers\HomeController::class, 'index'])->mi
 /* Google SSO Routes */
 Route::get('login/google', [GoogleController::class, 'redirectToGoogle'])->name('login.google');
 Route::get('login/google/callback', [GoogleController::class, 'handleGoogleCallback']);
+// Sign in with Apple (2026-10-19). Apple POSTs the answer; that bounces to the GET.
+Route::get('login/apple', [App\Http\Controllers\Auth\AppleController::class, 'redirect'])->name('login.apple');
+Route::post('login/apple/callback', [App\Http\Controllers\Auth\AppleController::class, 'callbackPost']);
+Route::get('login/apple/callback', [App\Http\Controllers\Auth\AppleController::class, 'callback'])->name('login.apple.callback');
 
 /* Routes for diveHub */
 // Unnamed on purpose: every route('Trips') call in the app builds a dated

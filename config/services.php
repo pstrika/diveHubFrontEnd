@@ -30,6 +30,21 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // Sign in with Apple (Pablo, 2026-10-19 - required by App Review because
+    // the app offers Google). client_id = the Services ID (web); the iOS
+    // app's own tokens carry its bundle id instead (APPLE_IOS_BUNDLE_ID).
+    // The client secret is generated from the .p8 key; APPLE_PRIVATE_KEY
+    // holds its contents (literal \n allowed, for one-line app settings).
+    'apple' => [
+        'client_id' => env('APPLE_CLIENT_ID'),
+        'client_secret' => env('APPLE_CLIENT_SECRET'),
+        'redirect' => env('APPLE_REDIRECT_URI', 'https://divers-hub.com/login/apple/callback'),
+        'team_id' => env('APPLE_TEAM_ID'),
+        'key_id' => env('APPLE_KEY_ID'),
+        'private_key' => str_replace('\\n', "\n", (string) env('APPLE_PRIVATE_KEY', '')),
+        'ios_bundle_id' => env('APPLE_IOS_BUNDLE_ID'),
+    ],
+
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
