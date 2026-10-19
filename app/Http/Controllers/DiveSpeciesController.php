@@ -45,6 +45,14 @@ class DiveSpeciesController extends Controller
     {
         abort_unless(\App\Support\SpeciesIdentifier::enabled($request->user()), 404);
         $p = DivePhoto::where('user_id', $request->user()->id)->where('uuid', $photo)->firstOrFail();
+        // One-time consent before a photo goes to Anthropic (send consent: true with the answer).
+        if (\App\Support\SpeciesIdentifier::needsConsent($request->user())) {
+            if (!$request->boolean('consent')) {
+                return response()->json(['consent_required' => true, 'provider' => 'Anthropic (Claude)',
+                    'message' => 'Your photo is sent to Anthropic\'s Claude to suggest which species are in it. Nothing is tagged unless you confirm.'], 409);
+            }
+            $request->user()->forceFill(['ai_photo_consent_at' => now()])->save();
+        }
         return response()->json(\App\Support\SpeciesIdentifier::identify($p, $request->boolean('fresh')));
     }
 

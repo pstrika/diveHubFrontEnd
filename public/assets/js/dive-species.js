@@ -126,7 +126,40 @@
     var box = host.querySelector('.dh-species-chips');
 
     // "What's this?" (2026-10-18): AI suggestions from our catalog; the
-    // diver taps one to tag it - nothing is tagged on its own.
+    // diver taps one to tag it - nothing is tagged on its own. The first
+    // time, the server asks for consent (409) before a photo leaves.
+    function identify(consent) {
+      return fetch(cfg.photoUrl + photo.uuid + '/identify', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'X-CSRF-TOKEN': cfg.csrf, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(consent ? { consent: true } : {}),
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (d) {
+          if (r.status === 409 && d.consent_required) return askAiConsent(d.message).then(function (ok) {
+            if (!ok) throw new Error('Not sent - your photo stays private.');
+            return identify(true);
+          });
+          if (!r.ok) throw new Error(d.message || 'Something went wrong');
+          return d;
+        });
+      });
+    }
+    function askAiConsent(message) {
+      return new Promise(function (resolve) {
+        var box = document.createElement('div');
+        box.className = 'dh-species-consent';
+        box.setAttribute('role', 'dialog');
+        box.innerHTML = '<div class="dh-species-consent-card"><h4>Identify with AI?</h4><p>' + esc(message) + '</p>'
+          + '<p class="text-xs">Anthropic doesn\'t use your photo to train its models. You\'ll only be asked once.</p>'
+          + '<div class="dh-species-consent-actions"><button type="button" class="dh-btn dh-btn-primary" data-v="1">Send photo</button>'
+          + '<button type="button" class="dh-btn dh-btn-ghost-dark" data-v="0">Not now</button></div></div>';
+        document.body.appendChild(box);
+        box.addEventListener('click', function (e) {
+          var b = e.target.closest('[data-v]'); if (!b) return;
+          box.remove(); resolve(b.getAttribute('data-v') === '1');
+        });
+      });
+    }
     var idBtn = host.querySelector('[data-identify]');
     if (idBtn) {
       var out = host.querySelector('.dh-whats-this-out');
@@ -134,7 +167,7 @@
       idBtn.addEventListener('click', function () {
         idBtn.disabled = true;
         out.innerHTML = '<span class="text-sm text-secondary">Looking at the photo...</span>';
-        send('POST', cfg.photoUrl + photo.uuid + '/identify').then(function (d) {
+        identify(false).then(function (d) {
           idBtn.disabled = false;
           var have = {}; photo.species.forEach(function (s) { have[s.uuid] = 1; });
           if (!d.candidates.length) {

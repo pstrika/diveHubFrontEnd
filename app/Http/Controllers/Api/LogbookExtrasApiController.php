@@ -54,6 +54,8 @@ class LogbookExtrasApiController extends Controller
             'equipment' => EarlyAccess::allows($u, 'equipment'),
             // "What's this?" on photos: POST /api/photos/{uuid}/identify.
             'species_id' => \App\Support\SpeciesIdentifier::enabled($u),
+            // Already agreed to sending photos to Anthropic for "What's this?".
+            'species_id_consent' => (bool) $u->ai_photo_consent_at,
             // null = never asked; ask before the first species tag.
             'share_sightings' => $u->share_sightings === null ? null : (bool) $u->share_sightings,
         ]);
@@ -178,6 +180,14 @@ class LogbookExtrasApiController extends Controller
     public function identifyPhoto(Request $request, string $photo)
     {
         abort_unless(\App\Support\SpeciesIdentifier::enabled($request->user()), 404);
+        // One-time consent before a photo goes to Anthropic (send consent: true with the answer).
+        if (\App\Support\SpeciesIdentifier::needsConsent($request->user())) {
+            if (!$request->boolean('consent')) {
+                return response()->json(['consent_required' => true, 'provider' => 'Anthropic (Claude)',
+                    'message' => 'Your photo is sent to Anthropic\'s Claude to suggest which species are in it. Nothing is tagged unless you confirm.'], 409);
+            }
+            $request->user()->forceFill(['ai_photo_consent_at' => now()])->save();
+        }
         return response()->json(\App\Support\SpeciesIdentifier::identify($this->photo($request, $photo), $request->boolean('fresh')));
     }
 

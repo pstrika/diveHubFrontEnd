@@ -454,6 +454,9 @@ Route::get('WreckSites', 'App\Http\Controllers\SiteController@showWrecks')->midd
 
 
 Route::get('overview', 'App\Http\Controllers\UserController@getProfile')->middleware('auth')->name('overview');
+// Delete my account (Pablo, 2026-10-19; App Store 5.1.1(v)) - the apps link here.
+Route::get('account/delete', [App\Http\Controllers\AccountDeletionController::class, 'show'])->middleware('auth')->name('account.delete');
+Route::delete('account/delete', [App\Http\Controllers\AccountDeletionController::class, 'destroy'])->middleware('auth')->name('account.delete.confirm');
 // Same name as the GET above would work fine at request-time (routing
 // dispatches by URI+method, not by name) but breaks route:cache, which
 // treats a shared name as a collision regardless of method - named

@@ -654,6 +654,20 @@
                     </div>
                 </div>
             </div>
+            {{-- Delete my account (Pablo, 2026-10-19; App Store 5.1.1(v)). --}}
+            <div class="row">
+                <div class="col-12">
+                    <div class="dh-profile-card">
+                        <div class="dh-profile-card-body d-flex justify-content-between align-items-center flex-wrap" style="gap: 10px;">
+                            <div>
+                                <h6 class="dh-panel-title mb-1">Delete my account</h6>
+                                <p class="text-sm text-secondary mb-0">Permanently delete your account, your logbook and your personal data.</p>
+                            </div>
+                            <a href="{{ route('account.delete') }}" class="dh-btn dh-btn-ghost-dark" style="color: var(--dh-danger); white-space: nowrap;"><span class="material-icons-round" aria-hidden="true">person_remove</span> Delete account</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
     </main>

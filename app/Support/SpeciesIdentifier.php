@@ -26,6 +26,15 @@ class SpeciesIdentifier
     /**
      * @return array{candidates: array<int, array{uuid:string,name:string,scientific:?string,category:string,confidence:string,photo_url:?string}>, not_in_catalog: ?string, cached: bool}
      */
+    /**
+     * Asked once (App Store 5.1.2(i)): no photo goes to the AI provider
+     * until the diver agreed. Passing $consent = true records the answer.
+     */
+    public static function needsConsent(?object $user): bool
+    {
+        return $user && !$user->ai_photo_consent_at;
+    }
+
     public static function identify(DivePhoto $photo, bool $fresh = false): array
     {
         $species = Species::visibleTo($photo->user_id)->orderBy('common_name')->get();
