@@ -76,3 +76,29 @@
         </p>
     </main>
 </div>
+
+{{-- Show / hide password (Play testers' report, 2026-10-18): an eye button
+     on every password field of the sign-in, sign-up and reset pages. --}}
+<script>
+    (function () {
+        document.querySelectorAll('.dh-auth input[type="password"]').forEach(function (input) {
+            var wrap = document.createElement('span');
+            wrap.className = 'dh-pw-wrap';
+            input.parentNode.insertBefore(wrap, input);
+            wrap.appendChild(input);
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'dh-pw-toggle';
+            btn.setAttribute('aria-label', 'Show password');
+            btn.innerHTML = '<span class="material-icons-round" aria-hidden="true">visibility</span>';
+            btn.addEventListener('click', function () {
+                var show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+                btn.firstChild.textContent = show ? 'visibility_off' : 'visibility';
+                input.focus();
+            });
+            wrap.appendChild(btn);
+        });
+    })();
+</script>

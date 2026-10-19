@@ -4857,3 +4857,9 @@ body.dh-photo-viewer-open { overflow: hidden; }
 .dh-eq-hero-change { position: absolute; right: 12px; bottom: 12px; background: rgba(255, 255, 255, .92); }
 .dh-eq-hero.is-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 28px 16px; text-align: center; border: 2px dashed var(--dh-line); }
 .dh-eq-hero.is-empty > .dh-cat-icon { width: 56px; height: 56px; color: var(--dh-sea); }
+
+/* Show / hide password on the auth pages (2026-10-18). */
+.dh-pw-wrap { position: relative; display: block; }
+.dh-pw-wrap input { padding-right: 48px; }
+.dh-pw-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border: 0; background: none; color: var(--dh-muted); display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; }
+.dh-pw-toggle:hover, .dh-pw-toggle:focus-visible { color: var(--dh-sea); background: var(--dh-foam); outline: none; }
