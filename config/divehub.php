@@ -14,7 +14,7 @@
 
 return [
 
-    'version' => '12.19.9',
+    'version' => '12.20.0',
 
     // Release date shown next to the version. Any human readable format.
     'released' => '10/17/26',
@@ -27,7 +27,9 @@ return [
     // Lower-case emails; '*' opens a feature to every logbook user.
     'early_access' => [
         // admin@material.com: the test logbook from 2026-10-18 on.
-        'equipment' => ['pstrika@gmail.com', 'admin@material.com'],
+        // Open to every logbook user (Pablo, 2026-10-19); the logbook gate
+        // (registered members, no guests) still applies on every route.
+        'equipment' => ['*'],
         'species' => ['pstrika@gmail.com', 'admin@material.com'],
     ],
 
