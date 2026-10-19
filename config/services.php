@@ -186,7 +186,7 @@ return [
         // Anthropic then needs the workspace to bill (2026-10-18).
         'workspace_id' => env('ANTHROPIC_WORKSPACE_ID'),
         'species_model' => env('ANTHROPIC_SPECIES_MODEL', 'claude-sonnet-5-5'),
-        'species_daily_limit' => (int) env('ANTHROPIC_SPECIES_DAILY_LIMIT', 50),
+        'species_daily_limit' => (int) env('ANTHROPIC_SPECIES_DAILY_LIMIT', 0), // per diver per day; 0 = no limit
     ],
 
 ];

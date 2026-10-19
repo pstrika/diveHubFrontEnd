@@ -14,7 +14,7 @@
 
 return [
 
-    'version' => '12.20.4',
+    'version' => '12.20.5',
 
     // Release date shown next to the version. Any human readable format.
     'released' => '10/17/26',
@@ -31,9 +31,10 @@ return [
         // (registered members, no guests) still applies on every route.
         'equipment' => ['*'],
         // Marine life open to every logbook user (Pablo, 2026-10-19). The AI
-        // "What's this?" photo ID has its own switch - each use is billed.
+        // "What's this?" photo ID has its own switch - each use is billed;
+        // opened to everyone too, no daily cap (Pablo, 2026-10-19).
         'species' => ['*'],
-        'species_id' => ['pstrika@gmail.com', 'admin@material.com'],
+        'species_id' => ['*'],
     ],
 
 ];

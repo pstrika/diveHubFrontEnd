@@ -43,10 +43,11 @@ class SpeciesIdentifier
             return self::present($photo->ai_suggestions, $species) + ['cached' => true];
         }
 
-        // A cap per diver per day keeps the bill predictable.
+        // Optional cap per diver per day (ANTHROPIC_SPECIES_DAILY_LIMIT; 0 = none,
+        // Pablo 2026-10-19). Uses are counted either way.
         $key = 'species-id:' . $photo->user_id . ':' . now()->toDateString();
-        $limit = (int) config('services.anthropic.species_daily_limit', 50);
-        if (Cache::get($key, 0) >= $limit) {
+        $limit = (int) config('services.anthropic.species_daily_limit', 0);
+        if ($limit > 0 && Cache::get($key, 0) >= $limit) {
             throw ValidationException::withMessages(['photo' => "You've used today's $limit species identifications. Try again tomorrow."]);
         }
 
