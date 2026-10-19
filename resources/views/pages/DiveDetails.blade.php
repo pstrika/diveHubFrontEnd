@@ -911,6 +911,29 @@
                     </div>
                     @endif
 
+                    {{-- Photos (Pablo, 2026-10-17): up to 20, private to the diver;
+                         each can be offered to the site's public page, which goes
+                         through the normal photo review. dive-photos.js. --}}
+                    <div class="card p-0 position-relative mt-3 z-index-2 mb-4" id="divePhotosCard">
+                        <div class="dh-calc-inputs-head" data-collapsible-toggle role="button" tabindex="0" aria-expanded="true" aria-controls="divePhotosBody">
+                            <span class="material-icons-round" aria-hidden="true">photo_library</span>
+                            <h3>Photos <span class="dh-dive-photos-count" id="divePhotosCount">{{ count($photos) }}/{{ \App\Models\DivePhoto::MAX_PER_DIVE }}</span></h3>
+                            <span class="material-icons-round dh-calc-inputs-chevron" aria-hidden="true">expand_less</span>
+                        </div>
+                        <div class="card-body" id="divePhotosBody">
+                            <div class="dh-dive-photos-grid" id="divePhotosGrid"></div>
+                            <p class="text-sm text-secondary mb-2" id="divePhotosEmpty" @if(count($photos)) hidden @endif>
+                                No photos yet. They stay private to you{{ $dive->site_id ? ' - you can choose to share any of them on the site page' : '' }}.
+                            </p>
+                            <label class="dh-btn dh-btn-ghost-dark mb-0" id="divePhotosAdd">
+                                <span class="material-icons-round" aria-hidden="true">add_a_photo</span>
+                                Add photos
+                                <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden id="divePhotosInput">
+                            </label>
+                            <span class="text-sm text-secondary ms-2" id="divePhotosStatus" role="status"></span>
+                        </div>
+                    </div>
+
                     {{-- Dive Operator (Pablo, 2026-10-15, renamed from "Dive
                          Logistics"): who ran the trip. View state is plain
                          text (Pablo: "go back to spans or labels, no inputs"),
@@ -1237,6 +1260,23 @@
                         </div>
                     </div>
 
+                    @if ($speciesEnabled)
+                        {{-- Marine life (Pablo, 2026-10-17): species seen on this dive.
+                             dive-species.js. Early access. --}}
+                        <div class="card p-0 position-relative mt-3 z-index-2 mb-4" id="diveSpeciesCard">
+                            <div class="dh-calc-inputs-head" data-collapsible-toggle role="button" tabindex="0" aria-expanded="true" aria-controls="diveSpeciesBody">
+                                <span class="dh-cat-icon" style="--icon:url('{{ asset('assets/img/icons/logbook/species_reef_fish.svg') }}')" aria-hidden="true"></span>
+                                <h3>Marine life</h3>
+                                <span class="material-icons-round dh-calc-inputs-chevron" aria-hidden="true">expand_less</span>
+                            </div>
+                            <div class="card-body" id="diveSpeciesBody">
+                                <div class="dh-species-chips" id="diveSpeciesChips"></div>
+                                <div class="dh-species-picker" id="diveSpeciesPicker"></div>
+                                <a href="{{ route('Species.index') }}" class="text-sm">All marine life</a>
+                            </div>
+                        </div>
+                    @endif
+
                     @if ($equipmentEnabled)
                         {{-- Equipment (Pablo, 2026-10-17): the gear on this dive. A
                              configuration adds its items; computers whose serial
@@ -1273,46 +1313,6 @@
                             </div>
                         </div>
                     @endif
-
-                    @if ($speciesEnabled)
-                        {{-- Marine life (Pablo, 2026-10-17): species seen on this dive.
-                             dive-species.js. Early access. --}}
-                        <div class="card p-0 position-relative mt-3 z-index-2 mb-4" id="diveSpeciesCard">
-                            <div class="dh-calc-inputs-head" data-collapsible-toggle role="button" tabindex="0" aria-expanded="true" aria-controls="diveSpeciesBody">
-                                <span class="dh-cat-icon" style="--icon:url('{{ asset('assets/img/icons/logbook/species_reef_fish.svg') }}')" aria-hidden="true"></span>
-                                <h3>Marine life</h3>
-                                <span class="material-icons-round dh-calc-inputs-chevron" aria-hidden="true">expand_less</span>
-                            </div>
-                            <div class="card-body" id="diveSpeciesBody">
-                                <div class="dh-species-chips" id="diveSpeciesChips"></div>
-                                <div class="dh-species-picker" id="diveSpeciesPicker"></div>
-                                <a href="{{ route('Species.index') }}" class="text-sm">All marine life</a>
-                            </div>
-                        </div>
-                    @endif
-
-                    {{-- Photos (Pablo, 2026-10-17): up to 20, private to the diver;
-                         each can be offered to the site's public page, which goes
-                         through the normal photo review. dive-photos.js. --}}
-                    <div class="card p-0 position-relative mt-3 z-index-2 mb-4" id="divePhotosCard">
-                        <div class="dh-calc-inputs-head" data-collapsible-toggle role="button" tabindex="0" aria-expanded="true" aria-controls="divePhotosBody">
-                            <span class="material-icons-round" aria-hidden="true">photo_library</span>
-                            <h3>Photos <span class="dh-dive-photos-count" id="divePhotosCount">{{ count($photos) }}/{{ \App\Models\DivePhoto::MAX_PER_DIVE }}</span></h3>
-                            <span class="material-icons-round dh-calc-inputs-chevron" aria-hidden="true">expand_less</span>
-                        </div>
-                        <div class="card-body" id="divePhotosBody">
-                            <div class="dh-dive-photos-grid" id="divePhotosGrid"></div>
-                            <p class="text-sm text-secondary mb-2" id="divePhotosEmpty" @if(count($photos)) hidden @endif>
-                                No photos yet. They stay private to you{{ $dive->site_id ? ' - you can choose to share any of them on the site page' : '' }}.
-                            </p>
-                            <label class="dh-btn dh-btn-ghost-dark mb-0" id="divePhotosAdd">
-                                <span class="material-icons-round" aria-hidden="true">add_a_photo</span>
-                                Add photos
-                                <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden id="divePhotosInput">
-                            </label>
-                            <span class="text-sm text-secondary ms-2" id="divePhotosStatus" role="status"></span>
-                        </div>
-                    </div>
 
                     {{-- Photo viewer: caption, share to the site page, species, delete. --}}
                     <div class="dh-photo-viewer" id="dhPhotoViewer" hidden role="dialog" aria-modal="true" aria-label="Photo">
