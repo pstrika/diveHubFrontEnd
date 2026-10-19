@@ -53,13 +53,13 @@ class EquipmentController extends Controller
      */
     public static function suggestedComputers(int $userId, $items): array
     {
-        $have = $items->where('category', 'computer')->pluck('serial_number')->filter()->map(fn ($s) => (string) $s)->flip();
+        $have = $items->where('category', 'computer')->pluck('serial_number')->filter()->map(fn ($s) => mb_strtolower((string) $s))->flip();
         $haveModels = $items->where('category', 'computer')->whereNull('serial_number')->pluck('model')->filter()->map(fn ($m) => mb_strtolower($m))->flip();
         return Dive::withoutGlobalScope('companions')->where('user_id', $userId)->whereNotNull('computer_model')
             ->groupBy('computer_family', 'computer_model', 'computer_serial')
             ->selectRaw('computer_family, computer_model, computer_serial, COUNT(*) n, MIN(started_at) first_at')
             ->orderByDesc('n')->get()
-            ->reject(fn ($r) => $r->computer_serial ? isset($have[(string) $r->computer_serial]) : isset($haveModels[mb_strtolower($r->computer_model)]))
+            ->reject(fn ($r) => $r->computer_serial ? isset($have[mb_strtolower((string) $r->computer_serial)]) : isset($haveModels[mb_strtolower($r->computer_model)]))
             ->map(fn ($r) => [
                 'manufacturer' => self::brand($r->computer_family, $r->computer_model),
                 'model' => $r->computer_model, 'serial' => $r->computer_serial, 'dives' => (int) $r->n,
