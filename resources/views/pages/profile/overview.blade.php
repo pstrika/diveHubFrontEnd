@@ -158,10 +158,15 @@
                 <div class="dh-profile-who">
                     <h5 class="mb-1">{{ $user->name }}</h5>
                     <p class="mb-0 text-sm text-muted">{{ $user->email }}</p>
-                    @if($user->google_id)
+                    @php
+                        // How THIS session signed in (set at login); older sessions,
+                        // and remember-me logins, fall back to a linked account.
+                        $loginMethod = session('login_method') ?? ($user->apple_id ? 'apple' : ($user->google_id ? 'google' : null));
+                    @endphp
+                    @if($loginMethod === 'google' || $loginMethod === 'apple')
                         <span class="dh-google-badge">
-                            <img src="{{ asset('assets') }}/img/icons/google_icon.webp" alt="" width="14" height="14">
-                            Signed in with Google
+                            <img src="{{ asset('assets') }}/img/icons/{{ $loginMethod === 'apple' ? 'apple_icon.svg' : 'google_icon.webp' }}" alt="" width="14" height="14">
+                            Signed in with {{ $loginMethod === 'apple' ? 'Apple' : 'Google' }}
                         </span>
                     @endif
                 </div>

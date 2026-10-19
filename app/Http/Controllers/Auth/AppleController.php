@@ -55,6 +55,7 @@ class AppleController extends Controller
         [$user, $isNew] = AppleSignIn::findOrCreate($claims['sub'], $claims['email'] ?? $apple->getEmail(), $apple->getName());
         Auth::login($user, true);
         session()->put('dh_show_splash', true);
+        session()->put('login_method', 'apple');
 
         // A new account made from the app's sign-in sheet: the welcome wizard first, then back to the app.
         if ($isNew && ($toWizard = OnboardingController::appSignUpRedirect())) {

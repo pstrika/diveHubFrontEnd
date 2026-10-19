@@ -31,6 +31,11 @@
                             <span class="dh-health-stat-n">{{ $googleUsers }}</span>
                             <span class="dh-health-stat-label">Signed up with Google</span>
                         </div>
+                        <div class="dh-health-stat is-good">
+                            <img src="{{ asset('assets') }}/img/icons/apple_icon.svg" alt="" class="dh-health-stat-icon">
+                            <span class="dh-health-stat-n">{{ $appleUsers }}</span>
+                            <span class="dh-health-stat-label">Signed up with Apple</span>
+                        </div>
                         <div class="dh-health-stat is-wait">
                             <img src="{{ asset('assets') }}/img/icons/favicon.png" alt="" class="dh-health-stat-icon">
                             <span class="dh-health-stat-n">{{ $directUsers }}</span>
@@ -113,8 +118,9 @@
                                         {{-- Dropped during the retheme, put back (Pablo, 2026-09-18) -
                                              at a glance, is this account Google SSO or a native Divers
                                              Hub signup. --}}
-                                        <span class="dh-user-auth-badge" title="{{ $user->google_id ? 'Signed up with Google' : 'Registered on Divers Hub' }}">
-                                            <img src="{{ asset('assets') }}/img/icons/{{ $user->google_id ? 'google_icon.webp' : 'favicon.png' }}" alt="">
+                                        @php $origin = ['google' => ['Signed up with Google', 'google_icon.webp'], 'apple' => ['Signed up with Apple', 'apple_icon.svg']][$user->signup_method] ?? ['Registered on Divers Hub', 'favicon.png']; @endphp
+                                        <span class="dh-user-auth-badge" title="{{ $origin[0] }}">
+                                            <img src="{{ asset('assets') }}/img/icons/{{ $origin[1] }}" alt="">
                                         </span>
                                     </div>
                                 </td>

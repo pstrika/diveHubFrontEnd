@@ -21,14 +21,16 @@ class UserManagementController extends Controller
         // platform... visited the platform in the last 25 hours").
         $realUsers = User::where('role_id', '!=', 4);
         $totalUsers = (clone $realUsers)->count();
-        $googleUsers = (clone $realUsers)->whereNotNull('google_id')->count();
-        $directUsers = $totalUsers - $googleUsers;
+        $googleUsers = (clone $realUsers)->where('signup_method', 'google')->count();
+        $appleUsers = (clone $realUsers)->where('signup_method', 'apple')->count();
+        $directUsers = $totalUsers - $googleUsers - $appleUsers;
         $activeRecently = (clone $realUsers)->where('last_seen_at', '>=', now()->subHours(25))->count();
 
         return view('laravel-examples.users.index', [
             'users' => User::with('role')->get(),
             'totalUsers' => $totalUsers,
             'googleUsers' => $googleUsers,
+            'appleUsers' => $appleUsers,
             'directUsers' => $directUsers,
             'activeRecently' => $activeRecently,
         ]);

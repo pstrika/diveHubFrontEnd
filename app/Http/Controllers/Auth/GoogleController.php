@@ -35,6 +35,7 @@ class GoogleController extends Controller
                 $finduser->save();
                 Auth::login($finduser, true);
                 session()->put('dh_show_splash', true);
+                session()->put('login_method', 'google');
                 return redirect()->intended('MyDashboard');
             } elseif($userExists) { //if the user already exists, we add the google_id to the account to allow SSO
                 $userExists->google_id = $user->id;
@@ -42,6 +43,7 @@ class GoogleController extends Controller
                 $userExists->save();
                 Auth::login($userExists, true);
                 session()->put('dh_show_splash', true);
+                session()->put('login_method', 'google');
                 return redirect()->intended('MyDashboard');
             } else {
                 $newUser = User::create([
@@ -83,8 +85,10 @@ class GoogleController extends Controller
                     }
                 }
 
+                $newUser->forceFill(['signup_method' => 'google'])->save();
                 Auth::login($newUser, true);
                 session()->put('dh_show_splash', true);
+                session()->put('login_method', 'google');
                 // New account from the app's sign-in sheet: the welcome
                 // wizard first, then back to the app.
                 return \App\Http\Controllers\OnboardingController::appSignUpRedirect()

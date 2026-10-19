@@ -67,7 +67,7 @@ class AppleSignIn
             'password' => encrypt(\Illuminate\Support\Str::random(32)),
             'role_id' => 3,
         ]);
-        $user->forceFill(['apple_id' => $sub, 'email_verified_at' => now()])->save();
+        $user->forceFill(['apple_id' => $sub, 'signup_method' => 'apple', 'email_verified_at' => now()])->save();
 
         // Same as Google sign-up: pending group invites to this email become the member's.
         foreach (GroupMember::where('invited_email', $user->email)->whereNull('user_id')->with('group')->get() as $invite) {
