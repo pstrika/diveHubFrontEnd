@@ -31,6 +31,8 @@ class EquipmentItem extends Model
         'mask' => ['Masks', 'visibility'],
         'fins' => ['Fins', 'water'],
         'camera' => ['Cameras', 'photo_camera'],
+        // Wetsuits, drysuits, shorts, hoods, boots (Pablo, 2026-10-20).
+        'suit' => ['Suits & Boots', 'checkroom'],
         'other' => ['Other', 'category'],
     ];
 
