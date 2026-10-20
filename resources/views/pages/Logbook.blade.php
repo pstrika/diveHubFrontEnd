@@ -245,7 +245,6 @@
                                                      wishlisted site. --}}
                                                 <span class="material-icons-round dh-logbook-row-wished" title="On your wishlist">bookmark</span>
                                             @endif
-                                            <span class="dh-logbook-row-time">{{ $dive->started_at->format('g:i A') }}</span>
                                         </div>
                                         @if ($city)
                                             <div class="dh-logbook-row-sub text-sm text-secondary">{{ $city }}</div>
@@ -257,7 +256,10 @@
                                             </div>
                                         @endif
                                     </div>
+                                    {{-- Tablet/desktop: the time on its own line above the stats, so it never
+                                         overlaps them on a short card (Pablo, 2026-10-20). --}}
                                     <div class="dh-logbook-row-stats">
+                                        <div class="dh-logbook-row-time d-none d-md-block">{{ $dive->started_at->format('g:i A') }}</div>
                                         <div><strong><span data-unit-value="depth" data-metric="{{ $dive->max_depth_m }}"></span></strong><span class="text-xs text-secondary d-block">max depth</span></div>
                                         <div><strong>{{ gmdate('H:i', $dive->duration_seconds) }}</strong><span class="text-xs text-secondary d-block">duration</span></div>
                                     </div>

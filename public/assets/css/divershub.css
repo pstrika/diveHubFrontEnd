@@ -1380,10 +1380,10 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-logbook-row-wished { font-size: 18px; color: var(--dh-sea); flex: 0 0 auto; }
 .dh-logbook-row-oplogo { flex: 0 0 auto; display: flex; align-items: center; }
 .dh-logbook-row-oplogo img { width: 32px; height: 32px; border-radius: 6px; object-fit: contain; background: #fff; }
-/* Tablet/desktop: the time sits at the row's top right corner, as on the phone (Pablo, 2026-10-19). */
+/* Tablet/desktop: the time on its own line above max depth / duration (Pablo, 2026-10-20). */
 @media (min-width: 768px) {
-  .dh-logbook-row { position: relative; }
-  .dh-logbook-row-main .dh-logbook-row-time { position: absolute; top: 10px; right: 16px; }
+  .dh-logbook-row-stats { flex-wrap: wrap; justify-content: flex-end; row-gap: 2px; }
+  .dh-logbook-row-stats .dh-logbook-row-time { flex: 0 0 100%; margin: 0; padding: 0; }
 }
 .dh-logbook-row-operator-logo { width: 18px; height: 18px; border-radius: 4px; object-fit: contain; background: #fff; vertical-align: -4px; margin-right: 2px; }
 .dh-logbook-filters { display: flex; flex-direction: column; gap: 8px; margin: 0 0 14px; }
