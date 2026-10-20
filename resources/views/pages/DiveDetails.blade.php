@@ -533,7 +533,6 @@
                         {{-- Freediving: start time, then water temp; otherwise water temp, then start time. --}}
                         {!! $descents ? $startTile . $tempTile : $tempTile . $startTile !!}
                     </div>
-                    </div>
 
                     {{-- Cardless row (Pablo, 2026-10-15: "put a no card row in
                          between the dashboard and the Dive Setup Card") - the

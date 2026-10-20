@@ -1363,6 +1363,7 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-logbook-row-title { font-weight: 700; display: flex; align-items: center; gap: 6px; }
 .dh-logbook-row-mode-icon { font-size: 18px; color: var(--dh-sea); }
 .dh-logbook-row-sub { margin-top: 2px; }
+.dh-logbook-row-time { margin-left: auto; flex: 0 0 auto; padding-left: 8px; font-size: .8rem; font-weight: 600; color: var(--dh-muted); font-variant-numeric: tabular-nums; }
 .dh-logbook-row-stats { flex: 0 0 auto; display: flex; gap: 18px; text-align: right; }
 .dh-logbook-row-chevron { color: var(--dh-muted); flex: 0 0 auto; }
 .dh-logbook-row-number { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: var(--dh-deep); color: #fff; font-size: .82rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }

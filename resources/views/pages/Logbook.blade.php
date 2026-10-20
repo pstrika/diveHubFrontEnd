@@ -208,8 +208,9 @@
                                             @if (isset($dive->pendingGroup))<span class="dh-same-dive-badge" title="Logged by more than one computer - open it to combine or keep apart">Same dive?</span>@endif
                                             @if (!empty($photoCounts[$dive->id]))<span class="dh-logbook-photo-badge" title="{{ $photoCounts[$dive->id] }} {{ $photoCounts[$dive->id] == 1 ? 'photo' : 'photos' }}"><span class="material-icons-round" aria-hidden="true">photo_camera</span>{{ $photoCounts[$dive->id] }}</span>@endif
                                             @if ($wished)<span class="material-icons-round dh-logbook-row-wished" title="On your wishlist">bookmark</span>@endif
+                                            {{-- Time on the site line, right-aligned (Pablo, 2026-10-19, as in the app). --}}
+                                            <span class="dh-logbook-row-time">{{ $dive->started_at->format('g:i A') }}</span>
                                         </div>
-                                        <div class="dh-logbook-row-sub text-sm text-secondary">{{ $dive->started_at->format('g:i A') }}</div>
                                     </div>
                                     @php [$numBase, $numLetter] = array_pad(explode('.', (string) $dive->listSeq, 2), 2, null); @endphp
                                     <div class="dh-logbook-row-number" title="Dive #{{ $dive->listSeq }}">{{ $numBase }}@if ($numLetter)<span class="dh-row-number-letter">{{ $numLetter }}</span>@endif</div>
@@ -223,7 +224,7 @@
                                          date. Same size as the date"). --}}
                                     <div class="dh-logbook-row-mode" title="{{ $dive->modeLabel() }} · {{ ucfirst($dive->classification()) }}">
                                         <x-svg-icon :file="$dive->iconFile()" class="dh-logbook-row-mode-icon" />
-                                        <div class="dh-logbook-row-mode-label">{{ $dive->classification() === 'technical' ? 'Tec' : 'Rec' }}</div>
+                                        <div class="dh-logbook-row-mode-label">{{ ['technical' => 'Tec', 'snorkeling' => 'Snorkel', 'freediving' => 'Free'][$dive->classification()] ?? 'Rec' }}</div>
                                     </div>
                                     {{-- Tablet/desktop 4th column, three lines: site, time ·
                                          city, operator. A catalog site (site_id) wins; otherwise
@@ -240,10 +241,11 @@
                                                      wishlisted site. --}}
                                                 <span class="material-icons-round dh-logbook-row-wished" title="On your wishlist">bookmark</span>
                                             @endif
+                                            <span class="dh-logbook-row-time">{{ $dive->started_at->format('g:i A') }}</span>
                                         </div>
-                                        <div class="dh-logbook-row-sub text-sm text-secondary">
-                                            {{ $dive->started_at->format('g:i A') }}@if ($city) &middot; {{ $city }}@endif
-                                        </div>
+                                        @if ($city)
+                                            <div class="dh-logbook-row-sub text-sm text-secondary">{{ $city }}</div>
+                                        @endif
                                         @if ($operatorName)
                                             <div class="dh-logbook-row-sub text-sm text-secondary">
                                                 @if ($operatorLogo)<img src="{{ $operatorLogo }}" alt="" class="dh-logbook-row-operator-logo">@endif

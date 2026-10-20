@@ -194,7 +194,12 @@
         if (withDepth.length) {
             var first = withDepth[0], last = withDepth[withDepth.length - 1];
             if (first.depth > 0.3) pts.unshift({ x: toMinutes(Math.max(0, first.time - 10)), y: 0 });
-            if (last.depth > 0.3) pts.push({ x: toMinutes(Math.max(last.time + 10, window.dhDiveDuration || 0)), y: 0 });
+            if (last.depth > 0.3) {
+                // Up to the surface right after the last sample, then flat
+                // to the logged duration (a ramp would invent a slow ascent).
+                pts.push({ x: toMinutes(last.time + 10), y: 0 });
+                if ((window.dhDiveDuration || 0) > last.time + 10) pts.push({ x: toMinutes(window.dhDiveDuration), y: 0 });
+            }
         }
         return pts;
     }
