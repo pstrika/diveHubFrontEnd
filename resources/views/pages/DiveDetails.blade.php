@@ -1432,6 +1432,9 @@
                 'buddies' => array_values(array_filter(array_map('trim', explode(',', $conditions['buddies'] ?? '')))),
                 'notes' => $dive->notes,
                 'gases' => $printGases,
+                // Names only on the printout - no pictures (Pablo, 2026-10-19).
+                'equipment' => collect($diveEquipment ?? [])->map(fn ($i) => ['name' => $i['name'], 'category' => $i['category']])->values()->all(),
+                'species' => collect($speciesTagged ?? [])->map(fn ($s) => ['name' => $s['name'], 'count' => $s['count']])->values()->all(),
                 'hasProfile' => $dive->hasProfile(),
                 'serverPdfUrl' => route('DiveDetails.print', $dive->id),
             ];

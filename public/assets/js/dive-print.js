@@ -95,7 +95,8 @@
     }
 
     function chip(label, o2, he) {
-        var c = el('div', 'display:inline-flex; align-items:center; border:1.5px solid ' + INK + '; border-radius:999px; padding:4px 10px 4px 12px; gap:6px; white-space:nowrap;');
+        // Just the O2/He pills - no outline around them (Pablo, 2026-10-19).
+        var c = el('div', 'display:inline-flex; align-items:center; white-space:nowrap;');
         if (label) c.appendChild(el('span', 'font-weight:700; font-size:12px; color:' + INK + ';', label));
         var o2Pill = document.createElement('label');
         o2Pill.className = 'dh-gas-result-pill is-o2 is-compact';
@@ -131,7 +132,7 @@
             var rowEl = document.querySelectorAll('.dh-dive-gas-row')[g.rowIdx];
             var sizeEl = rowEl ? rowEl.querySelector('[data-tank-size-wrap] .dh-select-value') : null;
             var size = sizeEl ? sizeEl.textContent.trim() : '';
-            var tankText = size && size.toLowerCase() !== 'not set' && size.toLowerCase() !== 'select' ? size : '—';
+            var tankText = size && ['not set', 'select', 'select…', 'tank size'].indexOf(size.toLowerCase()) === -1 ? size : '—';
             if (g.tankIndices.length > 1) tankText += ' ×' + g.tankIndices.length;
             tr.appendChild(el('td', 'padding:6px; border-bottom:1px solid #eef3f6; vertical-align:middle;', tankText));
             var start = g.tankIndices.map(function (ti) { return textOf('tankStartPressure' + g.rowIdx + '_' + ti); }).join(' / ');
@@ -216,6 +217,18 @@
         right.appendChild(el('div', 'height:16px;'));
         right.appendChild(sectionHead('Notes'));
         right.appendChild(el('div', 'font-size:13px; line-height:1.5; white-space:pre-wrap; color:#10212b;', d.notes || '—'));
+
+        // Equipment and marine life as plain lists - names only, no pictures.
+        if ((d.equipment || []).length) {
+            left.appendChild(el('div', 'height:16px;'));
+            left.appendChild(sectionHead('Equipment'));
+            left.appendChild(tagsRow(d.equipment.map(function (i) { return i.name; })));
+        }
+        if ((d.species || []).length) {
+            right.appendChild(el('div', 'height:16px;'));
+            right.appendChild(sectionHead('Marine life'));
+            right.appendChild(tagsRow(d.species.map(function (s) { return s.name + (s.count > 1 ? ' ×' + s.count : ''); })));
+        }
 
         cols.appendChild(left);
         cols.appendChild(right);
