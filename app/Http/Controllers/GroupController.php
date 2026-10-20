@@ -260,7 +260,10 @@ class GroupController extends Controller
         // eager-loading them here too, Eloquent falls back to one lazy
         // query per message per relation on every page load of this
         // chat - functionally correct but a real N+1 this avoids.
-        $messages = $group->messages()->with(['user', 'photos', 'siteMentions.site', 'reactions.user'])->orderBy('created_at')->get();
+        $messages = $group->messages()->with(['user', 'photos', 'videos', 'siteMentions.site', 'reactions.user'])->orderBy('created_at')->get();
+        // Photos & videos gallery (Pablo, 2026-10-20) - everything posted in the chat.
+        $media = \App\Http\Controllers\GroupMediaController::galleryItems($group);
+        $videoUploadsOn = \App\Support\CloudflareStream::configured();
 
         // The chat poll's initial baseline (Pablo, 2026-10-10) - without a
         // real starting signature here, the live poll's FIRST tick after
@@ -298,7 +301,7 @@ class GroupController extends Controller
             ? \App\Models\Site::whereIn('id', $autoAddRule->site_ids)->get(['id', 'name'])
             : collect();
 
-        return view('pages.Groups.Show', compact('group', 'isAdmin', 'myMembership', 'members', 'invitedMembers', 'dives', 'messages', 'chatSignature', 'addDiveDate', 'addDiveSite', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'operators', 'fbFeed', 'autoAddRule', 'ruleSites', 'SEO'));
+        return view('pages.Groups.Show', compact('group', 'isAdmin', 'myMembership', 'members', 'invitedMembers', 'dives', 'messages', 'media', 'videoUploadsOn', 'chatSignature', 'addDiveDate', 'addDiveSite', 'tripsForDate', 'calendarFeedUrl', 'callingCards', 'operators', 'fbFeed', 'autoAddRule', 'ruleSites', 'SEO'));
     }
 
     /**
@@ -722,11 +725,17 @@ class GroupController extends Controller
 
         $groupName = $group->name;
 
-        foreach ($group->messages()->with('photos')->get() as $message) {
+        foreach ($group->messages()->with('photos', 'videos')->get() as $message) {
             foreach ($message->photos as $photo) {
                 $photo->deletePhoto();
             }
+            foreach ($message->videos as $video) {
+                $video->deleteVideo();
+            }
             $message->delete();
+        }
+        foreach (\App\Models\GroupMessageVideo::where('group_id', $group->id)->get() as $video) {
+            $video->deleteVideo(); // uploaded but never posted
         }
 
         foreach ($group->dives as $dive) {

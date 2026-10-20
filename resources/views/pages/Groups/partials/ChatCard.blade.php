@@ -39,7 +39,13 @@
                 <button type="button" class="dh-btn dh-btn-ghost-dark me-2" data-bs-toggle="modal" data-bs-target="#modalChatPhotos">
                     <span class="material-icons-round" aria-hidden="true">add_photo_alternate</span>
                 </button>
+                @if($videoUploadsOn ?? false)
+                    <button type="button" class="dh-btn dh-btn-ghost-dark me-2" data-bs-toggle="modal" data-bs-target="#modalChatVideo" title="Add a video">
+                        <span class="material-icons-round" aria-hidden="true">videocam</span>
+                    </button>
+                @endif
                 <span id="chatPhotoPreview" class="d-flex align-items-center flex-wrap gap-1"></span>
+                <span id="chatVideoPreview" class="d-flex align-items-center flex-wrap gap-1"></span>
             </span>
             <button type="submit" class="dh-btn dh-btn-primary">Post</button>
         </div>

@@ -29,6 +29,9 @@ class GroupMessageController extends Controller
             'body' => 'nullable|max:2000',
             'existing_photos' => 'nullable|array|max:5',
             'existing_photos.*' => 'string',
+            // Videos uploaded ahead of time to Cloudflare (GroupMediaController::storeVideo).
+            'existing_videos' => 'nullable|array|max:2',
+            'existing_videos.*' => 'integer',
             'mentioned_site_ids' => 'nullable|array|max:10',
             'mentioned_site_ids.*' => 'integer',
         ]);
@@ -48,7 +51,11 @@ class GroupMessageController extends Controller
         $mentionedSiteIds = Site::whereIn('id', $request->input('mentioned_site_ids', []))
             ->pluck('id');
 
-        if (empty($request->body) && $photoPaths->isEmpty()) {
+        $videos = \App\Models\GroupMessageVideo::where('group_id', $group->id)->where('user_id', auth()->id())
+            ->whereNull('group_message_id')->where('stream_status', '!=', 'failed')
+            ->whereIn('id', $request->input('existing_videos', []))->get();
+
+        if (empty($request->body) && $photoPaths->isEmpty() && $videos->isEmpty()) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Write something or attach a photo.'], 422);
             }
@@ -66,6 +73,11 @@ class GroupMessageController extends Controller
                 'group_message_id' => $message->id,
                 'file' => $path,
             ]);
+        }
+
+        foreach ($videos as $video) {
+            $video->group_message_id = $message->id;
+            $video->save();
         }
 
         foreach ($mentionedSiteIds as $siteId) {
@@ -112,9 +124,11 @@ class GroupMessageController extends Controller
         }
 
         $messages = $group->messages()
-            ->with(['user', 'photos', 'siteMentions.site', 'reactions.user'])
+            ->with(['user', 'photos', 'videos', 'siteMentions.site', 'reactions.user'])
             ->orderBy('created_at')
             ->get();
+        // Videos still processing: ask Cloudflare (at most every 5 s each).
+        $messages->each(fn ($m) => $m->videos->each->refreshStream());
 
         $sig = GroupMessage::chatSignature($messages);
 
@@ -246,7 +260,7 @@ class GroupMessageController extends Controller
      */
     private function notifyNewMessage(Group $group, GroupMessage $message, $mentionedIds)
     {
-        $body = $message->body ? Str::limit($message->body, 100) : 'Sent a photo';
+        $body = $message->body ? Str::limit($message->body, 100) : ($message->videos()->exists() ? 'Sent a video' : 'Sent a photo');
 
         NotificationService::notify(
             $group->activeMembers()->pluck('user_id'),

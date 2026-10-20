@@ -332,6 +332,64 @@
         </div>
     </div>
 
+    {{--chat video composer (Pablo, 2026-10-20): the file goes straight to Cloudflare Stream--}}
+    @if($videoUploadsOn ?? false)
+    <div class="modal fade" id="modalChatVideo" tabindex="-1" role="dialog" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-normal">Add a video</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="dh-file-picker">
+                        <input type="file" accept="video/*" id="chatVideoInput">
+                        <span class="material-icons-round" aria-hidden="true">video_call</span>
+                        <span class="dh-file-picker-name">Choose a video…</span>
+                    </label>
+                    <p class="text-sm mt-2 mb-0" id="chatVideoPicked"></p>
+                    <p class="text-xs text-secondary mt-2 mb-0">Up to 3 minutes and 1 GB. Only this group's members can watch it.</p>
+                    <p class="text-danger text-xs mt-2 mb-0" id="chatVideoError" hidden></p>
+                    <div id="chatVideoProgress" hidden>
+                        <div class="dh-video-progress"><div class="dh-video-progress-bar" id="chatVideoProgressBar"></div></div>
+                        <p class="text-xs text-secondary mb-0" id="chatVideoProgressText">Uploading…</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-dismiss="modal" id="chatVideoCancel">Cancel</button>
+                    <button type="button" class="dh-btn dh-btn-primary" id="chatVideoAttach" disabled>Attach</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{--chat video viewer modal--}}
+    <div class="modal fade dh-site-video-modal" id="modalChatVideoViewer" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <button type="button" class="dh-photo-modal-close" data-bs-dismiss="modal" aria-label="Close"><span class="material-icons-round" aria-hidden="true">close</span></button>
+                <iframe id="chatVideoViewerFrame" src="about:blank" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture" allowfullscreen title="Video"></iframe>
+            </div>
+        </div>
+    </div>
+
+    {{--gallery viewer (photo or video) with Delete for the uploader / a group admin--}}
+    <div class="modal fade dh-group-media-modal" id="modalGroupMedia" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <button type="button" class="dh-photo-modal-close" data-bs-dismiss="modal" aria-label="Close"><span class="material-icons-round" aria-hidden="true">close</span></button>
+                <img id="groupMediaImg" src="" alt="" hidden>
+                <iframe id="groupMediaFrame" src="about:blank" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture" allowfullscreen title="Video" hidden></iframe>
+                <div class="dh-group-media-panel">
+                    <div class="avatar avatar-sm"><img id="groupMediaAvatar" src="" alt="" class="w-100 rounded-circle shadow-sm"></div>
+                    <div class="dh-group-media-who"><b id="groupMediaName"></b><span class="text-xs text-secondary" id="groupMediaWhen"></span><span class="text-sm" id="groupMediaCaption"></span></div>
+                    <button type="button" class="dh-btn dh-btn-ghost-dark" id="groupMediaDelete" hidden><span class="material-icons-round" aria-hidden="true">delete</span>Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{--chat photo viewer modal--}}
     <div class="modal fade" id="modalChatPhotoViewer" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -587,6 +645,22 @@
                     </section>
                 </div>
             </div>
+
+                {{-- Photos & videos (Pablo, 2026-10-20): everything posted in the chat, newest
+                     first - a badge says which, the uploader's avatar sits on each tile, and
+                     the uploader (or a group admin) can delete from the viewer. group-media.js. --}}
+                <div class="row">
+                    <div class="col-md-12">
+                        <section class="dh-panel" id="groupMediaCard">
+                            <div class="dh-panel-head-row">
+                                <h2 class="dh-panel-title mb-0">Photos &amp; videos <span class="dh-region-count" id="groupMediaCount">{{ count($media) }}</span></h2>
+                            </div>
+                            <p class="text-xs text-secondary mb-2">Everything shared in the group chat. Tap one to view it; you can delete the ones you uploaded.</p>
+                            <div class="dh-group-media-grid" id="groupMediaGrid"></div>
+                            <p class="text-secondary text-sm mb-0" id="groupMediaEmpty" @if(count($media)) hidden @endif>Nothing shared yet - add a photo or a video in the chat.</p>
+                        </section>
+                    </div>
+                </div>
 
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>
@@ -975,6 +1049,14 @@
             });
         }
 
+        function showChatVideo(url) {
+            document.getElementById('chatVideoViewerFrame').src = url;
+            new bootstrap.Modal(document.getElementById('modalChatVideoViewer')).show();
+        }
+        document.getElementById('modalChatVideoViewer').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('chatVideoViewerFrame').src = 'about:blank';
+        });
+
         function showChatPhoto(url) {
             document.getElementById('chatPhotoViewerImg').src = url;
             new bootstrap.Modal(document.getElementById('modalChatPhotoViewer')).show();
@@ -984,6 +1066,7 @@
             var form = document.getElementById('groupChatForm');
             var formData = new FormData(form);
             chatPhotoPaths.forEach(function (p) { formData.append('existing_photos[]', p); });
+            (window.dhChatVideoIds || []).forEach(function (id) { formData.append('existing_videos[]', id); });
 
             // Only submit a tracked #site mention if its "#Name" text is
             // still actually present in the message - a diver who inserts
@@ -1009,6 +1092,8 @@
                         chatPhotoPaths = [];
                         window.dhChatMentionedSites = [];
                         updateChatPhotoPreview();
+                        if (window.dhChatVideoReset) window.dhChatVideoReset();
+                        if (window.dhGroupMediaRefresh) setTimeout(window.dhGroupMediaRefresh, 800);
                         playChatSendSound();
                         suppressNextReceiveSound = true;
                         refreshChatMessages();
@@ -1524,5 +1609,19 @@
             }, 300);
         });
     </script>
-    @endpush
+        <script>
+        window.dhGroupMedia = {
+            media: @json($media),
+            csrf: "{{ csrf_token() }}",
+            listUrl: "{{ route('Groups.media.index', ['group' => $group->slug]) }}",
+            videoCreateUrl: "{{ route('Groups.videos.store', ['group' => $group->slug]) }}",
+            maxBytes: {{ \App\Support\CloudflareStream::MAX_BYTES }},
+            uploadsOn: {{ ($videoUploadsOn ?? false) ? 'true' : 'false' }},
+        };
+    </script>
+    @if($videoUploadsOn ?? false)
+        <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.1.0/dist/tus.min.js"></script>
+    @endif
+    <script src="{{ asset('assets') }}/js/group-media.js?v={{ config('divehub.version') }}"></script>
+@endpush
 </x-page-template>

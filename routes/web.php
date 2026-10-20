@@ -993,6 +993,12 @@ Route::middleware(['auth', 'not_guest'])->group(function () {
 	Route::post('Groups/{group}/messages', 'App\Http\Controllers\GroupMessageController@store')->name('Groups.messages.store');
 	Route::get('Groups/{group}/messages/poll', 'App\Http\Controllers\GroupMessageController@poll')->name('Groups.messages.poll');
 	Route::post('Groups/{group}/messages/{message}/react', 'App\Http\Controllers\GroupMessageController@react')->name('Groups.messages.react');
+	// Chat videos + the photos & videos gallery (Pablo, 2026-10-20) - GroupMediaController.
+	Route::post('Groups/{group}/videos', 'App\Http\Controllers\GroupMediaController@storeVideo')->name('Groups.videos.store');
+	Route::post('Groups/{group}/videos/{id}/uploaded', 'App\Http\Controllers\GroupMediaController@videoUploaded')->where('id', '[0-9]+')->name('Groups.videos.uploaded');
+	Route::get('Groups/{group}/videos/{id}', 'App\Http\Controllers\GroupMediaController@videoStatus')->where('id', '[0-9]+')->name('Groups.videos.status');
+	Route::get('Groups/{group}/media', 'App\Http\Controllers\GroupMediaController@index')->name('Groups.media.index');
+	Route::delete('Groups/{group}/media/{kind}/{id}', 'App\Http\Controllers\GroupMediaController@destroy')->where(['kind' => 'photo|video', 'id' => '[0-9]+'])->name('Groups.media.destroy');
 	Route::post('Groups/{group}/settings', 'App\Http\Controllers\GroupController@updateSettings')->name('Groups.updateSettings');
 	Route::post('Groups/{group}/auto-add-rule', 'App\Http\Controllers\GroupAutoAddRuleController@update')->name('Groups.autoAddRule.update');
 	Route::post('Groups/{group}/info', 'App\Http\Controllers\GroupController@updateInfo')->name('Groups.updateInfo');

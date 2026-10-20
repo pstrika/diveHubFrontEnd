@@ -9,7 +9,7 @@
         // null, never more than one.
         $reactionCounts = $message->reactions->countBy('emoji');
         $myReaction = optional($message->reactions->firstWhere('user_id', auth()->id()))->emoji;
-        $hasPhotos = $message->photos->isNotEmpty();
+        $hasPhotos = $message->photos->isNotEmpty() || $message->videos->isNotEmpty();
     @endphp
     <div class="dh-chat-row {{ $isMine ? 'is-mine' : '' }}">
         <div class="avatar avatar-sm dh-chat-avatar">
@@ -52,6 +52,24 @@
                 <div class="dh-chat-photos" data-message-id="{{ $message->id }}">
                     @foreach($message->photos as $photo)
                         <img src="{{ asset('assets/' . $photo->file) }}" alt="" class="dh-chat-photo" onclick="showChatPhoto('{{ asset('assets/' . $photo->file) }}')">
+                    @endforeach
+                    {{-- Videos (2026-10-20): Cloudflare Stream, a thumbnail with a play badge once
+                         processed; the poll redraws this when processing finishes. --}}
+                    @foreach($message->videos as $video)
+                        @if($video->isReady())
+                            <button type="button" class="dh-chat-video" onclick="showChatVideo('{{ $video->playerUrl() }}')" aria-label="Play video">
+                                <img src="{{ $video->thumbnailUrl(320) }}" alt="">
+                                <span class="dh-dive-video-play"><span class="material-icons-round" aria-hidden="true">play_arrow</span></span>
+                                @if($video->durationLabel())<span class="dh-dive-video-duration">{{ $video->durationLabel() }}</span>@endif
+                            </button>
+                        @else
+                            <span class="dh-chat-video is-{{ $video->stream_status }}" title="{{ $video->stream_error }}">
+                                <span class="dh-dive-video-status">
+                                    @if($video->stream_status === 'failed')<span class="material-icons-round" aria-hidden="true">error_outline</span><span>Video failed</span>
+                                    @else<span class="dh-spinner" aria-hidden="true"></span><span>Processing video…</span>@endif
+                                </span>
+                            </span>
+                        @endif
                     @endforeach
                     @include('pages.Groups.partials._reactionPills')
                 </div>

@@ -61,6 +61,11 @@ class GroupMessage extends Model
      * @param Collection $messages must already have 'reactions' eager-loaded
      * @return array{count: int, signature: string, reactionSignature: string}
      */
+    public function videos()
+    {
+        return $this->hasMany(GroupMessageVideo::class, 'group_message_id');
+    }
+
     public static function chatSignature(Collection $messages): array
     {
         $messageIds = $messages->pluck('id');
@@ -71,10 +76,12 @@ class GroupMessage extends Model
         // rather than deleting and re-inserting it, so the id never
         // changes; max(updated_at) catches it instead.
         $reactionSignature = $lastReactionId . ':' . $lastReactionChange;
+        // A video finishing processing updates its row - the chat must redraw it (2026-10-20).
+        $lastVideoChange = GroupMessageVideo::whereIn('group_message_id', $messageIds)->max('updated_at');
 
         return [
             'count' => $messages->count(),
-            'signature' => $messages->count() . ':' . optional($messages->last())->id . ':' . $reactionSignature,
+            'signature' => $messages->count() . ':' . optional($messages->last())->id . ':' . $reactionSignature . ':' . $lastVideoChange,
             'reactionSignature' => $reactionSignature,
         ];
     }

@@ -47,6 +47,9 @@ class AccountDeleter
         foreach (\App\Models\SiteVideo::where('userId', $id)->get() as $video) {
             $video->deleteWithStream();
         }
+        foreach (\App\Models\GroupMessageVideo::where('user_id', $id)->get() as $video) {
+            $video->deleteVideo();
+        }
         File::deleteDirectory(storage_path('app/equipment/' . $id));
         File::deleteDirectory(storage_path('app/dive-photos/' . $id));
         if ($user->picture) {
