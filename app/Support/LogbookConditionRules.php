@@ -16,7 +16,9 @@ class LogbookConditionRules
     public const SURFACE = ['calm', 'slight_chop', 'choppy', 'rough'];
     public const WEATHER = ['sunny', 'partly_cloudy', 'cloudy', 'rainy', 'windy', 'stormy'];
     public const DIVE_TYPE = ['drift', 'training', 'photo_video', 'cave', 'cavern', 'wall', 'reef', 'wreck'];
-    public const CLASSIFICATION = ['recreational', 'technical'];
+    // snorkeling/freediving only for breath-hold dives (dive_mode 'freedive'),
+    // recreational/technical for every other mode - see allowedClassification().
+    public const CLASSIFICATION = ['recreational', 'technical', 'snorkeling', 'freediving'];
     public const GAS_ROLE = ['bottom', 'deco', 'travel', 'bailout'];
 
     public static function rules(): array
@@ -90,5 +92,11 @@ class LogbookConditionRules
             }
         }
         return $out;
+    }
+
+    /** Whether a classification fits this dive's mode (null clears it, always fine). */
+    public static function allowedClassification(\App\Models\Dive $dive, ?string $value): bool
+    {
+        return $value === null || in_array($value, $dive->classificationOptions(), true);
     }
 }

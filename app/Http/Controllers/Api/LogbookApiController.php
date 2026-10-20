@@ -164,6 +164,9 @@ class LogbookApiController extends Controller
         }
         $rules = LogbookConditionRules::rules() + ['user_site_id' => 'nullable|integer'];
         $validated = validator($toValidate, $rules)->validate();
+        if (array_key_exists('classification', $flat) && !LogbookConditionRules::allowedClassification($dive, $validated['conditions']['classification'] ?? null)) {
+            return response()->json(['message' => 'Classification doesn\'t fit this dive', 'errors' => ['classification' => ['Use ' . implode(' or ', $dive->classificationOptions()) . ' for this dive']]], 422);
+        }
 
         $conditions = $dive->conditions ?? [];
         foreach ($conditionKeys as $k) {

@@ -89,7 +89,7 @@ class LogbookController extends Controller
 
         $filters = [
             'circuit' => in_array($request->query('circuit'), ['cc', 'oc'], true) ? $request->query('circuit') : null,
-            'class' => in_array($request->query('class'), ['recreational', 'technical'], true) ? $request->query('class') : null,
+            'class' => in_array($request->query('class'), \App\Support\LogbookConditionRules::CLASSIFICATION, true) ? $request->query('class') : null,
             'tag' => (string) $request->query('tag', '') !== '' ? (string) $request->query('tag') : null,
             'type' => isset($diveTypeLabels[$request->query('type')]) ? $request->query('type') : null,
             'q' => trim(mb_substr((string) $request->query('q', ''), 0, 100)) ?: null,
@@ -150,8 +150,9 @@ class LogbookController extends Controller
         };
         $hasCcr = false; $hasOc = false;
         foreach ($within('circuit') as $dive) { $dive->isCcr() ? $hasCcr = true : $hasOc = true; }
-        $hasTec = false; $hasRec = false;
-        foreach ($within('class') as $dive) { $dive->classification() === 'technical' ? $hasTec = true : $hasRec = true; }
+        $classesPresent = [];
+        foreach ($within('class') as $dive) { $classesPresent[$dive->classification()] = true; }
+        $classOptions = array_intersect_key(['recreational' => 'Recreational', 'technical' => 'Technical', 'snorkeling' => 'Snorkeling', 'freediving' => 'Freediving'], $classesPresent);
         $typeCounts = [];
         foreach ($within('type') as $dive) foreach ($dive->conditions['dive_type'] ?? [] as $t) $typeCounts[$t] = ($typeCounts[$t] ?? 0) + 1;
         $typeOptions = [];
@@ -193,7 +194,8 @@ class LogbookController extends Controller
             'stats' => $stats,
             'filters' => $filters,
             'showCircuitFilter' => $hasCcr && $hasOc,
-            'showClassFilter' => $hasTec && $hasRec,
+            'showClassFilter' => count($classOptions) > 1,
+            'classOptions' => $classOptions,
             'tagOptions' => $tagOptions,
             'typeOptions' => $typeOptions,
             'operatorLogos' => $operatorLogos,
@@ -845,7 +847,7 @@ class LogbookController extends Controller
             'conditions.buddies' => 'nullable|string|max:300',
             'conditions.dive_type' => 'nullable|array',
             'conditions.dive_type.*' => 'in:drift,training,photo_video,cave,cavern,wall,reef,wreck',
-            'conditions.classification' => 'nullable|in:recreational,technical',
+            'conditions.classification' => 'nullable|in:' . implode(',', \App\Support\LogbookConditionRules::CLASSIFICATION),
             // OC/CC for dives whose mode didn't come from a computer sync
             // (Dive::modeEditable) - ignored for synced dives.
             'dive_mode' => 'nullable|in:open_circuit,closed_circuit',
@@ -915,6 +917,9 @@ class LogbookController extends Controller
         switch ($data['form']) {
             case 'classification':
                 $conditions['classification'] = $data['conditions']['classification'] ?? null;
+                if (!\App\Support\LogbookConditionRules::allowedClassification($dive, $conditions['classification'])) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['conditions.classification' => 'That classification doesn\'t fit this dive\'s mode.']);
+                }
                 if (!empty($data['dive_mode']) && $dive->modeEditable() && $dive->dive_mode !== $data['dive_mode']) {
                     $dive->setModeByHand($data['dive_mode']);
                     // Gas pairings/roles were keyed to the old reading.

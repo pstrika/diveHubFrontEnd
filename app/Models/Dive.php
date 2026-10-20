@@ -262,7 +262,8 @@ class Dive extends Model
     /** Row title: the site's name, else "{Recreational|Technical} Dive". */
     public function title(): string
     {
-        return $this->siteInfo()['name'] ?? (ucfirst($this->classification()) . ' Dive');
+        $class = $this->classification();
+        return $this->siteInfo()['name'] ?? (in_array($class, self::BREATH_HOLD_CLASSES, true) ? ucfirst($class) : ucfirst($class) . ' Dive');
     }
 
     /** True when the computer-owned facts can be edited by hand (manual entry, or an import that carried no profile). */
@@ -529,6 +530,7 @@ class Dive extends Model
     public function modeLabel(): string
     {
         if ($this->isCcr()) return 'Closed Circuit';
+        if ($this->dive_mode === 'freedive') return 'Breath-hold';
         return $this->isSidemount() ? 'Open Circuit Sidemount' : 'Open Circuit';
     }
 
@@ -540,9 +542,25 @@ class Dive extends Model
      * conditions.classification). The override always wins once set; the
      * rules are only ever a default for a dive nobody has touched yet.
      */
+    /** Classifications for a breath-hold (dive_mode 'freedive') dive; every other mode is recreational/technical. */
+    public const BREATH_HOLD_CLASSES = ['snorkeling', 'freediving'];
+
+    /** The pair of classifications this dive can take. */
+    public function classificationOptions(): array
+    {
+        return $this->dive_mode === 'freedive' ? self::BREATH_HOLD_CLASSES : ['recreational', 'technical'];
+    }
+
     public function classification(): string
     {
         $override = $this->conditions['classification'] ?? null;
+        // Breath-hold dives (computer in freedive/snorkel mode) pick between
+        // their own pair (Pablo, 2026-10-19): snorkeling unless deeper than
+        // 5 ft, freediving otherwise; the diver's own choice wins.
+        if ($this->dive_mode === 'freedive') {
+            if (in_array($override, self::BREATH_HOLD_CLASSES, true)) return $override;
+            return $this->max_depth_m < 1.524 ? 'snorkeling' : 'freediving';
+        }
         if (in_array($override, ['recreational', 'technical'], true)) {
             return $override;
         }
@@ -563,7 +581,7 @@ class Dive extends Model
     public function iconFile(): string
     {
         if ($this->isCcr()) return 'icons_calendar_ccr.svg';
-        if ($this->dive_mode === 'freedive') return 'icons_calendar_freediving.svg';
+        if ($this->dive_mode === 'freedive') return $this->classification() === 'snorkeling' ? 'icons_calendar_snorkeling.svg' : 'icons_calendar_freediving.svg';
         if ($this->isSidemount()) return 'divetype_sidemount_upright.svg';
 
         return $this->classification() === 'technical' ? 'icons_calendar_tec.svg' : 'icons_calendar_rec.svg';

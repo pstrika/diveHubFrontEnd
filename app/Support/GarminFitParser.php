@@ -12,7 +12,7 @@ namespace App\Support;
  * dive needs are kept:
  *
  *   0 file_id      - product (watch model), serial
- *   18 session     - start time, GPS entry point, elapsed time
+ *   18 session     - start time, GPS entry point, elapsed time, sub_sport (apnea)
  *   20 record      - 1 s samples: depth, temperature, NDL, next stop, TTS, CNS, N2, PO2
  *   21 event       - gas switches (event 57, data = dive_gas index)
  *   34 activity    - local_timestamp, giving the diver's UTC offset
@@ -172,6 +172,9 @@ class GarminFitParser
             $gasMixes[] = ['oxygen' => $o2, 'helium' => $he, 'nitrogen' => max(0, 100 - $o2 - $he), 'usage' => ($g[3] ?? 0) === 1 ? 2 : 0];
         }
         $isCc = (bool) array_filter($gasMixes, fn ($g) => $g['usage'] === 2);
+        // Session sub_sport (field 6) 56 apnea_diving / 57 apnea_hunting: a
+        // breath-hold dive, which the logbook classes as snorkeling or freediving.
+        $isApnea = in_array((int) ($session[6] ?? -1), [56, 57], true);
         // Gas switches: event 57 (dive_gas_switched), data = dive_gas index.
         $switches = [];
         foreach ($m[21] ?? [] as $e) {
@@ -264,7 +267,7 @@ class GarminFitParser
             'avg_depth_m' => isset($summary[2]) ? round($summary[2] / 1000, 2) : UddfParser::averageDepth($profile),
             'min_water_temp_c' => $temps ? round(min($temps), 1) : null,
             'max_water_temp_c' => $temps ? round(max($temps), 1) : null,
-            'dive_mode' => $isCc ? 'closed_circuit' : 'open_circuit',
+            'dive_mode' => $isApnea ? 'freedive' : ($isCc ? 'closed_circuit' : 'open_circuit'),
             'mode_source' => 'file',
             'gas_mixes' => $gasMixes ?: null,
             'tanks' => $tanks,

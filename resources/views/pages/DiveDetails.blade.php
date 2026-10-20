@@ -371,8 +371,10 @@
                                     </select>
                                 @endif
                                 <select name="conditions[classification]" onchange="this.form.submit()">
-                                    <option value="recreational" @selected($classification === 'recreational')>Recreational</option>
-                                    <option value="technical" @selected($classification === 'technical')>Technical</option>
+                                    {{-- Breath-hold dives pick snorkeling/freediving instead (Pablo, 2026-10-19). --}}
+                                    @foreach ($dive->classificationOptions() as $opt)
+                                        <option value="{{ $opt }}" @selected($classification === $opt)>{{ ucfirst($opt) }}</option>
+                                    @endforeach
                                 </select>
                             </form>
                         </div>

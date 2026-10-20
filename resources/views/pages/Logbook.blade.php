@@ -148,7 +148,7 @@
                                 <x-query-chips param="circuit" :options="['oc' => 'Open Circuit', 'cc' => 'Closed Circuit']" :selected="$filters['circuit']" all="All" label="Circuit" />
                             @endif
                             @if ($showClassFilter)
-                                <x-query-chips param="class" :options="['recreational' => 'Recreational', 'technical' => 'Technical']" :selected="$filters['class']" all="All" label="Level" />
+                                <x-query-chips param="class" :options="$classOptions" :selected="$filters['class']" all="All" label="Level" />
                             @endif
                             @if (count($typeOptions))
                                 <x-query-chips param="type" :options="$typeOptions" :selected="$filters['type']" all="All" label="Dive type" />
