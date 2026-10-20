@@ -72,6 +72,7 @@
             &copy; {{ date('Y') }} Divers Hub
             <a href="{{ route('TermsOfUse') }}">Terms</a>
             <a href="{{ route('PrivacyPolicy') }}">Privacy</a>
+            <a href="{{ route('Support') }}">Support</a>
             <span class="dh-auth-version"><x-version /></span>
         </p>
     </main>

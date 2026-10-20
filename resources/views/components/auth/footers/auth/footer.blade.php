@@ -28,6 +28,9 @@
             <li class="nav-item">
               <a href="/DataDeletion" class="nav-link text-muted">Data Deletion</a>
             </li>
+            <li class="nav-item">
+              <a href="/Support" class="nav-link text-muted">Support</a>
+            </li>
           </ul>
         </div>
       </div>

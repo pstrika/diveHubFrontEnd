@@ -84,6 +84,16 @@ Route::get('newsletter/resubscribe/{user}', [\App\Http\Controllers\NewsletterCon
 // verify yet (a hardening step for later, not required for this to work).
 Route::post('webhooks/twilio/inbound', [\App\Http\Controllers\TwilioWebhookController::class, 'inbound'])->name('webhooks.twilio.inbound');
 
+/* Support - public; the App Store Support URL for the iPhone app */
+Route::get('Support', function () {
+    $SEO = [
+        "title" => "Support | Divers Hub",
+        "desc" => "Help for Divers Hub and the Logbook by Divers Hub iPhone app: contact, dive computer downloads, Apple Watch dives and your data.",
+        "canonical" => route("Support"),
+    ];
+    return view('pages.Support', compact('SEO'));
+})->middleware('guest')->name('Support');
+
 /* Privacy Policy */
 Route::get('PrivacyPolicy', function () {
     $SEO = [
