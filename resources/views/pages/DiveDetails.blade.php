@@ -489,13 +489,32 @@
 
                     {{-- Dark header dashboard (Pablo, 2026-10-15) - dive number
                          moved to the title/chip above instead of its own tile. --}}
+                    {{-- Breath-hold sessions get their own tiles (Pablo, 2026-10-19,
+                         same as the app): freediving adds the longest descent and the
+                         number of descents; neither shows an average depth. --}}
+                    @php
+                        $breathHold = in_array($classification, ['snorkeling', 'freediving'], true) && $dive->dive_mode === 'freedive';
+                        $descents = $classification === 'freediving' && $dive->dive_mode === 'freedive' ? $dive->breathHoldDescents() : null;
+                    @endphp
                     <div class="dh-dive-header-stats">
                         <div class="dh-dive-header-stat">
                             <span class="material-icons-round" aria-hidden="true">vertical_align_bottom</span>
                             <div class="dh-dive-header-stat-value" data-unit-value="depth" data-metric="{{ $dive->max_depth_m }}"></div>
                             <div class="dh-dive-header-stat-label">Max depth</div>
                         </div>
-                        @if ($dive->avg_depth_m)
+                        @if ($descents)
+                            <div class="dh-dive-header-stat">
+                                <span class="material-icons-round" aria-hidden="true">timer</span>
+                                <div class="dh-dive-header-stat-value">{{ intdiv($descents['longest_seconds'], 60) }}:{{ str_pad($descents['longest_seconds'] % 60, 2, '0', STR_PAD_LEFT) }}</div>
+                                <div class="dh-dive-header-stat-label">Longest dive</div>
+                            </div>
+                            <div class="dh-dive-header-stat">
+                                <span class="material-icons-round" aria-hidden="true">repeat</span>
+                                <div class="dh-dive-header-stat-value">{{ $descents['count'] }}</div>
+                                <div class="dh-dive-header-stat-label">Dives</div>
+                            </div>
+                        @endif
+                        @if ($dive->avg_depth_m && !$breathHold)
                             <div class="dh-dive-header-stat">
                                 <span class="material-icons-round" aria-hidden="true">height</span>
                                 <div class="dh-dive-header-stat-value" data-unit-value="depth" data-metric="{{ $dive->avg_depth_m }}"></div>
@@ -505,20 +524,15 @@
                         <div class="dh-dive-header-stat">
                             <span class="material-icons-round" aria-hidden="true">schedule</span>
                             <div class="dh-dive-header-stat-value">{{ gmdate('H:i', $dive->duration_seconds) }}</div>
-                            <div class="dh-dive-header-stat-label">Duration</div>
+                            <div class="dh-dive-header-stat-label">{{ $breathHold ? 'Session' : 'Duration' }}</div>
                         </div>
-                        @if ($dive->min_water_temp_c)
-                            <div class="dh-dive-header-stat">
-                                <span class="material-icons-round" aria-hidden="true">device_thermostat</span>
-                                <div class="dh-dive-header-stat-value" data-unit-value="temp" data-metric="{{ $dive->min_water_temp_c }}"></div>
-                                <div class="dh-dive-header-stat-label">Min water temp</div>
-                            </div>
-                        @endif
-                        <div class="dh-dive-header-stat">
-                            <span class="material-icons-round" aria-hidden="true">wb_sunny</span>
-                            <div class="dh-dive-header-stat-value">{{ $dive->started_at->format('g:i A') }}</div>
-                            <div class="dh-dive-header-stat-label">Start time</div>
-                        </div>
+                        @php
+                            $tempTile = $dive->min_water_temp_c ? '<div class="dh-dive-header-stat"><span class="material-icons-round" aria-hidden="true">device_thermostat</span><div class="dh-dive-header-stat-value" data-unit-value="temp" data-metric="' . e($dive->min_water_temp_c) . '"></div><div class="dh-dive-header-stat-label">' . ($breathHold ? 'Water temp' : 'Min water temp') . '</div></div>' : '';
+                            $startTile = '<div class="dh-dive-header-stat"><span class="material-icons-round" aria-hidden="true">wb_sunny</span><div class="dh-dive-header-stat-value">' . e($dive->started_at->format('g:i A')) . '</div><div class="dh-dive-header-stat-label">Start time</div></div>';
+                        @endphp
+                        {{-- Freediving: start time, then water temp; otherwise water temp, then start time. --}}
+                        {!! $descents ? $startTile . $tempTile : $tempTile . $startTile !!}
+                    </div>
                     </div>
 
                     {{-- Cardless row (Pablo, 2026-10-15: "put a no card row in

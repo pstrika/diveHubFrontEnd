@@ -542,6 +542,42 @@ class Dive extends Model
      * conditions.classification). The override always wins once set; the
      * rules are only ever a default for a dive nobody has touched yet.
      */
+    /**
+     * Descents in a breath-hold session (Pablo, 2026-10-19; same rule as the
+     * app, so both show the same numbers): a run of samples deeper than
+     * 0.5 m, runs less than 3 s apart merged into one, kept when it reaches
+     * 1.0 m and lasts 5 s. Duration is first to last sample below 0.5 m.
+     *
+     * @return array{count:int, longest_seconds:int, deepest_m:float}
+     */
+    public function breathHoldDescents(): array
+    {
+        $runs = []; $surfaced = true;
+        foreach ($this->profile ?? [] as $p) {
+            $depth = $p['depth'] ?? null;
+            if ($depth === null) continue;
+            if ($depth <= 0.5) { $surfaced = true; continue; }
+            $t = (float) ($p['time'] ?? 0);
+            $last = count($runs) - 1;
+            // Consecutive deep samples are one descent however far apart
+            // they're logged; a surface break under 3 s doesn't split it.
+            if ($last >= 0 && (!$surfaced || $t - $runs[$last]['end'] < 3)) {
+                $runs[$last]['end'] = $t;
+                $runs[$last]['max'] = max($runs[$last]['max'], (float) $depth);
+            } else {
+                $runs[] = ['start' => $t, 'end' => $t, 'max' => (float) $depth];
+            }
+            $surfaced = false;
+        }
+        $runs = array_filter($runs, fn ($r) => $r['max'] >= 1.0 && $r['end'] - $r['start'] >= 5);
+
+        return [
+            'count' => count($runs),
+            'longest_seconds' => (int) round($runs ? max(array_map(fn ($r) => $r['end'] - $r['start'], $runs)) : 0),
+            'deepest_m' => $runs ? max(array_column($runs, 'max')) : 0.0,
+        ];
+    }
+
     /** Classifications for a breath-hold (dive_mode 'freedive') dive; every other mode is recreational/technical. */
     public const BREATH_HOLD_CLASSES = ['snorkeling', 'freediving'];
 
