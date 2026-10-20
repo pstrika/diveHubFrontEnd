@@ -19,7 +19,7 @@ class DivePhotoStore
     /** Validation rule for one upload. Same limits as diver site photos. */
     public const RULE = 'required|image|mimes:jpg,jpeg,png,webp|max:20480';
 
-    public static function add(Dive $dive, UploadedFile $file, ?string $caption = null, ?string $uuid = null): DivePhoto
+    public static function add(Dive $dive, UploadedFile $file, ?string $caption = null, ?string $uuid = null, ?string $takenAt = null): DivePhoto
     {
         if ($dive->photos()->count() >= DivePhoto::MAX_PER_DIVE) {
             throw ValidationException::withMessages(['photo' => 'A dive can have up to ' . DivePhoto::MAX_PER_DIVE . ' photos.']);
@@ -33,7 +33,9 @@ class DivePhotoStore
             'user_id' => $dive->user_id,
             'dive_id' => $dive->id,
             'caption' => $caption ? mb_substr($caption, 0, 500) : null,
-            'taken_at' => self::takenAt($file->getRealPath()),
+            // The browser shrinks big camera files before upload (dive-photos.js)
+            // and the copy has no EXIF, so it sends the original's date along.
+            'taken_at' => $takenAt ?: self::takenAt($file->getRealPath()),
             'position' => (int) $dive->photos()->max('position') + 1,
         ]);
 

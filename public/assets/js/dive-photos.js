@@ -43,6 +43,57 @@
     });
   }
 
+  // Big camera JPEGs (Pablo's run 20-30 MB) hit the 20 MB upload limit, and
+  // the server throws the original away anyway (1600 px WebP). So the browser
+  // shrinks anything over 3 MB or 2000 px to a 2000 px JPEG first
+  // (2026-10-20), and sends the camera's date read from the original's EXIF.
+  var SHRINK_MAX_PX = 2000, SHRINK_OVER_BYTES = 3 * 1024 * 1024;
+  function shrink(file) {
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type) || !window.createImageBitmap) return Promise.resolve(file);
+    return createImageBitmap(file, { imageOrientation: 'from-image' }).then(function (bmp) {
+      var w = bmp.width, h = bmp.height, scale = Math.min(1, SHRINK_MAX_PX / Math.max(w, h));
+      if (scale === 1 && file.size <= SHRINK_OVER_BYTES) { bmp.close(); return file; }
+      var c = document.createElement('canvas');
+      c.width = Math.round(w * scale); c.height = Math.round(h * scale);
+      c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+      bmp.close();
+      return new Promise(function (resolve) {
+        c.toBlob(function (b) {
+          resolve(b ? new File([b], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }) : file);
+        }, 'image/jpeg', 0.85);
+      });
+    }).catch(function () { return file; });
+  }
+  // EXIF DateTimeOriginal (0x9003), else DateTime (0x0132), as "YYYY-MM-DD HH:MM:SS".
+  function exifDate(file) {
+    if (file.type !== 'image/jpeg') return Promise.resolve(null);
+    return file.slice(0, 256 * 1024).arrayBuffer().then(function (buf) {
+      var v = new DataView(buf);
+      if (v.byteLength < 4 || v.getUint16(0) !== 0xFFD8) return null;
+      var off = 2;
+      while (off + 4 <= v.byteLength) {
+        var marker = v.getUint16(off);
+        if ((marker & 0xFF00) !== 0xFF00) return null;
+        var len = v.getUint16(off + 2);
+        if (marker === 0xFFE1 && v.getUint32(off + 4) === 0x45786966) { // "Exif"
+          var tiff = off + 10;
+          var little = v.getUint16(tiff) === 0x4949;
+          var g16 = function (o) { return v.getUint16(o, little); }, g32 = function (o) { return v.getUint32(o, little); };
+          var scan = function (ifd, want) { var n = g16(ifd); for (var i = 0; i < n; i++) { var e = ifd + 2 + i * 12; if (e + 12 > v.byteLength) return -1; if (g16(e) === want) return e; } return -1; };
+          var ascii = function (e) { var count = g32(e + 4), at = count > 4 ? tiff + g32(e + 8) : e + 8, s = ''; for (var i = 0; i < count - 1 && at + i < v.byteLength; i++) s += String.fromCharCode(v.getUint8(at + i)); return s; };
+          var ifd0 = tiff + g32(tiff + 4), date = null;
+          var exifPtr = scan(ifd0, 0x8769);
+          if (exifPtr >= 0) { var d = scan(tiff + g32(exifPtr + 8), 0x9003); if (d >= 0) date = ascii(d); }
+          if (!date) { var d2 = scan(ifd0, 0x0132); if (d2 >= 0) date = ascii(d2); }
+          return date && /^\d{4}:\d{2}:\d{2} \d{2}:\d{2}:\d{2}$/.test(date) ? date.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3') : null;
+        }
+        if (marker === 0xFFDA) return null; // image data starts: no EXIF
+        off += 2 + len;
+      }
+      return null;
+    }).catch(function () { return null; });
+  }
+
   function render() {
     grid.innerHTML = '';
     photos.forEach(function (p, i) {
@@ -92,10 +143,14 @@
         return;
       }
       var f = files.shift();
-      status.textContent = 'Uploading ' + (done + failed.length + 1) + ' of ' + (done + failed.length + 1 + files.length) + '...';
-      var fd = new FormData();
-      fd.append('photo', f);
-      send('POST', cfg.uploadUrl, fd).then(function (data) {
+      status.textContent = 'Preparing ' + (done + failed.length + 1) + ' of ' + (done + failed.length + 1 + files.length) + '...';
+      Promise.all([shrink(f), exifDate(f)]).then(function (r) {
+        status.textContent = 'Uploading ' + (done + failed.length + 1) + ' of ' + (done + failed.length + 1 + files.length) + '...';
+        var fd = new FormData();
+        fd.append('photo', r[0]);
+        if (r[1]) fd.append('taken_at', r[1]);
+        return send('POST', cfg.uploadUrl, fd);
+      }).then(function (data) {
         photos.push(data.photo); done++; render(); next();
       }).catch(function (e) {
         failed.push(f.name + ': ' + e.message); next();

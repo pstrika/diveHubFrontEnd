@@ -27,8 +27,8 @@ class DivePhotoController extends Controller
     public function store(Request $request, $id)
     {
         $dive = $this->ownDive($request, $id);
-        $request->validate(['photo' => DivePhotoStore::RULE, 'caption' => 'nullable|string|max:500']);
-        $photo = DivePhotoStore::add($dive, $request->file('photo'), $request->input('caption'));
+        $data = $request->validate(['photo' => DivePhotoStore::RULE, 'caption' => 'nullable|string|max:500', 'taken_at' => 'nullable|date_format:Y-m-d H:i:s']);
+        $photo = DivePhotoStore::add($dive, $request->file('photo'), $data['caption'] ?? null, null, $data['taken_at'] ?? null);
         return response()->json(['photo' => $this->card($photo), 'count' => $dive->photos()->count()], 201);
     }
 

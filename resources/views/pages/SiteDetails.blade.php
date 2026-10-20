@@ -1293,7 +1293,7 @@
                                              no chunk-reassembly like the admin upload endpoint has. --}}
                                         <div id="dh-diver-upload-form-state">
                                             <div class="dropzone dh-dropzone" id="dh-diver-dropzone"></div>
-                                            <p class="text-xs text-secondary mt-2 mb-0">JPG, PNG or WebP, up to 20 MB each. Drop up to 4 at once.</p>
+                                            <p class="text-xs text-secondary mt-2 mb-0">JPG, PNG or WebP. Drop up to 4 at once - big camera files are shrunk before upload.</p>
                                             @error('photo')
                                                 <p class="text-danger text-xs mt-2 mb-0">{{ $message }}</p>
                                             @enderror
@@ -1343,7 +1343,10 @@
                                     url: "{{ route('DiverPhotos.store', ['siteId' => $site->id]) }}",
                                     autoProcessQueue: false,
                                     maxFiles: 4,
-                                    maxFilesize: 20,
+                                    maxFilesize: 60,
+                                    // Shrunk in the browser before upload (Pablo, 2026-10-20: camera
+                                    // JPEGs run past the 20 MB limit; the original is never kept anyway).
+                                    resizeWidth: 2000, resizeHeight: 2000, resizeQuality: 0.85, resizeMimeType: 'image/jpeg',
                                     acceptedFiles: ".jpeg,.jpg,.png,.webp",
                                     parallelUploads: 4,
                                     addRemoveLinks: true,
