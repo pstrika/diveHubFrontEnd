@@ -2181,7 +2181,7 @@ span.dh-dive-weather-icon { font-size: 22px; color: var(--dh-sea); }
 /* Themed file picker (Pablo, 2026-09-24: "the choose file button needs to
    be themed to the site") - a styled label over a hidden native input. */
 .dh-file-picker { display: flex; align-items: center; gap: 8px; border: 1.5px dashed var(--dh-line); border-radius: var(--dh-radius); padding: 12px 14px; cursor: pointer; color: var(--dh-deep); font-weight: 600; font-size: .9rem; background: var(--dh-foam); transition: border-color .12s ease, background-color .12s ease; }
-.dh-file-picker:hover { border-color: var(--dh-sea); background: #fff; }
+.dh-file-picker:hover { border-color: var(--dh-sea); background: var(--dh-paper); }
 .dh-file-picker .material-icons-round { color: var(--dh-sea); }
 
 /* Upload spinner - feedback while a form POST is in flight, not a real

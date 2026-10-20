@@ -40,11 +40,17 @@
                                 <span>Notes</span>
                                 <textarea name="notes" rows="4" maxlength="5000" placeholder="Service history, settings, sizes...">{{ old('notes', $item->notes) }}</textarea>
                             </label>
-                            <label class="dh-sp-field">
+                            <div class="dh-sp-field">
                                 <span>Picture</span>
                                 @if ($item->photoUrl())<img src="{{ $item->photoUrl() }}" alt="" class="dh-species-photo mb-1">@endif
-                                <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" style="height:auto;padding:6px 0;border:0">
-                            </label>
+                                <label class="dh-file-picker">
+                                    <input type="file" name="photo" accept="image/jpeg,image/png,image/webp"
+                                        onchange="this.parentNode.querySelector('.dh-file-picker-name').textContent = this.files[0] ? this.files[0].name : this.dataset.empty"
+                                        data-empty="{{ $item->photoUrl() ? 'Choose a new picture…' : 'Choose a picture…' }}">
+                                    <span class="material-icons-round" aria-hidden="true">add_a_photo</span>
+                                    <span class="dh-file-picker-name">{{ $item->photoUrl() ? 'Choose a new picture…' : 'Choose a picture…' }}</span>
+                                </label>
+                            </div>
                             {{-- Retire date (Pablo, 2026-10-18): gear you no longer use or no
                                  longer have. It stays in your history and on past dives. --}}
                             <label class="dh-sp-field">
