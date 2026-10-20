@@ -426,6 +426,9 @@ class LogbookController extends Controller
         foreach (\App\Models\DivePhoto::where('user_id', $userId)->get() as $photo) {
             \App\Support\DivePhotoStore::delete($photo);
         }
+        foreach (\App\Models\DiveVideo::where('user_id', $userId)->get() as $video) {
+            \App\Support\DiveVideoStore::delete($video);
+        }
         \Illuminate\Support\Facades\DB::transaction(function () use ($userId) {
             $diveIds = Dive::withTrashed()->withoutGlobalScope('companions')->where('user_id', $userId)->pluck('id');
             foreach ($diveIds->chunk(500) as $chunk) {
@@ -776,6 +779,9 @@ class LogbookController extends Controller
             'mergeCandidate' => \App\Support\DiveMerger::nextCandidate($dive),
             // Photos card (Pablo, 2026-10-17).
             'photos' => $dive->photos()->with('species')->get()->map(fn ($p) => \App\Http\Controllers\DivePhotoController::card($p))->values(),
+            // Videos card (Pablo, 2026-10-20) - Cloudflare Stream.
+            'videosEnabled' => $videosOn = \App\Support\EarlyAccess::allows($request->user(), 'videos') && \App\Support\CloudflareStream::configured(),
+            'videos' => $videosOn ? $dive->videos()->get()->map(fn ($v) => \App\Http\Controllers\DiveVideoController::card($v->refreshStream()))->values() : collect(),
             'speciesEnabled' => $speciesOn = \App\Support\EarlyAccess::allows($request->user(), 'species'),
             'speciesTagged' => $speciesOn ? \App\Http\Controllers\DiveSpeciesController::diveList($dive) : [],
             'speciesAll' => $speciesOn ? \App\Models\Species::visibleTo($request->user()->id)->orderBy('common_name')->get()

@@ -94,6 +94,9 @@ class DiveSyncController extends Controller
             'computers' => $dive->companions()->get(['computer_model', 'computer_serial'])->map(fn ($c) => ['model' => $c->computer_model, 'serial' => $c->computer_serial])->values(),
             // Photos on the dive (web 12.17.0) - URLs need the bearer token.
             'photos' => $dive->photos()->with('species')->get()->map->toApi()->values(),
+            // Videos (web 12.21.0): null when the account doesn't have them, else the list (playback URLs good ~1 h).
+            'videos' => \App\Support\EarlyAccess::allows($dive->user, 'videos') && \App\Support\CloudflareStream::configured()
+                ? $dive->videos()->get()->map(fn ($v) => $v->refreshStream()->toApi())->values() : null,
             // Early-access blocks: null when the account doesn't have the
             // feature (GET /api/me/features), else the dive's list.
             'species' => \App\Support\EarlyAccess::allows($dive->user, 'species') ? \App\Http\Controllers\Api\LogbookExtrasApiController::diveSpecies($dive) : null,

@@ -374,6 +374,10 @@ Route::post('AddSiteReview/{siteId}', 'App\Http\Controllers\SiteController@addRe
 // real account, not the guest shim SiteDetails itself uses.
 Route::post('DiverPhotos/{siteId}', 'App\Http\Controllers\DiverPhotoController@store')->middleware('auth')->name('DiverPhotos.store');
 Route::delete('DiverPhotos/{diverPhoto}', 'App\Http\Controllers\DiverPhotoController@destroy')->middleware('auth')->name('DiverPhotos.destroy');
+// Divers' site videos (Pablo, 2026-10-20) - Cloudflare Stream, admin review like pictures.
+Route::post('SiteVideos/{siteId}', 'App\Http\Controllers\SiteVideoController@store')->where('siteId', '[0-9]+')->middleware('auth')->name('SiteVideos.store');
+Route::post('SiteVideos/{id}/uploaded', 'App\Http\Controllers\SiteVideoController@uploaded')->where('id', '[0-9]+')->middleware('auth')->name('SiteVideos.uploaded');
+Route::delete('SiteVideos/{id}', 'App\Http\Controllers\SiteVideoController@destroy')->where('id', '[0-9]+')->middleware('auth')->name('SiteVideos.destroy');
 
 // Post-dive feedback wizard (Pablo, 2026-10-04) - reached via a bare token
 // link (WhatsApp/SMS/email), deliberately NOT behind 'auth': the token
@@ -462,6 +466,10 @@ Route::get('DiverPhotos-Admin', 'App\Http\Controllers\DiverPhotoAdminController@
 Route::get('DiverPhotos-Admin/species', 'App\Http\Controllers\SpeciesController@photoReview')->middleware('auth')->name('Species.photoReview');
 Route::post('DiverPhotos-Admin/species/{uuid}/decide', 'App\Http\Controllers\SpeciesController@photoDecide')->middleware('auth')->name('Species.photoDecide');
 Route::post('DiverPhotos-Admin/species/{uuid}/flip', 'App\Http\Controllers\SpeciesController@photoFlip')->middleware('auth')->name('Species.photoFlip');
+Route::get('DiverPhotos-Admin/videos', 'App\Http\Controllers\SiteVideoAdminController@index')->middleware('auth')->name('SiteVideos.manage.index');
+Route::post('DiverPhotos-Admin/videos/{video}/approve', 'App\Http\Controllers\SiteVideoAdminController@approve')->middleware('auth')->name('SiteVideos.manage.approve');
+Route::post('DiverPhotos-Admin/videos/{video}/reject', 'App\Http\Controllers\SiteVideoAdminController@reject')->middleware('auth')->name('SiteVideos.manage.reject');
+Route::delete('DiverPhotos-Admin/videos/{video}', 'App\Http\Controllers\SiteVideoAdminController@destroy')->middleware('auth')->name('SiteVideos.manage.destroy');
 Route::post('DiverPhotos-Admin/{photo}/approve', 'App\Http\Controllers\DiverPhotoAdminController@approve')->middleware('auth')->name('DiverPhotos.manage.approve');
 Route::post('DiverPhotos-Admin/{photo}/reject', 'App\Http\Controllers\DiverPhotoAdminController@reject')->middleware('auth')->name('DiverPhotos.manage.reject');
 Route::delete('DiverPhotos-Admin/{photo}', 'App\Http\Controllers\DiverPhotoAdminController@destroy')->middleware('auth')->name('DiverPhotos.manage.destroy');
@@ -539,6 +547,13 @@ Route::middleware(['auth', 'logbook'])->group(function () {
     Route::delete('Logbook/photos/{uuid}', 'App\Http\Controllers\DivePhotoController@destroy')->name('DivePhotos.destroy');
     Route::post('Logbook/photos/{uuid}/share', 'App\Http\Controllers\DivePhotoController@share')->name('DivePhotos.share');
     Route::get('Logbook/photos/{uuid}/{size}', 'App\Http\Controllers\DivePhotoController@file')->where('size', 'web|thumb')->name('DivePhotos.file');
+    // Dive videos (Pablo, 2026-10-20) - on Cloudflare Stream, owner-only playback.
+    Route::post('Logbook/{id}/videos', 'App\Http\Controllers\DiveVideoController@store')->where('id', '[0-9]+')->middleware('early:videos')->name('DiveVideos.store');
+    Route::get('Logbook/videos/{uuid}', 'App\Http\Controllers\DiveVideoController@show')->name('DiveVideos.show');
+    Route::post('Logbook/videos/{uuid}/uploaded', 'App\Http\Controllers\DiveVideoController@uploaded')->name('DiveVideos.uploaded');
+    Route::patch('Logbook/videos/{uuid}', 'App\Http\Controllers\DiveVideoController@update')->name('DiveVideos.update');
+    Route::delete('Logbook/videos/{uuid}', 'App\Http\Controllers\DiveVideoController@destroy')->name('DiveVideos.destroy');
+    Route::post('Logbook/videos/{uuid}/share', 'App\Http\Controllers\DiveVideoController@share')->name('DiveVideos.share');
 });
 // Equipment (Pablo, 2026-10-17) - early access, Pablo only for now.
 Route::middleware(['auth', 'logbook', 'early:equipment'])->group(function () {

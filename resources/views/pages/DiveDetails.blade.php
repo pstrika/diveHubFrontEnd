@@ -949,6 +949,32 @@
                         </div>
                     </div>
 
+                    @if ($videosEnabled)
+                        {{-- Videos (Pablo, 2026-10-20): up to 5 per dive on Cloudflare Stream,
+                             private to the diver; each can be offered to the site's page
+                             through the normal review. dive-videos.js. --}}
+                        <div class="card p-0 position-relative mt-3 z-index-2 mb-4" id="diveVideosCard">
+                            <div class="dh-calc-inputs-head" data-collapsible-toggle role="button" tabindex="0" aria-expanded="true" aria-controls="diveVideosBody">
+                                <span class="material-icons-round" aria-hidden="true">videocam</span>
+                                <h3>Videos <span class="dh-dive-photos-count" id="diveVideosCount">{{ count($videos) }}/{{ \App\Models\DiveVideo::MAX_PER_DIVE }}</span></h3>
+                                <span class="material-icons-round dh-calc-inputs-chevron" aria-hidden="true">expand_less</span>
+                            </div>
+                            <div class="card-body" id="diveVideosBody">
+                                <div class="dh-dive-videos-grid" id="diveVideosGrid"></div>
+                                <p class="text-sm text-secondary mb-2" id="diveVideosEmpty" @if(count($videos)) hidden @endif>
+                                    No videos yet. Up to 3 minutes each; they stay private to you{{ $dive->site_id ? ' - you can choose to share any of them on the site page' : '' }}.
+                                </p>
+                                <div class="dh-video-progress" id="diveVideosProgress" hidden><div class="dh-video-progress-bar" id="diveVideosProgressBar"></div></div>
+                                <label class="dh-btn dh-btn-ghost-dark mb-0" id="diveVideosAdd">
+                                    <span class="material-icons-round" aria-hidden="true">video_call</span>
+                                    Add a video
+                                    <input type="file" accept="video/*" hidden id="diveVideosInput">
+                                </label>
+                                <span class="text-sm text-secondary ms-2" id="diveVideosStatus" role="status"></span>
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- Dive Operator (Pablo, 2026-10-15, renamed from "Dive
                          Logistics"): who ran the trip. View state is plain
                          text (Pablo: "go back to spans or labels, no inputs"),
@@ -1348,6 +1374,30 @@
                         </div>
                     </div>
 
+                    @if ($videosEnabled)
+                        {{-- Video viewer: Cloudflare's player with an owner token. --}}
+                        <div class="dh-photo-viewer" id="dhVideoViewer" hidden role="dialog" aria-modal="true" aria-label="Video">
+                            <button type="button" class="dh-photo-viewer-close" data-vv-close aria-label="Close"><span class="material-icons-round" aria-hidden="true">close</span></button>
+                            <figure class="dh-video-viewer-figure"><iframe id="dhVideoViewerFrame" src="about:blank" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture" allowfullscreen title="Dive video"></iframe></figure>
+                            <div class="dh-photo-viewer-panel">
+                                <div class="dh-photo-viewer-meta text-xs" id="dhVideoViewerMeta"></div>
+                                <div class="dh-photo-viewer-caption">
+                                    <input type="text" maxlength="500" placeholder="Add a caption" id="dhVideoViewerCaption" aria-label="Caption">
+                                </div>
+                                <div class="dh-photo-viewer-actions">
+                                    @if ($dive->site_id)
+                                        <label class="dh-photo-share">
+                                            <input type="checkbox" id="dhVideoViewerShare">
+                                            <span>Show on <strong>{{ $siteName }}</strong>'s page</span>
+                                            <span class="dh-photo-share-status" id="dhVideoViewerShareStatus"></span>
+                                        </label>
+                                    @endif
+                                    <button type="button" class="dh-btn dh-btn-ghost-dark" id="dhVideoViewerDelete"><span class="material-icons-round" aria-hidden="true">delete</span>Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                 </div>
             </div>
         </div>
@@ -1440,6 +1490,15 @@
             ];
             @endphp
             window.dhDivePrint = @json($printData);
+            @if ($videosEnabled)
+                window.dhDiveVideos = {
+                    videos: @json($videos),
+                    max: {{ \App\Models\DiveVideo::MAX_PER_DIVE }},
+                    maxBytes: {{ \App\Support\CloudflareStream::MAX_BYTES }},
+                    createUrl: "{{ route('DiveVideos.store', $dive->id) }}",
+                    csrf: "{{ csrf_token() }}",
+                };
+            @endif
             window.dhDivePhotos = {
                 photos: @json($photos),
                 max: {{ \App\Models\DivePhoto::MAX_PER_DIVE }},
@@ -1520,6 +1579,10 @@
             </script>
         @endif
         <script src="{{ asset('assets') }}/js/dive-photos.js?v={{ config('divehub.version') }}"></script>
+        @if ($videosEnabled)
+            <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.1.0/dist/tus.min.js"></script>
+            <script src="{{ asset('assets') }}/js/dive-videos.js?v={{ config('divehub.version') }}"></script>
+        @endif
         {{-- PDF export, same libraries + approach as DivePlanner's own export. --}}
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

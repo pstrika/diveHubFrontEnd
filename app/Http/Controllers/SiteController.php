@@ -406,6 +406,9 @@ class SiteController extends Controller
         // Registered divers' own pictures of this site, approved ones only
         // (Pablo, 2026-09-23) - see App\Models\DiverPhoto.
         $diverPhotos = \App\Models\DiverPhoto::where('siteId', $id)->approved()->with('user')->latest()->get();
+        // Divers' videos (Pablo, 2026-10-20): approved and processed.
+        $siteVideos = \App\Models\SiteVideo::where('siteId', $id)->approved()->where('stream_status', 'ready')->with('user')->latest()->get();
+        $videoUploadsOn = \App\Support\CloudflareStream::configured();
         $location = WeatherLocation::where('short', $site->location)->first();
 
         $ids = explode(',', $site->visitingOperators);
@@ -455,7 +458,7 @@ class SiteController extends Controller
             ? \App\Models\Dive::where('user_id', auth()->id())->where('site_id', $site->id)->count()
             : 0;
 
-        return view('pages.SiteDetails', compact('site','photos', 'diverPhotos', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'gasMixes', 'forecast', 'nextTrips', 'myDiveCount'));
+        return view('pages.SiteDetails', compact('site','photos', 'diverPhotos', 'siteVideos', 'videoUploadsOn', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'gasMixes', 'forecast', 'nextTrips', 'myDiveCount'));
 
     }
     public function getMyVisitedSites() {

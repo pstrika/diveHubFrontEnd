@@ -14,7 +14,7 @@
 
 return [
 
-    'version' => '12.20.16',
+    'version' => '12.21.0',
 
     // Release date shown next to the version. Any human readable format.
     'released' => '10/17/26',
@@ -35,6 +35,8 @@ return [
         // opened to everyone too, no daily cap (Pablo, 2026-10-19).
         'species' => ['*'],
         'species_id' => ['*'],
+        // Dive videos (Cloudflare Stream, 2026-10-20): everyone with the logbook.
+        'videos' => ['*'],
     ],
 
 ];

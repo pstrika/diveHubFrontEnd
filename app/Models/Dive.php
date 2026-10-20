@@ -185,6 +185,11 @@ class Dive extends Model
         return $this->hasMany(DivePhoto::class)->orderBy('position')->orderBy('id');
     }
 
+    public function videos(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(DiveVideo::class)->orderBy('position');
+    }
+
     /** Species seen on this dive. */
     public function species(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {

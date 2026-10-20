@@ -1420,6 +1420,127 @@
                         @enderror
 
                     @endif
+
+                    {{-- Divers' videos (Pablo, 2026-10-20): on Cloudflare Stream, admin
+                         review like the pictures above (SiteVideoAdminController). --}}
+                    <section class="dh-panel" id="diver-videos">
+                        <div class="dh-panel-head-row">
+                            <h2 class="dh-panel-title mb-0">Divers' videos</h2>
+                            @if(auth()->user()->isNotGuest() && $videoUploadsOn)
+                                <button type="button" class="dh-btn dh-btn-primary" data-bs-toggle="modal" data-bs-target="#dh-upload-site-video-modal">
+                                    <span class="material-icons-round" aria-hidden="true">videocam</span>Add a video
+                                </button>
+                            @endif
+                        </div>
+                        @if($siteVideos->isEmpty())
+                            <p class="text-secondary text-sm mb-0">
+                                No diver videos yet.
+                                @if(auth()->user()->isNotGuest() && $videoUploadsOn)
+                                    Be the first to add one - up to 3 minutes.
+                                @endif
+                            </p>
+                        @else
+                            <div class="dh-site-videos">
+                                @foreach($siteVideos as $v)
+                                    @php
+                                        $uploaderName = $v->user->name ?? 'A diver';
+                                        $uploadedDate = $v->created_at->format('M j, Y');
+                                    @endphp
+                                    <figure class="dh-diver-tile-figure">
+                                        <button type="button" class="dh-site-video-tile" data-bs-toggle="modal" data-bs-target="#dh-site-video-modal"
+                                            data-player="{{ $v->publicPlayerUrl() }}" data-uploader-name="{{ $uploaderName }}" data-uploaded-date="{{ $uploadedDate }}">
+                                            <img src="{{ $v->publicThumbnailUrl() }}" alt="{{ $v->desc ? $site->name . ' - ' . $v->desc : $site->name . ' - video by ' . $uploaderName }}" loading="lazy">
+                                            <span class="dh-dive-video-play"><span class="material-icons-round" aria-hidden="true">play_arrow</span></span>
+                                            @if($v->durationLabel())<span class="dh-dive-video-duration">{{ $v->durationLabel() }}</span>@endif
+                                        </button>
+                                        <figcaption class="dh-diver-tile-caption">
+                                            @if($v->desc)
+                                                <span class="dh-diver-tile-desc">{{ $v->desc }}</span>
+                                            @endif
+                                            <span class="dh-diver-tile-byline">
+                                                <span class="dh-diver-tile-name do-not-translate">{{ $uploaderName }}</span>
+                                                <span class="dh-diver-tile-date">{{ $uploadedDate }}</span>
+                                            </span>
+                                            @if($v->owns_stream && ($v->userId === auth()->id() || auth()->user()->isAdmin()))
+                                                <form method="POST" action="{{ route('SiteVideos.destroy', $v->id) }}" onsubmit="return confirm('Remove this video?');" class="d-inline">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="dh-link-btn text-xs">Remove</button>
+                                                </form>
+                                            @endif
+                                        </figcaption>
+                                    </figure>
+                                @endforeach
+                            </div>
+                        @endif
+                    </section>
+
+                    <div class="modal fade dh-site-video-modal" id="dh-site-video-modal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                            <div class="modal-content">
+                                <button type="button" class="dh-photo-modal-close" data-bs-dismiss="modal" aria-label="Close"><span class="material-icons-round" aria-hidden="true">close</span></button>
+                                <iframe id="dh-site-video-modal-frame" src="about:blank" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture" allowfullscreen title="Diver video"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                    <script>
+                        (function () {
+                            var m = document.getElementById('dh-site-video-modal'), f = document.getElementById('dh-site-video-modal-frame');
+                            if (!m) return;
+                            m.addEventListener('show.bs.modal', function (e) { f.src = e.relatedTarget.getAttribute('data-player'); });
+                            m.addEventListener('hidden.bs.modal', function () { f.src = 'about:blank'; });
+                        })();
+                    </script>
+
+                    @if(auth()->user()->isNotGuest() && $videoUploadsOn)
+                        <div class="modal fade" id="dh-upload-site-video-modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title font-weight-normal">Add a video of {{ $site->name }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div id="dh-site-video-form-state">
+                                            <label class="dh-file-picker">
+                                                <input type="file" accept="video/*" id="dh-site-video-input">
+                                                <span class="material-icons-round" aria-hidden="true">video_call</span>
+                                                <span class="dh-file-picker-name">Choose a video…</span>
+                                            </label>
+                                            <p class="text-sm mt-2 mb-0" id="dh-site-video-picked"></p>
+                                            <p class="text-xs text-secondary mt-2 mb-0">Up to 3 minutes and 1 GB. It uploads straight from your device; a dropped connection resumes where it stopped.</p>
+                                            <p class="text-danger text-xs mt-2 mb-0" id="dh-site-video-error" hidden></p>
+                                            <p class="dh-comms-note dh-comms-warn mt-3">
+                                                <span class="material-icons-round" aria-hidden="true">info</span>
+                                                Your video will be shown publicly on this site's page once approved. Inappropriate content will be rejected or removed.
+                                            </p>
+                                            <div id="dh-site-video-progress" hidden>
+                                                <div class="dh-video-progress"><div class="dh-video-progress-bar" id="dh-site-video-progress-bar"></div></div>
+                                                <p class="text-xs text-secondary mb-0" id="dh-site-video-progress-text">Uploading…</p>
+                                            </div>
+                                        </div>
+                                        <div class="py-3 text-center" id="dh-site-video-success" hidden>
+                                            <i class="material-icons h1 text-secondary">task_alt</i>
+                                            <h4 class="text-gradient text-info mt-4" id="dh-site-video-success-text"></h4>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="dh-btn dh-btn-ghost-dark" data-bs-dismiss="modal" id="dh-site-video-cancel">Cancel</button>
+                                        <button type="button" class="dh-btn dh-btn-primary" id="dh-site-video-submit" disabled>Submit for review</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <script>
+                            window.dhSiteVideos = {
+                                createUrl: "{{ route('SiteVideos.store', ['siteId' => $site->id]) }}",
+                                csrf: "{{ csrf_token() }}",
+                                maxBytes: {{ \App\Support\CloudflareStream::MAX_BYTES }},
+                                siteName: @json($site->name),
+                            };
+                        </script>
+                        <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.1.0/dist/tus.min.js"></script>
+                        <script src="{{ asset('assets') }}/js/site-videos.js?v={{ config('divehub.version') }}"></script>
+                    @endif
                 </div>
 
                 <div class="col-md-6 px-0 ps-md-2">

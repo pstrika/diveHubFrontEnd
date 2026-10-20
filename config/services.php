@@ -189,4 +189,11 @@ return [
         'species_daily_limit' => (int) env('ANTHROPIC_SPECIES_DAILY_LIMIT', 0), // per diver per day; 0 = no limit
     ],
 
+    // Dive videos live on Cloudflare Stream (Pablo, 2026-10-20). A user API
+    // token with Stream:Edit. Off until both are set.
+    'cloudflare_stream' => [
+        'account_id' => env('CLOUDFLARE_ACCOUNT_ID'),
+        'token' => env('CLOUDFLARE_STREAM_TOKEN'),
+    ],
+
 ];

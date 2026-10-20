@@ -81,6 +81,14 @@ Route::withoutMiddleware('throttle:api')->middleware(['auth.api:sanctum', 'logbo
     Route::put('/photos/{photo}/species', [$x, 'setPhotoSpecies'])->where('photo', $u);
     Route::post('/photos/{photo}/identify', [$x, 'identifyPhoto'])->where('photo', $u);
     Route::get('/photos/{photo}/{size}', [$x, 'photoFile'])->where(['photo' => $u, 'size' => 'web|thumb']);
+    // Videos (2026-10-20) - docs/app-api/VIDEOS.md.
+    Route::get('/dives/{dive}/videos', [$x, 'videos'])->where('dive', $u);
+    Route::post('/dives/{dive}/videos', [$x, 'createVideo'])->where('dive', $u);
+    Route::get('/videos/{video}', [$x, 'video'])->where('video', $u);
+    Route::post('/videos/{video}/uploaded', [$x, 'videoUploaded'])->where('video', $u);
+    Route::patch('/videos/{video}', [$x, 'updateVideo'])->where('video', $u);
+    Route::delete('/videos/{video}', [$x, 'deleteVideo'])->where('video', $u);
+    Route::post('/videos/{video}/share', [$x, 'shareVideo'])->where('video', $u);
     Route::get('/species', [$x, 'species']);
     Route::post('/species', [$x, 'createSpecies']);
     Route::patch('/species/{uuid}', [$x, 'updateSpecies'])->where('uuid', $u);

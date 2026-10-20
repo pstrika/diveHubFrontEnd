@@ -50,6 +50,11 @@ class LogbookExtrasApiController extends Controller
         return response()->json([
             'photos' => true,
             'max_photos_per_dive' => DivePhoto::MAX_PER_DIVE,
+            // Videos on Cloudflare Stream (2026-10-20): POST /api/dives/{uuid}/videos.
+            'videos' => EarlyAccess::allows($u, 'videos') && \App\Support\CloudflareStream::configured(),
+            'max_videos_per_dive' => \App\Models\DiveVideo::MAX_PER_DIVE,
+            'max_video_seconds' => \App\Support\CloudflareStream::MAX_SECONDS,
+            'max_video_bytes' => \App\Support\CloudflareStream::MAX_BYTES,
             'species' => EarlyAccess::allows($u, 'species'),
             'equipment' => EarlyAccess::allows($u, 'equipment'),
             // "What's this?" on photos: POST /api/photos/{uuid}/identify.
@@ -76,6 +81,80 @@ class LogbookExtrasApiController extends Controller
         $data = $request->validate(['photo' => DivePhotoStore::RULE, 'caption' => 'nullable|string|max:500', 'uuid' => 'nullable|uuid']);
         $photo = DivePhotoStore::add($d, $request->file('photo'), $data['caption'] ?? null, $data['uuid'] ?? null);
         return response()->json(['photo' => $photo->load('species')->toApi()], 201);
+    }
+
+    // Videos (2026-10-20). The app uploads straight to Cloudflare.
+
+    private function ownVideo(Request $request, string $uuid): \App\Models\DiveVideo
+    {
+        return \App\Models\DiveVideo::where('user_id', $request->user()->id)->where('uuid', $uuid)->with('dive')->firstOrFail();
+    }
+
+    private function videosOn(Request $request): void
+    {
+        abort_unless(EarlyAccess::allows($request->user(), 'videos') && \App\Support\CloudflareStream::configured(), 404);
+    }
+
+    public function videos(Request $request, string $dive)
+    {
+        $this->videosOn($request);
+        $d = $this->dive($request, $dive);
+        return response()->json(['videos' => $d->videos()->get()->map(fn ($v) => $v->refreshStream()->toApi())->values()]);
+    }
+
+    /**
+     * JSON {name?, size_bytes?, caption?, uuid?} -> {video, upload_url, upload_kind}.
+     * With size_bytes: a resumable tus upload (upload_kind "tus"). Without:
+     * a one-shot multipart POST of `file` to upload_url ("direct", 200 MB max).
+     * Then POST /api/videos/{uuid}/uploaded.
+     */
+    public function createVideo(Request $request, string $dive)
+    {
+        $this->videosOn($request);
+        $d = $this->dive($request, $dive);
+        $data = $request->validate(['name' => 'nullable|string|max:255', 'size_bytes' => 'nullable|integer|min:1', 'caption' => 'nullable|string|max:500', 'uuid' => 'nullable|uuid']);
+        [$video, $url, $kind] = \App\Support\DiveVideoStore::create($d, isset($data['size_bytes']) ? (int) $data['size_bytes'] : null, $data['name'] ?? null, $data['caption'] ?? null, $data['uuid'] ?? null);
+        return response()->json(['video' => $video->toApi(), 'upload_url' => $url, 'upload_kind' => $kind], 201);
+    }
+
+    public function video(Request $request, string $video)
+    {
+        $this->videosOn($request);
+        return response()->json(['video' => $this->ownVideo($request, $video)->refreshStream()->toApi()]);
+    }
+
+    public function videoUploaded(Request $request, string $video)
+    {
+        $this->videosOn($request);
+        return response()->json(['video' => \App\Support\DiveVideoStore::uploaded($this->ownVideo($request, $video))->toApi()]);
+    }
+
+    public function updateVideo(Request $request, string $video)
+    {
+        $this->videosOn($request);
+        $v = $this->ownVideo($request, $video);
+        $data = $request->validate(['caption' => 'nullable|string|max:500', 'position' => 'nullable|integer|min:0']);
+        if ($request->has('caption')) $v->caption = $data['caption'];
+        if ($request->has('position')) $v->position = (int) $data['position'];
+        $v->save();
+        $v->dive?->logUpdated();
+        return response()->json(['video' => $v->toApi()]);
+    }
+
+    public function deleteVideo(Request $request, string $video)
+    {
+        $this->videosOn($request);
+        \App\Support\DiveVideoStore::delete($this->ownVideo($request, $video));
+        return response()->noContent();
+    }
+
+    /** {share: true|false} - offer to / take off the dive site's public page (admin review). */
+    public function shareVideo(Request $request, string $video)
+    {
+        $this->videosOn($request);
+        $v = $this->ownVideo($request, $video);
+        $request->boolean('share') ? \App\Support\DiveVideoStore::share($v) : \App\Support\DiveVideoStore::unshare($v);
+        return response()->json(['video' => $v->fresh()->toApi()]);
     }
 
     public function updatePhoto(Request $request, string $photo)

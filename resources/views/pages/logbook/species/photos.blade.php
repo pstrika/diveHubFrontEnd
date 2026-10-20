@@ -11,6 +11,7 @@
             <nav class="dh-sp-tabs mb-3" aria-label="Picture type">
                 <a href="{{ route('DiverPhotos.manage.index') }}" class="{{ request()->routeIs('DiverPhotos.manage.index') ? 'is-active' : '' }}">Diver site photos</a>
                 <a href="{{ route('Species.photoReview') }}" class="{{ request()->routeIs('Species.photoReview') ? 'is-active' : '' }}">Species pictures</a>
+                <a href="{{ route('SiteVideos.manage.index') }}" class="{{ request()->routeIs('SiteVideos.manage.index') ? 'is-active' : '' }}">Videos</a>
             </nav>
 
                     <p class="text-sm text-secondary">
