@@ -65,6 +65,9 @@ class DiveUploadController extends Controller
             'dives.*.sensor_data' => 'nullable|array',
             'dives.*.fingerprint' => 'nullable|string|max:512', // base64, or the app's synthesised "sha256:..." form
             'dives.*.profile' => 'required|array',
+            // The diver explicitly picked this dive to import again (Apple
+            // Watch import, 2026-10-19): a dive they deleted comes back.
+            'dives.*.restore' => 'nullable|boolean',
         ]);
 
         $user = $request->user();
@@ -146,6 +149,20 @@ class DiveUploadController extends Controller
                     // Reported as a duplicate (server uuid wins), flagged so
                     // the app knows to refetch the full record.
                     $duplicates[] = ['index' => $i, 'uuid' => $existing->uuid, 'id' => $existing->id, 'dive_number' => $existing->dive_number, 'replaced_import' => true];
+                    return;
+                }
+
+                if ($existing && $existing->trashed() && !empty($diveData['restore'])) {
+                    // An explicit re-import brings a deleted dive back, same
+                    // uuid, with the uploaded computer facts winning (the old
+                    // log may be the broken one being re-imported to fix it).
+                    // Without `restore` a deleted dive stays deleted.
+                    $existing->restore();
+                    $f = $facts; unset($f['source'], $f['dive_number']);
+                    $existing->replaceComputerFacts($f, 'ios-uploader');
+                    // After the feed's "deleted": other devices add it back.
+                    DiveChange::record($existing->user_id, $existing->uuid, 'created');
+                    $duplicates[] = ['index' => $i, 'uuid' => $existing->uuid, 'id' => $existing->id, 'dive_number' => $existing->dive_number, 'replaced_import' => true, 'restored' => true];
                     return;
                 }
 
