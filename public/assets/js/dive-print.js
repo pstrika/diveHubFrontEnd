@@ -201,9 +201,13 @@
         right.appendChild(sectionHead('Dive operator'));
         var opName = el('div', 'display:flex; align-items:center; gap:8px;');
         if (d.operator.logoUrl) {
-            var logo = el('img', 'width:22px; height:22px; border-radius:5px; object-fit:contain; background:#fff;');
+            // html2canvas ignores object-fit, so a fixed 22x22 img came out
+            // squashed: let the browser size it inside the box at its own ratio.
+            var logoBox = el('span', 'width:22px; height:22px; flex:0 0 22px; display:inline-flex; align-items:center; justify-content:center; border-radius:5px; background:#fff; overflow:hidden;');
+            var logo = el('img', 'max-width:22px; max-height:22px; width:auto; height:auto; display:block;');
             logo.src = d.operator.logoUrl;
-            opName.appendChild(logo);
+            logoBox.appendChild(logo);
+            opName.appendChild(logoBox);
         }
         opName.appendChild(el('span', '', d.operator.name || '—'));
         right.appendChild(kvTable([
