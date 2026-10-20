@@ -1378,6 +1378,13 @@ details.dh-card[open] > summary.dh-card-head::after { content: 'expand_less'; }
 .dh-logbook-row-mode-label { font-size: .62rem; color: var(--dh-muted); text-transform: uppercase; letter-spacing: .03em; line-height: 1.1; white-space: nowrap; }
 .dh-logbook-row-title { min-width: 0; }
 .dh-logbook-row-wished { font-size: 18px; color: var(--dh-sea); flex: 0 0 auto; }
+.dh-logbook-row-oplogo { flex: 0 0 auto; display: flex; align-items: center; }
+.dh-logbook-row-oplogo img { width: 32px; height: 32px; border-radius: 6px; object-fit: contain; background: #fff; }
+/* Tablet/desktop: the time sits at the row's top right corner, as on the phone (Pablo, 2026-10-19). */
+@media (min-width: 768px) {
+  .dh-logbook-row { position: relative; }
+  .dh-logbook-row-main .dh-logbook-row-time { position: absolute; top: 10px; right: 16px; }
+}
 .dh-logbook-row-operator-logo { width: 18px; height: 18px; border-radius: 4px; object-fit: contain; background: #fff; vertical-align: -4px; margin-right: 2px; }
 .dh-logbook-filters { display: flex; flex-direction: column; gap: 8px; margin: 0 0 14px; }
 .dh-logbook-filters .dive-filter-chips { flex-wrap: wrap; }
@@ -3233,6 +3240,7 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
   max-height: 260px; overflow-y: auto;
 }
 .dh-select-menu li { padding: 9px 10px; border-radius: 8px; cursor: pointer; font-size: .92rem; color: var(--dh-ink); }
+.dh-select-menu li.dh-select-group { cursor: default; padding: 10px 10px 4px; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--dh-muted); background: none; }
 .dh-select-menu li:hover { background: var(--dh-foam); }
 .dh-select-menu li.is-selected { background: var(--dh-foam); color: var(--dh-deep); font-weight: 700; }
 .dh-hint { font-size: .78rem; color: var(--dh-muted); margin: 6px 0 0; line-height: 1.45; }
@@ -4789,6 +4797,7 @@ body.dh-photo-viewer-open { overflow: hidden; }
 .dh-eq-service .material-icons-round { font-size: 14px; }
 .dh-eq-service.is-due { color: var(--dh-warn); }
 .dh-eq-add { display: flex; gap: 8px; flex-wrap: wrap; }
+.dh-eq-add .dh-select { flex: 1 1 220px; max-width: 340px; }
 .dh-eq-add select { height: 36px; border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill); padding: 0 12px; font-size: .85rem; color: var(--dh-ink); background: var(--dh-paper); max-width: 100%; }
 .dh-eq-pick { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
 .dh-eq-pick legend { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }

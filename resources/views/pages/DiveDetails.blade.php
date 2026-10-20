@@ -294,9 +294,9 @@
             :title="'Dive #' . $seq . ' on ' . $dive->started_at->format('M j, Y') . ($siteName ? ' to ' . $siteName : '')"
             icon="menu_book" :h1="true" />
 
-        <div class="container-fluid py-0">
+        <div class="container-fluid py-0 dh-board">
             <div class="row">
-                <div class="col-lg-9 col-12 m-auto pt-4">
+                <div class="col-12 pt-4">
 
                     {{-- One button, "Switch to {opposite unit}" - the exact DecoPlanner
                          convention (Pablo, 2026-10-15), toggled client-side; always
@@ -1308,20 +1308,12 @@
                                     <p class="text-sm text-secondary mb-0">Your gear list is empty. <a href="{{ route('Equipment.index') }}">Add your equipment</a> to record what you used on each dive.</p>
                                 @else
                                     <div class="dh-eq-add">
+                                        {{-- Themed dropdowns, not the browser's (Pablo, 2026-10-19). --}}
                                         @if ($equipmentConfigs->isNotEmpty())
-                                            <select id="diveEquipmentConfig" aria-label="Add a configuration">
-                                                <option value="">Add a configuration...</option>
-                                                @foreach ($equipmentConfigs as $c)<option value="{{ $c->uuid }}">{{ $c->name }}</option>@endforeach
-                                            </select>
+                                            <x-dh-select id="diveEquipmentConfig" name="eq_config" :options="$equipmentConfigs->pluck('name', 'uuid')->all()" placeholder="Add a configuration…" :disabled="false" />
                                         @endif
-                                        <select id="diveEquipmentItem" aria-label="Add one piece of gear">
-                                            <option value="">Add one piece of gear...</option>
-                                            @foreach ($equipmentItems->groupBy('category') as $cat => $list)
-                                                <optgroup label="{{ \App\Models\EquipmentItem::CATEGORIES[$cat][0] ?? 'Other' }}">
-                                                    @foreach ($list as $i)<option value="{{ $i->uuid }}">{{ $i->name }}</option>@endforeach
-                                                </optgroup>
-                                            @endforeach
-                                        </select>
+                                        <x-dh-select id="diveEquipmentItem" name="eq_item" placeholder="Add one piece of gear…" :disabled="false"
+                                            :options="$equipmentItems->groupBy('category')->mapWithKeys(fn ($list, $cat) => [(\App\Models\EquipmentItem::CATEGORIES[$cat][0] ?? 'Other') => $list->pluck('name', 'uuid')->all()])->all()" />
                                     </div>
                                     <a href="{{ route('Equipment.index') }}" class="text-sm d-inline-block mt-2">My equipment</a>
                                 @endif
@@ -1505,12 +1497,19 @@
                         });
                     }
                     [['diveEquipmentConfig', 'config'], ['diveEquipmentItem', 'item']].forEach(function (pair) {
-                        var sel = document.getElementById(pair[0]);
+                        var sel = document.getElementById(pair[0]); // the themed dropdown's hidden input
                         if (!sel) return;
+                        var wrap = sel.closest('.dh-select');
+                        function reset() {
+                            sel.value = '';
+                            var first = wrap.querySelector('li[data-value=""]');
+                            wrap.querySelector('.dh-select-value').textContent = first ? first.textContent : '';
+                            wrap.querySelectorAll('li').forEach(function (o) { o.classList.toggle('is-selected', o === first); });
+                        }
                         sel.addEventListener('change', function () {
                             if (!sel.value) return;
                             var body = {}; body[pair[1]] = sel.value;
-                            send('POST', addUrl, body).then(function (d) { list = d.equipment; render(); sel.value = ''; }).catch(function (e) { alert(e.message); });
+                            send('POST', addUrl, body).then(function (d) { list = d.equipment; render(); reset(); }).catch(function (e) { alert(e.message); reset(); });
                         });
                     });
                     render();

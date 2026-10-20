@@ -54,11 +54,11 @@
             }
         });
 
-        menu.querySelectorAll('li').forEach(function (li) {
+        menu.querySelectorAll('li[data-value]').forEach(function (li) {
             li.addEventListener('click', function () {
                 hidden.value = li.dataset.value;
                 valueSpan.textContent = li.textContent;
-                menu.querySelectorAll('li').forEach(function (o) { o.classList.remove('is-selected'); });
+                menu.querySelectorAll('li[data-value]').forEach(function (o) { o.classList.remove('is-selected'); });
                 li.classList.add('is-selected');
                 menu.hidden = true;
                 hidden.dispatchEvent(new Event('change', { bubbles: true }));

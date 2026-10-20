@@ -4,9 +4,9 @@
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
         <x-shell.header title="Site journal" icon="auto_stories" :h1="true" />
 
-        <div class="container-fluid py-0">
+        <div class="container-fluid py-0 dh-board">
             <div class="row">
-                <div class="col-lg-9 col-12 m-auto pt-4">
+                <div class="col-12 pt-4">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                         <a href="{{ route('Logbook') }}" class="dh-btn dh-btn-ghost-dark"><span class="material-icons-round" aria-hidden="true">arrow_back</span> Logbook</a>
                         <a href="{{ route('MyVisitedSites') }}" class="dh-btn dh-btn-ghost-dark"><span class="material-icons-round" aria-hidden="true">check_circle</span> My visited sites</a>

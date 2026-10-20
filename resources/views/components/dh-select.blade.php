@@ -11,7 +11,7 @@
     edit-to-unlock pattern) lives once in overview.blade.php's script block.
 
     $name         form field name (and the hidden input's id, unless $id given)
-    $options      value => label
+    $options      value => label, or heading => [value => label] for groups
     $selected     current value, or null
     $placeholder  leading "not set" style option; when set, null shows this label
     $disabled     starts locked like every other richer field on this page
@@ -39,7 +39,15 @@
             <li data-value="" role="option" class="{{ $selected === null ? 'is-selected' : '' }}">{{ $placeholder }}</li>
         @endif
         @foreach($options as $value => $label)
-            <li data-value="{{ $value }}" role="option" class="{{ (string) $selected === (string) $value ? 'is-selected' : '' }}">{{ $label }}</li>
+            @if (is_array($label))
+                {{-- A group: heading => [value => label] (like an <optgroup>). --}}
+                <li class="dh-select-group" role="presentation">{{ $value }}</li>
+                @foreach($label as $v => $l)
+                    <li data-value="{{ $v }}" role="option" class="{{ (string) $selected === (string) $v ? 'is-selected' : '' }}">{{ $l }}</li>
+                @endforeach
+            @else
+                <li data-value="{{ $value }}" role="option" class="{{ (string) $selected === (string) $value ? 'is-selected' : '' }}">{{ $label }}</li>
+            @endif
         @endforeach
     </ul>
 </div>

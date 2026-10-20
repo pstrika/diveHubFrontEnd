@@ -4,9 +4,9 @@
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
         <x-shell.header title="Logbook" icon="menu_book" :h1="true" />
 
-        <div class="container-fluid py-0">
+        <div class="container-fluid py-0 dh-board">
             <div class="row">
-                <div class="col-lg-9 col-12 m-auto pt-4">
+                <div class="col-12 pt-4">
 
                     @if (session('status'))
                         <div class="dh-logbook-flash" role="status">
@@ -226,6 +226,10 @@
                                         <x-svg-icon :file="$dive->iconFile()" class="dh-logbook-row-mode-icon" />
                                         <div class="dh-logbook-row-mode-label">{{ ['technical' => 'Tec', 'snorkeling' => 'Snorkel', 'freediving' => 'Free'][$dive->classification()] ?? 'Rec' }}</div>
                                     </div>
+                                    {{-- Phone: just the operator's logo, next to the dive type (as in the app). --}}
+                                    @if ($operatorLogo)
+                                        <div class="dh-logbook-row-oplogo d-md-none" title="{{ $operatorName }}"><img src="{{ $operatorLogo }}" alt="{{ $operatorName }}"></div>
+                                    @endif
                                     {{-- Tablet/desktop 4th column, three lines: site, time ·
                                          city, operator. A catalog site (site_id) wins; otherwise
                                          a free-typed name (conditions.site_name_custom); falls

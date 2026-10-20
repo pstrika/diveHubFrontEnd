@@ -4,9 +4,9 @@
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
         <x-shell.header :title="$species->exists ? 'Edit species' : 'Add a species'" icon="logbook/species_reef_fish.svg" :h1="true" />
 
-        <div class="container-fluid py-0">
+        <div class="container-fluid py-0 dh-board">
             <div class="row">
-                <div class="col-lg-9 col-12 m-auto pt-4">
+                <div class="col-12 pt-4">
                     <a href="{{ $species->exists ? route('Species.show', $species->uuid) : route('Species.index') }}" class="dh-btn dh-btn-ghost-dark mb-3"><span class="material-icons-round" aria-hidden="true">arrow_back</span> Back</a>
 
                     <p class="text-sm text-secondary">Something you saw that isn't in the list. Only you see species you add. The common name and group are all you need; fill in the classification if you know it.</p>

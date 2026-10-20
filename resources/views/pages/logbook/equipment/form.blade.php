@@ -4,9 +4,9 @@
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
         <x-shell.header :title="$item->exists ? 'Edit gear' : 'Add gear'" icon="handyman" :h1="true" />
 
-        <div class="container-fluid py-0">
+        <div class="container-fluid py-0 dh-board">
             <div class="row">
-                <div class="col-lg-9 col-12 m-auto pt-4">
+                <div class="col-12 pt-4">
                     <a href="{{ $item->exists ? route('Equipment.show', $item->uuid) : route('Equipment.index') }}" class="dh-btn dh-btn-ghost-dark mb-3"><span class="material-icons-round" aria-hidden="true">arrow_back</span> Back</a>
 
                     @if ($errors->any())
