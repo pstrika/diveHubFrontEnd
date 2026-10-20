@@ -73,6 +73,35 @@ class SameDivePending
      * Logbook number with the pending letter: "844", "844.a", "844.b".
      * $base is the number of the dive the group belongs to.
      */
+    /**
+     * id => "844" / "844.b" for every dive the diver has, from one query -
+     * the Duplicates page called sequenceNumber() (a COUNT each) twice per
+     * pair, 300 ms a time, 331 pairs: a two-minute page (2026-10-20).
+     * Same rules as LogbookController::index's own numbering.
+     */
+    public static function labelsForUser(int $userId): array
+    {
+        $all = Dive::where('user_id', $userId)->orderBy('started_at')->orderBy('id')->get(['id', 'started_at']);
+        $pending = self::forUser($userId);
+        $asks = $pending['asks']; $groups = $pending['groups'];
+        $num = 0; $base = []; $out = [];
+        foreach ($all as $d) {
+            if (!isset($asks[$d->id])) $base[$d->id] = ++$num;
+        }
+        foreach ($all as $d) {
+            if (isset($asks[$d->id])) {
+                $t = $asks[$d->id];
+                $i = array_search($d->id, array_merge([$t], $groups[$t] ?? []), true);
+                $out[$d->id] = ($base[$t] ?? '?') . '.' . self::letter((int) $i);
+            } elseif (isset($groups[$d->id])) {
+                $out[$d->id] = $base[$d->id] . '.a';
+            } else {
+                $out[$d->id] = (string) $base[$d->id];
+            }
+        }
+        return $out;
+    }
+
     public static function label(Dive $dive, ?array $pending = null): string
     {
         $pending ??= self::forUser($dive->user_id);

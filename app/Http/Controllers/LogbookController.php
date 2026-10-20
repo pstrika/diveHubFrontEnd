@@ -498,6 +498,9 @@ class LogbookController extends Controller
         $ids = collect($pairs)->flatten()->unique();
         $full = $ids->isEmpty() ? collect() : Dive::whereIn('id', $ids)->get()->keyBy('id');
         Dive::preloadSites($full->values());
+        // Dive numbers in one go (the view read logbookNumber() per dive: a COUNT each).
+        $labels = $full->isEmpty() ? [] : \App\Support\SameDivePending::labelsForUser($userId);
+        foreach ($full as $d) $d->listSeq = $labels[$d->id] ?? null;
         $out = [];
         foreach ($pairs as [$x, $y]) {
             $a = $full[$x] ?? null; $b = $full[$y] ?? null;

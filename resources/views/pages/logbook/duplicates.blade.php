@@ -49,7 +49,7 @@
                                 <div class="dh-dup-grid">
                                     @foreach ([[$a, $sa], [$b, $sb]] as [$d, $si])
                                         <a class="dh-dup-dive" href="{{ route('DiveDetails', $d->id) }}" target="_blank" rel="noopener">
-                                            <strong>#{{ $d->logbookNumber() }} &middot; {{ $d->computer_model ?: 'Unknown computer' }}</strong>
+                                            <strong>#{{ $d->listSeq ?? $d->logbookNumber() }} &middot; {{ $d->computer_model ?: 'Unknown computer' }}</strong>
                                             <span>{{ $d->started_at->format('M j, Y g:i A') }}</span>
                                             <span><span data-unit-value="depth" data-metric="{{ $d->max_depth_m }}"></span> &middot; {{ intdiv((int) $d->duration_seconds, 60) }} min</span>
                                             <span class="text-secondary">{{ $si['name'] ?? 'No site' }}</span>
