@@ -734,7 +734,7 @@
                     var wrap = row && row.querySelector('[data-tank-size-wrap]');
                     if (wrap) {
                         var newIndex = hidden.value;
-                        var gasIndex = row.dataset.gasIndex;
+                        var gasIndex = row.dataset.gasIndex || row.dataset.rowKey;
                         wrap.dataset.tankIndex = newIndex;
                         var sizeWrap = wrap.querySelector('.dh-select');
                         var sizeHidden = sizeWrap && sizeWrap.querySelector('input[type="hidden"]');

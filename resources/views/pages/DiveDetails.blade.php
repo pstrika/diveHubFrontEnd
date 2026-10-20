@@ -70,12 +70,29 @@
         }
         return $o2 === 21 ? 'Air' : $o2 . '%';
     };
-    $tankLabels = collect($tanks)->map(function ($tank, $i) use ($diluentMix, $tanks, $dive, $gasMatch, $tankGasOverride, $chipMix) {
+    // Which tank is the diluent / oxygen supply on a CC dive (Pablo,
+    // 2026-10-20): the computer's own "diluent"/"oxygen" usage tag is the
+    // suggestion, but a diver whose computer just says "Tank 1"/"Tank 2"
+    // (his Nerd on the rEvo) picks them in the Gases card - stored under
+    // the 'diluent'/'oxygen' keys of conditions.gas_tank_choice.
+    $ccrRoleTank = ['diluent' => null, 'oxygen' => null];
+    if ($isCcr) {
+        foreach (['diluent', 'oxygen'] as $role) {
+            if (array_key_exists($role, $gasTankChoice)) {
+                $ccrRoleTank[$role] = ($gasTankChoice[$role] === null || $gasTankChoice[$role] === '') ? null : (int) $gasTankChoice[$role];
+            } else {
+                foreach ($tanks as $ti => $t) {
+                    if (($t['usage'] ?? null) === $role) { $ccrRoleTank[$role] = $ti; break; }
+                }
+            }
+        }
+    }
+    $tankLabels = collect($tanks)->map(function ($tank, $i) use ($diluentMix, $tanks, $dive, $gasMatch, $tankGasOverride, $chipMix, $ccrRoleTank) {
         $usage = $tank['usage'] ?? null;
-        if ($usage === 'diluent' && $diluentMix) {
+        if ($i === $ccrRoleTank['diluent'] && $diluentMix) {
             return 'Diluent ' . $chipMix($diluentMix);
         }
-        if ($usage === 'oxygen') {
+        if ($i === $ccrRoleTank['oxygen']) {
             return 'Oxygen 100%';
         }
         if (count($tanks) === 1 && count($dive->gas_mixes ?? []) === 1) {
@@ -139,13 +156,7 @@
     $fixedTankIndices = [];
 
     if ($isCcr) {
-        $diluentTankIdx = null;
-        foreach ($tanks as $ti => $t) {
-            if (($t['usage'] ?? null) === 'diluent') {
-                $diluentTankIdx = $ti;
-                break;
-            }
-        }
+        $diluentTankIdx = $ccrRoleTank['diluent'];
         // Diluent and oxygen rows exist on EVERY CC dive, whether or not
         // the computer has air integration for them (Pablo, 2026-10-15:
         // "Oxygen tank is ALWAYS present on a CC dive - even if the data
@@ -154,20 +165,12 @@
         // the row still gets a size picker, stored under its rowKey.
         if ($diluentMix) {
             $gasRows[] = ['mix' => $diluentMix, 'gasIndex' => null, 'tankIndex' => $diluentTankIdx, 'tankIndices' => $diluentTankIdx !== null ? [$diluentTankIdx] : [], 'pair' => false, 'role' => 'Diluent', 'fixed' => true, 'deleted' => false, 'rowKey' => 'diluent'];
-            if ($diluentTankIdx !== null) $fixedTankIndices[] = $diluentTankIdx;
         }
 
-        $oxygenTankIdx = null;
-        foreach ($tanks as $ti => $t) {
-            if (($t['usage'] ?? null) === 'oxygen') {
-                $oxygenTankIdx = $ti;
-                break;
-            }
-        }
+        $oxygenTankIdx = $ccrRoleTank['oxygen'];
         // Synthesized pill - pure O2 fed to the loop has no gas_mixes
         // entry of its own, by design (same rule $tankLabels uses).
         $gasRows[] = ['mix' => ['oxygen' => 100, 'helium' => 0], 'gasIndex' => null, 'tankIndex' => $oxygenTankIdx, 'tankIndices' => $oxygenTankIdx !== null ? [$oxygenTankIdx] : [], 'pair' => false, 'role' => 'Oxygen', 'fixed' => true, 'deleted' => false, 'rowKey' => 'oxygen'];
-        if ($oxygenTankIdx !== null) $fixedTankIndices[] = $oxygenTankIdx;
     }
 
     // Role per gas (Pablo, 2026-10-15: "below the gas pill...a small
@@ -255,7 +258,8 @@
     $gasTankOptions = [];
     foreach ($tanks as $ti => $t) {
         if (!in_array($ti, $fixedTankIndices, true)) {
-            $gasTankOptions[$ti] = 'Tank ' . ($ti + 1);
+            $tag = ['diluent' => 'D', 'oxygen' => 'O'][$t['usage'] ?? ''] ?? null;
+            $gasTankOptions[$ti] = 'Tank ' . ($tag ?? ($ti + 1)) . ($tag ? ' (' . ($ti + 1) . ')' : '');
         }
     }
 
@@ -767,16 +771,21 @@
                                                         @if ($row['pair'])
                                                             {{-- Sidemount: both cylinders, no picker. --}}
                                                             <span class="dh-dive-tank-row-view-text">Tank {{ implode(' + Tank ', array_map(fn ($t) => $t + 1, $row['tankIndices'])) }}</span>
-                                                        @elseif ($row['tankIndex'] === null && ($row['fixed'] || !count($gasTankOptions)))
+                                                        @elseif ($row['tankIndex'] === null && !count($gasTankOptions))
                                                             {{-- Nothing to match: the computer reported no
                                                                  air-integrated tank for this gas. --}}
                                                             <span class="dh-dive-no-ai">No AI data</span>
-                                                        @elseif (!$row['fixed'])
+                                                        @else
+                                                            {{-- Any tank can be assigned to any gas - CCR's
+                                                                 diluent/oxygen rows included (Pablo, 2026-10-20:
+                                                                 a Nerd reports "Tank 1"/"Tank 2" with no D/O
+                                                                 tag). The computer's own D/O tag is only the
+                                                                 suggestion; the diver's pick wins. --}}
                                                             <span class="dh-dive-tank-row-view-text" data-view>
                                                                 @if ($row['deleted'])
                                                                     &mdash;
                                                                 @elseif ($row['tankIndex'] !== null)
-                                                                    Tank {{ $row['tankIndex'] + 1 }}
+                                                                    {{ $gasTankOptions[$row['tankIndex']] ?? 'Tank ' . ($row['tankIndex'] + 1) }}
                                                                 @else
                                                                     Not matched
                                                                 @endif
@@ -784,19 +793,13 @@
                                                             <div data-edit hidden>
                                                                 <x-dh-select
                                                                     id="gasTankChoice{{ $loop->index }}"
-                                                                    name="conditions[gas_tank_choice][{{ $row['gasIndex'] }}]"
+                                                                    name="conditions[gas_tank_choice][{{ $row['gasIndex'] ?? $row['rowKey'] }}]"
                                                                     :options="$gasTankOptions"
                                                                     :selected="$row['tankIndex']"
                                                                     placeholder="Tank with AI?"
                                                                     :disabled="false"
                                                                 />
                                                             </div>
-                                                        @else
-                                                            {{-- Matched automatically via the computer's own
-                                                                 diluent/oxygen usage tag - no name comes with
-                                                                 the tank, so this mirrors that tag (Pablo,
-                                                                 2026-10-15: "just put Tank D or Tank O"). --}}
-                                                            <span class="dh-dive-tank-row-view-text">Tank {{ $row['rowKey'] === 'oxygen' ? 'O' : 'D' }}</span>
                                                         @endif
                                                     </div>
 
