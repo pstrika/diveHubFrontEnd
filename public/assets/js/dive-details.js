@@ -182,11 +182,21 @@
 
     function depthSeries(unit) {
         var toFt = unit === 'imperial';
-        return profile.map(function (p) {
+        var pts = profile.map(function (p) {
             if (p.depth === null || p.depth === undefined) return { x: toMinutes(p.time), y: null };
             var v = toFt ? window.dhUnits.mToFt(p.depth) : p.depth;
             return { x: toMinutes(p.time), y: -v };
         });
+        // Some computers (Oceanic, 30 s sampling) log no surface points, so
+        // the line starts and ends hanging mid-water. Draw the surface at
+        // both ends, as the app does - display only, the data is untouched.
+        var withDepth = profile.filter(function (p) { return p.depth !== null && p.depth !== undefined; });
+        if (withDepth.length) {
+            var first = withDepth[0], last = withDepth[withDepth.length - 1];
+            if (first.depth > 0.3) pts.unshift({ x: toMinutes(Math.max(0, first.time - 10)), y: 0 });
+            if (last.depth > 0.3) pts.push({ x: toMinutes(Math.max(last.time + 10, window.dhDiveDuration || 0)), y: 0 });
+        }
+        return pts;
     }
 
     function tankSeries(tankIndex, unit) {

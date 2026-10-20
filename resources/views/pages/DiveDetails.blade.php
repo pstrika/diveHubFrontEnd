@@ -1355,6 +1355,7 @@
         <link href="{{ asset('assets') }}/css/nouislider.css" rel="stylesheet">
         <script>
             window.dhDiveProfile = @json($chartProfile ?? $dive->profile);
+            window.dhDiveDuration = {{ (int) $dive->duration_seconds }};
             window.dhDiveTanks = @json($tanks);
             window.dhDiveCompanions = @json(collect($companions ?? [])->map(fn ($c) => ['label' => $c['label'], 'color' => $c['color'], 'points' => $c['points']])->values());
             window.dhDiveGasMixes = @json($dive->gas_mixes ?? []);
