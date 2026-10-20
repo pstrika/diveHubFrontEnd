@@ -1432,6 +1432,7 @@
             window.dhDivePhotos = {
                 photos: @json($photos),
                 max: {{ \App\Models\DivePhoto::MAX_PER_DIVE }},
+                fishIcon: "{{ asset('assets/img/icons/logbook/species_reef_fish.svg') }}",
                 uploadUrl: "{{ route('DivePhotos.store', $dive->id) }}",
                 orderUrl: "{{ route('DivePhotos.reorder', $dive->id) }}",
                 deleteUrl: "{{ url('Logbook/photos') }}/",

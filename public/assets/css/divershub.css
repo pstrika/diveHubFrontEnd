@@ -4698,6 +4698,9 @@ body.dh-logbook main .input-group-outline:has(> input.form-control):not(.is-fill
 .dh-dive-photo-badge { position: absolute; right: 6px; bottom: 6px; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(11, 42, 58, .75); color: #fff; }
 .dh-dive-photo-badge .material-icons-round { font-size: 15px; }
 .dh-dive-photo-badge.is-approved { background: var(--dh-sea); }
+/* Species tagged on the photo: reef fish bottom right (as in the app); the share-status badge then moves bottom left. */
+.dh-dive-photo-badge.is-species .dh-cat-icon { width: 16px; height: 16px; vertical-align: 0; }
+.dh-dive-photo-badge:not(.is-species) { right: auto; left: 6px; }
 .dh-photo-viewer { position: fixed; inset: 0; z-index: 2000; background: rgba(5, 18, 26, .94); display: flex; flex-direction: column; }
 .dh-photo-viewer[hidden] { display: none; }
 body.dh-photo-viewer-open { overflow: hidden; }

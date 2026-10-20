@@ -60,6 +60,14 @@
         badge.innerHTML = '<span class="material-icons-round" aria-hidden="true">' + (p.shared === 'approved' ? 'public' : p.shared === 'rejected' ? 'block' : 'schedule') + '</span>';
         b.appendChild(badge);
       }
+      // A species tagged on this photo: reef-fish badge, bottom right, as in the app.
+      if (p.species && p.species.length) {
+        var fish = document.createElement('span');
+        fish.className = 'dh-dive-photo-badge is-species';
+        fish.title = p.species.map(function (s) { return s.name; }).join(', ');
+        fish.innerHTML = '<span class="dh-cat-icon" style="--icon:url(' + cfg.fishIcon + ')" aria-hidden="true"></span>';
+        b.appendChild(fish);
+      }
       b.addEventListener('click', function () { open(i); });
       grid.appendChild(b);
     });
@@ -107,7 +115,7 @@
       vShare.checked = !!p.shared && p.shared !== 'rejected';
       vShareStatus.textContent = p.shared ? (SHARE_LABELS[p.shared] || '') : '';
     }
-    if (window.dhPhotoSpecies) window.dhPhotoSpecies(p, function (updated) { photos[current] = updated; });
+    if (window.dhPhotoSpecies) window.dhPhotoSpecies(p, function (updated) { photos[current] = updated; render(); });
     viewer.hidden = false;
     document.body.classList.add('dh-photo-viewer-open');
   }
