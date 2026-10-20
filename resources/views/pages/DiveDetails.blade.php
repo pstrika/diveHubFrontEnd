@@ -593,7 +593,11 @@
                                         </span>
                                     @endforeach
                                 </div>
-                                <input type="text" id="diveTagInput" placeholder="Add a tag, press Enter" maxlength="40">
+                                <span class="dh-tag-suggest-wrap">
+                                    <input type="text" id="diveTagInput" placeholder="Add a tag, press Enter" maxlength="40" autocomplete="off">
+                                    {{-- Tags you've used before, filtered as you type (Pablo, 2026-10-20). --}}
+                                    <div class="dh-mention-menu dh-mention-menu-down dh-tag-suggest" id="diveTagSuggest" hidden></div>
+                                </span>
                             </div>
                         </form>
                     </div>
@@ -1415,6 +1419,7 @@
             window.dhDiveProfile = @json($chartProfile ?? $dive->profile);
             window.dhDiveDuration = {{ (int) $dive->duration_seconds }};
             window.dhDiveTanks = @json($tanks);
+            window.dhDiveTagSuggestions = @json($tagSuggestions ?? []);
             window.dhDiveCompanions = @json(collect($companions ?? [])->map(fn ($c) => ['label' => $c['label'], 'color' => $c['color'], 'points' => $c['points']])->values());
             window.dhDiveGasMixes = @json($dive->gas_mixes ?? []);
             window.dhDiveIsCcr = @json($isCcr);

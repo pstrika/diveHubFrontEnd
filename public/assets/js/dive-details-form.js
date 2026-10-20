@@ -425,9 +425,59 @@
                 chip.appendChild(removeBtn);
                 tagChips.appendChild(chip);
             }
+            // Suggest tags the diver has used before (Pablo, 2026-10-20) -
+            // most used first, filtered as you type, arrows/Enter/click pick.
+            var suggestBox = document.getElementById('diveTagSuggest');
+            var allTags = window.dhDiveTagSuggestions || [];
+            var suggestActive = -1;
+            function currentTags() {
+                return Array.prototype.map.call(tagChips.querySelectorAll('input[name="tags[]"]'), function (i) { return i.value.toLowerCase(); });
+            }
+            function suggestions() {
+                var q = tagInput.value.trim().toLowerCase(), have = currentTags();
+                return allTags.filter(function (t) {
+                    var l = t.toLowerCase();
+                    return have.indexOf(l) === -1 && (!q || l.indexOf(q) !== -1);
+                }).sort(function (a, b) {
+                    // Prefix matches first, then the most-used order they came in.
+                    var pa = q && a.toLowerCase().indexOf(q) === 0 ? 0 : 1, pb = q && b.toLowerCase().indexOf(q) === 0 ? 0 : 1;
+                    return pa - pb;
+                }).slice(0, 8);
+            }
+            function hideSuggest() { if (suggestBox) { suggestBox.hidden = true; suggestBox.innerHTML = ''; } suggestActive = -1; }
+            function showSuggest() {
+                if (!suggestBox || tagChips.children.length >= 5) return;
+                var list = suggestions();
+                if (!list.length) { hideSuggest(); return; }
+                suggestBox.innerHTML = '';
+                list.forEach(function (t, i) {
+                    var b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'dh-mention-item' + (i === suggestActive ? ' is-active' : '');
+                    b.textContent = t;
+                    b.addEventListener('mousedown', function (e) { e.preventDefault(); pickTag(t); });
+                    suggestBox.appendChild(b);
+                });
+                suggestBox.hidden = false;
+            }
+            function pickTag(value) {
+                if (tagChips.children.length >= 5) { tagInput.placeholder = 'Up to 5 tags only'; return; }
+                addTagChip(value);
+                tagInput.value = '';
+                hideSuggest();
+                tagsForm.submit();
+            }
+            tagInput.addEventListener('focus', showSuggest);
+            tagInput.addEventListener('input', function () { suggestActive = -1; showSuggest(); });
+            tagInput.addEventListener('blur', function () { setTimeout(hideSuggest, 150); });
             tagInput.addEventListener('keydown', function (e) {
+                var items = suggestBox && !suggestBox.hidden ? suggestBox.querySelectorAll('.dh-mention-item') : [];
+                if (e.key === 'ArrowDown' && items.length) { e.preventDefault(); suggestActive = (suggestActive + 1) % items.length; showSuggest(); return; }
+                if (e.key === 'ArrowUp' && items.length) { e.preventDefault(); suggestActive = (suggestActive - 1 + items.length) % items.length; showSuggest(); return; }
+                if (e.key === 'Escape') { hideSuggest(); return; }
                 if (e.key !== 'Enter') return;
                 e.preventDefault();
+                if (items.length && suggestActive >= 0) { pickTag(items[suggestActive].textContent); return; }
                 var value = tagInput.value.trim();
                 if (!value) return;
                 if (tagChips.children.length >= 5) {

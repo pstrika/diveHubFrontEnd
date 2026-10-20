@@ -780,6 +780,18 @@ class LogbookController extends Controller
             // 2026-10-16): the next dive by this diver that starts within an
             // hour of this one's end can be merged into it.
             'mergeCandidate' => \App\Support\DiveMerger::nextCandidate($dive),
+            // Tags this diver has used before, most used first - offered while
+            // typing a tag (Pablo, 2026-10-20).
+            'tagSuggestions' => (function () use ($request) {
+                $counts = [];
+                foreach (Dive::where('user_id', $request->user()->id)->whereNotNull('tags')->pluck('tags') as $ts) {
+                    foreach ((array) (is_string($ts) ? json_decode($ts, true) : $ts) as $t) {
+                        if (is_string($t) && $t !== '') $counts[$t] = ($counts[$t] ?? 0) + 1;
+                    }
+                }
+                arsort($counts);
+                return array_keys($counts);
+            })(),
             // Photos card (Pablo, 2026-10-17).
             'photos' => $dive->photos()->with('species')->get()->map(fn ($p) => \App\Http\Controllers\DivePhotoController::card($p))->values(),
             // Videos card (Pablo, 2026-10-20) - Cloudflare Stream.
