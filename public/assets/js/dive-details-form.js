@@ -416,15 +416,20 @@
                 removeBtn.type = 'button';
                 removeBtn.setAttribute('aria-label', 'Remove tag');
                 removeBtn.textContent = '×';
-                removeBtn.addEventListener('click', function () {
-                    chip.remove();
-                    tagsForm.submit();
-                });
                 chip.appendChild(document.createTextNode(tag + ' '));
                 chip.appendChild(hidden);
                 chip.appendChild(removeBtn);
                 tagChips.appendChild(chip);
             }
+            // One listener for every chip's remove button (Pablo, 2026-10-21:
+            // "when I try to remove a tag it won't remove it") - the chips the
+            // page renders had no handler; only chips added here did.
+            tagChips.addEventListener('click', function (e) {
+                var btn = e.target.closest('button[aria-label="Remove tag"]');
+                if (!btn) return;
+                btn.closest('.dh-dive-tag-chip').remove();
+                tagsForm.submit();
+            });
             // Suggest tags the diver has used before (Pablo, 2026-10-20) -
             // most used first, filtered as you type, arrows/Enter/click pick.
             var suggestBox = document.getElementById('diveTagSuggest');
