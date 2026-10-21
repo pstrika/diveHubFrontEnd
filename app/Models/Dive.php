@@ -39,11 +39,15 @@ class Dive extends Model
         // migration 2026_10_16_010000) so list views never load profiles.
         static::saving(function (Dive $dive) {
             if ($dive->isDirty('profile') || $dive->entered_deco === null) {
-                // A dive went into deco if ANY computer worn on it says so
-                // (the MacDive copy of a Petrel dive has no stops; the NERD
-                // attached to it does).
+                // Deco is the main computer's call; another computer worn on
+                // the dive only counts when the main log has no deco data at
+                // all (the MacDive copy of a Petrel dive has no stops; the
+                // NERD attached to it does). Same rule as the chart
+                // (DiveChartData). Pablo, 2026-10-21: a NERD left on the 0.7
+                // setpoint "went into deco" on a 79 ft dive the Petrel - on
+                // 1.3 - kept well inside its NDL, and the dive read Technical.
                 $dive->entered_deco = self::scanEnteredDeco($dive->profile ?? [])
-                    || ($dive->exists && !$dive->merged_into_id && Dive::withoutGlobalScope('companions')->where('merged_into_id', $dive->id)->whereNull('deleted_at')->where('entered_deco', true)->exists());
+                    || ($dive->exists && !$dive->merged_into_id && !self::hasDecoData($dive->profile ?? []) && Dive::withoutGlobalScope('companions')->where('merged_into_id', $dive->id)->whereNull('deleted_at')->where('entered_deco', true)->exists());
             }
         });
         // A dive at a catalog site marks that site visited (Pablo,
@@ -69,6 +73,13 @@ class Dive extends Model
             $row->date = $when;
             $row->save();
         }
+    }
+
+    /** The log carries deco state at all (NDL/stops/TTS), whatever it says. */
+    public static function hasDecoData(array $profile): bool
+    {
+        foreach ($profile as $s) if (isset($s['decoKind']) || isset($s['tts'])) return true;
+        return false;
     }
 
     public static function scanEnteredDeco(array $profile): bool
@@ -481,7 +492,7 @@ class Dive extends Model
     public function refreshEnteredDeco(): void
     {
         $this->entered_deco = self::scanEnteredDeco($this->profile ?? [])
-            || Dive::withoutGlobalScope('companions')->where('merged_into_id', $this->id)->whereNull('deleted_at')->where('entered_deco', true)->exists();
+            || (!self::hasDecoData($this->profile ?? []) && Dive::withoutGlobalScope('companions')->where('merged_into_id', $this->id)->whereNull('deleted_at')->where('entered_deco', true)->exists());
         $this->saveQuietly();
     }
 
