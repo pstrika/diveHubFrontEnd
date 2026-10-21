@@ -307,7 +307,9 @@
                          alone on its own line, top right (Pablo, 2026-10-17). --}}
                     <div class="dh-unit-row"><button type="button" class="dh-btn dh-btn-ghost-dark dh-unit-toggle" id="switchUnits"></button></div>
                     <div class="d-flex justify-content-between align-items-start">
-                        <a href="{{ route('Logbook') }}" class="dh-btn dh-btn-ghost-dark">
+                        {{-- Back to the list you came from (page, filters, search),
+                             scrolled to this dive's row (Pablo, 2026-10-21). --}}
+                        <a href="{{ session('logbook_back', route('Logbook')) }}#dive-{{ $dive->id }}" class="dh-btn dh-btn-ghost-dark">
                             <span class="material-icons-round" aria-hidden="true">arrow_back</span>
                             Logbook
                         </a>

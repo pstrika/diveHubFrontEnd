@@ -202,6 +202,11 @@ class LogbookController extends Controller
             ->mapWithKeys(fn ($o) => [mb_strtolower($o->operatorName) => asset('assets') . $o->logoUrl]);
         $wishedSiteIds = \App\Models\WishedSite::where('userId', $userId)->pluck('siteId')->map(fn ($v) => (int) $v)->flip();
 
+        // Dive details' "Logbook" button returns to this exact list - page,
+        // filters, search (Pablo, 2026-10-21: "it takes me to the top of the
+        // log... go back to the place on the log I just came in from").
+        $request->session()->put('logbook_back', $request->fullUrl());
+
         return view('pages.Logbook', [
             'dives' => $dives,
             'stats' => $stats,

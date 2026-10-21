@@ -4924,3 +4924,9 @@ body.dh-photo-viewer-open { overflow: hidden; }
 /* Sign in with Apple (2026-10-19): Apple's black button style. */
 .dh-btn-apple { background: #000; color: #fff; border: 1px solid #000; gap: 10px; margin-top: 10px; }
 .dh-btn-apple:hover, .dh-btn-apple:focus { background: #1c1c1e; color: #fff; }
+
+/* Back from dive details lands on the dive's row (#dive-<id>, 2026-10-21): clear of the top bar, briefly highlighted. */
+.dh-logbook-row { scroll-margin-top: 110px; scroll-margin-bottom: 90px; }
+.dh-logbook-row:target { border-color: var(--dh-sea); box-shadow: 0 0 0 2px var(--dh-sea); animation: dh-row-found 2.4s ease-out 1 forwards; }
+@keyframes dh-row-found { 0%, 60% { box-shadow: 0 0 0 2px var(--dh-sea); } 100% { box-shadow: 0 0 0 0 transparent; border-color: var(--dh-line); } }
+@media (prefers-reduced-motion: reduce) { .dh-logbook-row:target { animation: none; } }

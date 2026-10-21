@@ -198,7 +198,7 @@
                                     $wished = $siteInfo && $siteInfo['site'] && isset($wishedSiteIds[(int) $siteInfo['site']->id]);
                                     $siteTitle = $dive->title();
                                 @endphp
-                                <a href="{{ route('DiveDetails', $dive->id) }}" class="dh-logbook-row{{ isset($dive->pendingGroup) ? ' is-same-dive-pending' : '' }}">
+                                <a href="{{ route('DiveDetails', $dive->id) }}" id="dive-{{ $dive->id }}" class="dh-logbook-row{{ isset($dive->pendingGroup) ? ' is-same-dive-pending' : '' }}">
                                     {{-- Phone only: the site + city and the time as a full-width
                                          block above the number/date/mode/stats line (Pablo,
                                          2026-10-15); on tablet/desktop this is the 4th column
