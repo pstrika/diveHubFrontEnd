@@ -66,71 +66,8 @@ class DiveMerger
 
         return DB::transaction(function () use ($first, $second) {
             $gap = self::gapSeconds($first, $second);
+            $offset = self::stitch($first, $second, $gap);
 
-            // Gas list: the first's, plus any of the second's it lacks;
-            // the second's sample currentGas indexes are remapped.
-            $mixes = $first->gas_mixes ?? [];
-            $gasMap = [];
-            foreach ($second->gas_mixes ?? [] as $i => $mix) {
-                $found = null;
-                foreach ($mixes as $j => $m) {
-                    if (self::sameMix($m, $mix)) { $found = $j; break; }
-                }
-                if ($found === null) { $mixes[] = $mix; $found = count($mixes) - 1; }
-                $gasMap[$i] = $found;
-            }
-
-            // Profile: first + surface fill + second shifted.
-            $a = $first->profile ?? [];
-            $b = $second->profile ?? [];
-            $interval = self::sampleInterval($a) ?? self::sampleInterval($b) ?? 10;
-            $aEnd = (int) $first->duration_seconds;
-            if ($a) $aEnd = max($aEnd, (int) ($a[count($a) - 1]['time'] ?? 0));
-            $merged = $a;
-            $tankCount = max(count($first->tanks ?? []), count($second->tanks ?? []));
-            for ($t = $aEnd + $interval; $t < $aEnd + $gap; $t += $interval) {
-                $merged[] = ['time' => $t, 'depth' => 0, 'surface' => true];
-            }
-            $offset = $aEnd + $gap;
-            foreach ($b as $s) {
-                $s['time'] = (int) round(($s['time'] ?? 0) + $offset);
-                if (isset($s['currentGas']) && array_key_exists($s['currentGas'], $gasMap)) {
-                    $s['currentGas'] = $gasMap[$s['currentGas']];
-                }
-                $merged[] = $s;
-            }
-
-            // Tanks: index-aligned (same physical cylinders on both halves) -
-            // start pressure from the first, end pressure from the second.
-            $tanks = [];
-            for ($i = 0; $i < $tankCount; $i++) {
-                $ta = $first->tanks[$i] ?? null;
-                $tb = $second->tanks[$i] ?? null;
-                if ($ta && $tb) {
-                    $tank = $ta;
-                    if (isset($tb['endPressure'])) $tank['endPressure'] = $tb['endPressure'];
-                    $tanks[] = $tank;
-                } else {
-                    $tanks[] = $ta ?? $tb;
-                }
-            }
-
-            $durA = (int) $first->duration_seconds;
-            $durB = (int) $second->duration_seconds;
-            $total = $durA + $gap + $durB;
-            $avg = null;
-            if ($first->avg_depth_m !== null || $second->avg_depth_m !== null) {
-                $avg = $total > 0 ? round((((float) $first->avg_depth_m) * $durA + ((float) $second->avg_depth_m) * $durB) / $total, 2) : null;
-            }
-
-            $first->duration_seconds = $total;
-            $first->max_depth_m = max((float) $first->max_depth_m, (float) $second->max_depth_m);
-            $first->avg_depth_m = $avg;
-            $first->min_water_temp_c = self::minOf($first->min_water_temp_c, $second->min_water_temp_c);
-            $first->max_water_temp_c = self::maxOf($first->max_water_temp_c, $second->max_water_temp_c);
-            $first->gas_mixes = $mixes ?: null;
-            $first->tanks = $tanks ?: null;
-            $first->profile = $merged;
             $first->tags = array_values(array_unique(array_merge($first->tags ?? [], $second->tags ?? [])));
             if ($second->notes && $second->notes !== $first->notes) {
                 $first->notes = trim(($first->notes ? $first->notes . "\n\n" : '') . $second->notes);
@@ -147,6 +84,9 @@ class DiveMerger
             if ($first->site_id || $first->user_site_id) unset($conditions['site_name_custom']);
             $first->conditions = $conditions ?: null;
             $first->save();
+
+            self::stitchCompanions($first, $second, $gap, $offset);
+            $first->refreshEnteredDeco();
             DiveChange::record($first->user_id, $first->uuid, 'updated');
 
             $second->merged_into_id = $first->id;
@@ -155,6 +95,115 @@ class DiveMerger
 
             return $first;
         });
+    }
+
+    /**
+     * The other computers worn on both halves (Pablo, 2026-10-21: a Petrel
+     * + NERD dive, combined per half, then merged, kept the NERD's pressure
+     * for the first short half only - the second half's NERD log was
+     * deleted along with that half). Each of the second half's attached
+     * logs is stitched onto the first half's log from the same computer
+     * (serial, else model), its gap measured on that computer's own clock
+     * (the NERD's ran 13 h off the Petrel's). One with no counterpart is
+     * re-attached to the merged dive, shifted onto its timeline.
+     */
+    private static function stitchCompanions(Dive $first, Dive $second, int $gap, int $offset): void
+    {
+        $mine = $first->companions()->get();
+        foreach ($second->companions()->get() as $c) {
+            $match = $mine->first(fn (Dive $m) => $c->computer_serial
+                ? $m->computer_serial === $c->computer_serial
+                : (!$m->computer_serial && $m->computer_model === $c->computer_model));
+            if ($match) {
+                $ownGap = ($match->started_at && $c->started_at) ? self::gapSeconds($match, $c) : $gap;
+                self::stitch($match, $c, $ownGap > self::MAX_GAP_SECONDS ? $gap : $ownGap);
+                $match->save();
+                $mine = $mine->reject(fn (Dive $m) => $m->id === $match->id);
+                // $c stays attached to $second and is tombstoned with it.
+            } else {
+                $c->profile = array_map(function ($s) use ($offset) {
+                    $s['time'] = (int) round(($s['time'] ?? 0) + $offset);
+                    return $s;
+                }, $c->profile ?? []);
+                $c->merged_into_id = $first->id;
+                $c->save();
+            }
+        }
+    }
+
+    /**
+     * Extend $first's computer facts with $second's: profile stitched with
+     * the surface interval filled at depth 0, gases, tanks, duration,
+     * depths and temperatures. Returns the offset applied to $second's
+     * sample times. Does not save.
+     */
+    private static function stitch(Dive $first, Dive $second, int $gap): int
+    {
+        // Gas list: the first's, plus any of the second's it lacks;
+        // the second's sample currentGas indexes are remapped.
+        $mixes = $first->gas_mixes ?? [];
+        $gasMap = [];
+        foreach ($second->gas_mixes ?? [] as $i => $mix) {
+            $found = null;
+            foreach ($mixes as $j => $m) {
+                if (self::sameMix($m, $mix)) { $found = $j; break; }
+            }
+            if ($found === null) { $mixes[] = $mix; $found = count($mixes) - 1; }
+            $gasMap[$i] = $found;
+        }
+
+        // Profile: first + surface fill + second shifted.
+        $a = $first->profile ?? [];
+        $b = $second->profile ?? [];
+        $interval = self::sampleInterval($a) ?? self::sampleInterval($b) ?? 10;
+        $aEnd = (int) $first->duration_seconds;
+        if ($a) $aEnd = max($aEnd, (int) ($a[count($a) - 1]['time'] ?? 0));
+        $merged = $a;
+        $tankCount = max(count($first->tanks ?? []), count($second->tanks ?? []));
+        for ($t = $aEnd + $interval; $t < $aEnd + $gap; $t += $interval) {
+            $merged[] = ['time' => $t, 'depth' => 0, 'surface' => true];
+        }
+        $offset = $aEnd + $gap;
+        foreach ($b as $s) {
+            $s['time'] = (int) round(($s['time'] ?? 0) + $offset);
+            if (isset($s['currentGas']) && array_key_exists($s['currentGas'], $gasMap)) {
+                $s['currentGas'] = $gasMap[$s['currentGas']];
+            }
+            $merged[] = $s;
+        }
+
+        // Tanks: index-aligned (same physical cylinders on both halves) -
+        // start pressure from the first, end pressure from the second.
+        $tanks = [];
+        for ($i = 0; $i < $tankCount; $i++) {
+            $ta = $first->tanks[$i] ?? null;
+            $tb = $second->tanks[$i] ?? null;
+            if ($ta && $tb) {
+                $tank = $ta;
+                if (isset($tb['endPressure'])) $tank['endPressure'] = $tb['endPressure'];
+                $tanks[] = $tank;
+            } else {
+                $tanks[] = $ta ?? $tb;
+            }
+        }
+
+        $durA = (int) $first->duration_seconds;
+        $durB = (int) $second->duration_seconds;
+        $total = $durA + $gap + $durB;
+        $avg = null;
+        if ($first->avg_depth_m !== null || $second->avg_depth_m !== null) {
+            $avg = $total > 0 ? round((((float) $first->avg_depth_m) * $durA + ((float) $second->avg_depth_m) * $durB) / $total, 2) : null;
+        }
+
+        $first->duration_seconds = $total;
+        $first->max_depth_m = max((float) $first->max_depth_m, (float) $second->max_depth_m);
+        $first->avg_depth_m = $avg;
+        $first->min_water_temp_c = self::minOf($first->min_water_temp_c, $second->min_water_temp_c);
+        $first->max_water_temp_c = self::maxOf($first->max_water_temp_c, $second->max_water_temp_c);
+        $first->gas_mixes = $mixes ?: null;
+        $first->tanks = $tanks ?: null;
+        $first->profile = $merged;
+        return $offset;
     }
 
     private static function sameMix(array $a, array $b): bool

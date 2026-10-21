@@ -35,6 +35,24 @@ use Illuminate\Http\Request;
  */
 class DiveSyncController extends Controller
 {
+    /**
+     * The full dive object (show/index): profile and tanks are what the web
+     * chart shows - tank pressure and deco filled in from another computer
+     * on the dive when the main one had none (DiveChartData) - so the apps
+     * draw the same chart (2026-10-21: iOS showed no pressures on a Petrel +
+     * NERD dive). pressure_from / deco_from name that computer, or null.
+     */
+    private function fullArray(Dive $dive): array
+    {
+        $chart = \App\Support\DiveChartData::resolve($dive);
+        $view = clone $dive;
+        $view->profile = $chart['profile'];
+        $view->tanks = $chart['tanks'];
+        return $this->syncArray($view)
+            + ['profile' => $view->profile, 'pressure_from' => $chart['pressure_from'], 'deco_from' => $chart['deco_from']]
+            + DiveGasStats::block($view);
+    }
+
     private function syncArray(Dive $dive): array
     {
         return [
@@ -226,7 +244,7 @@ class DiveSyncController extends Controller
             ->where('uuid', $uuid)
             ->firstOrFail();
 
-        return response()->json($this->syncArray($dive) + ['profile' => $dive->profile] + DiveGasStats::block($dive));
+        return response()->json($this->fullArray($dive));
     }
 
     /**
@@ -256,7 +274,7 @@ class DiveSyncController extends Controller
         $dives = Dive::where('user_id', $request->user()->id)
             ->whereIn('uuid', $uuids)
             ->get()
-            ->map(fn (Dive $dive) => $this->syncArray($dive) + ['profile' => $dive->profile] + DiveGasStats::block($dive))
+            ->map(fn (Dive $dive) => $this->fullArray($dive))
             ->values();
 
         return response()->json(['dives' => $dives]);

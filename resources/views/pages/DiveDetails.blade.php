@@ -573,6 +573,26 @@
                                 <span class="dh-computer-note">Deco stops from the {{ $decoFrom }}</span>
                             @endif
                         </div>
+                        {{-- A <details> menu only closes from its own summary (Pablo,
+                             2026-10-21: "that dropdown will never close"): close it on
+                             a click anywhere else or Escape, and keep one open at a time. --}}
+                        <script>
+                            (function () {
+                                var menus = document.querySelectorAll('.dh-dive-computers details');
+                                function closeAll(except) {
+                                    menus.forEach(function (d) { if (d !== except) d.removeAttribute('open'); });
+                                }
+                                menus.forEach(function (d) {
+                                    d.addEventListener('toggle', function () { if (d.open) closeAll(d); });
+                                });
+                                document.addEventListener('click', function (e) {
+                                    if (!e.target.closest('.dh-dive-computers details')) closeAll(null);
+                                });
+                                document.addEventListener('keydown', function (e) {
+                                    if (e.key === 'Escape') closeAll(null);
+                                });
+                            })();
+                        </script>
                     @endif
 
                     <div class="dh-dive-legend-row">

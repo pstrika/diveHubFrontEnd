@@ -576,76 +576,10 @@ class LogbookController extends Controller
             ];
         }
 
-        $pressureFrom = null;
-        $mainHasPressure = collect($profile)->contains(fn ($s) => isset($s['tankPressures']) || isset($s['pressure']));
-        if (!$mainHasPressure && $profile) {
-            foreach ($logs as $c) {
-                $src = array_values(array_filter($c->profile ?? [], fn ($s) => isset($s['time']) && (isset($s['tankPressures']) || isset($s['pressure']))));
-                if (!$src) continue;
-                $j = 0; $n = count($src);
-                foreach ($profile as &$s) {
-                    if (!isset($s['time'])) continue;
-                    while ($j < $n - 1 && $src[$j + 1]['time'] <= $s['time']) $j++;
-                    if ($src[$j]['time'] > $s['time'] + 30) continue; // before the other computer's first reading
-                    $s['tankPressures'] = $src[$j]['tankPressures'] ?? [$src[$j]['pressure']];
-                }
-                unset($s);
-                // The main log's cylinders carry no real pressures (MacDive
-                // lists the diluent with 0 bar): use the other computer's
-                // cylinder list - one per transmitter - keeping the main
-                // log's role for each (diluent) and, on a rebreather, the
-                // remaining transmitter cylinder as the oxygen (Pablo's
-                // NERD: diluent + O2 sensors).
-                $mainHasPressures = collect($tanks ?? [])->contains(fn ($t) => ($t['beginPressure'] ?? 0) > 0 || ($t['endPressure'] ?? 0) > 0);
-                if (!$mainHasPressures && $c->tanks) {
-                    $borrowed = array_values($c->tanks);
-                    $width = count($src[0]['tankPressures'] ?? [1]);
-                    while (count($borrowed) < $width) $borrowed[] = ['usage' => 'none', 'volume' => 0, 'workPressure' => 0];
-                    foreach ($borrowed as $ti => &$bt) {
-                        $mainUsage = $tanks[$ti]['usage'] ?? null;
-                        if ($mainUsage && $mainUsage !== 'none') $bt['usage'] = $mainUsage;
-                        if (isset($tanks[$ti]['gasMix'])) $bt['gasMix'] = $tanks[$ti]['gasMix'];
-                    }
-                    unset($bt);
-                    if ($dive->isCcr()) {
-                        $roles = array_column($borrowed, 'usage');
-                        $hasDil = in_array('diluent', $roles, true); $hasO2 = in_array('oxygen', $roles, true);
-                        foreach ($borrowed as $ti => $bt) {
-                            if (($bt['usage'] ?? 'none') !== 'none') continue;
-                            if ($hasDil && !$hasO2) { $borrowed[$ti]['usage'] = 'oxygen'; $hasO2 = true; }
-                            elseif (!$hasDil) { $borrowed[$ti]['usage'] = 'diluent'; $hasDil = true; }
-                        }
-                    }
-                    $tanks = $borrowed;
-                }
-                $pressureFrom = $c->computer_model ?: 'another computer';
-                break;
-            }
-        }
-        // Deco the same way (Pablo, 2026-10-16: "what about the
-        // decompression profile missing"): a logbook export (MacDive) keeps
-        // no stops; the NERD/Perdix worn on the same dive did. When the
-        // main computer has no deco data at all, its samples take stops,
-        // stop time, TTS and NDL from the attached computer that has them.
-        $mainHasDeco = collect($profile)->contains(fn ($s) => isset($s['decoKind']) || isset($s['tts']));
-        if (!$mainHasDeco && $profile) {
-            foreach ($logs as $c) {
-                $src = array_values(array_filter($c->profile ?? [], fn ($s) => isset($s['time']) && (isset($s['decoKind']) || isset($s['tts']))));
-                if (!collect($src)->contains(fn ($s) => ($s['decoKind'] ?? '') === 'deco_stop' || ($s['tts'] ?? 0) > 0)) continue;
-                $j = 0; $n = count($src);
-                foreach ($profile as &$s) {
-                    if (!isset($s['time'])) continue;
-                    while ($j < $n - 1 && $src[$j + 1]['time'] <= $s['time']) $j++;
-                    if ($src[$j]['time'] > $s['time'] + 30) continue;
-                    foreach (['decoKind', 'decoStop', 'decoTime', 'tts'] as $k) if (isset($src[$j][$k])) $s[$k] = $src[$j][$k];
-                    if (!isset($s['ndl']) && isset($src[$j]['ndl'])) $s['ndl'] = $src[$j]['ndl'];
-                }
-                unset($s);
-                $decoFrom = $c->computer_model ?: 'another computer';
-                break;
-            }
-        }
-        return [$out, $profile, $tanks, $pressureFrom, $decoFrom ?? null];
+        // Pressure and deco borrowed from another computer: shared with the
+        // app API (DiveSyncController), so both show the same chart.
+        ['profile' => $profile, 'tanks' => $tanks, 'pressure_from' => $pressureFrom, 'deco_from' => $decoFrom] = \App\Support\DiveChartData::resolve($dive, $logs);
+        return [$out, $profile, $tanks, $pressureFrom, $decoFrom];
     }
 
     /** POST Logbook/{id}/computers/{log}/main - that computer becomes the dive's main one. */
