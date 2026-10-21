@@ -82,7 +82,7 @@
                          (Pablo, 2026-10-15: "the dashboard in the logbook landing
                          needs to follow the same shape, layout and colors as the
                          one for the dive details"). --}}
-                    @if ($stats['total'] > 0)
+                    @if (($stats['all_total'] ?? $stats['total']) > 0)
                         @php
                             $totalMinutes = intdiv($stats['total_time_seconds'], 60);
                             $hours = intdiv($totalMinutes, 60);
@@ -93,7 +93,8 @@
                                 {{-- Same glyph as the Dives tab in the bottom bar (Pablo, 2026-10-15). --}}
                                 <span class="material-icons-round" aria-hidden="true">scuba_diving</span>
                                 <div class="dh-dive-header-stat-value">{{ $stats['total'] }}</div>
-                                <div class="dh-dive-header-stat-label">Total dives</div>
+                                {{-- Filtered: "112 of 845 dives", so the tiles read as the filter's numbers. --}}
+                                <div class="dh-dive-header-stat-label">{{ $stats['filtered'] ? 'of ' . $stats['all_total'] . ' dives' : 'Total dives' }}</div>
                             </div>
                             <div class="dh-dive-header-stat">
                                 <span class="material-icons-round" aria-hidden="true">schedule</span>
@@ -102,7 +103,7 @@
                             </div>
                             <div class="dh-dive-header-stat">
                                 <span class="material-icons-round" aria-hidden="true">vertical_align_bottom</span>
-                                <div class="dh-dive-header-stat-value" data-unit-value="depth" data-metric="{{ $stats['max_depth_m'] }}"></div>
+                                <div class="dh-dive-header-stat-value" data-unit-value="depth" data-metric="{{ $stats['max_depth_m'] }}">@if ($stats['max_depth_m'] === null)—@endif</div>
                                 <div class="dh-dive-header-stat-label">Deepest dive</div>
                             </div>
                         </div>

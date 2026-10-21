@@ -139,6 +139,19 @@ class LogbookController extends Controller
 
         $filtered = $all->filter(fn (Dive $dive) => $matches($dive, $filters))->values();
 
+        // The dashboard follows the filters (Pablo, 2026-10-21, from a
+        // diver: "if the user selects recreational show the numbers for the
+        // filter being shown"). Same counting rule as the unfiltered stats:
+        // a dive still asking "same dive?" isn't counted twice.
+        $stats['all_total'] = $stats['total'];
+        $stats['filtered'] = (bool) array_filter($filters);
+        if ($stats['filtered']) {
+            $shown = $filtered->reject(fn ($d) => isset($asks[$d->id]));
+            $stats['total'] = $shown->count();
+            $stats['total_time_seconds'] = (int) $shown->sum('duration_seconds');
+            $stats['max_depth_m'] = $filtered->max('max_depth_m');
+        }
+
         // Chip options are computed against the dives that pass the OTHER
         // active filters, so no chip is ever offered that would return
         // nothing (Pablo, 2026-10-15: "do not show dive types, tags or
