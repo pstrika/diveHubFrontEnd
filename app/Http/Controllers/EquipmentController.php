@@ -230,17 +230,22 @@ class EquipmentController extends Controller
     /** Gear on a dive: recorded items, plus computers matched by serial (not removable). */
     public static function diveList(Dive $dive): array
     {
-        $list = $dive->equipment()->get()->map(fn ($i) => [
-            'uuid' => $i->uuid, 'name' => $i->name, 'category' => $i->categoryLabel(), 'icon' => $i->icon(), 'icon_url' => $i->iconUrl(),
-            'auto' => false, 'url' => route('Equipment.show', $i->uuid),
-        ])->keyBy('uuid');
+        // Computers that logged this dive (any of its attached logs), matched by
+        // serial: always on the list and never removable - even when a gear
+        // configuration attached the same computer explicitly (Pablo,
+        // 2026-10-20: "it should not" be removable then either).
         $serials = Dive::withoutGlobalScope('companions')->where(fn ($q) => $q->where('id', $dive->id)->orWhere('merged_into_id', $dive->id))
             ->whereNotNull('computer_serial')->pluck('computer_serial');
-        if ($serials->isNotEmpty()) {
-            EquipmentItem::where('user_id', $dive->user_id)->where('category', 'computer')->whereIn('serial_number', $serials)->get()
-                ->each(function ($i) use ($list) {
-                    if (!$list->has($i->uuid)) $list[$i->uuid] = ['uuid' => $i->uuid, 'name' => $i->name, 'category' => $i->categoryLabel(), 'icon' => $i->icon(), 'icon_url' => $i->iconUrl(), 'auto' => true, 'url' => route('Equipment.show', $i->uuid)];
-                });
+        $autoItems = $serials->isNotEmpty()
+            ? EquipmentItem::where('user_id', $dive->user_id)->where('category', 'computer')->whereIn('serial_number', $serials)->get()->keyBy('uuid')
+            : collect();
+        $row = fn (EquipmentItem $i, bool $auto) => [
+            'uuid' => $i->uuid, 'name' => $i->name, 'category' => $i->categoryLabel(), 'icon' => $i->icon(), 'icon_url' => $i->iconUrl(),
+            'auto' => $auto, 'url' => route('Equipment.show', $i->uuid),
+        ];
+        $list = $dive->equipment()->get()->map(fn ($i) => $row($i, $autoItems->has($i->uuid)))->keyBy('uuid');
+        foreach ($autoItems as $uuid => $i) {
+            if (!$list->has($uuid)) $list[$uuid] = $row($i, true);
         }
         return $list->values()->all();
     }
