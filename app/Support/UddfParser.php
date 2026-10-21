@@ -233,13 +233,20 @@ class UddfParser
             return $mixIndex[$ref];
         };
         $tankRows = [];
+        $tankRowById = [];
         foreach ($this->all($x, 'tankdata') as $t) {
             $link = $this->el($t, 'link');
             $ref = $link ? $this->attr($link, 'ref') : '';
             $gi = $ref !== '' ? $addMix($ref) : null;
             $vol = $this->num($this->txt($t, 'tankvolume'));
+            $id = $this->attr($t, 'id');
+            if ($id !== '') $tankRowById[$id] = count($tankRows);
             $tankRows[] = ['gasMix' => $gi, 'volume_m3' => $vol];
         }
+        // Every transmitter, not just the first (Pablo, 2026-10-21: a Perdix
+        // UDDF with diluent and O2 transmitters imported with one cylinder).
+        // <tankpressure ref="tank id"> per transmitter; no ref = first tank.
+        $pressureByRow = []; // tankdata row => [first, last]
 
         // Profile.
         $profile = [];
@@ -288,13 +295,27 @@ class UddfParser
             $s = ['time' => $time, 'depth' => round($depth, 3)];
             $tempK = $this->num($this->txt($w, 'temperature'));
             if ($tempK !== null) $s['temperature'] = round($tempK > 200 ? $tempK - 273.15 : $tempK, 2);
-            $pPa = $this->num($this->txt($w, 'tankpressure'));
-            if ($pPa !== null && $pPa > 0) {
-                $bar = round($pPa > 2000 ? $pPa / 100000 : $pPa, 2);
-                $s['pressure'] = $bar;
-                $s['tankPressures'] = [$bar];
-                $firstPressure ??= $bar;
-                $lastPressure = $bar;
+            $byRow = [];
+            foreach ($this->all($w, 'tankpressure') as $tpEl) {
+                $pPa = $this->num(trim((string) $tpEl));
+                if ($pPa === null || $pPa <= 0) continue;
+                $ref = $this->attr($tpEl, 'ref');
+                $row = ($ref !== '' && isset($tankRowById[$ref])) ? $tankRowById[$ref] : 0;
+                $byRow[$row] = round($pPa > 2000 ? $pPa / 100000 : $pPa, 2);
+            }
+            if ($byRow) {
+                ksort($byRow);
+                foreach ($byRow as $row => $bar) {
+                    $pressureByRow[$row][0] ??= $bar;
+                    $pressureByRow[$row][1] = $bar;
+                }
+                $first = reset($byRow);
+                $s['pressure'] = $first;
+                // A list when the readings are tanks 0..n-1, keyed otherwise
+                // (same shape the uploader app sends; see DiveGasStats).
+                $s['tankPressures'] = array_keys($byRow) === range(0, count($byRow) - 1) ? array_values($byRow) : array_combine(array_map('strval', array_keys($byRow)), array_values($byRow));
+                $firstPressure ??= $first;
+                $lastPressure = $first;
             }
             if ($currentGas !== null) $s['currentGas'] = $currentGas;
             // Same sample keys the uploader app sends for a CCR dive.
@@ -321,16 +342,21 @@ class UddfParser
         $tanks = [];
         $seenMix = [];
         foreach ($tankRows as $i => $t) {
-            if ($t['gasMix'] !== null && isset($seenMix[$t['gasMix']]) && !($t['volume_m3'] > 0)) continue;
+            // A row with its own transmitter readings is always a real cylinder.
+            if (!isset($pressureByRow[$i]) && $t['gasMix'] !== null && isset($seenMix[$t['gasMix']]) && !($t['volume_m3'] > 0)) continue;
             if ($t['gasMix'] !== null) $seenMix[$t['gasMix']] = true;
             $tanks[] = [
                 'usage' => 'none',
                 'volume' => 0,
                 'workPressure' => 0,
-                'beginPressure' => count($tanks) === 0 && $firstPressure !== null ? $firstPressure : 0,
-                'endPressure' => count($tanks) === 0 && $lastPressure !== null ? $lastPressure : 0,
+                'beginPressure' => $pressureByRow[$i][0] ?? 0,
+                'endPressure' => $pressureByRow[$i][1] ?? 0,
                 'gasMix' => $t['gasMix'] ?? 4294967295,
             ];
+        }
+        // Readings with no tankdata at all: one cylinder, as before.
+        if (!$tanks && $firstPressure !== null) {
+            $tanks[] = ['usage' => 'none', 'volume' => 0, 'workPressure' => 0, 'beginPressure' => $firstPressure, 'endPressure' => $lastPressure, 'gasMix' => 4294967295];
         }
 
         $duration = (int) round((float) $this->txt($after, 'diveduration'));
