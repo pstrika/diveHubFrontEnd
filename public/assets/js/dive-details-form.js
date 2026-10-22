@@ -475,15 +475,12 @@
             tagInput.addEventListener('focus', showSuggest);
             tagInput.addEventListener('input', function () { suggestActive = -1; showSuggest(); });
             tagInput.addEventListener('blur', function () { setTimeout(hideSuggest, 150); });
-            tagInput.addEventListener('keydown', function (e) {
-                var items = suggestBox && !suggestBox.hidden ? suggestBox.querySelectorAll('.dh-mention-item') : [];
-                if (e.key === 'ArrowDown' && items.length) { e.preventDefault(); suggestActive = (suggestActive + 1) % items.length; showSuggest(); return; }
-                if (e.key === 'ArrowUp' && items.length) { e.preventDefault(); suggestActive = (suggestActive - 1 + items.length) % items.length; showSuggest(); return; }
-                if (e.key === 'Escape') { hideSuggest(); return; }
-                if (e.key !== 'Enter') return;
-                e.preventDefault();
-                if (items.length && suggestActive >= 0) { pickTag(items[suggestActive].textContent); return; }
-                var value = tagInput.value.trim();
+            // Add whatever is typed (Enter, the + button, a comma, or the
+            // phone keyboard's Go/Done, which submits the form natively -
+            // Pablo, 2026-10-22: "in mobile view, we cannot add new tags...
+            // the mobile keyboard does not have enter").
+            function commitTyped() {
+                var value = tagInput.value.replace(/,+$/, '').trim();
                 if (!value) return;
                 if (tagChips.children.length >= 5) {
                     tagInput.placeholder = 'Up to 5 tags only';
@@ -492,7 +489,29 @@
                 addTagChip(value);
                 tagInput.value = '';
                 tagsForm.submit();
+            }
+            tagInput.addEventListener('keydown', function (e) {
+                var items = suggestBox && !suggestBox.hidden ? suggestBox.querySelectorAll('.dh-mention-item') : [];
+                if (e.key === 'ArrowDown' && items.length) { e.preventDefault(); suggestActive = (suggestActive + 1) % items.length; showSuggest(); return; }
+                if (e.key === 'ArrowUp' && items.length) { e.preventDefault(); suggestActive = (suggestActive - 1 + items.length) % items.length; showSuggest(); return; }
+                if (e.key === 'Escape') { hideSuggest(); return; }
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                if (items.length && suggestActive >= 0) { pickTag(items[suggestActive].textContent); return; }
+                commitTyped();
             });
+            // Android keyboards report most keys as "Unidentified", so a comma
+            // is caught from the text itself.
+            tagInput.addEventListener('input', function () {
+                if (tagInput.value.indexOf(',') !== -1) commitTyped();
+            });
+            // Go/Done on a phone keyboard submits the form without firing a
+            // usable Enter keydown; turn that into adding the typed tag.
+            tagsForm.addEventListener('submit', function (e) {
+                if (tagInput.value.trim()) { e.preventDefault(); commitTyped(); }
+            });
+            var tagAddBtn = document.getElementById('diveTagAdd');
+            if (tagAddBtn) tagAddBtn.addEventListener('click', function () { commitTyped(); tagInput.focus(); });
         }
 
         // Visibility slider + text input (Pablo, 2026-10-15: "a slider for

@@ -14,10 +14,10 @@
 
 return [
 
-    'version' => '12.22.11',
+    'version' => '12.22.12',
 
     // Release date shown next to the version. Any human readable format.
-    'released' => '10/21/26',
+    'released' => '10/22/26',
 
     // App Store link for the companion app, "Logbook by Divers Hub". Null
     // while it's in TestFlight: the Logbook page then says "coming soon".

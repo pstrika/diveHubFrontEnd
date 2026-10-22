@@ -616,7 +616,8 @@
                                     @endforeach
                                 </div>
                                 <span class="dh-tag-suggest-wrap">
-                                    <input type="text" id="diveTagInput" placeholder="Add a tag, press Enter" maxlength="40" autocomplete="off">
+                                    <input type="text" id="diveTagInput" placeholder="Add a tag" maxlength="40" autocomplete="off" enterkeyhint="done">
+                                    <button type="button" class="dh-dive-tag-add" id="diveTagAdd" aria-label="Add tag"><span class="material-icons-round" aria-hidden="true">add</span></button>
                                     {{-- Tags you've used before, filtered as you type (Pablo, 2026-10-20). --}}
                                     <div class="dh-mention-menu dh-mention-menu-down dh-tag-suggest" id="diveTagSuggest" hidden></div>
                                 </span>

@@ -4588,6 +4588,22 @@ body.dh-logbook main .dh-gas-input { height: var(--dh-lb-control-h); }
 /* Floating labels sit centered in the shorter outline fields until filled. */
 body.dh-logbook main .input-group-outline:has(> input.form-control):not(.is-filled):not(.is-focused) .form-label { top: 50%; transform: translateY(-50%); margin-top: 0; line-height: 1; }
 
+/* No iOS focus-zoom anywhere in the logbook (Pablo, 2026-10-22:
+   "everywhere in the logbook where we have text inputs... the screen in
+   mobile view will zoom in and we can never get it back"). Same 16px
+   threshold and touch-only targeting as the rule above; !important because
+   several logbook fields size their text by id. */
+@media (hover: none) and (pointer: coarse) {
+    body.dh-logbook input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=hidden]):not([type=button]):not([type=submit]),
+    body.dh-logbook textarea,
+    body.dh-logbook select { font-size: 16px !important; }
+}
+
+/* "+" next to the tag field, so a tag can be added without an Enter key. */
+.dh-dive-tag-add { border: 1px solid var(--dh-line); background: #fff; color: var(--dh-sea); width: 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; padding: 0; margin-left: 6px; vertical-align: middle; cursor: pointer; }
+.dh-dive-tag-add:hover { background: var(--dh-foam); }
+.dh-dive-tag-add .material-icons-round { font-size: 20px; }
+
 /* Import page: one card per source (Pablo, 2026-10-16). */
 .dh-import-sources { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 .dh-import-source { padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
