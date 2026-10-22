@@ -1,5 +1,6 @@
 {{--
-    A site's type (wreck, reef, other) as an icon. New SVGs (2026-09-11),
+    A site's type (wreck, reef, cave, cavern, quarry, mine, lake, river,
+    other - App\Models\Site::TYPES) as an icon. New SVGs (2026-09-11),
     recolored to the theme color via App\Support\IconSvg instead of Pablo's
     old fixed-color PNGs - falls back to the old PNG if a type has no matching
     SVG yet, so a new/unexpected type value never disappears.

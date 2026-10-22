@@ -12,6 +12,16 @@ class Site extends Model
 {
     use HasFactory;
 
+    /**
+     * Every site type, catalog and "My sites" alike, with its label
+     * (Pablo, 2026-10-22: quarry, cave, cavern, mine, lake and river added
+     * for both). Each one has an assets/img/icons/<type>_icon.svg.
+     */
+    public const TYPES = [
+        'wreck' => 'Wreck', 'reef' => 'Reef', 'cave' => 'Cave', 'cavern' => 'Cavern',
+        'quarry' => 'Quarry', 'mine' => 'Mine', 'lake' => 'Lake', 'river' => 'River', 'other' => 'Other',
+    ];
+
     protected $connection = 'mysql_trips'; // Use the new connection for this model
     protected $table = 'sites';
 

@@ -126,7 +126,7 @@
                             <h2 class="dh-panel-title">Basics</h2>
                             <div class="dh-field">
                                 <label for="type-btn">Type</label>
-                                <x-dh-select name="type" :options="['wreck' => 'Wreck', 'reef' => 'Reef', 'other' => 'Other']" :selected="$site->type" :disabled="false" />
+                                <x-dh-select name="type" :options="\App\Models\Site::TYPES" :selected="$site->type" :disabled="false" />
                             </div>
                             <div class="dh-site-edit-grid">
                                 <div class="dh-field">

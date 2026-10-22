@@ -156,11 +156,11 @@ class SiteController extends Controller
      */
     private function buildSiteTitle(Site $site, string $locationTitleCase): string
     {
-        $typeLabel = match (strtolower(trim((string) $site->type))) {
-            'wreck' => 'Wreck',
-            'reef'  => 'Reef',
-            default => '',
-        };
+        // Every real type reads as a word ("Dutch Springs Quarry"); "other"
+        // adds nothing. Skipped when the name already says it ("Lake Denton").
+        $type = strtolower(trim((string) $site->type));
+        $typeLabel = $type !== 'other' ? (Site::TYPES[$type] ?? '') : '';
+        if ($typeLabel !== '' && stripos($site->name, $typeLabel) !== false) $typeLabel = '';
         $name = trim($site->name . ' ' . $typeLabel);
         $place = trim($locationTitleCase) !== '' ? ' – ' . $locationTitleCase . ' Dive Site' : ' Dive Site';
 
@@ -655,7 +655,7 @@ class SiteController extends Controller
 
         if($request->has('type')) {
             Log::info("Got type. Updating to: " . str($request->type));
-            $site->type = $request->type;
+            if (array_key_exists((string) $request->type, Site::TYPES)) $site->type = $request->type;
         }
 
         if($request->has('avgDepth')) {
@@ -820,13 +820,32 @@ class SiteController extends Controller
      * break the page or reach the database with junk.
      */
     private const EXPLORER_TYPES = ['wreck' => 'Wrecks', 'reef' => 'Reefs', 'other' => 'Other', 'shore' => 'Shore entry'];
+
+    /**
+     * Filter chips for the explorer: the fixed four, plus each newer type
+     * (cave, quarry...) once at least one catalog site has it - six chips
+     * that always match nothing would only be clutter (2026-10-22).
+     */
+    private static ?array $explorerTypes = null;
+
+    private static function explorerTypes(): array
+    {
+        if (self::$explorerTypes !== null) return self::$explorerTypes;
+        $plural = ['cave' => 'Caves', 'cavern' => 'Caverns', 'quarry' => 'Quarries', 'mine' => 'Mines', 'lake' => 'Lakes', 'river' => 'Rivers'];
+        $used = Site::query()->whereNotNull('type')->distinct()->pluck('type')->map(fn ($t) => strtolower($t))->all();
+        $extra = [];
+        foreach ($plural as $t => $label) {
+            if (in_array($t, $used, true)) $extra[$t] = $label;
+        }
+        return self::$explorerTypes = self::EXPLORER_TYPES + $extra;
+    }
     private const EXPLORER_SORTS = ['popular' => 'Popular', 'rate' => 'Top rated', 'name' => 'A to Z', 'maxDepth' => 'Deepest'];
 
     private function explorer(Request $request, array $explorer, array $SEO)
     {
         $q     = trim((string) $request->query('q', ''));
         $type  = $explorer['fixedType'] ?? $request->query('type');
-        $type  = array_key_exists((string) $type, self::EXPLORER_TYPES) ? $type : null;
+        $type  = array_key_exists((string) $type, self::explorerTypes()) ? $type : null;
         $level = $request->query('level');
         $level = DiveLevel::isValid($level) ? (int) $level : null;
         $sort  = $request->query('sort', $explorer['defaultSort']);
@@ -966,7 +985,7 @@ class SiteController extends Controller
             'show'          => $show,
             'isMember'    => $isMember,
             'filters'     => ['q' => $q, 'type' => $type, 'level' => $level, 'sort' => $sort, 'view' => $view],
-            'typeOptions' => self::EXPLORER_TYPES,
+            'typeOptions' => self::explorerTypes(),
             'sortOptions' => self::EXPLORER_SORTS,
             'levelCounts' => $levelCounts,
             'mapFeatures' => $mapFeatures,

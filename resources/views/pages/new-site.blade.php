@@ -176,9 +176,9 @@
                                             <div class="col-12 col-sm-2 mt-3 mt-sm-0">
                                                 <select id="type" class="form-control" name="type">
                                                     {{--<option disabled value="None" selected="">Type</option>--}}
-                                                    <option value="wreck">Wreck</option>
-                                                    <option value="reef">Reef</option>
-                                                    <option value="other">Other</option>
+                                                    @foreach (\App\Models\Site::TYPES as $typeValue => $typeLabel)
+                                                        <option value="{{ $typeValue }}">{{ $typeLabel }}</option>
+                                                    @endforeach
                                                 </select>
                                             </div>
                                             <div class="col-12 col-sm-2 mt-3 mt-sm-0">

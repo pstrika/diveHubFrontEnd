@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class UserSite extends Model
 {
-    public const TYPES = ['wreck', 'reef', 'cave', 'cavern', 'quarry', 'mine', 'lake', 'river', 'other'];
+    public const TYPES = ['wreck', 'reef', 'cave', 'cavern', 'quarry', 'mine', 'lake', 'river', 'other']; // same as Site::TYPES
     public const CERTS = ['OW', 'AOW', 'Ta', 'Tn', 'Th'];
     public const WATER = ['fresh', 'salt'];
 
@@ -64,10 +64,10 @@ class UserSite extends Model
         return $this->latitude !== null && $this->longitude !== null;
     }
 
-    /** Catalog site types have their own SVG icons; the extra custom types reuse "other". */
+    /** Every type has its own SVG icon (2026-10-22); anything unexpected shows "other". */
     public function iconType(): string
     {
-        return in_array($this->type, ['wreck', 'reef'], true) ? $this->type : 'other';
+        return in_array($this->type, self::TYPES, true) ? $this->type : 'other';
     }
 
     public function publicUrl(): string

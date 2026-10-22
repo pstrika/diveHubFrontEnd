@@ -338,6 +338,7 @@ class MacDiveXmlParser
         if (str_contains($body, 'quarry')) return 'quarry';
         if (str_contains($body, 'lake')) return 'lake';
         if (str_contains($body, 'river')) return 'river';
+        if (preg_match('/\bmine\b/', $body)) return 'mine';
         $votes = $site['type_votes'] ?? [];
         arsort($votes);
         return array_key_first($votes) ?? 'other';
