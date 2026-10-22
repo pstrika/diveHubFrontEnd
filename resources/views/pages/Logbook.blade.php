@@ -350,7 +350,7 @@
                     var features = @json($mapFeatures);
                     var map = new mapboxgl.Map({ container: 'diveMap', style: 'mapbox://styles/pstrika/clwqz4fds03gv01qo9d4w3g21', center: features[0].geometry.coordinates, zoom: 8 });
                     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
-                    ['reef', 'wreck', 'other'].forEach(function (t) {
+                    @json(array_keys(\App\Models\Site::TYPES)).forEach(function (t) {
                         map.loadImage('{{ asset('assets') }}/img/icons/marker_' + t + '.png', function (e, img) { if (!e) map.addImage('icon_' + t, img); });
                     });
                     map.on('load', function () {

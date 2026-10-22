@@ -221,7 +221,7 @@ class LogbookController extends Controller
                     'geometry' => ['type' => 'Point', 'coordinates' => [$p['lng'], $p['lat']]],
                     'properties' => [
                         'name' => $p['name'],
-                        'icon' => 'icon_' . (in_array($p['type'], ['wreck', 'reef'], true) ? $p['type'] : 'other'),
+                        'icon' => 'icon_' . (array_key_exists((string) $p['type'], \App\Models\Site::TYPES) ? $p['type'] : 'other'),
                         'url' => count($p['dives']) === 1 ? $p['dives'][0] : route('Logbook', $listQuery + $p['filter']),
                     ],
                 ];

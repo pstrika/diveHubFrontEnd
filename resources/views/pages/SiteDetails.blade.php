@@ -3405,36 +3405,14 @@
         });
 
         
-        //add icons
-        map.loadImage( '{{ asset('assets') }}/img/icons/marker_reef.png', (error, reef) => {
-            if (error) throw error;
-            // Continue to the next step...
-            map.addImage('icon_reef', reef);
-        });
-        map.loadImage( '{{ asset('assets') }}/img/icons/marker_wreck.png', (error, wreck) => {
-            if (error) throw error;
-            // Continue to the next step...
-            map.addImage('icon_wreck', wreck);
-        });
-        map.loadImage( '{{ asset('assets') }}/img/icons/marker_other.png', (error, other) => {
-            if (error) throw error;
-            // Continue to the next step...
-            map.addImage('icon_other', other);
-        });
-        map.loadImage( '{{ asset('assets') }}/img/icons/marker_reef_this.png', (error, reef) => {
-            if (error) throw error;
-            // Continue to the next step...
-            map.addImage('icon_reef_this', reef);
-        });
-        map.loadImage( '{{ asset('assets') }}/img/icons/marker_wreck_this.png', (error, wreck) => {
-            if (error) throw error;
-            // Continue to the next step...
-            map.addImage('icon_wreck_this', wreck);
-        });
-        map.loadImage( '{{ asset('assets') }}/img/icons/marker_other_this.png', (error, other) => {
-            if (error) throw error;
-            // Continue to the next step...
-            map.addImage('icon_other_this', other);
+        // One pin per site type (Pablo, 2026-10-22: markers for every type in
+        // Site::TYPES), plus the black "_this" twin for the site being viewed.
+        @json(array_keys(\App\Models\Site::TYPES)).forEach((t) => {
+            ['', '_this'].forEach((suffix) => {
+                map.loadImage('{{ asset('assets') }}/img/icons/marker_' + t + suffix + '.png', (error, img) => {
+                    if (!error) map.addImage('icon_' + t + suffix, img);
+                });
+            });
         });
 
 

@@ -124,7 +124,7 @@
             zoom: DEFAULT_ZOOM,
             projection: 'albers'
         });
-        ['reef', 'wreck', 'other'].forEach(t => map.loadImage('{{ asset('assets') }}/img/icons/marker_' + t + '.png', (e, img) => { if (!e) map.addImage('icon_' + t, img); }));
+        @json(array_keys(\App\Models\Site::TYPES)).forEach(t => map.loadImage('{{ asset('assets') }}/img/icons/marker_' + t + '.png', (e, img) => { if (!e) map.addImage('icon_' + t, img); }));
         map.on('load', () => {
             map.addSource('sites', { type: 'geojson', data: { type: 'FeatureCollection', features } });
             map.addLayer({

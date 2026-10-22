@@ -343,9 +343,9 @@
                     });
                     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
 
-                    map.loadImage('{{ asset('assets') }}/img/icons/marker_reef.png', (error, img) => { if (!error) map.addImage('icon_reef', img); });
-                    map.loadImage('{{ asset('assets') }}/img/icons/marker_wreck.png', (error, img) => { if (!error) map.addImage('icon_wreck', img); });
-                    map.loadImage('{{ asset('assets') }}/img/icons/marker_other.png', (error, img) => { if (!error) map.addImage('icon_other', img); });
+                    @json(array_keys(\App\Models\Site::TYPES)).forEach((t) => {
+                        map.loadImage('{{ asset('assets') }}/img/icons/marker_' + t + '.png', (error, img) => { if (!error) map.addImage('icon_' + t, img); });
+                    });
 
                     var sites = {
                         'type': 'FeatureCollection',
@@ -360,7 +360,7 @@
                                         'type' => 'Feature',
                                         'properties' => [
                                             'name' => $site->name,
-                                            'icon' => 'icon_' . $site->type,
+                                            'icon' => 'icon_' . (array_key_exists((string) $site->type, \App\Models\Site::TYPES) ? $site->type : 'other'),
                                             'url' => url('SiteDetails/' . $site->id),
                                         ],
                                         'geometry' => ['type' => 'Point', 'coordinates' => [$longitude_dd, $latitude_dd]],

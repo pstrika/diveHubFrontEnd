@@ -320,7 +320,7 @@ class SiteController extends Controller
                         'properties' => [
                             'id' => $site->id,
                             'name' => $site->name,
-                            'icon' => 'icon_' . $site->type,
+                            'icon' => 'icon_' . (array_key_exists((string) $site->type, \App\Models\Site::TYPES) ? $site->type : 'other'),
                             'url' => route('SiteDetails') . '/' . ($site->slug ?? $site->id),
                         ],
                         'geometry' => [
@@ -971,7 +971,7 @@ class SiteController extends Controller
                 }
                 $mapFeatures[] = [
                     'type' => 'Feature',
-                    'properties' => ['name' => $site->name, 'icon' => 'icon_' . (in_array($site->type, ['wreck', 'reef']) ? $site->type : 'other'), 'url' => route('SiteDetails') . '/' . ($site->slug ?? $site->id)],
+                    'properties' => ['name' => $site->name, 'icon' => 'icon_' . (array_key_exists((string) $site->type, \App\Models\Site::TYPES) ? $site->type : 'other'), 'url' => route('SiteDetails') . '/' . ($site->slug ?? $site->id)],
                     'geometry' => ['type' => 'Point', 'coordinates' => [$lon, $lat]],
                 ];
             }
