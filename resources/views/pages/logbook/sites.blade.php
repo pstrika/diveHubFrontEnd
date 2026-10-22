@@ -36,17 +36,37 @@
 
                     @if ($totalSites > 0)
                         @php $sitesFiltered = (bool) array_filter($filters); @endphp
-                        <x-filter-bar
-                            :search="['name' => 'q', 'value' => $filters['q'], 'placeholder' => 'Search name, location, notes']"
-                            :selects="[
-                                ['name' => 'type', 'label' => 'Type', 'options' => $typeOptions, 'selected' => $filters['type'], 'all' => 'All types'],
-                                ['name' => 'country', 'label' => 'Country', 'options' => $countryOptions, 'selected' => $filters['country'], 'all' => 'All countries'],
-                                ['name' => 'location', 'label' => 'Location', 'options' => $locationOptions, 'selected' => $filters['location'], 'all' => 'All locations'],
-                                ['name' => 'cert', 'label' => 'Min cert', 'options' => $certOptions, 'selected' => $filters['cert'], 'all' => 'Any cert'],
-                            ]"
-                            :clear="route('Logbook.sites.index')" :active="$sitesFiltered" />
+                        {{-- Search + chip rows, the same ones the logbook uses (Pablo,
+                             2026-10-22). A row only shows with something to choose. --}}
+                        <form method="GET" action="{{ route('Logbook.sites.index') }}" class="dh-logbook-search" role="search">
+                            @foreach (['type', 'country', 'location', 'cert'] as $k)
+                                @if ($filters[$k])<input type="hidden" name="{{ $k }}" value="{{ $filters[$k] }}">@endif
+                            @endforeach
+                            <span class="material-icons-round" aria-hidden="true">search</span>
+                            <input type="search" name="q" value="{{ $filters['q'] }}" placeholder="Search name, location, notes" aria-label="Search your sites">
+                            @if ($filters['q'])
+                                <a href="{{ route('Logbook.sites.index', array_filter(array_diff_key($filters, ['q' => 1]))) }}" class="dh-logbook-search-clear" aria-label="Clear search"><span class="material-icons-round" aria-hidden="true">close</span></a>
+                            @endif
+                        </form>
+                        @php
+                            $chipRows = [
+                                ['type', 'Type', $typeOptions],
+                                ['country', 'Country', $countryOptions],
+                                ['location', 'Location', $locationOptions],
+                                ['cert', 'Min cert', $certOptions],
+                            ];
+                            $chipRows = array_filter($chipRows, fn ($r) => count($r[2]) > 1 || $filters[$r[0]]);
+                        @endphp
+                        @if ($chipRows)
+                            <div class="dh-logbook-filters">
+                                @foreach ($chipRows as [$param, $label, $options])
+                                    @if ($filters[$param] && !isset($options[$filters[$param]])) @php $options[$filters[$param]] = $filters[$param]; @endphp @endif
+                                    <x-query-chips :param="$param" :options="$options" :selected="$filters[$param]" all="All" :label="$label" />
+                                @endforeach
+                            </div>
+                        @endif
                         @if ($sitesFiltered)
-                            <p class="text-sm text-secondary mb-2">{{ $sites->count() }} of {{ $totalSites }} sites</p>
+                            <p class="text-sm text-secondary mb-2">{{ $sites->count() }} of {{ $totalSites }} sites &middot; <a href="{{ route('Logbook.sites.index') }}">Clear filters</a></p>
                         @endif
                     @endif
 
@@ -118,6 +138,5 @@
 
     @push('js')
         <script src="{{ asset('assets') }}/js/dh-units.js?v={{ config('divehub.version') }}"></script>
-        <script src="{{ asset('assets') }}/js/dh-select.js?v={{ config('divehub.version') }}"></script>
     @endpush
 </x-page-template>
