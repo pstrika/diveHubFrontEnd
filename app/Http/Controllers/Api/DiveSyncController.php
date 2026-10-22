@@ -44,7 +44,7 @@ class DiveSyncController extends Controller
      */
     private function fullArray(Dive $dive): array
     {
-        $chart = \App\Support\DiveChartData::resolve($dive);
+        $chart = \App\Support\DiveChartData::resolve($dive, $dive->relationLoaded('companions') ? $dive->companions : null);
         $view = clone $dive;
         $view->profile = $chart['profile'];
         $view->tanks = $chart['tanks'];
@@ -60,14 +60,27 @@ class DiveSyncController extends Controller
     {
         $this->syncPressureFrom = null;
         $own = collect($dive->tanks ?? [])->contains(fn ($t) => ($t['beginPressure'] ?? 0) > 0 || ($t['endPressure'] ?? 0) > 0);
-        if ($own || !$dive->hasProfile() || !$dive->companions()->exists()) return $dive->tanks;
-        $chart = \App\Support\DiveChartData::resolve($dive);
+        $hasLogs = $dive->relationLoaded('companions') ? $dive->companions->isNotEmpty() : $dive->companions()->exists();
+        if ($own || !$dive->hasProfile() || !$hasLogs) return $dive->tanks;
+        $chart = \App\Support\DiveChartData::resolve($dive, $dive->relationLoaded('companions') ? $dive->companions : null);
         $this->syncPressureFrom = $chart['pressure_from'];
         return $chart['tanks'];
     }
 
+    /** What changes() / index() / show() eager-load so syncArray() runs no query per dive. */
+    public const SYNC_WITH = ['photos.species', 'videos', 'species', 'equipment', 'companions', 'userSite'];
+
     private function syncArray(Dive $dive): array
     {
+        // The feed is always the owner's: no users lookup per dive.
+        $viewer = auth()->user() ?: $dive->user;
+        $companions = $dive->relationLoaded('companions') ? $dive->companions : $dive->companions()->get();
+        $photos = $dive->relationLoaded('photos') ? $dive->photos : $dive->photos()->with('species')->get();
+        $videos = $dive->relationLoaded('videos') ? $dive->videos : $dive->videos()->get();
+        // toApi() prints the dive's uuid through $photo->dive: hand it the
+        // parent instead of a full dive load (profile and all) per photo.
+        $photos->each(fn ($p) => $p->setRelation('dive', $dive));
+        $videos->each(fn ($v) => $v->setRelation('dive', $dive));
         return [
             // Integer id too (iOS session, 2026-10-15): the web URL is
             // Logbook/{id}, and the dive-number tie-break is by id.
@@ -128,16 +141,16 @@ class DiveSyncController extends Controller
             // POST /api/dives/{uuid}/combine and /not-same.
             'same_dive' => \App\Support\SameDivePending::syncBlock($dive),
             // Other computers already combined into this dive.
-            'computers' => $dive->companions()->get(['computer_model', 'computer_serial'])->map(fn ($c) => ['model' => $c->computer_model, 'serial' => $c->computer_serial])->values(),
+            'computers' => $companions->map(fn ($c) => ['model' => $c->computer_model, 'serial' => $c->computer_serial])->values(),
             // Photos on the dive (web 12.17.0) - URLs need the bearer token.
-            'photos' => $dive->photos()->with('species')->get()->map->toApi()->values(),
+            'photos' => $photos->map->toApi()->values(),
             // Videos (web 12.21.0): null when the account doesn't have them, else the list (playback URLs good ~1 h).
-            'videos' => \App\Support\EarlyAccess::allows($dive->user, 'videos') && \App\Support\CloudflareStream::configured()
-                ? $dive->videos()->get()->map(fn ($v) => $v->refreshStream()->toApi())->values() : null,
+            'videos' => \App\Support\EarlyAccess::allows($viewer, 'videos') && \App\Support\CloudflareStream::configured()
+                ? $videos->map(fn ($v) => $v->refreshStream()->toApi())->values() : null,
             // Early-access blocks: null when the account doesn't have the
             // feature (GET /api/me/features), else the dive's list.
-            'species' => \App\Support\EarlyAccess::allows($dive->user, 'species') ? \App\Http\Controllers\Api\LogbookExtrasApiController::diveSpecies($dive) : null,
-            'equipment' => \App\Support\EarlyAccess::allows($dive->user, 'equipment')
+            'species' => \App\Support\EarlyAccess::allows($viewer, 'species') ? \App\Http\Controllers\Api\LogbookExtrasApiController::diveSpecies($dive) : null,
+            'equipment' => \App\Support\EarlyAccess::allows($viewer, 'equipment')
                 ? collect(\App\Http\Controllers\EquipmentController::diveList($dive))->map(fn ($i) => ['uuid' => $i['uuid'], 'auto' => $i['auto']])->values() : null,
             'updated_at' => optional($dive->updated_at)->toIso8601String(),
         ];
@@ -236,8 +249,10 @@ class DiveSyncController extends Controller
         $dives = Dive::withTrashed()->withoutGlobalScope('companions')
             ->where('user_id', $user->id)
             ->whereIn('uuid', $uuids)
+            ->with(self::SYNC_WITH)
             ->get()
             ->keyBy('uuid');
+        Dive::preloadSites($dives);
 
         $changes = $rows->map(function (DiveChange $change) use ($dives) {
             $dive = $dives->get($change->dive_uuid);
@@ -261,6 +276,7 @@ class DiveSyncController extends Controller
     {
         $dive = Dive::where('user_id', $request->user()->id)
             ->where('uuid', $uuid)
+            ->with(self::SYNC_WITH)
             ->firstOrFail();
 
         return response()->json($this->fullArray($dive));
@@ -292,8 +308,10 @@ class DiveSyncController extends Controller
 
         $dives = Dive::where('user_id', $request->user()->id)
             ->whereIn('uuid', $uuids)
-            ->get()
-            ->map(fn (Dive $dive) => $this->fullArray($dive))
+            ->with(self::SYNC_WITH)
+            ->get();
+        Dive::preloadSites($dives);
+        $dives = $dives->map(fn (Dive $dive) => $this->fullArray($dive))
             ->values();
 
         return response()->json(['dives' => $dives]);

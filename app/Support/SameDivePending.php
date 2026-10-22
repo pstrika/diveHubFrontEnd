@@ -27,9 +27,11 @@ class SameDivePending
      *   groups: dive asked about => its asking dives, oldest first
      */
     private static array $cache = [];
+    private static array $labels = []; // user id => [dive id => label], from labelsForUser()
 
     public static function forget(): void
     {
+        self::$labels = [];
         self::$cache = [];
     }
 
@@ -104,6 +106,10 @@ class SameDivePending
 
     public static function label(Dive $dive, ?array $pending = null): string
     {
+        // One query per request for the whole logbook (the feed used to do a
+        // COUNT and a find per dive - 2026-10-22).
+        $map = self::$labels[$dive->user_id] ??= self::labelsForUser($dive->user_id);
+        if (isset($map[$dive->id])) return $map[$dive->id];
         $pending ??= self::forUser($dive->user_id);
         $target = $pending['asks'][$dive->id] ?? (isset($pending['groups'][$dive->id]) ? $dive->id : null);
         if ($target === null) return (string) $dive->sequenceNumber();

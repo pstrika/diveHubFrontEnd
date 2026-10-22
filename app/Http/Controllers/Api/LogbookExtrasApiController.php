@@ -378,7 +378,8 @@ class LogbookExtrasApiController extends Controller
 
     public static function diveSpecies(Dive $dive): array
     {
-        return $dive->species()->orderBy('common_name')->get()->map(fn ($s) => ['uuid' => $s->uuid, 'count' => $s->pivot->count])->values()->all();
+        $species = $dive->relationLoaded('species') ? $dive->species->sortBy('common_name') : $dive->species()->orderBy('common_name')->get();
+        return $species->map(fn ($s) => ['uuid' => $s->uuid, 'count' => $s->pivot->count])->values()->all();
     }
 
     private function speciesData(Request $request): array
