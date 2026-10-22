@@ -34,7 +34,30 @@
                         Your own sites, for places that aren't in the Divers Hub catalog yet. Only you see them; tag a dive with one from the dive's site chip.
                     </p>
 
-                    @if ($sites->isEmpty())
+                    @if ($totalSites > 0)
+                        @php $sitesFiltered = (bool) array_filter($filters); @endphp
+                        <x-filter-bar
+                            :search="['name' => 'q', 'value' => $filters['q'], 'placeholder' => 'Search name, location, notes']"
+                            :selects="[
+                                ['name' => 'type', 'label' => 'Type', 'options' => $typeOptions, 'selected' => $filters['type'], 'all' => 'All types'],
+                                ['name' => 'country', 'label' => 'Country', 'options' => $countryOptions, 'selected' => $filters['country'], 'all' => 'All countries'],
+                                ['name' => 'location', 'label' => 'Location', 'options' => $locationOptions, 'selected' => $filters['location'], 'all' => 'All locations'],
+                                ['name' => 'cert', 'label' => 'Min cert', 'options' => $certOptions, 'selected' => $filters['cert'], 'all' => 'Any cert'],
+                            ]"
+                            :clear="route('Logbook.sites.index')" :active="$sitesFiltered" />
+                        @if ($sitesFiltered)
+                            <p class="text-sm text-secondary mb-2">{{ $sites->count() }} of {{ $totalSites }} sites</p>
+                        @endif
+                    @endif
+
+                    @if ($totalSites > 0 && $sites->isEmpty())
+                        <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
+                            <div class="card-body text-center py-4">
+                                <p class="text-sm text-secondary mb-2">No sites match these filters.</p>
+                                <a href="{{ route('Logbook.sites.index') }}" class="dh-btn dh-btn-ghost-dark">Clear filters</a>
+                            </div>
+                        </div>
+                    @elseif ($sites->isEmpty())
                         <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
                             <div class="card-body text-center py-5">
                                 <span class="material-icons-round" aria-hidden="true" style="font-size: 40px; color: var(--dh-shallow, #9bb);">place</span>
@@ -95,5 +118,6 @@
 
     @push('js')
         <script src="{{ asset('assets') }}/js/dh-units.js?v={{ config('divehub.version') }}"></script>
+        <script src="{{ asset('assets') }}/js/dh-select.js?v={{ config('divehub.version') }}"></script>
     @endpush
 </x-page-template>

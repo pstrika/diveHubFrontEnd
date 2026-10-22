@@ -99,7 +99,14 @@ class LogbookController extends Controller
             // "which equipment was used the most, in which dives").
             'gear' => preg_match('/^[0-9a-f-]{36}$/i', (string) $request->query('gear')) ? $request->query('gear') : null,
             'species' => preg_match('/^[0-9a-f-]{36}$/i', (string) $request->query('species')) ? $request->query('species') : null,
+            // The site's country / city-area (Pablo, 2026-10-22), catalog
+            // and own sites alike - App\Support\SiteFacets.
+            'country' => trim(mb_substr((string) $request->query('country', ''), 0, 80)) ?: null,
+            'location' => trim(mb_substr((string) $request->query('location', ''), 0, 80)) ?: null,
         ];
+        // List (default) or Map (Pablo, 2026-10-22). Not a filter: it doesn't
+        // change which dives count, only how they're shown.
+        $view = $request->query('view') === 'map' ? 'map' : 'list';
         $onlyIds = null; $filterLabel = null;
         if ($filters['gear'] && \App\Support\EarlyAccess::allows($request->user(), 'equipment')
             && ($item = \App\Models\EquipmentItem::where('user_id', $userId)->where('uuid', $filters['gear'])->first())) {
@@ -116,12 +123,16 @@ class LogbookController extends Controller
         // site, city, operator, buddies, notes, tags or computer; a bare
         // number is also the dive number.
         $terms = $filters['q'] ? preg_split('/\s+/', mb_strtolower($filters['q'])) : [];
-        if ($terms) {
-            Dive::preloadSites($all);
-            $all->load('userSite');
-        }
+        // Every dive's site is needed for the search, the Country/Location
+        // filters and the map - two queries for the whole logbook.
+        Dive::preloadSites($all);
+        $all->load('userSite');
+        $facets = [];
+        foreach ($all as $dive) $facets[$dive->id] = \App\Support\SiteFacets::ofDive($dive);
 
-        $matches = function (Dive $dive, array $f) use ($terms, $onlyIds): bool {
+        $matches = function (Dive $dive, array $f) use ($terms, $onlyIds, $facets): bool {
+            if ($f['country'] && $facets[$dive->id][1] !== $f['country']) return false;
+            if ($f['location'] && $facets[$dive->id][0] !== $f['location']) return false;
             if ($f['circuit'] === 'cc' && !$dive->isCcr()) return false;
             if ($f['circuit'] === 'oc' && $dive->isCcr()) return false;
             if ($f['class'] && $dive->classification() !== $f['class']) return false;
@@ -178,6 +189,38 @@ class LogbookController extends Controller
         // Keep an active chip visible even if it is the only one left.
         if ($filters['tag'] && !isset($tagOptions[$filters['tag']])) $tagOptions[$filters['tag']] = $filters['tag'];
         if ($filters['type'] && !isset($typeOptions[$filters['type']])) $typeOptions[$filters['type']] = $diveTypeLabels[$filters['type']];
+        $countries = []; $locations = [];
+        foreach ($within('country') as $dive) if ($c = $facets[$dive->id][1]) $countries[$c] = $c;
+        foreach ($within('location') as $dive) if ($l = $facets[$dive->id][0]) $locations[$l] = $l;
+        ksort($countries); ksort($locations, SORT_NATURAL | SORT_FLAG_CASE);
+
+        // Map view: one pin per site the filtered dives were at (catalog or
+        // own site with GPS). A pin carries its dives, newest first, so a
+        // click opens the dive - or lets you pick when there were several.
+        $mapFeatures = []; $unmapped = 0;
+        if ($view === 'map') {
+            $pins = [];
+            foreach ($filtered as $dive) {
+                if (isset($asks[$dive->id])) continue;
+                $info = $dive->siteInfo();
+                if (!$info || $info['latitude'] === null || $info['longitude'] === null) { $unmapped++; continue; }
+                $key = ($info['site'] ? 's' . $info['site']->id : 'u' . $info['user_site']->id);
+                $pins[$key] ??= ['name' => $info['name'], 'type' => $info['type'], 'lat' => (float) $info['latitude'], 'lng' => (float) $info['longitude'], 'dives' => []];
+                $pins[$key]['dives'][] = ['url' => route('DiveDetails', $dive->id), 'seq' => (string) $dive->listSeq, 'date' => $dive->started_at->format('M j, Y')];
+            }
+            foreach ($pins as $p) {
+                $mapFeatures[] = [
+                    'type' => 'Feature',
+                    'geometry' => ['type' => 'Point', 'coordinates' => [$p['lng'], $p['lat']]],
+                    'properties' => [
+                        'name' => $p['name'],
+                        'icon' => 'icon_' . (in_array($p['type'], ['wreck', 'reef'], true) ? $p['type'] : 'other'),
+                        'count' => count($p['dives']),
+                        'dives' => json_encode($p['dives']),
+                    ],
+                ];
+            }
+        }
 
         $perPage = 20;
         $page = max(1, (int) $request->query('page', 1));
@@ -225,6 +268,12 @@ class LogbookController extends Controller
             'siteFilterName' => $filters['site'] ? \App\Models\Site::whereKey($filters['site'])->value('name') : null,
             'filterLabel' => $filterLabel,
             'photoCounts' => $photoCounts,
+            'countryOptions' => $countries,
+            'locationOptions' => $locations,
+            'view' => $view,
+            'mapFeatures' => $mapFeatures,
+            'unmappedDives' => $unmapped,
+            'mapboxToken' => 'pk.eyJ1IjoicHN0cmlrYSIsImEiOiJjbHZsc2p2bXcyY240MmtuMDcydHJzd2UxIn0.KBf79cvk47WseBc9rNu6gQ',
         ]);
     }
 

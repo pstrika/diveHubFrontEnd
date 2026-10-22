@@ -109,6 +109,14 @@
                         </div>
                     @endif
 
+                    {{-- List or Map (Pablo, 2026-10-22): the map shows every site the
+                         filtered dives were at; a pin opens the dive. --}}
+                    @if ($stats['total'] > 0 || $view === 'map')
+                        <div class="dh-logbook-filters dh-logbook-view-toggle">
+                            <x-query-chips param="view" :options="['map' => 'Map']" :selected="$view === 'map' ? 'map' : null" all="List" label="View" />
+                        </div>
+                    @endif
+
                     {{-- Filter chips (Pablo, 2026-10-15), the same query-string
                          chips the Trips finder uses, so filters compose and URLs
                          are shareable. A row only appears when this logbook has
@@ -118,9 +126,10 @@
                          notes, tags, computer or dive number. Keeps the chips. --}}
                     @if ($stats['total'] > 0)
                         <form method="GET" action="{{ route('Logbook') }}" class="dh-logbook-search" role="search">
-                            @foreach (['circuit', 'class', 'type', 'tag', 'site', 'gear', 'species'] as $k)
+                            @foreach (['circuit', 'class', 'type', 'tag', 'site', 'gear', 'species', 'country', 'location'] as $k)
                                 @if ($filters[$k])<input type="hidden" name="{{ $k }}" value="{{ $filters[$k] }}">@endif
                             @endforeach
+                            @if ($view === 'map')<input type="hidden" name="view" value="map">@endif
                             <span class="material-icons-round" aria-hidden="true">search</span>
                             <input type="search" name="q" value="{{ $filters['q'] }}" placeholder="Search site, buddy, notes, dive #" aria-label="Search your dives">
                             @if ($filters['q'])
@@ -160,6 +169,21 @@
                         </div>
                     @endif
 
+                    {{-- Country / Location of the dive's site (Pablo, 2026-10-22).
+                         Dropdowns, not chips - a well-travelled logbook has dozens. --}}
+                    @php
+                        $showCountry = count($countryOptions) > 1 || $filters['country'];
+                        $showLocation = count($locationOptions) > 1 || $filters['location'];
+                    @endphp
+                    @if ($stats['all_total'] > 0 && ($showCountry || $showLocation))
+                        <x-filter-bar
+                            :selects="array_values(array_filter([
+                                $showCountry ? ['name' => 'country', 'label' => 'Country', 'options' => $countryOptions, 'selected' => $filters['country'], 'all' => 'All countries'] : null,
+                                $showLocation ? ['name' => 'location', 'label' => 'Location', 'options' => $locationOptions, 'selected' => $filters['location'], 'all' => 'All locations'] : null,
+                            ]))"
+                            :keep="array_merge(array_diff_key(array_filter($filters), ['country' => 1, 'location' => 1]), $view === 'map' ? ['view' => 'map'] : [])" />
+                    @endif
+
                     @if ($stats['total'] === 0)
                         <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
                             <div class="card-body py-4">
@@ -184,6 +208,15 @@
                                 <p class="text-sm text-secondary mb-2">No dives match these filters.</p>
                                 <a href="{{ route('Logbook') }}" class="dh-btn dh-btn-ghost-dark">Clear filters</a>
                             </div>
+                        </div>
+                    @elseif ($view === 'map')
+                        <div class="dh-logbook-map-wrap">
+                            <div id="diveMap" class="dh-logbook-map" role="region" aria-label="Map of the sites you've dived"></div>
+                            @if (!count($mapFeatures))
+                                <p class="text-sm text-secondary mt-2">None of these dives is at a site with GPS coordinates yet.</p>
+                            @elseif ($unmappedDives)
+                                <p class="text-xs text-secondary mt-2">{{ $unmappedDives }} {{ $unmappedDives === 1 ? 'dive isn\'t' : 'dives aren\'t' }} on the map: no site with GPS coordinates.</p>
+                            @endif
                         </div>
                     @else
                         <div class="dh-logbook-list">
@@ -302,6 +335,50 @@
 
     @push('js')
         <script src="{{ asset('assets') }}/js/dh-units.js?v={{ config('divehub.version') }}"></script>
+        <script src="{{ asset('assets') }}/js/dh-select.js?v={{ config('divehub.version') }}"></script>
+        @if ($view === 'map' && count($mapFeatures))
+            <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
+            <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
+            <script>
+                (function () {
+                    // Same Mapbox style and pins as the sites explorer. One pin per
+                    // site; it opens the dive, or lists them when there were several.
+                    mapboxgl.accessToken = @json($mapboxToken);
+                    var features = @json($mapFeatures);
+                    var map = new mapboxgl.Map({ container: 'diveMap', style: 'mapbox://styles/pstrika/clwqz4fds03gv01qo9d4w3g21', center: features[0].geometry.coordinates, zoom: 8 });
+                    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
+                    ['reef', 'wreck', 'other'].forEach(function (t) {
+                        map.loadImage('{{ asset('assets') }}/img/icons/marker_' + t + '.png', function (e, img) { if (!e) map.addImage('icon_' + t, img); });
+                    });
+                    function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+                    map.on('load', function () {
+                        map.addSource('dives', { type: 'geojson', data: { type: 'FeatureCollection', features: features } });
+                        map.addLayer({
+                            id: 'dives', type: 'symbol', source: 'dives',
+                            layout: { 'text-field': ['get', 'name'], 'text-variable-anchor': ['top'], 'text-radial-offset': 0.1, 'text-size': 12, 'text-optional': true,
+                                      'icon-image': ['get', 'icon'], 'icon-size': 0.3, 'icon-anchor': 'bottom', 'icon-allow-overlap': true },
+                            paint: { 'text-color': 'white' }
+                        });
+                        // Fit every dived site - a logbook spans the world, unlike
+                        // the explorer's Florida catalog.
+                        if (features.length > 1) {
+                            var b = new mapboxgl.LngLatBounds();
+                            features.forEach(function (f) { b.extend(f.geometry.coordinates); });
+                            map.fitBounds(b, { padding: 50, maxZoom: 12, duration: 0 });
+                        }
+                        map.on('click', 'dives', function (e) {
+                            var f = e.features[0], dives = JSON.parse(f.properties.dives);
+                            if (dives.length === 1) { window.location.href = dives[0].url; return; }
+                            var html = '<div class="dh-map-popup"><strong>' + esc(f.properties.name) + '</strong><span>' + dives.length + ' dives</span><ul>' +
+                                dives.map(function (d) { return '<li><a href="' + d.url + '">#' + esc(d.seq) + ' &middot; ' + esc(d.date) + '</a></li>'; }).join('') + '</ul></div>';
+                            new mapboxgl.Popup({ maxWidth: '260px' }).setLngLat(f.geometry.coordinates).setHTML(html).addTo(map);
+                        });
+                        map.on('mouseenter', 'dives', function () { map.getCanvas().style.cursor = 'pointer'; });
+                        map.on('mouseleave', 'dives', function () { map.getCanvas().style.cursor = ''; });
+                    });
+                })();
+            </script>
+        @endif
         <script>
             (function () {
                 var close = document.getElementById('dhAppCardClose');
