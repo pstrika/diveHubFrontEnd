@@ -34,6 +34,26 @@ class SiteFacets
         return self::ISO[strtoupper($raw)] ?? $raw;
     }
 
+    /** @var array<string, string>|null lowercase country name => ISO code */
+    private static ?array $codes = null;
+
+    /** Flag image URL for a country name, or null when it isn't a known country. */
+    public static function flag(?string $country): ?string
+    {
+        if ($country === null || $country === '') return null;
+        self::$codes ??= require __DIR__ . '/country_codes.php';
+        $code = self::$codes[mb_strtolower(trim($country))] ?? null;
+        return $code && is_file(public_path("assets/img/flags/$code.svg")) ? asset("assets/img/flags/$code.svg") : null;
+    }
+
+    /** value => flag URL for a list of country names (chip icons). */
+    public static function flags(iterable $countries): array
+    {
+        $out = [];
+        foreach ($countries as $c) if ($f = self::flag($c)) $out[$c] = $f;
+        return $out;
+    }
+
     /** [location, country] of a catalog site's coast code. */
     public static function coast(?string $code): array
     {

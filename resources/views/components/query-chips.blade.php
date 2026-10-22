@@ -10,14 +10,16 @@
     $selected active value or null
     $all      label for the "everything" chip; empty string hides it
     $toggle   true for a single on/off chip (clicking the active chip clears it)
+    $icons    optional value => image URL, shown before the label (country flags)
+    $drop     optional params cleared whenever this one changes (country -> location)
 
     Usage: <x-query-chips param="type" :options="$types" :selected="$filters['type']" all="All trips" label="Type" />
 --}}
-@props(['param', 'options', 'selected' => null, 'all' => 'All', 'label' => '', 'toggle' => false])
+@props(['param', 'options', 'selected' => null, 'all' => 'All', 'label' => '', 'toggle' => false, 'icons' => [], 'drop' => []])
 
 @php
-    $url = function ($value) use ($param) {
-        $params = request()->except($param, 'page');
+    $url = function ($value) use ($param, $drop) {
+        $params = request()->except(array_merge([$param, 'page'], (array) $drop));
         if ($value !== null && $value !== '') {
             $params[$param] = $value;
         }
@@ -33,6 +35,6 @@
     @endif
     @foreach($options as $value => $text)
         @php $on = !$isAll && (string) $selected === (string) $value; @endphp
-        <a href="{{ $on && $toggle ? $url(null) : $url($value) }}" class="chip {{ $on ? 'chip-on' : '' }}" @if($on) aria-current="true" @endif>{{ $text }}</a>
+        <a href="{{ $on && $toggle ? $url(null) : $url($value) }}" class="chip {{ $on ? 'chip-on' : '' }}{{ isset($icons[$value]) ? ' chip-with-icon' : '' }}" @if($on) aria-current="true" @endif>@if(isset($icons[$value]))<img src="{{ $icons[$value] }}" alt="" class="chip-icon" width="18" height="13.5" loading="lazy">@endif{{ $text }}</a>
     @endforeach
 </nav>

@@ -55,13 +55,17 @@
                                 ['location', 'Location', $locationOptions],
                                 ['cert', 'Min cert', $certOptions],
                             ];
-                            $chipRows = array_filter($chipRows, fn ($r) => count($r[2]) > 1 || $filters[$r[0]]);
+                            // Location sits under Country: only once a country is picked
+                            // (Pablo, 2026-10-22), and picking another country clears it.
+                            $chipRows = array_filter($chipRows, fn ($r) => ($r[0] !== 'location' || $filters['country']) && (count($r[2]) > 1 || $filters[$r[0]]));
                         @endphp
                         @if ($chipRows)
                             <div class="dh-logbook-filters">
                                 @foreach ($chipRows as [$param, $label, $options])
                                     @if ($filters[$param] && !isset($options[$filters[$param]])) @php $options[$filters[$param]] = $filters[$param]; @endphp @endif
-                                    <x-query-chips :param="$param" :options="$options" :selected="$filters[$param]" all="All" :label="$label" />
+                                    <x-query-chips :param="$param" :options="$options" :selected="$filters[$param]" all="All" :label="$label"
+                                        :icons="$param === 'country' ? \App\Support\SiteFacets::flags(array_keys($options)) : []"
+                                        :drop="$param === 'country' ? ['location'] : []" />
                                 @endforeach
                             </div>
                         @endif

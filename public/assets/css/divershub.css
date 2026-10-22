@@ -4947,21 +4947,6 @@ body.dh-photo-viewer-open { overflow: hidden; }
 @keyframes dh-row-found { 0%, 60% { box-shadow: 0 0 0 2px var(--dh-sea); } 100% { box-shadow: 0 0 0 0 transparent; border-color: var(--dh-line); } }
 @media (prefers-reduced-motion: reduce) { .dh-logbook-row:target { animation: none; } }
 
-/* Filter bar: search + dropdowns that apply on pick (Pablo, 2026-10-22:
-   My sites type/country/location/min cert, logbook country/location). */
-.dh-filter-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 12px; margin: 0 0 14px; }
-.dh-filter-bar-search { flex: 1 1 260px; display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; margin: 0; border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill); background: var(--dh-paper); }
-.dh-filter-bar-search:focus-within { border-color: var(--dh-sea); }
-.dh-filter-bar-search > .material-icons-round { color: var(--dh-muted); font-size: 20px; }
-.dh-filter-bar-search input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font-size: .9rem; color: var(--dh-ink); }
-.dh-filter-bar-field { flex: 0 1 190px; min-width: 150px; display: flex; flex-direction: column; gap: 3px; }
-.dh-filter-bar-label { font-size: .75rem; color: var(--dh-muted); padding-left: 4px; }
-.dh-filter-bar-field .dh-select-btn { width: 100%; }
-.dh-filter-bar-clear { align-self: center; font-size: .85rem; white-space: nowrap; }
-@media (max-width: 575.98px) {
-    .dh-filter-bar-field { flex: 1 1 calc(50% - 6px); min-width: 0; }
-}
-
 /* Logbook map view (Pablo, 2026-10-22). */
 .dh-logbook-view-toggle { margin-bottom: 12px; }
 .dh-logbook-map-wrap { margin: 0 0 24px; }
@@ -4971,3 +4956,7 @@ body.dh-photo-viewer-open { overflow: hidden; }
 .dh-map-popup > span { color: var(--dh-muted); font-size: .75rem; }
 .dh-map-popup ul { list-style: none; margin: 6px 0 0; padding: 0; max-height: 200px; overflow-y: auto; }
 .dh-map-popup li a { display: block; padding: 3px 0; }
+
+/* Country flag in front of a chip's label (Pablo, 2026-10-22). */
+.chip.chip-with-icon { display: inline-flex; align-items: center; gap: 6px; }
+.chip-icon { width: 18px; height: 13.5px; border-radius: 2px; object-fit: cover; box-shadow: 0 0 0 1px rgba(0,0,0,.08); flex: 0 0 auto; }

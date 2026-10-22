@@ -169,19 +169,23 @@
                         </div>
                     @endif
 
-                    {{-- Country / Location of the dive's site (Pablo, 2026-10-22).
-                         Dropdowns, not chips - a well-travelled logbook has dozens. --}}
+                    {{-- Country, then Location within it (Pablo, 2026-10-22: "nested
+                         Country -> Location... as chips", with the country's flag).
+                         Location only appears once a country is picked; changing
+                         the country clears it. --}}
                     @php
                         $showCountry = count($countryOptions) > 1 || $filters['country'];
-                        $showLocation = count($locationOptions) > 1 || $filters['location'];
+                        $showLocation = $filters['country'] && (count($locationOptions) > 1 || $filters['location']);
+                        if ($filters['country'] && !isset($countryOptions[$filters['country']])) $countryOptions[$filters['country']] = $filters['country'];
+                        if ($filters['location'] && !isset($locationOptions[$filters['location']])) $locationOptions[$filters['location']] = $filters['location'];
                     @endphp
-                    @if ($stats['all_total'] > 0 && ($showCountry || $showLocation))
-                        <x-filter-bar
-                            :selects="array_values(array_filter([
-                                $showCountry ? ['name' => 'country', 'label' => 'Country', 'options' => $countryOptions, 'selected' => $filters['country'], 'all' => 'All countries'] : null,
-                                $showLocation ? ['name' => 'location', 'label' => 'Location', 'options' => $locationOptions, 'selected' => $filters['location'], 'all' => 'All locations'] : null,
-                            ]))"
-                            :keep="array_merge(array_diff_key(array_filter($filters), ['country' => 1, 'location' => 1]), $view === 'map' ? ['view' => 'map'] : [])" />
+                    @if ($stats['all_total'] > 0 && $showCountry)
+                        <div class="dh-logbook-filters">
+                            <x-query-chips param="country" :options="$countryOptions" :selected="$filters['country']" all="All" label="Country" :icons="\App\Support\SiteFacets::flags($countryOptions)" :drop="['location']" />
+                            @if ($showLocation)
+                                <x-query-chips param="location" :options="$locationOptions" :selected="$filters['location']" all="All" label="Location" />
+                            @endif
+                        </div>
                     @endif
 
                     @if ($stats['total'] === 0)
@@ -335,7 +339,6 @@
 
     @push('js')
         <script src="{{ asset('assets') }}/js/dh-units.js?v={{ config('divehub.version') }}"></script>
-        <script src="{{ asset('assets') }}/js/dh-select.js?v={{ config('divehub.version') }}"></script>
         @if ($view === 'map' && count($mapFeatures))
             <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
             <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
