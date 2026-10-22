@@ -31,7 +31,7 @@
                     </div>
 
                     <p class="text-sm text-secondary">
-                        Your own sites, for places that aren't in the Divers Hub catalog yet. Only you see them; tag a dive with one from the dive's site chip.
+                        Every site you've dived: Divers Hub catalog sites (marked, read-only) and your own sites for places that aren't in the catalog yet. Only you see your own sites; tag a dive with one from the dive's site chip.
                     </p>
 
                     @if ($totalSites > 0)
@@ -39,7 +39,7 @@
                         {{-- Search + chip rows, the same ones the logbook uses (Pablo,
                              2026-10-22). A row only shows with something to choose. --}}
                         <form method="GET" action="{{ route('Logbook.sites.index') }}" class="dh-logbook-search" role="search">
-                            @foreach (['type', 'country', 'location', 'cert'] as $k)
+                            @foreach (['source', 'type', 'country', 'location', 'cert'] as $k)
                                 @if ($filters[$k])<input type="hidden" name="{{ $k }}" value="{{ $filters[$k] }}">@endif
                             @endforeach
                             <span class="material-icons-round" aria-hidden="true">search</span>
@@ -50,6 +50,7 @@
                         </form>
                         @php
                             $chipRows = [
+                                ['source', 'Source', $sourceOptions],
                                 ['type', 'Type', $typeOptions],
                                 ['country', 'Country', $countryOptions],
                                 ['location', 'Location', $locationOptions],
@@ -92,23 +93,30 @@
                     @else
                         <div class="dh-logbook-list">
                             @foreach ($sites as $s)
-                                <div class="dh-logbook-row dh-user-site-row {{ $highlight === $s->id ? 'is-highlight' : '' }}" id="site-{{ $s->id }}">
+                                @php $isMine = $s->kind === 'mine'; @endphp
+                                <div class="dh-logbook-row dh-user-site-row {{ $isMine ? '' : 'is-catalog' }} {{ $isMine && $highlight === $s->id ? 'is-highlight' : '' }}" id="{{ $s->key }}">
                                     <div class="dh-logbook-row-mode">
-                                        <x-site-type-icon :type="$s->iconType()" size="30" />
+                                        <x-site-type-icon :type="$s->iconType" size="30" />
                                         <div class="dh-logbook-row-mode-label">{{ $s->type }}</div>
                                     </div>
                                     <div class="dh-logbook-row-main d-block">
-                                        <div class="dh-logbook-row-title"><span class="text-truncate">{{ $s->name }}</span></div>
+                                        <div class="dh-logbook-row-title">
+                                            @if ($s->siteUrl)
+                                                <a href="{{ $s->siteUrl }}" class="text-truncate">{{ $s->name }}</a>
+                                            @else
+                                                <span class="text-truncate">{{ $s->name }}</span>
+                                            @endif
+                                        </div>
                                         <div class="dh-logbook-row-sub text-sm text-secondary">
                                             {{ collect([$s->location, $s->country])->filter()->implode(', ') ?: '—' }}
-                                            @if ($s->hasGps())
-                                                &middot; <a href="https://www.google.com/maps?q={{ $s->latitude }},{{ $s->longitude }}" target="_blank" rel="noopener">{{ number_format($s->latitude, 5) }}, {{ number_format($s->longitude, 5) }}</a>
+                                            @if ($s->lat !== null && $s->lng !== null)
+                                                &middot; <a href="https://www.google.com/maps?q={{ $s->lat }},{{ $s->lng }}" target="_blank" rel="noopener">{{ number_format($s->lat, 5) }}, {{ number_format($s->lng, 5) }}</a>
                                             @endif
                                         </div>
                                         <div class="dh-logbook-row-sub text-sm text-secondary">
                                             @php
                                                 $facts = collect([
-                                                    $s->min_cert ? 'Min ' . e($s->min_cert) : null,
+                                                    $s->cert ? 'Min ' . e($s->cert) : null,
                                                     $s->water_type ? ucfirst(e($s->water_type)) . ' water' : null,
                                                     $s->altitude_m !== null ? '<span data-unit-value="depth" data-metric="' . (int) $s->altitude_m . '"></span> altitude' : null,
                                                 ])->filter();
@@ -117,18 +125,26 @@
                                         </div>
                                     </div>
                                     <div class="dh-logbook-row-stats">
-                                        <div><strong>{{ $s->dives_count }}</strong><span class="text-xs text-secondary d-block">{{ $s->dives_count === 1 ? 'dive' : 'dives' }}</span></div>
+                                        @if ($s->dives)
+                                            <a href="{{ $s->divesUrl }}" title="Show these dives in your logbook"><strong>{{ $s->dives }}</strong><span class="text-xs text-secondary d-block">{{ $s->dives === 1 ? 'dive' : 'dives' }}</span></a>
+                                        @else
+                                            <div><strong>0</strong><span class="text-xs text-secondary d-block">dives</span></div>
+                                        @endif
                                     </div>
                                     <div class="dh-user-site-actions">
-                                        @if ($s->dives_count)
-                                            <a href="{{ route('SiteJournal.show', ['mine', $s->id]) }}" class="dh-btn-icon" title="Photos and marine life here"><span class="material-icons-round" aria-hidden="true">auto_stories</span></a>
+                                        {{-- Journal on every site (Pablo, 2026-10-22). --}}
+                                        <a href="{{ $s->journalUrl }}" class="dh-btn-icon" title="Photos and marine life here"><span class="material-icons-round" aria-hidden="true">auto_stories</span></a>
+                                        @if ($isMine)
+                                            <a href="{{ route('Logbook.sites.edit', $s->id) }}" class="dh-btn-icon" title="Edit"><span class="material-icons-round" aria-hidden="true">edit</span></a>
+                                            <form method="POST" action="{{ route('Logbook.sites.destroy', $s->id) }}" class="d-inline" onsubmit="return confirm('Delete this site? Dives tagged with it keep the name as plain text.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="dh-btn-icon dh-btn-icon-danger" title="Delete"><span class="material-icons-round" aria-hidden="true">delete</span></button>
+                                            </form>
+                                        @else
+                                            {{-- A Divers Hub site: no edit/delete - the DH mark, opening its page. --}}
+                                            <a href="{{ $s->siteUrl }}" class="dh-site-dh-logo" title="Divers Hub site - open its page"><img src="{{ asset('assets') }}/img/logos/logo_circle_small.png" alt="Divers Hub" width="32" height="32"></a>
                                         @endif
-                                        <a href="{{ route('Logbook.sites.edit', $s->id) }}" class="dh-btn-icon" title="Edit"><span class="material-icons-round" aria-hidden="true">edit</span></a>
-                                        <form method="POST" action="{{ route('Logbook.sites.destroy', $s->id) }}" class="d-inline" onsubmit="return confirm('Delete this site? Dives tagged with it keep the name as plain text.');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="dh-btn-icon dh-btn-icon-danger" title="Delete"><span class="material-icons-round" aria-hidden="true">delete</span></button>
-                                        </form>
                                     </div>
                                 </div>
                             @endforeach

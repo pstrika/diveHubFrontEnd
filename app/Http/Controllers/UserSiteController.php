@@ -62,52 +62,92 @@ class UserSiteController extends Controller
 
     public function index(Request $request)
     {
-        $all = UserSite::where('user_id', $request->user()->id)
-            ->withCount('dives')
-            ->orderBy('name')
-            ->get();
+        $userId = $request->user()->id;
+        // Every site the diver has been to (Pablo, 2026-10-22: "show ALL the
+        // sites the user dove including the catalog from Divers Hub"): their
+        // own sites (all of them, dived or not - they can edit and delete
+        // those) plus each catalog site with at least one of their dives,
+        // read-only here. One row shape for both, so the filters and the
+        // list don't care which kind a row is.
+        $rows = collect();
+        foreach (UserSite::where('user_id', $userId)->withCount('dives')->get() as $s) {
+            [$loc, $country] = \App\Support\SiteFacets::ofUserSite($s);
+            $rows->push((object) [
+                'key' => 'site-' . $s->id, 'kind' => 'mine', 'id' => $s->id, 'name' => $s->name,
+                'type' => $s->type, 'iconType' => $s->iconType(), 'location' => $loc, 'country' => $country,
+                'cert' => $s->min_cert ?: null, 'lat' => $s->latitude, 'lng' => $s->longitude,
+                'water_type' => $s->water_type, 'altitude_m' => $s->altitude_m, 'notes' => $s->notes,
+                'dives' => (int) $s->dives_count, 'divesUrl' => route('Logbook', ['usersite' => $s->id]),
+                'siteUrl' => null, 'journalUrl' => route('SiteJournal.show', ['mine', $s->id]),
+            ]);
+        }
+        $catalogCounts = \App\Models\Dive::where('user_id', $userId)->whereNotNull('site_id')->whereNull('merged_into_id')
+            ->groupBy('site_id')->selectRaw('site_id, COUNT(*) n')->pluck('n', 'site_id');
+        if ($catalogCounts->isNotEmpty()) {
+            $levels = \App\Support\DiveLevel::all();
+            foreach (\App\Models\Site::whereIn('id', $catalogCounts->keys())->get() as $site) {
+                [$loc, $country] = \App\Support\SiteFacets::coast($site->location);
+                $type = strtolower((string) $site->type);
+                $rows->push((object) [
+                    'key' => 'catalog-' . $site->id, 'kind' => 'catalog', 'id' => $site->id, 'name' => $site->name,
+                    'type' => $type, 'iconType' => isset(\App\Models\Site::TYPES[$type]) ? $type : 'other', 'location' => $loc, 'country' => $country,
+                    'cert' => $site->level !== null ? ($levels[(int) $site->level]['code'] ?? null) : null,
+                    'lat' => $site->decimalLatitude(), 'lng' => $site->decimalLongitude(),
+                    'water_type' => null, 'altitude_m' => null, 'notes' => null,
+                    'dives' => (int) $catalogCounts[$site->id], 'divesUrl' => route('Logbook', ['site' => $site->id]),
+                    'siteUrl' => $site->publicUrl(), 'journalUrl' => route('SiteJournal.show', ['site', $site->id]),
+                ]);
+            }
+        }
+        $all = $rows->sortBy(fn ($r) => mb_strtolower($r->name))->values();
 
         // Search + Type / Country / Location / Min cert filters (Pablo,
-        // 2026-10-22). Same rule as the logbook's chips: each dropdown only
-        // offers values that still match something under the OTHER filters.
+        // 2026-10-22). Same rule as the logbook's chips: each row only offers
+        // values that still match something under the OTHER filters.
         $filters = [
             'q' => trim(mb_substr((string) $request->query('q', ''), 0, 100)) ?: null,
-            'type' => in_array($request->query('type'), UserSite::TYPES, true) ? $request->query('type') : null,
+            // Sites I created / Divers Hub catalog sites (Pablo, 2026-10-22).
+            'source' => in_array($request->query('source'), ['mine', 'dh'], true) ? $request->query('source') : null,
+            'type' => isset(\App\Models\Site::TYPES[$request->query('type')]) ? $request->query('type') : null,
             'country' => trim((string) $request->query('country')) ?: null,
             'location' => trim((string) $request->query('location')) ?: null,
             'cert' => in_array($request->query('cert'), UserSite::CERTS, true) ? $request->query('cert') : null,
         ];
         $terms = $filters['q'] ? preg_split('/\s+/', mb_strtolower($filters['q'])) : [];
-        $matches = function (UserSite $s, array $f) use ($terms): bool {
-            [$loc, $country] = \App\Support\SiteFacets::ofUserSite($s);
-            if ($f['type'] && $s->type !== $f['type']) return false;
-            if ($f['country'] && $country !== $f['country']) return false;
-            if ($f['location'] && $loc !== $f['location']) return false;
-            if ($f['cert'] && $s->min_cert !== $f['cert']) return false;
+        $matches = function ($r, array $f) use ($terms): bool {
+            if ($f['source'] === 'mine' && $r->kind !== 'mine') return false;
+            if ($f['source'] === 'dh' && $r->kind !== 'catalog') return false;
+            if ($f['type'] && $r->type !== $f['type']) return false;
+            if ($f['country'] && $r->country !== $f['country']) return false;
+            if ($f['location'] && $r->location !== $f['location']) return false;
+            if ($f['cert'] && $r->cert !== $f['cert']) return false;
             if ($terms) {
-                $text = mb_strtolower(implode(' ', [$s->name, $loc, $country, $s->notes]));
+                $text = mb_strtolower(implode(' ', [$r->name, $r->location, $r->country, $r->notes]));
                 foreach ($terms as $t) if (!str_contains($text, $t)) return false;
             }
             return true;
         };
         $within = function (string $except) use ($all, $filters, $matches) {
             $others = $filters; $others[$except] = null;
-            return $all->filter(fn (UserSite $s) => $matches($s, $others));
+            return $all->filter(fn ($r) => $matches($r, $others));
         };
 
+        $kinds = $within('source')->pluck('kind')->unique()->all();
+        $sourceOptions = array_filter(['mine' => in_array('mine', $kinds, true) ? 'Sites I created' : null, 'dh' => in_array('catalog', $kinds, true) ? 'DH Sites' : null]);
         $typeOptions = [];
         $present = $within('type')->pluck('type')->unique()->all();
         foreach (\App\Models\Site::TYPES as $t => $label) if (in_array($t, $present, true)) $typeOptions[$t] = $label;
-        $countries = $within('country')->map(fn ($s) => \App\Support\SiteFacets::ofUserSite($s)[1])->filter()->unique()->sort()->values()->all();
-        $locations = $within('location')->map(fn ($s) => \App\Support\SiteFacets::ofUserSite($s)[0])->filter()->unique()->sort(SORT_NATURAL | SORT_FLAG_CASE)->values()->all();
+        $countries = $within('country')->pluck('country')->filter()->unique()->sort()->values()->all();
+        $locations = $within('location')->pluck('location')->filter()->unique()->sort(SORT_NATURAL | SORT_FLAG_CASE)->values()->all();
         $certOptions = [];
-        $present = $within('cert')->pluck('min_cert')->filter()->unique()->all();
+        $present = $within('cert')->pluck('cert')->filter()->unique()->all();
         foreach (UserSite::CERTS as $c) if (in_array($c, $present, true)) $certOptions[$c] = UserSite::certLabel($c);
 
         return view('pages.logbook.sites', [
-            'sites' => $all->filter(fn (UserSite $s) => $matches($s, $filters))->values(),
+            'sites' => $all->filter(fn ($r) => $matches($r, $filters))->values(),
             'totalSites' => $all->count(),
             'filters' => $filters,
+            'sourceOptions' => $sourceOptions,
             'typeOptions' => $typeOptions,
             'countryOptions' => $countries ? array_combine($countries, $countries) : [],
             'locationOptions' => $locations ? array_combine($locations, $locations) : [],

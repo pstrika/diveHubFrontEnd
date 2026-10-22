@@ -4955,3 +4955,9 @@ body.dh-photo-viewer-open { overflow: hidden; }
 /* Country flag in front of a chip's label (Pablo, 2026-10-22). */
 .chip.chip-with-icon { display: inline-flex; align-items: center; gap: 6px; }
 .chip-icon { width: 18px; height: 13.5px; border-radius: 2px; object-fit: cover; box-shadow: 0 0 0 1px rgba(0,0,0,.08); flex: 0 0 auto; }
+
+/* My sites: a Divers Hub catalog site in the list (read-only). */
+.dh-user-site-row.is-catalog { background: var(--dh-foam); }
+.dh-site-dh-logo { display: inline-flex; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex: 0 0 auto; }
+.dh-site-dh-logo img { width: 100%; height: 100%; display: block; }
+.dh-user-site-row .dh-logbook-row-stats a { color: inherit; text-decoration: none; display: block; }
