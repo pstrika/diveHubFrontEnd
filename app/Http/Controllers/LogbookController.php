@@ -95,6 +95,8 @@ class LogbookController extends Controller
             'q' => trim(mb_substr((string) $request->query('q', ''), 0, 100)) ?: null,
             // "All your dives here" from a site page.
             'site' => ctype_digit((string) $request->query('site')) ? (int) $request->query('site') : null,
+            // Same for one of the diver's own sites (a map pin with several dives).
+            'usersite' => ctype_digit((string) $request->query('usersite')) ? (int) $request->query('usersite') : null,
             // Dives with a piece of gear / a species (Pablo, 2026-10-17:
             // "which equipment was used the most, in which dives").
             'gear' => preg_match('/^[0-9a-f-]{36}$/i', (string) $request->query('gear')) ? $request->query('gear') : null,
@@ -139,6 +141,7 @@ class LogbookController extends Controller
             if ($f['tag'] && !in_array($f['tag'], $dive->tags ?? [], true)) return false;
             if ($f['type'] && !in_array($f['type'], $dive->conditions['dive_type'] ?? [], true)) return false;
             if ($f['site'] && (int) $dive->site_id !== $f['site']) return false;
+            if ($f['usersite'] && (int) $dive->user_site_id !== $f['usersite']) return false;
             if ($onlyIds !== null && !isset($onlyIds[$dive->id])) return false;
             if ($terms) {
                 if (count($terms) === 1 && ctype_digit($terms[0]) && (string) $dive->listSeq === $terms[0]) return true;
@@ -205,9 +208,13 @@ class LogbookController extends Controller
                 $info = $dive->siteInfo();
                 if (!$info || $info['latitude'] === null || $info['longitude'] === null) { $unmapped++; continue; }
                 $key = ($info['site'] ? 's' . $info['site']->id : 'u' . $info['user_site']->id);
-                $pins[$key] ??= ['name' => $info['name'], 'type' => $info['type'], 'lat' => (float) $info['latitude'], 'lng' => (float) $info['longitude'], 'dives' => []];
-                $pins[$key]['dives'][] = ['url' => route('DiveDetails', $dive->id), 'seq' => (string) $dive->listSeq, 'date' => $dive->started_at->format('M j, Y')];
+                $pins[$key] ??= ['name' => $info['name'], 'type' => $info['type'], 'lat' => (float) $info['latitude'], 'lng' => (float) $info['longitude'], 'dives' => [],
+                    'filter' => $info['site'] ? ['site' => $info['site']->id] : ['usersite' => $info['user_site']->id]];
+                $pins[$key]['dives'][] = route('DiveDetails', $dive->id);
             }
+            // A pin opens its dive; with several dives there it opens the list
+            // filtered to that site, keeping the other filters (Pablo, 2026-10-22).
+            $listQuery = array_filter(array_diff_key($filters, ['site' => 1, 'usersite' => 1]));
             foreach ($pins as $p) {
                 $mapFeatures[] = [
                     'type' => 'Feature',
@@ -215,8 +222,7 @@ class LogbookController extends Controller
                     'properties' => [
                         'name' => $p['name'],
                         'icon' => 'icon_' . (in_array($p['type'], ['wreck', 'reef'], true) ? $p['type'] : 'other'),
-                        'count' => count($p['dives']),
-                        'dives' => json_encode($p['dives']),
+                        'url' => count($p['dives']) === 1 ? $p['dives'][0] : route('Logbook', $listQuery + $p['filter']),
                     ],
                 ];
             }
@@ -265,7 +271,8 @@ class LogbookController extends Controller
             // computer log) came from the app, or the diver closed it.
             'usesApp' => Dive::withoutGlobalScope('companions')->where('user_id', $userId)->where('source', 'ios-uploader')->exists(),
             'appCardHidden' => (bool) $request->cookie('dh_app_card_hidden'),
-            'siteFilterName' => $filters['site'] ? \App\Models\Site::whereKey($filters['site'])->value('name') : null,
+            'siteFilterName' => $filters['site'] ? \App\Models\Site::whereKey($filters['site'])->value('name')
+                : ($filters['usersite'] ? \App\Models\UserSite::where('user_id', $userId)->whereKey($filters['usersite'])->value('name') : null),
             'filterLabel' => $filterLabel,
             'photoCounts' => $photoCounts,
             'countryOptions' => $countries,

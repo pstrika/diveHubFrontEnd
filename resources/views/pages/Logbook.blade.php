@@ -126,7 +126,7 @@
                          notes, tags, computer or dive number. Keeps the chips. --}}
                     @if ($stats['total'] > 0)
                         <form method="GET" action="{{ route('Logbook') }}" class="dh-logbook-search" role="search">
-                            @foreach (['circuit', 'class', 'type', 'tag', 'site', 'gear', 'species', 'country', 'location'] as $k)
+                            @foreach (['circuit', 'class', 'type', 'tag', 'site', 'usersite', 'gear', 'species', 'country', 'location'] as $k)
                                 @if ($filters[$k])<input type="hidden" name="{{ $k }}" value="{{ $filters[$k] }}">@endif
                             @endforeach
                             @if ($view === 'map')<input type="hidden" name="view" value="map">@endif
@@ -147,7 +147,7 @@
                             <div class="dh-logbook-site-filter">
                                 <span class="material-icons-round" aria-hidden="true">place</span>
                                 Dives at <strong>{{ $siteFilterName }}</strong>
-                                <a href="{{ route('Logbook', array_filter(array_diff_key($filters, ['site' => 1]))) }}" aria-label="Show all dives"><span class="material-icons-round" aria-hidden="true">close</span></a>
+                                <a href="{{ route('Logbook', array_filter(array_diff_key($filters, ['site' => 1, 'usersite' => 1]))) }}" aria-label="Show all dives"><span class="material-icons-round" aria-hidden="true">close</span></a>
                             </div>
                         @endif
                     @endif
@@ -345,7 +345,7 @@
             <script>
                 (function () {
                     // Same Mapbox style and pins as the sites explorer. One pin per
-                    // site; it opens the dive, or lists them when there were several.
+                    // site: it opens the dive, or the list of dives there.
                     mapboxgl.accessToken = @json($mapboxToken);
                     var features = @json($mapFeatures);
                     var map = new mapboxgl.Map({ container: 'diveMap', style: 'mapbox://styles/pstrika/clwqz4fds03gv01qo9d4w3g21', center: features[0].geometry.coordinates, zoom: 8 });
@@ -353,7 +353,6 @@
                     ['reef', 'wreck', 'other'].forEach(function (t) {
                         map.loadImage('{{ asset('assets') }}/img/icons/marker_' + t + '.png', function (e, img) { if (!e) map.addImage('icon_' + t, img); });
                     });
-                    function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
                     map.on('load', function () {
                         map.addSource('dives', { type: 'geojson', data: { type: 'FeatureCollection', features: features } });
                         map.addLayer({
@@ -369,13 +368,7 @@
                             features.forEach(function (f) { b.extend(f.geometry.coordinates); });
                             map.fitBounds(b, { padding: 50, maxZoom: 12, duration: 0 });
                         }
-                        map.on('click', 'dives', function (e) {
-                            var f = e.features[0], dives = JSON.parse(f.properties.dives);
-                            if (dives.length === 1) { window.location.href = dives[0].url; return; }
-                            var html = '<div class="dh-map-popup"><strong>' + esc(f.properties.name) + '</strong><span>' + dives.length + ' dives</span><ul>' +
-                                dives.map(function (d) { return '<li><a href="' + d.url + '">#' + esc(d.seq) + ' &middot; ' + esc(d.date) + '</a></li>'; }).join('') + '</ul></div>';
-                            new mapboxgl.Popup({ maxWidth: '260px' }).setLngLat(f.geometry.coordinates).setHTML(html).addTo(map);
-                        });
+                        map.on('click', 'dives', function (e) { window.location.href = e.features[0].properties.url; });
                         map.on('mouseenter', 'dives', function () { map.getCanvas().style.cursor = 'pointer'; });
                         map.on('mouseleave', 'dives', function () { map.getCanvas().style.cursor = ''; });
                     });

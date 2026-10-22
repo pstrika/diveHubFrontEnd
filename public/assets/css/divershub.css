@@ -4951,11 +4951,6 @@ body.dh-photo-viewer-open { overflow: hidden; }
 .dh-logbook-view-toggle { margin-bottom: 12px; }
 .dh-logbook-map-wrap { margin: 0 0 24px; }
 .dh-logbook-map { width: 100%; height: min(70vh, 640px); min-height: 360px; border-radius: var(--dh-radius, 14px); overflow: hidden; }
-.dh-map-popup { font-size: .85rem; }
-.dh-map-popup strong { display: block; color: var(--dh-ink); }
-.dh-map-popup > span { color: var(--dh-muted); font-size: .75rem; }
-.dh-map-popup ul { list-style: none; margin: 6px 0 0; padding: 0; max-height: 200px; overflow-y: auto; }
-.dh-map-popup li a { display: block; padding: 3px 0; }
 
 /* Country flag in front of a chip's label (Pablo, 2026-10-22). */
 .chip.chip-with-icon { display: inline-flex; align-items: center; gap: 6px; }
