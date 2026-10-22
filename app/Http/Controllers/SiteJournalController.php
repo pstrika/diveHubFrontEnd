@@ -82,6 +82,11 @@ class SiteJournalController extends Controller
                 ->orderByDesc('dives')->orderBy('species.common_name')->get();
         }
 
-        return view('pages.logbook.journal.show', compact('kind', 'id', 'name', 'city', 'publicUrl', 'dives', 'photos', 'species', 'speciesOn'));
+        // Operator mini logo next to its name, as on the logbook rows (Pablo,
+        // 2026-10-22). Live catalog match by name, same lookup as LogbookController.
+        $operatorLogos = \App\Models\Operator::whereNotNull('logoUrl')->get(['operatorName', 'logoUrl'])
+            ->mapWithKeys(fn ($o) => [mb_strtolower($o->operatorName) => asset('assets') . $o->logoUrl]);
+
+        return view('pages.logbook.journal.show', compact('kind', 'id', 'name', 'city', 'publicUrl', 'dives', 'photos', 'species', 'speciesOn', 'operatorLogos'));
     }
 }

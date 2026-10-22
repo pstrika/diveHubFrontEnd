@@ -4961,3 +4961,7 @@ body.dh-photo-viewer-open { overflow: hidden; }
 .dh-site-dh-logo { display: inline-flex; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex: 0 0 auto; }
 .dh-site-dh-logo img { width: 100%; height: 100%; display: block; }
 .dh-user-site-row .dh-logbook-row-stats a { color: inherit; text-decoration: none; display: block; }
+
+/* Site journal: dive mode as its icon instead of "Closed/Open Circuit" (2026-10-22). */
+.dh-journal-mode { display: inline-flex; align-items: center; width: 22px; height: 22px; margin-right: 6px; flex: 0 0 auto; color: var(--dh-deep); vertical-align: middle; }
+.dh-journal-mode svg, .dh-journal-mode img { width: 100%; height: 100%; }

@@ -83,8 +83,19 @@
                                         <div class="dh-logbook-row-month">{{ $d->started_at->format('M Y') }}</div>
                                     </div>
                                     <div class="dh-logbook-row-main d-block">
-                                        <div class="dh-logbook-row-title"><span class="text-truncate">{{ $d->started_at->format('g:i A') }} &middot; {{ $d->modeLabel() }}</span></div>
-                                        <div class="dh-logbook-row-sub text-sm text-secondary">{{ $d->conditions['operator_name'] ?? '' }}</div>
+                                        <div class="dh-logbook-row-title">
+                                            {{-- The mode as its icon, same as the logbook rows (Pablo, 2026-10-22). --}}
+                                            <span class="dh-journal-mode" title="{{ $d->modeLabel() }}"><x-svg-icon :file="$d->iconFile()" /><span class="visually-hidden">{{ $d->modeLabel() }}</span></span>
+                                            <span class="text-truncate">{{ $d->started_at->format('g:i A') }}</span>
+                                        </div>
+                                        @php
+                                            $operatorName = $d->conditions['operator_name'] ?? null;
+                                            $operatorLogo = $operatorName ? ($operatorLogos[mb_strtolower($operatorName)] ?? null) : null;
+                                        @endphp
+                                        <div class="dh-logbook-row-sub text-sm text-secondary">
+                                            @if ($operatorLogo)<img src="{{ $operatorLogo }}" alt="" class="dh-logbook-row-operator-logo">@endif
+                                            {{ $operatorName }}
+                                        </div>
                                     </div>
                                     <div class="dh-logbook-row-stats">
                                         <div><strong><span data-unit-value="depth" data-metric="{{ $d->max_depth_m }}"></span></strong><span class="text-xs text-secondary d-block">max depth</span></div>
