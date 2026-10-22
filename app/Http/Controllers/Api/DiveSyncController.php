@@ -53,6 +53,19 @@ class DiveSyncController extends Controller
             + DiveGasStats::block($view);
     }
 
+    private ?string $syncPressureFrom = null;
+
+    /** Cylinders with pressures, borrowed from an attached computer's log when the main one has none. */
+    private function syncTanks(Dive $dive): ?array
+    {
+        $this->syncPressureFrom = null;
+        $own = collect($dive->tanks ?? [])->contains(fn ($t) => ($t['beginPressure'] ?? 0) > 0 || ($t['endPressure'] ?? 0) > 0);
+        if ($own || !$dive->hasProfile() || !$dive->companions()->exists()) return $dive->tanks;
+        $chart = \App\Support\DiveChartData::resolve($dive);
+        $this->syncPressureFrom = $chart['pressure_from'];
+        return $chart['tanks'];
+    }
+
     private function syncArray(Dive $dive): array
     {
         return [
@@ -74,7 +87,13 @@ class DiveSyncController extends Controller
             'max_water_temp_c' => $dive->max_water_temp_c,
             'dive_mode' => $dive->dive_mode,
             'gas_mixes' => $dive->gas_mixes,
-            'tanks' => $dive->tanks,
+            // The same cylinders the web chart shows: when this computer has
+            // no transmitter, the pressures of another computer worn on the
+            // dive (DiveChartData). The change feed sent the bare row before,
+            // so the app showed no consumption on a Petrel + NERD dive
+            // merged on the web (Pablo, 2026-10-22).
+            'tanks' => $this->syncTanks($dive),
+            'pressure_from' => $this->syncPressureFrom,
             'deco_model' => $dive->deco_model,
             'location' => $dive->location,
             'sensor_data' => $dive->sensor_data,
