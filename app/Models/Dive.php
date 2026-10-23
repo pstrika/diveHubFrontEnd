@@ -343,7 +343,20 @@ class Dive extends Model
 
     public function hasProfile(): bool
     {
+        // Loaded without the profile column (FEED_COLUMNS): the SELECT carried a
+        // has_profile flag instead - the sync feed ran out of memory holding 200
+        // profiles it never sent (2026-10-22).
+        if (!array_key_exists('profile', $this->attributes) && array_key_exists('has_profile', $this->attributes)) {
+            return (bool) $this->attributes['has_profile'];
+        }
         return count($this->profile ?? []) > 1;
+    }
+
+    /** Every column the app's sync summary needs, minus the profile JSON, plus a has_profile flag. */
+    public static function feedColumns(): array
+    {
+        return array_merge(self::LIST_COLUMNS, ['surface_temp_c', 'deco_model', 'location', 'sensor_data',
+            \Illuminate\Support\Facades\DB::raw('(profile IS NOT NULL AND LENGTH(profile) > 40) AS has_profile')]);
     }
 
     /**

@@ -48,9 +48,11 @@ class DiveSyncController extends Controller
         $view = clone $dive;
         $view->profile = $chart['profile'];
         $view->tanks = $chart['tanks'];
-        return $this->syncArray($view)
-            + ['profile' => $view->profile, 'pressure_from' => $chart['pressure_from'], 'deco_from' => $chart['deco_from']]
-            + DiveGasStats::block($view);
+        return array_merge(
+            $this->syncArray($view),
+            ['profile' => $view->profile, 'sensor_data' => $dive->sensor_data, 'pressure_from' => $chart['pressure_from'], 'deco_from' => $chart['deco_from']],
+            DiveGasStats::block($view)
+        );
     }
 
     private ?string $syncPressureFrom = null;
@@ -58,17 +60,23 @@ class DiveSyncController extends Controller
     /** Cylinders with pressures, borrowed from an attached computer's log when the main one has none. */
     private function syncTanks(Dive $dive): ?array
     {
-        $this->syncPressureFrom = null;
-        $own = collect($dive->tanks ?? [])->contains(fn ($t) => ($t['beginPressure'] ?? 0) > 0 || ($t['endPressure'] ?? 0) > 0);
-        $hasLogs = $dive->relationLoaded('companions') ? $dive->companions->isNotEmpty() : $dive->companions()->exists();
-        if ($own || !$dive->hasProfile() || !$hasLogs) return $dive->tanks;
-        $chart = \App\Support\DiveChartData::resolve($dive, $dive->relationLoaded('companions') ? $dive->companions : null);
-        $this->syncPressureFrom = $chart['pressure_from'];
-        return $chart['tanks'];
+        $logs = $dive->relationLoaded('companions') ? $dive->companions : $dive->companions()->get();
+        $r = \App\Support\DiveChartData::tanksFor($dive, $logs);
+        $this->syncPressureFrom = $r['pressure_from'];
+        return $r['tanks'];
     }
 
-    /** What changes() / index() / show() eager-load so syncArray() runs no query per dive. */
+    /** What index() / show() eager-load so syncArray() runs no query per dive. */
     public const SYNC_WITH = ['photos.species', 'videos', 'species', 'equipment', 'companions', 'userSite'];
+    /** The change feed: no profile JSON for the dives or their logs (syncTanks() borrows cylinders from the logs' tank lists). */
+    public const FEED_WITH = ['photos.species', 'videos', 'species', 'equipment', 'userSite'];
+
+    /** sensor_data without its per-sample arrays (anything over 20 entries). */
+    public static function compactSensorData($data): ?array
+    {
+        if (!is_array($data)) return $data;
+        return array_filter($data, fn ($v) => !is_array($v) || count($v) <= 20);
+    }
 
     private function syncArray(Dive $dive): array
     {
@@ -109,7 +117,10 @@ class DiveSyncController extends Controller
             'pressure_from' => $this->syncPressureFrom,
             'deco_model' => $dive->deco_model,
             'location' => $dive->location,
-            'sensor_data' => $dive->sensor_data,
+            // Scalars only in the summary (cns, setpoint, salinity...): a NERD's
+            // ppo2Readings is thousands of entries per dive, and decoding it for
+            // 200 dives blew the feed's 128 MB (2026-10-22). The full record keeps it.
+            'sensor_data' => self::compactSensorData($dive->sensor_data),
             'site_id' => $dive->site_id,
             'site' => $this->siteArray($dive),
             'notes' => $dive->notes,
@@ -249,7 +260,9 @@ class DiveSyncController extends Controller
         $dives = Dive::withTrashed()->withoutGlobalScope('companions')
             ->where('user_id', $user->id)
             ->whereIn('uuid', $uuids)
-            ->with(self::SYNC_WITH)
+            ->select(Dive::feedColumns())
+            ->with(self::FEED_WITH)
+            ->with(['companions' => fn ($q) => $q->select(Dive::feedColumns())])
             ->get()
             ->keyBy('uuid');
         Dive::preloadSites($dives);

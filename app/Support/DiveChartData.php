@@ -49,28 +49,7 @@ class DiveChartData
                 // log's role for each (diluent) and, on a rebreather, the
                 // remaining transmitter cylinder as the oxygen (Pablo's
                 // NERD: diluent + O2 sensors).
-                $mainHasPressures = collect($tanks ?? [])->contains(fn ($t) => ($t['beginPressure'] ?? 0) > 0 || ($t['endPressure'] ?? 0) > 0);
-                if (!$mainHasPressures && $c->tanks) {
-                    $borrowed = array_values($c->tanks);
-                    $width = count($src[0]['tankPressures'] ?? [1]);
-                    while (count($borrowed) < $width) $borrowed[] = ['usage' => 'none', 'volume' => 0, 'workPressure' => 0];
-                    foreach ($borrowed as $ti => &$bt) {
-                        $mainUsage = $tanks[$ti]['usage'] ?? null;
-                        if ($mainUsage && $mainUsage !== 'none') $bt['usage'] = $mainUsage;
-                        if (isset($tanks[$ti]['gasMix'])) $bt['gasMix'] = $tanks[$ti]['gasMix'];
-                    }
-                    unset($bt);
-                    if ($dive->isCcr()) {
-                        $roles = array_column($borrowed, 'usage');
-                        $hasDil = in_array('diluent', $roles, true); $hasO2 = in_array('oxygen', $roles, true);
-                        foreach ($borrowed as $ti => $bt) {
-                            if (($bt['usage'] ?? 'none') !== 'none') continue;
-                            if ($hasDil && !$hasO2) { $borrowed[$ti]['usage'] = 'oxygen'; $hasO2 = true; }
-                            elseif (!$hasDil) { $borrowed[$ti]['usage'] = 'diluent'; $hasDil = true; }
-                        }
-                    }
-                    $tanks = $borrowed;
-                }
+                $tanks = self::borrowTanks($dive, $tanks, $c, count($src[0]['tankPressures'] ?? [1]));
                 $pressureFrom = $c->computer_model ?: 'another computer';
                 break;
             }
@@ -99,5 +78,54 @@ class DiveChartData
             }
         }
         return ['profile' => $profile, 'tanks' => $tanks, 'pressure_from' => $pressureFrom, 'deco_from' => $decoFrom];
+    }
+
+    /**
+     * The other computer's cylinder list in place of the main log's
+     * pressure-less one (one per transmitter), keeping the main log's role
+     * for each (diluent) and, on a rebreather, the remaining transmitter
+     * cylinder as the oxygen (Pablo's NERD: diluent + O2 sensors).
+     */
+    public static function borrowTanks(Dive $dive, ?array $tanks, Dive $c, int $width): ?array
+    {
+        $mainHasPressures = collect($tanks ?? [])->contains(fn ($t) => ($t['beginPressure'] ?? 0) > 0 || ($t['endPressure'] ?? 0) > 0);
+        if ($mainHasPressures || !$c->tanks) return $tanks;
+        $borrowed = array_values($c->tanks);
+        while (count($borrowed) < $width) $borrowed[] = ['usage' => 'none', 'volume' => 0, 'workPressure' => 0];
+        foreach ($borrowed as $ti => &$bt) {
+            $mainUsage = $tanks[$ti]['usage'] ?? null;
+            if ($mainUsage && $mainUsage !== 'none') $bt['usage'] = $mainUsage;
+            if (isset($tanks[$ti]['gasMix'])) $bt['gasMix'] = $tanks[$ti]['gasMix'];
+        }
+        unset($bt);
+        if ($dive->isCcr()) {
+            $roles = array_column($borrowed, 'usage');
+            $hasDil = in_array('diluent', $roles, true); $hasO2 = in_array('oxygen', $roles, true);
+            foreach ($borrowed as $ti => $bt) {
+                if (($bt['usage'] ?? 'none') !== 'none') continue;
+                if ($hasDil && !$hasO2) { $borrowed[$ti]['usage'] = 'oxygen'; $hasO2 = true; }
+                elseif (!$hasDil) { $borrowed[$ti]['usage'] = 'diluent'; $hasDil = true; }
+            }
+        }
+        return $borrowed;
+    }
+
+    /**
+     * Just the cylinders (no profile work) for the app's sync feed: the main
+     * log's own when it has pressures, else the first attached log's that
+     * does. Works on dives loaded without their profile JSON.
+     *
+     * @return array{tanks: ?array, pressure_from: ?string}
+     */
+    public static function tanksFor(Dive $dive, $logs): array
+    {
+        $own = collect($dive->tanks ?? [])->contains(fn ($t) => ($t['beginPressure'] ?? 0) > 0 || ($t['endPressure'] ?? 0) > 0);
+        if ($own) return ['tanks' => $dive->tanks, 'pressure_from' => null];
+        foreach ($logs as $c) {
+            $has = collect($c->tanks ?? [])->contains(fn ($t) => ($t['beginPressure'] ?? 0) > 0 || ($t['endPressure'] ?? 0) > 0);
+            if (!$has) continue;
+            return ['tanks' => self::borrowTanks($dive, $dive->tanks, $c, count($c->tanks)), 'pressure_from' => $c->computer_model ?: 'another computer'];
+        }
+        return ['tanks' => $dive->tanks, 'pressure_from' => null];
     }
 }
