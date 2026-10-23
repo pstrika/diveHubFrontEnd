@@ -201,6 +201,8 @@ class DiveSyncController extends Controller
                 'url' => $us->publicUrl(),
                 'wished' => false,
                 'custom' => true,
+                // Map marker: the web logbook's rule (own sites by their icon type).
+                'marker' => array_key_exists((string) $us->iconType(), \App\Models\Site::TYPES) ? $us->iconType() : 'other',
                 // The web logbook's Country / Location filter values for this dive
                 // (App\\Support\\SiteFacets): the same strings for catalog and own
                 // sites, so the apps can offer the same chips (2026-10-22).
@@ -233,6 +235,8 @@ class DiveSyncController extends Controller
             // logbook row.
             'wished' => isset($this->wishedSiteIds[(int) $site->id]),
             'custom' => false,
+                // Map marker: the web logbook's rule - marker_{marker}.png.
+                'marker' => array_key_exists((string) $site->type, \App\Models\Site::TYPES) ? $site->type : 'other',
                 // The web logbook's Country / Location filter values for this dive
                 // (App\\Support\\SiteFacets): the same strings for catalog and own
                 // sites, so the apps can offer the same chips (2026-10-22).
