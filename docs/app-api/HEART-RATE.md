@@ -22,8 +22,9 @@ per-sample `heartbeat` on BLE downloads).
 ## Upload (`POST /api/dives`)
 
 Send `heartRate` per sample (bpm) in the profile array and, if you have a
-summary, `sensor_data.heart_rate_avg` / `heart_rate_max`. Samples are stored
-verbatim.
+summary, `sensor_data.heart_rate_avg` / `heart_rate_max`. A sample's
+libdivecomputer-named `heartbeat` is accepted too and renamed to `heartRate`
+on the way in (12.26.1); everything else in a sample is stored verbatim.
 
 ## Web
 

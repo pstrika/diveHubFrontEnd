@@ -77,6 +77,16 @@ class DiveUploadController extends Controller
 
         foreach ($data['dives'] as $i => $diveData) {
             $serial = $data['computer']['serial'] ?? null;
+            // Heart rate: the web and the FIT importer call it heartRate;
+            // libdivecomputer's sample field (sent as-is by the Android
+            // uploader, 2026-10-23) is "heartbeat". One name on file.
+            foreach ($diveData['profile'] as &$smp) {
+                if (is_array($smp) && array_key_exists('heartbeat', $smp)) {
+                    if (!isset($smp['heartRate']) && (int) $smp['heartbeat'] > 0) $smp['heartRate'] = (int) round($smp['heartbeat']);
+                    unset($smp['heartbeat']);
+                }
+            }
+            unset($smp);
             $fingerprint = $diveData['fingerprint'] ?? null;
 
             DB::transaction(function () use ($data, $diveData, $user, $serial, $fingerprint, $i, &$created, &$duplicates, &$deleted) {
