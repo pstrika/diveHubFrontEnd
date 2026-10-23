@@ -683,7 +683,11 @@ class LogbookImportController extends Controller
                         $item->decision = 'import';
                     }
                     // Last-second duplicate guard (the same file imported twice).
-                    if ($p['computer_serial'] && Dive::withTrashed()->withoutGlobalScope('companions')->where('user_id', $user->id)->where('computer_serial', $p['computer_serial'])->where('fingerprint', $p['fingerprint'])->exists()) {
+                    // Only for computers that fingerprint their dives: a null
+                    // fingerprint would match every dive of the same watch
+                    // (2026-10-23: four Garmin Descent dives all skipped
+                    // because one Descent dive was already on file).
+                    if ($p['computer_serial'] && ($p['fingerprint'] ?? null) !== null && Dive::withTrashed()->withoutGlobalScope('companions')->where('user_id', $user->id)->where('computer_serial', $p['computer_serial'])->where('fingerprint', $p['fingerprint'])->exists()) {
                         $item->update(['decision' => 'skip', 'duplicate_kind' => $item->duplicate_kind ?? 'fingerprint']);
                         $skipped++;
                         continue;
