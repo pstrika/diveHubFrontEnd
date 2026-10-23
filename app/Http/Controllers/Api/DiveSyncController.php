@@ -201,6 +201,12 @@ class DiveSyncController extends Controller
                 'url' => $us->publicUrl(),
                 'wished' => false,
                 'custom' => true,
+                // The web logbook's Country / Location filter values for this dive
+                // (App\\Support\\SiteFacets): the same strings for catalog and own
+                // sites, so the apps can offer the same chips (2026-10-22).
+                'facet_location' => \App\Support\SiteFacets::ofDive($dive)[0],
+                'facet_country' => \App\Support\SiteFacets::ofDive($dive)[1],
+                'country_flag' => \App\Support\SiteFacets::flag(\App\Support\SiteFacets::ofDive($dive)[1]),
                 'type' => $us->type,
                 'min_cert' => $us->min_cert,
                 'water_type' => $us->water_type,
@@ -227,6 +233,12 @@ class DiveSyncController extends Controller
             // logbook row.
             'wished' => isset($this->wishedSiteIds[(int) $site->id]),
             'custom' => false,
+                // The web logbook's Country / Location filter values for this dive
+                // (App\\Support\\SiteFacets): the same strings for catalog and own
+                // sites, so the apps can offer the same chips (2026-10-22).
+                'facet_location' => \App\Support\SiteFacets::ofDive($dive)[0],
+                'facet_country' => \App\Support\SiteFacets::ofDive($dive)[1],
+                'country_flag' => \App\Support\SiteFacets::flag(\App\Support\SiteFacets::ofDive($dive)[1]),
         ];
     }
 
