@@ -83,6 +83,11 @@ class LogbookImportController extends Controller
             'files' => 'required|array|max:' . self::CHUNK_FILES,
             'files.*' => 'file|max:140000', // KB
             'file_count' => 'required|integer|min:1',
+            // One big file sent in slices (Pablo, 2026-10-23: a 204 MB
+            // "All dives.uddf" hit the 140 MB request cap): part_index of
+            // part_count, each slice appended to the same file.
+            'part_index' => 'nullable|integer|min:0',
+            'part_count' => 'nullable|integer|min:1',
         ]);
         $files = $request->file('files');
         if ((int) $request->input('file_count') > count($files)) {
@@ -93,6 +98,30 @@ class LogbookImportController extends Controller
         $dir = $this->chunkDir($userId, $request->input('batch'));
         if (!is_dir($dir)) mkdir($dir, 0775, true);
         $n = count(glob($dir . '/*'));
+
+        if ($request->filled('part_index')) {
+            $file = $files[0];
+            $ext = strtolower($file->getClientOriginalExtension());
+            if (!in_array($ext, ['uddf', 'xml', 'fit'], true)) {
+                return response()->json(['message' => $file->getClientOriginalName() . ' is not a .xml, .uddf or .fit export.'], 422);
+            }
+            $safe = preg_replace('/[^\w\[\]#.\- ]+/u', '_', $file->getClientOriginalName());
+            $part = (int) $request->input('part_index');
+            if ($part === 0) {
+                $target = $dir . '/' . sprintf('%05d_', $n++) . $safe;
+                if (is_file($target)) @unlink($target);
+            } else {
+                $found = glob($dir . '/[0-9][0-9][0-9][0-9][0-9]_' . str_replace(['[', ']', '*', '?'], ['\[', '\]', '\*', '\?'], $safe));
+                $target = $found ? end($found) : null;
+                if (!$target) return response()->json(['message' => 'A piece of ' . $file->getClientOriginalName() . ' arrived out of order. Please try again.'], 422);
+            }
+            $in = fopen($file->getRealPath(), 'rb');
+            $out = fopen($target, $part === 0 ? 'wb' : 'ab');
+            stream_copy_to_stream($in, $out);
+            fclose($in); fclose($out);
+            return response()->json(['stored' => $n, 'part' => $part, 'bytes' => filesize($target)]);
+        }
+
         foreach ($files as $file) {
             $ext = strtolower($file->getClientOriginalExtension());
             if (!in_array($ext, ['uddf', 'xml', 'fit'], true)) {

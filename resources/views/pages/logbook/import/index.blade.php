@@ -255,11 +255,22 @@
                         xhr.send(data);
                     });
                 }
-                // Batches of up to CHUNK_FILES files (and ~60 MB; a big
-                // logbook file goes on its own), then one call reads them all.
+                // Batches of up to CHUNK_FILES files (and ~60 MB). A file
+                // bigger than that goes alone, in slices of CHUNK_BYTES that
+                // the server appends back together (Pablo, 2026-10-23: a
+                // 204 MB "All dives.uddf" was refused as too big - the
+                // server takes at most 140 MB per request).
                 function batches() {
                     var out = [], cur = [], bytes = 0;
                     files.forEach(function (f) {
+                        if (f.size > CHUNK_BYTES) {
+                            if (cur.length) { out.push(cur); cur = []; bytes = 0; }
+                            var count = Math.ceil(f.size / CHUNK_BYTES);
+                            for (var i = 0; i < count; i++) {
+                                out.push({ part: { file: f, index: i, count: count, blob: f.slice(i * CHUNK_BYTES, Math.min(f.size, (i + 1) * CHUNK_BYTES)) } });
+                            }
+                            return;
+                        }
                         if (cur.length && (cur.length >= CHUNK_FILES || bytes + f.size > CHUNK_BYTES)) { out.push(cur); cur = []; bytes = 0; }
                         cur.push(f); bytes += f.size;
                     });
@@ -278,12 +289,22 @@
                             var data = new FormData();
                             data.append('_token', token);
                             data.append('batch', batch);
-                            group.forEach(function (f) { data.append('files[]', f, f.name); });
-                            data.append('file_count', group.length);
+                            var groupBytes;
+                            if (group.part) {
+                                data.append('files[]', group.part.blob, group.part.file.name);
+                                data.append('file_count', 1);
+                                data.append('part_index', group.part.index);
+                                data.append('part_count', group.part.count);
+                                groupBytes = group.part.blob.size;
+                            } else {
+                                group.forEach(function (f) { data.append('files[]', f, f.name); });
+                                data.append('file_count', group.length);
+                                groupBytes = group.reduce(function (a, f) { return a + f.size; }, 0);
+                            }
                             var base = sent;
                             return post('{{ route('Logbook.import.chunk') }}', data, function (loaded) {
                                 setProgress((base + loaded) / total * 100, many ? 'Uploading ' + files.length + ' files…' : 'Uploading…');
-                            }).then(function () { sent = base + group.reduce(function (a, f) { return a + f.size; }, 0); });
+                            }).then(function () { sent = base + groupBytes; });
                         });
                     }, Promise.resolve()).then(function () {
                         setProgress(100, 'Reading your dives - a full logbook takes up to a minute…');
