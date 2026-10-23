@@ -187,6 +187,20 @@ class UddfParser
         return $e === null ? '' : trim((string) $e);
     }
 
+    /**
+     * A water/air temperature in °C a dive can actually have; an impossible
+     * one becomes 0 °C (Pablo, 2026-10-23: "do not skip the whole dive,
+     * just put a 0 degree water temp on it"). MacDive writes 4699.85 K
+     * (4426.7 °C) as "no reading" for a dive whose computer logged none -
+     * that overflowed the dives table's decimal(5,2) column and failed
+     * another diver's import. null stays null (no reading at all).
+     */
+    public static function plausibleTemp(?float $c): ?float
+    {
+        if ($c === null) return null;
+        return ($c < -5 || $c > 60) ? 0.0 : $c;
+    }
+
     private function num(string $v): ?float
     {
         return $v === '' || !is_numeric($v) ? null : (float) $v;
@@ -294,7 +308,7 @@ class UddfParser
             $depth = (float) $this->txt($w, 'depth');
             $s = ['time' => $time, 'depth' => round($depth, 3)];
             $tempK = $this->num($this->txt($w, 'temperature'));
-            if ($tempK !== null) $s['temperature'] = round($tempK > 200 ? $tempK - 273.15 : $tempK, 2);
+            if ($tempK !== null && ($t = self::plausibleTemp($tempK > 200 ? $tempK - 273.15 : $tempK)) !== null) $s['temperature'] = round($t, 2);
             $byRow = [];
             foreach ($this->all($w, 'tankpressure') as $tpEl) {
                 $pPa = $this->num(trim((string) $tpEl));
@@ -365,7 +379,7 @@ class UddfParser
         if ($maxDepth === null && count($profile)) $maxDepth = max(array_column($profile, 'depth'));
         $avgDepth = self::averageDepth($profile);
         $lowK = $this->num($this->txt($after, 'lowesttemperature'));
-        $minTemp = $lowK === null ? null : round($lowK > 200 ? $lowK - 273.15 : $lowK, 1);
+        $minTemp = $lowK === null ? null : self::plausibleTemp(round($lowK > 200 ? $lowK - 273.15 : $lowK, 1));
 
         $serial = $comp ? strtolower($comp['serial'] ?? '') : '';
         $model = $comp ? ($comp['model'] ?? '') : '';

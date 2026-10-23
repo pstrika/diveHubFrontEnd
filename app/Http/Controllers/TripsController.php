@@ -219,8 +219,9 @@ class TripsController extends Controller
         Log::debug("favorite locations name : " . implode(', ', $weatherLocationsNames));
         $weathers = Weatherday::where('date', $date)->whereIn('location', $weatherLocationsNames)->get();
 
-        // create prev and next dates
-        $carbonDate = new Carbon($date);
+        // create prev and next dates. A link built with a missing date
+        // (/Trips/null, seen in the log 2026-10-23) means today.
+        try { $carbonDate = new Carbon($date); } catch (\Throwable $e) { $carbonDate = Carbon::today(); $date = $carbonDate->toDateString(); }
         // Get the previous day
         $previousDay = $carbonDate->subDay()->toDateString(); // Decrements the date by one day and converts it to 'YYYY-MM-DD' format
         // Get the next day

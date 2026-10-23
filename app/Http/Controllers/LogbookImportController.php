@@ -667,10 +667,20 @@ class LogbookImportController extends Controller
         // file) already exists.
         $batch = $import->items()->whereIn('decision', ['import', 'upgrade', 'attach'])->whereNull('imported_dive_id')
             ->orderByRaw("decision = 'attach'")->orderBy('position')->limit(self::RUN_BATCH)->get();
-        $upgraded = 0; $attached = 0;
+        $upgraded = 0; $attached = 0; $failed = 0; $newSites = 0;
         foreach ([$batch] as $items) {
                 foreach ($items as $item) {
+                  // One dive the database refuses (2026-10-23: a MacDive
+                  // "no reading" temperature of 4426 °C) must not take the
+                  // other 61 of the batch down with a 500: it is skipped,
+                  // logged, and counted in the closing message.
+                  try {
                     $p = $item->payload;
+                    // Staged before the parsers learned to drop MacDive's
+                    // "no reading" temperature (4426 °C): the same guard here.
+                    foreach (['min_water_temp_c', 'max_water_temp_c', 'surface_temp_c'] as $tk) {
+                        if (isset($p[$tk])) $p[$tk] = UddfParser::plausibleTemp((float) $p[$tk]);
+                    }
                     if ($item->decision === 'upgrade') {
                         // The computer's file replaces what the logbook guessed.
                         $target = Dive::where('user_id', $user->id)->find($item->duplicate_of_dive_id);
@@ -732,7 +742,11 @@ class LogbookImportController extends Controller
                                 if (!isset($createdSites[$item->site_key])) {
                                     // Created in an earlier batch? The map was
                                     // flipped to 'own' then, so this is first time.
-                                    $createdSites[$item->site_key] = UserSite::create([
+                                    // Unless a batch died before saving the map
+                                    // (2026-10-23): a site of this name the diver
+                                    // already has is reused, never doubled.
+                                    $existing = UserSite::where('user_id', $user->id)->where('name', Str::limit($s['name'] ?: 'Imported site', 150, ''))->orderBy('id')->value('id');
+                                    $createdSites[$item->site_key] = $existing ?: UserSite::create([
                                         'user_id' => $user->id,
                                         'name' => Str::limit($s['name'] ?: 'Imported site', 150, ''),
                                         'type' => \App\Support\MacDiveXmlParser::siteType($s),
@@ -746,6 +760,7 @@ class LogbookImportController extends Controller
                                     ])->id;
                                     $siteMap[$item->site_key]['user_site_id'] = $createdSites[$item->site_key];
                                     $siteMap[$item->site_key]['decision'] = 'own';
+                                    if ($existing) $ownIds[$existing] = true; else $newSites++;
                                 }
                                 $userSiteId = $createdSites[$item->site_key];
                                 break;
@@ -824,17 +839,26 @@ class LogbookImportController extends Controller
                         Dive::logUpdatedIds([(int) $conditions['same_dive_suggestion']['dive_id']]);
                     }
                     $created++;
+                  } catch (\Throwable $e) {
+                    \Log::warning('Logbook import: dive skipped', ['import' => $import->id, 'item' => $item->id, 'started_at' => $item->started_at, 'error' => $e->getMessage()]);
+                    $item->update(['decision' => 'failed']);
+                    $failed++;
+                    // Own sites created so far stay known to the next batch.
+                    $import->sites = $siteMap;
+                    $import->save();
+                  }
                 }
         }
 
         // Persist the site map (newly created own sites are now 'own')
         // and running totals, then either continue or finish.
         $summary = $import->summary ?? [];
-        $result = ($summary['result'] ?? []) + ['created' => 0, 'skipped' => 0, 'sites_created' => 0, 'upgraded' => 0, 'attached' => 0];
+        $result = ($summary['result'] ?? []) + ['created' => 0, 'skipped' => 0, 'sites_created' => 0, 'upgraded' => 0, 'attached' => 0, 'failed' => 0];
         $result['created'] += $created;
+        $result['failed'] += $failed;
         $result['attached'] += $attached;
         $result['upgraded'] += $upgraded;
-        $result['sites_created'] += count($createdSites);
+        $result['sites_created'] += $newSites;
         $import->sites = $siteMap;
 
         $remaining = $import->items()->whereIn('decision', ['import', 'upgrade', 'attach'])->whereNull('imported_dive_id')->count();
@@ -851,7 +875,7 @@ class LogbookImportController extends Controller
         $import->status = 'done';
         $import->save();
 
-        return redirect()->route('Logbook')->with('status', 'Imported ' . $result['created'] . ' dive' . ($result['created'] === 1 ? '' : 's') . ($result['upgraded'] ? ', upgraded ' . $result['upgraded'] . ' with computer data' : '') . ($result['attached'] ? ', added ' . $result['attached'] . ' second-computer log' . ($result['attached'] === 1 ? '' : 's') . ' to dives you already had' : '') . ' from ' . $import->filename . ($result['skipped'] ? ' (' . $result['skipped'] . ' skipped as duplicates)' : '') . ($result['sites_created'] ? ', created ' . $result['sites_created'] . ' of your own sites' : '') . '.');
+        return redirect()->route('Logbook')->with('status', 'Imported ' . $result['created'] . ' dive' . ($result['created'] === 1 ? '' : 's') . ($result['upgraded'] ? ', upgraded ' . $result['upgraded'] . ' with computer data' : '') . ($result['attached'] ? ', added ' . $result['attached'] . ' second-computer log' . ($result['attached'] === 1 ? '' : 's') . ' to dives you already had' : '') . ' from ' . $import->filename . ($result['skipped'] ? ' (' . $result['skipped'] . ' skipped as duplicates)' : '') . ($result['sites_created'] ? ', created ' . $result['sites_created'] . ' of your own sites' : '') . '.' . ($result['failed'] ? ' ' . $result['failed'] . ' dive' . ($result['failed'] === 1 ? '' : 's') . ' could not be read from the file and ' . ($result['failed'] === 1 ? 'was' : 'were') . ' left out.' : ''));
     }
 
     /** Catalog operator by name (case-insensitive), with its boats - cached per run. */
