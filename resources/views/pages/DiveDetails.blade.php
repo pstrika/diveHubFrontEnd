@@ -247,6 +247,7 @@
         'temperature' => \App\Support\DiveChartPalette::TEMPERATURE,
         'po2' => \App\Support\DiveChartPalette::PPO2,
         'ndl' => \App\Support\DiveChartPalette::NDL,
+        'heartRate' => \App\Support\DiveChartPalette::HEART_RATE,
         'tanks' => (object) $tankColors,
     ];
 
@@ -573,6 +574,12 @@
                             @endif
                             @if (!empty($decoFrom))
                                 <span class="dh-computer-note">Deco stops from the {{ $decoFrom }}</span>
+                            @endif
+                            @if (!empty($heartRate))
+                                {{-- Wrist heart rate (Pablo, 2026-10-23): a Garmin Descent logs
+                                     it; named like the borrowed pressure/deco when it came
+                                     from a second computer. --}}
+                                <span class="dh-computer-note">Heart rate{{ !empty($heartRateFrom) ? ' from the ' . $heartRateFrom : '' }}: avg {{ $heartRate['avg'] }}, max {{ $heartRate['max'] }} bpm</span>
                             @endif
                         </div>
                         {{-- A <details> menu only closes from its own summary (Pablo,
@@ -928,6 +935,7 @@
                             <button type="button" class="dh-chart-toggle" data-series="temperature" style="--toggle-color: {{ \App\Support\DiveChartPalette::TEMPERATURE }};">Temperature</button>
                             <button type="button" class="dh-chart-toggle" data-series="po2" style="--toggle-color: {{ \App\Support\DiveChartPalette::PPO2 }};">PPO2</button>
                             <button type="button" class="dh-chart-toggle" data-series="ndl" style="--toggle-color: {{ \App\Support\DiveChartPalette::NDL }};">NDL</button>
+                            <button type="button" class="dh-chart-toggle" data-series="heartRate" style="--toggle-color: {{ \App\Support\DiveChartPalette::HEART_RATE }};">Heart rate</button>
                             @foreach (($companions ?? []) as $ci => $c)
                                 <button type="button" class="dh-chart-toggle is-active" data-series="computer{{ $ci }}" style="--toggle-color: {{ $c['color'] }};">{{ $c['label'] }}</button>
                             @endforeach

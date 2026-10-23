@@ -20,7 +20,7 @@ class DiveChartData
 {
     /**
      * @param iterable<Dive>|null $logs the dive's companions, when already loaded
-     * @return array{profile: array, tanks: ?array, pressure_from: ?string, deco_from: ?string}
+     * @return array{profile: array, tanks: ?array, pressure_from: ?string, deco_from: ?string, heart_rate_from: ?string}
      */
     public static function resolve(Dive $dive, $logs = null): array
     {
@@ -77,7 +77,41 @@ class DiveChartData
                 break;
             }
         }
-        return ['profile' => $profile, 'tanks' => $tanks, 'pressure_from' => $pressureFrom, 'deco_from' => $decoFrom];
+        // Heart rate the same way (Pablo, 2026-10-23): a Garmin Descent on
+        // the wrist logs it, the Petrel that is the dive's main computer
+        // never does - its samples take the watch's reading at that time.
+        $heartRateFrom = null;
+        $mainHasHr = collect($profile)->contains(fn ($s) => isset($s['heartRate']));
+        if (!$mainHasHr && $profile) {
+            foreach ($logs as $c) {
+                $src = array_values(array_filter($c->profile ?? [], fn ($s) => isset($s['time'], $s['heartRate'])));
+                if (!$src) continue;
+                $j = 0; $n = count($src);
+                foreach ($profile as &$s) {
+                    if (!isset($s['time'])) continue;
+                    while ($j < $n - 1 && $src[$j + 1]['time'] <= $s['time']) $j++;
+                    if ($src[$j]['time'] > $s['time'] + 30 || $src[$j]['time'] < $s['time'] - 30) continue; // outside the watch's log
+                    $s['heartRate'] = $src[$j]['heartRate'];
+                }
+                unset($s);
+                $heartRateFrom = $c->computer_model ?: 'another computer';
+                break;
+            }
+        }
+        return ['profile' => $profile, 'tanks' => $tanks, 'pressure_from' => $pressureFrom, 'deco_from' => $decoFrom, 'heart_rate_from' => $heartRateFrom];
+    }
+
+    /**
+     * Average and highest heart rate over a profile (bpm), or null when no
+     * sample carries one - for a dive whose sensor_data has no summary.
+     *
+     * @return array{avg: int, max: int}|null
+     */
+    public static function heartRateSummary(array $profile): ?array
+    {
+        $hrs = array_values(array_filter(array_column($profile, 'heartRate'), fn ($v) => $v > 0));
+        if (!$hrs) return null;
+        return ['avg' => (int) round(array_sum($hrs) / count($hrs)), 'max' => (int) max($hrs)];
     }
 
     /**

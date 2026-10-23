@@ -21,6 +21,7 @@ class DiveChartPalette
     public const TEMPERATURE = '#ff8a65';
     public const PPO2 = '#4fc3f7';
     public const NDL = '#ba68c8';
+    public const HEART_RATE = '#f06292';
 
     private const FAMILIES = [
         'green' => [

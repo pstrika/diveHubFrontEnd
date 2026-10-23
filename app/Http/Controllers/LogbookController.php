@@ -622,7 +622,7 @@ class LogbookController extends Controller
      * Perdix with the AI). Samples are aligned by time into the dive, so
      * clocks set to different hours don't matter.
      *
-     * @return array{0: array, 1: array, 2: ?array, 3: ?string, 4: ?string}
+     * @return array{0: array, 1: array, 2: ?array, 3: ?string, 4: ?string, 5: ?string}
      */
     private function computerLogs(Dive $dive): array
     {
@@ -652,8 +652,8 @@ class LogbookController extends Controller
 
         // Pressure and deco borrowed from another computer: shared with the
         // app API (DiveSyncController), so both show the same chart.
-        ['profile' => $profile, 'tanks' => $tanks, 'pressure_from' => $pressureFrom, 'deco_from' => $decoFrom] = \App\Support\DiveChartData::resolve($dive, $logs);
-        return [$out, $profile, $tanks, $pressureFrom, $decoFrom];
+        ['profile' => $profile, 'tanks' => $tanks, 'pressure_from' => $pressureFrom, 'deco_from' => $decoFrom, 'heart_rate_from' => $heartRateFrom] = \App\Support\DiveChartData::resolve($dive, $logs);
+        return [$out, $profile, $tanks, $pressureFrom, $decoFrom, $heartRateFrom];
     }
 
     /** POST Logbook/{id}/computers/{log}/main - that computer becomes the dive's main one. */
@@ -702,7 +702,16 @@ class LogbookController extends Controller
         $any = Dive::withoutGlobalScope('companions')->where('user_id', $request->user()->id)->findOrFail($id);
         if ($any->isCompanion()) return redirect()->route('DiveDetails', $any->merged_into_id);
         $dive = $any;
-        [$companions, $chartProfile, $chartTanks, $pressureFrom, $decoFrom] = $this->computerLogs($dive);
+        [$companions, $chartProfile, $chartTanks, $pressureFrom, $decoFrom, $heartRateFrom] = $this->computerLogs($dive);
+        // Average / highest heart rate (Pablo, 2026-10-23): the watch's own
+        // summary when the main computer is the watch, else over the chart's
+        // (borrowed) samples.
+        $heartRate = null;
+        if (isset($dive->sensor_data['heart_rate_avg'], $dive->sensor_data['heart_rate_max'])) {
+            $heartRate = ['avg' => (int) $dive->sensor_data['heart_rate_avg'], 'max' => (int) $dive->sensor_data['heart_rate_max']];
+        } else {
+            $heartRate = \App\Support\DiveChartData::heartRateSummary($chartProfile);
+        }
         // Open "same dive?" questions this dive is part of - as the dive
         // that asks, or as the dive being asked about (844.a / 844.b).
         $sameDive = [];
@@ -765,6 +774,8 @@ class LogbookController extends Controller
             'chartTanks' => $chartTanks,
             'pressureFrom' => $pressureFrom,
             'decoFrom' => $decoFrom,
+            'heartRateFrom' => $heartRateFrom,
+            'heartRate' => $heartRate,
             'sameDive' => $sameDive,
             'site' => $dive->site(),
             'operators' => $operators->map(fn ($o) => [

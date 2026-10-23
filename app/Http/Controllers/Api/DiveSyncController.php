@@ -40,7 +40,8 @@ class DiveSyncController extends Controller
      * chart shows - tank pressure and deco filled in from another computer
      * on the dive when the main one had none (DiveChartData) - so the apps
      * draw the same chart (2026-10-21: iOS showed no pressures on a Petrel +
-     * NERD dive). pressure_from / deco_from name that computer, or null.
+     * NERD dive). pressure_from / deco_from / heart_rate_from name that
+     * computer, or null. Samples may carry heartRate (bpm; Garmin FIT, 2026-10-23).
      */
     private function fullArray(Dive $dive): array
     {
@@ -50,7 +51,7 @@ class DiveSyncController extends Controller
         $view->tanks = $chart['tanks'];
         return array_merge(
             $this->syncArray($view),
-            ['profile' => $view->profile, 'sensor_data' => $dive->sensor_data, 'pressure_from' => $chart['pressure_from'], 'deco_from' => $chart['deco_from']],
+            ['profile' => $view->profile, 'sensor_data' => $dive->sensor_data, 'pressure_from' => $chart['pressure_from'], 'deco_from' => $chart['deco_from'], 'heart_rate_from' => $chart['heart_rate_from']],
             DiveGasStats::block($view)
         );
     }

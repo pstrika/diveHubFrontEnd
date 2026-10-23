@@ -86,6 +86,10 @@
     }
     var hasPo2 = profile.some(function (p) { return po2At(p) !== null; });
     var hasNdl = hasField('ndl');
+    // Wrist heart rate in bpm (Pablo, 2026-10-23: Garmin Descent FIT
+    // files "include data for heartbeat") - already borrowed from a second
+    // computer by DiveChartData when the main one has none; not unit-sensitive.
+    var hasHeartRate = hasField('heartRate');
     // Deco ceiling (Pablo, 2026-10-15: "if a diver had deco, do we have
     // info to show the deco time (or tts) with the stops required? We can
     // add to the graph by default in red") - decoKind/decoStop/decoTime/tts
@@ -306,6 +310,10 @@
             return { x: toMinutes(p.time), y: t };
         });
     }
+    var heartRateData = hasHeartRate ? profile.map(function (p) {
+        var hr = p.heartRate;
+        return { x: toMinutes(p.time), y: (hr !== null && hr !== undefined && hr > 0) ? hr : null };
+    }) : [];
     var po2Data = hasPo2 ? profile.map(function (p) {
         return { x: toMinutes(p.time), y: po2At(p) };
     }) : [];
@@ -385,6 +393,7 @@
         temperature: palette.temperature || '#ff8a65',
         po2: palette.po2 || '#4fc3f7',
         ndl: palette.ndl || '#ba68c8',
+        heartRate: palette.heartRate || '#f06292',
     };
     function tankColor(tankIndex, series) {
         var t = (palette.tanks || {})[tankIndex];
@@ -452,6 +461,23 @@
             pointRadius: 0,
             pointHoverRadius: 4,
             yAxisID: 'yNdl',
+            hidden: true,
+        });
+    }
+
+    if (hasHeartRate) {
+        datasets.push({
+            key: 'heartRate',
+            label: 'Heart rate',
+            data: heartRateData,
+            borderColor: seriesColors.heartRate,
+            backgroundColor: 'rgba(240, 98, 146, 0.15)',
+            borderWidth: 1.5,
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            spanGaps: true,
+            yAxisID: 'yHeartRate',
             hidden: true,
         });
     }
@@ -579,7 +605,7 @@
                             if (ds.key === 'depth' || ds.isDecoStop) v = Math.abs(v);
                             // PPO2 to the hundredth (Pablo, 2026-10-15) - the computer reports it
                             // that way and 1.25 vs 1.3 matters on a loop; everything else 1 decimal.
-                            var text = ds.label + ': ' + (typeof v === 'number' ? v.toFixed(ds.key === 'po2' ? 2 : 1) : v);
+                            var text = ds.label + ': ' + (typeof v === 'number' ? v.toFixed(ds.key === 'po2' ? 2 : (ds.key === 'heartRate' ? 0 : 1)) : v);
                             if (ds.isDecoStop) {
                                 var tts = profile[context.dataIndex] && profile[context.dataIndex].tts;
                                 if (tts !== null && tts !== undefined) text += ' (TTS ' + Math.ceil(tts / 60) + ' min)';
@@ -590,6 +616,7 @@
                             if (ds.isTank) text += imperial ? ' psi' : ' bar';
                             if (ds.key === 'po2') text += ' bar';
                             if (ds.key === 'ndl') text += ' min';
+                            if (ds.key === 'heartRate') text += ' bpm';
                             if (ds.isSac) text += imperial ? ' psi/min' : ' bar/min';
                             if (ds.isRmv) text += imperial ? ' cuft/min' : ' L/min';
                             return text;
@@ -628,6 +655,13 @@
                     position: 'right',
                     title: { display: true, text: 'min', color: seriesColors.ndl },
                     ticks: { color: seriesColors.ndl },
+                    grid: { display: false },
+                    display: false,
+                },
+                yHeartRate: {
+                    position: 'right',
+                    title: { display: true, text: 'bpm', color: seriesColors.heartRate },
+                    ticks: { color: seriesColors.heartRate, precision: 0 },
                     grid: { display: false },
                     display: false,
                 },

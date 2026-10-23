@@ -13,7 +13,7 @@ namespace App\Support;
  *
  *   0 file_id      - product (watch model), serial
  *   18 session     - start time, GPS entry point, elapsed time, sub_sport (apnea)
- *   20 record      - 1 s samples: depth, temperature, NDL, next stop, TTS, CNS, N2, PO2
+ *   20 record      - 1 s samples: depth, temperature, heart rate, NDL, next stop, TTS, CNS, N2, PO2
  *   21 event       - gas switches (event 57, data = dive_gas index)
  *   34 activity    - local_timestamp, giving the diver's UTC offset
  *   258 dive_settings - algorithm, GF low/high, water type
@@ -199,6 +199,10 @@ class GarminFitParser
             foreach ($tank as $at => $bar) { if ($at <= $ts) $tankVal = $bar; else break; }
             $s = ['time' => $ts - $t0, 'depth' => round($r[92] / 1000, 3)];
             if (isset($r[13])) $s['temperature'] = (float) $r[13];
+            // Wrist heart rate (record field 3, bpm; Pablo, 2026-10-23: "those
+            // include data for heartbeat... include this"). The watch writes
+            // it on every sample; 0 would mean no reading.
+            if (isset($r[3]) && (int) $r[3] > 0) $s['heartRate'] = (int) $r[3];
             if ($gas !== null) $s['currentGas'] = $gas;
             $stop = isset($r[93]) ? $r[93] / 1000 : 0;
             if ($stop > 0) {
@@ -225,6 +229,11 @@ class GarminFitParser
         $depths = array_column($profile, 'depth');
         $maxDepth = isset($summary[3]) ? $summary[3] / 1000 : max($depths);
         $temps = array_column($profile, 'temperature');
+        // Session avg/max heart rate (fields 16/17); from the samples when
+        // the summary lacks them.
+        $hrs = array_column($profile, 'heartRate');
+        $hrAvg = isset($session[16]) ? (int) $session[16] : ($hrs ? (int) round(array_sum($hrs) / count($hrs)) : null);
+        $hrMax = isset($session[17]) ? (int) $session[17] : ($hrs ? max($hrs) : null);
 
         $settings = ($m[258] ?? [[]])[0];
         $decoModel = ['type' => 'buhlmann', 'gfLow' => (int) ($settings[2] ?? 0), 'gfHigh' => (int) ($settings[3] ?? 0), 'conservatism' => 0];
@@ -273,7 +282,7 @@ class GarminFitParser
             'tanks' => $tanks,
             'deco_model' => $decoModel,
             'location' => $location,
-            'sensor_data' => array_filter(['cns' => isset($summary[6]) ? (int) $summary[6] : null], fn ($v) => $v !== null) ?: null,
+            'sensor_data' => array_filter(['cns' => isset($summary[6]) ? (int) $summary[6] : null, 'heart_rate_avg' => $hrAvg ?: null, 'heart_rate_max' => $hrMax ?: null], fn ($v) => $v !== null) ?: null,
             'profile' => $profile,
             'site_key' => $siteKey,
             'notes' => null,

@@ -165,6 +165,7 @@ class DiveGasStats
                 'temperature' => DiveChartPalette::TEMPERATURE,
                 'po2' => DiveChartPalette::PPO2,
                 'ndl' => DiveChartPalette::NDL,
+                'heart_rate' => DiveChartPalette::HEART_RATE,
                 'tanks' => (object) DiveChartPalette::forTanks($tankRoles),
             ],
             'gas_stats' => array_values($rows),
