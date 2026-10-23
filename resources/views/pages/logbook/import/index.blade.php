@@ -60,17 +60,32 @@
                                     <span class="material-icons-round dh-dropzone-icon" aria-hidden="true">cloud_upload</span>
                                     @if ($full)
                                         <strong>Drop your logbook here</strong>
-                                        <span class="text-sm text-secondary">or click to choose files · MacDive XML, UDDF, Shearwater (.xml) or Garmin (.fit) dive files - any number at once</span>
+                                        <span class="text-sm text-secondary">MacDive XML, UDDF, Shearwater (.xml) or Garmin (.fit) dive files - any number at once</span>
                                     @else
                                         <strong>Drop your dive files here</strong>
-                                        <span class="text-sm text-secondary">or click to choose · Garmin (.fit), Oceanic+ (.uddf) or other single-dive files</span>
+                                        <span class="text-sm text-secondary">Garmin (.fit), Oceanic+ (.uddf) or other single-dive files</span>
                                     @endif
-                                    <button type="button" class="dh-btn dh-btn-ghost-dark dh-dropzone-folder" id="importFolderBtn">
-                                        <span class="material-icons-round" aria-hidden="true">folder_open</span>
-                                        Choose a folder
-                                    </button>
+                                    {{-- Two explicit choices (Pablo, 2026-10-23: "the click in the
+                                         drop zone should allow folder or file... impossible to import
+                                         a single file in a mobile phone"); tapping anywhere else in the
+                                         zone opens the file picker. The folder button hides itself on
+                                         phones, which have no folder picker. --}}
+                                    <span class="dh-dropzone-actions">
+                                        <button type="button" class="dh-btn dh-btn-primary dh-dropzone-folder" id="importFilesBtn">
+                                            <span class="material-icons-round" aria-hidden="true">upload_file</span>
+                                            Choose files
+                                        </button>
+                                        <button type="button" class="dh-btn dh-btn-ghost-dark dh-dropzone-folder" id="importFolderBtn">
+                                            <span class="material-icons-round" aria-hidden="true">folder_open</span>
+                                            Choose a folder
+                                        </button>
+                                    </span>
                                     <span class="dh-dropzone-files text-sm" id="importFileName"></span>
-                                    <input type="file" id="importFile" name="files[]" accept=".uddf,.xml,.fit,application/xml,text/xml" multiple class="dh-visually-hidden">
+                                    {{-- No accept= list: iOS's Files picker greys out every file whose
+                                         type isn't in it, and .fit has no registered type there, so a
+                                         Garmin file could not be picked on a phone. isDiveFile() below
+                                         filters by name instead. --}}
+                                    <input type="file" id="importFile" name="files[]" multiple class="dh-visually-hidden">
                                 </label>
                                 {{-- Outside the label so picking a folder doesn't also open the file picker. --}}
                                 <input type="file" id="importFolder" webkitdirectory directory multiple class="dh-visually-hidden" tabindex="-1" aria-hidden="true">
@@ -164,7 +179,10 @@
         <script>
             (function () {
                 var form = document.getElementById('importForm'), input = document.getElementById('importFile'), drop = document.getElementById('importDrop');
-                var folderInput = document.getElementById('importFolder'), folderBtn = document.getElementById('importFolderBtn');
+                var folderInput = document.getElementById('importFolder'), folderBtn = document.getElementById('importFolderBtn'), filesBtn = document.getElementById('importFilesBtn');
+                // Phones and tablets have no folder picker (iOS Files, Android):
+                // only the file choice there.
+                if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) folderBtn.hidden = true;
                 var names = document.getElementById('importFileName'), submit = document.getElementById('importSubmit');
                 var prog = document.getElementById('importProgress'), fill = document.getElementById('importProgressFill');
                 var label = document.getElementById('importProgressLabel'), pct = document.getElementById('importProgressPct'), err = document.getElementById('importError');
@@ -181,6 +199,9 @@
                     if (!files.length) { err.textContent = 'No .xml, .uddf or .fit files there.'; err.hidden = false; }
                 }
                 input.addEventListener('change', function () { files = Array.prototype.slice.call(input.files).filter(isDiveFile); show(); });
+                // The label already opens the file picker on a plain click; the
+                // button is the explicit choice next to the folder one.
+                filesBtn.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); input.click(); });
                 // A whole folder (Shearwater Cloud exports one file per dive).
                 folderBtn.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); folderInput.click(); });
                 folderInput.addEventListener('change', function () { files = Array.prototype.slice.call(folderInput.files).filter(isDiveFile); show(); });

@@ -4551,6 +4551,7 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
 .dh-dropzone-icon { font-size: 42px; color: var(--dh-sea); }
 .dh-dropzone-files { font-weight: 700; color: var(--dh-ink); }
 .dh-dropzone-folder { margin-top: 4px; padding: 6px 14px; font-size: 13px; }
+.dh-dropzone-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 6px; }
 .dh-upload-progress { margin-top: 14px; }
 .dh-wizard-progress-fill.is-working { background-size: 40px 40px; background-image: linear-gradient(45deg, rgba(255,255,255,.25) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.25) 50%, rgba(255,255,255,.25) 75%, transparent 75%, transparent), linear-gradient(90deg, var(--dh-sea), #4fc3f7); animation: dh-progress-stripes 1s linear infinite; }
 @keyframes dh-progress-stripes { from { background-position: 40px 0, 0 0; } to { background-position: 0 0, 0 0; } }
