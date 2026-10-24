@@ -111,6 +111,17 @@
                 @endforeach
             @endif
 
+            {{-- The area and kind-of-dive schedule pages (SEO audit, 2026-10-24):
+                 linked from here so search engines and divers find them. --}}
+            <section class="dh-dtrips-more">
+                <h2 class="dh-day-title">Dive trips by area</h2>
+                <ul>
+                    @foreach (\App\Http\Controllers\DiveTripsController::PAGES as $s => $p)
+                        <li><a href="{{ route('DiveTrips.show', $s) }}">{{ $p['kind'] === 'area' ? $p['name'] . ' dive trips' : $p['name'] }}</a></li>
+                    @endforeach
+                </ul>
+            </section>
+
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
         </div>
     </main>

@@ -146,7 +146,13 @@ class OperatorController extends Controller
             "twitterCard" => $operator->logoUrl ? "summary" : null,
         );
 
-        return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites', 'trips', 'ratedAlready', 'SEO', 'card'));
+        // Links out to the operator's area (SEO audit, 2026-10-24): every
+        // boat leaving the same area this week, and the area's group.
+        $areaSlug = \App\Http\Controllers\DiveTripsController::areaForCode($operator->location);
+        $area = $areaSlug ? ['slug' => $areaSlug] + \App\Http\Controllers\DiveTripsController::PAGES[$areaSlug] : null;
+        $areaGroup = !empty($area['group']) ? \App\Models\Group::where('slug', $area['group'])->where('is_public', true)->first(['id', 'slug', 'name']) : null;
+
+        return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites', 'trips', 'ratedAlready', 'SEO', 'card', 'area', 'areaGroup'));
     }
 
 

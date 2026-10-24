@@ -466,7 +466,11 @@ class SiteController extends Controller
             ? \App\Models\Dive::where('user_id', auth()->id())->where('site_id', $site->id)->count()
             : 0;
 
-        return view('pages.SiteDetails', compact('site','photos', 'diverPhotos', 'siteVideos', 'videoUploadsOn', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'gasMixes', 'forecast', 'nextTrips', 'myDiveCount'));
+        // Blog posts that list this site (SEO audit, 2026-10-24): links back
+        // from the site to the guides that send divers here.
+        $sitePosts = \App\Models\Post::mentioningSite((int) $site->id);
+
+        return view('pages.SiteDetails', compact('site','photos', 'diverPhotos', 'siteVideos', 'videoUploadsOn', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'gasMixes', 'forecast', 'nextTrips', 'myDiveCount', 'sitePosts'));
 
     }
     public function getMyVisitedSites() {

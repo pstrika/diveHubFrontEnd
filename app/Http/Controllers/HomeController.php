@@ -94,7 +94,15 @@ class HomeController extends Controller
             'canonical' => route('/'),
         ];
 
+        // Latest guides and the public groups (SEO audit, 2026-10-24: the
+        // homepage linked to neither, so both were reachable only from
+        // their own index pages).
+        $latestPosts = \App\Models\Post::published()->orderByDesc('published_at')->take(3)->get(['title', 'slug', 'cover_image', 'published_at']);
+        $publicGroups = \App\Models\Group::where('is_public', true)->orderBy('id')->take(6)->get(['slug', 'name']);
+
         return view('pages.Landing', [
+            'latestPosts' => $latestPosts,
+            'publicGroups' => $publicGroups,
             'coasts'     => array_values($coasts),
             'totalBoats' => $totalBoats,
             'featured'   => $featured,

@@ -308,6 +308,19 @@
                             @endforeach
                         </div>
                     </section>
+
+                    {{-- The operator's area (SEO audit, 2026-10-24). --}}
+                    @if (!empty($area))
+                        <section class="dh-panel">
+                            <h2 class="dh-panel-title">Diving in {{ $area['name'] }}</h2>
+                            <ul class="dh-area-links">
+                                <li><a href="{{ route('DiveTrips.show', $area['slug']) }}">Every dive boat leaving {{ $area['name'] }} this week</a></li>
+                                @if (!empty($areaGroup))
+                                    <li><a href="{{ route('Groups.show', ['group' => $areaGroup->slug]) }}">{{ $areaGroup->name }}</a> - find buddies and swap trip reports</li>
+                                @endif
+                            </ul>
+                        </section>
+                    @endif
                 </div>
             </div>
 

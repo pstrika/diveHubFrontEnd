@@ -1635,6 +1635,24 @@
                                 </table>
                             </div>
                     </section>
+
+                    {{-- From the blog (SEO audit, 2026-10-24): the guides that list this site. --}}
+                    @if (!empty($sitePosts) && $sitePosts->isNotEmpty())
+                        <section class="dh-panel" id="site-blog">
+                            <h2 class="dh-panel-title">From the blog</h2>
+                            <ul class="dh-site-posts">
+                                @foreach ($sitePosts as $post)
+                                    <li>
+                                        <a href="{{ route('Blog.show', $post->slug) }}">
+                                            @if ($post->cover_image)<img src="{{ asset($post->cover_image) }}" alt="" loading="lazy" width="72" height="54">@endif
+                                            <span><strong>{{ $post->title }}</strong>
+                                            @if ($post->published_at)<small>{{ $post->published_at->format('M j, Y') }}</small>@endif</span>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </section>
+                    @endif
                 </div>
 
             </div>

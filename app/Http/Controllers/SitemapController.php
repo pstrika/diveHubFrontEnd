@@ -27,6 +27,15 @@ class SitemapController extends Controller
                 );
             }
 
+            // Schedule pages per area and kind of dive (SEO audit, 2026-10-24).
+            foreach (array_keys(\App\Http\Controllers\DiveTripsController::PAGES) as $slug) {
+                $sitemap->add(
+                    Url::create(route('DiveTrips.show', $slug))
+                        ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY)
+                        ->setPriority(0.8)
+                );
+            }
+
             $siteHasSlug = Schema::connection('mysql_trips')->hasColumn('sites', 'slug');
 
             Site::where('_hidden', '<>', 1)
@@ -136,6 +145,9 @@ class SitemapController extends Controller
         foreach (array_keys($this->staticPages()) as $routeName) {
             $urls[] = route($routeName);
         }
+        foreach (array_keys(\App\Http\Controllers\DiveTripsController::PAGES) as $slug) {
+            $urls[] = route('DiveTrips.show', $slug);
+        }
 
         $siteHasSlug = Schema::connection('mysql_trips')->hasColumn('sites', 'slug');
         Site::where('_hidden', '<>', 1)
@@ -186,6 +198,7 @@ class SitemapController extends Controller
         return [
             '/' => ['priority' => 1.0, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'Trips' => ['priority' => 0.9, 'changefreq' => Url::CHANGE_FREQUENCY_DAILY],
+            'DiveTrips' => ['priority' => 0.7, 'changefreq' => Url::CHANGE_FREQUENCY_DAILY],
             'DiveSites' => ['priority' => 0.9, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'WreckSites' => ['priority' => 0.9, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'BeachDiving' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
@@ -208,6 +221,7 @@ class SitemapController extends Controller
             // Live and indexable but missing until the SEO audit of
             // 2026-10-24: the trimix/helitrox blender and the support page.
             'GasBlending' => ['priority' => 0.7, 'changefreq' => Url::CHANGE_FREQUENCY_MONTHLY],
+            'DiveLogApp' => ['priority' => 0.7, 'changefreq' => Url::CHANGE_FREQUENCY_MONTHLY],
             'Support' => ['priority' => 0.3, 'changefreq' => Url::CHANGE_FREQUENCY_MONTHLY],
             // 'home' deliberately excluded (SEO audit, 2026-09-28): it now
             // just 301s to '/', so listing it would point crawlers at a

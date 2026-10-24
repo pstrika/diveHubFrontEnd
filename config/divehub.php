@@ -14,7 +14,7 @@
 
 return [
 
-    'version' => '12.27.2',
+    'version' => '12.28.0',
 
     // Release date shown next to the version. Any human readable format.
     'released' => '10/22/26',
@@ -22,6 +22,10 @@ return [
     // App Store link for the companion app, "Logbook by Divers Hub". Null
     // while it's in TestFlight: the Logbook page then says "coming soon".
     'app_store_url' => null,
+
+    // Google Play link for the Android app. Null until it is published:
+    // the public app page (/DiveLogApp) then says "coming soon".
+    'play_store_url' => null,
 
     // Features open to a few accounts only (App\Support\EarlyAccess).
     // Lower-case emails; '*' opens a feature to every logbook user.

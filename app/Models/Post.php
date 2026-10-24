@@ -92,6 +92,31 @@ class Post extends Model
      *
      * @return \Illuminate\Support\Collection<int, array{site: Site, note: ?string}>
      */
+    /**
+     * Published posts that list this site among their related sites, newest
+     * first - the site page's "From the blog" block (SEO audit, 2026-10-24:
+     * the Top 5 wrecks post linked its 10 sites but none linked back). One
+     * cached site_id => post ids map for every site page.
+     *
+     * @return \Illuminate\Support\Collection<int, Post>
+     */
+    public static function mentioningSite(int $siteId)
+    {
+        $map = \Illuminate\Support\Facades\Cache::remember('posts.by_site', 600, function () {
+            $out = [];
+            foreach (self::published()->orderByDesc('published_at')->get(['id', 'related_sites']) as $p) {
+                foreach ($p->related_sites ?? [] as $entry) {
+                    $sid = (int) ($entry['site_id'] ?? 0);
+                    if ($sid && !in_array($p->id, $out[$sid] ?? [], true)) $out[$sid][] = $p->id;
+                }
+            }
+            return $out;
+        });
+        $ids = $map[$siteId] ?? [];
+        if (!$ids) return collect();
+        return self::published()->whereIn('id', $ids)->orderByDesc('published_at')->get(['id', 'title', 'slug', 'excerpt', 'cover_image', 'published_at']);
+    }
+
     public function rankedSites()
     {
         $entries = collect($this->related_sites ?? []);

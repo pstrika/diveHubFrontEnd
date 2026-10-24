@@ -70,6 +70,53 @@
                 </div>
             </section>
 
+            {{-- Latest guides and the groups (SEO audit, 2026-10-24). --}}
+            @if (($latestPosts ?? collect())->isNotEmpty() || ($publicGroups ?? collect())->isNotEmpty())
+            <section class="dh-home-more">
+                @if ($latestPosts->isNotEmpty())
+                <div>
+                    <div class="dh-section-head">
+                        <h2>From the blog</h2>
+                        <a class="dh-why" href="{{ route('Blog') }}">All guides</a>
+                    </div>
+                    <ul class="dh-site-posts">
+                        @foreach ($latestPosts as $post)
+                            <li>
+                                <a href="{{ route('Blog.show', $post->slug) }}">
+                                    @if ($post->cover_image)<img src="{{ asset($post->cover_image) }}" alt="" loading="lazy" width="72" height="54">@endif
+                                    <span><strong>{{ $post->title }}</strong>
+                                    @if ($post->published_at)<small>{{ $post->published_at->format('M j, Y') }}</small>@endif</span>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
+                @if ($publicGroups->isNotEmpty())
+                <div>
+                    <div class="dh-section-head">
+                        <h2>Diving groups</h2>
+                        <a class="dh-why" href="{{ route('Groups.public') }}">All groups</a>
+                    </div>
+                    <div class="dh-dtrips-more"><ul>
+                        @foreach ($publicGroups as $g)
+                            <li><a href="{{ route('Groups.show', ['group' => $g->slug]) }}">{{ $g->name }}</a></li>
+                        @endforeach
+                    </ul></div>
+                    <div class="dh-section-head" style="margin-top: 18px;">
+                        <h2>Dive trips by area</h2>
+                    </div>
+                    <div class="dh-dtrips-more"><ul>
+                        @foreach (\App\Http\Controllers\DiveTripsController::PAGES as $s => $p)
+                            @continue($p['kind'] !== 'area')
+                            <li><a href="{{ route('DiveTrips.show', $s) }}">{{ $p['name'] }}</a></li>
+                        @endforeach
+                    </ul></div>
+                </div>
+                @endif
+            </section>
+            @endif
+
             {{-- Account invitation as a band, not a modal (W1 note 5, F-04). --}}
             @php $__u = auth()->user(); @endphp
             @if(!$__u || !$__u->isNotGuest())

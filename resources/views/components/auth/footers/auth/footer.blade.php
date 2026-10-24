@@ -14,7 +14,8 @@
         <div class="col-lg-6">
           <ul class="nav nav-footer justify-content-center justify-content-lg-end">
           <li class="nav-item">
-              <a href="/home" class="nav-link text-muted">Home</a>
+              {{-- "/" not "/home": /home is a 301 (SEO audit, 2026-10-24). --}}
+              <a href="/" class="nav-link text-muted">Home</a>
             </li>
             <li class="nav-item">
               <a href="/AboutUs" class="nav-link text-muted">About us</a>
@@ -27,6 +28,9 @@
             </li>
             <li class="nav-item">
               <a href="/DataDeletion" class="nav-link text-muted">Data Deletion</a>
+            </li>
+            <li class="nav-item">
+              <a href="/DiveLogApp" class="nav-link text-muted">Logbook app</a>
             </li>
             <li class="nav-item">
               <a href="/Support" class="nav-link text-muted">Support</a>

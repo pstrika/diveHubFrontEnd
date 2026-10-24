@@ -6,6 +6,7 @@ Coverage runs from Stuart to Key West. Contact: support@divers-hub.com
 
 ## Plan a dive
 - [Today's dive trips](https://divers-hub.com/Trips): every scheduled boat dive from participating South Florida operators, by date, with departure time and site.
+- [Dive trips by area and type](https://divers-hub.com/DiveTrips): the next 7 days of departures for [Fort Lauderdale](https://divers-hub.com/DiveTrips/fort-lauderdale), [Palm Beach and Jupiter](https://divers-hub.com/DiveTrips/palm-beach), [Miami](https://divers-hub.com/DiveTrips/miami), [Key Largo and Islamorada](https://divers-hub.com/DiveTrips/key-largo), [Marathon](https://divers-hub.com/DiveTrips/marathon) and [Key West](https://divers-hub.com/DiveTrips/key-west), plus [shark dives](https://divers-hub.com/DiveTrips/shark-dives), [wreck dives](https://divers-hub.com/DiveTrips/wreck-dives) and [lobster dives](https://divers-hub.com/DiveTrips/lobster-dives).
 - [Dive operators](https://divers-hub.com/Operators): dive shops and charter boats with location, boats, sites they visit and contact details.
 - [Beach diving](https://divers-hub.com/BeachDiving): shore diving conditions and tides for Fort Lauderdale and West Palm Beach.
 - [Marine forecasts](https://divers-hub.com/Weather/jupiter): 7-day wave, wind and tide forecasts for South Florida dive towns.
@@ -18,11 +19,17 @@ Coverage runs from Stuart to Key West. Contact: support@divers-hub.com
 ## Tools
 - [Gas mix calculator](https://divers-hub.com/gasplanning): nitrox and trimix best-mix and MOD calculator.
 - [Decompression planner](https://divers-hub.com/DecoPlanner): free dive and deco schedule planner.
+- [Gas blending calculator](https://divers-hub.com/GasBlending): partial-pressure fills for nitrox, trimix and helitrox.
 - [Online dive waivers](https://divers-hub.com/Waivers)
+
+## Logbook and community
+- [Logbook by Divers Hub](https://divers-hub.com/DiveLogApp): free dive log for iPhone and the web. Downloads dives over Bluetooth (Shearwater, Oceanic and other libdivecomputer-supported computers), imports Garmin Descent .FIT, Shearwater Cloud, MacDive and UDDF files and Apple Watch dives, and combines logs from several computers on one dive.
+- [Diving groups](https://divers-hub.com/Groups): public groups for South Florida divers to find buddies and plan dives, such as the [Fort Lauderdale Diving Community](https://divers-hub.com/Groups/fort-lauderdale-diving-community) and [Lionfish Hunters](https://divers-hub.com/Groups/lionfish-hunters).
 
 ## Guides
 - [Blog](https://divers-hub.com/Blog): local guides on wrecks, seasons, lobster season, lionfish, nitrox and more.
 
 ## About
 - [About Divers Hub](https://divers-hub.com/AboutUs)
+- [Support](https://divers-hub.com/Support)
 - [Privacy policy](https://divers-hub.com/PrivacyPolicy)

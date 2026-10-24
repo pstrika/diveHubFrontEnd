@@ -94,6 +94,18 @@ Route::get('Support', function () {
     return view('pages.Support', compact('SEO'));
 })->middleware('guest')->name('Support');
 
+// Public page for the Logbook app (SEO audit, 2026-10-24): /Logbook is
+// members-only, so the app had no page search engines or app-store
+// reviewers could read.
+Route::get('DiveLogApp', function () {
+    $SEO = [
+        "title" => "Logbook by Divers Hub – Free Dive Log App",
+        "desc" => "A free dive log for iPhone and the web: Bluetooth downloads, Garmin, Shearwater, MacDive and Apple Watch imports, and every computer on one chart.",
+        "canonical" => route("DiveLogApp"),
+    ];
+    return view('pages.DiveLogApp', compact('SEO'));
+})->middleware('guest')->name('DiveLogApp');
+
 /* Privacy Policy */
 Route::get('PrivacyPolicy', function () {
     $SEO = [
@@ -183,6 +195,10 @@ Route::get('login/apple/callback', [App\Http\Controllers\Auth\AppleController::c
 // zero route caching for this exact reason).
 Route::get('Trips/{date}', 'App\Http\Controllers\TripsController@show')->middleware('guest');
 Route::get('Trips/', 'App\Http\Controllers\TripsController@show')->middleware('guest')->name('Trips');
+// Indexable schedule pages per area and per kind of dive (SEO audit,
+// 2026-10-24): the next 7 days from every operator, see DiveTripsController.
+Route::get('DiveTrips', 'App\Http\Controllers\DiveTripsController@index')->middleware('guest')->name('DiveTrips');
+Route::get('DiveTrips/{slug}', 'App\Http\Controllers\DiveTripsController@show')->middleware('guest')->where('slug', '[a-z0-9-]+')->name('DiveTrips.show');
 
 Route::middleware(['auth', 'admin'])->group(function () {
     // Define admin-only routes here

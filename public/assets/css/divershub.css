@@ -4993,3 +4993,47 @@ body.dh-photo-viewer-open { overflow: hidden; }
 /* Site journal: dive mode as its icon instead of "Closed/Open Circuit" (2026-10-22). */
 .dh-journal-mode { display: inline-flex; align-items: center; width: 22px; height: 22px; margin-right: 6px; flex: 0 0 auto; color: var(--dh-deep); vertical-align: middle; }
 .dh-journal-mode svg, .dh-journal-mode img { width: 100%; height: 100%; }
+
+/* Schedule pages per area / kind of dive (/DiveTrips, SEO audit 2026-10-24). */
+.dh-dtrips-intro { max-width: 72ch; margin: 0 0 var(--dh-space-3); color: var(--dh-ink); }
+.dh-dtrips-intro p { margin: 0 0 8px; line-height: 1.55; }
+.dh-dtrips-meta { font-size: .85rem; color: var(--dh-muted); }
+.dh-dtrips-meta a, .dh-dtrips-intro a { color: var(--dh-sea); }
+.dh-dtrips-ops, .dh-dtrips-more { margin: var(--dh-space-5) 0 var(--dh-space-3); }
+.dh-dtrips-ops ul, .dh-dtrips-more ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.dh-dtrips-ops li, .dh-dtrips-more li { background: #fff; border: 1px solid var(--dh-line); border-radius: 999px; padding: 6px 14px; font-size: .9rem; }
+.dh-dtrips-ops li span { color: var(--dh-muted); margin-left: 6px; font-size: .8rem; }
+.dh-dtrips-ops a, .dh-dtrips-more a { color: var(--dh-ink); font-weight: 700; text-decoration: none; }
+.dh-dtrips-more ul.dh-dtrips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.dh-dtrips-grid li { border-radius: 14px; padding: 14px 16px; display: grid; gap: 4px; }
+.dh-dtrips-grid li span { color: var(--dh-sea); font-size: .8rem; font-weight: 700; }
+.dh-dtrips-grid li p { margin: 0; color: var(--dh-muted); font-size: .85rem; line-height: 1.45; }
+/* "From the blog" on a dive-site page (SEO audit, 2026-10-24). */
+.dh-site-posts { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.dh-site-posts a { display: flex; gap: 12px; align-items: center; text-decoration: none; color: var(--dh-ink); }
+.dh-site-posts img { width: 72px; height: 54px; object-fit: cover; border-radius: 8px; flex: none; }
+.dh-site-posts strong { display: block; font-size: .95rem; line-height: 1.3; }
+.dh-site-posts small { color: var(--dh-muted); font-size: .78rem; }
+.dh-site-posts a:hover strong { color: var(--dh-sea); }
+.dh-area-links { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.dh-area-links a { color: var(--dh-sea); font-weight: 600; }
+/* Homepage: latest guides, groups and area schedules (SEO audit, 2026-10-24). */
+.dh-home-more { display: grid; grid-template-columns: 1fr 1fr; gap: var(--dh-space-6); margin: var(--dh-space-6) 0 0; }
+.dh-home-more .dh-dtrips-more { margin: 0; }
+@media (max-width: 767px) { .dh-home-more { grid-template-columns: 1fr; gap: var(--dh-space-4); } }
+/* Public Logbook app page (/DiveLogApp, SEO audit 2026-10-24). */
+.dh-app-hero { background: linear-gradient(135deg, var(--dh-deep, #0b2a3a), #0e5d7a); color: #fff; border-radius: 16px; padding: 32px 28px; margin: var(--dh-space-3) 0 var(--dh-space-4); }
+.dh-app-hero h1 { color: #fff; font-size: clamp(1.6rem, 3.5vw, 2.3rem); font-weight: 800; margin: 0 0 10px; text-wrap: balance; }
+.dh-app-hero p { max-width: 66ch; color: rgba(255,255,255,.88); line-height: 1.55; margin: 0 0 14px; }
+.dh-app-hero a { color: #9fdcf0; }
+.dh-app-stores { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 14px; }
+.dh-app-stores .dh-btn { display: inline-flex; align-items: center; gap: 8px; background: #fff; color: var(--dh-deep, #0b2a3a); }
+.dh-app-soon { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid rgba(255,255,255,.35); border-radius: 999px; font-size: .9rem; color: #fff; }
+.dh-app-web { font-size: .9rem; margin: 0 !important; }
+.dh-app-features h2 { font-size: 1.25rem; font-weight: 800; color: var(--dh-ink); margin: 0 0 12px; }
+.dh-app-features ul { list-style: none; padding: 0; margin: 0 0 var(--dh-space-4); display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.dh-app-features li { display: flex; gap: 12px; background: #fff; border: 1px solid var(--dh-line); border-radius: 14px; padding: 16px; }
+.dh-app-features li > .material-icons-round { color: var(--dh-sea); font-size: 26px; flex: none; }
+.dh-app-features h3 { font-size: 1rem; font-weight: 800; margin: 0 0 4px; color: var(--dh-ink); }
+.dh-app-features p { margin: 0; color: var(--dh-muted); font-size: .9rem; line-height: 1.45; }
+.dh-app-how { margin-bottom: var(--dh-space-4); }
