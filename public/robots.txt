@@ -15,4 +15,10 @@ Disallow: /Trips
 User-agent: meta-externalagent
 Disallow: /Trips
 
+# Meta's search indexer (2026-10-24): ~100,000 requests a day to /Trips filter
+# combinations, many mangled ("®ion=" for "&region="), maxing out the PHP
+# workers. Kept off the trip board only; the /DiveTrips pages stay open to it.
+User-agent: meta-webindexer
+Disallow: /Trips
+
 Sitemap: https://divers-hub.com/sitemap.xml
