@@ -22,7 +22,7 @@ class GasBlendingController extends Controller
     {
         $SEO = [
             "title" => "Trimix & Helitrox Gas Blending Calculator | Divers Hub",
-            "desc" => "Blend standard trimix and Helitrox mixes, top off an existing mix, or bleed down a cylinder to a new mix - free partial-pressure blending calculators for real gas blending.",
+            "desc" => "Free partial-pressure blending calculators: blend trimix and Helitrox, top off an existing mix, or bleed a cylinder down to a new mix.",
             "keywords" => "trimix blending calculator, helitrox blending, top off gas mix, bleed down cylinder, partial pressure blending, gas blending scuba",
             "canonical" => route("GasBlending"),
         ];

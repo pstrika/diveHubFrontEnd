@@ -935,7 +935,7 @@ class NDLController extends Controller
     {
         return [
             'title' => 'Free Scuba Decompression Dive Planner | Divers Hub',
-            'desc' => 'Plan technical and recreational dives for free: gradient factors, multi-gas OC deco schedules, CCR bailout tables, gas consumption and a full deco profile chart - built for real dive planning, not a toy calculator.',
+            'desc' => 'Free dive planner for recreational and technical dives: gradient factors, multi-gas OC deco schedules, CCR bailout, gas consumption and a profile chart.',
             'keywords' => 'decompression planner, dive planner, deco planner, gradient factors calculator, technical diving, CCR bailout planner, dive deco tables, tech diving florida, scuba decompression calculator',
             'canonical' => route('DecoPlanner'),
         ];

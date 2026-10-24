@@ -281,8 +281,9 @@ class SiteController extends Controller
             }
             $levelSentence = DiveLevel::isValid($site->level) ? " Suitable for " . DiveLevel::name($site->level) . " divers." : "";
             $extra = $bits ? " " . ucfirst(implode(", ", $bits)) . "." : "";
-            // Reefs always; a wreck only while it still fits a snippet.
-            if ($extra !== "" && ($site->type !== "wreck" || mb_strlen($desc . $extra . $levelSentence) <= 160)) {
+            // Only while it still fits a snippet (160 characters) - reefs
+            // with long names ran over (crawl, 2026-10-25).
+            if ($extra !== "" && mb_strlen($desc . $extra . $levelSentence) <= 160) {
                 $desc .= $extra;
             }
         }

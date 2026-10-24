@@ -170,7 +170,7 @@ class OperatorController extends Controller
     $operatorNames = Operator::pluck('operatorName')->toArray();
     $SEO = array(
         "title" => "South Florida Dive Shops & Charter Boats | Divers Hub",
-        "desc" => "Every scuba diving operator from Stuart to Key West, including Miami, Fort Lauderdale, West Palm Beach and the Florida Keys: boats, schedules and the sites they run.",
+        "desc" => "Every scuba diving operator from Stuart to Key West, including Miami, Fort Lauderdale, Palm Beach and the Keys: boats, schedules and the sites they run.",
         "keywords" => implode(', ', $operatorNames),
         "canonical" => route("Operators"),
     );
