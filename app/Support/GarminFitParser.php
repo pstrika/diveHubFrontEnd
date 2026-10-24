@@ -239,12 +239,19 @@ class GarminFitParser
         $decoModel = ['type' => 'buhlmann', 'gfLow' => (int) ($settings[2] ?? 0), 'gfHigh' => (int) ($settings[3] ?? 0), 'conservatism' => 0];
         if (!$decoModel['gfHigh']) $decoModel = null;
 
-        // GPS entry point -> a coordinates-only site for the wizard.
+        // GPS entry point -> a coordinates-only site for the wizard. The
+        // exit point (session end_position, fields 38/39) is there when the
+        // watch got a fix back at the surface (Pablo, 2026-10-24: the dive
+        // page's Entry & Exit card, drift distance and current).
         $siteKey = null; $location = null;
         if (isset($session[3], $session[4])) {
             $lat = round($session[3] * self::SEMI, 6); $lon = round($session[4] * self::SEMI, 6);
             if (abs($lat) > 0.0001 || abs($lon) > 0.0001) {
                 $location = ['latitude' => $lat, 'longitude' => $lon, 'altitude' => null];
+                if (isset($session[38], $session[39])) {
+                    $xlat = round($session[38] * self::SEMI, 6); $xlon = round($session[39] * self::SEMI, 6);
+                    if (abs($xlat) > 0.0001 || abs($xlon) > 0.0001) { $location['exit_latitude'] = $xlat; $location['exit_longitude'] = $xlon; }
+                }
                 // Dives within ~100 m of each other share one site.
                 $siteKey = 'gps:' . round($lat, 3) . ',' . round($lon, 3);
                 $this->sites[$siteKey] ??= [

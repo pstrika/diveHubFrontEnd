@@ -966,7 +966,66 @@
 
                     {{-- Photos (Pablo, 2026-10-17): up to 20, private to the diver;
                          each can be offered to the site's public page, which goes
-                         through the normal photo review. dive-photos.js. --}}
+                         through the normal photo review. dive-photos.js.
+                         With a GPS entry and exit on the dive (Pablo, 2026-10-24) the
+                         Entry & Exit card sits beside it: 8/4 from tablet up, stacked
+                         on phones. --}}
+                    <div class="row">
+                    @if (!empty($drift))
+                        <div class="col-12 col-md-4">
+                            <div class="card p-0 position-relative mt-3 z-index-2 mb-4" id="diveDriftCard">
+                                <div class="dh-calc-inputs-head" data-collapsible-toggle role="button" tabindex="0" aria-expanded="true" aria-controls="diveDriftBody">
+                                    <span class="material-icons-round" aria-hidden="true">route</span>
+                                    <h3>Entry &amp; Exit</h3>
+                                    <span class="material-icons-round dh-calc-inputs-chevron" aria-hidden="true">expand_less</span>
+                                </div>
+                                <div class="card-body" id="diveDriftBody">
+                                    <div class="dh-dive-drift-map" id="diveDriftMap" role="img" aria-label="Map of the entry and exit points"></div>
+                                    <div class="dh-dive-drift-legend text-sm text-secondary">
+                                        <span><i class="dh-dive-drift-dot is-entry"></i> Entry</span>
+                                        <span><i class="dh-dive-drift-dot is-exit"></i> Exit</span>
+                                        @if (!empty($drift['from']))<span>from the {{ $drift['from'] }}</span>@endif
+                                    </div>
+                                    @php
+                                        $driftMin = max(1, (int) round($drift['drift_seconds'] / 60));
+                                        $fmtClock = fn ($s) => sprintf('%d:%02d', intdiv((int) $s, 60), ((int) $s) % 60);
+                                    @endphp
+                                    <div class="dh-dive-drift-stats">
+                                        <div>
+                                            <div class="dh-dive-header-stat-label">Distance drifted</div>
+                                            <div class="dh-dive-header-stat-value" id="diveDriftDistance" data-meters="{{ $drift['distance_m'] }}"></div>
+                                        </div>
+                                        <div class="dh-dive-drift-current">
+                                            <div class="dh-dive-header-stat-label">Current
+                                                <button type="button" class="dh-help-btn" aria-label="How the current is worked out" aria-expanded="false" aria-controls="diveDriftHelp"><span class="material-icons-round" aria-hidden="true">help_outline</span></button>
+                                            </div>
+                                            <div class="dh-dive-header-stat-value">{{ $drift['knots'] !== null ? number_format($drift['knots'], 1) . ' kn' : '—' }}</div>
+                                            <div class="text-sm text-secondary">
+                                                @if ($drift['knots'] === null)
+                                                    too short to tell
+                                                @elseif ($drift['wreck'])
+                                                    over {{ $driftMin }} min from leaving the wreck
+                                                @else
+                                                    over the {{ $driftMin }} min dive
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="dh-help-box text-sm" id="diveDriftHelp" hidden>
+                                        <strong>How the current is worked out.</strong>
+                                        The distance between the computer's GPS fix going in and its fix back at the surface, divided by the time you were drifting, in nautical miles per hour.
+                                        @if ($drift['wreck'])
+                                            This is a wreck dive, so the clock starts when you left the wreck: the start of the final ascent, found by walking back from {{ $drift['ascent_end_seconds'] !== null ? 'your first deco stop' : 'the ascent' }} while you were climbing at least 3 m (10 ft) a minute - here at {{ $fmtClock($drift['start_seconds']) }}. It ends when the log ends, at {{ $fmtClock($drift['exit_seconds']) }}.
+                                        @else
+                                            This is not a wreck dive, so the clock runs the whole dive, from the start to the end of the log at {{ $fmtClock($drift['exit_seconds']) }}.
+                                        @endif
+                                        The straight line between the two fixes is a floor: you will have covered at least that much. A fix taken on the boat, or a long surface swim, moves the exit point and the number with it.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                    <div class="{{ !empty($drift) ? 'col-12 col-md-8' : 'col-12' }}">
                     <div class="card p-0 position-relative mt-3 z-index-2 mb-4" id="divePhotosCard">
                         <div class="dh-calc-inputs-head" data-collapsible-toggle role="button" tabindex="0" aria-expanded="true" aria-controls="divePhotosBody">
                             <span class="material-icons-round" aria-hidden="true">photo_library</span>
@@ -985,6 +1044,8 @@
                             </label>
                             <span class="text-sm text-secondary ms-2" id="divePhotosStatus" role="status"></span>
                         </div>
+                    </div>
+                    </div>
                     </div>
 
                     @if ($videosEnabled)
@@ -1461,6 +1522,8 @@
             window.dhBuddySearchUrl = "{{ route('Logbook.searchUsers') }}";
             window.dhDiveTankConfig = @json($tankConfig);
             window.dhDiveConditionsUrl = "{{ route('DiveDetails.updateConditions', $dive->id) }}";
+            window.dhDiveDrift = @json($drift ?? null);
+            window.dhMapboxToken = @json($mapboxToken ?? null);
             // One-page PDF export (dive-print.js), planner-style page
             // snapshot in portrait (Pablo, 2026-10-16: "something similar to
             // what we created for the pdf of the deco planning, portrait").
@@ -1618,6 +1681,12 @@
             </script>
         @endif
         <script src="{{ asset('assets') }}/js/dive-photos.js?v={{ config('divehub.version') }}"></script>
+        @if (!empty($drift))
+            {{-- Entry & Exit map (Pablo, 2026-10-24): Mapbox only on dives that have both points. --}}
+            <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
+            <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
+            <script src="{{ asset('assets') }}/js/dive-drift.js?v={{ config('divehub.version') }}"></script>
+        @endif
         @if ($videosEnabled)
             <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.1.0/dist/tus.min.js"></script>
             <script src="{{ asset('assets') }}/js/dive-videos.js?v={{ config('divehub.version') }}"></script>

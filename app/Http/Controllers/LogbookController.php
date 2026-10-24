@@ -776,6 +776,10 @@ class LogbookController extends Controller
             'decoFrom' => $decoFrom,
             'heartRateFrom' => $heartRateFrom,
             'heartRate' => $heartRate,
+            // Entry & Exit card (Pablo, 2026-10-24): only when a computer on
+            // this dive fixed both GPS points.
+            'drift' => \App\Support\DiveDrift::resolve($dive),
+            'mapboxToken' => 'pk.eyJ1IjoicHN0cmlrYSIsImEiOiJjbHZsc2p2bXcyY240MmtuMDcydHJzd2UxIn0.KBf79cvk47WseBc9rNu6gQ',
             'sameDive' => $sameDive,
             'site' => $dive->site(),
             'operators' => $operators->map(fn ($o) => [
