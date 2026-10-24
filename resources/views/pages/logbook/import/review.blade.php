@@ -100,7 +100,7 @@
                             <div class="card p-0 position-relative mt-3 z-index-2 mb-4 dh-import-group is-check">
                                 <div class="card-body">
                                     <h3 class="h5 mb-1 d-flex align-items-center gap-2"><span class="material-icons-round" aria-hidden="true">rule</span> Check these values &middot; {{ count($issueRows) }}</h3>
-                                    <p class="text-sm text-secondary">The file gives these dives a value no dive can have - usually the computer logged no reading and the app wrote a placeholder. Each one is set to the suggestion shown; change it if you know better. Metric units.</p>
+                                    <p class="text-sm text-secondary">The file gives these dives a value no dive can have - usually the computer logged no reading and the app wrote a placeholder. Each one is set to the suggestion shown; change it if you know better.</p>
                                     <div class="dh-import-list">
                                         @foreach ($issueRows as $row)
                                             <div class="dh-import-row dh-import-fix-row">
@@ -109,12 +109,23 @@
                                                     @if ($row['computer']) &middot; {{ $row['computer'] }} @endif
                                                     <div class="dh-import-fixes">
                                                         @foreach ($row['issues'] as $iss)
+                                                            {{-- Shown in the diver's unit (°F / ft when imperial, Pablo
+                                                                 2026-10-23); the hidden field posts metric, the inline
+                                                                 script below converts both ways. --}}
+                                                            @php $kind = str_ends_with($iss['field'], '_temp_c') ? 'temp' : (str_ends_with($iss['field'], '_depth_m') ? 'depth' : ''); @endphp
                                                             <label class="dh-import-fix">
                                                                 <span class="dh-import-fix-label">{{ $iss['label'] }}</span>
-                                                                <span class="dh-import-fix-file">File says {{ \App\Support\DiveImportChecks::display($iss['field'], (float) $iss['value']) }} {{ $iss['unit'] }}</span>
+                                                                <span class="dh-import-fix-file">File says
+                                                                    @if ($kind)
+                                                                        <span data-unit-value="{{ $kind }}" data-metric="{{ $iss['value'] }}"></span>
+                                                                    @else
+                                                                        {{ \App\Support\DiveImportChecks::display($iss['field'], (float) $iss['value']) }} {{ $iss['unit'] }}
+                                                                    @endif
+                                                                </span>
                                                                 <span class="dh-import-fix-input">
-                                                                    <input type="number" step="any" inputmode="decimal" name="fix[{{ $row['pos'] }}][{{ $iss['field'] }}]" value="{{ \App\Support\DiveImportChecks::display($iss['field'], (float) ($iss['chosen'] ?? $iss['suggested'])) }}" aria-label="{{ $iss['label'] }}">
-                                                                    <span>{{ $iss['unit'] }}</span>
+                                                                    <input type="number" step="any" inputmode="decimal" class="dh-import-fix-value" data-kind="{{ $kind }}" data-metric="{{ $iss['chosen'] ?? $iss['suggested'] }}" value="{{ \App\Support\DiveImportChecks::display($iss['field'], (float) ($iss['chosen'] ?? $iss['suggested'])) }}" aria-label="{{ $iss['label'] }}">
+                                                                    <input type="hidden" name="fix[{{ $row['pos'] }}][{{ $iss['field'] }}]" value="{{ \App\Support\DiveImportChecks::display($iss['field'], (float) ($iss['chosen'] ?? $iss['suggested'])) }}">
+                                                                    <span data-unit-label="{{ $kind }}">{{ $iss['unit'] }}</span>
                                                                 </span>
                                                                 <span class="dh-import-fix-why text-sm text-secondary">{{ $iss['why'] }}</span>
                                                             </label>
@@ -281,6 +292,49 @@
     @endpush
 @push('js')
     <script>
+        // "Check these values" inputs: shown in the page's unit, posted in
+        // metric (the hidden field). Follows the Switch to Metric/Imperial
+        // button like every other value on the page.
+        (function () {
+            var fixes = document.querySelectorAll('.dh-import-fix-value');
+            if (!fixes.length) return;
+            function toDisplay(metric, kind, unit) {
+                if (unit === 'imperial' && kind === 'temp') return Math.round(window.dhUnits.cToF(metric) * 10) / 10;
+                if (unit === 'imperial' && kind === 'depth') return Math.round(window.dhUnits.mToFt(metric) * 10) / 10;
+                return Math.round(metric * 100) / 100;
+            }
+            function toMetric(shown, kind, unit) {
+                if (unit === 'imperial' && kind === 'temp') return (shown - 32) * 5 / 9;
+                if (unit === 'imperial' && kind === 'depth') return shown / 3.28084;
+                return shown;
+            }
+            function labelFor(kind, unit) {
+                if (kind === 'temp') return unit === 'imperial' ? '°F' : '°C';
+                if (kind === 'depth') return unit === 'imperial' ? 'ft' : 'm';
+                return 'min';
+            }
+            function sync() {
+                var unit = window.dhUnits.getUnit();
+                fixes.forEach(function (inp) {
+                    var kind = inp.getAttribute('data-kind'), metric = parseFloat(inp.getAttribute('data-metric'));
+                    if (kind === '') metric = parseFloat(inp.value); // duration: minutes either way
+                    if (!isNaN(metric)) inp.value = kind === '' ? inp.value : toDisplay(metric, kind, unit);
+                    var lab = inp.parentNode.querySelector('[data-unit-label]');
+                    if (lab) lab.textContent = labelFor(kind, unit);
+                });
+            }
+            fixes.forEach(function (inp) {
+                inp.addEventListener('input', function () {
+                    var kind = inp.getAttribute('data-kind'), v = parseFloat(inp.value), hidden = inp.parentNode.querySelector('input[type=hidden]');
+                    if (isNaN(v)) { hidden.value = ''; return; }
+                    var metric = kind === '' ? v : Math.round(toMetric(v, kind, window.dhUnits.getUnit()) * 100) / 100;
+                    if (kind !== '') inp.setAttribute('data-metric', metric);
+                    hidden.value = metric;
+                });
+            });
+            document.addEventListener('dh-units-changed', sync);
+            if (window.dhUnits) sync();
+        })();
         document.querySelectorAll('[data-tick-all],[data-untick-all]').forEach(function (b) {
             b.addEventListener('click', function () {
                 var name = b.getAttribute('data-tick-all') || b.getAttribute('data-untick-all');
