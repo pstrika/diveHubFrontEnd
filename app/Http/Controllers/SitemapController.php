@@ -205,6 +205,10 @@ class SitemapController extends Controller
             // crawlers the other two aren't separate pages.
             'gasplanning' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
             'DecoPlanner' => ['priority' => 0.8, 'changefreq' => Url::CHANGE_FREQUENCY_WEEKLY],
+            // Live and indexable but missing until the SEO audit of
+            // 2026-10-24: the trimix/helitrox blender and the support page.
+            'GasBlending' => ['priority' => 0.7, 'changefreq' => Url::CHANGE_FREQUENCY_MONTHLY],
+            'Support' => ['priority' => 0.3, 'changefreq' => Url::CHANGE_FREQUENCY_MONTHLY],
             // 'home' deliberately excluded (SEO audit, 2026-09-28): it now
             // just 301s to '/', so listing it would point crawlers at a
             // redirect instead of a real page.

@@ -31,6 +31,7 @@ class BlogArticleController extends Controller
 
         $data = $request->validate([
             'title' => 'required|string|max:255',
+            'seo_title' => 'nullable|string|max:70',
             'slug' => 'nullable|string|max:255|alpha_dash:ascii',
             'category' => 'required|string|max:100',
             'tags' => 'nullable|array',
@@ -63,7 +64,8 @@ class BlogArticleController extends Controller
         $post ??= new Post();
 
         $post->title = $data['title'];
-        $post->slug = $post->exists ? $post->slug : ($data['slug'] ?? Post::uniqueSlugFrom($data['title']));
+        if (array_key_exists('seo_title', $data)) $post->seo_title = $data['seo_title'] ?: null;
+        $post->slug =$post->exists ? $post->slug : ($data['slug'] ?? Post::uniqueSlugFrom($data['title']));
         $post->category = $data['category'];
         $post->tags = $data['tags'] ?? [];
         $post->min_level = $data['min_level'] ?? null;

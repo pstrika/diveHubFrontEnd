@@ -137,8 +137,10 @@ class SiteController extends Controller
 
         /*Provide SEO metadata */
         $SEO = array(
-            "title" => "Beach diving in South Florida",
-            "desc" => "Shore diving conditions, tides and dive sites for Fort Lauderdale and West Palm Beach.",
+            // 29-char title and 86-char description flagged short (SEO
+            // audits, 2026-09-28 and 2026-10-24).
+            "title" => "Beach Diving in South Florida: Tides & Conditions",
+            "desc" => "Shore diving in Fort Lauderdale and Palm Beach: today's tides, the next high tide, water conditions and the beach dive sites to walk in from, updated daily.",
             "keywords" => "beach diving, fort lauderdale beach diving, palm beach beach diving, shore diving, tides",
             "canonical" => route("BeachDiving")
         );
@@ -248,14 +250,17 @@ class SiteController extends Controller
         if ($site->type === "wreck" && $site->wreckData) {
             $wreckData = json_decode($site->wreckData, true);
             if (is_array($wreckData) && !empty($wreckData['type'])) {
-                $wreckBits = (!empty($wreckData['length']) ? $wreckData['length'] . '-ft ' : '') . $wreckData['type'];
-                $sentence = "A " . $wreckBits;
+                $wreckBits = (!empty($wreckData['length']) ? $wreckData['length'] . '-ft ' : '') . mb_strtolower($wreckData['type']);
+                $sentence = (preg_match('/^[aeiou8]/i', $wreckBits) ? "An " : "A ") . $wreckBits;
                 if (!empty($wreckData['sunkDate'])) {
                     $sentence .= " sunk " . $wreckData['sunkDate'];
                 }
                 $desc .= " " . $sentence . ".";
             }
-        } elseif ($site->type !== "wreck") {
+        }
+        // A wreck with no sunk date (Titan, SEO audit 2026-10-24) stays
+        // short: it gets the depth/access sentence reefs get too.
+        if ($site->type !== "wreck" || mb_strlen($desc) < 100) {
             // Reefs and "other" sites have no wreckData to draw the extra
             // sentence above from, leaving 186 of them under 100 chars
             // (SEO audit, 2026-09-28 re-audit). avgDepth and access are
@@ -274,8 +279,11 @@ class SiteController extends Controller
             if ($accessPhrase) {
                 $bits[] = $accessPhrase;
             }
-            if ($bits) {
-                $desc .= " " . ucfirst(implode(", ", $bits)) . ".";
+            $levelSentence = DiveLevel::isValid($site->level) ? " Suitable for " . DiveLevel::name($site->level) . " divers." : "";
+            $extra = $bits ? " " . ucfirst(implode(", ", $bits)) . "." : "";
+            // Reefs always; a wreck only while it still fits a snippet.
+            if ($extra !== "" && ($site->type !== "wreck" || mb_strlen($desc . $extra . $levelSentence) <= 160)) {
+                $desc .= $extra;
             }
         }
 

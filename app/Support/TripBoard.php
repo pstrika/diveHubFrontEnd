@@ -354,7 +354,7 @@ final class TripBoard
             'availability'  => self::availability($trip, $departed),
             'bookUrl'       => $departed ? null : ($trip->linkToBook ?: null),
             'detailsUrl'    => route('TripDetails', ['tripId' => $trip->id]),
-            'operatorUrl'   => route('OperatorDetails', ['id' => $trip->operatorId]),
+            'operatorUrl'   => \App\Models\Operator::urlFor($trip->operatorId),
             'siteUrl'       => $first ? route('SiteDetails') . '/' . ($first->slug ?? $first->id) : null,
             // For the trip finder's desktop/tablet card photo (Pablo,
             // 2026-10-09) - null for every other caller, which doesn't pass

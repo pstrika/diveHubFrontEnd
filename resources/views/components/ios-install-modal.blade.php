@@ -19,7 +19,13 @@
     every non-Safari iOS browser's own share/menu placement is different
     (and Pablo found Chrome-iOS's Share Sheet not to be reachable at all
     on his device) - Safari is the one iOS browser this always works on.
+
+    Kept in a <template> (SEO audit, 2026-10-24): as plain markup its text
+    ("This browser doesn't support adding Divers Hub...") sat in the HTML of
+    every page, where search engines read it as page content. The modal is
+    added to the page the first time it's opened.
 --}}
+<template id="dh-ios-install-tpl">
 <div class="modal fade" id="dh-ios-install-modal" tabindex="-1" role="dialog" aria-labelledby="dh-ios-install-title" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -71,11 +77,18 @@
         </div>
     </div>
 </div>
+</template>
 
 @push('js')
 <script>
     function dhShowIosInstallModal(isSafari) {
         var el = document.getElementById('dh-ios-install-modal');
+        if (!el) {
+            var tpl = document.getElementById('dh-ios-install-tpl');
+            if (!tpl) return;
+            document.body.appendChild(tpl.content.cloneNode(true));
+            el = document.getElementById('dh-ios-install-modal');
+        }
         if (!el || !window.bootstrap) return;
 
         document.getElementById('dh-ios-steps-safari').hidden = !!isSafari === false;

@@ -326,6 +326,10 @@ class GroupController extends Controller
     private function groupTabTitle(Group $group): string
     {
         $title = $group->name . ' | Divers Hub';
+        // A short name says nothing in results ("Lionfish Hunters | Divers
+        // Hub", 29 characters - SEO audit, 2026-10-24): say what it is.
+        $longer = $group->name . ' – Florida Diving Group | Divers Hub';
+        if (mb_strlen($title) < 40 && mb_strlen($longer) <= 60) return $longer;
 
         return mb_strlen($title) > 60 ? $group->name : $title;
     }

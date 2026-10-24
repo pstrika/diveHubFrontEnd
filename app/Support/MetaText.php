@@ -23,7 +23,12 @@ final class MetaText
             return $text;
         }
 
-        $sentences = preg_split('/(?<=[.!?])\s+/u', $text) ?: [$text];
+        // A sentence ends at . ! ? followed by a capital, digit or opening
+        // quote - not at an abbreviation (SEO audit, 2026-10-24: "the best
+        // places in the U.S. to dive" was cut after "U.S.", leaving an
+        // 85-character description). Initials (U.S., D.C.) and the
+        // abbreviations Florida dive copy uses (Ft., St., Mt.) never end one.
+        $sentences = preg_split('/(?<!\b[A-Z]\.[A-Z]\.)(?<!\b[A-Z]\.)(?<!\bFt\.)(?<!\bSt\.)(?<!\bMt\.)(?<!\bMr\.)(?<!\bDr\.)(?<!\bvs\.)(?<!\bapprox\.)(?<=[.!?])\s+(?=[\p{Lu}0-9"“‘(])/u', $text) ?: [$text];
         $out = '';
         foreach ($sentences as $sentence) {
             $candidate = $out === '' ? $sentence : $out . ' ' . $sentence;
@@ -32,7 +37,9 @@ final class MetaText
             }
             $out = $candidate;
         }
-        if ($out !== '') {
+        // Whole sentences, unless they come to well under the limit: then a
+        // longer description cut at a word reads better in results.
+        if ($out !== '' && mb_strlen($out) >= $max * 0.6) {
             return $out;
         }
 

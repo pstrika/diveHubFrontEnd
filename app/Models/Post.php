@@ -26,6 +26,7 @@ class Post extends Model
 
     protected $fillable = [
         'title',
+        'seo_title',
         'slug',
         'category',
         'tags',

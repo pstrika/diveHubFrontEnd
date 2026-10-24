@@ -71,7 +71,7 @@
                                         <img src="{{ asset('assets') }}{{ $operatorLogo }}" alt="" style="width: 28px; height: 28px; object-fit: contain;" class="me-1">
                                     @endif
                                     @if($operatorId)
-                                        <a href="{{ route('OperatorDetails', ['id' => $operatorId]) }}">{{ $operatorName }}</a>
+                                        <a href="{{ \App\Models\Operator::urlFor($operatorId) }}">{{ $operatorName }}</a>
                                     @else
                                         {{ $operatorName }}
                                     @endif

@@ -212,7 +212,7 @@ class EventController extends Controller
             'availability' => ['state' => 'cancelled', 'label' => 'Cancelled', 'count' => null],
             'bookUrl' => null,
             'detailsUrl' => null,
-            'operatorUrl' => $event->operatorId ? route('OperatorDetails', ['id' => $event->operatorId]) : null,
+            'operatorUrl' => \App\Models\Operator::urlFor($event->operatorId),
             'siteUrl' => null,
             'booked' => (bool) $event->booked,
             'eventId' => $event->id,

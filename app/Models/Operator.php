@@ -19,4 +19,20 @@ class Operator extends Model
         'rate',
         'votes',
     ];
+
+    /** id => slug for every operator, loaded once per request (a few dozen rows). */
+    private static ?array $slugs = null;
+
+    /**
+     * The operator page's canonical URL from an operator id: the slug,
+     * not the numeric id (SEO audit, 2026-10-24: 114 trip cards on /Trips
+     * linked to /OperatorDetails/48, each a 301, and Google kept listing
+     * the numeric URL).
+     */
+    public static function urlFor($id): ?string
+    {
+        if (!$id) return null;
+        self::$slugs ??= self::query()->pluck('slug', 'id')->all();
+        return route('OperatorDetails', ['id' => self::$slugs[(int) $id] ?? null ?: $id]);
+    }
 }

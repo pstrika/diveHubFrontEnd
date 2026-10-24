@@ -42,6 +42,13 @@
                                         <p class="dh-hint" style="margin-top: 4px;">/Blog/{{ $post->slug }} - only an Admin can change this.</p>
                                     </div>
                                 @endif
+                                {{-- Optional search title (SEO audit, 2026-10-24): Google shows
+                                     about 60 characters; a longer title is cut off in results. --}}
+                                <div class="dh-field">
+                                    <label for="seo_title">Search title <span class="dh-hint" style="display:inline">(optional)</span></label>
+                                    <input type="text" id="seo_title" name="seo_title" maxlength="70" value="{{ old('seo_title', $post->seo_title) }}" placeholder="Leave empty to use the title">
+                                    <p class="dh-hint">What Google shows. Use it when the title is longer than 60 characters: <span id="seoTitleCount"></span></p>
+                                </div>
                                 <div class="dh-field">
                                     <label for="excerpt">Excerpt</label>
                                     <textarea id="excerpt" name="excerpt" rows="2" maxlength="500">{{ old('excerpt', $post->excerpt) }}</textarea>
@@ -193,6 +200,18 @@
         @if($post->exists && $post->body)
             try { quill.setContents(JSON.parse(@json($post->body))); } catch (e) {}
         @endif
+
+        // Search title counter: what Google will show, title or search title.
+        (function () {
+            var t = document.getElementById('title'), s = document.getElementById('seo_title'), out = document.getElementById('seoTitleCount');
+            if (!t || !s || !out) return;
+            function upd() {
+                var used = s.value.trim() || t.value.trim(), n = used.length;
+                out.textContent = (s.value.trim() ? 'search title ' : 'title ') + n + ' characters' + (n > 60 ? ' - too long, it will be cut off' : '');
+                out.style.color = n > 60 ? '#b23b3b' : '';
+            }
+            t.addEventListener('input', upd); s.addEventListener('input', upd); upd();
+        })();
 
         // Slug auto-fills from the title until the slug field itself is touched.
         // Creators don't get this field at all (see the Content card), so

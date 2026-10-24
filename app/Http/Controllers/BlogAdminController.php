@@ -234,6 +234,7 @@ class BlogAdminController extends Controller
 
         $rules = [
             'title' => 'required|string|max:255',
+            'seo_title' => 'nullable|string|max:70',
             'category' => 'required|string|max:100',
             'tags' => 'nullable|string|max:500',
             'min_level' => 'nullable|integer|min:0|max:4',

@@ -6,10 +6,10 @@ Disallow: /Trips/*-*-*
 # itself is the single costliest page on the site). Blocked outright for
 # these specific bots; Google/Bing etc. still get the dated-page-only rule
 # above, since the bare page has real search value for them.
+# PerplexityBot is not on this list (SEO audit, 2026-10-24): it builds
+# Perplexity's search index, not a training set, so it follows the same
+# dated-page-only rule as Google and can see the schedule.
 User-agent: ClaudeBot
-Disallow: /Trips
-
-User-agent: PerplexityBot
 Disallow: /Trips
 
 User-agent: meta-externalagent
