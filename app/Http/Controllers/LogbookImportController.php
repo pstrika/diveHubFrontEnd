@@ -438,10 +438,20 @@ class LogbookImportController extends Controller
             $import->delete();
             return redirect()->route('Logbook.import.index')->withErrors(['file' => 'That upload did not finish. Please upload the file again.']);
         }
-        $dups = $import->items()->whereNotNull('duplicate_kind')->whereNotIn('duplicate_kind', ['upgrade', 'companion'])->with('duplicateOfDive')->get();
-        $companions = $import->items()->where('duplicate_kind', 'companion')->with('duplicateOfDive')->orderBy('position')->get();
-        $upgrades = $import->items()->where('duplicate_kind', 'upgrade')->with('duplicateOfDive')->get(['id', 'dive_import_id', 'started_at', 'computer_model', 'max_depth_m', 'duration_seconds', 'decision', 'duplicate_of_dive_id']);
+        // Light columns only (2026-10-23: a 1,516-dive MacDive XML re-import
+        // of a logbook already on file had 954 duplicates and 561 second-
+        // computer logs; loading their payloads - 90 MB of profiles - and the
+        // matched dives' profiles ran the review page out of memory). The
+        // companion rows need only the match summary inside the payload.
+        $light = ['id', 'dive_import_id', 'position', 'started_at', 'duration_seconds', 'max_depth_m', 'computer_model', 'has_profile', 'duplicate_kind', 'duplicate_of_dive_id', 'duplicate_of_item_id', 'decision'];
+        $withDive = ['duplicateOfDive' => fn ($q) => $q->select(Dive::LIST_COLUMNS)];
+        $dups = $import->items()->whereNotNull('duplicate_kind')->whereNotIn('duplicate_kind', ['upgrade', 'companion'])->with($withDive)->get($light);
+        $companions = $import->items()->where('duplicate_kind', 'companion')->with($withDive)->orderBy('position')
+            ->get(array_merge($light, [DB::raw("JSON_EXTRACT(payload, '$._match') AS match_json")]));
+        $upgrades = $import->items()->where('duplicate_kind', 'upgrade')->with($withDive)->get(['id', 'dive_import_id', 'started_at', 'computer_model', 'max_depth_m', 'duration_seconds', 'decision', 'duplicate_of_dive_id']);
         $itemsById = $import->items()->get(['id', 'started_at', 'computer_model', 'has_profile'])->keyBy('id');
+        // title() needs each matched dive's site: one query, not one per row.
+        Dive::preloadSites($dups->pluck('duplicateOfDive')->merge($companions->pluck('duplicateOfDive'))->merge($upgrades->pluck('duplicateOfDive'))->filter());
 
         return view('pages.logbook.import.review', [
             'import' => $import,

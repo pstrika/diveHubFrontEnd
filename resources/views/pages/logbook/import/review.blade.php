@@ -176,7 +176,7 @@
                                     <div class="dh-import-list">
                                         @foreach ($companions as $c)
                                             @php
-                                                $m = $c->payload['_match'] ?? [];
+                                                $m = json_decode($c->match_json ?? 'null', true) ?: [];
                                                 $other = $c->duplicateOfDive;
                                                 $otherItem = $c->duplicate_of_item_id ? ($itemsById[$c->duplicate_of_item_id] ?? null) : null;
                                                 $offset = (int) ($m['offset'] ?? 0);
