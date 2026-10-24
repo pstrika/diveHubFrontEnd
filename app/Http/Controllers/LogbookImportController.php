@@ -269,8 +269,14 @@ class LogbookImportController extends Controller
         $computers = [];
         $items = [];
         $prev = null;
+        // Values no dive can have (a 4426 °C water temperature): corrected
+        // now, shown on the review page with the file's value so the diver
+        // can change the suggestion.
+        $issueRows = [];
         foreach ($dives as $i => $d) {
             $kind = null; $ofDive = null; $ofItemPos = null; $decision = null;
+            ['payload' => $d, 'issues' => $iss] = \App\Support\DiveImportChecks::review($d);
+            if ($iss) $issueRows[] = ['pos' => $i, 'date' => $d['started_at'], 'computer' => $d['computer_model'] ?? null, 'issues' => $iss];
             $key = strtolower((string) $d['computer_serial']) . '|' . $d['fingerprint'];
             if ($d['computer_serial'] && isset($byKey[$key])) {
                 $kind = 'fingerprint'; $ofDive = $mainOf($byKey[$key]);
@@ -402,6 +408,7 @@ class LogbookImportController extends Controller
             'mode_from_file' => array_filter($fromFile),
             'mode_unknown' => $modeRows,
             'cc_positions' => [],
+            'issues' => $issueRows,
         ];
         $import->save();
 
@@ -491,6 +498,33 @@ class LogbookImportController extends Controller
             $import->summary = $summary;
             $import->save();
         }
+
+        // Corrections to impossible values (DiveImportChecks): the diver's
+        // own number replaces the suggestion in the staged payload, and is
+        // remembered so going Back shows it.
+        $fixes = (array) $request->input('fix', []);
+        $summary = $import->summary;
+        $changed = false;
+        foreach ($summary['issues'] ?? [] as $ri => $row) {
+            $typed = (array) ($fixes[$row['pos']] ?? []);
+            $apply = [];
+            foreach ($row['issues'] as $ii => $iss) {
+                $v = \App\Support\DiveImportChecks::fromInput($iss['field'], $typed[$iss['field']] ?? null);
+                $chosen = $v ?? $iss['suggested'];
+                if (($iss['chosen'] ?? $iss['suggested']) != $chosen) { $summary['issues'][$ri]['issues'][$ii]['chosen'] = $chosen; $changed = true; }
+                $apply[$iss['field']] = $chosen;
+            }
+            $item = $import->items()->where('position', $row['pos'])->first();
+            if (!$item) continue;
+            $p = $item->payload;
+            $dirty = false;
+            foreach ($apply as $f => $v) {
+                $v = $f === 'duration_seconds' ? (int) $v : $v;
+                if (($p[$f] ?? null) != $v) { $p[$f] = $v; $dirty = true; }
+            }
+            if ($dirty) { $item->payload = $p; $item->save(); }
+        }
+        if ($changed) { $import->summary = $summary; $import->save(); }
 
         return redirect()->route('Logbook.import.sites', $import->id);
     }

@@ -4540,6 +4540,16 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
 .dh-wizard-progress-steps .is-active .dh-wizard-progress-dot { background: var(--dh-ink); color: #fff; }
 .dh-wizard-progress-steps .is-done .dh-wizard-progress-dot { background: var(--dh-sea); color: #fff; }
 .dh-wizard-progress-dot .material-icons-round { font-size: 14px; }
+.dh-import-fix-row { cursor: default; }
+.dh-import-fixes { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.dh-import-fix { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(140px, 1fr) auto; gap: 6px 14px; align-items: center; cursor: default; margin: 0; }
+.dh-import-fix-label { font-weight: 700; }
+.dh-import-fix-file { color: #b23b3b; font-size: .9rem; }
+.dh-import-fix-input { display: inline-flex; align-items: center; gap: 6px; }
+.dh-import-fix-input input { width: 110px; padding: 6px 10px; border: 1px solid var(--dh-line); border-radius: 10px; font: inherit; color: var(--dh-ink); background: #fff; }
+.dh-import-fix-input input:focus { outline: 2px solid var(--dh-sea); outline-offset: 1px; }
+.dh-import-fix-why { grid-column: 1 / -1; }
+@media (max-width: 640px) { .dh-import-fix { grid-template-columns: 1fr; } }
 .dh-import-group.is-high { border-left: 4px solid var(--dh-good, #2e7d32); }
 .dh-import-group.is-check { border-left: 4px solid #f2a541; }
 .dh-import-group.is-none { border-left: 4px solid var(--dh-line); }

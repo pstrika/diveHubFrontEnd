@@ -308,7 +308,7 @@ class UddfParser
             $depth = (float) $this->txt($w, 'depth');
             $s = ['time' => $time, 'depth' => round($depth, 3)];
             $tempK = $this->num($this->txt($w, 'temperature'));
-            if ($tempK !== null && ($t = self::plausibleTemp($tempK > 200 ? $tempK - 273.15 : $tempK)) !== null) $s['temperature'] = round($t, 2);
+            if ($tempK !== null) $s['temperature'] = round($tempK > 200 ? $tempK - 273.15 : $tempK, 2);
             $byRow = [];
             foreach ($this->all($w, 'tankpressure') as $tpEl) {
                 $pPa = $this->num(trim((string) $tpEl));
@@ -379,7 +379,10 @@ class UddfParser
         if ($maxDepth === null && count($profile)) $maxDepth = max(array_column($profile, 'depth'));
         $avgDepth = self::averageDepth($profile);
         $lowK = $this->num($this->txt($after, 'lowesttemperature'));
-        $minTemp = $lowK === null ? null : self::plausibleTemp(round($lowK > 200 ? $lowK - 273.15 : $lowK, 1));
+        // Raw, even when impossible (MacDive's 4699.85 K "no reading"):
+        // the import's review step shows it and suggests the correction
+        // (DiveImportChecks); run() guards what was staged before that.
+        $minTemp = $lowK === null ? null : round($lowK > 200 ? $lowK - 273.15 : $lowK, 1);
 
         $serial = $comp ? strtolower($comp['serial'] ?? '') : '';
         $model = $comp ? ($comp['model'] ?? '') : '';

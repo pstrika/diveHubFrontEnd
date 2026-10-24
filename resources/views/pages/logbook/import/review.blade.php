@@ -91,6 +91,43 @@
                             </div>
                         </div>
 
+                        {{-- Impossible values with a suggested correction (Pablo,
+                             2026-10-23: "if a dive has a bad format, suggest corrections
+                             at the import time"). The suggestion is already applied;
+                             the diver can type another number. --}}
+                        @php $issueRows = $import->summary['issues'] ?? []; @endphp
+                        @if (count($issueRows))
+                            <div class="card p-0 position-relative mt-3 z-index-2 mb-4 dh-import-group is-check">
+                                <div class="card-body">
+                                    <h3 class="h5 mb-1 d-flex align-items-center gap-2"><span class="material-icons-round" aria-hidden="true">rule</span> Check these values &middot; {{ count($issueRows) }}</h3>
+                                    <p class="text-sm text-secondary">The file gives these dives a value no dive can have - usually the computer logged no reading and the app wrote a placeholder. Each one is set to the suggestion shown; change it if you know better. Metric units.</p>
+                                    <div class="dh-import-list">
+                                        @foreach ($issueRows as $row)
+                                            <div class="dh-import-row dh-import-fix-row">
+                                                <div class="dh-import-row-main w-100">
+                                                    <strong>{{ \Carbon\Carbon::parse($row['date'])->format('M j, Y g:i A') }}</strong>
+                                                    @if ($row['computer']) &middot; {{ $row['computer'] }} @endif
+                                                    <div class="dh-import-fixes">
+                                                        @foreach ($row['issues'] as $iss)
+                                                            <label class="dh-import-fix">
+                                                                <span class="dh-import-fix-label">{{ $iss['label'] }}</span>
+                                                                <span class="dh-import-fix-file">File says {{ \App\Support\DiveImportChecks::display($iss['field'], (float) $iss['value']) }} {{ $iss['unit'] }}</span>
+                                                                <span class="dh-import-fix-input">
+                                                                    <input type="number" step="any" inputmode="decimal" name="fix[{{ $row['pos'] }}][{{ $iss['field'] }}]" value="{{ \App\Support\DiveImportChecks::display($iss['field'], (float) ($iss['chosen'] ?? $iss['suggested'])) }}" aria-label="{{ $iss['label'] }}">
+                                                                    <span>{{ $iss['unit'] }}</span>
+                                                                </span>
+                                                                <span class="dh-import-fix-why text-sm text-secondary">{{ $iss['why'] }}</span>
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         @if ($upgrades->isNotEmpty())
                             <div class="card p-0 position-relative mt-3 z-index-2 mb-4 dh-import-group is-high">
                                 <div class="card-body">

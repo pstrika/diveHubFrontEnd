@@ -203,7 +203,7 @@ class MacDiveXmlParser
         foreach ($raw as $s) {
             while ($spIdx + 1 < count($setpoints) && $setpoints[$spIdx + 1][0] <= $s['time']) { $spIdx++; $currentSp = $setpoints[$spIdx][1]; }
             $p = ['time' => (int) round($s['time']), 'depth' => round($this->m($s['depth']), 3)];
-            if ($s['temperature'] !== null && $s['temperature'] != 0 && ($t = UddfParser::plausibleTemp($this->c($s['temperature']))) !== null) $p['temperature'] = round($t, 2);
+            if ($s['temperature'] !== null && $s['temperature'] != 0) $p['temperature'] = round($this->c($s['temperature']), 2);
             if ($s['pressure'] !== null && $s['pressure'] > 0) {
                 $b = round($this->bar($s['pressure']), 2);
                 $p['pressure'] = $b; $p['tankPressures'] = [$b];
@@ -309,9 +309,9 @@ class MacDiveXmlParser
             'duration_seconds' => $duration,
             'max_depth_m' => round((float) $maxDepth, 2),
             'avg_depth_m' => $avgDepth,
-            'min_water_temp_c' => $low ? UddfParser::plausibleTemp(round($this->c($low), 1)) : null,
-            'max_water_temp_c' => $high ? UddfParser::plausibleTemp(round($this->c($high), 1)) : null,
-            'surface_temp_c' => $air ? UddfParser::plausibleTemp(round($this->c($air), 1)) : null,
+            'min_water_temp_c' => $low ? round($this->c($low), 1) : null,
+            'max_water_temp_c' => $high ? round($this->c($high), 1) : null,
+            'surface_temp_c' => $air ? round($this->c($air), 1) : null,
             'dive_mode' => $mode ?? 'open_circuit',
             'mode_source' => $modeSource,
             'gas_mixes' => $gasMixes ?: null,
