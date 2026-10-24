@@ -414,6 +414,11 @@
             pointHoverRadius: 4,
             yAxisID: 'yDepth',
             alwaysOn: true,
+            // Chart.js draws datasets from the last to the first, so the
+            // first one (this) would paint over every other line. A higher
+            // order is drawn earlier, i.e. behind (Pablo, 2026-10-23: "push
+            // the depth series to the back; all other data series in front").
+            order: 100,
         },
     ];
 
@@ -504,6 +509,7 @@
             yAxisID: 'yDepth',
             alwaysOn: true,
             isDecoStop: true,
+            order: 90, // over the depth fill, under every data line
         });
     }
 
