@@ -4546,7 +4546,9 @@ h2.dh-wx-place { line-height: 1.25; } /* Beach Diving place names moved from h1 
 .dh-import-fix-label { font-weight: 700; }
 .dh-import-fix-file { color: #b23b3b; font-size: .9rem; }
 .dh-import-fix-input { display: inline-flex; align-items: center; gap: 6px; }
-.dh-import-fix-input input { width: 110px; padding: 6px 10px; border: 1px solid var(--dh-line); border-radius: 10px; font: inherit; color: var(--dh-ink); background: #fff; }
+/* A plain text box, no spinner arrows (Pablo, 2026-10-23: "the temp input box is illegible. Do not keep the up and down arrows"); explicit colours so no theme can wash the number out. */
+.dh-import-fix-input input[type="text"] { width: 110px; padding: 8px 12px; border: 1px solid var(--dh-line); border-radius: 10px; font: inherit; font-size: 1rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #0b2a3a; background: #fff; -moz-appearance: textfield; appearance: textfield; }
+.dh-import-fix-input input::-webkit-outer-spin-button, .dh-import-fix-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .dh-import-fix-input input:focus { outline: 2px solid var(--dh-sea); outline-offset: 1px; }
 .dh-import-fix-why { grid-column: 1 / -1; }
 @media (max-width: 640px) { .dh-import-fix { grid-template-columns: 1fr; } }

@@ -123,7 +123,7 @@
                                                                     @endif
                                                                 </span>
                                                                 <span class="dh-import-fix-input">
-                                                                    <input type="number" step="any" inputmode="decimal" class="dh-import-fix-value" data-kind="{{ $kind }}" data-metric="{{ $iss['chosen'] ?? $iss['suggested'] }}" value="{{ \App\Support\DiveImportChecks::display($iss['field'], (float) ($iss['chosen'] ?? $iss['suggested'])) }}" aria-label="{{ $iss['label'] }}">
+                                                                    <input type="text" inputmode="decimal" autocomplete="off" class="dh-import-fix-value" data-kind="{{ $kind }}" data-metric="{{ $iss['chosen'] ?? $iss['suggested'] }}" value="{{ \App\Support\DiveImportChecks::display($iss['field'], (float) ($iss['chosen'] ?? $iss['suggested'])) }}" aria-label="{{ $iss['label'] }}">
                                                                     <input type="hidden" name="fix[{{ $row['pos'] }}][{{ $iss['field'] }}]" value="{{ \App\Support\DiveImportChecks::display($iss['field'], (float) ($iss['chosen'] ?? $iss['suggested'])) }}">
                                                                     <span data-unit-label="{{ $kind }}">{{ $iss['unit'] }}</span>
                                                                 </span>
