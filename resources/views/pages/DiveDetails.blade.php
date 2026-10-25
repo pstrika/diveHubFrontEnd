@@ -1162,14 +1162,13 @@
                                         <span class="dh-dive-view-label">Boat name</span>
                                         <span class="dh-dive-view-value">{{ $conditions['boat_name'] ?? '—' }}</span>
                                     </div>
-                                </div>
-                                <div class="col-12 order-2 order-md-3">
+                                    {{-- Captain and divemaster in the same column as operator and
+                                         boat (Pablo, 2026-10-25: "all text fields to the left") -
+                                         they used to run full width under the boat photo. --}}
                                     <div class="dh-dive-view-row">
                                         <span class="dh-dive-view-label">Boat captain</span>
                                         <span class="dh-dive-view-value">{{ $conditions['boat_captain'] ?? '—' }}</span>
                                     </div>
-                                </div>
-                                <div class="col-12 order-3 order-md-4">
                                     <div class="dh-dive-view-row">
                                         <span class="dh-dive-view-label">Divemaster</span>
                                         <span class="dh-dive-view-value">{{ $conditions['divemaster'] ?? '—' }}</span>
@@ -1203,14 +1202,10 @@
                                         <input type="text" class="form-control" id="diveBoatName" name="conditions[boat_name]" value="{{ $conditions['boat_name'] ?? '' }}" autocomplete="off">
                                         <div id="diveBoatResults" class="dh-search-list dh-related-site-results" hidden></div>
                                     </div>
-                                </div>
-                                <div class="col-12 order-2 order-md-3">
                                     <div class="input-group input-group-outline dh-dive-ig @if($conditions['boat_captain'] ?? null) is-filled @endif">
                                         <label class="form-label">Boat captain</label>
                                         <input type="text" class="form-control" id="diveBoatCaptain" name="conditions[boat_captain]" value="{{ $conditions['boat_captain'] ?? '' }}">
                                     </div>
-                                </div>
-                                <div class="col-12 order-3 order-md-4">
                                     <div class="input-group input-group-outline dh-dive-ig @if($conditions['divemaster'] ?? null) is-filled @endif">
                                         <label class="form-label">Divemaster</label>
                                         <input type="text" class="form-control" id="diveDivemaster" name="conditions[divemaster]" value="{{ $conditions['divemaster'] ?? '' }}">
