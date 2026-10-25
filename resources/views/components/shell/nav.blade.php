@@ -1,11 +1,11 @@
 {{--
     Site shell navigation.
 
-    Desktop (lg and up) keeps the original fixed bar decided with Zach and
-    Pablo on 2026-09-10 - Dives, Sites, Weather, Groups, plus a More link
-    that opens the drawer (shell/menu.blade.php). My Dashboard was added
-    ahead of Dives for signed-in members on 2026-09-27 - guests still get
-    the original four, since they have no dashboard. $tabs below.
+    Desktop (lg and up): guests keep the original fixed bar decided with
+    Zach and Pablo on 2026-09-10 - Dives, Sites, Weather, Groups, plus a
+    More link that opens the drawer (shell/menu.blade.php). Members get My
+    Dashboard, Dives, their two customizable slots (the same nav_slot_1 /
+    nav_slot_2 as the phone bar, Pablo 2026-10-25) and More. $tabs below.
 
     Phones get their own $mobileTabs bar, customizable per diver since
     2026-09-24 (Pablo: "give them the chance to customize which icons they
@@ -58,6 +58,20 @@
     // Groups" page (Pablo, 2026-10-09: public groups need to be reachable
     // from the nav itself, not just a direct URL).
     $tabs['groups']  = ['label' => 'Groups',     'short' => 'Groups',  'icon' => 'groups',       'href' => $isGuest ? route('Groups.public') : route('MyGroups')];
+
+    // Desktop for members (Pablo, 2026-10-25): My Dashboard and Dives fixed
+    // first, then the diver's two customizable slots - the same
+    // nav_slot_1/nav_slot_2 the phone bar uses - then More. Guests keep the
+    // fixed bar above; tablets and phones are untouched ($mobileTabs).
+    if (!$isGuest) {
+        $deskSlots = [];
+        foreach ([[$user->nav_slot_1, \App\Support\NavTabs::DEFAULT_SLOT_1], [$user->nav_slot_2, \App\Support\NavTabs::DEFAULT_SLOT_2]] as [$picked, $default]) {
+            $k = \App\Support\NavTabs::resolveSlot($picked, $default, $user);
+            $o = \App\Support\NavTabs::OPTIONS[$k];
+            $deskSlots[$k] = ['label' => $o['label'], 'short' => $o['short'], 'icon' => $o['icon'], 'href' => \App\Support\NavTabs::href($k)];
+        }
+        $tabs = ['dashboard' => $tabs['dashboard'], 'today' => $tabs['today']] + $deskSlots;
+    }
 
     // Unread in-app notifications, for the bell icon - inbox and groups combined.
     $unread = $isGuest ? 0 : (int) $user->unreadNotifications();
