@@ -2,7 +2,7 @@
     <x-shell.nav active="me" />
 
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
-        <x-shell.header :title="$full ? 'Import your logbook' : 'Add dives from a file'" icon="upload_file" :h1="true" />
+        <x-shell.header :title="$full ? 'Import your logbook' : 'Import dives from a file'" icon="upload_file" :h1="true" />
 
         <div class="container-fluid py-0">
             <div class="row">

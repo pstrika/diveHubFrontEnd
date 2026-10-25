@@ -14,7 +14,7 @@ use App\Models\Dive;
  * to a Petrel): the card follows that log's own timeline.
  *
  * location = {latitude, longitude, exit_latitude, exit_longitude} on the
- * dive row; without both points there is no card.
+ * dive row. With one point the card shows just that pin; with neither, no card.
  */
 class DiveDrift
 {
@@ -30,17 +30,21 @@ class DiveDrift
      */
     public static function resolve(Dive $dive, $logs = null): ?array
     {
+        // The log with both points wins; else the first with either one
+        // (Pablo, 2026-10-25: show the map with just an entry or an exit too).
+        $candidates = array_merge([$dive], iterator_to_array(collect($logs ?? $dive->companions()->get())));
         $owner = null;
-        if (self::hasBoth($dive->location)) $owner = $dive;
-        else {
-            foreach ($logs ?? $dive->companions()->get() as $c) {
-                if (self::hasBoth($c->location)) { $owner = $c; break; }
-            }
-        }
+        foreach ($candidates as $c) if (self::hasBoth($c->location)) { $owner = $c; break; }
+        if (!$owner) foreach ($candidates as $c) if (self::hasEntry($c->location) || self::hasExit($c->location)) { $owner = $c; break; }
         if (!$owner) return null;
         $loc = $owner->location;
-        $entry = ['lat' => (float) $loc['latitude'], 'lon' => (float) $loc['longitude']];
-        $exit = ['lat' => (float) $loc['exit_latitude'], 'lon' => (float) $loc['exit_longitude']];
+        $entry = self::hasEntry($loc) ? ['lat' => (float) $loc['latitude'], 'lon' => (float) $loc['longitude']] : null;
+        $exit = self::hasExit($loc) ? ['lat' => (float) $loc['exit_latitude'], 'lon' => (float) $loc['exit_longitude']] : null;
+        $from = $owner->id === $dive->id ? null : ($owner->computer_model ?: 'another computer');
+        if (!$entry || !$exit) {
+            return ['entry' => $entry, 'exit' => $exit, 'both' => false, 'distance_m' => null, 'from' => $from, 'wreck' => false,
+                'start_seconds' => 0, 'ascent_end_seconds' => null, 'exit_seconds' => 0, 'drift_seconds' => 0, 'knots' => null];
+        }
         $distance = self::meters($entry['lat'], $entry['lon'], $exit['lat'], $exit['lon']);
 
         $wreck = self::isWreckDive($dive);
@@ -55,8 +59,9 @@ class DiveDrift
         return [
             'entry' => $entry,
             'exit' => $exit,
+            'both' => true,
             'distance_m' => round($distance, 1),
-            'from' => $owner->id === $dive->id ? null : ($owner->computer_model ?: 'another computer'),
+            'from' => $from,
             'wreck' => $wreck,
             'start_seconds' => $start,
             'ascent_end_seconds' => $hasDeco ? $start : null, // non-null: the walk-back ran from the first deco stop
@@ -64,6 +69,16 @@ class DiveDrift
             'drift_seconds' => $drift,
             'knots' => $knots,
         ];
+    }
+
+    public static function hasEntry($loc): bool
+    {
+        return is_array($loc) && isset($loc['latitude'], $loc['longitude']) && (abs((float) $loc['latitude']) > 0.0001 || abs((float) $loc['longitude']) > 0.0001);
+    }
+
+    public static function hasExit($loc): bool
+    {
+        return is_array($loc) && isset($loc['exit_latitude'], $loc['exit_longitude']) && (abs((float) $loc['exit_latitude']) > 0.0001 || abs((float) $loc['exit_longitude']) > 0.0001);
     }
 
     public static function hasBoth($loc): bool

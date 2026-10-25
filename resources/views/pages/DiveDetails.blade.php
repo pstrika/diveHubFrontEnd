@@ -980,12 +980,20 @@
                                     <span class="material-icons-round dh-calc-inputs-chevron" aria-hidden="true">expand_less</span>
                                 </div>
                                 <div class="card-body" id="diveDriftBody">
-                                    <div class="dh-dive-drift-map" id="diveDriftMap" role="img" aria-label="Map of the entry and exit points"></div>
+                                    {{-- Tap the map or the expand button for a full-screen map
+                                         (Pablo, 2026-10-25: "like the click on the pictures"). --}}
+                                    <div class="dh-dive-drift-mapwrap">
+                                        <div class="dh-dive-drift-map" id="diveDriftMap" role="img" aria-label="Map of the {{ $drift['both'] ? 'entry and exit points' : ($drift['entry'] ? 'entry point' : 'exit point') }}"></div>
+                                        <button type="button" class="dh-dive-drift-expand" id="diveDriftExpand" aria-label="Open a larger map"><span class="material-icons-round" aria-hidden="true">open_in_full</span></button>
+                                    </div>
                                     <div class="dh-dive-drift-legend text-sm text-secondary">
-                                        <span><i class="dh-dive-drift-dot is-entry"></i> Entry</span>
-                                        <span><i class="dh-dive-drift-dot is-exit"></i> Exit</span>
+                                        @if ($drift['entry'])<span><i class="dh-dive-drift-dot is-entry"></i> Entry</span>@endif
+                                        @if ($drift['exit'])<span><i class="dh-dive-drift-dot is-exit"></i> Exit</span>@endif
                                         @if (!empty($drift['from']))<span>from the {{ $drift['from'] }}</span>@endif
                                     </div>
+                                    @if (!$drift['both'])
+                                        <p class="text-sm text-secondary mb-0">The computer recorded only the {{ $drift['entry'] ? 'entry' : 'exit' }} point, so there is no drift or current to show.</p>
+                                    @else
                                     @php
                                         $driftMin = max(1, (int) round($drift['drift_seconds'] / 60));
                                         $fmtClock = fn ($s) => sprintf('%d:%02d', intdiv((int) $s, 60), ((int) $s) % 60);
@@ -1021,6 +1029,7 @@
                                         @endif
                                         The straight line between the two fixes is a floor: you will have covered at least that much. A fix taken on the boat, or a long surface swim, moves the exit point and the number with it.
                                     </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -1443,6 +1452,14 @@
                                     <a href="{{ route('Equipment.index') }}" class="text-sm d-inline-block mt-2">My equipment</a>
                                 @endif
                             </div>
+                        </div>
+                    @endif
+
+                    @if (!empty($drift))
+                        {{-- Full-screen Entry & Exit map, same overlay as the photo viewer. dive-drift.js. --}}
+                        <div class="dh-photo-viewer dh-drift-viewer" id="dhDriftViewer" hidden role="dialog" aria-modal="true" aria-label="Entry and exit map">
+                            <button type="button" class="dh-photo-viewer-close" data-dv-close aria-label="Close"><span class="material-icons-round" aria-hidden="true">close</span></button>
+                            <div class="dh-drift-viewer-frame"><div class="dh-drift-viewer-map" id="dhDriftViewerMap"></div></div>
                         </div>
                     @endif
 
