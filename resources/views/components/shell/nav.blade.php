@@ -68,7 +68,10 @@
         foreach ([[$user->nav_slot_1, \App\Support\NavTabs::DEFAULT_SLOT_1], [$user->nav_slot_2, \App\Support\NavTabs::DEFAULT_SLOT_2]] as [$picked, $default]) {
             $k = \App\Support\NavTabs::resolveSlot($picked, $default, $user);
             $o = \App\Support\NavTabs::OPTIONS[$k];
-            $deskSlots[$k] = ['label' => $o['label'], 'short' => $o['short'], 'icon' => $o['icon'], 'href' => \App\Support\NavTabs::href($k)];
+            // "My Logbook" on the desktop bar (Pablo, 2026-10-25): the page is
+            // called Logbook everywhere else; the drawer and the picker keep "Dive Log".
+            $deskLabel = $k === 'logbook' ? 'My Logbook' : $o['label'];
+            $deskSlots[$k] = ['label' => $deskLabel, 'short' => $o['short'], 'icon' => $o['icon'], 'href' => \App\Support\NavTabs::href($k)];
         }
         $tabs = ['dashboard' => $tabs['dashboard'], 'today' => $tabs['today']] + $deskSlots;
     }
