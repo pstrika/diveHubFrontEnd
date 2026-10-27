@@ -8,17 +8,17 @@
         <span class="material-icons-round dh-app-steps-icon" aria-hidden="true">phone_iphone</span>
         <div>
             <strong>Logbook by Divers Hub</strong>
-            <span class="text-xs text-secondary d-block">The companion app for iPhone &middot; Android coming soon</span>
+            <span class="text-xs text-secondary d-block">The companion app for iPhone and Android</span>
         </div>
     </div>
     <ol class="dh-app-steps-list">
         <li>
             <strong>Get the app</strong>
-            @if (config('divehub.app_store_url'))
-                <span><a href="{{ config('divehub.app_store_url') }}" target="_blank" rel="noopener">Download it from the App Store</a>.</span>
-            @else
-                <span>Now in beta testing, coming soon to the App Store.</span>
-            @endif
+            {{-- Android is on Google Play since 2026-10-27; iPhone still in TestFlight until app_store_url is set. --}}
+            <span>
+                Android: <a href="{{ config('divehub.play_store_url') }}" target="_blank" rel="noopener">get it on Google Play</a>.
+                iPhone: @if (config('divehub.app_store_url'))<a href="{{ config('divehub.app_store_url') }}" target="_blank" rel="noopener">download it from the App Store</a>.@else now in beta testing, coming soon to the App Store.@endif
+            </span>
         </li>
         <li>
             <strong>Sign in with your Divers Hub account</strong>

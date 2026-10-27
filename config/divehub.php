@@ -14,7 +14,7 @@
 
 return [
 
-    'version' => '12.28.7',
+    'version' => '12.28.8',
 
     // Release date shown next to the version. Any human readable format.
     'released' => '10/22/26',
@@ -25,7 +25,7 @@ return [
 
     // Google Play link for the Android app. Null until it is published:
     // the public app page (/DiveLogApp) then says "coming soon".
-    'play_store_url' => null,
+    'play_store_url' => 'https://play.google.com/store/apps/details?id=com.divershub.uploader',
 
     // Features open to a few accounts only (App\Support\EarlyAccess).
     // Lower-case emails; '*' opens a feature to every logbook user.

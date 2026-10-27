@@ -33,11 +33,11 @@
                 'name' => 'Logbook by Divers Hub',
                 'applicationCategory' => 'SportsApplication',
                 'operatingSystem' => 'iOS, Android, Web',
-                'description' => 'A free dive log: Bluetooth downloads from dive computers, imports from Garmin, Shearwater, MacDive, UDDF and Apple Watch, multi-computer dives and detailed profile charts.',
+                'description' => 'A free dive log for Android, iPhone and the web: Bluetooth downloads from dive computers, imports from Garmin, Shearwater, MacDive, UDDF and Apple Watch, multi-computer dives and detailed profile charts.',
                 'url' => route('DiveLogApp'),
                 'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'USD'],
                 'publisher' => ['@id' => url('/') . '/#org'],
-                'downloadUrl' => $appStore ?: null,
+                'downloadUrl' => $appStore ?: ($playStore ?: null),
             ]),
             [
                 '@type' => 'FAQPage',
@@ -57,7 +57,7 @@
             <section class="dh-app-hero">
                 <div>
                     <h1>A free dive log that reads your computer</h1>
-                    <p>Logbook by Divers Hub keeps every dive in one place: downloaded over Bluetooth at the dock, imported from the logbook you already have, and combined when you dive with more than one computer. On your iPhone and on the web, with the same account.</p>
+                    <p>Logbook by Divers Hub keeps every dive in one place: downloaded over Bluetooth at the dock, imported from the logbook you already have, and combined when you dive with more than one computer. On Android, iPhone and the web, with the same account.</p>
                     <div class="dh-app-stores">
                         @if ($appStore)
                             <a class="dh-btn dh-btn-primary" href="{{ $appStore }}" target="_blank" rel="noopener"><span class="material-icons-round" aria-hidden="true">phone_iphone</span> Download on the App Store</a>
