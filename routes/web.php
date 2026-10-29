@@ -432,6 +432,9 @@ Route::middleware('auth')->group(function () {
     Route::get('Blog/manage/{post}/edit', 'App\Http\Controllers\BlogAdminController@edit')->name('Blog.manage.edit');
     Route::put('Blog/manage/{post}', 'App\Http\Controllers\BlogAdminController@update')->name('Blog.manage.update');
     Route::delete('Blog/manage/{post}', 'App\Http\Controllers\BlogAdminController@destroy')->name('Blog.manage.destroy');
+    // Review queue (2026-10-29): an Admin publishes or sends back a Creator's submitted article.
+    Route::post('Blog/manage/{post}/approve', 'App\Http\Controllers\BlogAdminController@approve')->name('Blog.manage.approve');
+    Route::post('Blog/manage/{post}/send-back', 'App\Http\Controllers\BlogAdminController@sendBack')->name('Blog.manage.sendBack');
     // Generates a signed, expiring link to a SAVED draft (or published)
     // post, for handing to an outside reviewer who has no Divers Hub login
     // (Pablo, 2026-10-04). See BlogController::previewSigned() below.

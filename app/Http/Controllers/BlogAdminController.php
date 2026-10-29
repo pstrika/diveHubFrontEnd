@@ -10,11 +10,14 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 
 /**
- * Creator/Admin authoring screen (Pablo, 2026-09-17/18). Creators publish
- * directly - no pre-approval queue ("I'm expecting creators to create
- * reasonable content") - draft is just a save-for-later, not a moderation
- * gate. Admins can remove anyone's post; Creators only their own - see
- * App\Policies\PostPolicy.
+ * Creator/Admin authoring screen (Pablo, 2026-09-17/18). Since 2026-10-29
+ * Creators no longer publish directly (Pablo: "submit for review and admins
+ * approve"): a Creator saves a draft or submits it for review ('pending'),
+ * every Admin is notified, and an Admin publishes it or sends it back to
+ * draft with a note. An article that is already live stays live when its
+ * Creator edits it; Admins are told about the edit. Admins publish their
+ * own articles directly and can remove anyone's; Creators only their own -
+ * see App\Policies\PostPolicy.
  */
 class BlogAdminController extends Controller
 {
@@ -56,6 +59,7 @@ class BlogAdminController extends Controller
         }
 
         $post = Post::create($data);
+        if ($post->status === 'pending') self::notifyAdminsSubmitted($post);
 
         // New content, not just a metadata tweak - worth telling Bing/Yandex
         // about right away rather than waiting for their next crawl or the
@@ -94,7 +98,13 @@ class BlogAdminController extends Controller
             $data['published_at'] = now();
         }
 
+        $wasStatus = $post->status;
+        if (($data['status'] ?? null) !== 'draft') $data['review_note'] = null; // resubmitted: the old note is done
         $post->update($data);
+        if ($post->status === 'pending' && $wasStatus !== 'pending') self::notifyAdminsSubmitted($post);
+        if ($post->status === 'published' && $wasStatus === 'published' && !$request->user()->isAdmin()) {
+            self::notifyAdmins($post, 'Published article edited', $post->author?->name . ' edited the live article "' . $post->title . '".');
+        }
 
         // Same reasoning as store() above - covers both a draft going live
         // and a live post's content changing (title, body, etc).
@@ -228,6 +238,48 @@ class BlogAdminController extends Controller
         return 'assets/img/blog/' . $filename;
     }
 
+    /** POST Blog/manage/{post}/approve - an Admin publishes a submitted article. */
+    public function approve(Request $request, Post $post)
+    {
+        abort_unless($request->user()->isAdmin(), 403);
+        $post->status = 'published';
+        $post->review_note = null;
+        $post->published_at ??= now();
+        $post->save();
+        IndexNowService::submitOne(route('Blog.show', $post->slug));
+        if ($post->author_id && $post->author_id !== $request->user()->id) {
+            \App\Services\NotificationService::notify([$post->author_id], 'Your article is published', '"' . $post->title . '" is now live on the Divers Hub blog.', route('Blog.show', $post->slug), null, $request->user()->id);
+        }
+        return redirect()->route('Blog.manage.index')->with('success', 'Published "' . $post->title . '".');
+    }
+
+    /** POST Blog/manage/{post}/send-back - an Admin returns a submitted article to its author as a draft, with a note. */
+    public function sendBack(Request $request, Post $post)
+    {
+        abort_unless($request->user()->isAdmin(), 403);
+        $v = $request->validate(['note' => 'nullable|string|max:2000']);
+        $note = trim((string) ($v['note'] ?? ''));
+        $post->status = 'draft';
+        $post->review_note = $note !== '' ? $note : null;
+        $post->save();
+        if ($post->author_id && $post->author_id !== $request->user()->id) {
+            \App\Services\NotificationService::notify([$post->author_id], 'Your article needs changes', '"' . $post->title . '" was sent back to you' . ($note !== '' ? ': ' . $note : '.'), route('Blog.manage.edit', $post), null, $request->user()->id);
+        }
+        return redirect()->route('Blog.manage.index')->with('success', 'Sent "' . $post->title . '" back to its author.');
+    }
+
+    private static function notifyAdminsSubmitted(Post $post): void
+    {
+        self::notifyAdmins($post, 'Article waiting for review', ($post->author?->name ?? 'A contributor') . ' submitted "' . $post->title . '" for review.');
+    }
+
+    /** In-app + push to every Admin except whoever made the change. */
+    private static function notifyAdmins(Post $post, string $subject, string $body): void
+    {
+        $admins = \App\Models\User::where('role_id', 1)->pluck('id');
+        \App\Services\NotificationService::notify($admins, $subject, $body, route('Blog.manage.edit', $post), auth()->id(), auth()->id());
+    }
+
     private function validated(Request $request, Post $post): array
     {
         $isAdmin = $request->user()->isAdmin();
@@ -245,7 +297,11 @@ class BlogAdminController extends Controller
             'cover_image' => 'nullable|image|max:30720',
             'cover_focus' => 'nullable|in:top,center,bottom',
             'related_sites' => 'nullable|string',
-            'status' => 'required|in:draft,published',
+            // Creators: draft or submit for review. A Creator's article that
+            // is already live may stay published (editing it doesn't take it
+            // down) but a Creator can never publish one that isn't.
+            'status' => $isAdmin ? 'required|in:draft,pending,published'
+                : ('required|in:draft,pending' . ($post->exists && $post->status === 'published' ? ',published' : '')),
         ];
 
         // Only Admins can set/change the article's URL (Pablo, 2026-09-18:

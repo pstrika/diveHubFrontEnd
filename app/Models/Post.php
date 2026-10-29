@@ -38,6 +38,7 @@ class Post extends Model
         'related_sites',
         'author_id',
         'status',
+        'review_note',
         'published_at',
     ];
 

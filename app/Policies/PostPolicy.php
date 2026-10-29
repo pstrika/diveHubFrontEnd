@@ -7,8 +7,9 @@ use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 /**
- * Creators are trusted to publish directly - no pre-approval queue (Pablo,
- * 2026-09-17: "I'm expecting creators to create reasonable content"). What
+ * Creators write and edit their own articles; since 2026-10-29 publishing
+ * goes through an Admin (BlogAdminController::approve - a Creator can only
+ * save a draft or submit for review). What
  * Admins get on top is removal power over EVERYONE's posts, not just their
  * own ("as Admins, we need to be able to remove articles") - the same
  * "creator owns theirs, admin owns everything" split Groups already uses

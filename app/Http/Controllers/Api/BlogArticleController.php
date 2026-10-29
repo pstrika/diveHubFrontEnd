@@ -45,7 +45,7 @@ class BlogArticleController extends Controller
             'related_sites.*.site_id' => 'nullable|integer',
             'related_sites.*.site_name' => 'nullable|string',
             'related_sites.*.note' => 'nullable|string',
-            'status' => 'nullable|in:draft,published',
+            'status' => 'nullable|in:draft,pending,published',
             'published_at' => 'nullable|date',
         ]);
 
@@ -74,6 +74,10 @@ class BlogArticleController extends Controller
         $post->cover_focus = $data['cover_focus'] ?? 'center';
         $post->related_sites = $this->resolveRelatedSites($data['related_sites'] ?? []);
         $post->author_id = $isNew ? $user->id : $post->author_id;
+        // Creators can't publish (2026-10-29 review queue): "published" from a
+        // non-admin becomes "pending" unless the article is already live.
+        $wasStatus = $post->exists ? $post->status : null;
+        if ($status === 'published' && !$user->isAdmin() && $wasStatus !== 'published') $status = 'pending';
         $post->status = $status;
         $post->published_at = $status === 'published'
             ? (isset($data['published_at']) ? \Carbon\Carbon::parse($data['published_at']) : ($post->published_at ?? now()))
@@ -87,6 +91,9 @@ class BlogArticleController extends Controller
         }
 
         $post->save();
+        if ($post->status === 'pending' && $wasStatus !== 'pending') {
+            \App\Services\NotificationService::notify(\App\Models\User::where('role_id', 1)->pluck('id'), 'Article waiting for review', ($user->name ?? 'A contributor') . ' submitted "' . $post->title . '" for review.', route('Blog.manage.edit', $post), $user->id, $user->id);
+        }
 
         return response()->json([
             'id' => $post->id,

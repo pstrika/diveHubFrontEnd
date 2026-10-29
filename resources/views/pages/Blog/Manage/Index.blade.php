@@ -39,6 +39,36 @@
                 </p>
             @endif
 
+            {{-- Review queue (2026-10-29): Creators' submitted articles, for an Admin to publish or send back. --}}
+            @php $pendingPosts = auth()->user()->isAdmin() ? $posts->where('status', 'pending') : collect(); @endphp
+            @if ($pendingPosts->isNotEmpty())
+                <div class="dh-panel-head-row mb-3">
+                    <h2 class="dh-panel-title mb-0">Waiting for review &middot; {{ $pendingPosts->count() }}</h2>
+                </div>
+                <div class="dh-admin-card mb-4 dh-review-queue">
+                    @foreach ($pendingPosts as $post)
+                        <div class="dh-review-item">
+                            <div class="dh-review-item-main">
+                                <b>{{ $post->title }}</b>
+                                <span class="text-sm text-secondary">by {{ $post->author->name ?? 'Unknown' }} &middot; {{ $post->category }} &middot; submitted {{ $post->updated_at->format('M j, Y') }}</span>
+                            </div>
+                            <div class="dh-review-item-actions">
+                                <a class="dh-btn dh-btn-ghost-dark" href="{{ route('Blog.manage.edit', $post) }}"><span class="material-icons-round" aria-hidden="true">edit</span>Read and edit</a>
+                                <form method="POST" action="{{ route('Blog.manage.approve', $post) }}" onsubmit="return confirm('Publish &quot;' + {{ json_encode($post->title) }} + '&quot; now?');">
+                                    @csrf
+                                    <button type="submit" class="dh-btn dh-btn-primary"><span class="material-icons-round" aria-hidden="true">publish</span>Publish</button>
+                                </form>
+                                <form method="POST" action="{{ route('Blog.manage.sendBack', $post) }}" onsubmit="var n = prompt('Note for the author (what to change):', ''); if (n === null) return false; this.querySelector('[name=note]').value = n; return true;">
+                                    @csrf
+                                    <input type="hidden" name="note" value="">
+                                    <button type="submit" class="dh-btn dh-btn-ghost-dark"><span class="material-icons-round" aria-hidden="true">undo</span>Send back</button>
+                                </form>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
             <div class="dh-panel-head-row mb-3">
                 <h2 class="dh-panel-title mb-0">{{ auth()->user()->isAdmin() ? 'All articles' : 'My articles' }}</h2>
                 <a class="dh-btn dh-btn-primary" href="{{ route('Blog.manage.create') }}">
@@ -69,7 +99,8 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <span class="chip {{ $post->status === 'published' ? 'chip-yes' : 'chip-static' }}">{{ ucfirst($post->status) }}</span>
+                                        <span class="chip {{ $post->status === 'published' ? 'chip-yes' : 'chip-static' }}">{{ ['draft' => 'Draft', 'pending' => 'Waiting for review', 'published' => 'Published'][$post->status] ?? ucfirst($post->status) }}</span>
+                                        @if ($post->status === 'draft' && $post->review_note)<span class="chip chip-static" title="{{ $post->review_note }}">Changes requested</span>@endif
                                     </td>
                                     <td>{{ $post->category }}</td>
                                     @if(auth()->user()->isAdmin())<td>{{ $post->author->name ?? 'Unknown' }}</td>@endif

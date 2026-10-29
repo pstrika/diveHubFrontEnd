@@ -87,9 +87,30 @@
                         <div class="dh-profile-card">
                             <div class="dh-profile-card-head"><h6 class="dh-panel-title">Publish</h6></div>
                             <div class="dh-profile-card-body">
+                                {{-- Review queue (2026-10-29): Admins publish; a Creator saves a
+                                     draft or submits for review, and keeps "Published" only on an
+                                     article that is already live. BlogAdminController enforces it. --}}
+                                @php
+                                    $isAdminAuthor = auth()->user()->isAdmin();
+                                    $statusOptions = $isAdminAuthor
+                                        ? ['draft' => 'Draft', 'pending' => 'Waiting for review', 'published' => 'Published']
+                                        : (['draft' => 'Draft', 'pending' => 'Submit for review'] + ($post->exists && $post->status === 'published' ? ['published' => 'Published (live)'] : []));
+                                @endphp
+                                @if (!$isAdminAuthor && $post->review_note && $post->status === 'draft')
+                                    <div class="dh-review-note" role="note">
+                                        <strong>Changes requested by an editor</strong>
+                                        <p>{{ $post->review_note }}</p>
+                                    </div>
+                                @endif
+                                @if (!$isAdminAuthor && $post->status === 'pending')
+                                    <p class="dh-hint">Waiting for an editor to review and publish it. You can still make changes.</p>
+                                @endif
                                 <div class="dh-field">
                                     <label for="status">Status</label>
-                                    <x-dh-select name="status" :options="['draft' => 'Draft', 'published' => 'Published']" :selected="old('status', $post->status ?: 'draft')" :disabled="false" />
+                                    <x-dh-select name="status" :options="$statusOptions" :selected="old('status', $post->status ?: 'draft')" :disabled="false" />
+                                    @if (!$isAdminAuthor)
+                                        <p class="dh-hint">An editor reviews every new article before it goes live.</p>
+                                    @endif
                                 </div>
                                 <button type="submit" class="dh-btn dh-btn-primary" style="width: 100%; justify-content: center;">Save article</button>
                                 <button type="button" id="previewArticleBtn" class="dh-btn dh-btn-ghost-dark" style="width: 100%; justify-content: center; margin-top: 8px;">
