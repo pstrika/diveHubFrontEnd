@@ -42,10 +42,12 @@
     </h1>
 @endif
 
-{{-- Quick ranges. "Today" returns to day mode; presets are plain links. --}}
+{{-- Quick ranges. "Today" returns to day mode; presets are plain links.
+     Today links to its own date, not bare /Trips: a bare landing restores the
+     last saved day, so the old link bounced straight back to it (2026-10-30). --}}
 <nav class="dh-range-row dive-filter-chips" aria-label="Dates">
     <span class="text-sm text-secondary me-1">Dates</span>
-    <a href="{{ $tripsBase }}{{ $query }}" class="chip {{ $isToday ? 'chip-on' : '' }}">Today</a>
+    <a href="{{ $tripsBase }}/{{ $today }}{{ $query }}" class="chip {{ $isToday ? 'chip-on' : '' }}">Today</a>
     @foreach($presets as $key => $preset)
         <a href="{{ $presetUrl($key) }}" class="chip {{ $rangeKey === $key ? 'chip-on' : '' }}" title="{{ \Carbon\Carbon::parse($preset['from'])->format('M j') }} to {{ \Carbon\Carbon::parse($preset['to'])->format('M j') }}">{{ $preset['label'] }}</a>
     @endforeach

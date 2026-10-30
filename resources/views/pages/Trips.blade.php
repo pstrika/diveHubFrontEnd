@@ -186,6 +186,12 @@
                     window.location.replace(basePath + '?' + params.toString());
                     return;
                 }
+                // A saved day that has already gone by is dropped: the board
+                // never lists past days, so it would only strand the diver there.
+                if (savedDate && savedDate < @json($today)) {
+                    try { localStorage.removeItem(DATE_KEY); } catch (e) {}
+                    savedDate = null;
+                }
                 if (savedDate) {
                     window.location.replace(basePath + '/' + savedDate + (params.toString() ? '?' + params.toString() : ''));
                     return;
