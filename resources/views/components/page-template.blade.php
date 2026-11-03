@@ -13,13 +13,34 @@
 
 <head>
   <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-JX0ZQN5ZK6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
 
     gtag('config', 'G-JX0ZQN5ZK6');
+
+    // Scraper farms (old desktop Chrome from hundreds of Singapore/China IPs,
+    // 2026-11-03) run the page's JavaScript, so every load showed up in GA as
+    // a visit. gtag.js now loads only once a visitor scrolls, taps, clicks or
+    // types - or right away for a signed-in member (not the automatic guest
+    // account every visitor gets) - and never for an
+    // automated browser. Calls made before that wait in dataLayer.
+    (function () {
+      if (navigator.webdriver || /bot|crawl|spider|slurp|headless|lighthouse|preview/i.test(navigator.userAgent)) return;
+      var loaded = false, events = ['scroll', 'pointerdown', 'keydown', 'touchstart', 'mousemove'];
+      function load() {
+        if (loaded) return;
+        loaded = true;
+        events.forEach(function (e) { window.removeEventListener(e, load, true); });
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=G-JX0ZQN5ZK6';
+        document.head.appendChild(s);
+      }
+      events.forEach(function (e) { window.addEventListener(e, load, { capture: true, passive: true }); });
+      @if(auth()->user()?->isNotGuest()) load(); @endif
+    })();
   </script>
   <!-- Google Analytics Code -->
   @sendGA4ClientID
