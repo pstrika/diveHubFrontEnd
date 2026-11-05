@@ -76,8 +76,12 @@ final class WreckTrekData
             }
 
             $legs = [];
+            $gps = $sites->keyBy('id');
             foreach (WreckTrekLeg::orderBy('id')->get() as $l) {
                 if (!isset($slugs[$l->from_site_id], $slugs[$l->to_site_id])) continue;
+                // A leg measured against old coordinates no longer applies; GPS gives the leg instead.
+                $a = $gps[$l->from_site_id]; $b = $gps[$l->to_site_id];
+                if ($l->gps_basis !== null && $l->gps_basis !== $a->gpsLat . '|' . $a->gpsLon . '|' . $b->gpsLat . '|' . $b->gpsLon) continue;
                 $legs[] = [
                     'id' => $l->id,
                     'from' => $slugs[$l->from_site_id],

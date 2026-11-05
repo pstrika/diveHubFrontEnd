@@ -47,7 +47,7 @@ class WreckTrekAdminController extends Controller
             return back()->withErrors(['to_site_id' => 'That leg already exists, in one direction or the other, or that wreck can\'t be used.']);
         }
 
-        WreckTrekLeg::create($data + ['from_site_id' => $from->id]);
+        WreckTrekLeg::create($data + ['from_site_id' => $from->id, 'gps_basis' => WreckTrekLeg::basisFor($from->id, $to)]);
         WreckTrekData::forget();
 
         return back()->with('status', 'Leg added.');
@@ -57,7 +57,8 @@ class WreckTrekAdminController extends Controller
     {
         $this->authorize('manage-items', User::class);
 
-        WreckTrekLeg::findOrFail($leg)->update($request->validate($this->legRules()));
+        $row = WreckTrekLeg::findOrFail($leg);
+        $row->update($request->validate($this->legRules()) + ['gps_basis' => WreckTrekLeg::basisFor($row->from_site_id, $row->to_site_id)]);
         WreckTrekData::forget();
 
         return back()->with('status', 'Leg saved.');

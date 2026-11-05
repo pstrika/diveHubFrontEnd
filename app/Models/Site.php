@@ -22,6 +22,16 @@ class Site extends Model
         'quarry' => 'Quarry', 'mine' => 'Mine', 'lake' => 'Lake', 'river' => 'River', 'other' => 'Other',
     ];
 
+    /** The wreck trek planner caches its data, so a change to a wreck must clear it. */
+    protected static function booted(): void
+    {
+        $watched = ['gpsLat', 'gpsLon', 'name', 'type', 'maxDepth', 'wreckData', 'wreck_trek_id', '_hidden', 'slug'];
+        static::saved(function (Site $site) use ($watched) {
+            if ($site->wasChanged($watched)) \App\Support\WreckTrekData::forget();
+        });
+        static::deleted(fn () => \App\Support\WreckTrekData::forget());
+    }
+
     protected $connection = 'mysql_trips'; // Use the new connection for this model
     protected $table = 'sites';
 
