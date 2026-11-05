@@ -167,7 +167,7 @@
     data.legs.forEach(function (l) {
       var a = pos[l.from], b = pos[l.to], ab = used[E.legKey(l.from, l.to)], ba = used[E.legKey(l.to, l.from)], on = ab || ba;
       var x1 = sx(a), y1 = sy(a), x2 = sx(b), y2 = sy(b);
-      if (!on && (state.onlyRebars ? !rebar(l) : !shown.has(l) && !rebar(l))) return;
+      if (!on && (state.onlyRebars && rebars.length ? !rebar(l) : !shown.has(l) && !rebar(l))) return;
       s += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + (on ? (rebar(l) ? 'var(--rebar)' : 'var(--route)') : rebar(l) ? 'var(--rebar)' : 'var(--accent)') + '" stroke-width="' + (on ? 4 : rebar(l) ? 3 : 2) + '"' + (on ? '' : ' stroke-dasharray="6 5"') + ' stroke-linecap="round"/>';
       s += '<line class="leg-hit" data-a="' + esc(l.from) + '" data-b="' + esc(l.to) + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>';
       var flip = !on && flipped[E.legKey(l.from, l.to)];
