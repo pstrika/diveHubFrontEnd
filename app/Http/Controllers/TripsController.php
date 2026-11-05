@@ -71,7 +71,7 @@ class TripsController extends Controller
         // name, type and slug are needed by the trip cards (site link, wreck chip).
         // Keyed by id: a range search enriches thousands of trips, and a scan per trip was the slow part.
         $sites = Cache::remember('sites.minimal', 300, function () {
-            return Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level')->get()->keyBy('id');
+            return Site::select('id', 'name', 'type', 'slug', 'maxDepth', 'level', 'trek_type')->get()->keyBy('id');
         });
 
         // Each trip card's site hero photo, desktop/tablet only (Pablo,

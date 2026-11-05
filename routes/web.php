@@ -168,6 +168,18 @@ Route::get('gasplanning', function () {
 // registered users, no admin/personal gate.
 Route::get('GasBlending', [App\Http\Controllers\GasBlendingController::class, 'index'])->name('GasBlending');
 
+// Wreck Trek: see WreckTrekController for why api/ lives in this file.
+Route::get('Tools/WreckTrek', [App\Http\Controllers\WreckTrekController::class, 'index'])->middleware('auth')->name('WreckTrek');
+Route::get('api/wrecktrek', [App\Http\Controllers\WreckTrekController::class, 'data'])->middleware('auth')->name('WreckTrek.data');
+Route::get('api/wrecktrek/routes/{id}', [App\Http\Controllers\WreckTrekController::class, 'show'])->whereNumber('id')->middleware('auth');
+Route::post('api/wrecktrek/routes', [App\Http\Controllers\WreckTrekController::class, 'store'])->middleware('auth');
+Route::put('api/wrecktrek/routes/{id}', [App\Http\Controllers\WreckTrekController::class, 'update'])->whereNumber('id')->middleware('auth');
+Route::delete('api/wrecktrek/routes/{id}', [App\Http\Controllers\WreckTrekController::class, 'destroy'])->whereNumber('id')->middleware('auth');
+Route::post('edit-site/{id}/trek', [App\Http\Controllers\WreckTrekAdminController::class, 'saveWreck'])->whereNumber('id')->middleware('auth')->name('site-trek.save');
+Route::post('edit-site/{id}/trek/legs', [App\Http\Controllers\WreckTrekAdminController::class, 'storeLeg'])->whereNumber('id')->middleware('auth')->name('site-trek.legs.store');
+Route::put('trek-legs/{leg}', [App\Http\Controllers\WreckTrekAdminController::class, 'updateLeg'])->whereNumber('leg')->middleware('auth')->name('site-trek.legs.update');
+Route::delete('trek-legs/{leg}', [App\Http\Controllers\WreckTrekAdminController::class, 'destroyLeg'])->whereNumber('leg')->middleware('auth')->name('site-trek.legs.destroy');
+
 // /Landing is the same page as / (the redesigned home) and keeps its canonical on /.
 Route::get('Landing', [App\Http\Controllers\HomeController::class, 'index'])->middleware('guest')->name('Landing');
 

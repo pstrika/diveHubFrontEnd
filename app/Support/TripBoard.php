@@ -23,7 +23,7 @@ use Illuminate\Support\Collection;
  *
  * Filters (all optional, read from the query string):
  *   region = coast key (see Coast)      level = 0..4 (see DiveLevel)
- *   type   = rec|tec|wreck|shark|lobster|night
+ *   type   = rec|tec|wreck|trek|shark|lobster|night
  *   seats  = 1 to hide trips with no seats
  */
 final class TripBoard
@@ -32,6 +32,7 @@ final class TripBoard
         'rec'     => 'Recreational',
         'tec'     => 'Technical',
         'wreck'   => 'Wreck',
+        'trek'    => 'Wreck trek',
         'shark'   => 'Shark',
         'lobster' => 'Lobster',
         'night'   => 'Night',
@@ -345,6 +346,7 @@ final class TripBoard
             'maxDepth'      => $first->maxDepth ?? null,
             'isTech'        => $isTech,
             'isWreck'       => $isWreck,
+            'isTrek'        => collect($sites)->contains(fn ($s) => !empty($s->trek_type)),
             'isShark'       => str_contains($tags, 'SHA'),
             'isLobster'     => str_contains($tags, 'LOB'),
             'isNight'       => $hour >= 17,
@@ -429,6 +431,7 @@ final class TripBoard
             case 'rec':     return !$card['isTech'];
             case 'tec':     return $card['isTech'];
             case 'wreck':   return $card['isWreck'];
+            case 'trek':    return $card['isTrek'];
             case 'shark':   return $card['isShark'];
             case 'lobster': return $card['isLobster'];
             case 'night':   return $card['isNight'];

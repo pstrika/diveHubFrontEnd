@@ -5056,3 +5056,14 @@ body.dh-photo-viewer-open { overflow: hidden; }
 .dh-review-item-actions form { margin: 0; }
 .dh-review-note { background: #fff4e0; color: #6b4500; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: .9rem; }
 .dh-review-note p { margin: 4px 0 0; white-space: pre-line; }
+
+/* Wreck Trek: the site page card and the site editor's legs grid. */
+.dh-site-trek-legs { list-style: none; padding: 0; margin: 0 0 12px; display: grid; gap: 6px; }
+.dh-site-trek-legs li { display: flex; justify-content: space-between; gap: 12px; }
+.dh-site-trek-legs span { font-variant-numeric: tabular-nums; color: var(--dh-muted, #5b6b75); white-space: nowrap; }
+.dh-trek-legs { overflow-x: auto; }
+.dh-trek-legs table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.dh-trek-legs th { text-align: left; padding: 6px; white-space: nowrap; }
+.dh-trek-legs td { padding: 4px 6px; vertical-align: middle; white-space: nowrap; }
+.dh-trek-legs input, .dh-trek-legs select { width: 100%; min-width: 84px; }
+.dh-trek-leg-actions { display: flex; gap: 6px; }

@@ -470,8 +470,10 @@ class SiteController extends Controller
         // Blog posts that list this site (SEO audit, 2026-10-24): links back
         // from the site to the guides that send divers here.
         $sitePosts = \App\Models\Post::mentioningSite((int) $site->id);
+        $trekLegs = $site->trek_type ? \App\Support\WreckTrekData::legsFrom((string) $site->slug) : [];
+        $trekName = $site->trek_type ? \App\Support\WreckTrekData::trekName((string) $site->slug) : null;
 
-        return view('pages.SiteDetails', compact('site','photos', 'diverPhotos', 'siteVideos', 'videoUploadsOn', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'gasMixes', 'forecast', 'nextTrips', 'myDiveCount', 'sitePosts'));
+        return view('pages.SiteDetails', compact('trekName', 'site','photos', 'diverPhotos', 'siteVideos', 'videoUploadsOn', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'gasMixes', 'forecast', 'nextTrips', 'myDiveCount', 'sitePosts', 'trekLegs'));
 
     }
     public function getMyVisitedSites() {
@@ -572,7 +574,10 @@ class SiteController extends Controller
         $visitingOperatorsIndex = explode(',', $site->visitingOperators);
         $visitingOperators = Operator::whereIn('id', $visitingOperatorsIndex)->get();
 
-        return view('pages.edit-site', compact('site', 'cover', 'locations', 'operators', 'visitingOperators'));
+        $trekLegs = \App\Models\WreckTrekLeg::where('from_site_id', $site->id)->orWhere('to_site_id', $site->id)->orderBy('id')->get();
+        $trekSites = Site::whereNotNull('trek_type')->orderBy('name')->get();
+
+        return view('pages.edit-site', compact('site', 'cover', 'locations', 'operators', 'visitingOperators', 'trekLegs', 'trekSites'));
     }
 
     public function showAdminPics($id) {

@@ -191,6 +191,132 @@
                     </button>
                 </div>
             </form>
+
+            {{-- Wreck Trek. Saved on its own, not with Save site above. --}}
+            <section class="dh-panel mt-4" id="site-trek">
+                <h2 class="dh-panel-title">Wreck trek</h2>
+                @if (session('status'))
+                    <p class="dh-hint">{{ session('status') }}</p>
+                @endif
+                @if ($errors->any())
+                    <p class="dh-hint text-danger">{{ $errors->first() }}</p>
+                @endif
+                <form action="{{ route('site-trek.save', ['id' => $site->id]) }}" method="POST">
+                    @csrf
+                    <div class="dh-site-edit-grid">
+                        <div class="dh-field">
+                            <label for="trek_type">Chart icon (blank = not a trek wreck)</label>
+                            <select id="trek_type" name="trek_type">
+                                <option value=""></option>
+                                @foreach (\App\Support\WreckTrekData::TYPES as $type)
+                                    <option value="{{ $type }}" @selected($site->trek_type === $type)>{{ $type }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="dh-field">
+                            <label for="wreck_trek_id">Wreck trek</label>
+                            <select id="wreck_trek_id" name="wreck_trek_id">
+                                <option value=""></option>
+                                @foreach (\App\Models\WreckTrek::orderBy('sort')->get() as $trek)
+                                    <option value="{{ $trek->id }}" @selected((int) $site->wreck_trek_id === $trek->id)>{{ $trek->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="dh-field">
+                            <label for="trek_sitting">How it sits</label>
+                            <select id="trek_sitting" name="trek_sitting">
+                                @foreach (\App\Support\WreckTrekData::SITTINGS as $value => $label)
+                                    <option value="{{ $value }}" @selected($site->trek_sitting === $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="dh-field">
+                            <label for="trek_broken">Broken (bow separated from stern)</label>
+                            <input type="hidden" name="trek_broken" value="0">
+                            <input type="checkbox" id="trek_broken" name="trek_broken" value="1" @checked($site->trek_broken) style="width: auto;">
+                        </div>
+                        <div class="dh-field">
+                            <label for="trek_lie_deg">Bow points (° true, 180 = south)</label>
+                            <input type="number" id="trek_lie_deg" name="trek_lie_deg" min="0" max="359" value="{{ $site->trek_lie_deg }}">
+                        </div>
+                        <div class="dh-field">
+                            <label for="trek_sand_ft">Max depth (ft)</label>
+                            <input type="number" id="trek_sand_ft" name="trek_sand_ft" min="0" value="{{ $site->trek_sand_ft }}">
+                        </div>
+                    </div>
+                    <button type="submit" class="dh-btn dh-btn-primary">Save trek details</button>
+                </form>
+
+                @if ($site->trek_type)
+                    <h3 class="dh-panel-subtitle mt-4">Trek legs</h3>
+                    <p class="dh-hint">Heading is degrees true, from the first wreck to the second. The reverse leg is worked out automatically. Fill in Verified on once a leg has been swum and measured: until then the planner says it comes from GPS.</p>
+                    @php
+                        $names = $trekSites->pluck('name', 'id');
+                        $byId = $trekSites->keyBy('id');
+                        // Measured heading beside the GPS bearing, to catch a mis-measured leg.
+                        $bearing = function ($leg) use ($byId) {
+                            $a = $byId[$leg->from_site_id] ?? null;
+                            $b = $byId[$leg->to_site_id] ?? null;
+                            if (!$a || !$b || $a->decimalLatitude() === null || $b->decimalLatitude() === null) return null;
+                            $la1 = deg2rad($a->decimalLatitude());
+                            $la2 = deg2rad($b->decimalLatitude());
+                            $dl = deg2rad($b->decimalLongitude() - $a->decimalLongitude());
+                            return (int) round(fmod(rad2deg(atan2(sin($dl) * cos($la2), cos($la1) * sin($la2) - sin($la1) * cos($la2) * cos($dl))) + 360, 360));
+                        };
+                    @endphp
+                    <div class="dh-trek-legs">
+                        <table>
+                            <thead><tr><th>Leg</th><th>Hdg °</th><th>GPS °</th><th>Dist ft</th><th>Notes</th><th>Verified by</th><th>Verified on</th><th></th></tr></thead>
+                            <tbody>
+                                @foreach ($trekLegs as $leg)
+                                    @php
+                                        $computed = $bearing($leg);
+                                        $off = $computed === null ? 0 : abs((($leg->heading_deg - $computed + 540) % 360) - 180);
+                                    @endphp
+                                    <tr>
+                                        <td>{{ $names[$leg->from_site_id] ?? '?' }} → {{ $names[$leg->to_site_id] ?? '?' }}</td>
+                                        <td><input form="leg-{{ $leg->id }}" type="number" name="heading_deg" min="0" max="359" value="{{ $leg->heading_deg }}" required></td>
+                                        <td @class(['text-danger fw-bold' => $off > 10])>{{ $computed ?? '—' }}</td>
+                                        <td><input form="leg-{{ $leg->id }}" type="number" name="distance_ft" min="1" value="{{ $leg->distance_ft }}" required></td>
+                                        <td><input form="leg-{{ $leg->id }}" type="text" name="notes" maxlength="255" value="{{ $leg->notes }}"></td>
+                                        <td><input form="leg-{{ $leg->id }}" type="text" name="verified_by" maxlength="100" value="{{ $leg->verified_by }}"></td>
+                                        <td><input form="leg-{{ $leg->id }}" type="date" name="verified_on" value="{{ $leg->verified_on?->toDateString() }}"></td>
+                                        <td class="dh-trek-leg-actions">
+                                            <form id="leg-{{ $leg->id }}" action="{{ route('site-trek.legs.update', ['leg' => $leg->id]) }}" method="POST">@csrf @method('PUT')
+                                                <button type="submit" class="dh-btn dh-btn-primary">Save</button>
+                                            </form>
+                                            <form action="{{ route('site-trek.legs.destroy', ['leg' => $leg->id]) }}" method="POST" onsubmit="return confirm('Delete this leg?')">@csrf @method('DELETE')
+                                                <button type="submit" class="dh-btn dh-btn-ghost-dark">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                <tr>
+                                    <td>
+                                        <select form="leg-new" name="to_site_id" required aria-label="To wreck">
+                                            <option value="">To…</option>
+                                            @foreach ($trekSites as $other)
+                                                @if ($other->id !== $site->id)<option value="{{ $other->id }}">{{ $other->name }}</option>@endif
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td><input form="leg-new" type="number" name="heading_deg" min="0" max="359" required></td>
+                                    <td>—</td>
+                                    <td><input form="leg-new" type="number" name="distance_ft" min="1" required></td>
+                                    <td><input form="leg-new" type="text" name="notes" maxlength="255"></td>
+                                    <td><input form="leg-new" type="text" name="verified_by" maxlength="100"></td>
+                                    <td><input form="leg-new" type="date" name="verified_on"></td>
+                                    <td class="dh-trek-leg-actions">
+                                        <form id="leg-new" action="{{ route('site-trek.legs.store', ['id' => $site->id]) }}" method="POST">@csrf
+                                            <button type="submit" class="dh-btn dh-btn-primary">Add leg</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </section>
         </div>
         <x-auth.footers.auth.footer></x-auth.footers.auth.footer>
     </main>

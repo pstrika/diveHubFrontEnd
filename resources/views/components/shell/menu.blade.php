@@ -132,6 +132,9 @@
     {!! $link('Multi dive planner', route('MultiDivePlanner'), 'repeat', $isGuest) !!}
     {!! $link('Best gases', route('gasplanning'), 'science') !!}
     {!! $link('Gas blending', route('GasBlending'), 'colorize') !!}
+    {{-- Registered members only, like the multi dive planner above.
+         WreckTrekController enforces it too. --}}
+    {!! $link('Wreck trek', route('WreckTrek'), 'explore', $isGuest) !!}
 </div>
 
 {{-- Pablo's own personal equipment log - its own group rather than folded

@@ -1636,7 +1636,29 @@
                             </div>
                     </section>
 
-                    {{-- From the blog (SEO audit, 2026-10-24): the guides that list this site. --}}
+                    {{-- Wreck Trek: this wreck's measured legs, and a way into the planner. --}}
+                    @if (!empty($trekLegs))
+                        <section class="dh-panel" id="site-trek">
+                            <h2 class="dh-panel-title">Part of the {{ $trekName ?? 'Wreck Trek' }}</h2>
+                            @if (collect($trekLegs)->contains('verified', false))
+                                <p class="dh-hint">Headings and distances are worked out from GPS coordinates, not measured underwater. Check them before you dive.</p>
+                            @endif
+                            <ul class="dh-site-trek-legs">
+                                @foreach ($trekLegs as $leg)
+                                    <li>
+                                        <a href="{{ route('SiteDetails') }}/{{ $leg['slug'] }}">{{ $leg['name'] }}</a>
+                                        <span>{{ str_pad((string) $leg['hdg'], 3, '0', STR_PAD_LEFT) }}° · {{ number_format($leg['dist']) }} ft</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                            @if (auth()->user()?->isNotGuest())
+                                <a class="dh-btn dh-btn-primary" href="{{ route('WreckTrek') }}?start={{ $site->slug }}">Plan a trek from here</a>
+                            @else
+                                <a class="dh-btn dh-btn-primary" href="#" onclick="event.preventDefault();showModalGuest();">Plan a trek from here</a>
+                            @endif
+                        </section>
+                    @endif
+
                     @if (!empty($sitePosts) && $sitePosts->isNotEmpty())
                         <section class="dh-panel" id="site-blog">
                             <h2 class="dh-panel-title">From the blog</h2>
