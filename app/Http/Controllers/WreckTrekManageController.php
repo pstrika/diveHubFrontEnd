@@ -8,6 +8,8 @@ use App\Models\WeatherLocation;
 use App\Models\WreckTrek;
 use App\Support\WreckTrekData;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -39,7 +41,8 @@ class WreckTrekManageController extends Controller
             $slug = $base . '-' . $n;
         }
 
-        WreckTrek::create($data + ['slug' => $slug]);
+        $trek = WreckTrek::create(Arr::except($data, ['logo', 'remove_logo']) + ['slug' => $slug]);
+        $this->saveLogo($request, $trek);
         WreckTrekData::forget();
 
         return back()->with('status', $data['name'] . ' created. Add its wrecks below.');
@@ -50,7 +53,8 @@ class WreckTrekManageController extends Controller
         $this->authorize('manage-items', User::class);
         $trek = WreckTrek::findOrFail($id);
 
-        $trek->update($this->validated($request, $id));
+        $trek->update(Arr::except($this->validated($request, $id), ['logo', 'remove_logo']));
+        $this->saveLogo($request, $trek);
         WreckTrekData::forget();
 
         return back()->with('status', $trek->name . ' saved.');
@@ -62,6 +66,7 @@ class WreckTrekManageController extends Controller
         $trek = WreckTrek::findOrFail($id);
 
         Site::where('wreck_trek_id', $id)->update(['wreck_trek_id' => null]);
+        $this->deleteLogoFile($trek);
         $trek->delete();
         WreckTrekData::forget();
 
@@ -93,12 +98,37 @@ class WreckTrekManageController extends Controller
         return back()->with('status', $site->name . ' removed.');
     }
 
+    /** A new file replaces the old one; the remove box clears it. */
+    private function saveLogo(Request $request, WreckTrek $trek): void
+    {
+        if ($request->hasFile('logo')) {
+            $this->deleteLogoFile($trek);
+            $file = $request->file('logo');
+            $name = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->extension();
+            Storage::disk('siteAssets')->putFileAs('img/treks', $file, $name);
+            $trek->update(['logo' => 'assets/img/treks/' . $name]);
+        } elseif ($request->boolean('remove_logo')) {
+            $this->deleteLogoFile($trek);
+            $trek->update(['logo' => null]);
+        }
+    }
+
+    private function deleteLogoFile(WreckTrek $trek): void
+    {
+        if ($trek->logo && str_starts_with($trek->logo, 'assets/img/treks/')) {
+            Storage::disk('siteAssets')->delete(substr($trek->logo, strlen('assets/')));
+        }
+    }
+
     private function validated(Request $request, ?int $id = null): array
     {
         return $request->validate([
             'name' => ['required', 'string', 'max:80', Rule::unique('wreck_treks', 'name')->ignore($id)],
             'location' => ['required', Rule::in(WeatherLocation::pluck('short')->all())],
             'notes' => 'nullable|string|max:5000',
+            'logo' => 'nullable|image|max:5120',
+            'logo_link' => ['nullable', 'url', 'max:255', 'regex:/^https?:\/\//i'],
+            'remove_logo' => 'nullable|boolean',
         ]);
     }
 }

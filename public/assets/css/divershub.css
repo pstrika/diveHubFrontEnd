@@ -5080,6 +5080,9 @@ body.dh-photo-viewer-open { overflow: hidden; }
 .dh-trek-form .dh-field { flex: 1 1 240px; margin-bottom: 0; }
 .dh-trek-form .dh-trek-notes { flex: 1 1 100%; }
 .dh-trek-notes textarea { min-height: 96px; }
+.dh-trek-logo-now { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.dh-trek-logo-now img { max-height: 48px; max-width: 160px; background: var(--dh-ink); border-radius: 6px; padding: 4px; }
+.dh-trek-remove-logo { display: inline-flex; align-items: center; gap: 6px; margin: 0; text-transform: none; letter-spacing: 0; font-weight: 600; }
 .dh-trek-wrecks { list-style: none; margin: 0 0 12px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px 16px; }
 .dh-trek-wrecks li { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--dh-line); }
 .dh-trek-wrecks form { margin: 0; }

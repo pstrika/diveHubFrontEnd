@@ -119,6 +119,10 @@
 
     // Where each wreck's icon and name go, worked out first so the leg labels can keep clear of them.
     var place = {}, boxes = [{ x: 0, w: 270 * f, t: 0, b: band }];
+    // The trek's logo, if it has one, sits right above the scale; the labels keep clear of it.
+    var trek = !paper && state.trek ? all.treks.find(function (tk) { return tk.slug === state.trek; }) : null, logo = trek && trek.logo ? trek : null;
+    var LOGO_W = 150, LOGO_H = 46, logoY = H - 24 - 24 - LOGO_H;
+    if (logo) boxes.push({ x: 26, w: LOGO_W + 8, t: logoY - 4, b: logoY + LOGO_H + 4 });
     Object.keys(data.wrecks).forEach(function (id) {
       var w = data.wrecks[id], x = sx(pos[id]), y = sy(pos[id]), hull = E.hullFt(w), long = hull.long * scale, wide = hull.wide * scale, r = state.showWrecks ? Math.max(12, long / 2) : 10, box = HULL[w.type];
       place[id] = { x: x, y: y, r: r, wide: state.showWrecks ? wide : 12, sw: wide / box[0], sl: long / box[1], tiny: long < 20 };
@@ -216,6 +220,10 @@
     });
 
     s += chips;
+    if (logo) {
+      var pic = '<image href="' + esc(logo.logo) + '" x="30" y="' + logoY + '" width="' + LOGO_W + '" height="' + LOGO_H + '" preserveAspectRatio="xMinYMax meet"/>';
+      s += logo.logoLink ? '<a class="trek-logo" href="' + esc(logo.logoLink) + '" target="_blank" rel="noopener noreferrer"><title>' + esc(logo.name) + '</title>' + pic + '</a>' : '<g class="trek-logo">' + pic + '</g>';
+    }
 
     Object.keys(data.wrecks).forEach(function (id) {
       var w = data.wrecks[id], at = place[id], on = state.route.indexOf(id) >= 0, x = at.x, y = at.y, r = at.r, bx = x + Math.max(10, at.wide / 2 + 7), by = y - r * 0.7;

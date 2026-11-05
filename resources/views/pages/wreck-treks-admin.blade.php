@@ -18,7 +18,7 @@
 
             <section class="dh-panel">
                 <h2 class="dh-panel-title">New wreck trek</h2>
-                <form action="{{ route('wreck-treks.store') }}" method="POST" class="dh-trek-form">
+                <form action="{{ route('wreck-treks.store') }}" method="POST" class="dh-trek-form" enctype="multipart/form-data">
                     @csrf
                     <div class="dh-field">
                         <label for="new-trek-name">Name</label>
@@ -27,6 +27,14 @@
                     <div class="dh-field">
                         <label for="new-trek-location-btn">Location</label>
                         <x-dh-select name="location" id="new-trek-location" :options="$locations" placeholder="Choose a location" :disabled="false" />
+                    </div>
+                    <div class="dh-field dh-trek-notes">
+                        <label for="new-trek-logo">Logo (shown above the chart's scale; leave empty for none)</label>
+                        <input type="file" id="new-trek-logo" name="logo" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+                    </div>
+                    <div class="dh-field dh-trek-notes">
+                        <label for="new-trek-logo-link">Logo link (where clicking the logo goes)</label>
+                        <input type="url" id="new-trek-logo-link" name="logo_link" maxlength="255" placeholder="https://" value="{{ old('logo_link') }}">
                     </div>
                     <button type="submit" class="dh-btn dh-btn-primary">Create</button>
                 </form>
@@ -45,7 +53,7 @@
                         </form>
                     </div>
 
-                    <form action="{{ route('wreck-treks.update', $trek->id) }}" method="POST" class="dh-trek-form">
+                    <form action="{{ route('wreck-treks.update', $trek->id) }}" method="POST" class="dh-trek-form" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         <div class="dh-field">
@@ -59,6 +67,17 @@
                         <div class="dh-field dh-trek-notes">
                             <label for="trek-notes-{{ $trek->id }}">Notes</label>
                             <textarea class="dh-site-textarea" id="trek-notes-{{ $trek->id }}" name="notes" maxlength="5000" placeholder="Entry point, currents, what to expect…">{{ $trek->notes }}</textarea>
+                        </div>
+                        <div class="dh-field dh-trek-notes">
+                            <label for="trek-{{ $trek->id }}-logo">Logo (shown above the chart's scale; leave empty for none)</label>
+                            @if ($trek && $trek->logo)
+                                <div class="dh-trek-logo-now"><img src="{{ asset($trek->logo) }}" alt="Current logo"> <label class="dh-trek-remove-logo"><input type="checkbox" name="remove_logo" value="1"> Remove it</label></div>
+                            @endif
+                            <input type="file" id="trek-{{ $trek->id }}-logo" name="logo" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+                        </div>
+                        <div class="dh-field dh-trek-notes">
+                            <label for="trek-{{ $trek->id }}-logo-link">Logo link (where clicking the logo goes)</label>
+                            <input type="url" id="trek-{{ $trek->id }}-logo-link" name="logo_link" maxlength="255" placeholder="https://" value="{{ $trek->logo_link }}">
                         </div>
                         <button type="submit" class="dh-btn dh-btn-ghost-dark">Save</button>
                     </form>

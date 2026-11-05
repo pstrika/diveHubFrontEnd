@@ -76,7 +76,7 @@ final class WreckTrekData
             return [
                 // A trek with no wrecks yet stays out of the planner.
                 'treks' => $treks->filter(fn ($t) => collect($wrecks)->contains('trek', $t->slug))
-                    ->map(fn ($t) => ['slug' => $t->slug, 'name' => $t->name, 'location' => $names[$t->location] ?? 'Other', 'notes' => $t->notes])->values()->all(),
+                    ->map(fn ($t) => ['slug' => $t->slug, 'name' => $t->name, 'location' => $names[$t->location] ?? 'Other', 'notes' => $t->notes, 'logo' => $t->logo ? '/' . $t->logo : null, 'logoLink' => $t->logo_link])->values()->all(),
                 'wrecks' => $wrecks,
                 'legs' => $legs,
                 'routes' => $routes,
