@@ -29,7 +29,7 @@
 
   // all = everything from the API; data = the chosen trek's part of it.
   var all = { treks: [], wrecks: {}, legs: [], routes: [] }, data = all, pos = {}; 
-  var state = { trek: null, center: null, miles: 0.5, anchor: 'C', cellFt: 100, showWrecks: true, showAids: true, route: [], swim: 70, curKt: 0, curSet: 0 };
+  var state = { trek: null, center: null, miles: 0.5, anchor: 'C', cellFt: 100, showWrecks: true, showAids: true, onlyRebars: false, route: [], swim: 70, curKt: 0, curSet: 0 };
   var msg = '';
   var track = null; // what the depth tracker needs from the last profile
   var zoom = { k: 1, cx: null, cy: null }, view = { W: 760, H: 520 }, MAX_ZOOM = 8; // how far in, and where
@@ -167,14 +167,14 @@
     data.legs.forEach(function (l) {
       var a = pos[l.from], b = pos[l.to], ab = used[E.legKey(l.from, l.to)], ba = used[E.legKey(l.to, l.from)], on = ab || ba;
       var x1 = sx(a), y1 = sy(a), x2 = sx(b), y2 = sy(b);
-      if (!on && !shown.has(l) && !rebar(l)) return;
-      s += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + (on ? 'var(--route)' : rebar(l) ? 'var(--rebar)' : 'var(--accent)') + '" stroke-width="' + (on ? 4 : rebar(l) ? 3 : 2) + '"' + (on ? '' : rebar(l) ? '' : ' stroke-dasharray="6 5"') + ' stroke-linecap="round"/>';
+      if (!on && (state.onlyRebars ? !rebar(l) : !shown.has(l) && !rebar(l))) return;
+      s += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + (on ? (rebar(l) ? 'var(--rebar)' : 'var(--route)') : rebar(l) ? 'var(--aid)' : 'var(--accent)') + '" stroke-width="' + (on ? 4 : rebar(l) ? 3 : 2) + '"' + (on ? '' : ' stroke-dasharray="6 5"') + ' stroke-linecap="round"/>';
       s += '<line class="leg-hit" data-a="' + esc(l.from) + '" data-b="' + esc(l.to) + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>';
       var flip = !on && flipped[E.legKey(l.from, l.to)];
       if (!on && p.legs.length && !flip) return; // with a route showing, only its labels and legs turned by hand stay
       if (!on) { // the heading on the chip runs in the direction of this arrow
         var along = flip ? 0.3 : 0.72;
-        s += '<path transform="translate(' + (x1 + (x2 - x1) * along) + ',' + (y1 + (y2 - y1) * along) + ') rotate(' + (E.toDeg(Math.atan2(y2 - y1, x2 - x1)) + (flip ? 180 : 0)) + ')" d="M7,0 L-5,5 L-5,-5 Z" fill="var(--accent)"/>';
+        s += '<path transform="translate(' + (x1 + (x2 - x1) * along) + ',' + (y1 + (y2 - y1) * along) + ') rotate(' + (E.toDeg(Math.atan2(y2 - y1, x2 - x1)) + (flip ? 180 : 0)) + ')" d="M7,0 L-5,5 L-5,-5 Z" fill="' + (rebar(l) ? 'var(--aid)' : 'var(--accent)') + '"/>';
       }
       var text = deg3(flip ? E.norm(l.hdg + 180) : l.hdg) + ' \u00b7 ' + l.dist + ' ft';
       if (on && on.steer != null && Math.round(on.steer) !== Math.round(on.leg.hdg)) text = deg3(on.leg.hdg) + ' \u00b7 ' + on.leg.dist + ' ft \u00b7 steer ' + deg3(on.steer);
@@ -224,7 +224,7 @@
     p.legs.forEach(function (pl) {
       var a = pos[pl.leg.from], b = pos[pl.leg.to], x1 = sx(a), y1 = sy(a), x2 = sx(b), y2 = sy(b);
       var ang = E.toDeg(Math.atan2(y2 - y1, x2 - x1)), px = x1 + (x2 - x1) * 0.62, py = y1 + (y2 - y1) * 0.62;
-      s += '<path transform="translate(' + px + ',' + py + ') rotate(' + ang + ')" d="M8,0 L-6,6 L-6,-6 Z" fill="var(--route)"/>';
+      s += '<path transform="translate(' + px + ',' + py + ') rotate(' + ang + ')" d="M8,0 L-6,6 L-6,-6 Z" fill="' + (rebar(pl.leg) ? 'var(--rebar)' : 'var(--route)') + '"/>';
     });
 
     s += chips;
@@ -390,7 +390,8 @@
     $('wtLegend').innerHTML = Object.keys(ICON_LABEL).map(function (k) { return item(k, ICON_LABEL[k], ''); }).join('')
       + (hasAids ? Object.keys(AID_LABEL).map(function (k) { return item(k, AID_LABEL[k], 'aid'); }).join('') : '');
     $('wtAidsSwitch').hidden = !hasAids;
-    if (trek && (trek.rebars || []).length) $('wtLegend').insertAdjacentHTML('beforeend', '<span><svg viewBox="0 0 40 40" aria-hidden="true"><line x1="4" y1="20" x2="36" y2="20" stroke="var(--rebar)" stroke-width="4"/></svg>Rebar</span>');
+    $('wtRebarSwitch').hidden = !(trek && (trek.rebars || []).length);
+    if (trek && (trek.rebars || []).length) $('wtLegend').insertAdjacentHTML('beforeend', '<span><svg viewBox="0 0 40 40" aria-hidden="true"><line x1="4" y1="20" x2="36" y2="20" stroke="var(--aid)" stroke-width="3" stroke-dasharray="6 5"/></svg>Rebar link</span>');
   }
 
   function drawViewControls() {
@@ -770,7 +771,7 @@
     drawPanel(p);
     drawSites();
     try {
-      localStorage.setItem(STORE, JSON.stringify({ trek: state.trek, center: state.center, miles: state.miles, anchor: state.anchor, showWrecks: state.showWrecks, showAids: state.showAids, cellFt: state.cellFt, route: state.route, speed: $('wtSpeed').value, custom: $('wtCustom').value, curKt: state.curKt, curSet: state.curSet }));
+      localStorage.setItem(STORE, JSON.stringify({ trek: state.trek, center: state.center, miles: state.miles, anchor: state.anchor, showWrecks: state.showWrecks, showAids: state.showAids, onlyRebars: state.onlyRebars, cellFt: state.cellFt, route: state.route, speed: $('wtSpeed').value, custom: $('wtCustom').value, curKt: state.curKt, curSet: state.curSet }));
     } catch (e) {}
   }
 
@@ -901,6 +902,10 @@
       if (state.trek) useTrek(state.trek); else if (state.center) useAround(state.center);
       render();
     });
+    $('wtOnlyRebars').addEventListener('change', function () {
+      state.onlyRebars = this.checked;
+      render();
+    });
     bindCenterPicker();
     $('wtWide').onclick = function () {
       var wide = document.querySelector('.dh-wt').classList.toggle('is-wide');
@@ -929,6 +934,7 @@
     if (saved && (saved.cellFt === 50 || saved.cellFt === 100 || saved.cellFt === 200)) state.cellFt = saved.cellFt;
     drawViewControls();
     if (!saved) return;
+    if (saved.onlyRebars === true) { $('wtOnlyRebars').checked = true; state.onlyRebars = true; }
     if (saved.showAids === false) { $('wtShowAids').checked = false; state.showAids = false; }
     if (saved.showWrecks === false) { $('wtShowWrecks').checked = false; state.showWrecks = false; $('wtLegend').hidden = true; }
     var speed = $('wtSpeed').parentNode.querySelector('li[data-value="' + saved.speed + '"]');
