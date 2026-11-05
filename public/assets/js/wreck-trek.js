@@ -291,7 +291,7 @@
     state.center = null;
     var wrecks = {};
     Object.keys(all.wrecks).forEach(function (id) { if (all.wrecks[id].trek === state.trek) wrecks[id] = all.wrecks[id]; });
-    showArea(wrecks, all.legs.filter(function (l) { return wrecks[l.from] && wrecks[l.to]; }));
+    showArea(wrecks, E.gpsLegs(wrecks, all.legs));
   }
 
   // Shows every wreck within the chosen radius of one wreck.
@@ -340,6 +340,9 @@
     trekBox.querySelectorAll('li').forEach(function (li) { li.classList.toggle('is-selected', li === row); });
     trekBox.querySelector('.dh-select-value').textContent = row ? row.textContent : 'Choose a wreck trek';
     $('wtTrek').value = state.trek || '';
+    var trek = all.treks.find(function (t) { return t.slug === state.trek; });
+    $('wtNotes').hidden = !(trek && trek.notes);
+    $('wtNotesText').textContent = trek && trek.notes ? trek.notes : '';
     $('wtCenterValue').textContent = state.center ? all.wrecks[state.center].name : "Pick a wreck to see what's around it";
   }
 

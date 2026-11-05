@@ -5062,8 +5062,26 @@ body.dh-photo-viewer-open { overflow: hidden; }
 .dh-site-trek-legs li { display: flex; justify-content: space-between; gap: 12px; }
 .dh-site-trek-legs span { font-variant-numeric: tabular-nums; color: var(--dh-muted, #5b6b75); white-space: nowrap; }
 .dh-trek-legs { overflow-x: auto; }
+@media (min-width: 768px) { .dh-trek-legs { overflow-x: visible; } } /* room for the open dropdown */
 .dh-trek-legs table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
 .dh-trek-legs th { text-align: left; padding: 6px; white-space: nowrap; }
 .dh-trek-legs td { padding: 4px 6px; vertical-align: middle; white-space: nowrap; }
 .dh-trek-legs input, .dh-trek-legs select { width: 100%; min-width: 84px; }
 .dh-trek-leg-actions { display: flex; gap: 6px; }
+
+/* Wreck treks admin page. */
+.dh-trek-admin { padding-top: var(--dh-space-4); padding-bottom: var(--dh-space-4); }
+.dh-trek-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.dh-trek-form .dh-field { flex: 1 1 240px; margin-bottom: 0; }
+.dh-trek-form .dh-trek-notes { flex: 1 1 100%; }
+.dh-trek-notes textarea { min-height: 96px; }
+.dh-trek-wrecks { list-style: none; margin: 0 0 12px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px 16px; }
+.dh-trek-wrecks li { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--dh-line); }
+.dh-trek-wrecks form { margin: 0; }
+.dh-trek-remove { display: inline-flex; padding: 4px; border: 0; background: none; color: var(--dh-muted); cursor: pointer; }
+.dh-trek-remove:hover { color: var(--dh-danger); }
+.dh-trek-remove .material-icons-round { font-size: 18px; }
+.dh-trek-add .dh-field { position: relative; margin-bottom: 0; max-width: 360px; }
+.dh-trek-matches { position: absolute; z-index: 20; top: 100%; left: 0; right: 0; margin: 4px 0 0; padding: 6px; list-style: none; max-height: 260px; overflow-y: auto; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 12px; box-shadow: 0 8px 24px rgba(11,42,58,.16); }
+.dh-trek-matches li { padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: .92rem; }
+.dh-trek-matches li:hover { background: var(--dh-foam); }

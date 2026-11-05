@@ -15,10 +15,11 @@
     $selected     current value, or null
     $placeholder  leading "not set" style option; when set, null shows this label
     $disabled     starts locked like every other richer field on this page
+    $form         id of the form this belongs to, when it can't sit inside it
 
     Usage: <x-dh-select name="level" :options="$opts" :selected="$user->certLevel" placeholder="Not set" />
 --}}
-@props(['name', 'id' => null, 'options', 'selected' => null, 'placeholder' => null, 'disabled' => true])
+@props(['name', 'id' => null, 'options', 'selected' => null, 'placeholder' => null, 'disabled' => true, 'form' => null])
 
 @php
     $id = $id ?? $name;
@@ -33,7 +34,7 @@
         <span class="dh-select-value">{{ $selectedLabel ?? 'Select…' }}</span>
         <span class="material-icons-round" aria-hidden="true">expand_more</span>
     </button>
-    <input type="hidden" name="{{ $name }}" id="{{ $id }}" value="{{ $selected }}" @if($disabled) disabled @endif>
+    <input type="hidden" name="{{ $name }}" id="{{ $id }}" value="{{ $selected }}" @if($form) form="{{ $form }}" @endif @if($disabled) disabled @endif>
     <ul class="dh-select-menu" hidden role="listbox">
         @if($placeholder)
             <li data-value="" role="option" class="{{ $selected === null ? 'is-selected' : '' }}">{{ $placeholder }}</li>

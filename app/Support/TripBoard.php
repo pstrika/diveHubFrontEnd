@@ -346,7 +346,7 @@ final class TripBoard
             'maxDepth'      => $first->maxDepth ?? null,
             'isTech'        => $isTech,
             'isWreck'       => $isWreck,
-            'isTrek'        => collect($sites)->contains(fn ($s) => !empty($s->trek_type)),
+            'isTrek'        => collect($sites)->contains(fn ($s) => !empty($s->wreck_trek_id)),
             'isShark'       => str_contains($tags, 'SHA'),
             'isLobster'     => str_contains($tags, 'LOB'),
             'isNight'       => $hour >= 17,

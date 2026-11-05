@@ -7,6 +7,9 @@
         <!-- End Navbar -->
         <div class="container-fluid py-0 dh-board">
             <div class="d-none" data-color="info" id="sidebarColorDiv"></div> {{--Set active element on sidenav bar color (goes together wih JS below--}}
+            <nav class="dh-range-row mt-3" aria-label="Site management tools">
+                <a href="{{ route('wreck-treks.index') }}" class="chip">Wreck treks</a>
+            </nav>
             {{--modal code--}}
             <div class="modal fade" id="modal-notification" data-backdrop="static" data-keyboard="false" tabindex="-1" >
                 <div class="modal-dialog modal-danger modal-dialog-centered modal-" role="document">

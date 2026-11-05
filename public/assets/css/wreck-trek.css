@@ -57,6 +57,7 @@
 .dh-wt .wt-tip b { display: block; font-weight: 700; }
 .dh-wt .wt-sites { margin-top: 18px; }
 .dh-wt .wt-sites[hidden] { display: none; }
+.dh-wt .wt-notes { margin: 0; white-space: pre-line; }
 .dh-wt .wt-sitegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
 .dh-wt .wt-site { display: block; min-width: 0; color: var(--fg); text-decoration: none; border: 1px solid var(--line); border-radius: var(--dh-radius); overflow: hidden; background: var(--dh-paper); }
 .dh-wt .wt-site:hover { border-color: var(--dh-sea); }

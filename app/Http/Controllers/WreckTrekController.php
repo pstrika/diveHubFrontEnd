@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\WreckTrek;
 use App\Models\WreckTrekRoute;
 use App\Support\WreckTrekData;
 use Illuminate\Http\Request;
@@ -28,7 +27,11 @@ class WreckTrekController extends Controller
             'canonical' => route('WreckTrek'),
         ];
 
-        $treks = WreckTrek::orderBy('sort')->pluck('name', 'slug')->all();
+        // Grouped by location for the dropdown.
+        $treks = [];
+        foreach (WreckTrekData::load()['treks'] as $trek) {
+            $treks[$trek['location']][$trek['slug']] = $trek['name'];
+        }
 
         return view('pages.WreckTrek', compact('SEO', 'treks'));
     }

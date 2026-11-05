@@ -18,9 +18,7 @@ class WreckTrekAdminController extends Controller
         $site = Site::findOrFail($id);
 
         $data = $request->validate([
-            'trek_type' => ['nullable', Rule::in(WreckTrekData::TYPES)],
-            'wreck_trek_id' => ['required_with:trek_type', 'nullable', 'integer', Rule::exists('wreck_treks', 'id')],
-            'trek_sand_ft' => 'required_with:trek_type|nullable|integer|min:0|max:1000',
+            'wreck_trek_id' => ['nullable', 'integer', Rule::exists('wreck_treks', 'id')],
             'trek_lie_deg' => 'nullable|integer|min:0|max:359',
             'trek_broken' => 'required|boolean',
             'trek_sitting' => ['required', Rule::in(array_keys(WreckTrekData::SITTINGS))],
@@ -45,7 +43,7 @@ class WreckTrekAdminController extends Controller
         $exists = WreckTrekLeg::where(fn ($q) => $q->where('from_site_id', $from->id)->where('to_site_id', $to))
             ->orWhere(fn ($q) => $q->where('from_site_id', $to)->where('to_site_id', $from->id))
             ->exists();
-        if ($to === (int) $from->id || $exists || !Site::whereKey($to)->whereNotNull('trek_type')->exists()) {
+        if ($to === (int) $from->id || $exists || !Site::whereKey($to)->whereNotNull('wreck_trek_id')->exists()) {
             return back()->withErrors(['to_site_id' => 'That leg already exists, in one direction or the other, or that wreck can\'t be used.']);
         }
 

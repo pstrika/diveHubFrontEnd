@@ -205,30 +205,12 @@
                     @csrf
                     <div class="dh-site-edit-grid">
                         <div class="dh-field">
-                            <label for="trek_type">Chart icon (blank = not a trek wreck)</label>
-                            <select id="trek_type" name="trek_type">
-                                <option value=""></option>
-                                @foreach (\App\Support\WreckTrekData::TYPES as $type)
-                                    <option value="{{ $type }}" @selected($site->trek_type === $type)>{{ $type }}</option>
-                                @endforeach
-                            </select>
+                            <label for="wreck_trek_id-btn">Wreck trek</label>
+                            <x-dh-select name="wreck_trek_id" :options="\App\Models\WreckTrek::orderBy('name')->pluck('name', 'id')->all()" :selected="$site->wreck_trek_id" placeholder="Not in a wreck trek" :disabled="false" />
                         </div>
                         <div class="dh-field">
-                            <label for="wreck_trek_id">Wreck trek</label>
-                            <select id="wreck_trek_id" name="wreck_trek_id">
-                                <option value=""></option>
-                                @foreach (\App\Models\WreckTrek::orderBy('sort')->get() as $trek)
-                                    <option value="{{ $trek->id }}" @selected((int) $site->wreck_trek_id === $trek->id)>{{ $trek->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="dh-field">
-                            <label for="trek_sitting">How it sits</label>
-                            <select id="trek_sitting" name="trek_sitting">
-                                @foreach (\App\Support\WreckTrekData::SITTINGS as $value => $label)
-                                    <option value="{{ $value }}" @selected($site->trek_sitting === $value)>{{ $label }}</option>
-                                @endforeach
-                            </select>
+                            <label for="trek_sitting-btn">How it sits</label>
+                            <x-dh-select name="trek_sitting" :options="\App\Support\WreckTrekData::SITTINGS" :selected="$site->trek_sitting" :disabled="false" />
                         </div>
                         <div class="dh-field">
                             <label for="trek_broken">Broken (bow separated from stern)</label>
@@ -239,15 +221,11 @@
                             <label for="trek_lie_deg">Bow points (° true, 180 = south)</label>
                             <input type="number" id="trek_lie_deg" name="trek_lie_deg" min="0" max="359" value="{{ $site->trek_lie_deg }}">
                         </div>
-                        <div class="dh-field">
-                            <label for="trek_sand_ft">Max depth (ft)</label>
-                            <input type="number" id="trek_sand_ft" name="trek_sand_ft" min="0" value="{{ $site->trek_sand_ft }}">
-                        </div>
                     </div>
                     <button type="submit" class="dh-btn dh-btn-primary">Save trek details</button>
                 </form>
 
-                @if ($site->trek_type)
+                @if ($site->wreck_trek_id)
                     <h3 class="dh-panel-subtitle mt-4">Trek legs</h3>
                     <p class="dh-hint">Heading is degrees true, from the first wreck to the second. The reverse leg is worked out automatically. Fill in Verified on once a leg has been swum and measured: until then the planner says it comes from GPS.</p>
                     @php
@@ -293,12 +271,7 @@
                                 @endforeach
                                 <tr>
                                     <td>
-                                        <select form="leg-new" name="to_site_id" required aria-label="To wreck">
-                                            <option value="">To…</option>
-                                            @foreach ($trekSites as $other)
-                                                @if ($other->id !== $site->id)<option value="{{ $other->id }}">{{ $other->name }}</option>@endif
-                                            @endforeach
-                                        </select>
+                                        <x-dh-select name="to_site_id" form="leg-new" :options="$trekSites->where('id', '!=', $site->id)->pluck('name', 'id')->all()" placeholder="To…" :disabled="false" />
                                     </td>
                                     <td><input form="leg-new" type="number" name="heading_deg" min="0" max="359" required></td>
                                     <td>—</td>

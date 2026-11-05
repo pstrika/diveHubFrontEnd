@@ -39,7 +39,7 @@
                         </div>
                         <div class="wt-controls">
                             <div class="wt-row">
-                                <div class="wt-grow"><x-dh-select name="wtTrek" :disabled="false" :options="$treks" :selected="array_key_first($treks)" /></div>
+                                <div class="wt-grow"><x-dh-select name="wtTrek" :disabled="false" :options="$treks" /></div>
                             </div>
                             <div class="wt-row">
                                 <div class="wt-grow dh-select" id="wtCenterBox">
@@ -146,6 +146,11 @@
                     </section>
                 </div>
             </div>
+
+            <section class="dh-panel wt-sites" id="wtNotes" hidden>
+                <h2 class="dh-panel-title">Notes</h2>
+                <p class="wt-notes" id="wtNotesText"></p>
+            </section>
 
             <section class="dh-panel wt-sites" id="wtSites" hidden>
                 <h2 class="dh-panel-title">Sites in this route</h2>

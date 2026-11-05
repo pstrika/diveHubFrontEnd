@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Photo;
 use App\Models\Site;
+use App\Models\WeatherLocation;
 use App\Models\WreckTrek;
 use App\Models\WreckTrekLeg;
 use App\Models\WreckTrekRoute;
@@ -16,16 +17,17 @@ use Illuminate\Support\Facades\Cache;
  */
 final class WreckTrekData
 {
-    public const TYPES = ['ship', 'barge'];
     public const SITTINGS = ['upright' => 'Upright', 'upside_down' => 'Upside down', 'port' => 'On its port side', 'starboard' => 'On its starboard side'];
 
     private const CACHE_KEY = 'wrecktrek.data';
     private const SITE_PAGE_LEGS = 5;
+    private const EARTH_RADIUS_FT = 20902231;
 
     public static function load(): array
     {
         return Cache::remember(self::CACHE_KEY, 600, function () {
-            $treks = WreckTrek::orderBy('sort')->get();
+            $names = WeatherLocation::all()->mapWithKeys(fn ($l) => [$l->short => ucwords($l->location)]);
+            $treks = WreckTrek::get()->sortBy(fn ($t) => [$names[$t->location] ?? 'zzz', $t->name])->values();
             $trekSlugs = $treks->pluck('slug', 'id');
             $sites = Site::where('type', 'wreck')->where('_hidden', 0)->whereNotNull('slug')->orderBy('name')->get();
             $slugs = $sites->pluck('slug', 'id');
@@ -37,8 +39,8 @@ final class WreckTrekData
                 $wrecks[$s->slug] = [
                     'name' => $s->name,
                     'trek' => $trekSlugs[$s->wreck_trek_id] ?? null,
-                    'sand' => (int) ($s->trek_sand_ft ?? $s->maxDepth),
-                    'type' => $s->trek_type ?? self::chartIcon($details['type'] ?? null),
+                    'sand' => (int) $s->maxDepth,
+                    'type' => self::chartIcon($details['type'] ?? null),
                     'lie' => (int) $s->trek_lie_deg,
                     'length' => self::wreckFt($s->wreckData, 'length'),
                     'beam' => self::wreckFt($s->wreckData, 'beam'),
@@ -70,7 +72,9 @@ final class WreckTrekData
                 ->map(fn ($r) => $r->toApi())->all();
 
             return [
-                'treks' => $treks->map(fn ($t) => ['slug' => $t->slug, 'name' => $t->name])->all(),
+                // A trek with no wrecks yet stays out of the planner.
+                'treks' => $treks->filter(fn ($t) => collect($wrecks)->contains('trek', $t->slug))
+                    ->map(fn ($t) => ['slug' => $t->slug, 'name' => $t->name, 'location' => $names[$t->location] ?? 'Other', 'notes' => $t->notes])->values()->all(),
                 'wrecks' => $wrecks,
                 'legs' => $legs,
                 'routes' => $routes,
@@ -78,7 +82,7 @@ final class WreckTrekData
         });
     }
 
-    /** The chart icon for a wreck that hasn't been given one in the site editor. */
+    /** The chart icon, from the wreck's ship type. */
     private static function chartIcon(?string $wreckType): string
     {
         return in_array($wreckType, ['Barge', 'Drydock'], true) ? 'barge' : 'ship';
@@ -119,26 +123,41 @@ final class WreckTrekData
         return collect($data['treks'])->firstWhere('slug', $trek)['name'] ?? null;
     }
 
-    /** The legs to a wreck's nearest neighbours, reverse legs derived, for its site page. */
+    /** Legs to the nearest wrecks in the same trek: the stored one if any, otherwise from GPS. */
     public static function legsFrom(string $slug): array
     {
         $data = self::load();
-        $out = [];
+        $wreck = $data['wrecks'][$slug] ?? null;
+        if (!$wreck || !$wreck['trek']) return [];
+
+        $stored = [];
         foreach ($data['legs'] as $l) {
-            if ($l['from'] === $slug) {
-                $to = $l['to'];
-                $hdg = $l['hdg'];
-            } elseif ($l['to'] === $slug) {
-                $to = $l['from'];
-                $hdg = ($l['hdg'] + 180) % 360;
-            } else {
-                continue;
-            }
-            $out[] = ['slug' => $to, 'name' => $data['wrecks'][$to]['name'], 'hdg' => $hdg, 'dist' => $l['dist'], 'verified' => $l['verifiedOn'] !== null];
+            if ($l['from'] === $slug) $stored[$l['to']] = [$l['hdg'], $l['dist'], $l['verifiedOn'] !== null];
+            if ($l['to'] === $slug) $stored[$l['from']] = [($l['hdg'] + 180) % 360, $l['dist'], $l['verifiedOn'] !== null];
+        }
+
+        $out = [];
+        foreach ($data['wrecks'] as $to => $other) {
+            if ($to === $slug || $other['trek'] !== $wreck['trek']) continue;
+            [$hdg, $dist, $verified] = $stored[$to] ?? [...self::bearingAndDistance($wreck, $other), false];
+            $out[] = ['slug' => $to, 'name' => $other['name'], 'hdg' => $hdg, 'dist' => $dist, 'verified' => $verified];
         }
 
         usort($out, fn ($a, $b) => $a['dist'] <=> $b['dist']);
 
         return array_slice($out, 0, self::SITE_PAGE_LEGS);
+    }
+
+    /** Heading (true) and distance in feet between two wrecks' GPS positions. */
+    private static function bearingAndDistance(array $a, array $b): array
+    {
+        $la1 = deg2rad($a['lat']);
+        $la2 = deg2rad($b['lat']);
+        $dl = deg2rad($b['lon'] - $a['lon']);
+
+        $hdg = rad2deg(atan2(sin($dl) * cos($la2), cos($la1) * sin($la2) - sin($la1) * cos($la2) * cos($dl)));
+        $h = sin(($la2 - $la1) / 2) ** 2 + cos($la1) * cos($la2) * sin($dl / 2) ** 2;
+
+        return [((int) round($hdg) + 360) % 360, (int) round(2 * self::EARTH_RADIUS_FT * asin(sqrt($h)))];
     }
 }
