@@ -70,6 +70,7 @@
                         <div class="wt-mapwrap" id="wtMapWrap">
                             <svg id="wtMap" class="wt-chart" viewBox="0 0 760 520" role="img" aria-label="Schematic chart of wrecks and legs"></svg>
                             <div class="wt-chips wt-onchart" id="wtScale" role="group" aria-label="Chart scale">
+                                <button type="button" class="chip" data-ft="50">1 sq = 50 ft</button>
                                 <button type="button" class="chip" data-ft="100">1 sq = 100 ft</button>
                                 <button type="button" class="chip" data-ft="200">1 sq = 200 ft</button>
                             </div>

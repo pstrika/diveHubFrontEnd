@@ -57,7 +57,7 @@
   // Hull width and length inside each 40x40 icon, used to draw it to scale.
   var MIN_CHART_H = 420, SQUARE_PX = 40, PHONE_SQUARE_PX = 52; // a grid square on the chart
   var PAPER_MAX_SCALE = 0.5; // px per ft, so a short route doesn't blow up on the PDF
-  var GRID_FT = [100, 200, 500, 1000, 2000, 5000], MIN_GRID_PX = 24; // a wide area needs bigger squares
+  var GRID_FT = [50, 100, 200, 500, 1000, 2000, 5000], MIN_GRID_PX = 24; // a wide area needs bigger squares
   var HULL = { ship: [16, 34], barge: [18, 33], tank: [18, 26] };
 
   // paper: { svg, w, h } draws the PDF's chart instead of the page's.
@@ -768,7 +768,7 @@
   function restore() {
     var saved = null;
     try { saved = JSON.parse(localStorage.getItem(STORE)); } catch (e) {}
-    if (saved && (saved.cellFt === 100 || saved.cellFt === 200)) state.cellFt = saved.cellFt;
+    if (saved && (saved.cellFt === 50 || saved.cellFt === 100 || saved.cellFt === 200)) state.cellFt = saved.cellFt;
     drawViewControls();
     if (!saved) return;
     if (saved.showWrecks === false) { $('wtShowWrecks').checked = false; state.showWrecks = false; $('wtLegend').hidden = true; }
