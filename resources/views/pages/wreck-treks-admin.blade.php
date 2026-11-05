@@ -114,8 +114,14 @@
                     </form>
 
                     <h3 class="dh-panel-subtitle">Rebar links ({{ count($trek->rebars ?? []) }})</h3>
-                    <p class="dh-hint">Wrecks joined by rebar. Their leg is drawn in green on the chart.</p>
-                    @php $wreckOptions = $wrecks->pluck('name', 'id')->all(); $slugName = $wrecks->pluck('name', 'slug')->all(); @endphp
+                    <p class="dh-hint">Wrecks or navigational aids joined by rebar. Their leg is drawn in green on the chart.</p>
+                    @php
+                        $slugName = $wrecks->pluck('name', 'slug')->all();
+                        foreach (($trek->aids ?? []) as $aid) {
+                            if (!empty($aid['id'])) $slugName['aid-' . $aid['id']] = (\App\Support\WreckTrekData::AID_TYPES[$aid['type']] ?? 'Aid') . (!empty($aid['name']) ? ' – ' . $aid['name'] : '') . ' (aid)';
+                        }
+                        $wreckOptions = $slugName;
+                    @endphp
                     <ul class="dh-trek-wrecks">
                         @foreach (($trek->rebars ?? []) as $n => $pair)
                             @if (isset($slugName[$pair[0]], $slugName[$pair[1]]))
@@ -130,16 +136,16 @@
                             @endif
                         @endforeach
                     </ul>
-                    @if ($wrecks->count() > 1)
+                    @if (count($wreckOptions) > 1)
                     <form action="{{ route('wreck-treks.rebars.add', $trek->id) }}" method="POST" class="dh-trek-form">
                         @csrf
                         <div class="dh-field">
-                            <label for="rebar-a-{{ $trek->id }}-btn">First wreck</label>
-                            <x-dh-select name="site_a" id="rebar-a-{{ $trek->id }}" :options="$wreckOptions" placeholder="Choose a wreck" :disabled="false" />
+                            <label for="rebar-a-{{ $trek->id }}-btn">From</label>
+                            <x-dh-select name="site_a" id="rebar-a-{{ $trek->id }}" :options="$wreckOptions" placeholder="Choose a wreck or aid" :disabled="false" />
                         </div>
                         <div class="dh-field">
-                            <label for="rebar-b-{{ $trek->id }}-btn">Second wreck</label>
-                            <x-dh-select name="site_b" id="rebar-b-{{ $trek->id }}" :options="$wreckOptions" placeholder="Choose a wreck" :disabled="false" />
+                            <label for="rebar-b-{{ $trek->id }}-btn">To</label>
+                            <x-dh-select name="site_b" id="rebar-b-{{ $trek->id }}" :options="$wreckOptions" placeholder="Choose a wreck or aid" :disabled="false" />
                         </div>
                         <button type="submit" class="dh-btn dh-btn-ghost-dark">Add rebar link</button>
                     </form>

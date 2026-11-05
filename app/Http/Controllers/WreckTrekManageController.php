@@ -103,10 +103,12 @@ class WreckTrekManageController extends Controller
     {
         $this->authorize('manage-items', User::class);
         $trek = WreckTrek::findOrFail($id);
-        $data = $request->validate(['site_a' => 'required|integer|different:site_b', 'site_b' => 'required|integer']);
+        $data = $request->validate(['site_a' => 'required|string|different:site_b', 'site_b' => 'required|string']);
 
-        $slugs = Site::where('wreck_trek_id', $trek->id)->whereIn('id', [$data['site_a'], $data['site_b']])->pluck('slug')->all();
-        if (count($slugs) !== 2) return back()->with('open_trek', $trek->id)->withErrors(['site_a' => 'Pick two different wrecks from this trek.']);
+        // Either end can be a wreck of this trek (its slug) or one of the trek's aids ('aid-' and its id).
+        $valid = Site::where('wreck_trek_id', $trek->id)->pluck('slug')->merge(collect($trek->aids ?? [])->pluck('id')->filter()->map(fn ($a) => 'aid-' . $a));
+        $slugs = [$data['site_a'], $data['site_b']];
+        if (!$valid->contains($slugs[0]) || !$valid->contains($slugs[1])) return back()->with('open_trek', $trek->id)->withErrors(['site_a' => 'Pick two different points from this trek.']);
         sort($slugs);
 
         $rebars = collect($trek->rebars ?? []);
