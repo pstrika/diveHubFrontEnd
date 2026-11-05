@@ -20,7 +20,7 @@ class WreckTrekManageController extends Controller
     {
         $this->authorize('manage-items', User::class);
 
-        $wrecks = WreckTrekData::eligible()->orderBy('name')->get(['id', 'name', 'wreck_trek_id']);
+        $wrecks = WreckTrekData::eligible()->orderBy('name')->get(['id', 'name', 'slug', 'wreck_trek_id']);
         $treks = WreckTrek::orderBy('location')->orderBy('name')->get();
         $trekNames = $treks->pluck('name', 'id');
         $locations = WeatherLocation::all()->sortBy('location')->mapWithKeys(fn ($l) => [$l->short => ucwords($l->location)])->all();
@@ -96,6 +96,86 @@ class WreckTrekManageController extends Controller
         WreckTrekData::forget();
 
         return back()->with('status', $site->name . ' removed.');
+    }
+
+    /** Two wrecks of this trek joined by rebar; the chart draws their leg in green. */
+    public function addRebar(Request $request, int $id)
+    {
+        $this->authorize('manage-items', User::class);
+        $trek = WreckTrek::findOrFail($id);
+        $data = $request->validate(['site_a' => 'required|integer|different:site_b', 'site_b' => 'required|integer']);
+
+        $slugs = Site::where('wreck_trek_id', $trek->id)->whereIn('id', [$data['site_a'], $data['site_b']])->pluck('slug')->all();
+        if (count($slugs) !== 2) return back()->withErrors(['site_a' => 'Pick two different wrecks from this trek.']);
+        sort($slugs);
+
+        $rebars = collect($trek->rebars ?? []);
+        if (!$rebars->contains(fn ($p) => $p === $slugs)) $rebars->push($slugs);
+        $trek->update(['rebars' => $rebars->values()->all()]);
+        WreckTrekData::forget();
+
+        return back()->with('status', 'Rebar link added to ' . $trek->name . '.');
+    }
+
+    public function removeRebar(int $id, int $n)
+    {
+        $this->authorize('manage-items', User::class);
+        $trek = WreckTrek::findOrFail($id);
+        $rebars = $trek->rebars ?? [];
+        unset($rebars[$n]);
+        $trek->update(['rebars' => array_values($rebars)]);
+        WreckTrekData::forget();
+
+        return back()->with('status', 'Rebar link removed.');
+    }
+
+    /** A navigational aid on the chart: boulders, a mitigation point or pipes, at a GPS position. */
+    public function addAid(Request $request, int $id)
+    {
+        $this->authorize('manage-items', User::class);
+        $trek = WreckTrek::findOrFail($id);
+        $data = $request->validate([
+            'type' => ['required', Rule::in(array_keys(WreckTrekData::AID_TYPES))],
+            'name' => 'nullable|string|max:60',
+            'lat' => 'required|string|max:40',
+            'lon' => 'required|string|max:40',
+            'depth' => 'nullable|integer|min:0|max:500',
+        ]);
+        $lat = $this->coordinate($data['lat'], 'NS');
+        $lon = $this->coordinate($data['lon'], 'EW');
+        if ($lat === null || $lon === null || abs($lat) > 90 || abs($lon) > 180) {
+            return back()->withErrors(['lat' => 'Could not read those coordinates. Use 25 49.510 N and 80 04.874 W, or 25.8252 and -80.0812.'])->withInput();
+        }
+
+        $aids = $trek->aids ?? [];
+        $aids[] = ['id' => Str::lower(Str::random(8)), 'depth' => $data['depth'] ?? null, 'type' => $data['type'], 'name' => $data['name'] ?? null, 'lat' => round($lat, 6), 'lon' => round($lon, 6)];
+        $trek->update(['aids' => $aids]);
+        WreckTrekData::forget();
+
+        return back()->with('status', WreckTrekData::AID_TYPES[$data['type']] . ' added to ' . $trek->name . '.');
+    }
+
+    public function removeAid(int $id, int $n)
+    {
+        $this->authorize('manage-items', User::class);
+        $trek = WreckTrek::findOrFail($id);
+        $aids = $trek->aids ?? [];
+        unset($aids[$n]);
+        $trek->update(['aids' => array_values($aids)]);
+        WreckTrekData::forget();
+
+        return back()->with('status', 'Aid removed.');
+    }
+
+    /** Degrees and decimal minutes with a hemisphere letter ("25 49.510 N"), or signed decimal degrees ("-80.0812"). */
+    private function coordinate(string $raw, string $hemispheres): ?float
+    {
+        $raw = trim(str_replace(['°', "'", '′'], ' ', $raw));
+        if (preg_match('/^(-?\d{1,3}(?:\.\d+)?)$/', $raw, $m)) return (float) $m[1];
+        if (!preg_match('/^(\d{1,3})\s+(\d{1,2}(?:\.\d+)?)\s*([' . $hemispheres . '])$/i', $raw, $m)) return null;
+        $value = (float) $m[1] + (float) $m[2] / 60;
+
+        return in_array(strtoupper($m[3]), ['S', 'W']) ? -$value : $value;
     }
 
     /** A new file replaces the old one; the remove box clears it. */

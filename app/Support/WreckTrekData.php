@@ -19,6 +19,9 @@ final class WreckTrekData
 {
     public const SITTINGS = ['upright' => 'Upright', 'upside_down' => 'Upside down', 'port' => 'On its port side', 'starboard' => 'On its starboard side'];
 
+    /** Navigational aids a trek can carry besides its wrecks. */
+    public const AID_TYPES = ['boulders' => 'Boulders', 'mitigation' => 'Mitigation point', 'pipes' => 'Pipes'];
+
     private const CACHE_KEY = 'wrecktrek.data';
     private const SITE_PAGE_LEGS = 5;
     /** Ship types for objects that are not wrecks but have their own chart icon. */
@@ -55,6 +58,23 @@ final class WreckTrekData
                 ];
             }
 
+            // A trek's navigational aids join the wrecks as stops of their own, so legs run to them too.
+            foreach ($treks as $t) {
+                $depths = collect($wrecks)->where('trek', $t->slug)->pluck('sand')->filter();
+                foreach ($t->aids ?? [] as $a) {
+                    if (empty($a['id'])) continue;
+                    $wrecks['aid-' . $a['id']] = [
+                        'name' => ($a['name'] ?? null) ?: (self::AID_TYPES[$a['type']] ?? 'Aid'),
+                        'trek' => $t->slug,
+                        'aid' => true,
+                        'sand' => (int) ($a['depth'] ?? ($depths->isNotEmpty() ? round($depths->avg()) : 0)),
+                        'type' => $a['type'],
+                        'lie' => 0, 'length' => null, 'beam' => null, 'broken' => false, 'sitting' => null, 'photo' => null,
+                        'lat' => (float) $a['lat'], 'lon' => (float) $a['lon'],
+                    ];
+                }
+            }
+
             $legs = [];
             foreach (WreckTrekLeg::orderBy('id')->get() as $l) {
                 if (!isset($slugs[$l->from_site_id], $slugs[$l->to_site_id])) continue;
@@ -75,13 +95,21 @@ final class WreckTrekData
 
             return [
                 // A trek with no wrecks yet stays out of the planner.
-                'treks' => $treks->filter(fn ($t) => collect($wrecks)->contains('trek', $t->slug))
-                    ->map(fn ($t) => ['slug' => $t->slug, 'name' => $t->name, 'location' => $names[$t->location] ?? 'Other', 'notes' => $t->notes, 'logo' => $t->logo ? '/' . $t->logo : null, 'logoLink' => $t->logo_link])->values()->all(),
+                'treks' => $treks->filter(fn ($t) => collect($wrecks)->contains(fn ($w) => $w['trek'] === $t->slug && empty($w['aid'])))
+                    ->map(fn ($t) => ['slug' => $t->slug, 'name' => $t->name, 'location' => $names[$t->location] ?? 'Other', 'notes' => $t->notes, 'logo' => $t->logo ? '/' . $t->logo : null, 'logoLink' => $t->logo_link, 'rebars' => self::rebarsOf($t, $wrecks), 'aids' => []])->values()->all(),
                 'wrecks' => $wrecks,
                 'legs' => $legs,
                 'routes' => $routes,
             ];
         });
+    }
+
+    /** The rebar pairs of a trek that still have both wrecks in it. */
+    private static function rebarsOf(WreckTrek $trek, array $wrecks): array
+    {
+        return collect($trek->rebars ?? [])
+            ->filter(fn ($p) => is_array($p) && count($p) === 2 && ($wrecks[$p[0]]['trek'] ?? null) === $trek->slug && ($wrecks[$p[1]]['trek'] ?? null) === $trek->slug)
+            ->values()->all();
     }
 
     /** The sites the planner can use: wrecks, plus the odd non-wreck object with its own icon (an army tank, radio towers). */
@@ -156,7 +184,7 @@ final class WreckTrekData
 
         $out = [];
         foreach ($data['wrecks'] as $to => $other) {
-            if ($to === $slug || $other['trek'] !== $wreck['trek']) continue;
+            if ($to === $slug || $other['trek'] !== $wreck['trek'] || !empty($other['aid'])) continue;
             [$hdg, $dist, $verified] = $stored[$to] ?? [...self::bearingAndDistance($wreck, $other), false];
             $out[] = ['slug' => $to, 'name' => $other['name'], 'hdg' => $hdg, 'dist' => $dist, 'verified' => $verified];
         }

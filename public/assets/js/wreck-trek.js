@@ -17,14 +17,19 @@
     // two open steel pyramids from above: a square frame and the four ridges running up to the apex
     pyramids: '<g fill="none"><rect x="2" y="11" width="17" height="18"/><path d="M2,11 L19,29 M19,11 L2,29"/><rect x="21" y="11" width="17" height="18"/><path d="M21,11 L38,29 M38,11 L21,29"/></g>',
     tank: '<rect x="11" y="8" width="5" height="26" rx="1.5"/><rect x="24" y="8" width="5" height="26" rx="1.5"/><rect x="15" y="10" width="10" height="22" rx="1"/><circle cx="20" cy="22" r="5" class="ic-deck"/><rect x="19" y="3" width="2" height="14" class="ic-deck"/>',
+    // navigational aids (drawn yellow): a cluster of boulders, a mitigation point (a square with two circles on top), pipes laid side by side
+    boulders: '<circle cx="13" cy="24" r="8"/><circle cx="27" cy="26" r="7"/><circle cx="21" cy="13" r="6"/>',
+    mitigation: '<rect x="8" y="16" width="24" height="20"/><circle cx="14" cy="9" r="5"/><circle cx="26" cy="9" r="5"/>',
+    pipes: '<rect x="3" y="9" width="34" height="6" rx="3"/><rect x="3" y="18" width="34" height="6" rx="3"/><rect x="3" y="27" width="34" height="6" rx="3"/>',
     barge: '<path d="M14,4 L26,4 L29,8 L29,33 L26,37 L14,37 L11,33 L11,8 Z"/><rect x="15" y="10" width="10" height="20" rx="1" class="ic-deck"/>'
   };
+  var AID_LABEL = { boulders: 'Boulders', mitigation: 'Mitigation point', pipes: 'Pipes' };
   var ICON_LABEL = { ship: 'Ship', broken: 'Broken', upside_down: 'Upside down', port: 'On port side', starboard: 'On starboard side', barge: 'Barge', tank: 'Army tank', pyramids: 'Radio tower pyramids' };
   var HELP = 'Steer is the compass heading that keeps you on the measured track with this current. SOG is speed over ground. A red flag means the current beats your swim speed on that leg.';
 
   // all = everything from the API; data = the chosen trek's part of it.
-  var all = { treks: [], wrecks: {}, legs: [], routes: [] }, data = all, pos = {};
-  var state = { trek: null, center: null, miles: 0.5, anchor: 'C', cellFt: 100, showWrecks: true, route: [], swim: 70, curKt: 0, curSet: 0 };
+  var all = { treks: [], wrecks: {}, legs: [], routes: [] }, data = all, pos = {}; 
+  var state = { trek: null, center: null, miles: 0.5, anchor: 'C', cellFt: 100, showWrecks: true, showAids: true, route: [], swim: 70, curKt: 0, curSet: 0 };
   var msg = '';
   var track = null; // what the depth tracker needs from the last profile
   var zoom = { k: 1, cx: null, cy: null }, view = { W: 760, H: 520 }, MAX_ZOOM = 8; // how far in, and where
@@ -61,7 +66,7 @@
   var MIN_CHART_H = 420, SQUARE_PX = 40, PHONE_SQUARE_PX = 52; // a grid square on the chart
   var PAPER_MAX_SCALE = 0.5; // px per ft, so a short route doesn't blow up on the PDF
   var GRID_FT = [50, 100, 200, 500, 1000, 2000, 5000], MIN_GRID_PX = 24; // a wide area needs bigger squares
-  var HULL = { ship: [16, 34], barge: [18, 33], tank: [18, 26], pyramids: [36, 18] };
+  var HULL = { ship: [16, 34], barge: [18, 33], tank: [18, 26], pyramids: [36, 18], boulders: [40, 40], mitigation: [40, 40], pipes: [40, 40] };
 
   // paper: { svg, w, h } draws the PDF's chart instead of the page's.
   // How far a horizontal chip sits from the middle of a line so it clears it.
@@ -125,7 +130,7 @@
     if (logo) boxes.push({ x: 26, w: LOGO_W + 8, t: logoY - 4, b: logoY + LOGO_H + 4 });
     Object.keys(data.wrecks).forEach(function (id) {
       var w = data.wrecks[id], x = sx(pos[id]), y = sy(pos[id]), hull = E.hullFt(w), long = hull.long * scale, wide = hull.wide * scale, r = state.showWrecks ? Math.max(12, long / 2) : 10, box = HULL[w.type];
-      place[id] = { x: x, y: y, r: r, wide: state.showWrecks ? wide : 12, sw: wide / box[0], sl: long / box[1], tiny: long < 20 };
+      place[id] = w.aid ? { x: x, y: y, r: 15, wide: 28, sw: 28 / 40, sl: 28 / 40, tiny: false } : { x: x, y: y, r: r, wide: state.showWrecks ? wide : 12, sw: wide / box[0], sl: long / box[1], tiny: long < 20 };
       boxes.push({ x: x - r, w: 2 * r, t: y - r, b: y + r });
     });
     // Each base line, as dots, so a wreck's name can keep off it.
@@ -156,11 +161,14 @@
     });
 
     var chips = '';
+    // A leg between two wrecks joined by rebar is drawn green, whatever else shows.
+    var trekFull = all.treks.find(function (tk) { return tk.slug === state.trek; }), rebars = (trekFull && trekFull.rebars) || [];
+    var rebar = function (l) { return rebars.some(function (p) { return (p[0] === l.from && p[1] === l.to) || (p[0] === l.to && p[1] === l.from); }); };
     data.legs.forEach(function (l) {
       var a = pos[l.from], b = pos[l.to], ab = used[E.legKey(l.from, l.to)], ba = used[E.legKey(l.to, l.from)], on = ab || ba;
       var x1 = sx(a), y1 = sy(a), x2 = sx(b), y2 = sy(b);
-      if (!on && !shown.has(l)) return;
-      s += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + (on ? 'var(--route)' : 'var(--accent)') + '" stroke-width="' + (on ? 4 : 2) + '"' + (on ? '' : ' stroke-dasharray="6 5"') + ' stroke-linecap="round"/>';
+      if (!on && !shown.has(l) && !rebar(l)) return;
+      s += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + (on ? 'var(--route)' : rebar(l) ? 'var(--rebar)' : 'var(--accent)') + '" stroke-width="' + (on ? 4 : rebar(l) ? 3 : 2) + '"' + (on ? '' : rebar(l) ? '' : ' stroke-dasharray="6 5"') + ' stroke-linecap="round"/>';
       s += '<line class="leg-hit" data-a="' + esc(l.from) + '" data-b="' + esc(l.to) + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>';
       var flip = !on && flipped[E.legKey(l.from, l.to)];
       if (!on && p.legs.length && !flip) return; // with a route showing, only its labels and legs turned by hand stay
@@ -228,16 +236,18 @@
     Object.keys(data.wrecks).forEach(function (id) {
       var w = data.wrecks[id], at = place[id], on = state.route.indexOf(id) >= 0, x = at.x, y = at.y, r = at.r, bx = x + Math.max(10, at.wide / 2 + 7), by = y - r * 0.7;
       s += '<g class="wreck' + (on ? ' on' : '') + '" data-id="' + esc(id) + '"><circle cx="' + x + '" cy="' + y + '" r="' + Math.max(18, r) + '" fill="transparent"/>';
-      if (!state.showWrecks) s += '<circle class="dot" cx="' + x + '" cy="' + y + '" r="6"/>';
+      if (w.aid) s += '<g class="ic aid" transform="translate(' + x + ',' + y + ') scale(' + at.sw + ',' + at.sl + ') translate(-20,-20)">' + ICONS[w.type] + '</g>';
+      else if (!state.showWrecks) s += '<circle class="dot" cx="' + x + '" cy="' + y + '" r="6"/>';
       else if (at.tiny) s += '<circle class="ring" cx="' + x + '" cy="' + y + '" r="12"/>'; // so a very small wreck can still be found
-      if (state.showWrecks) s += '<g class="ic" transform="translate(' + x + ',' + y + ') rotate(' + w.lie + ') scale(' + at.sw + ',' + at.sl + ') translate(-20,-20)">' + ICONS[E.iconFor(w)] + '</g>';
+      if (state.showWrecks && !w.aid) s += '<g class="ic" transform="translate(' + x + ',' + y + ') rotate(' + w.lie + ') scale(' + at.sw + ',' + at.sl + ') translate(-20,-20)">' + ICONS[E.iconFor(w)] + '</g>';
       state.route.forEach(function (stop, i) { // one number per visit
       if (stop !== id) return;
       s += '<circle cx="' + bx + '" cy="' + by + '" r="8" fill="var(--route)"/><text x="' + bx + '" y="' + (by + 3.5) + '" text-anchor="middle" class="lbl badge">' + (i + 1) + '</text>';
       bx += 18;
     });
       var tx = at.tx, anchor = at.anchor;
-      s += '<a href="' + esc(siteUrl(id)) + '"><text x="' + tx + '" y="' + (at.ny + 1) + '" text-anchor="' + anchor + '" class="nm">' + esc(w.name) + '</text></a>';
+      var nameText = '<text x="' + tx + '" y="' + (at.ny + 1) + '" text-anchor="' + anchor + '" class="nm' + (w.aid ? ' aid-nm' : '') + '">' + esc(w.name) + '</text>';
+      s += w.aid ? nameText : '<a href="' + esc(siteUrl(id)) + '">' + nameText + '</a>';
       s += '<text x="' + tx + '" y="' + (at.ny + 1 + 13 * f) + '" text-anchor="' + anchor + '" class="dp">' + w.sand + ' ft</text></g>';
     });
 
@@ -348,6 +358,11 @@
   }
 
   function showArea(wrecks, legs) {
+    // Navigational aids can be hidden, unless the route runs through one.
+    if (!state.showAids) {
+      wrecks = Object.keys(wrecks).reduce(function (out, id) { if (!wrecks[id].aid || state.route.indexOf(id) >= 0) out[id] = wrecks[id]; return out; }, {});
+      legs = E.gpsLegs(wrecks, all.legs);
+    }
     data = {
       wrecks: wrecks,
       legs: legs,
@@ -368,7 +383,18 @@
     drawViewControls();
   }
 
+  // The icon key; the aids only appear when this trek has some.
+  function drawLegend() {
+    var trek = all.treks.find(function (t) { return t.slug === state.trek; }), hasAids = Object.keys(all.wrecks).some(function (id) { return all.wrecks[id].aid && all.wrecks[id].trek === state.trek; });
+    var item = function (k, label, cls) { return '<span><svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic ' + cls + '">' + ICONS[k] + '</g></svg>' + label + '</span>'; };
+    $('wtLegend').innerHTML = Object.keys(ICON_LABEL).map(function (k) { return item(k, ICON_LABEL[k], ''); }).join('')
+      + (hasAids ? Object.keys(AID_LABEL).map(function (k) { return item(k, AID_LABEL[k], 'aid'); }).join('') : '');
+    $('wtAidsSwitch').hidden = !hasAids;
+    if (trek && (trek.rebars || []).length) $('wtLegend').insertAdjacentHTML('beforeend', '<span><svg viewBox="0 0 40 40" aria-hidden="true"><line x1="4" y1="20" x2="36" y2="20" stroke="var(--rebar)" stroke-width="4"/></svg>Rebar</span>');
+  }
+
   function drawViewControls() {
+    drawLegend();
     var pick = function (box, key, value) {
       document.querySelectorAll(box + ' button').forEach(function (b) {
         var on = b.getAttribute(key) === String(value);
@@ -561,7 +587,7 @@
   var sitesDrawn = null;
 
   function drawSites() {
-    var ids = state.route.filter(function (id, i) { return state.route.indexOf(id) === i; }), key = ids.join();
+    var ids = state.route.filter(function (id, i) { return state.route.indexOf(id) === i && !all.wrecks[id].aid; }), key = ids.join();
     if (key === sitesDrawn) return;
     sitesDrawn = key;
     $('wtSites').hidden = !ids.length;
@@ -700,7 +726,7 @@
 
   function drawCenterList(search) {
     var q = search.trim().toLowerCase();
-    var ids = Object.keys(all.wrecks).filter(function (id) { return all.wrecks[id].name.toLowerCase().indexOf(q) >= 0; });
+    var ids = Object.keys(all.wrecks).filter(function (id) { return !all.wrecks[id].aid && all.wrecks[id].name.toLowerCase().indexOf(q) >= 0; });
     $('wtCenterList').innerHTML = ids.map(function (id) {
       return '<li data-value="' + esc(id) + '" role="option"' + (id === state.center ? ' class="is-selected"' : '') + '>' + esc(all.wrecks[id].name) + '</li>';
     }).join('') || '<li class="dh-select-group" role="presentation">No wrecks found</li>';
@@ -744,7 +770,7 @@
     drawPanel(p);
     drawSites();
     try {
-      localStorage.setItem(STORE, JSON.stringify({ trek: state.trek, center: state.center, miles: state.miles, anchor: state.anchor, showWrecks: state.showWrecks, cellFt: state.cellFt, route: state.route, speed: $('wtSpeed').value, custom: $('wtCustom').value, curKt: state.curKt, curSet: state.curSet }));
+      localStorage.setItem(STORE, JSON.stringify({ trek: state.trek, center: state.center, miles: state.miles, anchor: state.anchor, showWrecks: state.showWrecks, showAids: state.showAids, cellFt: state.cellFt, route: state.route, speed: $('wtSpeed').value, custom: $('wtCustom').value, curKt: state.curKt, curSet: state.curSet }));
     } catch (e) {}
   }
 
@@ -870,6 +896,11 @@
       $('wtLegend').hidden = !this.checked;
       render();
     });
+    $('wtShowAids').addEventListener('change', function () {
+      state.showAids = this.checked;
+      if (state.trek) useTrek(state.trek); else if (state.center) useAround(state.center);
+      render();
+    });
     bindCenterPicker();
     $('wtWide').onclick = function () {
       var wide = document.querySelector('.dh-wt').classList.toggle('is-wide');
@@ -898,6 +929,7 @@
     if (saved && (saved.cellFt === 50 || saved.cellFt === 100 || saved.cellFt === 200)) state.cellFt = saved.cellFt;
     drawViewControls();
     if (!saved) return;
+    if (saved.showAids === false) { $('wtShowAids').checked = false; state.showAids = false; }
     if (saved.showWrecks === false) { $('wtShowWrecks').checked = false; state.showWrecks = false; $('wtLegend').hidden = true; }
     var speed = $('wtSpeed').parentNode.querySelector('li[data-value="' + saved.speed + '"]');
     if (speed) speed.click();
@@ -927,7 +959,7 @@
   function start() {
     var q = new URLSearchParams(location.search), routeId = q.get('route'), slug = q.get('start');
     chooseView(q, slug);
-    $('wtLegend').innerHTML = Object.keys(ICON_LABEL).map(function (k) { return '<span><svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic">' + ICONS[k] + '</g></svg>' + ICON_LABEL[k] + '</span>'; }).join('');
+    drawLegend();
     bind();
     restore();
     var resizing;

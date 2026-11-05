@@ -91,6 +91,14 @@
     return pos;
   }
 
+  // Other points (navigational aids) placed on the same ground as geoLayout puts the wrecks.
+  function geoPoints(wrecks, points) {
+    const list = Object.values(wrecks);
+    const lat0 = list.reduce((s, w) => s + w.lat, 0) / list.length;
+    const lon0 = list.reduce((s, w) => s + w.lon, 0) / list.length;
+    return points.map(a => ({ x: (a.lon - lon0) * FT_PER_DEG_LAT * Math.cos(toRad(lat0)), y: (a.lat - lat0) * FT_PER_DEG_LAT }));
+  }
+
   // The legs the base chart draws: the shortest set that links every wreck, so
   // each wreck keeps its shortest leg and no wreck or group is left apart.
   function baseLegs(legs) {
@@ -136,7 +144,7 @@
     const middle = { lat: c.lat + north * deg, lon: c.lon + east * deg / Math.cos(toRad(c.lat)) };
     const out = {};
     for (const [id, w] of Object.entries(wrecks)) {
-      if (id === chosen || bearingAndDistance(middle, w).dist <= miles * FT_PER_MILE) out[id] = w;
+      if (id === chosen || (!w.aid && bearingAndDistance(middle, w).dist <= miles * FT_PER_MILE)) out[id] = w;
     }
     return out;
   }
@@ -181,7 +189,7 @@
     return wreck.broken ? "broken" : "ship";
   }
 
-  const api = { KT_FTMIN, toRad, toDeg, norm, legKey, loadLegs, legBetween, planLeg, planRoute, layout, geoLayout, baseLegs, hullFt, removeStop, bearingAndDistance, within, gpsLegs, depthAxis, profileAt, iconFor };
+  const api = { KT_FTMIN, toRad, toDeg, norm, legKey, loadLegs, legBetween, planLeg, planRoute, layout, geoLayout, geoPoints, baseLegs, hullFt, removeStop, bearingAndDistance, within, gpsLegs, depthAxis, profileAt, iconFor };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.WreckTrekEngine = api;
 })(typeof window !== "undefined" ? window : globalThis);

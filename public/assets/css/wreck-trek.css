@@ -2,6 +2,7 @@
    charts have their own look: dark navy grid paper, with lighter ink. */
 .dh-wt {
   --panel: var(--dh-paper); --fg: var(--dh-ink); --muted: var(--dh-muted); --line: var(--dh-line); --grid: var(--dh-line);
+  --rebar: #1f9d55; --aid: #f2c230; --aid-line: #8a6a00;
   --accent: var(--dh-sea); --accent-soft: var(--dh-foam); --route: var(--dh-deep); --route-soft: var(--dh-foam);
   --warn: var(--dh-warn); --crit: var(--dh-danger); --ok: var(--dh-good);
   color: var(--fg); font-family: var(--dh-font); font-size: 14px; line-height: 1.45;
@@ -9,6 +10,7 @@
 }
 .dh-wt .wt-chart {
   --panel: var(--dh-ink); --fg: var(--dh-foam); --muted: #9db7c4; --line: #2f5468; --grid: #1c4156;
+  --rebar: #3ddc84; --aid: #ffd54a; --aid-line: #ffd54a;
   --accent: var(--dh-shallow); --accent-soft: #174258; --route: #f0655a;
   --display: "Barlow Condensed", "Arial Narrow", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
@@ -164,3 +166,7 @@
 .dh-wt .wt-stat { background: var(--dh-foam); border-radius: var(--dh-radius); padding: 8px 10px; }
 .dh-wt .wt-stat .v { font-size: 22px; font-weight: 800; line-height: 1.1; color: var(--dh-ink); }
 .dh-wt .wt-stat .k { font-size: .66rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+
+.dh-wt .wt-chart .ic.aid, .dh-wt .wt-legend .ic.aid { fill: var(--aid); stroke: var(--aid-line); }
+.dh-wt .wt-chart .aid-nm { fill: var(--aid-line); }
+.dh-wt .wt-chart.wt-paper { --rebar: #1f9d55; --aid: #f2c230; --aid-line: #8a6a00; }

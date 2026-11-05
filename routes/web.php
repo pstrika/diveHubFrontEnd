@@ -181,6 +181,10 @@ Route::put('wreck-treks/{id}', [App\Http\Controllers\WreckTrekManageController::
 Route::delete('wreck-treks/{id}', [App\Http\Controllers\WreckTrekManageController::class, 'destroy'])->whereNumber('id')->middleware('auth')->name('wreck-treks.destroy');
 Route::post('wreck-treks/{id}/wrecks', [App\Http\Controllers\WreckTrekManageController::class, 'addWreck'])->whereNumber('id')->middleware('auth')->name('wreck-treks.wrecks.add');
 Route::delete('wreck-treks/{id}/wrecks/{siteId}', [App\Http\Controllers\WreckTrekManageController::class, 'removeWreck'])->whereNumber('id')->whereNumber('siteId')->middleware('auth')->name('wreck-treks.wrecks.remove');
+Route::post('wreck-treks/{id}/rebars', [App\Http\Controllers\WreckTrekManageController::class, 'addRebar'])->whereNumber('id')->middleware('auth')->name('wreck-treks.rebars.add');
+Route::delete('wreck-treks/{id}/rebars/{n}', [App\Http\Controllers\WreckTrekManageController::class, 'removeRebar'])->whereNumber('id')->whereNumber('n')->middleware('auth')->name('wreck-treks.rebars.remove');
+Route::post('wreck-treks/{id}/aids', [App\Http\Controllers\WreckTrekManageController::class, 'addAid'])->whereNumber('id')->middleware('auth')->name('wreck-treks.aids.add');
+Route::delete('wreck-treks/{id}/aids/{n}', [App\Http\Controllers\WreckTrekManageController::class, 'removeAid'])->whereNumber('id')->whereNumber('n')->middleware('auth')->name('wreck-treks.aids.remove');
 Route::post('edit-site/{id}/trek', [App\Http\Controllers\WreckTrekAdminController::class, 'saveWreck'])->whereNumber('id')->middleware('auth')->name('site-trek.save');
 Route::post('edit-site/{id}/trek/legs', [App\Http\Controllers\WreckTrekAdminController::class, 'storeLeg'])->whereNumber('id')->middleware('auth')->name('site-trek.legs.store');
 Route::put('trek-legs/{leg}', [App\Http\Controllers\WreckTrekAdminController::class, 'updateLeg'])->whereNumber('leg')->middleware('auth')->name('site-trek.legs.update');

@@ -85,6 +85,10 @@
                             <input class="form-check-input ms-0" type="checkbox" id="wtShowWrecks" checked>
                             <label class="form-check-label" for="wtShowWrecks">Show wrecks</label>
                         </div>
+                        <div class="wt-switch form-check form-switch ps-0" id="wtAidsSwitch" hidden>
+                            <input class="form-check-input ms-0" type="checkbox" id="wtShowAids" checked>
+                            <label class="form-check-label" for="wtShowAids">Show navigational aids</label>
+                        </div>
                         <div class="wt-legend" id="wtLegend"></div>
                         <p class="wt-hint" id="wtMapHint"></p>
                     </section>

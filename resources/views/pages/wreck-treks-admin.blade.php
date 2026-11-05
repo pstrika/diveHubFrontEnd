@@ -108,6 +108,77 @@
                             <ul class="dh-trek-matches" hidden></ul>
                         </div>
                     </form>
+
+                    <h3 class="dh-panel-subtitle">Rebar links ({{ count($trek->rebars ?? []) }})</h3>
+                    <p class="dh-hint">Wrecks joined by rebar. Their leg is drawn in green on the chart.</p>
+                    @php $wreckOptions = $wrecks->pluck('name', 'id')->all(); $slugName = $wrecks->pluck('name', 'slug')->all(); @endphp
+                    <ul class="dh-trek-wrecks">
+                        @foreach (($trek->rebars ?? []) as $n => $pair)
+                            @if (isset($slugName[$pair[0]], $slugName[$pair[1]]))
+                            <li>
+                                <span>{{ $slugName[$pair[0]] }} ↔ {{ $slugName[$pair[1]] }}</span>
+                                <form action="{{ route('wreck-treks.rebars.remove', [$trek->id, $n]) }}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="dh-trek-remove" title="Remove this rebar link" aria-label="Remove this rebar link"><span class="material-icons-round" aria-hidden="true">close</span></button>
+                                </form>
+                            </li>
+                            @endif
+                        @endforeach
+                    </ul>
+                    @if ($wrecks->count() > 1)
+                    <form action="{{ route('wreck-treks.rebars.add', $trek->id) }}" method="POST" class="dh-trek-form">
+                        @csrf
+                        <div class="dh-field">
+                            <label for="rebar-a-{{ $trek->id }}-btn">First wreck</label>
+                            <x-dh-select name="site_a" id="rebar-a-{{ $trek->id }}" :options="$wreckOptions" placeholder="Choose a wreck" :disabled="false" />
+                        </div>
+                        <div class="dh-field">
+                            <label for="rebar-b-{{ $trek->id }}-btn">Second wreck</label>
+                            <x-dh-select name="site_b" id="rebar-b-{{ $trek->id }}" :options="$wreckOptions" placeholder="Choose a wreck" :disabled="false" />
+                        </div>
+                        <button type="submit" class="dh-btn dh-btn-ghost-dark">Add rebar link</button>
+                    </form>
+                    @endif
+
+                    <h3 class="dh-panel-subtitle">Navigational aids ({{ count($trek->aids ?? []) }})</h3>
+                    <p class="dh-hint">Boulders, mitigation points and pipes. They show in yellow on the chart and are not sites.</p>
+                    <ul class="dh-trek-wrecks">
+                        @foreach (($trek->aids ?? []) as $n => $aid)
+                            <li>
+                                <span>{{ \App\Support\WreckTrekData::AID_TYPES[$aid['type']] ?? $aid['type'] }}{{ !empty($aid['name']) ? ' – ' . $aid['name'] : '' }} ({{ $aid['lat'] }}, {{ $aid['lon'] }})</span>
+                                <form action="{{ route('wreck-treks.aids.remove', [$trek->id, $n]) }}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="dh-trek-remove" title="Remove this aid" aria-label="Remove this aid"><span class="material-icons-round" aria-hidden="true">close</span></button>
+                                </form>
+                            </li>
+                        @endforeach
+                    </ul>
+                    <form action="{{ route('wreck-treks.aids.add', $trek->id) }}" method="POST" class="dh-trek-form">
+                        @csrf
+                        <div class="dh-field">
+                            <label for="aid-type-{{ $trek->id }}-btn">Type</label>
+                            <x-dh-select name="type" id="aid-type-{{ $trek->id }}" :options="\App\Support\WreckTrekData::AID_TYPES" placeholder="Choose a type" :disabled="false" />
+                        </div>
+                        <div class="dh-field">
+                            <label for="aid-name-{{ $trek->id }}">Name (optional)</label>
+                            <input type="text" id="aid-name-{{ $trek->id }}" name="name" maxlength="60">
+                        </div>
+                        <div class="dh-field">
+                            <label for="aid-lat-{{ $trek->id }}">Latitude</label>
+                            <input type="text" id="aid-lat-{{ $trek->id }}" name="lat" placeholder="25 49.510 N" required>
+                        </div>
+                        <div class="dh-field">
+                            <label for="aid-lon-{{ $trek->id }}">Longitude</label>
+                            <input type="text" id="aid-lon-{{ $trek->id }}" name="lon" placeholder="80 04.874 W" required>
+                        </div>
+                        <div class="dh-field">
+                            <label for="aid-depth-{{ $trek->id }}">Depth ft (optional)</label>
+                            <input type="number" id="aid-depth-{{ $trek->id }}" name="depth" min="0" max="500" placeholder="trek average">
+                        </div>
+                        <button type="submit" class="dh-btn dh-btn-ghost-dark">Add aid</button>
+                    </form>
                 </section>
             @endforeach
         </div>
