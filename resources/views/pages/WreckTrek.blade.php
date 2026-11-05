@@ -81,16 +81,20 @@
                             </div>
                             <div class="wt-legbox" id="wtLegBox" role="status" hidden></div>
                         </div>
-                        <div class="wt-switch form-check form-switch ps-0">
-                            <input class="form-check-input ms-0" type="checkbox" id="wtShowWrecks" checked>
+                        <div class="wt-switch form-check">
+                            <input class="form-check-input dh-check" type="checkbox" id="wtShowWrecks" checked>
                             <label class="form-check-label" for="wtShowWrecks">Show wrecks</label>
                         </div>
-                        <div class="wt-switch form-check form-switch ps-0" id="wtAidsSwitch" hidden>
-                            <input class="form-check-input ms-0" type="checkbox" id="wtShowAids" checked>
+                        <div class="wt-switch form-check" id="wtAidsSwitch" hidden>
+                            <input class="form-check-input dh-check" type="checkbox" id="wtShowAids" checked>
                             <label class="form-check-label" for="wtShowAids">Show navigational aids</label>
                         </div>
-                        <div class="wt-switch form-check form-switch ps-0" id="wtRebarSwitch" hidden>
-                            <input class="form-check-input ms-0" type="checkbox" id="wtOnlyRebars">
+                        <div class="wt-switch form-check" id="wtRebarSwitch" hidden>
+                            <input class="form-check-input dh-check" type="checkbox" id="wtRebarWrecks">
+                            <label class="form-check-label" for="wtRebarWrecks">Show wrecks connected with rebars</label>
+                        </div>
+                        <div class="wt-switch form-check" id="wtRebarLegsSwitch" hidden>
+                            <input class="form-check-input dh-check" type="checkbox" id="wtOnlyRebars">
                             <label class="form-check-label" for="wtOnlyRebars">Show only rebar links</label>
                         </div>
                         <div class="wt-legend" id="wtLegend"></div>

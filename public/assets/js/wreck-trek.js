@@ -29,7 +29,7 @@
 
   // all = everything from the API; data = the chosen trek's part of it.
   var all = { treks: [], wrecks: {}, legs: [], routes: [] }, data = all, pos = {}; 
-  var state = { trek: null, center: null, miles: 0.5, anchor: 'C', cellFt: 100, showWrecks: true, showAids: true, onlyRebars: false, route: [], swim: 70, curKt: 0, curSet: 0 };
+  var state = { trek: null, center: null, miles: 0.5, anchor: 'C', cellFt: 100, showWrecks: true, showAids: true, onlyRebars: false, rebarWrecks: false, route: [], swim: 70, curKt: 0, curSet: 0 };
   var msg = '';
   var track = null; // what the depth tracker needs from the last profile
   var zoom = { k: 1, cx: null, cy: null }, view = { W: 760, H: 520 }, MAX_ZOOM = 8; // how far in, and where
@@ -168,13 +168,13 @@
       var a = pos[l.from], b = pos[l.to], ab = used[E.legKey(l.from, l.to)], ba = used[E.legKey(l.to, l.from)], on = ab || ba;
       var x1 = sx(a), y1 = sy(a), x2 = sx(b), y2 = sy(b);
       if (!on && (state.onlyRebars ? !rebar(l) : !shown.has(l) && !rebar(l))) return;
-      s += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + (on ? (rebar(l) ? 'var(--rebar)' : 'var(--route)') : rebar(l) ? 'var(--aid)' : 'var(--accent)') + '" stroke-width="' + (on ? 4 : rebar(l) ? 3 : 2) + '"' + (on ? '' : ' stroke-dasharray="6 5"') + ' stroke-linecap="round"/>';
+      s += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + (on ? (rebar(l) ? 'var(--rebar)' : 'var(--route)') : rebar(l) ? 'var(--rebar)' : 'var(--accent)') + '" stroke-width="' + (on ? 4 : rebar(l) ? 3 : 2) + '"' + (on ? '' : ' stroke-dasharray="6 5"') + ' stroke-linecap="round"/>';
       s += '<line class="leg-hit" data-a="' + esc(l.from) + '" data-b="' + esc(l.to) + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>';
       var flip = !on && flipped[E.legKey(l.from, l.to)];
       if (!on && p.legs.length && !flip) return; // with a route showing, only its labels and legs turned by hand stay
       if (!on) { // the heading on the chip runs in the direction of this arrow
         var along = flip ? 0.3 : 0.72;
-        s += '<path transform="translate(' + (x1 + (x2 - x1) * along) + ',' + (y1 + (y2 - y1) * along) + ') rotate(' + (E.toDeg(Math.atan2(y2 - y1, x2 - x1)) + (flip ? 180 : 0)) + ')" d="M7,0 L-5,5 L-5,-5 Z" fill="' + (rebar(l) ? 'var(--aid)' : 'var(--accent)') + '"/>';
+        s += '<path transform="translate(' + (x1 + (x2 - x1) * along) + ',' + (y1 + (y2 - y1) * along) + ') rotate(' + (E.toDeg(Math.atan2(y2 - y1, x2 - x1)) + (flip ? 180 : 0)) + ')" d="M7,0 L-5,5 L-5,-5 Z" fill="' + (rebar(l) ? 'var(--rebar)' : 'var(--accent)') + '"/>';
       }
       var text = deg3(flip ? E.norm(l.hdg + 180) : l.hdg) + ' \u00b7 ' + l.dist + ' ft';
       if (on && on.steer != null && Math.round(on.steer) !== Math.round(on.leg.hdg)) text = deg3(on.leg.hdg) + ' \u00b7 ' + on.leg.dist + ' ft \u00b7 steer ' + deg3(on.steer);
@@ -359,8 +359,15 @@
 
   function showArea(wrecks, legs) {
     // Navigational aids can be hidden, unless the route runs through one.
-    if (!state.showAids) {
-      wrecks = Object.keys(wrecks).reduce(function (out, id) { if (!wrecks[id].aid || state.route.indexOf(id) >= 0) out[id] = wrecks[id]; return out; }, {});
+    var trekNow = all.treks.find(function (t) { return t.slug === state.trek; }), joined = {};
+    ((trekNow && trekNow.rebars) || []).forEach(function (p) { joined[p[0]] = joined[p[1]] = true; });
+    var onlyJoined = state.rebarWrecks && Object.keys(joined).length;
+    if (!state.showAids || onlyJoined) {
+      wrecks = Object.keys(wrecks).reduce(function (out, id) {
+        var w = wrecks[id], kept = state.route.indexOf(id) >= 0 || (w.aid ? state.showAids : !onlyJoined || joined[id]);
+        if (kept) out[id] = w;
+        return out;
+      }, {});
       legs = E.gpsLegs(wrecks, all.legs);
     }
     data = {
@@ -390,8 +397,8 @@
     $('wtLegend').innerHTML = Object.keys(ICON_LABEL).map(function (k) { return item(k, ICON_LABEL[k], ''); }).join('')
       + (hasAids ? Object.keys(AID_LABEL).map(function (k) { return item(k, AID_LABEL[k], 'aid'); }).join('') : '');
     $('wtAidsSwitch').hidden = !hasAids;
-    $('wtRebarSwitch').hidden = !(trek && (trek.rebars || []).length);
-    if (trek && (trek.rebars || []).length) $('wtLegend').insertAdjacentHTML('beforeend', '<span><svg viewBox="0 0 40 40" aria-hidden="true"><line x1="4" y1="20" x2="36" y2="20" stroke="var(--aid)" stroke-width="3" stroke-dasharray="6 5"/></svg>Rebar link</span>');
+    $('wtRebarSwitch').hidden = $('wtRebarLegsSwitch').hidden = !(trek && (trek.rebars || []).length);
+    if (trek && (trek.rebars || []).length) $('wtLegend').insertAdjacentHTML('beforeend', '<span><svg viewBox="0 0 40 40" aria-hidden="true"><line x1="4" y1="20" x2="36" y2="20" stroke="var(--rebar)" stroke-width="3" stroke-dasharray="6 5"/></svg>Rebar link</span>');
   }
 
   function drawViewControls() {
@@ -771,7 +778,7 @@
     drawPanel(p);
     drawSites();
     try {
-      localStorage.setItem(STORE, JSON.stringify({ trek: state.trek, center: state.center, miles: state.miles, anchor: state.anchor, showWrecks: state.showWrecks, showAids: state.showAids, onlyRebars: state.onlyRebars, cellFt: state.cellFt, route: state.route, speed: $('wtSpeed').value, custom: $('wtCustom').value, curKt: state.curKt, curSet: state.curSet }));
+      localStorage.setItem(STORE, JSON.stringify({ trek: state.trek, center: state.center, miles: state.miles, anchor: state.anchor, showWrecks: state.showWrecks, showAids: state.showAids, onlyRebars: state.onlyRebars, rebarWrecks: state.rebarWrecks, cellFt: state.cellFt, route: state.route, speed: $('wtSpeed').value, custom: $('wtCustom').value, curKt: state.curKt, curSet: state.curSet }));
     } catch (e) {}
   }
 
@@ -902,6 +909,11 @@
       if (state.trek) useTrek(state.trek); else if (state.center) useAround(state.center);
       render();
     });
+    $('wtRebarWrecks').addEventListener('change', function () {
+      state.rebarWrecks = this.checked;
+      if (state.trek) useTrek(state.trek);
+      render();
+    });
     $('wtOnlyRebars').addEventListener('change', function () {
       state.onlyRebars = this.checked;
       render();
@@ -934,8 +946,10 @@
     if (saved && (saved.cellFt === 50 || saved.cellFt === 100 || saved.cellFt === 200)) state.cellFt = saved.cellFt;
     drawViewControls();
     if (!saved) return;
+    if (saved.rebarWrecks === true) { $('wtRebarWrecks').checked = true; state.rebarWrecks = true; }
     if (saved.onlyRebars === true) { $('wtOnlyRebars').checked = true; state.onlyRebars = true; }
     if (saved.showAids === false) { $('wtShowAids').checked = false; state.showAids = false; }
+    if ((state.rebarWrecks || !state.showAids) && state.trek) useTrek(state.trek); // the saved filters apply to the area already drawn
     if (saved.showWrecks === false) { $('wtShowWrecks').checked = false; state.showWrecks = false; $('wtLegend').hidden = true; }
     var speed = $('wtSpeed').parentNode.querySelector('li[data-value="' + saved.speed + '"]');
     if (speed) speed.click();

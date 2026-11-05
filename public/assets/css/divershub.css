@@ -5093,3 +5093,13 @@ body.dh-photo-viewer-open { overflow: hidden; }
 .dh-trek-matches { position: absolute; z-index: 20; top: 100%; left: 0; right: 0; margin: 4px 0 0; padding: 6px; list-style: none; max-height: 260px; overflow-y: auto; background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 12px; box-shadow: 0 8px 24px rgba(11,42,58,.16); }
 .dh-trek-matches li { padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: .92rem; }
 .dh-trek-matches li:hover { background: var(--dh-foam); }
+
+/* Wreck treks admin: each trek is a collapsed card that expands (Pablo, 2026-11-05: "collapse all the cards, allow to expand"). */
+.dh-trek-card > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: var(--dh-space-3); flex-wrap: wrap; }
+.dh-trek-card > summary::-webkit-details-marker { display: none; }
+.dh-trek-card > summary .dh-panel-title { margin: 0; flex: 1 1 auto; }
+.dh-trek-counts { font-size: .8rem; color: var(--dh-muted); }
+.dh-trek-chevron { color: var(--dh-muted); transition: transform .15s; }
+.dh-trek-card[open] > summary .dh-trek-chevron { transform: rotate(180deg); }
+.dh-trek-card[open] > summary { margin-bottom: var(--dh-space-3); }
+.dh-trek-delete-row { justify-content: flex-end; }

@@ -43,9 +43,13 @@
 
             @foreach ($treks as $trek)
                 @php $wrecks = $members->get($trek->id, collect()); @endphp
-                <section class="dh-panel" id="trek-{{ $trek->id }}">
-                    <div class="dh-panel-head-row">
+                <details class="dh-panel dh-trek-card" id="trek-{{ $trek->id }}" @if (session('open_trek') == $trek->id) open @endif>
+                    <summary>
                         <h2 class="dh-panel-title">{{ $trek->name }}</h2>
+                        <span class="dh-trek-counts">{{ $wrecks->count() }} {{ Str::plural('wreck', $wrecks->count()) }} · {{ count($trek->rebars ?? []) }} rebar · {{ count($trek->aids ?? []) }} {{ Str::plural('aid', count($trek->aids ?? [])) }}</span>
+                        <span class="material-icons-round dh-trek-chevron" aria-hidden="true">expand_more</span>
+                    </summary>
+                    <div class="dh-panel-head-row dh-trek-delete-row">
                         <form action="{{ route('wreck-treks.destroy', $trek->id) }}" method="POST" onsubmit="return confirm('Delete {{ addslashes($trek->name) }}? Its wrecks stay in the database.');">
                             @csrf
                             @method('DELETE')
@@ -179,7 +183,7 @@
                         </div>
                         <button type="submit" class="dh-btn dh-btn-ghost-dark">Add aid</button>
                     </form>
-                </section>
+                </details>
             @endforeach
         </div>
 

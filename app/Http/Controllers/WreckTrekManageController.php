@@ -45,7 +45,7 @@ class WreckTrekManageController extends Controller
         $this->saveLogo($request, $trek);
         WreckTrekData::forget();
 
-        return back()->with('status', $data['name'] . ' created. Add its wrecks below.');
+        return back()->with('open_trek', $trek->id)->with('status', $data['name'] . ' created. Add its wrecks below.');
     }
 
     public function update(Request $request, int $id)
@@ -57,7 +57,7 @@ class WreckTrekManageController extends Controller
         $this->saveLogo($request, $trek);
         WreckTrekData::forget();
 
-        return back()->with('status', $trek->name . ' saved.');
+        return back()->with('open_trek', $trek->id)->with('status', $trek->name . ' saved.');
     }
 
     public function destroy(int $id)
@@ -84,7 +84,7 @@ class WreckTrekManageController extends Controller
         $site->forceFill(['wreck_trek_id' => $trek->id])->save();
         WreckTrekData::forget();
 
-        return back()->with('status', $site->name . ' added to ' . $trek->name . '.');
+        return back()->with('open_trek', $trek->id)->with('status', $site->name . ' added to ' . $trek->name . '.');
     }
 
     public function removeWreck(int $id, int $siteId)
@@ -95,7 +95,7 @@ class WreckTrekManageController extends Controller
         $site->forceFill(['wreck_trek_id' => null])->save();
         WreckTrekData::forget();
 
-        return back()->with('status', $site->name . ' removed.');
+        return back()->with('open_trek', $id)->with('status', $site->name . ' removed.');
     }
 
     /** Two wrecks of this trek joined by rebar; the chart draws their leg in green. */
@@ -106,7 +106,7 @@ class WreckTrekManageController extends Controller
         $data = $request->validate(['site_a' => 'required|integer|different:site_b', 'site_b' => 'required|integer']);
 
         $slugs = Site::where('wreck_trek_id', $trek->id)->whereIn('id', [$data['site_a'], $data['site_b']])->pluck('slug')->all();
-        if (count($slugs) !== 2) return back()->withErrors(['site_a' => 'Pick two different wrecks from this trek.']);
+        if (count($slugs) !== 2) return back()->with('open_trek', $trek->id)->withErrors(['site_a' => 'Pick two different wrecks from this trek.']);
         sort($slugs);
 
         $rebars = collect($trek->rebars ?? []);
@@ -114,7 +114,7 @@ class WreckTrekManageController extends Controller
         $trek->update(['rebars' => $rebars->values()->all()]);
         WreckTrekData::forget();
 
-        return back()->with('status', 'Rebar link added to ' . $trek->name . '.');
+        return back()->with('open_trek', $trek->id)->with('status', 'Rebar link added to ' . $trek->name . '.');
     }
 
     public function removeRebar(int $id, int $n)
@@ -126,7 +126,7 @@ class WreckTrekManageController extends Controller
         $trek->update(['rebars' => array_values($rebars)]);
         WreckTrekData::forget();
 
-        return back()->with('status', 'Rebar link removed.');
+        return back()->with('open_trek', $trek->id)->with('status', 'Rebar link removed.');
     }
 
     /** A navigational aid on the chart: boulders, a mitigation point or pipes, at a GPS position. */
@@ -144,7 +144,7 @@ class WreckTrekManageController extends Controller
         $lat = $this->coordinate($data['lat'], 'NS');
         $lon = $this->coordinate($data['lon'], 'EW');
         if ($lat === null || $lon === null || abs($lat) > 90 || abs($lon) > 180) {
-            return back()->withErrors(['lat' => 'Could not read those coordinates. Use 25 49.510 N and 80 04.874 W, or 25.8252 and -80.0812.'])->withInput();
+            return back()->with('open_trek', $trek->id)->withErrors(['lat' => 'Could not read those coordinates. Use 25 49.510 N and 80 04.874 W, or 25.8252 and -80.0812.'])->withInput();
         }
 
         $aids = $trek->aids ?? [];
@@ -152,7 +152,7 @@ class WreckTrekManageController extends Controller
         $trek->update(['aids' => $aids]);
         WreckTrekData::forget();
 
-        return back()->with('status', WreckTrekData::AID_TYPES[$data['type']] . ' added to ' . $trek->name . '.');
+        return back()->with('open_trek', $trek->id)->with('status', WreckTrekData::AID_TYPES[$data['type']] . ' added to ' . $trek->name . '.');
     }
 
     public function removeAid(int $id, int $n)
@@ -164,7 +164,7 @@ class WreckTrekManageController extends Controller
         $trek->update(['aids' => array_values($aids)]);
         WreckTrekData::forget();
 
-        return back()->with('status', 'Aid removed.');
+        return back()->with('open_trek', $trek->id)->with('status', 'Aid removed.');
     }
 
     /** Degrees and decimal minutes with a hemisphere letter ("25 49.510 N"), or signed decimal degrees ("-80.0812"). */
