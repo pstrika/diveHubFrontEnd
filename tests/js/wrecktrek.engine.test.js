@@ -47,6 +47,7 @@ assert.strictEqual(E.iconFor({ type: 'ship', sitting: 'port', broken: true }), '
 assert.strictEqual(E.iconFor({ type: 'ship', sitting: 'starboard', broken: false }), 'starboard');
 assert.strictEqual(E.iconFor({ type: 'barge', sitting: 'port', broken: true }), 'barge');
 assert.strictEqual(E.iconFor({ type: 'tank', sitting: 'upright', broken: false }), 'tank');
+assert.strictEqual(E.iconFor({ type: 'pyramids', sitting: 'port', broken: true }), 'pyramids');
 assert.deepStrictEqual(E.hullFt({ type: 'tank', length: null, beam: 12 }).long, 100, 'no length falls back');
 
 // GPS legs match the seeder's sums: Rodeo 25 to Lady Luck is 176 degrees, 433 ft.

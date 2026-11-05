@@ -74,6 +74,11 @@
                                 <button type="button" class="chip" data-ft="100">1 sq = 100 ft</button>
                                 <button type="button" class="chip" data-ft="200">1 sq = 200 ft</button>
                             </div>
+                            <div class="wt-zoom" role="group" aria-label="Zoom the chart">
+                                <button type="button" id="wtZoomIn" aria-label="Zoom in" title="Zoom in"><span class="material-icons-round" aria-hidden="true">add</span></button>
+                                <button type="button" id="wtZoomOut" aria-label="Zoom out" title="Zoom out"><span class="material-icons-round" aria-hidden="true">remove</span></button>
+                                <button type="button" id="wtZoomReset" aria-label="Show the whole chart" title="Show the whole chart" hidden><span class="material-icons-round" aria-hidden="true">fit_screen</span></button>
+                            </div>
                             <div class="wt-legbox" id="wtLegBox" role="status" hidden></div>
                         </div>
                         <div class="wt-switch form-check form-switch ps-0">

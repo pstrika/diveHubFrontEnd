@@ -21,6 +21,8 @@ final class WreckTrekData
 
     private const CACHE_KEY = 'wrecktrek.data';
     private const SITE_PAGE_LEGS = 5;
+    /** Ship types for objects that are not wrecks but have their own chart icon. */
+    public const OBJECT_TYPES = ['Army Tank', 'Radio Tower'];
     private const EARTH_RADIUS_FT = 20902231;
 
     public static function load(): array
@@ -82,10 +84,15 @@ final class WreckTrekData
         });
     }
 
-    /** The sites the planner can use: wrecks, plus the odd non-wreck object with its own icon (an army tank). */
+    /** The sites the planner can use: wrecks, plus the odd non-wreck object with its own icon (an army tank, radio towers). */
     public static function eligible()
     {
-        return Site::where('_hidden', 0)->where(fn ($q) => $q->where('type', 'wreck')->orWhere('wreckData', 'like', '%"type":"Army Tank"%'));
+        return Site::where('_hidden', 0)->where(function ($q) {
+            $q->where('type', 'wreck');
+            foreach (self::OBJECT_TYPES as $objectType) {
+                $q->orWhere('wreckData', 'like', '%"type":"' . $objectType . '"%');
+            }
+        });
     }
 
     /** The chart icon, from the wreck's ship type. */
@@ -94,6 +101,7 @@ final class WreckTrekData
         return match ($wreckType) {
             'Barge', 'Drydock' => 'barge',
             'Army Tank' => 'tank',
+            'Radio Tower' => 'pyramids',
             default => 'ship',
         };
     }

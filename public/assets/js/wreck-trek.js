@@ -14,10 +14,12 @@
     upside_down: '<path d="' + HULL_PATH + '" class="ic-deck"/><path d="M20,6 L20,34" class="ic-keel"/>',
     port: '<path d="' + HULL_PATH + '"/><path d="M20,3 C14,10 12,18 12,27 L12,34 Q16,36.5 20,36.5 Z" class="ic-deck"/><rect x="5" y="19" width="7" height="8" rx="1" class="ic-deck"/>',
     starboard: '<path d="' + HULL_PATH + '"/><path d="M20,3 C26,10 28,18 28,27 L28,34 Q24,36.5 20,36.5 Z" class="ic-deck"/><rect x="28" y="19" width="7" height="8" rx="1" class="ic-deck"/>',
+    // two open steel pyramids from above: a square frame and the four ridges running up to the apex
+    pyramids: '<g fill="none"><rect x="2" y="11" width="17" height="18"/><path d="M2,11 L19,29 M19,11 L2,29"/><rect x="21" y="11" width="17" height="18"/><path d="M21,11 L38,29 M38,11 L21,29"/></g>',
     tank: '<rect x="11" y="8" width="5" height="26" rx="1.5"/><rect x="24" y="8" width="5" height="26" rx="1.5"/><rect x="15" y="10" width="10" height="22" rx="1"/><circle cx="20" cy="22" r="5" class="ic-deck"/><rect x="19" y="3" width="2" height="14" class="ic-deck"/>',
     barge: '<path d="M14,4 L26,4 L29,8 L29,33 L26,37 L14,37 L11,33 L11,8 Z"/><rect x="15" y="10" width="10" height="20" rx="1" class="ic-deck"/>'
   };
-  var ICON_LABEL = { ship: 'Ship', broken: 'Broken', upside_down: 'Upside down', port: 'On port side', starboard: 'On starboard side', barge: 'Barge', tank: 'Army tank' };
+  var ICON_LABEL = { ship: 'Ship', broken: 'Broken', upside_down: 'Upside down', port: 'On port side', starboard: 'On starboard side', barge: 'Barge', tank: 'Army tank', pyramids: 'Radio tower pyramids' };
   var HELP = 'Steer is the compass heading that keeps you on the measured track with this current. SOG is speed over ground. A red flag means the current beats your swim speed on that leg.';
 
   // all = everything from the API; data = the chosen trek's part of it.
@@ -25,6 +27,7 @@
   var state = { trek: null, center: null, miles: 0.5, anchor: 'C', cellFt: 100, showWrecks: true, route: [], swim: 70, curKt: 0, curSet: 0 };
   var msg = '';
   var track = null; // what the depth tracker needs from the last profile
+  var zoom = { k: 1, cx: null, cy: null }, view = { W: 760, H: 520 }, MAX_ZOOM = 8; // how far in, and where
   var flipped = {}; // dashed legs turned to their opposite direction
   var RADIUS_LABEL = { 0.25: '1/4 mile', 0.5: '1/2 mile', 1: '1 mile' };
   var ANCHOR_LABEL = { C: 'of', N: 'south of', S: 'north of', E: 'west of', W: 'east of' };
@@ -58,9 +61,12 @@
   var MIN_CHART_H = 420, SQUARE_PX = 40, PHONE_SQUARE_PX = 52; // a grid square on the chart
   var PAPER_MAX_SCALE = 0.5; // px per ft, so a short route doesn't blow up on the PDF
   var GRID_FT = [50, 100, 200, 500, 1000, 2000, 5000], MIN_GRID_PX = 24; // a wide area needs bigger squares
-  var HULL = { ship: [16, 34], barge: [18, 33], tank: [18, 26] };
+  var HULL = { ship: [16, 34], barge: [18, 33], tank: [18, 26], pyramids: [36, 18] };
 
   // paper: { svg, w, h } draws the PDF's chart instead of the page's.
+  // How far a horizontal chip sits from the middle of a line so it clears it.
+  function base0(tw, ch, ang) { return Math.abs(Math.sin(ang)) * tw / 2 + Math.abs(Math.cos(ang)) * ch / 2 + 3; }
+
   function drawMap(p, paper) {
     var svg = paper ? paper.svg : $('wtMap'), W = paper ? paper.w : chartWidth(svg), pad = paper ? 60 : 90;
     var pts = Object.values(pos);
@@ -70,14 +76,25 @@
     var minx = Math.min.apply(null, xs), maxx = Math.max.apply(null, xs), miny = Math.min.apply(null, ys), maxy = Math.max.apply(null, ys);
     // The chosen scale sets the size; the chart is as tall as the trek needs at that scale.
     var spanX = Math.max(1, maxx - minx), spanY = Math.max(1, maxy - miny), cellFt = state.cellFt;
-    var scale = paper
+    var scale0 = paper
       ? Math.min(PAPER_MAX_SCALE, (W - 2 * pad) / spanX, (paper.h - 2 * pad) / spanY)
       : Math.min((f > 1.5 ? PHONE_SQUARE_PX : SQUARE_PX) / cellFt, (W - 2 * pad) / spanX);
     var band = paper ? 0 : 44 * f; // kept clear at the top for the scale chips
-    var H = paper ? paper.h : Math.max(MIN_CHART_H, Math.round(spanY * scale + 2 * pad + band));
+    var H = paper ? paper.h : Math.max(MIN_CHART_H, Math.round(spanY * scale0 + 2 * pad + band));
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-    var ox = pad + ((W - 2 * pad) - (maxx - minx) * scale) / 2, oy = pad + band + ((H - band - 2 * pad) - (maxy - miny) * scale) / 2;
-    var sx = function (q) { return ox + (q.x - minx) * scale; }, sy = function (q) { return oy + (maxy - q.y) * scale; };
+    var ox = pad + ((W - 2 * pad) - (maxx - minx) * scale0) / 2, oy = pad + band + ((H - band - 2 * pad) - (maxy - miny) * scale0) / 2;
+    // Zoom is a real change of scale: wrecks and segments grow and the text keeps its size.
+    // zoom.cx / cy is the point of the whole-chart picture that sits in the middle of the view.
+    var k = paper ? 1 : zoom.k;
+    if (!paper) {
+      view = { W: W, H: H };
+      if (k === 1) { zoom.cx = W / 2; zoom.cy = H / 2; }
+      zoom.cx = Math.max(0, Math.min(W, zoom.cx)); zoom.cy = Math.max(0, Math.min(H, zoom.cy));
+      svg.classList.toggle('zoomed', k > 1.001);
+      $('wtZoomReset').hidden = k <= 1.001;
+    }
+    var scale = scale0 * k, cx0 = paper ? W / 2 : zoom.cx, cy0 = paper ? H / 2 : zoom.cy;
+    var sx = function (q) { return W / 2 + (ox + (q.x - minx) * scale0 - cx0) * k; }, sy = function (q) { return H / 2 + (oy + (maxy - q.y) * scale0 - cy0) * k; };
     var used = {};
     p.legs.forEach(function (l) { used[E.legKey(l.leg.from, l.leg.to)] = l; });
 
@@ -88,9 +105,9 @@
 
     // The scale bar sits on the grid.
     var gridFt = GRID_FT.find(function (ft) { return ft >= cellFt && ft * scale >= MIN_GRID_PX; }) || 5000;
-    var cell = gridFt * scale, barX = 30, barY = H - 24;
-    for (g = barX % cell; g <= W; g += cell) s += '<line x1="' + g + '" y1="0" x2="' + g + '" y2="' + H + '" stroke="var(--grid)"/>';
-    for (g = barY % cell; g <= H; g += cell) s += '<line x1="0" y1="' + g + '" x2="' + W + '" y2="' + g + '" stroke="var(--grid)"/>';
+    var cell = gridFt * scale, barX = 30, barY = H - 24, gx0 = sx({ x: 0 }), gy0 = sy({ y: 0 });
+    for (g = gx0 - Math.ceil(gx0 / cell) * cell; g <= W; g += cell) s += '<line x1="' + g + '" y1="0" x2="' + g + '" y2="' + H + '" stroke="var(--grid)"/>';
+    for (g = gy0 - Math.ceil(gy0 / cell) * cell; g <= H; g += cell) s += '<line x1="0" y1="' + g + '" x2="' + W + '" y2="' + g + '" stroke="var(--grid)"/>';
 
     s += '<g transform="translate(' + (W - 44) + ',44)"><circle r="22" fill="var(--panel)" stroke="var(--line)"/><path d="M0,-18 L6,4 L0,0 L-6,4 Z" fill="var(--route)"/><text y="-24" text-anchor="middle" class="lbl">N</text></g>';
 
@@ -144,34 +161,52 @@
       var flip = !on && flipped[E.legKey(l.from, l.to)];
       if (!on && p.legs.length && !flip) return; // with a route showing, only its labels and legs turned by hand stay
       if (!on) { // the heading on the chip runs in the direction of this arrow
-        var along = flip ? 0.38 : 0.62;
+        var along = flip ? 0.3 : 0.72;
         s += '<path transform="translate(' + (x1 + (x2 - x1) * along) + ',' + (y1 + (y2 - y1) * along) + ') rotate(' + (E.toDeg(Math.atan2(y2 - y1, x2 - x1)) + (flip ? 180 : 0)) + ')" d="M7,0 L-5,5 L-5,-5 Z" fill="var(--accent)"/>';
       }
-      // Labels of steep legs go to the west, wreck names to the east, so they don't collide.
-      var mx = (x1 + x2) / 2, my = (y1 + y2) / 2, ang = Math.atan2(y2 - y1, x2 - x1), nx = -Math.sin(ang) * 14, ny = Math.cos(ang) * 14;
-      var steep = Math.abs(Math.cos(ang)) < 0.5;
-      var text = deg3(flip ? E.norm(l.hdg + 180) : l.hdg) + ' · ' + l.dist + ' ft';
-      if (on && on.steer != null && Math.round(on.steer) !== Math.round(on.leg.hdg)) text = deg3(on.leg.hdg) + ' · ' + on.leg.dist + ' ft · steer ' + deg3(on.steer);
-      else if (on) text = deg3(on.leg.hdg) + ' · ' + on.leg.dist + ' ft';
-      var tw = (text.length * 6.7 + 24) * f; // the Trips chip: .8rem text, 12px side padding, 28px tall
-      if (steep) nx = -Math.abs(nx);
-      else { // far enough above or below that the line clears both ends of the text
-        var clear = 14 + tw / 2 * Math.abs(Math.tan(ang));
-        nx = 0;
-        ny = ny > 0 ? clear + 8 : -clear;
-      }
-      // Nudge a chip outward until it clears the icons, names and chips already placed, staying on the chart.
-      var lx = mx + nx - (steep ? tw : tw / 2), ly = my + ny, ch = 28 * f, top = 18 * f, startX = lx, startY = ly;
-      var free = function () {
-        return lx > 0 && lx + tw < W && ly - top > 0 && ly + ch < H - 36 && !boxes.some(function (q) { return lx < q.x + q.w && q.x < lx + tw && ly - top < q.b && q.t < ly - top + ch; });
+      var text = deg3(flip ? E.norm(l.hdg + 180) : l.hdg) + ' \u00b7 ' + l.dist + ' ft';
+      if (on && on.steer != null && Math.round(on.steer) !== Math.round(on.leg.hdg)) text = deg3(on.leg.hdg) + ' \u00b7 ' + on.leg.dist + ' ft \u00b7 steer ' + deg3(on.steer);
+      else if (on) text = deg3(on.leg.hdg) + ' \u00b7 ' + on.leg.dist + ' ft';
+      // A small chip lying along its segment, text kept the right way up. A segment too short
+      // for it gets the chip horizontal, beside the line.
+      var segLen = Math.hypot(x2 - x1, y2 - y1), ang = Math.atan2(y2 - y1, x2 - x1), deg = E.toDeg(ang);
+      var tw = (text.length * 5.2 + 2) * f, ch = 10 * f, tdeg = deg > 90 || deg < -90 ? deg + 180 : deg;
+      var hitBox = function (cx, cy, w, h) { return { x: cx - w / 2, w: w, t: cy - h / 2, b: cy + h / 2 }; };
+      var clear = function (q) {
+        return q.x > 0 && q.x + q.w < W && q.t > 0 && q.b < H - 30 && !boxes.some(function (o) { return q.x < o.x + o.w && o.x < q.x + q.w && q.t < o.b && o.t < q.b; });
       };
-      for (var k = 1; k < 14 && !free(); k++) {
-        var tries = [[-10 * k, 0], [10 * k, 0], [0, 12 * k], [0, -12 * k]], t = 0;
-        do { lx = startX + tries[t][0] * f; ly = startY + tries[t][1] * f; t++; } while (t < 4 && !free());
+      var ra = place[l.from] ? place[l.from].r : 12, rb = place[l.to] ? place[l.to].r : 12, placed = null;
+      var sinA = Math.sin(ang), cosA = Math.cos(ang);
+      if (tw + 0.6 * (ra + rb) + 8 <= segLen) { // along the line, trying the middle first, then either side of it
+        [0.5, 0.4, 0.6, 0.3, 0.7, 0.22, 0.78].some(function (fr) {
+          var d = fr * segLen;
+          if (d - tw / 2 < ra * 0.6 + 4 || d + tw / 2 > segLen - rb * 0.6 - 4) return false;
+          var off = ch / 2 + 2 * f, up = cosA >= 0 ? -1 : 1; // the side that is above the line on screen first
+          return [up, -up].some(function (sgn) {
+            var cx = x1 + cosA * d - sinA * sgn * off, cy = y1 + sinA * d + cosA * sgn * off;
+            var q = hitBox(cx, cy, Math.abs(cosA) * tw + Math.abs(sinA) * ch, Math.abs(sinA) * tw + Math.abs(cosA) * ch);
+            if (!clear(q)) return false;
+            placed = { cx: cx, cy: cy, rot: tdeg, q: q };
+            return true;
+          });
+        });
       }
-      if (!free()) { lx = startX; ly = startY; }
-      boxes.push({ x: lx, w: tw, t: ly - top, b: ly - top + ch });
-      chips += '<g class="chip' + (on ? ' on' : '') + '"><rect x="' + lx + '" y="' + (ly - top) + '" width="' + tw + '" height="' + ch + '" rx="' + (ch / 2) + '"/><text x="' + (lx + tw / 2) + '" y="' + ly + '" text-anchor="middle" class="lbl' + (on ? ' on' : '') + '">' + text + '</text></g>';
+      if (!placed) { // horizontal and close beside the line, on whichever side is free
+        var base = Math.abs(sinA) * tw / 2 + Math.abs(cosA) * ch / 2 + 3 * f;
+        [0.5, 0.38, 0.62, 0.26, 0.74].some(function (fr) {
+          return [0, 5, 10, 16].some(function (extra) {
+            return [1, -1].some(function (sgn) {
+              var cx = x1 + cosA * segLen * fr - sinA * sgn * (base + extra * f), cy = y1 + sinA * segLen * fr + cosA * sgn * (base + extra * f), q = hitBox(cx, cy, tw, ch);
+              if (!clear(q)) return false;
+              placed = { cx: cx, cy: cy, rot: 0, q: q };
+              return true;
+            });
+          });
+        });
+      }
+      if (!placed) { var cx0 = (x1 + x2) / 2 - sinA * (base0(tw, ch, ang)), cy0 = (y1 + y2) / 2 + cosA * base0(tw, ch, ang); placed = { cx: cx0, cy: cy0, rot: 0, q: hitBox(cx0, cy0, tw, ch) }; }
+      boxes.push(placed.q);
+      chips += '<g class="seg' + (on ? ' on' : '') + '" transform="translate(' + placed.cx + ',' + placed.cy + ') rotate(' + placed.rot + ')"><text x="0" y="' + (3.3 * f) + '" text-anchor="middle" class="lbl' + (on ? ' on' : '') + '">' + text + '</text></g>';
     });
 
     p.legs.forEach(function (pl) {
@@ -408,6 +443,88 @@
   }
 
   // ---------- Depth tracker ----------
+  // ---------- Zoom ----------
+  var redrawing = false;
+
+  // Draws the chart again at the new scale, once per frame however fast you drag.
+  function redrawMap() {
+    if (redrawing) return;
+    redrawing = true;
+    requestAnimationFrame(function () { redrawing = false; hideLegBox(); drawMap(plan()); });
+  }
+
+  // Zooms by a factor around a point of the chart, in chart units as drawn now.
+  function zoomAt(factor, px, py) {
+    var k = Math.max(1, Math.min(MAX_ZOOM, zoom.k * factor)), W = view.W, H = view.H;
+    // the point of the whole-chart picture under (px, py) stays under it
+    var bx = zoom.cx + (px - W / 2) / zoom.k, by = zoom.cy + (py - H / 2) / zoom.k;
+    zoom.k = k;
+    zoom.cx = bx - (px - W / 2) / k;
+    zoom.cy = by - (py - H / 2) / k;
+    redrawMap();
+  }
+
+  function resetZoom() { zoom = { k: 1, cx: null, cy: null }; redrawMap(); }
+
+  function bindZoom() {
+    var svg = $('wtMap'), pointers = {}, last = null, dragged = false, startX = 0, startY = 0;
+    var toChart = function (cx, cy) { var r = svg.getBoundingClientRect(); return { x: (cx - r.left) / r.width * view.W, y: (cy - r.top) / r.height * view.H }; };
+    $('wtZoomIn').onclick = function () { zoomAt(1.6, view.W / 2, view.H / 2); };
+    $('wtZoomOut').onclick = function () { zoomAt(1 / 1.6, view.W / 2, view.H / 2); };
+    $('wtZoomReset').onclick = resetZoom;
+
+    // Ctrl or cmd with the wheel, or a trackpad pinch (which sends ctrl). A plain wheel still scrolls the page.
+    svg.addEventListener('wheel', function (e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      var c = toChart(e.clientX, e.clientY);
+      zoomAt(Math.exp(-e.deltaY * 0.01), c.x, c.y);
+    }, { passive: false });
+
+    var pts = function () { return Object.keys(pointers).map(function (id) { return pointers[id]; }); };
+    var dist = function () { var a = pts(); return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); };
+    var mid = function () { var a = pts(); return { x: (a[0].x + a[1].x) / 2, y: (a[0].y + a[1].y) / 2 }; };
+
+    svg.addEventListener('pointerdown', function (e) {
+      pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+      last = { x: e.clientX, y: e.clientY, d: Object.keys(pointers).length === 2 ? dist() : 0 };
+      startX = e.clientX; startY = e.clientY; dragged = false;
+    });
+
+    document.addEventListener('pointermove', function (e) {
+      if (!pointers[e.pointerId]) return;
+      pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+      var n = Object.keys(pointers).length, r = svg.getBoundingClientRect();
+      if (n === 2 && last.d) { // pinch
+        var d = dist(), m = mid(), c = toChart(m.x, m.y);
+        zoomAt(d / last.d, c.x, c.y);
+        last = { x: m.x, y: m.y, d: d };
+        dragged = true;
+        return;
+      }
+      if (n !== 1 || zoom.k <= 1.001) return;
+      if (!dragged && Math.hypot(e.clientX - startX, e.clientY - startY) < 5) return;
+      dragged = true;
+      svg.classList.add('panning');
+      zoom.cx -= (e.clientX - last.x) / r.width * view.W / zoom.k;
+      zoom.cy -= (e.clientY - last.y) / r.height * view.H / zoom.k;
+      last = { x: e.clientX, y: e.clientY, d: 0 };
+      redrawMap();
+    });
+
+    var up = function (e) {
+      delete pointers[e.pointerId];
+      svg.classList.remove('panning');
+      var left = Object.keys(pointers)[0];
+      if (left) last = { x: pointers[left].x, y: pointers[left].y, d: 0 };
+    };
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
+
+    // A drag or pinch must not also tap a wreck or a line.
+    svg.addEventListener('click', function (e) { if (dragged) { e.stopPropagation(); e.preventDefault(); dragged = false; } }, true);
+  }
+
   function bindTracker() {
     var svg = $('wtProfile'), tip = $('wtTip');
     var hide = function () {
@@ -562,6 +679,7 @@
   function changeArea(show) {
     show();
     flipped = {};
+    zoom = { k: 1, cx: null, cy: null };
     state.route = [];
     msg = '';
     syncUrl();
@@ -762,6 +880,7 @@
 
     bindRouteModals();
     bindTracker();
+    bindZoom();
     $('wtPdf').onclick = exportPdf;
   }
 

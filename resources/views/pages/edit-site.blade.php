@@ -19,10 +19,10 @@
 
         @php
             $wreckData = json_decode($site->wreckData ?? '');
-            $isWreck = $site->type === 'wreck' || (json_decode($site->wreckData ?? '')->type ?? null) === 'Army Tank';
+            $isWreck = $site->type === 'wreck' || in_array(json_decode($site->wreckData ?? '')->type ?? null, \App\Support\WreckTrekData::OBJECT_TYPES, true);
             $levelOptions = collect(\App\Support\DiveLevel::all())->mapWithKeys(fn ($l) => [$l['value'] => $l['name']])->all();
             $locationOptions = $locations->mapWithKeys(fn ($l) => [$l->short => ucwords(strtolower($l->location))])->all();
-            $shipTypes = ['Army Tank', 'Barge', 'Buoy Tender', 'Cable Ship', 'Cargo Ship', 'Cruiser', 'Cutter', 'Destroyer', 'Dredge', 'Drydock',
+            $shipTypes = ['Army Tank', 'Radio Tower', 'Barge', 'Buoy Tender', 'Cable Ship', 'Cargo Ship', 'Cruiser', 'Cutter', 'Destroyer', 'Dredge', 'Drydock',
                 'Erojacks', 'Ferry', 'Freighter', 'Houseboat', 'Landing Craft', 'Landing Dock Ship', 'Minesweeper', 'Missile Tracker',
                 'Other', 'Pipes', 'Sailboat', 'Schooner', 'Steamer', 'Tanker', 'Tower', 'Trawler', 'Tugboat', 'Vessel', 'Workboat', 'Yatch'];
             $shipType = $wreckData->type ?? null;
