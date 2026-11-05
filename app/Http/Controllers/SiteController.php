@@ -471,9 +471,11 @@ class SiteController extends Controller
         // from the site to the guides that send divers here.
         $sitePosts = \App\Models\Post::mentioningSite((int) $site->id);
         $trekLegs = $site->wreck_trek_id ? \App\Support\WreckTrekData::legsFrom((string) $site->slug) : [];
-        $trekName = $site->wreck_trek_id ? \App\Support\WreckTrekData::trekName((string) $site->slug) : null;
+        $trek = $site->wreck_trek_id ? \App\Models\WreckTrek::find($site->wreck_trek_id) : null;
+        $trekName = $trek?->name;
+        $trekSlug = $trek?->slug;
 
-        return view('pages.SiteDetails', compact('trekName', 'site','photos', 'diverPhotos', 'siteVideos', 'videoUploadsOn', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'gasMixes', 'forecast', 'nextTrips', 'myDiveCount', 'sitePosts', 'trekLegs'));
+        return view('pages.SiteDetails', compact('trekName', 'trekSlug', 'site','photos', 'diverPhotos', 'siteVideos', 'videoUploadsOn', 'location', 'operators', 'ratedAlready', 'visited', 'wished', 'SEO', 'gasMixes', 'forecast', 'nextTrips', 'myDiveCount', 'sitePosts', 'trekLegs'));
 
     }
     public function getMyVisitedSites() {

@@ -392,6 +392,16 @@
                         @endif
                     </p>
                     @if($site->gpsLat)<p class="dh-site-gps">{{ $site->gpsLat }} {{ $site->gpsLon }}</p>@endif
+                    @if(!empty($trekName))
+                        {{-- Opens the planner on this trek; the planner is for members, so guests get the sign-up prompt. --}}
+                        <p class="dh-site-trek">
+                            @if(auth()->user()?->isNotGuest())
+                                <a class="dh-site-trek-pill" href="{{ route('WreckTrek') }}?trek={{ $trekSlug }}" title="Open this wreck trek in the planner"><span class="material-icons-round" aria-hidden="true">explore</span>{{ $trekName }}</a>
+                            @else
+                                <a class="dh-site-trek-pill" href="#" onclick="event.preventDefault();showModalGuest();"><span class="material-icons-round" aria-hidden="true">explore</span>{{ $trekName }}</a>
+                            @endif
+                        </p>
+                    @endif
                     <div class="dh-site-chips">
                         @if($levelInfo)<span class="chip chip-static" title="Minimum recommended certification"><x-dive-level.icon :level="$site->level" height="16" /> {{ $levelInfo['name'] }}</span>@endif
                         @if($site->maxDepth)<span class="chip chip-static">Max {{ $site->maxDepth }} ft</span>@endif
