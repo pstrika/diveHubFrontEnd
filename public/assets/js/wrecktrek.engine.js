@@ -11,7 +11,7 @@
   // Where the circle's centre lies from the chosen wreck, as [north, east] radii.
   const CIRCLE_CENTRE = { C: [0, 0], N: [-1, 0], S: [1, 0], E: [0, -1], W: [0, 1] };
   const DEPTH_STEPS = [10, 20, 25, 50, 100, 200, 500];
-  const USUAL_RATIO = { ship: 6.5, barge: 4 };
+  const USUAL_RATIO = { ship: 6.5, barge: 4, tank: 1.9 };
   const toRad = d => d * Math.PI / 180, toDeg = r => r * 180 / Math.PI;
   const norm = d => ((d % 360) + 360) % 360;
   const legKey = (a, b) => a + "|" + b;
@@ -171,10 +171,11 @@
     return { x, depth: Math.round(a.depth + (c.depth - a.depth) * f), time: a.time + (c.time - a.time) * f, stop: null };
   }
 
-  // Which chart icon a wreck gets. A barge is always the barge; a ship shows how
+  // Which chart icon a wreck gets. A barge and a tank never change; a ship shows how
   // it sits, and only an upright one shows whether it is broken.
   function iconFor(wreck) {
     if (wreck.type === "barge") return "barge";
+    if (wreck.type === "tank") return "tank";
     if (wreck.sitting && wreck.sitting !== "upright") return wreck.sitting;
     return wreck.broken ? "broken" : "ship";
   }

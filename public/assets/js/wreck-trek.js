@@ -14,9 +14,10 @@
     upside_down: '<path d="' + HULL_PATH + '" class="ic-deck"/><path d="M20,6 L20,34" class="ic-keel"/>',
     port: '<path d="' + HULL_PATH + '"/><path d="M20,3 C14,10 12,18 12,27 L12,34 Q16,36.5 20,36.5 Z" class="ic-deck"/><rect x="5" y="19" width="7" height="8" rx="1" class="ic-deck"/>',
     starboard: '<path d="' + HULL_PATH + '"/><path d="M20,3 C26,10 28,18 28,27 L28,34 Q24,36.5 20,36.5 Z" class="ic-deck"/><rect x="28" y="19" width="7" height="8" rx="1" class="ic-deck"/>',
+    tank: '<rect x="11" y="8" width="5" height="26" rx="1.5"/><rect x="24" y="8" width="5" height="26" rx="1.5"/><rect x="15" y="10" width="10" height="22" rx="1"/><circle cx="20" cy="22" r="5" class="ic-deck"/><rect x="19" y="3" width="2" height="14" class="ic-deck"/>',
     barge: '<path d="M14,4 L26,4 L29,8 L29,33 L26,37 L14,37 L11,33 L11,8 Z"/><rect x="15" y="10" width="10" height="20" rx="1" class="ic-deck"/>'
   };
-  var ICON_LABEL = { ship: 'Ship', broken: 'Broken', upside_down: 'Upside down', port: 'On port side', starboard: 'On starboard side', barge: 'Barge' };
+  var ICON_LABEL = { ship: 'Ship', broken: 'Broken', upside_down: 'Upside down', port: 'On port side', starboard: 'On starboard side', barge: 'Barge', tank: 'Army tank' };
   var HELP = 'Steer is the compass heading that keeps you on the measured track with this current. SOG is speed over ground. A red flag means the current beats your swim speed on that leg.';
 
   // all = everything from the API; data = the chosen trek's part of it.
@@ -57,7 +58,7 @@
   var MIN_CHART_H = 420, SQUARE_PX = 40, PHONE_SQUARE_PX = 52; // a grid square on the chart
   var PAPER_MAX_SCALE = 0.5; // px per ft, so a short route doesn't blow up on the PDF
   var GRID_FT = [100, 200, 500, 1000, 2000, 5000], MIN_GRID_PX = 24; // a wide area needs bigger squares
-  var HULL = { ship: [16, 34], barge: [18, 33] };
+  var HULL = { ship: [16, 34], barge: [18, 33], tank: [18, 26] };
 
   // paper: { svg, w, h } draws the PDF's chart instead of the page's.
   function drawMap(p, paper) {

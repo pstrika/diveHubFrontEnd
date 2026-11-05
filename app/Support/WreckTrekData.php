@@ -29,7 +29,7 @@ final class WreckTrekData
             $names = WeatherLocation::all()->mapWithKeys(fn ($l) => [$l->short => ucwords($l->location)]);
             $treks = WreckTrek::get()->sortBy(fn ($t) => [$names[$t->location] ?? 'zzz', $t->name])->values();
             $trekSlugs = $treks->pluck('slug', 'id');
-            $sites = Site::where('type', 'wreck')->where('_hidden', 0)->whereNotNull('slug')->orderBy('name')->get();
+            $sites = self::eligible()->whereNotNull('slug')->orderBy('name')->get();
             $slugs = $sites->pluck('slug', 'id');
             $covers = Photo::coversFor($sites->pluck('id'));
 
@@ -82,10 +82,20 @@ final class WreckTrekData
         });
     }
 
+    /** The sites the planner can use: wrecks, plus the odd non-wreck object with its own icon (an army tank). */
+    public static function eligible()
+    {
+        return Site::where('_hidden', 0)->where(fn ($q) => $q->where('type', 'wreck')->orWhere('wreckData', 'like', '%"type":"Army Tank"%'));
+    }
+
     /** The chart icon, from the wreck's ship type. */
     private static function chartIcon(?string $wreckType): string
     {
-        return in_array($wreckType, ['Barge', 'Drydock'], true) ? 'barge' : 'ship';
+        return match ($wreckType) {
+            'Barge', 'Drydock' => 'barge',
+            'Army Tank' => 'tank',
+            default => 'ship',
+        };
     }
 
     /** A size in feet from the site's wreckData JSON, or null if it has none. */

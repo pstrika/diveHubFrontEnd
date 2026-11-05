@@ -18,7 +18,7 @@ class WreckTrekManageController extends Controller
     {
         $this->authorize('manage-items', User::class);
 
-        $wrecks = Site::where('type', 'wreck')->where('_hidden', 0)->orderBy('name')->get(['id', 'name', 'wreck_trek_id']);
+        $wrecks = WreckTrekData::eligible()->orderBy('name')->get(['id', 'name', 'wreck_trek_id']);
         $treks = WreckTrek::orderBy('location')->orderBy('name')->get();
         $trekNames = $treks->pluck('name', 'id');
         $locations = WeatherLocation::all()->sortBy('location')->mapWithKeys(fn ($l) => [$l->short => ucwords($l->location)])->all();
@@ -75,7 +75,7 @@ class WreckTrekManageController extends Controller
         $trek = WreckTrek::findOrFail($id);
         $data = $request->validate(['site_id' => 'required|integer']);
 
-        $site = Site::where('type', 'wreck')->findOrFail($data['site_id']);
+        $site = WreckTrekData::eligible()->findOrFail($data['site_id']);
         $site->forceFill(['wreck_trek_id' => $trek->id])->save();
         WreckTrekData::forget();
 
