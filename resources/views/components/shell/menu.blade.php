@@ -134,7 +134,7 @@
     {!! $link('Gas blending', route('GasBlending'), 'colorize') !!}
     {{-- Registered members only, like the multi dive planner above.
          WreckTrekController enforces it too. --}}
-    {!! $link('Wreck trek', route('WreckTrek'), 'explore', $isGuest) !!}
+    {!! $link('Wreck trek', route('WreckTrek'), 'explore', $isGuest, 'Beta') !!}
 </div>
 
 {{-- Pablo's own personal equipment log - its own group rather than folded
