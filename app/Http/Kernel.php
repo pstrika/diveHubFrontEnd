@@ -15,6 +15,8 @@ class Kernel extends HttpKernel
      */
     protected $middleware = [
         \App\Http\Middleware\EnforceCanonicalHost::class,
+        \App\Http\Middleware\NoindexOtherHosts::class,
+        \App\Http\Middleware\LogSlowRequests::class,
         // \App\Http\Middleware\TrustHosts::class,
         \App\Http\Middleware\TrustProxies::class,
         \Fruitcake\Cors\HandleCors::class,

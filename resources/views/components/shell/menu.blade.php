@@ -90,9 +90,10 @@
     <h6>Calendars</h6>
     {!! $link('Recreational', route('CalendarT') . '/rec', 'svg:icons_calendar_rec.svg') !!}
     {!! $link('Technical', route('CalendarT') . '/tec', 'svg:icons_calendar_tec.svg') !!}
-    {!! $link('Wreck diving', route('CalendarWreck'), 'svg:wreck_icon.svg') !!}
-    {!! $link('Shark diving', route('CalendarShark'), 'svg:icons_calendar_shark.svg') !!}
-    {!! $link('Lobster diving', route('CalendarLobster'), 'svg:icons_calendar_lobster.svg') !!}
+    {{-- Visitors without an account (and search engines) get the indexable schedule pages; the calendar views are noindex. --}}
+    {!! $link('Wreck diving', $isGuest ? route('DiveTrips.show', 'wreck-dives') : route('CalendarWreck'), 'svg:wreck_icon.svg') !!}
+    {!! $link('Shark diving', $isGuest ? route('DiveTrips.show', 'shark-dives') : route('CalendarShark'), 'svg:icons_calendar_shark.svg') !!}
+    {!! $link('Lobster diving', $isGuest ? route('DiveTrips.show', 'lobster-dives') : route('CalendarLobster'), 'svg:icons_calendar_lobster.svg') !!}
 </div>
 
 <div class="dh-menu-group">

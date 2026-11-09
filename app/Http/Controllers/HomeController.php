@@ -88,7 +88,7 @@ class HomeController extends Controller
         }
 
         $SEO = [
-            'title'     => 'Florida scuba diving sites, calendars and operators',
+            'title'     => 'Florida Dive Sites, Boat Calendars & Operators | Divers Hub',
             'desc'      => 'All you need to know for diving in Florida: dive operators, dive sites and wreckwiki, calendars, dive planning and more',
             'keywords'  => 'scuba diving florida, scuba, dive operators miami, dive operators fort lauderdale, diving florida keys, dive sites florida',
             'canonical' => route('/'),
