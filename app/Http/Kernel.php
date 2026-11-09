@@ -14,6 +14,7 @@ class Kernel extends HttpKernel
      * @var array
      */
     protected $middleware = [
+        \App\Http\Middleware\BlockBotTripFilters::class,
         \App\Http\Middleware\EnforceCanonicalHost::class,
         \App\Http\Middleware\NoindexOtherHosts::class,
         \App\Http\Middleware\LogSlowRequests::class,
