@@ -1534,6 +1534,10 @@ span.dh-dive-weather-icon { font-size: 22px; color: var(--dh-sea); }
    previous field's input (Pablo, 2026-10-15: "you need more padding in
    between the inputs...they overlap"). */
 .dh-dive-ig { margin-bottom: 22px; }
+/* The floating label sits inside an empty field, so a placeholder printed there
+   overlapped it (Operator / "Search or type your own"). The hint shows once the
+   field is focused and the label has floated up. */
+.dh-dive-ig:not(.is-focused):not(.is-filled) .form-control::placeholder { opacity: 0; }
 
 /* Buddy pill with avatar, "if known by DH" (Pablo, 2026-10-15) - same
    22px round-avatar convention as the operator/boat picks above. */
