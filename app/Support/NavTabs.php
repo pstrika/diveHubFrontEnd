@@ -40,7 +40,7 @@ final class NavTabs
         'logbook'          => ['label' => 'Dive Log', 'short' => 'Log', 'icon' => 'menu_book', 'gate' => 'logbook'],
         'multidive'        => ['label' => 'Multi Dive Planner', 'short' => 'Multi', 'icon' => 'repeat', 'gate' => 'member'],
         'blending'         => ['label' => 'Gas Blending', 'short' => 'Blend', 'icon' => 'colorize'],
-        'ccr_checklist'    => ['label' => 'rEvo CCR Checklist', 'short' => 'CCR', 'icon' => 'checklist', 'gate' => 'ccrChecklistAccess'],
+        'ccr_checklist'    => ['label' => 'CCR Checklists', 'short' => 'CCR', 'icon' => 'checklist', 'gate' => 'ccrChecklistAccess'],
     ];
 
     /** Can this user open the page behind $key? (Same gates as the menu.) */

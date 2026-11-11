@@ -2,7 +2,10 @@
     <x-shell.nav active="me" />
 
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
-        <x-shell.header title="rEvo CCR Checklist" icon="checklist" :h1="true" />
+        {{-- Linked here, not in the layout's head, and with the file's own
+             modified time in the URL: see the note at the top of the file. --}}
+        <link rel="stylesheet" href="{{ asset('assets/css/ccr-checklists.css') }}?m={{ @filemtime(public_path('assets/css/ccr-checklists.css')) }}">
+        <x-shell.header :title="($session->unit ? $session->unit->name : 'rEvo CCR') . ': ' . $session->stageLabel()" icon="checklist" :h1="true" />
 
         <div class="container-fluid py-0">
             <div class="row">
@@ -14,8 +17,55 @@
                         <a class="dh-icon-btn" href="{{ route('CcrChecklist.pdf', $session->id) }}" title="Download PDF report" aria-label="Download PDF report">
                             <span class="material-icons-round" aria-hidden="true">print</span>
                         </a>
-                        <a class="dh-btn dh-btn-ghost-dark" href="{{ route('CcrChecklist') }}">Back to history</a>
+                        <a class="dh-btn dh-btn-ghost-dark" href="{{ route('CcrChecklist') }}">All checklists</a>
                     </div>
+
+                    {{-- What this record is, and proof the warning was seen
+                         (Zach, 2026-11-10). Sessions saved before the warning
+                         existed have no acknowledgement and say nothing. --}}
+                    @php [$ccrDone, $ccrTotal] = $session->tickCount(); @endphp
+                    <div class="dh-ccr-strip">
+                        <span class="material-icons-round" aria-hidden="true">info</span>
+                        <div>
+                            <div><strong>{{ $ccrDone }} of {{ $ccrTotal }} steps ticked.</strong> {{ config('ccr_checklist_templates.disclaimer.strip') }}</div>
+                            @if (!empty($template['source']))
+                                <div class="dh-ccr-strip-src">{{ $template['source'] }}</div>
+                            @endif
+                            @php $ccrOwn = \App\Support\CcrChecklistBuilder::customCount($template); @endphp
+                            @if ($ccrOwn && empty($template['own']))
+                                <div class="dh-ccr-strip-src">Includes {{ $ccrOwn }} {{ $ccrOwn === 1 ? 'step' : 'steps' }} you added yourself, marked "Your step".</div>
+                            @endif
+                            @if ($session->disclaimer_accepted_at)
+                                <div class="dh-ccr-strip-src">Warning acknowledged {{ $session->disclaimer_accepted_at->format('M j, Y g:i A') }} (wording {{ $session->disclaimer_version }}).</div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Build and closed check, tied together (Zach, 2026-11-10).
+                         A build that has no closed check yet leads with one
+                         large button, so doing both in one sitting is build,
+                         save, one tap. Once both exist each page links to the
+                         other. --}}
+                    @if ($offerClosed)
+                        <a class="dh-ccr-next" href="{{ route('CcrChecklist.create', array_filter(['stage' => 'closed', 'unit' => $session->unit->uuid ?? null])) }}">
+                            <span class="material-icons-round" aria-hidden="true">compress</span>
+                            <span class="dh-ccr-next-body">
+                                <span class="dh-ccr-next-label">Continue to the closed check</span>
+                                <span class="dh-ccr-next-sub">Build saved. The pressurised check is next.</span>
+                            </span>
+                            <span class="material-icons-round" aria-hidden="true">chevron_right</span>
+                        </a>
+                    @endif
+                    @foreach (array_filter(['Build check' => $linkedBuild ?? null, 'Closed check' => $linkedClosed ?? null]) as $ccrLinkLabel => $ccrLink)
+                        @php [$ccrLinkDone, $ccrLinkTotal] = $ccrLink->tickCount(); @endphp
+                        <a class="dh-ccr-linked" href="{{ route('CcrChecklist.show', $ccrLink->id) }}">
+                            <span class="material-icons-round" aria-hidden="true">link</span>
+                            <span>{{ $ccrLinkLabel === 'Build check' ? 'This closed check follows the build of' : 'Closed check done' }}
+                                <strong>{{ $ccrLink->build_date->format('M j, g:i A') }}</strong>
+                                ({{ $ccrLinkDone }} of {{ $ccrLinkTotal }})</span>
+                            <span class="material-icons-round" aria-hidden="true">chevron_right</span>
+                        </a>
+                    @endforeach
 
                     {{-- Read-only - a saved session is a record of what was
                          actually done, same as the paper original can't be
@@ -47,9 +97,20 @@
                                             {{ !empty($answer['checked']) ? 'check_circle' : 'radio_button_unchecked' }}
                                         </span>
                                         <div class="flex-grow-1">
-                                            <div class="fw-bold">{{ $item['number'] }}. {{ $item['text'] }}</div>
+                                            <div class="fw-bold">@if (empty($item['custom'])){{ $item['number'] }}. @endif{{ $item['text'] }}</div>
+                                            @if (!empty($item['custom']))
+                                                <div class="dh-ccr-yours">Your step</div>
+                                            @endif
                                             @if (!empty($answer['checked_at']))
-                                                <div class="text-secondary text-xs">Checked {{ \Carbon\Carbon::parse($answer['checked_at'])->format('g:i A') }}</div>
+                                                {{-- checked_at is a UTC instant from the browser. The server
+                                                     does not know the diver's time zone, so it prints the UTC
+                                                     time as a fallback and the script at the foot of this page
+                                                     rewrites it in the viewer's own zone (Zach, 2026-11-10: it
+                                                     read 12:40 AM for a tick made at 7:40 PM Eastern). --}}
+                                                <div class="text-secondary text-xs">Checked <time class="dh-ccr-local-time" datetime="{{ \Carbon\Carbon::parse($answer['checked_at'])->toIso8601ZuluString() }}">{{ \Carbon\Carbon::parse($answer['checked_at'])->format('g:i A') }}</time></div>
+                                            @endif
+                                            @if (!empty($answer['timer_seconds']))
+                                                <div class="text-secondary text-xs">Timed {{ gmdate('i:s', (int) $answer['timer_seconds']) }}</div>
                                             @endif
 
                                             @if (count($item['fields']))
@@ -131,7 +192,35 @@
         </div>
     </main>
 
+    @if (session('ccrSavedUuid'))
+        {{-- The save reached the server, so the copy this device kept while
+             the checklist was being filled in can go (ccr-checklist-stage.js,
+             block E). Matched by the checklist's own id, so a different
+             checklist still in progress on this device is left alone. --}}
+        @push('js')
+        <script>
+            (function () {
+                var saved = @json(session('ccrSavedUuid'));
+                try {
+                    for (var i = localStorage.length - 1; i >= 0; i--) {
+                        var k = localStorage.key(i);
+                        if (!k || k.indexOf('dh.ccr.draft.') !== 0) continue;
+                        var d = JSON.parse(localStorage.getItem(k) || 'null');
+                        if (d && d.clientUuid === saved) localStorage.removeItem(k);
+                    }
+                } catch (e) {}
+            })();
+        </script>
+        @endpush
+    @endif
+
     @push('js')
+    <script>
+        document.querySelectorAll('time.dh-ccr-local-time').forEach(function (t) {
+            var d = new Date(t.getAttribute('datetime'));
+            if (!isNaN(d)) t.textContent = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        });
+    </script>
     <script src="{{ asset('assets') }}/js/ccr-theme.js?v={{ config('divehub.version') }}"></script>
     @endpush
 </x-page-template>

@@ -80,9 +80,22 @@ class UserPolicy
      * CcrChecklistController precedent in this app (Multi Dive Planner,
      * etc). This is Pablo's own personal equipment log, not an admin tool,
      * so admin status is irrelevant here on purpose.
+     *
+     * 2026-11-10 (Zach): the checklist is growing from Pablo's own build
+     * sheet into a tool for other rebreather divers (docs/ccr-checklists-scope.md),
+     * so the single hardcoded address became the 'ccr_checklists' early
+     * access list in config/divehub.php. Same rule as before, admin status
+     * still does not matter, only the list does. Opening it up later is a
+     * config edit, not a code change.
      */
     public function ccrChecklistAccess(User $user)
     {
-        return $user->email === 'pstrika@gmail.com';
+        // Registered members only (Zach, 2026-11-11, when the list became
+        // '*'). Signed-out visitors are logged in as the shared guest
+        // account, and a checklist saved there would be every visitor's.
+        if (!$user->isNotGuest()) {
+            return false;
+        }
+        return \App\Support\EarlyAccess::allows($user, 'ccr_checklists');
     }
 }

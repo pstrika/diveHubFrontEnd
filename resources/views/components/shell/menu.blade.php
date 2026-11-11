@@ -136,23 +136,12 @@
     {{-- Registered members only, like the multi dive planner above.
          WreckTrekController enforces it too. --}}
     {!! $link('Wreck trek', route('WreckTrek'), 'explore', $isGuest, 'Beta') !!}
+    {{-- CCR checklists: every registered member, as a beta (Zach and
+         Pablo, 2026-11-11). It was a "My Gear" group for Pablo's account
+         alone. Guests see it locked; UserPolicy::ccrChecklistAccess
+         enforces the same rule on every route. --}}
+    {!! $link('CCR checklists', route('CcrChecklist'), 'checklist', $isGuest, 'Beta') !!}
 </div>
-
-{{-- Pablo's own personal equipment log - its own group rather than folded
-     into Admin Tools below, since that group is platform/content
-     management, not personal gear maintenance. Gated to Pablo's own
-     account only, NOT admin status (Pablo, 2026-10-17: "make ONLY
-     available to my user pstrika@gmail.com (nobody else - not even
-     platform admins)") - CcrChecklistController itself also enforces
-     this via UserPolicy::ccrChecklistAccess, this is just keeping anyone
-     else from seeing a link that would 403. --}}
-@can('ccrChecklistAccess', App\Models\User::class)
-    <div class="dh-menu-group">
-        <h6>My Gear</h6>
-        {!! $link('rEvo CCR checklist', route('CcrChecklist'), 'checklist') !!}
-    </div>
-@endcan
-
 @auth
     {{-- Everything an Admin can reach lives in one group (Pablo, 2026-09-18).
          Site Management now carries its own "Add site" action, so that link

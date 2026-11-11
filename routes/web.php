@@ -283,7 +283,18 @@ Route::get('MultiDivePlannerMetric', 'App\Http\Controllers\MultiDivePlannerContr
 // (nobody else - not even platform admins)"), NOT the admin-only
 // enforcement MultiDivePlanner above uses.
 Route::get('CcrChecklist', 'App\Http\Controllers\CcrChecklistController@index')->middleware('auth')->name('CcrChecklist');
-Route::get('CcrChecklist/New', 'App\Http\Controllers\CcrChecklistController@create')->middleware('auth')->name('CcrChecklist.create');
+// {stage}: build | closed | prejump | postdive (Zach, 2026-11-10). Optional
+// and defaulting to build, so the old CcrChecklist/New link is unchanged.
+Route::get('CcrChecklist/New/{stage?}', 'App\Http\Controllers\CcrChecklistController@create')->where('stage', '[a-z]+')->middleware('auth')->name('CcrChecklist.create');
+Route::post('CcrChecklist/unit', 'App\Http\Controllers\CcrChecklistController@storeUnit')->middleware('auth')->name('CcrChecklist.unit');
+Route::put('CcrChecklist/unit/{uuid}', 'App\Http\Controllers\CcrChecklistController@updateUnit')->middleware('auth')->name('CcrChecklist.unit.update');
+Route::delete('CcrChecklist/unit/{uuid}', 'App\Http\Controllers\CcrChecklistController@retireUnit')->middleware('auth')->name('CcrChecklist.unit.retire');
+// The diver's own steps (Zach, 2026-11-10): add, reword, move, remove.
+Route::get('CcrChecklist/Customize/{stage}', 'App\Http\Controllers\CcrChecklistController@customize')->where('stage', '[a-z]+')->middleware('auth')->name('CcrChecklist.customize');
+Route::post('CcrChecklist/Customize/{stage}', 'App\Http\Controllers\CcrChecklistController@storeCustom')->where('stage', '[a-z]+')->middleware('auth')->name('CcrChecklist.custom.store');
+Route::put('CcrChecklist/custom/{uuid}', 'App\Http\Controllers\CcrChecklistController@updateCustom')->middleware('auth')->name('CcrChecklist.custom.update');
+Route::post('CcrChecklist/custom/{uuid}/move', 'App\Http\Controllers\CcrChecklistController@moveCustom')->middleware('auth')->name('CcrChecklist.custom.move');
+Route::delete('CcrChecklist/custom/{uuid}', 'App\Http\Controllers\CcrChecklistController@destroyCustom')->middleware('auth')->name('CcrChecklist.custom.destroy');
 Route::post('CcrChecklist', 'App\Http\Controllers\CcrChecklistController@store')->middleware('auth')->name('CcrChecklist.store');
 Route::get('CcrChecklist/{id}', 'App\Http\Controllers\CcrChecklistController@show')->where('id', '[0-9]+')->middleware('auth')->name('CcrChecklist.show');
 Route::get('CcrChecklist/{id}/pdf', 'App\Http\Controllers\CcrChecklistController@pdf')->where('id', '[0-9]+')->middleware('auth')->name('CcrChecklist.pdf');

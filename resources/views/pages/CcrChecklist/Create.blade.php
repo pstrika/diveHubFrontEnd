@@ -2,8 +2,13 @@
     <x-shell.nav active="me" />
 
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
+        {{-- Linked here, not in the layout's head, and with the file's own
+             modified time in the URL: see the note at the top of the file. --}}
+        <link rel="stylesheet" href="{{ asset('assets/css/ccr-checklists.css') }}?m={{ @filemtime(public_path('assets/css/ccr-checklists.css')) }}">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <x-shell.header title="rEvo CCR Build-up Checklist" icon="checklist" :h1="true" />
+        {{-- Pablo's build keeps the title it always had; every other checklist,
+             and a build on a unit with no built in one, is titled by its own label. --}}
+        <x-shell.header :title="(($stage ?? 'build') === 'build' && empty($template['own'])) ? 'rEvo CCR Build-up Checklist' : $template['label']" icon="checklist" :h1="true" />
 
         <div class="container-fluid py-0">
             <div class="row">
@@ -12,7 +17,35 @@
                         <button type="button" class="dh-ccr-theme-toggle" id="ccrThemeToggle" title="Switch to dark mode" aria-label="Switch to dark mode">
                             <span class="material-icons-round" aria-hidden="true">dark_mode</span>
                         </button>
-                        <a class="dh-btn dh-btn-ghost-dark" href="{{ route('CcrChecklist') }}">View history</a>
+                        @if ($unit)
+                            <a class="dh-btn dh-btn-ghost-dark" href="{{ route('CcrChecklist.customize', ['stage' => $stage ?? 'build', 'unit' => $unit->uuid]) }}">Add your own steps</a>
+                        @endif
+                        <a class="dh-btn dh-btn-ghost-dark" href="{{ route('CcrChecklist') }}">All checklists</a>
+                    </div>
+
+                    {{-- Stays on screen for the whole checklist (Zach, 2026-11-10):
+                         what this tool is and is not, and where the steps come
+                         from. The blocking version of the same message is the
+                         modal at the foot of this file. --}}
+                    <div class="dh-ccr-strip">
+                        <span class="material-icons-round" aria-hidden="true">info</span>
+                        <div>
+                            <div>{{ $disclaimer['strip'] }}</div>
+                            @if (!empty($template['source']))
+                                <div class="dh-ccr-strip-src">{{ $template['source'] }}</div>
+                            @endif
+                            @if (!empty($template['draft']))
+                                <div class="dh-ccr-strip-draft">Wording under review. Check every step against your own checklist.</div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Shown only when this device is holding answers from a
+                         checklist that was never saved (ccr-checklist-stage.js). --}}
+                    <div class="dh-ccr-restored" id="ccrDraftNotice" hidden>
+                        <span class="material-icons-round" aria-hidden="true">history</span>
+                        <span>Picked up where you left off on this device<span id="ccrDraftWhen"></span>.</span>
+                        <button type="button" class="dh-linkbtn" id="ccrDraftDiscard">Start over</button>
                     </div>
 
                     {{-- Plain native inputs, not noUiSlider (Pablo, 2026-10-15) -
@@ -23,14 +56,33 @@
                          (config/ccr_checklist_templates.php) rather than 16
                          hardcoded blocks, so a future template version is a
                          config change, not a rewrite of this view. --}}
-                    <form method="POST" action="{{ route('CcrChecklist.store') }}" id="ccrChecklistForm" class="card p-0 position-relative mt-3 z-index-2 mb-4">
+                    <form method="POST" action="{{ route('CcrChecklist.store') }}" id="ccrChecklistForm" class="card p-0 position-relative mt-3 z-index-2 mb-4"
+                          data-user="{{ auth()->id() }}" data-unit="{{ $unit->uuid ?? 'none' }}" data-stage="{{ $stage ?? 'build' }}" data-version="{{ $templateVersion }}"
+                          data-signature="{{ ($template['signature'] ?? true) ? '1' : '0' }}">
                         @csrf
                         <input type="hidden" name="template_version" value="{{ $templateVersion }}">
+                        <input type="hidden" name="stage" value="{{ $stage ?? 'build' }}">
+                        @if ($unit)
+                            <input type="hidden" name="unit" value="{{ $unit->uuid }}">
+                        @endif
+                        {{-- Filled in by ccr-checklist-stage.js: which warning wording
+                             was acknowledged and when, and one id per opened
+                             checklist so a retried save cannot create a second row. --}}
+                        <input type="hidden" name="disclaimer_version" id="ccrDisclaimerVersion" value="">
+                        <input type="hidden" name="disclaimer_accepted_at" id="ccrDisclaimerAcceptedAt" value="">
+                        <input type="hidden" name="client_uuid" id="ccrClientUuid" value="">
+                        {{-- The diver's own steps exactly as this form shows them.
+                             Saved with the checklist so the record still reads the
+                             same after a step is reworded, moved or removed. --}}
+                        <input type="hidden" name="custom_items" value="{{ json_encode($customs ?? []) }}">
                         <input type="hidden" name="signature" id="ccrSignatureData">
 
                         <div class="dh-calc-inputs-head">
                             <span class="material-icons-round" aria-hidden="true">checklist</span>
                             <h3>{{ $template['label'] }}</h3>
+                            @if ($unit)
+                                <span class="dh-calc-inputs-chevron" style="margin-left: auto; font-weight: 600;">{{ $unit->name }}</span>
+                            @endif
                         </div>
 
                         <div class="card-body">
@@ -65,9 +117,28 @@
                                         </div>
                                         <div class="flex-grow-1">
                                             <label class="form-check-label text-body fw-bold mb-0" for="item_{{ $item['key'] }}_checked">
-                                                <span class="dh-ccr-step-num">{{ $item['number'] }}</span>
+                                                <span class="dh-ccr-step-num {{ !empty($item['custom']) ? 'is-custom' : '' }}">{{ $item['number'] }}</span>
                                                 {{ $item['text'] }}
                                             </label>
+                                            @if (!empty($item['custom']))
+                                                {{-- One the diver added themselves, said so on the
+                                                     row: it must never read as the manufacturer's. --}}
+                                                <div class="dh-ccr-yours">Your step</div>
+                                            @endif
+                                            @if (!empty($item['hint']))
+                                                <div class="dh-ccr-hint">{{ $item['hint'] }}</div>
+                                            @endif
+                                            @if (!empty($item['timer']))
+                                                {{-- A countdown for a timed step (the pre-breathe).
+                                                     Reaching zero ticks the step; the time actually
+                                                     run is saved with the item either way. --}}
+                                                <div class="dh-ccr-timer" data-seconds="{{ (int) $item['timer'] }}">
+                                                    <span class="dh-ccr-timer-clock">{{ gmdate('i:s', (int) $item['timer']) }}</span>
+                                                    <button type="button" class="btn btn-outline-info btn-sm mb-0 dh-ccr-timer-go">Start</button>
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm mb-0 dh-ccr-timer-reset">Reset</button>
+                                                    <input type="hidden" class="dh-ccr-timer-elapsed" name="answers[{{ $item['key'] }}][timer_seconds]" value="">
+                                                </div>
+                                            @endif
 
                                             @if (($item['group'] ?? null) === 'Gas Analysis')
                                                 {{-- Material Dashboard's native floating-label input
@@ -164,7 +235,7 @@
                                                             <div class="d-flex flex-column align-items-center">
                                                                 <div class="input-group input-group-outline dh-ccr-ig-grey" style="width: 140px;">
                                                                     <label class="form-label">{{ $rctDepthField['label'] }}</label>
-                                                                    <input type="number" step="any" min="60" inputmode="decimal" class="form-control ccr-field-input" id="item_scrubber_time_rct_depth" name="answers[scrubber_time][rct_depth]" data-item-key="scrubber_time" data-field-key="rct_depth">
+                                                                    <input type="number" step="any" min="60" inputmode="decimal" class="form-control ccr-field-input" id="item_scrubber_time_rct_depth" name="answers[scrubber_time][rct_depth]" data-item-key="scrubber_time" data-field-key="rct_depth" data-optional="1">
                                                                 </div>
                                                                 <div class="dh-ccr-unit-label" style="width: 140px;">{{ $rctDepthField['suffix'] }} (default 60)</div>
                                                             </div>
@@ -450,6 +521,7 @@
                                  signature") - a plain canvas, drawn on with a
                                  finger/stylus/mouse, captured as a base64 PNG into
                                  the hidden #ccrSignatureData input on submit. --}}
+                            @if ($template['signature'] ?? true)
                             <div class="dh-ccr-signature-card mb-3">
                                 <label class="dh-gas-label d-flex justify-content-between align-items-center">
                                     Signature
@@ -459,6 +531,7 @@
                                 </label>
                                 <canvas id="ccrSignatureCanvas" width="600" height="160" style="border: 1px solid var(--dh-line); border-radius: var(--dh-radius); width: 100%; height: 160px; touch-action: none; background: #fff;"></canvas>
                             </div>
+                            @endif
 
                             {{-- Sticky save bar (Pablo, 2026-10-15: "make the form
                                  more modern") - stays reachable at the bottom of a
@@ -482,6 +555,17 @@
                                 <button type="submit" class="btn btn-info mt-0" id="ccrSubmitBtn">Save Checklist</button>
                             </div>
                         </div>
+                        {{-- No connection (Zach, 2026-11-11: "inform the user how to
+                             handle no connection. it will be very rare"). The
+                             checklist does not send itself later, so the page says
+                             what to do. The banner only shows while the phone
+                             reports no connection; the line under it is always
+                             there. See G in ccr-checklist-stage.js. --}}
+                        <div class="dh-ccr-offline" id="ccrOffline" role="status" hidden>
+                            <span class="material-icons-round" aria-hidden="true">wifi_off</span>
+                            <span><strong>No connection.</strong> Keep going: every tick is saved on this phone. When you have signal again, open this checklist and tap Save Checklist.</span>
+                        </div>
+                        <p class="dh-ccr-offline-hint">No signal on the boat? Your ticks are saved on this phone as you go. Tap Save Checklist once you are back in range.</p>
                     </form>
 
                     {{-- Pre-save confirmation (Pablo, 2026-10-15: "if not all
@@ -508,8 +592,43 @@
         </div>
     </main>
 
+    {{-- The safety warning (Zach, 2026-11-10). Same shape and strength as
+         the multi dive planner's #modalMultiDiveWarning: shown on every load,
+         data-bs-backdrop="static" + data-bs-keyboard="false" so it cannot be
+         clicked or Escaped away. One step further than the planner: the
+         button stamps the wording's version and the time into the form, and
+         both are saved with the checklist. Wording lives in
+         config/ccr_checklist_templates.php 'disclaimer'; do not soften it
+         here as a friction fix. --}}
+    <div class="modal fade" id="ccrDisclaimerModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ccrDisclaimerTitle" aria-hidden="true" data-version="{{ $disclaimer['version'] }}">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header text-center">
+                    <h6 class="modal-title font-weight-normal" id="ccrDisclaimerTitle">{{ $disclaimer['title'] }}</h6>
+                </div>
+                <div class="modal-body">
+                    <div class="py-2 text-center">
+                        <i class="material-icons h1 text-primary">warning</i>
+                        <div class="dh-ccr-disclaimer-text">
+                            @foreach ($disclaimer['paragraphs'] as $para)
+                                <p><strong>{{ $para['lead'] }}</strong> {{ $para['body'] }}</p>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <a class="btn btn-outline-secondary mb-0" href="{{ route('CcrChecklist') }}">Go back</a>
+                    <button type="button" class="btn btn-info mb-0" id="ccrDisclaimerAccept">I understand</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('js')
     <script src="{{ asset('assets') }}/js/ccr-theme.js?v={{ config('divehub.version') }}"></script>
     <script src="{{ asset('assets') }}/js/ccr-checklist.js?v={{ config('divehub.version') }}"></script>
+    {{-- Modified time, not the app version, in the URL: public/sw.js serves
+         /assets/ cache first by URL, so this is what lets an edit show up. --}}
+    <script src="{{ asset('assets') }}/js/ccr-checklist-stage.js?m={{ @filemtime(public_path('assets/js/ccr-checklist-stage.js')) }}"></script>
     @endpush
 </x-page-template>

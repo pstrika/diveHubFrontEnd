@@ -1,0 +1,229 @@
+/*
+ * CCR checklists: the hub, the four stages, the warning strip, the
+ * countdown (Zach, 2026-11-10).
+ *
+ * Its own file, linked only from the CcrChecklist views, and linked with the
+ * file's modified time in the URL rather than the app version. Reason:
+ * public/sw.js answers everything under /assets/ from its cache first, keyed
+ * by the full URL, so an edit to a file whose URL has not changed never
+ * reaches a browser that has seen it once. divershub.css only changes URL on
+ * a release. This one changes URL every time it is saved.
+ */
+.dh-ccr-stage-foot { margin: 14px 0 0; font-size: .74rem; color: var(--dh-muted); line-height: 1.45; }
+
+.dh-ccr-strip { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; padding: 11px 13px; border-radius: 12px; background: var(--dh-avg-bg); border: 1px solid #e6d79a; color: var(--dh-ink); font-size: .8rem; line-height: 1.45; }
+.dh-ccr-strip > .material-icons-round { font-size: 19px; color: var(--dh-avg); flex: 0 0 auto; margin-top: 1px; }
+.dh-ccr-strip-src { font-size: .73rem; color: var(--dh-muted); margin-top: 3px; }
+.dh-ccr-strip-draft { font-size: .73rem; font-weight: 800; color: var(--dh-poor); margin-top: 3px; }
+
+.dh-ccr-restored { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; padding: 9px 13px; border-radius: 12px; background: var(--dh-foam); border: 1px solid var(--dh-line); font-size: .8rem; color: var(--dh-ink); }
+.dh-ccr-restored > .material-icons-round { font-size: 18px; color: var(--dh-sea); }
+.dh-ccr-restored .dh-linkbtn { margin-left: auto; }
+
+.dh-ccr-hint { font-size: .76rem; color: var(--dh-muted); margin-top: 2px; line-height: 1.4; }
+.dh-ccr-timer { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.dh-ccr-timer-clock { font-size: 1.9rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--dh-deep); min-width: 96px; }
+.dh-ccr-timer.is-running .dh-ccr-timer-clock { color: var(--dh-sea); }
+.dh-ccr-timer.is-done .dh-ccr-timer-clock { color: var(--dh-good); }
+
+.dh-ccr-disclaimer-text { text-align: left; font-size: .88rem; line-height: 1.5; color: var(--dh-ink); margin-top: 14px; }
+.dh-ccr-disclaimer-text p { margin-bottom: .8rem; }
+.dh-ccr-disclaimer-text p:last-child { margin-bottom: 0; }
+
+.dh-ccr-other-list { list-style: none; margin: 0; padding: 0; }
+.dh-ccr-other-list li { border-bottom: 1px solid #eef1f3; }
+.dh-ccr-other-list li:last-child { border-bottom: 0; }
+.dh-ccr-other-list a { display: flex; align-items: center; gap: 10px; padding: 11px 2px; color: var(--dh-ink); text-decoration: none; min-height: 48px; }
+.dh-ccr-other-list a:hover { color: var(--dh-deep); }
+.dh-ccr-other-stage { flex: 0 0 96px; font-weight: 800; font-size: .84rem; }
+.dh-ccr-other-date { flex: 1 1 auto; font-size: .8rem; color: var(--dh-muted); }
+.dh-ccr-other-count { font-size: .76rem; font-weight: 700; color: var(--dh-muted); }
+.dh-ccr-other-list .material-icons-round { color: var(--dh-muted); font-size: 20px; }
+
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage-when,
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage-foot,
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-hint,
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-strip-src,
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-other-date,
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-other-count { color: #9fb4bf; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-strip { background: #2e2a16; border-color: #5c5320; color: #f1ead0; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-restored { background: #14242e; border-color: #2a3b47; color: #e6eef2; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-timer-clock { color: #cfe6ef; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-other-list li { border-color: #2a3b47; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-other-list a { color: #e6eef2; }
+body.dh-ccr-bg[data-theme="dark"] #ccrDisclaimerModal .modal-title { color: #e6eef2; }
+
+/* Rebreather picker and its add / edit forms. */
+.dh-ccr-units { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.dh-ccr-unit-chip { flex: 0 0 auto; display: flex; flex-direction: column; padding: 9px 14px; min-height: 48px; justify-content: center; border: 1px solid var(--dh-line); border-radius: 12px; background: var(--dh-paper); color: var(--dh-ink); text-decoration: none; }
+.dh-ccr-unit-chip:hover { border-color: var(--dh-sea); color: var(--dh-ink); }
+.dh-ccr-unit-chip.is-active { background: var(--dh-ink); border-color: var(--dh-ink); color: #fff; }
+.dh-ccr-unit-chip-name { font-size: .88rem; font-weight: 800; line-height: 1.15; }
+.dh-ccr-unit-chip-model { font-size: .68rem; opacity: .75; margin-top: 1px; }
+.dh-ccr-unit-details > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 700; color: var(--dh-sea); padding: 8px 0; min-height: 40px; }
+.dh-ccr-unit-details > summary::-webkit-details-marker { display: none; }
+.dh-ccr-unit-details > summary .material-icons-round { font-size: 18px; }
+.dh-ccr-unit-details[open] > summary { color: var(--dh-deep); }
+.dh-ccr-unit-note { font-size: .74rem; color: var(--dh-muted); margin: 10px 0 0; line-height: 1.45; }
+.dh-ccr-retire { color: var(--dh-poor); }
+.dh-ccr-form-error { margin-bottom: 12px; padding: 9px 12px; border-radius: 10px; background: var(--dh-poor-bg); color: var(--dh-poor); font-size: .82rem; font-weight: 700; }
+.dh-ccr-empty { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 12px; background: var(--dh-foam); border: 1px solid var(--dh-line); font-size: .85rem; line-height: 1.5; color: var(--dh-ink); margin-bottom: 14px; }
+.dh-ccr-empty > .material-icons-round { color: var(--dh-sea); font-size: 24px; flex: 0 0 auto; }
+
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-unit-chip { background: #14242e; border-color: #2a3b47; color: #e6eef2; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-unit-chip.is-active { background: var(--dh-sea); border-color: var(--dh-sea); color: #fff; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-unit-details > summary { color: #7fd0e6; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-unit-note { color: #9fb4bf; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-empty { background: #14242e; border-color: #2a3b47; color: #e6eef2; }
+
+/* The diver's own steps: the mark on a step, and the customise page. */
+.dh-ccr-step-num.is-custom { background: var(--dh-sea); color: #fff; }
+.dh-ccr-yours { display: inline-block; margin-top: 4px; font-size: .64rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--dh-sea); }
+
+.dh-ccr-edit-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px solid var(--dh-line); border-radius: 14px; background: var(--dh-paper); scroll-margin-top: 90px; }
+.dh-ccr-edit-row.is-locked { background: var(--dh-foam); }
+.dh-ccr-edit-row.is-yours { border-color: var(--dh-sea); }
+.dh-ccr-edit-row:target { box-shadow: 0 0 0 3px rgba(14,124,158,.25); }
+.dh-ccr-edit-row .dh-ccr-step-num { flex: 0 0 auto; }
+.dh-ccr-edit-main { flex: 1 1 auto; min-width: 0; }
+.dh-ccr-edit-text { flex: 1 1 auto; font-size: .88rem; font-weight: 700; line-height: 1.4; color: var(--dh-ink); overflow-wrap: anywhere; }
+.dh-ccr-edit-row.is-locked .dh-ccr-edit-text { font-weight: 600; }
+.dh-ccr-edit-lock { flex: 0 0 auto; font-size: 17px; color: var(--dh-muted); }
+.dh-ccr-edit-tools { flex: 0 0 auto; display: flex; gap: 2px; }
+.dh-ccr-edit-tools form { margin: 0; }
+.dh-ccr-edit-tools .dh-icon-btn { min-width: 40px; min-height: 40px; }
+.dh-ccr-remove { color: var(--dh-poor); }
+.dh-ccr-step-form { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; margin-top: 8px; }
+.dh-ccr-step-form textarea { width: 100%; font-size: .9rem; padding: 10px 12px; border-radius: 10px; }
+
+.dh-ccr-add-slot { margin: 4px 0; }
+.dh-ccr-add-slot > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 6px; font-size: .74rem; font-weight: 700; color: var(--dh-muted); border-radius: 8px; }
+.dh-ccr-add-slot > summary::-webkit-details-marker { display: none; }
+.dh-ccr-add-slot > summary::after { content: ''; flex: 1 1 auto; height: 1px; background: var(--dh-line); }
+.dh-ccr-add-slot > summary .material-icons-round { font-size: 17px; }
+.dh-ccr-add-slot > summary:hover, .dh-ccr-add-slot[open] > summary { color: var(--dh-sea); }
+.dh-ccr-add-slot[open] { padding: 4px 10px 12px; border: 1px dashed var(--dh-sea); border-radius: 12px; }
+
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-edit-row { background: #14242e; border-color: #2a3b47; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-edit-row.is-locked { background: #101c24; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-edit-row.is-yours { border-color: var(--dh-sea); }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-edit-text { color: #e6eef2; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-yours { color: #7fd0e6; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-add-slot > summary { color: #9fb4bf; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-add-slot > summary::after { background: #2a3b47; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-step-form textarea { background: #0f1c24; color: #e6eef2; border-color: #2a3b47; }
+
+/* Phase headings on the hub, and the build <-> closed check links. */
+.dh-ccr-next { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 16px; min-height: 72px; border-radius: 14px; background: var(--dh-ink); color: #fff; text-decoration: none; }
+.dh-ccr-next:hover { background: var(--dh-deep); color: #fff; }
+.dh-ccr-next > .material-icons-round:first-child { font-size: 28px; }
+.dh-ccr-next-body { flex: 1 1 auto; display: flex; flex-direction: column; }
+.dh-ccr-next-label { font-size: 1.02rem; font-weight: 800; line-height: 1.2; }
+.dh-ccr-next-sub { font-size: .76rem; opacity: .8; margin-top: 2px; }
+.dh-ccr-linked { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 11px 13px; min-height: 48px; border: 1px solid var(--dh-line); border-radius: 12px; background: var(--dh-paper); color: var(--dh-ink); text-decoration: none; font-size: .82rem; }
+.dh-ccr-linked:hover { border-color: var(--dh-sea); color: var(--dh-ink); }
+.dh-ccr-linked > span:nth-child(2) { flex: 1 1 auto; }
+.dh-ccr-linked .material-icons-round { font-size: 19px; color: var(--dh-sea); }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-next { background: var(--dh-sea); }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-linked { background: #14242e; border-color: #2a3b47; color: #e6eef2; }
+
+/* ------------------------------------------------------------------ */
+/* The hub, second pass (Zach, 2026-11-10). Two phase columns on a     */
+/* wide screen, one on a phone. One card per stage: a large tap target */
+/* on top, a quiet strip under it for "last done" and the diver's own  */
+/* steps.                                                              */
+/* ------------------------------------------------------------------ */
+.dh-ccr-phases { display: grid; grid-template-columns: 1fr; gap: 22px; }
+@media (min-width: 768px) { .dh-ccr-phases { grid-template-columns: 1fr 1fr; gap: 24px; } }
+.dh-ccr-phase-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.dh-ccr-phase { display: flex; align-items: center; gap: 8px; font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--dh-sea); margin: 0 2px 2px; }
+.dh-ccr-phase::after { content: ''; flex: 1 1 auto; height: 1px; background: var(--dh-line); }
+
+.dh-ccr-stage-card { border: 1px solid var(--dh-line); border-radius: 16px; background: var(--dh-paper); overflow: hidden; transition: border-color .15s ease, box-shadow .15s ease; }
+.dh-ccr-stage-card:hover, .dh-ccr-stage-card:focus-within { border-color: var(--dh-sea); box-shadow: 0 4px 14px rgba(11,42,58,.10); }
+.dh-ccr-stage-card.is-done { border-color: var(--dh-good); }
+.dh-ccr-stage { display: flex; align-items: center; gap: 14px; padding: 16px; min-height: 80px; color: var(--dh-ink); text-decoration: none; }
+.dh-ccr-stage:hover { color: var(--dh-ink); }
+.dh-ccr-stage-icon { flex: 0 0 48px; width: 48px; height: 48px; border-radius: 14px; background: var(--dh-foam); display: flex; align-items: center; justify-content: center; }
+.dh-ccr-stage-icon .material-icons-round { font-size: 26px; color: var(--dh-sea); }
+.dh-ccr-stage-card.is-done .dh-ccr-stage-icon { background: var(--dh-good-bg); }
+.dh-ccr-stage-card.is-done .dh-ccr-stage-icon .material-icons-round { color: var(--dh-good); }
+.dh-ccr-stage-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dh-ccr-stage-label { display: flex; align-items: center; gap: 8px; font-size: 1.06rem; font-weight: 800; line-height: 1.2; }
+.dh-ccr-stage-n { flex: 0 0 auto; width: 20px; height: 20px; border-radius: 50%; background: var(--dh-ink); color: #fff; font-size: .66rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
+.dh-ccr-stage-when { font-size: .8rem; color: var(--dh-muted); line-height: 1.35; }
+.dh-ccr-stage-go { flex: 0 0 auto; display: inline-flex; align-items: center; font-size: .78rem; font-weight: 800; color: var(--dh-sea); }
+.dh-ccr-stage-go .material-icons-round { font-size: 20px; }
+.dh-ccr-stage-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 8px 16px; border-top: 1px solid var(--dh-line); background: var(--dh-foam); }
+.dh-ccr-stage-last { display: inline-flex; align-items: center; gap: 5px; font-size: .74rem; font-weight: 700; color: var(--dh-muted); }
+.dh-ccr-stage-last .material-icons-round { font-size: 16px; }
+.dh-ccr-stage-card.is-done .dh-ccr-stage-last { color: var(--dh-good); }
+.dh-ccr-stage-custom { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; font-size: .74rem; font-weight: 700; color: var(--dh-sea); text-decoration: none; }
+.dh-ccr-stage-custom:hover { color: var(--dh-deep); text-decoration: underline; }
+.dh-ccr-stage-custom .material-icons-round { font-size: 17px; }
+.dh-ccr-stage-foot { margin: 18px 0 0; }
+
+.dh-ccr-onboard { padding: 14px; margin-bottom: 18px; border: 1px dashed var(--dh-sea); border-radius: 14px; }
+.dh-ccr-onboard-lead { font-size: .85rem; color: var(--dh-muted); margin: 0 0 12px; }
+
+/* Rename / add another: two small buttons at the foot of the card. An open
+   one takes the full row so its form has room. */
+.dh-ccr-manage { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--dh-line); }
+.dh-ccr-manage .dh-ccr-unit-details > summary { padding: 7px 14px; min-height: 36px; border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill); font-size: .78rem; }
+.dh-ccr-manage .dh-ccr-unit-details > summary:hover { border-color: var(--dh-sea); }
+.dh-ccr-manage .dh-ccr-unit-details[open] { flex: 1 1 100%; order: 2; }
+.dh-ccr-manage .dh-ccr-unit-details[open] > summary { border-color: var(--dh-sea); background: var(--dh-foam); }
+.dh-ccr-manage-panel { margin-top: 12px; padding: 14px; border: 1px solid var(--dh-line); border-radius: 14px; }
+
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage-card { background: #14242e; border-color: #2a3b47; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage-card:hover, body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage-card:focus-within { border-color: var(--dh-sea); box-shadow: 0 4px 16px rgba(0,0,0,.35); }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage-card.is-done { border-color: #3d9a63; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage, body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage:hover { color: #e6eef2; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage-icon { background: #1b3a4a; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage-icon .material-icons-round { color: #7fd0e6; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage-card.is-done .dh-ccr-stage-icon { background: #16281f; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage-card.is-done .dh-ccr-stage-icon .material-icons-round,
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage-card.is-done .dh-ccr-stage-last { color: #5fc78a; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage-n { background: #cfe6ef; color: #0b2a3a; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage-go, body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage-custom, body.dh-ccr-bg[data-theme="dark"] .dh-ccr-phase { color: #7fd0e6; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-phase::after { background: #2a3b47; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage-meta { background: #101c24; border-color: #2a3b47; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-stage-last { color: #9fb4bf; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-manage { border-color: #2a3b47; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-manage .dh-ccr-unit-details > summary { border-color: #2a3b47; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-manage .dh-ccr-unit-details[open] > summary { background: #1b3a4a; border-color: var(--dh-sea); color: #e6eef2; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-manage-panel { border-color: #2a3b47; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-onboard-lead { color: #9fb4bf; }
+
+/* The equipment tiles had no dark variant, so on the dark hub they were
+   white boxes on a navy page. Scoped to the checklist pages' own dark
+   theme; the light theme and every other page are untouched. */
+body.dh-ccr-bg[data-theme="dark"] .dh-equip-stat,
+body.dh-ccr-bg[data-theme="dark"] .dh-health-stat,
+body.dh-ccr-bg[data-theme="dark"] .dh-equip-logo-tile { background: #14242e; }
+body.dh-ccr-bg[data-theme="dark"] .dh-equip-stat-label,
+body.dh-ccr-bg[data-theme="dark"] .dh-health-stat .dh-health-stat-n { color: #e6eef2; }
+body.dh-ccr-bg[data-theme="dark"] .dh-equip-stat-meta,
+body.dh-ccr-bg[data-theme="dark"] .dh-health-stat-label { color: #9fb4bf; }
+body.dh-ccr-bg[data-theme="dark"] .dh-health-stat.is-run { color: #7fd0e6; }
+body.dh-ccr-bg[data-theme="dark"] .dh-equip-stat.is-good .dh-equip-stat-status,
+body.dh-ccr-bg[data-theme="dark"] .dh-equip-stat.is-good .dh-equip-stat-head .material-icons-round { color: #5fc78a; }
+
+/* Beta notice at the top of the hub. */
+.dh-ccr-beta { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; padding: 10px 13px; border-radius: 12px; border: 1px solid var(--dh-line); background: var(--dh-paper); color: var(--dh-ink); font-size: .8rem; line-height: 1.45; }
+.dh-ccr-beta-pill { flex: 0 0 auto; padding: 2px 8px; border-radius: 999px; background: var(--dh-sea); color: #fff; font-size: .62rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; margin-top: 1px; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-beta { background: #14242e; border-color: #2a3b47; color: #e6eef2; }
+
+/* Day headings in the history list. */
+.dh-ccr-day { font-size: .72rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--dh-sea); margin: 16px 2px 6px; }
+.dh-ccr-day:first-child { margin-top: 0; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-day { color: #7fd0e6; }
+
+/* No connection: banner (only while offline) and the standing line under Save. */
+.dh-ccr-offline { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--dh-avg-bg); border: 1px solid #e6d79a; color: var(--dh-ink); font-size: .85rem; line-height: 1.45; }
+.dh-ccr-offline[hidden] { display: none; }
+.dh-ccr-offline > .material-icons-round { font-size: 20px; color: var(--dh-avg); flex: 0 0 auto; }
+.dh-ccr-offline.is-flash { outline: 3px solid var(--dh-avg); }
+.dh-ccr-offline-hint { margin: 10px 2px 0; font-size: .76rem; color: #6b7a86; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-offline { background: #2e2a16; border-color: #5c5320; color: #f1ead0; }
+body.dh-ccr-bg[data-theme="dark"] .dh-ccr-offline-hint { color: #9fb2bf; }

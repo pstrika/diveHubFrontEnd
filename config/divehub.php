@@ -14,10 +14,10 @@
 
 return [
 
-    'version' => '12.33.5',
+    'version' => '12.34.0',
 
     // Release date shown next to the version. Any human readable format.
-    'released' => '11/6/26',
+    'released' => '11/11/26',
 
     // App Store link for the companion app, "Logbook by Divers Hub". Null
     // while it's in TestFlight: the Logbook page then says "coming soon".
@@ -41,6 +41,12 @@ return [
         'species_id' => ['*'],
         // Dive videos (Cloudflare Stream, 2026-10-20): everyone with the logbook.
         'videos' => ['*'],
+        // CCR checklists (was UserPolicy's single hardcoded address until
+        // 2026-11-10). Open to every registered member as a beta (Zach and
+        // Pablo, 2026-11-11); guest accounts stay out, see
+        // UserPolicy::ccrChecklistAccess. Marked Beta in the menu and on
+        // the page.
+        'ccr_checklists' => ['*'],
     ],
 
 ];

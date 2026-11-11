@@ -151,8 +151,8 @@
             @endphp
             <tr>
                 <td class="chk {{ $isChecked ? 'is-done' : 'is-open' }}">{{ $isChecked ? 'X' : '-' }}</td>
-                <td class="num">{{ $item['number'] }}.</td>
-                <td class="label">{{ $shortLabels[$item['key']] ?? $item['key'] }}</td>
+                <td class="num">{{ !empty($item['custom']) ? '+' : $item['number'] . '.' }}</td>
+                <td class="label">{{ !empty($item['custom']) ? 'Own step' : ($shortLabels[$item['key']] ?? \Illuminate\Support\Str::limit($item['text'], 60)) }}</td>
                 <td class="details">{{ $details }}</td>
             </tr>
         @endforeach
@@ -168,6 +168,14 @@
                     </div>
                 @else
                     <div class="no-sig">No signature on file</div>
+                @endif
+            </td>
+            {{-- Zach, 2026-11-10: the same line that sits on the form, on
+                 every printed copy too. --}}
+            <td style="vertical-align: bottom; text-align: right; font-size: 7pt; color: #555; line-height: 1.4;">
+                {{ $disclaimerStrip ?? '' }}
+                @if ($session->disclaimer_accepted_at)
+                    <br>Warning acknowledged {{ $session->disclaimer_accepted_at->format('M j, Y g:i A') }} (wording {{ $session->disclaimer_version }}).
                 @endif
             </td>
         </tr>
