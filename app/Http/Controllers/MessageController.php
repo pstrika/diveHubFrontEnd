@@ -50,6 +50,15 @@ class MessageController extends Controller
         return view('pages.Messages', compact('messages', 'groupMessages', 'trashed'));
     }
 
+    /**
+     * The real unread numbers per folder and per group (Zach, 2026-11-12).
+     * Reads messages.kind and expires_at, so a JSON answer here also
+     * proves that migration is live.
+     */
+    public function counts() {
+        return response()->json(Message::countsFor(auth()->user()->id));
+    }
+
     public function markAsRead(Request $request) {
     
         $noteId = $request->input('noteId');
