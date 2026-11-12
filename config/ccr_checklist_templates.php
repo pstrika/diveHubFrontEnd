@@ -80,7 +80,7 @@
  *   (Pablo, 2026-10-16). Cells/Ext V have no badge markup, so their same
  *   alarm bands simply don't carry this key.
  */
-return [
+$config = [
 
     'active' => 'v1.5',
 
@@ -320,6 +320,11 @@ return [
          * this file:
          *   1. Same steps, same order. Never merge, split, drop or add a
          *      step relative to the source checklist.
+         *      That is the order THIS FILE ships. A diver may put the
+         *      steps of their own checklist in their own order and under
+         *      their own headings (Zach, 2026-11-11); that lives in
+         *      ccr_layouts, is marked on the form, the saved page and the
+         *      PDF, and can never remove or reword a step.
          *   2. Rewording may only make a step MORE descriptive. Expanding
          *      shorthand into a sentence is fine ("Open O2 / pressure?"
          *      becomes "Open the O2 valve and check the pressure"). Losing
@@ -637,3 +642,34 @@ return [
     ],
 
 ];
+
+/*
+ * Build check v1.6 (Zach, 2026-11-11). Pablo's v1.5 with one step grown:
+ * step 10, the scrubbers. Same steps, same order, same wording and the same
+ * answer keys, so everything that reads a build by key (the equipment
+ * dashboard, the build table, the PDF) reads a v1.6 build the same way.
+ *
+ * What v1.6 adds to step 10, all of it in Create.blade.php and
+ * ccr-checklist-stage.js behind the `tracker` flag:
+ *  - time on the scrubbers, counted from recorded dive time
+ *    (App\Support\CcrScrubber), beside the RMS estimate, which becomes
+ *    optional: not every rEvo has an rMS and not every diver trusts it;
+ *  - the RCT typed as hours and minutes, the way the rEvo shows it;
+ *  - a dive site picker that fills in the planned depth;
+ *  - flags on the diluent and bail-out mixes for that depth.
+ *
+ * Derived from v1.5 here so the two cannot drift apart by accident. Every
+ * v1.5 session already saved keeps rendering as v1.5.
+ */
+$v16 = $config['versions']['v1.5'];
+foreach ($v16['items'] as $i => $item) {
+    if ($item['key'] === 'scrubber_time') {
+        $v16['items'][$i]['tracker'] = true;
+        $v16['items'][$i]['fields'][] = ['key' => 'site_name', 'label' => 'Site', 'type' => 'text'];
+    }
+}
+$config['versions']['v1.6'] = $v16;
+$config['active'] = 'v1.6';
+$config['units']['revo']['stages']['build'] = 'v1.6';
+
+return $config;

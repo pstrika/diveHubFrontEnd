@@ -21,6 +21,7 @@ class CcrChecklistSession extends Model
         'build_date',
         'answers',
         'custom_items',
+        'layout',
         'signature',
         'disclaimer_version',
         'disclaimer_accepted_at',
@@ -30,6 +31,7 @@ class CcrChecklistSession extends Model
     protected $casts = [
         'answers' => 'array',
         'custom_items' => 'array',
+        'layout' => 'array',
         'build_date' => 'datetime',
         'disclaimer_accepted_at' => 'datetime',
     ];
@@ -130,7 +132,8 @@ class CcrChecklistSession extends Model
         if (!$template) {
             return null;
         }
-        $template = \App\Support\CcrChecklistBuilder::merge($template, $this->custom_items ?? []);
+        // ...and in the order, under the headings, it was saved with (2026-11-11).
+        $template = \App\Support\CcrChecklistBuilder::build($template, $this->custom_items ?? [], $this->layout);
         if (!empty($template['own'])) {
             $template['label'] = ($this->unit ? $this->unit->name . ': ' : '') . $this->stageLabel();
         }

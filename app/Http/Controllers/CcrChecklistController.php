@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\CcrChecklistSession;
 use App\Models\CcrCustomItem;
+use App\Models\CcrLayout;
+use App\Models\CcrScrubberEvent;
 use App\Models\CcrUnit;
 use App\Support\CcrChecklistBuilder;
+use App\Support\CcrScrubber;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -100,6 +103,19 @@ class CcrChecklistController extends Controller
     }
 
     /**
+     * The diver's own order and headings for one rebreather and stage, or
+     * null when they have never changed the standard checklist.
+     */
+    private function rowsFor(?CcrUnit $unit, string $stage): ?array
+    {
+        if (!$unit) {
+            return null;
+        }
+        $layout = CcrLayout::where('unit_id', $unit->id)->where('stage', $stage)->first();
+        return $layout ? (array) $layout->rows : null;
+    }
+
+    /**
      * A diver's sessions for one rebreather.
      *
      * Sessions saved before units existed have no unit_id. Rather than
@@ -185,6 +201,8 @@ class CcrChecklistController extends Controller
             'units' => $units,
             'unit' => $unit,
             'isRevo' => $isRevo,
+            // Time on the scrubbers, for any rebreather (Zach, 2026-11-11).
+            'scrubberStatus' => $unit ? CcrScrubber::status($unit) : null,
             'unitOptions' => config('ccr_checklist_templates.units', []),
             'stages' => $stages,
         ]);
@@ -196,6 +214,40 @@ class CcrChecklistController extends Controller
             'model' => ['required', \Illuminate\Validation\Rule::in(array_keys(config('ccr_checklist_templates.units', [])))],
             'name' => 'required|string|max:120',
             'serial_number' => 'nullable|string|max:120',
+            // Scrubber limits as hours and minutes boxes (2026-11-11).
+            'top_h' => 'nullable|integer|min:0|max:24',
+            'top_m' => 'nullable|integer|min:0|max:59',
+            'reserve_h' => 'nullable|integer|min:0|max:24',
+            'reserve_m' => 'nullable|integer|min:0|max:59',
+        ];
+    }
+
+    /**
+     * The validated rebreather form as columns. The scrubber limits go into
+     * `settings` beside whatever else is there. Both boxes empty means "no
+     * limit set": for a rEvo that falls back to 3:00 and 1:30, for anything
+     * else it means time left is never shown.
+     */
+    private function unitData(array $v, ?CcrUnit $unit = null): array
+    {
+        $settings = $unit->settings ?? [];
+        $scrubber = [];
+        foreach (['top', 'reserve'] as $k) {
+            $min = CcrScrubber::minutes($v[$k . '_h'] ?? null, $v[$k . '_m'] ?? null);
+            if ($min !== null && ($min > 0 || $k === 'reserve')) {
+                $scrubber[$k] = $min;
+            }
+        }
+        if ($scrubber) {
+            $settings['scrubber'] = $scrubber;
+        } else {
+            unset($settings['scrubber']);
+        }
+        return [
+            'model' => $v['model'],
+            'name' => $v['name'],
+            'serial_number' => $v['serial_number'] ?? null,
+            'settings' => $settings ?: null,
         ];
     }
 
@@ -204,7 +256,7 @@ class CcrChecklistController extends Controller
     {
         $this->authorize('ccrChecklistAccess', User::class);
 
-        $unit = CcrUnit::create($request->validate($this->unitRules()) + ['user_id' => auth()->id()]);
+        $unit = CcrUnit::create($this->unitData($request->validate($this->unitRules())) + ['user_id' => auth()->id()]);
 
         return redirect()->route('CcrChecklist', ['unit' => $unit->uuid]);
     }
@@ -221,7 +273,7 @@ class CcrChecklistController extends Controller
         $this->authorize('ccrChecklistAccess', User::class);
 
         $unit = CcrUnit::where('user_id', auth()->id())->where('uuid', $uuid)->firstOrFail();
-        $unit->update($request->validate($this->unitRules()));
+        $unit->update($this->unitData($request->validate($this->unitRules()), $unit));
 
         return redirect()->route('CcrChecklist', ['unit' => $unit->uuid]);
     }
@@ -327,7 +379,7 @@ class CcrChecklistController extends Controller
         $scrubber = $latest->answers['scrubber_time'] ?? [];
         $scrubberLabel = isset($scrubber['result_minutes'])
             ? $scrubber['result_minutes'] . ' mins'
-            : (!empty($scrubber['checked']) ? 'Max Fresh' : '—');
+            : (!empty($scrubber['checked']) && $latest->template_version === 'v1.5' ? 'Max Fresh' : '—');
         $onTop = $latest->answers['install_scrubbers']['on_top'] ?? null;
 
         $batteryDate = null;
@@ -365,8 +417,10 @@ class CcrChecklistController extends Controller
         abort_unless($template, 404);
 
         // The diver's own steps, woven in around the built in ones.
+        // ...in the diver's own order, under their own headings, if they
+        // have changed either (Zach, 2026-11-11).
         $customs = $this->customsFor($unit, $stage);
-        $template = CcrChecklistBuilder::merge($template, $customs);
+        $template = CcrChecklistBuilder::build($template, $customs, $this->rowsFor($unit, $stage));
         $stageLabel = config('ccr_checklist_templates.stages')[$stage]['label'] ?? ucfirst($stage);
         if (!empty($template['own'])) {
             // Nothing to tick until they have written a step.
@@ -416,6 +470,7 @@ class CcrChecklistController extends Controller
             'stageLabel' => $stageLabel,
             'unit' => $unit,
             'customs' => $customs,
+            'scrubber' => $unit ? CcrScrubber::status($unit) : null,
             'disclaimer' => config('ccr_checklist_templates.disclaimer'),
         ]);
     }
@@ -488,6 +543,10 @@ class CcrChecklistController extends Controller
             'build_date' => $validated['build_date'],
             'answers' => $validated['answers'],
             'custom_items' => $customItems ?: null,
+            // The order and headings the diver had this checklist in, read
+            // here rather than sent by the browser. Kept on the session so
+            // changing the order later never rewrites a saved record.
+            'layout' => $this->rowsFor($this->currentUnit(), $stage),
             'signature' => $validated['signature'] ?? null,
             'disclaimer_version' => $validated['disclaimer_version'] ?? null,
             'disclaimer_accepted_at' => !empty($validated['disclaimer_accepted_at'])
@@ -584,97 +643,214 @@ class CcrChecklistController extends Controller
         return [$unit, $template];
     }
 
-    /** The edit page: the whole checklist, with "add a step here" between every row. */
+    /**
+     * The edit page (Zach, 2026-11-10 and 2026-11-11): the whole checklist
+     * top to bottom as one list of rows. Any row can be moved. A diver's
+     * own steps and the headings can also be reworded or removed; built in
+     * steps cannot, and keep their original number wherever they sit.
+     */
     public function customize($stage)
     {
         // Needs a rebreather to hang the steps on. Without one, send them
         // to the hub, where adding one is the first thing on the page.
         if ($this->units()->isEmpty()) {
             $this->authorize('ccrChecklistAccess', User::class);
-            return redirect()->route('CcrChecklist')->withErrors(['unit' => 'Add your rebreather first, then you can add your own steps to its checklists.']);
+            return redirect()->route('CcrChecklist')->withErrors(['unit' => 'Add your rebreather first, then you can make its checklists your own.']);
         }
         [$unit, $template] = $this->customizeContext($stage);
 
         $live = CcrCustomItem::where('unit_id', $unit->id)->where('stage', $stage)->get()->keyBy(fn ($c) => $c->answerKey());
-        $merged = CcrChecklistBuilder::merge($template, $live->map(fn ($c) => $c->snapshot())->values()->all());
+        $customs = $this->customsFor($unit, $stage);
+        $rows = $this->currentRows($unit, $stage, $template, $customs);
+        $built = CcrChecklistBuilder::build($template, $customs, $rows);
+        $items = array_column($built['items'], null, 'key');
+
+        // One entry per row, in order, ready for the page.
+        $list = [];
+        foreach ($rows as $i => $row) {
+            $ref = CcrChecklistBuilder::ref($row);
+            $entry = ['ref' => $ref, 'dom' => str_replace(':', '-', $ref)];
+            if ($row['t'] === 'h') {
+                $next = $rows[$i + 1] ?? null;
+                $entry += [
+                    'type' => 'heading',
+                    'text' => $row['text'],
+                    'label' => $row['text'] !== '' ? $row['text'] : 'Section break',
+                    // A heading with no step under it is not printed.
+                    'empty' => !$next || $next['t'] === 'h',
+                ];
+            } else {
+                $item = $items[$row['k']];
+                $entry += [
+                    'type' => empty($item['custom']) ? 'builtin' : 'custom',
+                    'text' => $item['text'],
+                    'number' => $item['number'],
+                    'label' => ($item['number'] === '+' ? '' : $item['number'] . '. ') . \Illuminate\Support\Str::limit($item['text'], 46),
+                    'custom' => $live[$row['k']] ?? null,
+                ];
+            }
+            $list[] = $entry;
+        }
 
         return view('pages.CcrChecklist.Customize', [
             'unit' => $unit,
             'stage' => $stage,
             'stageLabel' => config('ccr_checklist_templates.stages')[$stage]['label'] ?? ucfirst($stage),
-            'template' => $merged,
-            'live' => $live,
+            'list' => $list,
+            'stepCount' => count($built['items']),
+            'ownCount' => $live->count(),
+            'reordered' => !empty($built['reordered']),
             'isOwn' => !empty($template['own']),
         ]);
     }
 
-    /** The diver's steps that follow one built in step (or none), in order, renumbered 0..n. */
-    private function siblings(CcrUnit $unit, string $stage, ?string $anchor)
+    /** The rows the diver sees now: their saved layout made safe, or the standard order. */
+    private function currentRows(CcrUnit $unit, string $stage, array $template, array $customs): array
     {
-        $q = CcrCustomItem::where('unit_id', $unit->id)->where('stage', $stage);
-        $anchor === null ? $q->whereNull('after_key') : $q->where('after_key', $anchor);
-        $rows = $q->orderBy('position')->orderBy('id')->get();
-        foreach ($rows as $i => $row) {
-            if ((int) $row->position !== $i) {
-                $row->position = $i;
-                $row->save();
-            }
-        }
-        return $rows;
-    }
-
-    private function backToCustomize(CcrUnit $unit, string $stage, ?string $rowKey = null)
-    {
-        $url = route('CcrChecklist.customize', ['stage' => $stage, 'unit' => $unit->uuid]);
-        return redirect($url . ($rowKey ? '#row-' . $rowKey : ''));
+        $saved = $this->rowsFor($unit, $stage);
+        return $saved !== null
+            ? CcrChecklistBuilder::normalize($template, $customs, $saved)
+            : CcrChecklistBuilder::defaultRows($template, $customs);
     }
 
     /**
-     * Add a step. `after` is the key of the row it should follow: a built
-     * in step, one of the diver's own, or empty for the very top.
+     * Every change to a layout goes through here: load the rows, change
+     * them, make them safe again, save.
+     *
+     * It also writes each of the diver's own steps back onto the built in
+     * step it now follows. The layout is what places a step from here on,
+     * but that keeps "reset to the standard order" from throwing their
+     * steps to the top, and keeps the older records' rule working.
+     */
+    private function changeRows(CcrUnit $unit, string $stage, array $template, callable $change, bool $forget = false): void
+    {
+        $customs = $this->customsFor($unit, $stage);
+        $rows = $change($this->currentRows($unit, $stage, $template, $customs));
+        $rows = CcrChecklistBuilder::normalize($template, $customs, $rows);
+
+        $builtIn = array_flip(array_column($template['items'] ?? [], 'key'));
+        $anchor = null;
+        $place = [];
+        foreach ($rows as $row) {
+            if ($row['t'] !== 's') {
+                continue;
+            }
+            if (isset($builtIn[$row['k']])) {
+                $anchor = $row['k'];
+            } elseif (preg_match('/^custom_(\d+)$/', $row['k'], $m)) {
+                $n = $place[$anchor ?? ''] = ($place[$anchor ?? ''] ?? -1) + 1;
+                CcrCustomItem::where('unit_id', $unit->id)->where('id', (int) $m[1])
+                    ->update(['after_key' => $anchor, 'position' => $n]);
+            }
+        }
+
+        if ($forget) {
+            CcrLayout::where('unit_id', $unit->id)->where('stage', $stage)->delete();
+            return;
+        }
+        CcrLayout::updateOrCreate(
+            ['unit_id' => $unit->id, 'stage' => $stage],
+            ['template_version' => $this->stageVersions($unit)[$stage] ?? null, 'rows' => $rows]
+        );
+    }
+
+    private function backToCustomize(CcrUnit $unit, string $stage, ?string $ref = null)
+    {
+        $url = route('CcrChecklist.customize', ['stage' => $stage, 'unit' => $unit->uuid]);
+        return redirect($url . ($ref ? '#row-' . str_replace(':', '-', $ref) : ''));
+    }
+
+    /**
+     * Add a step or a heading. `after` names the row it should follow (a
+     * step's key, or h:<id> for a heading); empty puts it at the very top.
      */
     public function storeCustom(Request $request, $stage)
     {
         [$unit, $template] = $this->customizeContext($stage);
+        $kind = $request->input('kind') === 'heading' ? 'heading' : 'step';
         $validated = $request->validate([
-            'text' => 'required|string|max:500',
+            'text' => 'required|string|max:' . ($kind === 'heading' ? 80 : 500),
             'after' => 'nullable|string|max:60',
         ]);
-        abort_if(CcrCustomItem::where('unit_id', $unit->id)->where('stage', $stage)->count() >= 60, 422, 'That is a lot of steps. Remove one before adding another.');
-
         $after = $validated['after'] ?? null;
-        $builtInKeys = array_column($template['items'] ?? [], 'key');
-        $anchor = null;
-        $insertAt = 0;
+        $text = trim($validated['text']);
 
-        if ($after !== null && $after !== '' && preg_match('/^custom_(\d+)$/', $after, $m)) {
-            // After one of their own: same anchor, the slot right below it.
-            $prev = CcrCustomItem::where('unit_id', $unit->id)->where('stage', $stage)->where('id', (int) $m[1])->first();
-            if ($prev) {
-                $anchor = $prev->after_key;
-                $sibs = $this->siblings($unit, $stage, $anchor);
-                $insertAt = $sibs->search(fn ($r) => $r->id === $prev->id) + 1;
-            }
-        } elseif ($after !== null && $after !== '' && in_array($after, $builtInKeys, true)) {
-            $anchor = $after; // directly under that built in step
+        if ($kind === 'heading') {
+            $row = ['t' => 'h', 'id' => strtolower(\Illuminate\Support\Str::random(8)), 'text' => $text];
+        } else {
+            abort_if(CcrCustomItem::where('unit_id', $unit->id)->where('stage', $stage)->count() >= 60, 422, 'That is a lot of steps. Remove one before adding another.');
+            $item = CcrCustomItem::create([
+                'user_id' => auth()->id(),
+                'unit_id' => $unit->id,
+                'stage' => $stage,
+                'text' => $text,
+                'after_key' => null,
+                'position' => 0,
+            ]);
+            $row = ['t' => 's', 'k' => $item->answerKey()];
         }
 
-        foreach ($this->siblings($unit, $stage, $anchor) as $i => $row) {
-            if ($i >= $insertAt) {
-                $row->position = $i + 1;
-                $row->save();
-            }
-        }
-        $item = CcrCustomItem::create([
-            'user_id' => auth()->id(),
-            'unit_id' => $unit->id,
-            'stage' => $stage,
-            'text' => trim($validated['text']),
-            'after_key' => $anchor,
-            'position' => $insertAt,
+        $this->changeRows($unit, $stage, $template, function (array $rows) use ($row, $after) {
+            // A new step is already in the rows (at its standard place):
+            // take it out, then put it where it was asked for.
+            $rows = array_values(array_filter($rows, fn ($r) => CcrChecklistBuilder::ref($r) !== CcrChecklistBuilder::ref($row)));
+            $at = CcrChecklistBuilder::find($rows, $after);
+            array_splice($rows, $at === null ? 0 : $at + 1, 0, [$row]);
+            return $rows;
+        });
+
+        return $this->backToCustomize($unit, $stage, CcrChecklistBuilder::ref($row));
+    }
+
+    /**
+     * Move a row, rename or remove a heading, or go back to the standard
+     * order. One endpoint: each is a small form on the customise page.
+     */
+    public function layoutAction(Request $request, $stage)
+    {
+        [$unit, $template] = $this->customizeContext($stage);
+        $v = $request->validate([
+            'do' => 'required|in:move,rename,unhead,reset',
+            'ref' => 'nullable|string|max:60',
+            'dir' => 'nullable|in:up,down',
+            'to' => 'nullable|string|max:60',
+            'text' => 'nullable|string|max:80',
         ]);
+        $ref = $v['ref'] ?? null;
 
-        return $this->backToCustomize($unit, $stage, $item->answerKey());
+        if ($v['do'] === 'reset') {
+            // Their own steps stay, each after the built in step it follows
+            // now. Their headings and their order go.
+            $this->changeRows($unit, $stage, $template, fn (array $rows) => $rows, true);
+            return $this->backToCustomize($unit, $stage);
+        }
+
+        $back = $ref;
+        $this->changeRows($unit, $stage, $template, function (array $rows) use ($v, $ref, &$back) {
+            $at = CcrChecklistBuilder::find($rows, $ref);
+            if ($at === null) {
+                return $rows;
+            }
+            if ($v['do'] === 'rename' && $rows[$at]['t'] === 'h') {
+                $rows[$at]['text'] = trim((string) ($v['text'] ?? ''));
+            } elseif ($v['do'] === 'unhead' && $rows[$at]['t'] === 'h') {
+                array_splice($rows, $at, 1);
+                $back = isset($rows[$at]) ? CcrChecklistBuilder::ref($rows[$at]) : null;
+            } elseif ($v['do'] === 'move' && !empty($v['dir'])) {
+                $swap = $v['dir'] === 'up' ? $at - 1 : $at + 1;
+                if (isset($rows[$swap])) {
+                    [$rows[$at], $rows[$swap]] = [$rows[$swap], $rows[$at]];
+                }
+            } elseif ($v['do'] === 'move' && isset($v['to'])) {
+                $row = $rows[$at];
+                array_splice($rows, $at, 1);
+                $to = $v['to'] === 'top' ? null : CcrChecklistBuilder::find($rows, $v['to']);
+                array_splice($rows, $to === null ? 0 : $to + 1, 0, [$row]);
+            }
+            return $rows;
+        });
+
+        return $this->backToCustomize($unit, $stage, $back);
     }
 
     private function ownCustom(string $uuid): CcrCustomItem
@@ -697,68 +873,88 @@ class CcrChecklistController extends Controller
         $unit = $item->unit;
         $stage = $item->stage;
         $item->delete();
+
+        // Take its row out of the saved layout too, if there is one.
+        $template = $this->template($this->stageVersions($unit)[$stage] ?? '');
+        if ($template !== null && $this->rowsFor($unit, $stage) !== null) {
+            $this->changeRows($unit, $stage, $template, fn (array $rows) => $rows);
+        }
         return $this->backToCustomize($unit, $stage);
     }
 
+    /* ------------------------------------------------------------------ */
+    /* Time on the scrubbers, and the site picker (Zach, 2026-11-11)       */
+    /* ------------------------------------------------------------------ */
+
     /**
-     * Move a step one place up or down the checklist.
-     *
-     * Among the diver's own steps under the same built in step it is a
-     * swap. At the edge of that group it crosses the built in step next to
-     * it: going up it becomes the LAST of the steps under the built in
-     * step above (so it sits just above the one it crossed); going down it
-     * becomes the FIRST under the one it crossed.
+     * What a diver enters by hand on the hub: dive time, a corrected
+     * total, a rotate, a repack. Everything else in the scrubber record is
+     * read from saved checklists by App\Support\CcrScrubber.
      */
-    public function moveCustom(Request $request, $uuid)
+    public function scrubberAction(Request $request)
     {
-        $item = $this->ownCustom($uuid);
-        $dir = $request->validate(['dir' => 'required|in:up,down'])['dir'];
-        $unit = $item->unit;
-        $stage = $item->stage;
+        $this->authorize('ccrChecklistAccess', User::class);
+        $unit = $this->currentUnit();
+        abort_unless($unit, 404);
 
-        $versions = $this->stageVersions($unit);
-        $keys = array_column($this->template($versions[$stage] ?? '')['items'] ?? [], 'key');
+        $v = $request->validate([
+            'do' => 'required|in:add,adjust,rotate,repack',
+            'hours' => 'nullable|integer|min:0|max:99',
+            'minutes' => 'nullable|integer|min:0|max:999',
+        ]);
+        $minutes = CcrScrubber::minutes($v['hours'] ?? null, $v['minutes'] ?? null);
+        $back = redirect(route('CcrChecklist', ['unit' => $unit->uuid]) . '#scrubber');
 
-        // A step whose anchor no longer exists is shown last; treat it as
-        // following the last built in step so it can be moved from there.
-        if ($item->after_key !== null && !in_array($item->after_key, $keys, true)) {
-            $item->after_key = $keys ? end($keys) : null;
-            $item->position = 100000;
-            $item->save();
-        }
-
-        $sibs = $this->siblings($unit, $stage, $item->after_key);
-        $idx = $sibs->search(fn ($r) => $r->id === $item->id);
-        $item = $sibs[$idx];
-
-        if ($dir === 'up' && $idx > 0) {
-            $other = $sibs[$idx - 1];
-            [$item->position, $other->position] = [$other->position, $item->position];
-            $item->save(); $other->save();
-        } elseif ($dir === 'down' && $idx < $sibs->count() - 1) {
-            $other = $sibs[$idx + 1];
-            [$item->position, $other->position] = [$other->position, $item->position];
-            $item->save(); $other->save();
-        } elseif ($dir === 'up' && $item->after_key !== null) {
-            $at = array_search($item->after_key, $keys, true);
-            $newAnchor = $at > 0 ? $keys[$at - 1] : null;
-            $item->after_key = $newAnchor;
-            $item->position = $this->siblings($unit, $stage, $newAnchor)->count(); // last
-            $item->save();
-        } elseif ($dir === 'down') {
-            $at = $item->after_key === null ? -1 : array_search($item->after_key, $keys, true);
-            if (isset($keys[$at + 1])) {
-                $newAnchor = $keys[$at + 1];
-                foreach ($this->siblings($unit, $stage, $newAnchor) as $i => $row) {
-                    $row->position = $i + 1;
-                    $row->save();
-                }
-                $item->after_key = $newAnchor;
-                $item->position = 0; // first
-                $item->save();
+        if (in_array($v['do'], ['add', 'adjust'], true)) {
+            if ($minutes === null || ($v['do'] === 'add' && $minutes === 0)) {
+                return $back->withErrors(['scrubber' => 'Enter the time in hours and minutes.']);
             }
+        } else {
+            $minutes = null;
         }
 
-        return $this->backToCustomize($unit, $stage, $item->answerKey());
+        CcrScrubberEvent::create([
+            'unit_id' => $unit->id,
+            'user_id' => auth()->id(),
+            'type' => $v['do'],
+            'minutes' => $minutes,
+            'occurred_at' => now(),
+        ]);
+        return $back;
+    }
+
+    /** Take a hand entry back out. Entries that come from a saved checklist are not removable here. */
+    public function removeScrubberEvent($id)
+    {
+        $this->authorize('ccrChecklistAccess', User::class);
+        $event = CcrScrubberEvent::where('user_id', auth()->id())->where('id', (int) $id)->firstOrFail();
+        $unit = CcrUnit::where('user_id', auth()->id())->where('id', $event->unit_id)->firstOrFail();
+        $event->delete();
+        return redirect(route('CcrChecklist', ['unit' => $unit->uuid]) . '#scrubber');
+    }
+
+    /**
+     * Dive sites by name, for "planned depth" on the build check. Hidden
+     * sites stay hidden, same rule as the rest of the app. Depths are feet.
+     */
+    public function sites(Request $request)
+    {
+        $this->authorize('ccrChecklistAccess', User::class);
+        $q = trim((string) $request->input('q'));
+        if (mb_strlen($q) < 2) {
+            return response()->json([]);
+        }
+        $sites = \App\Models\Site::where('_hidden', '<>', 1)
+            ->where('name', 'LIKE', '%' . addcslashes($q, '%_\\') . '%')
+            ->orderBy('name')
+            ->take(8)
+            ->get(['id', 'name', 'maxDepth', 'location']);
+
+        return response()->json($sites->map(fn ($s) => [
+            'id' => $s->id,
+            'name' => $s->name,
+            'maxDepth' => (int) $s->maxDepth ?: null,
+            'location' => $s->location,
+        ])->values());
     }
 }

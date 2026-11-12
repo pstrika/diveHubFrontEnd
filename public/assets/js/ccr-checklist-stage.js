@@ -12,6 +12,8 @@
  *   E. Save as you go, on this device, and pick up after a closed tab.
  *   F. "You missed a step" for checklists with no signature pad.
  *   G. No connection: say so, and say what to do.
+ *   H. Build check v1.6, step 10: RCT in hours and minutes, the site
+ *      picker, mix flags for the planned depth, what a refill records.
  *
  * Nothing here ever stops a diver from continuing or saving. It records and
  * it warns. A tool that refuses implies that when it does not refuse,
@@ -428,5 +430,223 @@
       banner.scrollIntoView({ block: 'center', behavior: 'smooth' });
       setTimeout(function () { banner.classList.remove('is-flash'); }, 1200);
     }, true);
+  })();
+
+  /* ------------------------------------------------------------------ */
+  /* H. Build check v1.6, step 10 (Zach, 2026-11-11).                    */
+  /*                                                                      */
+  /* Everything here feeds Pablo's own inputs or sits beside them. His    */
+  /* formula, his result and his badges in ccr-checklist.js are not       */
+  /* touched: the hours and minutes boxes write minutes into his RCT      */
+  /* field, the site picker writes into his planned depth field, and      */
+  /* both fire the same 'input' event typing would.                       */
+  /* ------------------------------------------------------------------ */
+  (function () {
+    var rct = document.getElementById('item_scrubber_time_rct');
+    var depth = document.getElementById('item_scrubber_time_planned_depth');
+    var hBox = document.getElementById('ccrRctH');
+    var mBox = document.getElementById('ccrRctM');
+    if (!rct || !depth || !hBox || !mBox) return;   // not a v1.6 build check
+
+    function hm(min) {
+      min = Math.max(0, Math.round(min));
+      var m = min % 60;
+      return Math.floor(min / 60) + ':' + (m < 10 ? '0' : '') + m;
+    }
+
+    // Pablo's fields float their label only on a real keystroke. A value
+    // written by script needs the same class or the label sits on top of it.
+    function floatLabel(el) {
+      var g = el.closest('.input-group');
+      if (g) g.classList.toggle('is-filled', el.value !== '');
+    }
+
+    /* --- RCT as the rEvo shows it: hours and minutes ------------------ */
+    function boxesToRct() {
+      var h = parseInt(hBox.value, 10), m = parseInt(mBox.value, 10);
+      rct.value = (isNaN(h) && isNaN(m)) ? '' : (isNaN(h) ? 0 : h) * 60 + (isNaN(m) ? 0 : m);
+      floatLabel(rct);
+      fire(rct, 'input');
+    }
+    function rctToBoxes() {
+      if (document.activeElement === hBox || document.activeElement === mBox) return;
+      var v = parseFloat(rct.value);
+      hBox.value = isNaN(v) ? '' : Math.floor(v / 60);
+      mBox.value = isNaN(v) ? '' : Math.round(v % 60);
+    }
+    hBox.addEventListener('input', boxesToRct);
+    mBox.addEventListener('input', boxesToRct);
+    rct.addEventListener('input', rctToBoxes);
+
+    // Pablo's result is whole minutes; say it in hours and minutes too.
+    var resultIn = document.getElementById('ccrScrubberResultInput');
+    var resultHm = document.getElementById('ccrResultHm');
+    function showResultHm() {
+      if (!resultIn || !resultHm) return;
+      var v = parseFloat(resultIn.value);
+      resultHm.hidden = isNaN(v);
+      if (!isNaN(v)) resultHm.textContent = v + ' minutes is ' + hm(v) + '.';
+    }
+
+    /* --- Dive site: fills in the planned depth ------------------------ */
+    var siteBox = document.getElementById('ccrSite');
+    var siteName = document.getElementById('ccrSiteName');
+    var siteId = document.getElementById('ccrSiteId');
+    var siteList = document.getElementById('ccrSiteList');
+    var siteNote = document.getElementById('ccrSiteNote');
+    var siteTimer = null, siteSeq = 0;
+
+    function closeSites() { if (siteList) { siteList.hidden = true; siteList.innerHTML = ''; } }
+
+    function pickSite(site) {
+      siteName.value = site.name;
+      siteId.value = site.id;
+      closeSites();
+      if (site.maxDepth) {
+        depth.value = site.maxDepth;
+        floatLabel(depth);
+        fire(depth, 'input');
+        siteNote.textContent = site.name + ' is ' + site.maxDepth + ' ft at its deepest, so that is filled in below. Change it to the depth you plan to dive.';
+      } else {
+        siteNote.textContent = 'Divers Hub has no depth for ' + site.name + '. Enter your planned depth below.';
+      }
+      fire(siteName, 'change');
+    }
+
+    if (siteBox && siteName && siteList) {
+      siteName.addEventListener('input', function () {
+        siteId.value = '';          // typed text is no longer the picked site
+        var q = siteName.value.trim();
+        clearTimeout(siteTimer);
+        if (q.length < 2) { closeSites(); return; }
+        siteTimer = setTimeout(function () {
+          var seq = ++siteSeq;
+          fetch(siteBox.getAttribute('data-url') + '?q=' + encodeURIComponent(q), { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+            .then(function (r) { return r.ok ? r.json() : []; })
+            .then(function (sites) {
+              if (seq !== siteSeq) return;   // an older answer arriving late
+              siteList.innerHTML = '';
+              sites.forEach(function (site) {
+                var li = document.createElement('li');
+                var b = document.createElement('button');
+                b.type = 'button';
+                var name = document.createElement('span');
+                name.textContent = site.name;
+                var meta = document.createElement('span');
+                meta.className = 'dh-ccr-site-meta';
+                meta.textContent = site.maxDepth ? site.maxDepth + ' ft' : '';
+                b.appendChild(name); b.appendChild(meta);
+                b.addEventListener('click', function () { pickSite(site); });
+                li.appendChild(b);
+                siteList.appendChild(li);
+              });
+              siteList.hidden = !sites.length;
+            })
+            .catch(function () { closeSites(); });   // no connection: it is only a helper
+        }, 220);
+      });
+      document.addEventListener('click', function (e) { if (!siteBox.contains(e.target)) closeSites(); });
+    }
+
+    /* --- Mix flags for the planned depth ------------------------------ */
+    /* The bands are the ones Pablo's Best gases tool colours by:          */
+    /*   diluent PPO2 at depth     above 1.0 caution, above 1.10 or below  */
+    /*                             0.18 danger                             */
+    /*   bail-out PPO2 at depth    above 1.41 caution, above 1.59 or below */
+    /*                             0.16 danger                             */
+    /*   bail-out gas density      above 5.2 g/L caution, above 6.2 danger */
+    /* His tool also cautions on a diluent PPO2 under 0.5; that is about   */
+    /* picking a best mix, not a hazard, so it is left out here. The deco  */
+    /* gas is not checked: it is not breathed at the planned depth.        */
+    /* There is no "good" state. Nothing here is a verification.           */
+    var flagsBox = document.getElementById('ccrGasFlags');
+
+    function num(name) {
+      var el = form.querySelector('[name="' + name + '"]');
+      var v = el ? parseFloat(el.value) : NaN;
+      return isNaN(v) ? null : v;
+    }
+    function gasFlags() {
+      var d = parseFloat(depth.value);
+      var out = [];
+      if (isNaN(d) || d <= 0) return out;
+      var ata = d / 33 + 1;
+
+      var dilO2 = num('answers[diluent_tank][o2_percent]');
+      if (dilO2 !== null) {
+        var p = dilO2 / 100 * ata;
+        if (p > 1.10) out.push(['danger', 'diluent_tank', 'Diluent: PPO2 is ' + p.toFixed(2) + ' at ' + d + ' ft. A diluent flush cannot bring the loop below that.']);
+        else if (p > 1.0) out.push(['warn', 'diluent_tank', 'Diluent: PPO2 is ' + p.toFixed(2) + ' at ' + d + ' ft, close to set-point.']);
+        else if (p < 0.18) out.push(['danger', 'diluent_tank', 'Diluent: PPO2 is only ' + p.toFixed(2) + ' at ' + d + ' ft.']);
+      }
+
+      var boO2 = num('answers[bailout][o2_percent]');
+      if (boO2 !== null) {
+        var boHe = num('answers[bailout][he_percent]') || 0;
+        var bp = boO2 / 100 * ata;
+        if (bp > 1.59) out.push(['danger', 'bailout', 'Bail-out: PPO2 is ' + bp.toFixed(2) + ' at ' + d + ' ft.']);
+        else if (bp > 1.41) out.push(['warn', 'bailout', 'Bail-out: PPO2 is ' + bp.toFixed(2) + ' at ' + d + ' ft.']);
+        else if (bp < 0.16) out.push(['danger', 'bailout', 'Bail-out: PPO2 is only ' + bp.toFixed(2) + ' at ' + d + ' ft.']);
+        var fo = boO2 / 100, fh = boHe / 100, fn = Math.max(0, 1 - fo - fh);
+        var dens = (fo * 32 + fn * 28 + fh * 4) * ata / 22.4;
+        if (dens > 6.2) out.push(['danger', 'bailout', 'Bail-out: gas density is ' + dens.toFixed(1) + ' g/L at ' + d + ' ft.']);
+        else if (dens > 5.2) out.push(['warn', 'bailout', 'Bail-out: gas density is ' + dens.toFixed(1) + ' g/L at ' + d + ' ft.']);
+      }
+      return out;
+    }
+
+    function flagLine(f, tool) {
+      var div = document.createElement('div');
+      div.className = 'dh-ccr-gasflag is-' + f[0];
+      var icon = document.createElement('span');
+      icon.className = 'material-icons-round';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.textContent = f[0] === 'danger' ? 'error' : 'warning';
+      var text = document.createElement('span');
+      text.textContent = f[2] + ' Check it. ';
+      var a = document.createElement('a');
+      a.href = tool; a.target = '_blank'; a.rel = 'noopener';
+      a.textContent = 'Open Best gases';
+      text.appendChild(a);
+      div.appendChild(icon); div.appendChild(text);
+      return div;
+    }
+
+    function showFlags() {
+      if (!flagsBox) return;
+      var tool = flagsBox.getAttribute('data-tool');
+      var flags = gasFlags();
+      // Beside the depth, where the number that caused it was typed...
+      flagsBox.innerHTML = '';
+      flags.forEach(function (f) { flagsBox.appendChild(flagLine(f, tool)); });
+      flagsBox.hidden = !flags.length;
+      // ...and on the gas row itself, which is further up the page.
+      form.querySelectorAll('.dh-ccr-gasflag.is-onrow').forEach(function (n) { n.remove(); });
+      flags.forEach(function (f) {
+        var el = form.querySelector('[name="answers[' + f[1] + '][o2_percent]"]');
+        var item = el && el.closest('.dh-ccr-item');
+        if (!item) return;
+        var line = flagLine(f, tool);
+        line.classList.add('is-onrow');
+        item.appendChild(line);
+      });
+    }
+
+    /* --- What a refill will be recorded as ---------------------------- */
+    var refillNote = document.getElementById('ccrRefillNote');
+    function showRefill() {
+      if (!refillNote) return;
+      var n = form.querySelectorAll('[name="answers[scrubber_time][refilled][]"]:checked').length;
+      refillNote.hidden = n === 0;
+      if (n >= 2) refillNote.textContent = 'Saved as: both repacked. Time on the scrubbers goes back to 0:00.';
+      else if (n === 1 && refillNote.getAttribute('data-reserve') === '1') refillNote.textContent = 'The reserve canister has been used, so one fresh canister does not reset the time. Repack both.';
+      else if (n === 1) refillNote.textContent = 'Saved as: rotated, one fresh canister. Time on the scrubbers goes back to 0:00.';
+    }
+
+    function refresh() { setTimeout(function () { showResultHm(); showFlags(); showRefill(); }, 0); }
+    form.addEventListener('input', refresh);
+    form.addEventListener('change', refresh);
+    // A draft put back by E fills the fields without always firing events.
+    setTimeout(function () { rctToBoxes(); floatLabel(rct); floatLabel(depth); refresh(); }, 400);
   })();
 })();

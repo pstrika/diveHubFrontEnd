@@ -84,8 +84,8 @@
                         <div class="card-body">
                             @php $ccrPrevGroup = null; @endphp
                             @foreach ($template['items'] as $item)
-                                @if (($item['group'] ?? null) !== $ccrPrevGroup)
-                                    @php $ccrPrevGroup = $item['group'] ?? null; @endphp
+                                @if ((array_key_exists('section', $item) ? $item['section'] : ($item['group'] ?? null)) !== $ccrPrevGroup)
+                                    @php $ccrPrevGroup = (array_key_exists('section', $item) ? $item['section'] : ($item['group'] ?? null)); @endphp
                                     @if ($ccrPrevGroup)
                                         <div class="dh-ccr-group-header">{{ $ccrPrevGroup }}</div>
                                     @endif
@@ -165,7 +165,7 @@
                                                             // (Pablo, 2026-10-17).
                                                             $scrubberResultLabel = isset($answer['result_minutes'])
                                                                 ? $answer['result_minutes'] . ' mins'
-                                                                : (!empty($answer['checked']) ? 'Max Fresh' : '—');
+                                                                : (!empty($answer['checked']) && $session->template_version === 'v1.5' ? 'Max Fresh' : '—');
                                                         @endphp
                                                         <div class="col-auto mb-1">
                                                             <span class="dh-gas-label d-inline">Result:</span>

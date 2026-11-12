@@ -18,7 +18,7 @@
                             <span class="material-icons-round" aria-hidden="true">dark_mode</span>
                         </button>
                         @if ($unit)
-                            <a class="dh-btn dh-btn-ghost-dark" href="{{ route('CcrChecklist.customize', ['stage' => $stage ?? 'build', 'unit' => $unit->uuid]) }}">Add your own steps</a>
+                            <a class="dh-btn dh-btn-ghost-dark" href="{{ route('CcrChecklist.customize', ['stage' => $stage ?? 'build', 'unit' => $unit->uuid]) }}">Customize</a>
                         @endif
                         <a class="dh-btn dh-btn-ghost-dark" href="{{ route('CcrChecklist') }}">All checklists</a>
                     </div>
@@ -97,8 +97,8 @@
 
                             @php $ccrPrevGroup = null; @endphp
                             @foreach ($template['items'] as $item)
-                                @if (($item['group'] ?? null) !== $ccrPrevGroup)
-                                    @php $ccrPrevGroup = $item['group'] ?? null; @endphp
+                                @if ((array_key_exists('section', $item) ? $item['section'] : ($item['group'] ?? null)) !== $ccrPrevGroup)
+                                    @php $ccrPrevGroup = (array_key_exists('section', $item) ? $item['section'] : ($item['group'] ?? null)); @endphp
                                     @if ($ccrPrevGroup)
                                         <div class="dh-ccr-group-header">{{ $ccrPrevGroup }}</div>
                                     @endif
@@ -211,19 +211,47 @@
                                                     $rctDepthField = collect($item['fields'])->firstWhere('key', 'rct_depth');
                                                     $plannedDepthField = collect($item['fields'])->firstWhere('key', 'planned_depth');
                                                     $refilledField = collect($item['fields'])->firstWhere('key', 'refilled');
+                                                    // v1.6 (Zach, 2026-11-11): time on the scrubbers, a site
+                                                    // picker, hours and minutes for the RCT, mix flags. The
+                                                    // RMS inputs below are Pablo's, untouched, and optional.
+                                                    $ccrTracker = !empty($item['tracker']);
                                                 @endphp
+                                                @if ($ccrTracker)
+                                                    @if (!empty($scrubber))
+                                                        <div class="dh-ccr-scrub is-{{ $scrubber['tone'] }} mt-2">
+                                                            <div class="dh-ccr-scrub-label">Time on the scrubbers</div>
+                                                            <div class="dh-ccr-scrub-head">{{ $scrubber['headline'] }}</div>
+                                                            <div class="dh-ccr-scrub-detail">{{ $scrubber['detail'] }}</div>
+                                                        </div>
+                                                    @endif
+
+                                                    <div class="dh-ccr-site mt-3" id="ccrSite" data-url="{{ route('CcrChecklist.sites') }}">
+                                                        <label class="dh-gas-label" for="ccrSiteName">Dive site (optional)</label>
+                                                        <input type="text" class="form-control border" id="ccrSiteName" name="answers[scrubber_time][site_name]" maxlength="120" autocomplete="off" placeholder="Start typing a site name" data-optional="1">
+                                                        <input type="hidden" id="ccrSiteId" name="answers[scrubber_time][site_id]">
+                                                        <ul class="dh-ccr-site-list" id="ccrSiteList" hidden></ul>
+                                                        <div class="dh-ccr-edit-note" id="ccrSiteNote">Pick a site and its max depth fills in as your planned depth. Change it to the depth you plan to dive.</div>
+                                                    </div>
+
+                                                    <div class="dh-ccr-rms-label mt-3">RMS estimate (optional)</div>
+                                                    <div class="dh-ccr-hm" id="ccrRctHm">
+                                                        <span class="dh-ccr-hm-label">RCT on the handset</span>
+                                                        <input class="form-control border" type="number" inputmode="numeric" min="0" max="24" id="ccrRctH" aria-label="RCT hours" data-optional="1"><span>h</span>
+                                                        <input class="form-control border" type="number" inputmode="numeric" min="0" max="59" id="ccrRctM" aria-label="RCT minutes" data-optional="1"><span>min</span>
+                                                    </div>
+                                                @endif
                                                 <div class="row mt-2">
                                                     <div class="col-12">
                                                         <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
                                                             <div class="d-flex flex-column align-items-center">
                                                                 <div class="input-group input-group-outline dh-ccr-ig-grey" style="width: 140px;">
                                                                     <label class="form-label">{{ $rctField['label'] }}</label>
-                                                                    <input type="number" step="any" min="0" inputmode="decimal" class="form-control ccr-field-input" id="item_scrubber_time_rct" name="answers[scrubber_time][rct]" data-item-key="scrubber_time" data-field-key="rct">
+                                                                    <input type="number" step="any" min="0" inputmode="decimal" class="form-control ccr-field-input" id="item_scrubber_time_rct" name="answers[scrubber_time][rct]" data-item-key="scrubber_time" data-field-key="rct" {!! $ccrTracker ? 'data-optional="1"' : '' !!}>
                                                                 </div>
                                                                 <div style="width: 110px; border-top: 2px solid var(--dh-deep); margin: 10px 0 8px;"></div>
                                                                 <div class="input-group input-group-outline dh-ccr-ig-grey" style="width: 140px;">
                                                                     <label class="form-label">{{ $plannedDepthField['label'] }}</label>
-                                                                    <input type="number" step="any" min="0" inputmode="decimal" class="form-control ccr-field-input" id="item_scrubber_time_planned_depth" name="answers[scrubber_time][planned_depth]" data-item-key="scrubber_time" data-field-key="planned_depth">
+                                                                    <input type="number" step="any" min="0" inputmode="decimal" class="form-control ccr-field-input" id="item_scrubber_time_planned_depth" name="answers[scrubber_time][planned_depth]" data-item-key="scrubber_time" data-field-key="planned_depth" {!! $ccrTracker ? 'data-optional="1"' : '' !!}>
                                                                 </div>
                                                                 @if (!empty($plannedDepthField['suffix']))
                                                                     <div class="dh-ccr-unit-label" style="width: 140px;">{{ $plannedDepthField['suffix'] }}</div>
@@ -267,6 +295,13 @@
                                                         </div>
 
                                                         <div class="dh-ccr-alarm-msg" id="ccrScrubberResultMsg" hidden></div>
+                                                        @if ($ccrTracker)
+                                                            <div class="dh-ccr-edit-note" id="ccrResultHm" hidden></div>
+                                                            {{-- Mix flags for the planned depth. Only ever a
+                                                                 flag: there is no "good mix" state, because this
+                                                                 page does not verify anything. --}}
+                                                            <div class="dh-ccr-gasflags" id="ccrGasFlags" data-tool="{{ route('gasplanning') }}" hidden></div>
+                                                        @endif
 
                                                         {{-- Not part of the formula, so visually secondary -
                                                              smaller, below (Pablo, 2026-10-15: "the refilled
@@ -279,6 +314,11 @@
                                                                     <label class="btn btn-outline-info btn-sm" for="item_scrubber_time_refilled_{{ $opt }}">{{ $opt }}</label>
                                                                 @endforeach
                                                             </div>
+                                                            @if ($ccrTracker)
+                                                                {{-- Says what a refill will be recorded as, before it
+                                                                     is saved. A reset is never assumed silently. --}}
+                                                                <div class="dh-ccr-edit-note" id="ccrRefillNote" data-reserve="{{ ($scrubber['state'] ?? '') === 'reserve' ? 1 : 0 }}" hidden></div>
+                                                            @endif
                                                         </div>
                                                     </div>
                                                 </div>

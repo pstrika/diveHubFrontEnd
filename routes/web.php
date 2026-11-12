@@ -293,8 +293,11 @@ Route::delete('CcrChecklist/unit/{uuid}', 'App\Http\Controllers\CcrChecklistCont
 Route::get('CcrChecklist/Customize/{stage}', 'App\Http\Controllers\CcrChecklistController@customize')->where('stage', '[a-z]+')->middleware('auth')->name('CcrChecklist.customize');
 Route::post('CcrChecklist/Customize/{stage}', 'App\Http\Controllers\CcrChecklistController@storeCustom')->where('stage', '[a-z]+')->middleware('auth')->name('CcrChecklist.custom.store');
 Route::put('CcrChecklist/custom/{uuid}', 'App\Http\Controllers\CcrChecklistController@updateCustom')->middleware('auth')->name('CcrChecklist.custom.update');
-Route::post('CcrChecklist/custom/{uuid}/move', 'App\Http\Controllers\CcrChecklistController@moveCustom')->middleware('auth')->name('CcrChecklist.custom.move');
+Route::post('CcrChecklist/Customize/{stage}/layout', 'App\Http\Controllers\CcrChecklistController@layoutAction')->where('stage', '[a-z]+')->middleware('auth')->name('CcrChecklist.layout');
 Route::delete('CcrChecklist/custom/{uuid}', 'App\Http\Controllers\CcrChecklistController@destroyCustom')->middleware('auth')->name('CcrChecklist.custom.destroy');
+Route::post('CcrChecklist/scrubber', 'App\Http\Controllers\CcrChecklistController@scrubberAction')->middleware('auth')->name('CcrChecklist.scrubber');
+Route::delete('CcrChecklist/scrubber/{id}', 'App\Http\Controllers\CcrChecklistController@removeScrubberEvent')->where('id', '[0-9]+')->middleware('auth')->name('CcrChecklist.scrubber.remove');
+Route::get('CcrChecklist/sites', 'App\Http\Controllers\CcrChecklistController@sites')->middleware('auth')->name('CcrChecklist.sites');
 Route::post('CcrChecklist', 'App\Http\Controllers\CcrChecklistController@store')->middleware('auth')->name('CcrChecklist.store');
 Route::get('CcrChecklist/{id}', 'App\Http\Controllers\CcrChecklistController@show')->where('id', '[0-9]+')->middleware('auth')->name('CcrChecklist.show');
 Route::get('CcrChecklist/{id}/pdf', 'App\Http\Controllers\CcrChecklistController@pdf')->where('id', '[0-9]+')->middleware('auth')->name('CcrChecklist.pdf');

@@ -77,7 +77,7 @@
         if ($item['key'] === 'scrubber_time') {
             $resultLabel = isset($answer['result_minutes'])
                 ? $answer['result_minutes'] . ' min'
-                : (!empty($answer['checked']) ? 'Max Fresh' : '-');
+                : (!empty($answer['checked']) && $session->template_version === 'v1.5' ? 'Max Fresh' : '-');
             $stale = isset($answer['result_minutes']) && !empty($answer['refilled']);
             $parts[] = 'Result: ' . $resultLabel . ($stale ? ' (stale)' : '');
         }
@@ -138,8 +138,8 @@
     <table class="items">
         @php $pdfPrevGroup = null; @endphp
         @foreach ($template['items'] as $item)
-            @if (($item['group'] ?? null) !== $pdfPrevGroup)
-                @php $pdfPrevGroup = $item['group'] ?? null; @endphp
+            @if ((array_key_exists('section', $item) ? $item['section'] : ($item['group'] ?? null)) !== $pdfPrevGroup)
+                @php $pdfPrevGroup = (array_key_exists('section', $item) ? $item['section'] : ($item['group'] ?? null)); @endphp
                 @if ($pdfPrevGroup)
                     <tr class="group-row"><td colspan="4">{{ $pdfPrevGroup }}</td></tr>
                 @endif
@@ -173,7 +173,7 @@
             {{-- Zach, 2026-11-10: the same line that sits on the form, on
                  every printed copy too. --}}
             <td style="vertical-align: bottom; text-align: right; font-size: 7pt; color: #555; line-height: 1.4;">
-                {{ $disclaimerStrip ?? '' }}
+                {{ $disclaimerStrip ?? '' }}@if (!empty($template['reordered'])) Order or headings changed by the diver; built in steps keep their original numbers.@endif
                 @if ($session->disclaimer_accepted_at)
                     <br>Warning acknowledged {{ $session->disclaimer_accepted_at->format('M j, Y g:i A') }} (wording {{ $session->disclaimer_version }}).
                 @endif

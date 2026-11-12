@@ -496,3 +496,27 @@ Each phase is usable on its own. Phase 1 already replaces the prototype.
    settled, rEvo stays in early access and no second unit's official text
    goes in.
 8. **Confirm "GBM".** Most likely the Scubatron GBM chest mount unit.
+
+## Added 2026-11-11: the diver's own order and headings
+
+A diver can put any checklist in their own order and under their own headings
+(customise page). Built in steps can be moved but not removed or reworded, and
+keep their original number. The order lives in `ccr_layouts` (one row per
+rebreather and stage, a single ordered list of step and heading rows) and a
+copy is kept on each saved session (`ccr_checklist_sessions.layout`), so a
+saved checklist never changes. `App\Support\CcrChecklistBuilder::normalize`
+guarantees every step is on the checklist exactly once whatever a layout
+holds. A checklist whose built in steps or headings differ from the standard
+says so on the form, the saved page and the PDF. "Reset to standard order"
+removes the layout and keeps the diver's own steps where they were.
+Migration: `2026_11_12_000000_add_layouts_to_ccr_checklists.php`.
+
+## Added 2026-11-11: scrubber time, build check v1.6
+
+- Time on the scrubbers is tracked per rebreather (`App\Support\CcrScrubber`). One clock for the stack: the top canister's allowance is used first, then the reserve. A rotate or a repack sets it back to zero. A rotate is not counted once the reserve has been used.
+- It is read from saved checklists (post-dive dive time, build "Refilled #": one = rotate, both = repack) plus entries made by hand on the hub (`ccr_scrubber_events`). Nothing is copied, so there is no second record to drift.
+- No data is shown as unknown, never as a full canister.
+- Limits live on the rebreather (`settings.scrubber`). A rEvo defaults to 3:00 top and 1:30 reserve. Other units have none until the diver sets them.
+- Build check v1.6 is v1.5 with step 10 changed: RMS estimate optional, RCT entered as hours and minutes, a dive site picker that fills planned depth, and gas flags that link to Best gases. Answer keys are unchanged. v1.5 records render as they were saved.
+- Gas flags use the fixed bands from the Best gases tool. Diluent PPO2 at depth: caution above 1.0, danger above 1.10 or below 0.18. Bail-out PPO2: caution above 1.41, danger above 1.59 or below 0.16. Bail-out density: caution above 5.2 g/L, danger above 6.2. Deco gas and END are not checked.
+- Decided against: carrying post-dive pressures into the next build. The point of the step is to look at the gauge.

@@ -139,11 +139,11 @@
                                                     </span>
                                                     @if ($unit)
                                                         <a class="dh-ccr-stage-custom" href="{{ route('CcrChecklist.customize', $ccrArgs) }}">
-                                                            <span class="material-icons-round" aria-hidden="true">playlist_add</span>
+                                                            <span class="material-icons-round" aria-hidden="true">tune</span>
                                                             @if ($st['customCount'])
-                                                                {{ $st['customCount'] }} of your own
+                                                                Customize · {{ $st['customCount'] }} of your own
                                                             @else
-                                                                Add your own steps
+                                                                Customize
                                                             @endif
                                                         </a>
                                                     @endif
@@ -194,6 +194,87 @@
                         </div>
                     </div>
                     </div>
+
+                    {{-- Time on the scrubbers (Zach, 2026-11-11). For every
+                         rebreather. A number for "time left" only shows when
+                         it is known: limits set, a repack or rotate recorded,
+                         and dive time recorded since. See App\Support\CcrScrubber. --}}
+                    @if ($unit && $scrubberStatus)
+                        @php $sc = $scrubberStatus; @endphp
+                        <div class="card p-0 position-relative mt-3 z-index-2" id="scrubber">
+                            <div class="dh-calc-inputs-head">
+                                <span class="material-icons-round" aria-hidden="true">hourglass_bottom</span>
+                                <h3>Scrubber time</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="dh-ccr-scrub is-{{ $sc['tone'] }}">
+                                    <div class="dh-ccr-scrub-head">{{ $sc['headline'] }}</div>
+                                    @if ($sc['pct'] !== null)
+                                        <div class="dh-ccr-scrub-bar" role="img" aria-label="{{ $sc['pct'] }} percent of the top canister left"><span style="width: {{ $sc['pct'] }}%"></span></div>
+                                    @endif
+                                    <div class="dh-ccr-scrub-detail">{{ $sc['detail'] }}</div>
+                                </div>
+
+                                @if ($errors->has('scrubber'))
+                                    <div class="dh-ccr-form-error mt-2">{{ $errors->first('scrubber') }}</div>
+                                @endif
+
+                                <div class="dh-ccr-manage dh-ccr-scrub-actions">
+                                    @foreach ([
+                                        'add' => ['add', 'Add dive time', 'Add', 'For a dive with no post-dive check. A post-dive check adds its own dive time.'],
+                                        'rotate' => ['sync', 'Rotated', 'Record a rotate', 'One fresh canister. Time on the scrubbers goes back to 0:00. Not counted if the reserve has been used.'],
+                                        'repack' => ['restart_alt', 'Repacked both', 'Record a repack', 'Both canisters fresh. Time on the scrubbers goes back to 0:00.'],
+                                        'adjust' => ['edit', 'Set time used', 'Set', 'The total time on your scrubbers right now. Use this to start, or to correct the count.'],
+                                    ] as $ccrDo => [$ccrIcon, $ccrLabel, $ccrButton, $ccrHelp])
+                                        <details class="dh-ccr-unit-details">
+                                            <summary><span class="material-icons-round" aria-hidden="true">{{ $ccrIcon }}</span>{{ $ccrLabel }}</summary>
+                                            <div class="dh-ccr-manage-panel">
+                                                <form method="POST" action="{{ route('CcrChecklist.scrubber') }}" class="dh-ccr-scrub-form">
+                                                    @csrf
+                                                    <input type="hidden" name="unit" value="{{ $unit->uuid }}">
+                                                    <input type="hidden" name="do" value="{{ $ccrDo }}">
+                                                    <p class="dh-ccr-edit-note">{{ $ccrHelp }}</p>
+                                                    @if (in_array($ccrDo, ['add', 'adjust']))
+                                                        <div class="dh-ccr-hm">
+                                                            <input class="form-control border" type="number" inputmode="numeric" min="0" max="99" name="hours" placeholder="0" aria-label="Hours"><span>h</span>
+                                                            <input class="form-control border" type="number" inputmode="numeric" min="0" max="999" name="minutes" placeholder="0" aria-label="Minutes"><span>min</span>
+                                                        </div>
+                                                    @endif
+                                                    <button type="submit" class="btn btn-info btn-sm mb-0">{{ $ccrButton }}</button>
+                                                </form>
+                                            </div>
+                                        </details>
+                                    @endforeach
+                                </div>
+
+                                @if ($sc['history'])
+                                    <div class="dh-ccr-day">Latest entries</div>
+                                    <ul class="dh-ccr-scrub-log">
+                                        @foreach ($sc['history'] as $h)
+                                            <li>
+                                                <span class="dh-ccr-scrub-log-what">{{ $h['label'] }}</span>
+                                                <span class="dh-ccr-scrub-log-when">{{ $h['at']->format('M j, g:i A') }} ·
+                                                    @if ($h['session'])
+                                                        <a href="{{ route('CcrChecklist.show', $h['session']) }}">{{ $h['source'] }}</a>
+                                                    @else
+                                                        {{ $h['source'] }}
+                                                    @endif
+                                                </span>
+                                                @if ($h['event'])
+                                                    <form method="POST" action="{{ route('CcrChecklist.scrubber.remove', $h['event']) }}" onsubmit="return confirm('Remove this entry?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="dh-icon-btn" title="Remove this entry" aria-label="Remove this entry"><span class="material-icons-round" aria-hidden="true">close</span></button>
+                                                    </form>
+                                                @endif
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                                <p class="dh-ccr-stage-foot">A count of recorded dive time, not a measurement of your sorb. It only knows the dives you record here.</p>
+                            </div>
+                        </div>
+                    @endif
 
                     @if ($sessions->isNotEmpty())
                         <div class="card p-0 position-relative mt-3 z-index-2 mb-4">
@@ -299,7 +380,7 @@
                                                     // not the same as a fresh canister (Pablo, 2026-10-17).
                                                     $scrubberResultLabel = isset($scrubber['result_minutes'])
                                                         ? $scrubber['result_minutes'] . ' mins'
-                                                        : (!empty($scrubber['checked']) ? 'Max Fresh' : '—');
+                                                        : (!empty($scrubber['checked']) && $session->template_version === 'v1.5' ? 'Max Fresh' : '—');
                                                 @endphp
                                                 <tr>
                                                     <td>
