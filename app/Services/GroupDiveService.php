@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Http\Controllers\GroupFacebookController;
 use App\Models\Group;
 use App\Models\GroupDive;
+use App\Models\Message;
 use App\Models\Photo;
 use App\Models\Trip;
 use Carbon\Carbon;
@@ -23,7 +24,14 @@ use Illuminate\Support\Facades\Log;
  */
 class GroupDiveService
 {
-    public function createFromTrip(Group $group, Trip $trip, ?int $createdBy, ?string $notes = null): GroupDive
+    /**
+     * $notify false is for ApplyGroupAutoAddRules only: it adds dives in
+     * bulk and sends one notifyNewDives() per group when it is done, in
+     * place of one notification and one push per dive per member (Zach,
+     * 2026-11-12: a rule that matched 143 trips sent 143 of each). The
+     * Facebook post still goes out per dive either way.
+     */
+    public function createFromTrip(Group $group, Trip $trip, ?int $createdBy, ?string $notes = null, bool $notify = true): GroupDive
     {
         $dive = GroupDive::create([
             'group_id' => $group->id,
@@ -37,7 +45,9 @@ class GroupDiveService
         ]);
 
         $this->postDiveToFacebook($group, $dive);
-        $this->notifyNewDive($group, $dive, $createdBy);
+        if ($notify) {
+            $this->notifyNewDive($group, $dive, $createdBy);
+        }
 
         return $dive;
     }
@@ -134,7 +144,48 @@ class GroupDiveService
             route('Groups.show', ['group' => $group->slug]),
             $actorId,
             $actorId,
-            $group->id
+            $group->id,
+            kind: Message::KIND_DIVES
+        );
+    }
+
+    /**
+     * One notification and one push for a batch of auto-added dives. A
+     * batch of one reads exactly like a dive added by hand.
+     *
+     * @param iterable<GroupDive> $dives
+     */
+    public function notifyNewDives(Group $group, iterable $dives): void
+    {
+        $dives = collect($dives)->sortBy('date')->values();
+        if ($dives->isEmpty()) {
+            return;
+        }
+        if ($dives->count() === 1) {
+            $this->notifyNewDive($group, $dives->first(), null);
+            return;
+        }
+
+        $first = Carbon::parse($dives->first()->date);
+        $last = Carbon::parse($dives->last()->date);
+        $range = $first->isSameDay($last)
+            ? 'on ' . $first->format('D, M j')
+            : 'from ' . $first->format('M j') . ' to ' . $last->format('M j');
+
+        // The first few by name so the notice says something about what
+        // was added, then a count for the rest.
+        $names = $dives->pluck('tripName')->map(fn ($n) => trim((string) $n))->filter()->unique()->values();
+        $shown = $names->take(3)->implode(', ');
+        $more = $names->count() - min(3, $names->count());
+
+        NotificationService::notify(
+            $group->activeMembers()->pluck('user_id'),
+            $group->name,
+            $dives->count() . ' new dives added ' . $range
+                . ($shown !== '' ? ': ' . $shown . ($more > 0 ? ' and ' . $more . ' more' : '') : ''),
+            route('Groups.show', ['group' => $group->slug]),
+            groupId: $group->id,
+            kind: Message::KIND_DIVES
         );
     }
 }

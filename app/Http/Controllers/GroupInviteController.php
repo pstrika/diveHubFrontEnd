@@ -151,6 +151,7 @@ class GroupInviteController extends Controller
     public function decline($memberId)
     {
         $member = GroupMember::where('user_id', auth()->user()->id)->findOrFail($memberId);
+        \App\Models\Message::clearGroup((int) $member->group_id, auth()->user()->id);
         $member->delete();
 
         return redirect()->route('MyGroups')->with('msg', 'Invite declined.');
@@ -175,7 +176,8 @@ class GroupInviteController extends Controller
             route('MyGroups'),
             null,
             auth()->user()->id,
-            $group->id
+            $group->id,
+            kind: \App\Models\Message::KIND_INVITE
         );
     }
 

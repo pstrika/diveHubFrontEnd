@@ -7,31 +7,42 @@
 
         <div class="container-fluid py-0 dh-board">
             <section class="dh-panel">
-                @php
-                    $unreadInbox = $messages->where('read', false)->count();
-                    $unreadGroups = $groupMessages->where('read', false)->count();
-                @endphp
+                {{-- Every number here is the real total from Message::countsFor(),
+                     not a count of the rows this page loaded (Zach, 2026-11-12:
+                     the Groups tab said 200 while the nav badge said 260). --}}
                 <div class="dh-msg-toolbar">
                     <div class="dh-msg-tabs">
                         <button type="button" class="dh-msg-tab is-active" id="dh-msg-tab-inbox" onclick="dhSwitchFolder('inbox')">
                             <span class="material-icons-round" style="font-size:16px" aria-hidden="true">inbox</span>
                             Inbox
-                            <span class="dh-msg-tab-count" @if(!$unreadInbox) hidden @endif>{{ $unreadInbox }}</span>
+                            <span class="dh-msg-tab-count" @if(!$counts['inbox']) hidden @endif>{{ $counts['inbox'] }}</span>
                         </button>
                         <button type="button" class="dh-msg-tab" id="dh-msg-tab-groups" onclick="dhSwitchFolder('groups')">
                             <span class="material-icons-round" style="font-size:16px" aria-hidden="true">groups</span>
                             Groups
-                            <span class="dh-msg-tab-count" @if(!$unreadGroups) hidden @endif>{{ $unreadGroups }}</span>
+                            <span class="dh-msg-tab-count" @if(!$counts['groups']) hidden @endif>{{ $counts['groups'] }}</span>
                         </button>
+                        @if($showAdmin)
+                        <button type="button" class="dh-msg-tab" id="dh-msg-tab-admin" onclick="dhSwitchFolder('admin')">
+                            <span class="material-icons-round" style="font-size:16px" aria-hidden="true">shield</span>
+                            Admin
+                            <span class="dh-msg-tab-count" @if(!$counts['admin']) hidden @endif>{{ $counts['admin'] }}</span>
+                        </button>
+                        @endif
                         <button type="button" class="dh-msg-tab" id="dh-msg-tab-bin" onclick="dhSwitchFolder('bin')">
                             <span class="material-icons-round" style="font-size:16px" aria-hidden="true">delete_outline</span>
                             Bin
-                            <span class="dh-msg-tab-count" @if(!$trashed->count()) hidden @endif>{{ $trashed->count() }}</span>
+                            <span class="dh-msg-tab-count" @if(!$counts['bin']) hidden @endif>{{ $counts['bin'] }}</span>
                         </button>
                     </div>
                     <div class="dh-msg-toolbar-actions">
                         <input type="checkbox" class="dh-msg-select-all" id="dh-msg-select-all" title="Select all" aria-label="Select all notifications" onclick="dhToggleSelectAll(this)">
                         <span class="dh-msg-bulk-count" id="dh-msg-bulk-count" hidden></span>
+                        {{-- Clears the whole folder, including anything past the
+                             rows loaded here. Hidden when there is nothing unread. --}}
+                        <button type="button" class="dh-btn dh-btn-ghost-dark" id="dh-msg-mark-all" @if(!$counts['inbox']) hidden @endif onclick="dhMarkAllRead(dhFolder)">
+                            <span class="material-icons-round" aria-hidden="true">done_all</span> Mark all read
+                        </button>
                         <button type="button" class="dh-btn dh-btn-ghost-dark" id="dh-msg-bulk-delete" hidden onclick="dhBulkAction('delete')">
                             <span class="material-icons-round" aria-hidden="true">delete</span> Delete
                         </button>
@@ -62,17 +73,67 @@
                                     <p>No notifications yet.</p>
                                 </div>
                             @endforelse
+                            @if($totals['inbox'] > $pageSize)
+                                <p class="dh-msg-capnote">Showing the newest {{ $pageSize }} of {{ number_format($totals['inbox']) }}. Mark all read covers all of them.</p>
+                            @endif
                         </div>
+                        {{-- One block per group, newest activity first, so it is
+                             clear which group each notification is about and one
+                             group can be cleared without touching the others. --}}
                         <div class="dh-msg-list" id="dh-msg-list-groups" data-folder="groups" hidden>
-                            @forelse($groupMessages as $message)
-                                @include('pages.messages._row')
+                            @forelse($groupSections as $section)
+                                @php $g = $section['group']; @endphp
+                                <div class="dh-msg-group" data-msg-group="{{ $section['id'] }}">
+                                    <div class="dh-msg-group-head">
+                                        <span class="dh-msg-group-avatar">
+                                            @if($g && $g->avatar)
+                                                <img src="{{ asset('assets/' . $g->avatar) }}" alt="">
+                                            @else
+                                                <span class="material-icons-round" aria-hidden="true">groups</span>
+                                            @endif
+                                        </span>
+                                        <span class="dh-msg-group-name">{{ $g->name ?? ($section['rows']->first()->subject ?: 'A group you are no longer in') }}</span>
+                                        <span class="dh-msg-group-count" data-msg-group-count @if(!$section['unread']) hidden @endif>{{ $section['unread'] }} new</span>
+                                        <span class="dh-msg-group-actions">
+                                            <button type="button" class="dh-msg-group-btn" data-msg-group-mark @if(!$section['unread']) hidden @endif onclick="dhMarkAllRead('group', {{ $section['id'] }})">Mark read</button>
+                                            @if($g && $section['member'])
+                                                <a class="dh-msg-group-btn" href="{{ route('Groups.show', ['group' => $g->slug]) }}">Open group</a>
+                                            @else
+                                                <a class="dh-msg-group-btn" href="{{ route('MyGroups') }}">My groups</a>
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <div class="dh-msg-group-rows">
+                                        @foreach($section['rows'] as $message)
+                                            @include('pages.messages._row')
+                                        @endforeach
+                                    </div>
+                                </div>
                             @empty
                                 <div class="dh-empty">
                                     <span class="material-icons-round" aria-hidden="true">groups</span>
                                     <p>No group notifications yet.</p>
                                 </div>
                             @endforelse
+                            @if($totals['groups'] > $pageSize)
+                                <p class="dh-msg-capnote">Showing the newest {{ $pageSize }} of {{ number_format($totals['groups']) }}. Mark all read covers all of them.</p>
+                            @endif
                         </div>
+                        @if($showAdmin)
+                        <div class="dh-msg-list" id="dh-msg-list-admin" data-folder="admin" hidden>
+                            @forelse($adminMessages as $message)
+                                @include('pages.messages._row')
+                            @empty
+                                <div class="dh-empty">
+                                    <span class="material-icons-round" aria-hidden="true">shield</span>
+                                    <p>Nothing waiting for an admin.</p>
+                                </div>
+                            @endforelse
+                            @if($totals['admin'] > $pageSize)
+                                <p class="dh-msg-capnote">Showing the newest {{ $pageSize }} of {{ number_format($totals['admin']) }}. Mark all read covers all of them.</p>
+                            @endif
+                        </div>
+                        @endif
                         <div class="dh-msg-list" id="dh-msg-list-bin" data-folder="bin" hidden>
                             @forelse($trashed as $message)
                                 @include('pages.messages._row')
@@ -116,11 +177,11 @@
     <script>
         // One lookup, keyed by id, seeded from all three lists - the reading pane
         // and every bulk/single action work off this instead of re-parsing the DOM.
-        // `category` (inbox/groups) is fixed - it's what group_id says server side
+        // `category` (inbox/groups/admin) is fixed - it's what group_id says server side
         // and never changes; `inBin` is the only thing an action toggles, and
         // restoring always returns a message to its own category, not always Inbox.
         var dhMessages = {};
-        @foreach(['inbox' => $messages, 'groups' => $groupMessages, 'bin' => $trashed] as $__cat => $__list)
+        @foreach(['inbox' => $messages, 'groups' => $groupMessages, 'admin' => $adminMessages, 'bin' => $trashed] as $__cat => $__list)
             @foreach($__list as $message)
                 dhMessages[{{ $message->id }}] = {
                     id: {{ $message->id }},
@@ -131,7 +192,12 @@
                     fromAvatar: @json(($message->fromUser->picture ?? null) && \App\Support\UserAvatar::exists($message->fromUser->picture) ? \App\Support\UserAvatar::url($message->fromUser->picture) : null),
                     isSystem: {{ $message->from_user_id ? 'false' : 'true' }},
                     createdAt: @json($message->created_at->toIso8601String()),
-                    category: '{{ $message->group_id ? "groups" : "inbox" }}',
+                    category: '{{ $message->folder() }}',
+                    groupId: {{ $message->group_id ? (int) $message->group_id : 'null' }},
+                    kind: @json($message->kind),
+                    {{-- Where it goes. Rows written before the link was saved
+                         fall back to the group's page when they have a group. --}}
+                    url: @json($message->url ?: (($message->group_id && $groups->get($message->group_id)) ? route('Groups.show', ['group' => $groups->get($message->group_id)->slug]) : null)),
                     inBin: {{ $__cat === 'bin' ? 'true' : 'false' }}
                 };
             @endforeach
@@ -141,8 +207,11 @@
         var dhCsrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         var dhFolder = 'inbox';
         var dhOpenId = null;
-        var dhListEl = { inbox: 'dh-msg-list-inbox', groups: 'dh-msg-list-groups', bin: 'dh-msg-list-bin' };
-        var dhTabEl = { inbox: 'dh-msg-tab-inbox', groups: 'dh-msg-tab-groups', bin: 'dh-msg-tab-bin' };
+        var dhListEl = { inbox: 'dh-msg-list-inbox', groups: 'dh-msg-list-groups', admin: 'dh-msg-list-admin', bin: 'dh-msg-list-bin' };
+        var dhTabEl = { inbox: 'dh-msg-tab-inbox', groups: 'dh-msg-tab-groups', admin: 'dh-msg-tab-admin', bin: 'dh-msg-tab-bin' };
+        // The real totals, straight from the server. Redrawn from the server
+        // again after every action (dhRefreshTabCounts), never nudged here.
+        var dhCounts = @json($counts);
 
         function dhPost(url, ids) {
             return fetch(url, {
@@ -159,8 +228,9 @@
 
         function dhSwitchFolder(folder) {
             dhFolder = folder;
-            Object.keys(dhTabEl).forEach(function (f) { document.getElementById(dhTabEl[f]).classList.toggle('is-active', f === folder); });
-            Object.keys(dhListEl).forEach(function (f) { document.getElementById(dhListEl[f]).hidden = f !== folder; });
+            Object.keys(dhTabEl).forEach(function (f) { var el = document.getElementById(dhTabEl[f]); if (el) el.classList.toggle('is-active', f === folder); });
+            Object.keys(dhListEl).forEach(function (f) { var el = document.getElementById(dhListEl[f]); if (el) el.hidden = f !== folder; });
+            dhApplyCounts(dhCounts);
             document.getElementById('dh-msg-select-all').checked = false;
             dhCloseReading();
             dhOnCheckToggle();
@@ -213,27 +283,77 @@
             document.getElementById('dh-msg-bulk-destroy').hidden = !(count > 0 && dhFolder === 'bin');
         }
 
-        // Re-derives every tab's badge from the DOM (unread count for Inbox/
-        // Groups, total items for the Bin) after any action that could have
-        // changed one, rather than nudging a running number per code path -
-        // the bug report ("counters don't update, I need to refresh") was
-        // exactly that: several of those code paths never touched the badge
-        // at all. Re-deriving from what's actually on screen can't drift.
+        // Asks the server for the real numbers after any action that could
+        // have changed one. The page used to count its own rows, which was
+        // wrong as soon as a folder held more than it had loaded.
         function dhRefreshTabCounts() {
-            ['inbox', 'groups'].forEach(function (folder) {
-                var n = document.getElementById(dhListEl[folder]).querySelectorAll('.dh-msg-row.is-unread').length;
-                dhSetTabCount(folder, n);
+            fetch('{{ route("messages.counts") }}', { headers: { 'Accept': 'application/json' } })
+                .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+                .then(dhApplyCounts)
+                .catch(function () {});
+        }
+
+        function dhApplyCounts(c) {
+            dhCounts = c;
+            ['inbox', 'groups', 'admin', 'bin'].forEach(function (folder) { dhSetTabCount(folder, c[folder] || 0); });
+
+            // Each group's own count and its "Mark read" button.
+            document.querySelectorAll('[data-msg-group]').forEach(function (block) {
+                var n = (c.byGroup || {})[block.getAttribute('data-msg-group')] || 0;
+                var count = block.querySelector('[data-msg-group-count]');
+                var mark = block.querySelector('[data-msg-group-mark]');
+                if (count) { count.textContent = n + ' new'; count.hidden = n === 0; }
+                if (mark) mark.hidden = n === 0;
+                block.hidden = block.querySelectorAll('.dh-msg-row').length === 0;
             });
-            var binTotal = document.getElementById(dhListEl.bin).querySelectorAll('.dh-msg-row').length;
-            dhSetTabCount('bin', binTotal);
+
+            var markAll = document.getElementById('dh-msg-mark-all');
+            if (markAll) markAll.hidden = dhFolder === 'bin' || !(c[dhFolder] > 0);
+
+            // The badges in the nav are drawn by the server on page load;
+            // keep them in step so they do not lie until the next page.
+            var personal = (c.inbox || 0) + (c.groups || 0);
+            var bell = document.querySelector('.dh-bell-badge');
+            if (bell) {
+                if (personal > 0) { bell.classList.remove('is-dot'); bell.textContent = personal > 99 ? '99+' : personal; }
+                else if ((c.admin || 0) > 0) { bell.classList.add('is-dot'); bell.textContent = ''; }
+                else bell.remove();
+            }
+            document.querySelectorAll('.dh-tab-badge').forEach(function (b) {
+                if ((c.groups || 0) > 0) b.textContent = c.groups > 99 ? '99+' : c.groups; else b.remove();
+            });
         }
 
         function dhSetTabCount(folder, n) {
             var tab = document.getElementById(dhTabEl[folder]);
+            if (!tab) return;
             var countEl = tab.querySelector('.dh-msg-tab-count');
             if (!countEl) return;
             countEl.textContent = n;
             countEl.hidden = n === 0;
+        }
+
+        // scope: a folder name, or 'group' with that group's id.
+        function dhMarkAllRead(scope, groupId) {
+            var body = '_token=' + encodeURIComponent(dhCsrf) + '&scope=' + encodeURIComponent(scope) + (groupId ? '&group_id=' + encodeURIComponent(groupId) : '');
+            fetch('{{ route("messages.markAllRead") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+                body: body
+            }).then(function (r) { return r.ok ? r.json() : Promise.reject(); }).then(function (res) {
+                Object.keys(dhMessages).forEach(function (id) {
+                    var m = dhMessages[id];
+                    if (m.inBin || m.read) return;
+                    var hit = scope === 'group' ? (m.category === 'groups' && m.groupId == groupId) : m.category === scope;
+                    if (!hit) return;
+                    m.read = true;
+                    var row = document.getElementById('message-row-' + id);
+                    if (row) row.classList.remove('is-unread');
+                    var dot = document.getElementById('dot-' + id);
+                    if (dot) dot.remove();
+                });
+                dhApplyCounts(res.counts);
+            }).catch(function () { alert('Something went wrong - please try again.'); });
         }
 
         function dhBulkAction(action) {
@@ -267,7 +387,13 @@
                 dhAppendRow(document.getElementById(dhListEl.bin), id);
             } else if (action === 'restore') {
                 m.inBin = false;
-                dhAppendRow(document.getElementById(dhListEl[m.category]), id);
+                // A group notification goes back under its own group. If that
+                // group's block is not on the page, a reload redraws it.
+                var home = m.category === 'groups'
+                    ? document.querySelector('[data-msg-group="' + m.groupId + '"] .dh-msg-group-rows')
+                    : document.getElementById(dhListEl[m.category]);
+                if (!home) { location.reload(); return; }
+                dhAppendRow(home, id);
             } else {
                 delete dhMessages[id];
             }
@@ -318,13 +444,12 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
                     body: '_token=' + encodeURIComponent(dhCsrf) + '&noteId=' + encodeURIComponent(id)
-                });
+                }).then(dhRefreshTabCounts, dhRefreshTabCounts);
                 if (row) {
                     row.classList.remove('is-unread');
                     var dot = document.getElementById('dot-' + id);
                     if (dot) dot.remove();
                 }
-                dhRefreshTabCounts();
             }
 
             var avatarEl = document.getElementById('dh-msg-reading-avatar');
@@ -336,6 +461,14 @@
 
             var actions = document.getElementById('dh-msg-reading-actions');
             actions.innerHTML = '';
+            // Take me to what this is about: one of our own paths, or http(s).
+            if (m.url && /^(\/(?!\/)|https?:\/\/)/.test(m.url) && !m.inBin) {
+                var go = document.createElement('a');
+                go.className = 'dh-btn dh-btn-primary';
+                go.href = m.url;
+                go.innerHTML = '<span class="material-icons-round" aria-hidden="true">open_in_new</span> ' + (m.groupId ? 'Open group' : 'Open');
+                actions.appendChild(go);
+            }
             actions.appendChild(dhActionButton(m.inBin ? 'restore_from_trash' : 'delete',
                 m.inBin ? 'Restore' : 'Delete',
                 function () { dhSingleAction(id, m.inBin ? 'restore' : 'delete'); }));

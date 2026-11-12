@@ -27,11 +27,17 @@ class NotificationService
      *   @-mentioned in the message this notification is about (Pablo,
      *   2026-09-14: "general group [notifications] go to Groups... a
      *   message sent to a user using @name... put it in the inbox").
-     *   Their own copy of this notification gets group_id = null (Inbox)
-     *   even though $groupId is set for everyone else's copy - a direct
-     *   ping reads as personal, not general group chatter.
+     *   Their own copy of this notification is marked kind = mention,
+     *   which puts it in the Inbox even though everyone else's copy goes
+     *   to Groups - a direct ping reads as personal, not general group
+     *   chatter. It keeps the group_id (Zach, 2026-11-12) so My Groups can
+     *   show which group named you and opening that group clears it.
+     * @param string|null $kind One of the Message::KIND_* values. Decides
+     *   the folder together with $groupId (Message::folder()). Pass
+     *   Message::KIND_ADMIN for anything sent to every admin, so it lands
+     *   in the Admin folder and stays out of the bell's number.
      */
-    public static function notify(iterable $userIds, string $subject, string $body, ?string $url = null, ?int $excludeUserId = null, ?int $fromUserId = null, ?int $groupId = null, iterable $mentionedUserIds = []): void
+    public static function notify(iterable $userIds, string $subject, string $body, ?string $url = null, ?int $excludeUserId = null, ?int $fromUserId = null, ?int $groupId = null, iterable $mentionedUserIds = [], ?string $kind = null): void
     {
         $userIds = collect($userIds)->filter(fn ($id) => $id != $excludeUserId)->unique()->values();
 
@@ -45,14 +51,30 @@ class NotificationService
 
         $mentioned = collect($mentionedUserIds)->map(fn ($id) => (int) $id)->all();
 
+        // Saved as a path ("/Groups/lobster-hunters"), not with the host it
+        // was built on. The same row is opened later from whatever host the
+        // diver is on, and a link written by a cron hit or the CLI carries
+        // that caller's host, where the diver is not signed in. The push
+        // below keeps the full address, which it needs.
+        $savedUrl = null;
+        if ($url) {
+            $root = rtrim(url('/'), '/');
+            $savedUrl = str_starts_with($url, $root . '/') ? substr($url, strlen($root)) : $url;
+            $savedUrl = mb_substr($savedUrl, 0, 500);
+        }
+
         foreach ($userIds as $userId) {
             try {
                 Message::create([
                     'userId' => $userId,
                     'from_user_id' => $fromUserId,
-                    'group_id' => in_array((int) $userId, $mentioned, true) ? null : $groupId,
+                    'group_id' => $groupId,
+                    'kind' => $groupId && in_array((int) $userId, $mentioned, true) ? Message::KIND_MENTION : $kind,
                     'subject' => $subject,
                     'body' => $body,
+                    // The link used to go to the push only, so a row on the
+                    // Messages page could not take you to what it was about.
+                    'url' => $savedUrl,
                     'read' => 0,
                     'deleted' => 0,
                 ]);

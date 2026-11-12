@@ -277,7 +277,7 @@ class BlogAdminController extends Controller
     private static function notifyAdmins(Post $post, string $subject, string $body): void
     {
         $admins = \App\Models\User::where('role_id', 1)->pluck('id');
-        \App\Services\NotificationService::notify($admins, $subject, $body, route('Blog.manage.edit', $post), auth()->id(), auth()->id());
+        \App\Services\NotificationService::notify($admins, $subject, $body, route('Blog.manage.edit', $post), auth()->id(), auth()->id(), kind: \App\Models\Message::KIND_ADMIN);
     }
 
     private function validated(Request $request, Post $post): array

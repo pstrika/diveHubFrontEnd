@@ -77,7 +77,10 @@
     }
 
     // Unread in-app notifications, for the bell icon - inbox and groups combined.
+    // Admin notices are not in the number (User::unreadNotifications()); when
+    // they are the only thing waiting the bell shows a plain dot instead.
     $unread = $isGuest ? 0 : (int) $user->unreadNotifications();
+    $unreadAdmin = ($isGuest || !$user->isAdmin()) ? 0 : (int) $user->unreadAdminNotifications();
     // The Groups tab's own badge is scoped to Groups-folder messages only,
     // not the bell's combined total (Pablo, 2026-09-17: "we want here the
     // message count for groups, not the entire unread inbox").
@@ -193,9 +196,9 @@
                 <a href="{{ route('login') }}" class="dh-btn-ghost d-none d-lg-inline-flex">Sign in</a>
             @else
                 {{-- Notification centre, just left of the avatar - where people expect it (2026-09-11). --}}
-                <a href="{{ route('Messages') }}" class="dh-bell-btn" aria-label="Messages{{ $unread > 0 ? ', ' . $unread . ' unread' : '' }}">
+                <a href="{{ route('Messages') }}" class="dh-bell-btn" aria-label="Messages{{ $unread > 0 ? ', ' . $unread . ' unread' : '' }}{{ $unreadAdmin > 0 ? ', ' . $unreadAdmin . ' for admins' : '' }}">
                     <span class="material-icons-round" aria-hidden="true">notifications</span>
-                    @if($unread > 0)<span class="dh-bell-badge">{{ $unread > 99 ? '99+' : $unread }}</span>@endif
+                    @if($unread > 0)<span class="dh-bell-badge">{{ $unread > 99 ? '99+' : $unread }}</span>@elseif($unreadAdmin > 0)<span class="dh-bell-badge is-dot"></span>@endif
                 </a>
             @endif
 

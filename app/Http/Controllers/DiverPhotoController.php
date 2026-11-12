@@ -82,7 +82,8 @@ class DiverPhotoController extends Controller
             $adminIds,
             'New diver picture pending review',
             "A diver uploaded a picture of {$site->name}.",
-            route('DiverPhotos.manage.index')
+            route('DiverPhotos.manage.index'),
+            kind: \App\Models\Message::KIND_ADMIN
         );
     }
 }

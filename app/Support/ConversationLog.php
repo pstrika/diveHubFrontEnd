@@ -51,7 +51,8 @@ final class ConversationLog
             $adminIds,
             'New ' . $channel . ' message',
             $contact . ': ' . Str::limit((string) $body, 100),
-            route('admin.messages.index')
+            route('admin.messages.index'),
+            kind: \App\Models\Message::KIND_ADMIN
         );
     }
 

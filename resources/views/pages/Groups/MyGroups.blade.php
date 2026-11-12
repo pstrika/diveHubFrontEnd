@@ -19,7 +19,7 @@
                     <ul class="dh-invite-list">
                         @foreach($invites as $invite)
                             <li class="dh-invite-row">
-                                <b>{{ $invite->group->name }}</b>
+                                <b>{{ $invite->group->name }}@if(($unreadByGroup[$invite->group_id] ?? 0) > 0) <span class="dh-group-unread" aria-label="{{ $unreadByGroup[$invite->group_id] }} unread">{{ $unreadByGroup[$invite->group_id] }}</span>@endif</b>
                                 <div class="dh-invite-actions">
                                     <form method="POST" action="{{ route('Groups.invites.accept', ['member' => $invite->id]) }}">
                                         @csrf
@@ -50,6 +50,10 @@
                             @php
                                 $groupMembers = $group->activeMembers->take(8);
                                 $groupMemberCount = $group->activeMembers->count();
+                                // What the badge on the Groups tab is made of, per
+                                // group (Zach, 2026-11-12). Opening the group clears it.
+                                $groupUnread = $unreadByGroup[$group->id] ?? 0;
+                                $groupMentions = $mentionsByGroup[$group->id] ?? 0;
                             @endphp
                             <li>
                                 <a href="{{ route('Groups.show', ['group' => $group->slug]) }}" class="dh-group-row">
@@ -73,10 +77,16 @@
                                             <span style="flex: 0 0 auto;">@include('pages.Groups.partials.VisibilityPill')</span>
                                         </span>
                                         <span class="dh-group-meta">{{ $groupMemberCount }} {{ Str::plural('member', $groupMemberCount) }}</span>
+                                        @if($groupMentions > 0)
+                                            <span class="dh-group-mention"><span class="material-icons-round" aria-hidden="true">alternate_email</span>{{ $groupMentions > 1 ? 'Mentioned you ' . $groupMentions . ' times' : 'Mentioned you' }}</span>
+                                        @endif
                                     </span>
                                     <span class="dh-group-avatars">
                                         @include('pages.Groups.partials.GroupAvatars', ['members' => $groupMembers, 'totalCount' => $groupMemberCount])
                                     </span>
+                                    @if($groupUnread > 0)
+                                        <span class="dh-group-unread" aria-label="{{ $groupUnread }} unread {{ Str::plural('notification', $groupUnread) }}">{{ $groupUnread > 99 ? '99+' : $groupUnread }}</span>
+                                    @endif
                                     <span class="material-icons-round dh-group-arrow" aria-hidden="true">chevron_right</span>
                                 </a>
                             </li>

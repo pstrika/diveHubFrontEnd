@@ -379,6 +379,7 @@ Route::get('BeachDiving', 'App\Http\Controllers\SiteController@showBeach')->midd
 Route::get('Messages', 'App\Http\Controllers\MessageController@show')->middleware('auth')->name('Messages');
 Route::post('mark-as-read', 'App\Http\Controllers\MessageController@markAsRead')->middleware('auth')->name('mark-as-read');;
 Route::get('messages/counts', 'App\Http\Controllers\MessageController@counts')->middleware('auth')->name('messages.counts');
+Route::post('messages/mark-all-read', 'App\Http\Controllers\MessageController@markAllRead')->middleware('auth')->name('messages.markAllRead');
 Route::post('messages/bulk-delete', 'App\Http\Controllers\MessageController@bulkDelete')->middleware('auth')->name('messages.bulkDelete');
 Route::post('messages/restore', 'App\Http\Controllers\MessageController@restore')->middleware('auth')->name('messages.restore');
 Route::post('messages/destroy', 'App\Http\Controllers\MessageController@destroyMessages')->middleware('auth')->name('messages.destroy');

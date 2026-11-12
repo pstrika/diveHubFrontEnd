@@ -109,8 +109,21 @@ class User extends Authenticatable
         return $this->hasMany(UserDiveGas::class);
     }
 
+    /**
+     * The bell's number: unread in the Inbox and Groups folders. Admin
+     * notices (reviews waiting, inbound messages) are left out on purpose
+     * (Zach, 2026-11-12): on an admin's account they were most of the
+     * count and buried everything personal. They have their own folder
+     * and unreadAdminNotifications().
+     */
     public function unreadNotifications() {
-        return Message::where('userId', $this->id)->where('deleted', 0)->where('read', 0)->count();
+        return Message::liveFor($this->id)->unread()
+            ->where(fn ($w) => $w->whereNull('kind')->orWhere('kind', '<>', Message::KIND_ADMIN))
+            ->count();
+    }
+
+    public function unreadAdminNotifications() {
+        return Message::liveFor($this->id)->unread()->folder('admin')->count();
     }
 
     /**
@@ -121,7 +134,7 @@ class User extends Authenticatable
      * here the message count for groups, not the entire unread inbox").
      */
     public function unreadGroupNotifications() {
-        return Message::where('userId', $this->id)->where('deleted', 0)->where('read', 0)->whereNotNull('group_id')->count();
+        return Message::liveFor($this->id)->unread()->folder('groups')->count();
     }
 
     public function ensureCalendarToken()

@@ -49,7 +49,30 @@ class GroupController extends Controller
             "robots" => "noindex, nofollow",
         ];
 
-        return view('pages.Groups.MyGroups', compact('groups', 'invites', 'SEO'));
+        // Unread per group, and how many @mentions, so the badge on the
+        // Groups tab is explained the moment you land here.
+        $counts = \App\Models\Message::countsFor($userId);
+
+        // Safety net: anything still unread about a group that is not on
+        // this page (left it, removed from it, the group is gone) is
+        // cleared here. Otherwise the Groups badge would count things this
+        // page has no row to explain. Pending invites are on the page and
+        // keep their count.
+        $onPage = $groups->pluck('id')->merge($invites->pluck('group_id'))->map(fn ($id) => (int) $id)->all();
+        $orphans = array_diff(array_unique(array_merge(array_keys($counts['byGroup']), array_keys($counts['mentions']))), $onPage);
+        if (!empty($orphans)) {
+            foreach ($orphans as $groupId) {
+                \App\Models\Message::clearGroup((int) $groupId, $userId);
+            }
+            $counts = \App\Models\Message::countsFor($userId);
+        }
+
+        $unreadByGroup = $counts['byGroup'];
+        $mentionsByGroup = $counts['mentions'];
+        // Groups with something new first, then as they were.
+        $groups = $groups->sortByDesc(fn ($g) => (($unreadByGroup[$g->id] ?? 0) + ($mentionsByGroup[$g->id] ?? 0)) > 0 ? 1 : 0)->values();
+
+        return view('pages.Groups.MyGroups', compact('groups', 'invites', 'SEO', 'unreadByGroup', 'mentionsByGroup'));
     }
 
     /**
@@ -205,6 +228,12 @@ class GroupController extends Controller
             }
             return redirect()->route('MyGroups')->with('msg', 'That group is private - you need to be a member to view it.');
         }
+
+        // Opening a group is reading it (Zach, 2026-11-12): every unread
+        // notification about this group, @mentions included, is cleared.
+        // Before this nothing was ever marked read unless it was opened one
+        // at a time on the Messages page, so the badges only ever grew.
+        \App\Models\Message::clearGroup($group->id, $userId);
 
         $isAdmin = $group->isAdmin($userId);
         $myMembership = $group->members()->where('user_id', $userId)->where('status', 'active')->first();
@@ -692,6 +721,11 @@ class GroupController extends Controller
 
         $wasInvite = $member->status === 'invited';
         $member->delete();
+        // They can no longer open this group, so nothing about it should
+        // still be counting on their badge.
+        if ($member->user_id) {
+            \App\Models\Message::clearGroup($group->id, (int) $member->user_id);
+        }
 
         return redirect()->back()->with('msg', $wasInvite ? 'Invite cancelled.' : 'Member removed.');
     }
@@ -753,6 +787,7 @@ class GroupController extends Controller
         }
 
         $group->members()->delete();
+        \App\Models\Message::clearGroup($group->id);
         $group->delete();
 
         return redirect()->route('MyGroups')->with('msg', 'Group "' . $groupName . '" was deleted.');

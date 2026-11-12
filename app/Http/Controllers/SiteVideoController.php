@@ -66,6 +66,6 @@ class SiteVideoController extends Controller
         if (!$site) return;
         $adminIds = User::where('role_id', 1)->pluck('id');
         if ($adminIds->isEmpty()) return;
-        NotificationService::notify($adminIds, 'New diver video pending review', "A diver uploaded a video of {$site->name}.", route('SiteVideos.manage.index'));
+        NotificationService::notify($adminIds, 'New diver video pending review', "A diver uploaded a video of {$site->name}.", route('SiteVideos.manage.index'), kind: \App\Models\Message::KIND_ADMIN);
     }
 }

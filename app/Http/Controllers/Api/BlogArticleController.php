@@ -92,7 +92,7 @@ class BlogArticleController extends Controller
 
         $post->save();
         if ($post->status === 'pending' && $wasStatus !== 'pending') {
-            \App\Services\NotificationService::notify(\App\Models\User::where('role_id', 1)->pluck('id'), 'Article waiting for review', ($user->name ?? 'A contributor') . ' submitted "' . $post->title . '" for review.', route('Blog.manage.edit', $post), $user->id, $user->id);
+            \App\Services\NotificationService::notify(\App\Models\User::where('role_id', 1)->pluck('id'), 'Article waiting for review', ($user->name ?? 'A contributor') . ' submitted "' . $post->title . '" for review.', route('Blog.manage.edit', $post), $user->id, $user->id, kind: \App\Models\Message::KIND_ADMIN);
         }
 
         return response()->json([

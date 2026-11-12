@@ -270,7 +270,8 @@ class GroupMessageController extends Controller
             auth()->user()->id,
             auth()->user()->id,
             $group->id,
-            $mentionedIds
+            $mentionedIds,
+            \App\Models\Message::KIND_CHAT
         );
     }
 

@@ -181,7 +181,8 @@ class SendGroupDiveReminders extends Command
             $group->name,
             'Reminder: ' . $dive->tripName . ' in ' . $daysAhead . ' day' . ($daysAhead > 1 ? 's' : '') . ' - ' . $dateFormatted . ' at ' . $timeFormatted,
             route('Groups.show', ['group' => $group->slug]),
-            groupId: $group->id
+            groupId: $group->id,
+            kind: \App\Models\Message::KIND_REMINDER
         );
     }
 

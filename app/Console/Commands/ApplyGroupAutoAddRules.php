@@ -20,6 +20,9 @@ use Illuminate\Console\Command;
  * the request or hanging the admin's browser for minutes. A newly saved
  * or widened rule takes up to 30 minutes to reflect against trips that
  * already exist, same as it does for newly-scraped ones.
+ *
+ * Members get ONE notification and one push per group per run, however
+ * many dives the run added (GroupDiveService::notifyNewDives()).
  */
 class ApplyGroupAutoAddRules extends Command
 {
@@ -39,6 +42,11 @@ class ApplyGroupAutoAddRules extends Command
         $diveService = new GroupDiveService();
         $checked = 0;
         $added = 0;
+        // Dives added this run, per group, so each group's members get one
+        // notification for the run and not one per dive (Zach, 2026-11-12).
+        // Keyed by group, not by rule: two rules on one group still make
+        // one notification.
+        $addedByGroup = [];
 
         // Same for every rule - fetched once rather than per rule. Eager
         // loads operator: GroupAutoAddRule::matches() falls back to
@@ -83,10 +91,16 @@ class ApplyGroupAutoAddRules extends Command
                     continue;
                 }
 
-                $diveService->createFromTrip($group, $trip, null);
+                $dive = $diveService->createFromTrip($group, $trip, null, null, false);
                 $existingKeys->put($key, true);
                 $added++;
+                $addedByGroup[$group->id]['group'] = $group;
+                $addedByGroup[$group->id]['dives'][] = $dive;
             }
+        }
+
+        foreach ($addedByGroup as $batch) {
+            $diveService->notifyNewDives($batch['group'], $batch['dives']);
         }
 
         $this->info("Checked {$checked} trip/rule combination(s), added {$added} dive(s).");

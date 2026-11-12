@@ -19,7 +19,7 @@
             <span class="dh-msg-sender">{{ $senderName }}</span>
             <span class="dh-msg-date">{{ $message->created_at->format('M j') }}</span>
         </span>
-        <span class="dh-msg-subject" id="subject-inner-{{ $message->id }}">{{ $message->subject }}</span>
+        <span class="dh-msg-subject" id="subject-inner-{{ $message->id }}">@if($message->kind === \App\Models\Message::KIND_MENTION)<span class="dh-msg-tag">Mentioned you</span> @endif{{ $message->subject }}</span>
         <span class="dh-msg-snippet">{{ \Illuminate\Support\Str::limit(strip_tags($message->body), 90) }}</span>
     </span>
     @if(!$message->read)
