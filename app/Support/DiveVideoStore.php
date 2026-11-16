@@ -57,6 +57,41 @@ class DiveVideoStore
         return $video;
     }
 
+    /**
+     * Clean up uploads that never finished (Pablo, 2026-11-16: he left the page
+     * mid-upload and the video showed "Uploading" forever). A row still
+     * 'uploading' after $minutes whose Cloudflare asset is still waiting for its
+     * bytes ("pendingupload") or is gone can never complete - the browser that
+     * held the file is gone - so it is deleted. Anything Cloudflare has actually
+     * received (processing / ready) is updated instead, never deleted. If
+     * Cloudflare can't be reached the row is left alone. Returns how many rows
+     * were removed.
+     */
+    public static function pruneStale(?int $diveId = null, int $minutes = 30, bool $dryRun = false, ?array &$report = null): int
+    {
+        $query = DiveVideo::where('stream_status', 'uploading')->where('created_at', '<', now()->subMinutes($minutes));
+        if ($diveId) $query->where('dive_id', $diveId);
+        $removed = 0;
+        foreach ($query->get() as $video) {
+            try {
+                $details = CloudflareStream::details($video->stream_uid);
+            } catch (\Throwable $e) {
+                continue; // can't tell - leave it
+            }
+            $state = $details['status']['state'] ?? null;
+            if ($details !== null && $state !== 'pendingupload') {
+                $video->applyStreamDetails($details); // it did arrive after all
+                continue;
+            }
+            $report[] = ['id' => $video->id, 'dive_id' => $video->dive_id, 'name' => $video->original_name, 'created_at' => (string) $video->created_at];
+            if (!$dryRun) {
+                self::delete($video);
+            }
+            $removed++;
+        }
+        return $removed;
+    }
+
     /** Offer it for the dive site's public page (admin review first). */
     public static function share(DiveVideo $video): SiteVideo
     {

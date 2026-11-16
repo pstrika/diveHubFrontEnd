@@ -30,6 +30,15 @@
   var vDelete = document.getElementById('dhVideoViewerDelete');
   var current = -1;
   var uploading = false;
+  var activeEntry = null; // the video this page is uploading right now
+
+  // Leaving the page cancels an upload in flight (Pablo, 2026-11-16: the video then
+  // showed "Uploading" forever). Ask first, only while bytes are still going up.
+  window.addEventListener('beforeunload', function (e) {
+    if (!uploading) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
 
   var SHARE_LABELS = { pending: 'Waiting for review', approved: 'On the site page', rejected: 'Not approved' };
   var STATUS_LABELS = { uploading: 'Uploading…', processing: 'Processing…', failed: 'Failed' };
@@ -124,7 +133,7 @@
     progress.hidden = false; progressBar.style.width = '0%';
     var entry = null;
     send('POST', cfg.createUrl, { name: f.name, size: f.size }).then(function (d) {
-      entry = d.video; entry.pct = 0;
+      entry = d.video; entry.pct = 0; activeEntry = entry;
       videos.push(entry); render();
       var upload = new tus.Upload(f, {
         uploadUrl: d.upload_url,
@@ -141,24 +150,24 @@
           if (txt) txt.textContent = 'Uploading ' + pct + '%';
         },
         onError: function (e) {
-          uploading = false; progress.hidden = true;
+          uploading = false; activeEntry = null; progress.hidden = true;
           status.textContent = 'Upload failed: ' + (e && e.message ? e.message : e) + '. Try again.';
           entry.status = 'failed'; entry.error = 'Upload failed'; render();
         },
         onSuccess: function () {
           progressBar.style.width = '100%';
-          status.textContent = 'Uploaded. Cloudflare is processing the video - this takes a minute or two.';
+          status.textContent = 'Uploaded. You can leave this page now - Cloudflare is processing the video, which takes a minute or two.';
           send('POST', entry.uploaded_url).then(function (d) {
             var i = videos.indexOf(entry);
             if (i >= 0) videos[i] = d.video;
           }).catch(function (e) { status.textContent = e.message; }).then(function () {
-            uploading = false; progress.hidden = true; render();
+            uploading = false; activeEntry = null; progress.hidden = true; render();
           });
         }
       });
       upload.start();
     }).catch(function (e) {
-      uploading = false; progress.hidden = true;
+      uploading = false; activeEntry = null; progress.hidden = true;
       status.textContent = e.message;
       render();
     });
@@ -168,6 +177,13 @@
   function open(i) {
     var v = videos[i];
     if (!v) return;
+    if (v.status === 'uploading' && v !== activeEntry) {
+      // Nothing on this page is uploading it: the page was left mid-upload, so it can never finish.
+      if (confirm('This upload did not finish, so it cannot be completed. Remove it? You can add the video again.')) {
+        send('DELETE', v.delete_url).then(function () { videos.splice(videos.indexOf(v), 1); render(); }).catch(function (e) { alert(e.message); });
+      }
+      return;
+    }
     if (v.status !== 'ready') {
       if (v.status === 'failed' && confirm('This video could not be processed' + (v.error ? ' (' + v.error + ')' : '') + '. Remove it?')) {
         send('DELETE', v.delete_url).then(function () { videos.splice(i, 1); render(); }).catch(function (e) { alert(e.message); });

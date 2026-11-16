@@ -4812,6 +4812,7 @@ body.dh-logbook main .input-group-outline:has(> input.form-control):not(.is-fill
 .dh-dive-video-status { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: .75rem; font-weight: 600; color: #fff; background: var(--dh-deep); text-align: center; padding: 6px; }
 .dh-dive-video.is-failed .dh-dive-video-status { background: #7a1f1f; }
 .dh-dive-video-status .dh-spinner { border-color: rgba(255, 255, 255, .3); border-top-color: #fff; }
+.dh-video-warn { color: var(--dh-danger); font-size: .8rem; font-weight: 600; line-height: 1.35; max-width: 460px; }
 .dh-video-progress { height: 6px; border-radius: 3px; background: var(--dh-line); overflow: hidden; margin: 8px 0; max-width: 420px; }
 .dh-video-progress-bar { height: 100%; width: 0; background: var(--dh-sea); transition: width .2s; }
 .dh-video-viewer-figure { flex: 1; min-height: 0; margin: 0; display: flex; align-items: center; justify-content: center; padding: 56px 16px 8px; }

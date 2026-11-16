@@ -1079,6 +1079,8 @@
                                     <input type="file" accept="video/*" hidden id="diveVideosInput">
                                 </label>
                                 <span class="text-sm text-secondary ms-2" id="diveVideosStatus" role="status"></span>
+                                {{-- Pablo, 2026-11-16: leaving mid-upload left a video stuck on "Uploading". --}}
+                                <p class="dh-video-warn mb-0 mt-2" id="diveVideosWarn">Do not go to another page or close this one until the upload has finished. Once it says "Uploaded", you can leave: the processing carries on without you.</p>
                             </div>
                         </div>
                     @endif
