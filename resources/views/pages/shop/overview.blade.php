@@ -9,33 +9,49 @@
         <div class="dh-shop-stat"><b>{{ $scanCount }}</b><span>QR {{ Str::plural('scan', $scanCount) }} from {{ $codeCount }} {{ Str::plural('code', $codeCount) }}</span></div>
     </div>
 
+    {{-- Setup checklist (Zach, 2026-11-19): each step shows whether it is
+         done, the storefront is marked as the one everything else waits on,
+         and QR codes stay closed until it exists. --}}
+    @php
+        $steps = [
+            ['done' => $hasStorefront, 'title' => 'Add your storefront', 'text' => 'Address and hours. This is the step everything else waits on: divers can only pick you as their home shop, and you can only make QR codes, once you have one.', 'label' => 'Add storefront', 'href' => route('shop-portal.locations', ['operator' => $operator->id]), 'key' => true],
+            ['done' => $detailsDone, 'title' => 'Check your shop details', 'text' => 'Name, phone, website, fills and a short description, as divers see them.', 'label' => 'Shop details', 'href' => route('shop-portal.profile', ['operator' => $operator->id])],
+            ['done' => $offeringCount > 0, 'title' => 'List what you offer', 'text' => 'Fills, rentals, classes and service, with prices you have confirmed.', 'label' => 'Prices', 'href' => route('shop-portal.locations', ['operator' => $operator->id]), 'needs' => true],
+            ['done' => $codeCount > 0, 'title' => 'Put a QR code by the register', 'text' => 'A diver who scans it lands on your page. If they sign up, you are their home shop.', 'label' => 'QR codes', 'href' => route('shop-portal.codes', ['operator' => $operator->id]), 'needs' => true],
+        ];
+        $next = collect($steps)->search(fn ($s) => !$s['done']);
+    @endphp
     <section class="dh-panel">
         <h2 class="dh-panel-title">Getting set up</h2>
+        <ol class="dh-shop-steps">
+            @foreach($steps as $i => $step)
+                @php $blocked = !empty($step['needs']) && !$hasStorefront; @endphp
+                <li class="dh-shop-step {{ $step['done'] ? 'is-done' : '' }} {{ $next === $i ? 'is-next' : '' }} {{ $blocked ? 'is-blocked' : '' }}">
+                    <span class="dh-shop-step-mark" aria-hidden="true"><span class="material-icons-round">{{ $step['done'] ? 'check' : ($blocked ? 'lock' : 'radio_button_unchecked') }}</span></span>
+                    <div class="dh-shop-step-body">
+                        <b>{{ $i + 1 }}. {{ $step['title'] }}</b>
+                        @if($step['done'])<span class="dh-shop-step-tag is-done">Done</span>
+                        @elseif($blocked)<span class="dh-shop-step-tag">Needs your storefront</span>
+                        @elseif($next === $i)<span class="dh-shop-step-tag is-next">Do this next</span>@endif
+                        <p>{{ $step['text'] }}</p>
+                    </div>
+                    @if($blocked)
+                        <span class="dh-btn dh-btn-ghost-dark is-disabled" aria-disabled="true">{{ $step['label'] }}</span>
+                    @else
+                        <a class="dh-btn {{ $next === $i ? 'dh-btn-primary' : 'dh-btn-ghost-dark' }}" href="{{ $step['href'] }}">{{ $step['done'] ? 'Edit' : $step['label'] }}</a>
+                    @endif
+                </li>
+            @endforeach
+        </ol>
         <div class="dh-shop-scroll">
             <table class="dh-shop-table">
                 <tbody>
-                    <tr>
-                        <td><b>1. Check your shop details</b><br><span class="dh-shop-muted">Name, phone, website and a short description, as divers see them.</span></td>
-                        <td class="is-num"><a class="dh-btn dh-btn-ghost-dark" href="{{ route('shop-portal.profile', ['operator' => $operator->id]) }}">Shop details</a></td>
-                    </tr>
-                    <tr>
-                        <td><b>2. Add your storefront</b><br><span class="dh-shop-muted">Address and hours. Divers can only pick you as their home shop once you have one.</span></td>
-                        <td class="is-num"><a class="dh-btn dh-btn-ghost-dark" href="{{ route('shop-portal.locations', ['operator' => $operator->id]) }}">Locations</a></td>
-                    </tr>
-                    <tr>
-                        <td><b>3. List what you offer</b><br><span class="dh-shop-muted">Fills, rentals, classes and service, with prices you have confirmed.</span></td>
-                        <td class="is-num"><a class="dh-btn dh-btn-ghost-dark" href="{{ route('shop-portal.locations', ['operator' => $operator->id]) }}">Prices</a></td>
-                    </tr>
-                    <tr>
-                        <td><b>4. Put a QR code by the register</b><br><span class="dh-shop-muted">A diver who scans it lands on your page. If they sign up, you are their home shop.</span></td>
-                        <td class="is-num"><a class="dh-btn dh-btn-ghost-dark" href="{{ route('shop-portal.codes', ['operator' => $operator->id]) }}">QR codes</a></td>
-                    </tr>
                     <tr>
                         <td><b>Check your boats</b><br><span class="dh-shop-muted">Capacity, size and type for each boat on your page.</span></td>
                         <td class="is-num"><a class="dh-btn dh-btn-ghost-dark" href="{{ route('shop-portal.boats', ['operator' => $operator->id]) }}">Boats</a></td>
                     </tr>
                     <tr>
-                        <td><b>5. See how divers find you</b><br><span class="dh-shop-muted">Who calls you home, trips saved to calendars, visits to your page.</span></td>
+                        <td><b>See how divers find you</b><br><span class="dh-shop-muted">Who calls you home, trips saved to calendars, visits to your page.</span></td>
                         <td class="is-num"><a class="dh-btn dh-btn-ghost-dark" href="{{ route('shop-portal.insights', ['operator' => $operator->id]) }}">Insights</a></td>
                     </tr>
                 </tbody>

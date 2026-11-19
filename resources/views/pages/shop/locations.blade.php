@@ -146,8 +146,8 @@
         </section>
     @empty
         <section class="dh-panel">
-            <h2 class="dh-panel-title">Add your first location</h2>
-            <p class="dh-shop-muted">We filled this in from what Divers Hub already lists for you. Fix anything that is wrong and save.</p>
+            <h2 class="dh-panel-title">Add your storefront</h2>
+            <p class="dh-shop-muted">This is the step that switches the rest on. Once it is saved, divers can pick you as their home shop and you can make QR codes. We filled it in from what Divers Hub already lists for you. Fix anything that is wrong and save.</p>
             @include('pages.shop._location-form', ['loc' => null, 'seed' => $seed])
         </section>
     @endforelse

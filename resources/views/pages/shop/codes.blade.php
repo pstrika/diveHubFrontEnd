@@ -17,9 +17,33 @@
 <x-shop.page title="Shop portal">
     <x-shop.tabs :operator="$operator" :shopName="$shopName" tab="codes" />
 
+    {{-- How it works, in order, before anything else on the page. --}}
+    <section class="dh-panel">
+        <h2 class="dh-panel-title">How QR codes work</h2>
+        <ol class="dh-shop-how">
+            <li><b>You put a sign up.</b> By the register, on the boat, on a flyer.</li>
+            <li><b>A diver scans it</b> and lands on your Divers Hub page.</li>
+            <li><b>If they sign up, you become their home shop.</b> Your trips show first for them. A diver who already has an account is asked first.</li>
+        </ol>
+        @unless($hasStorefront)
+            <div class="dh-shop-callout" role="alert">
+                <span class="material-icons-round" aria-hidden="true">storefront</span>
+                <div>
+                    <b>Add your storefront first.</b>
+                    <p>A home shop is a place: an address and hours. Until you have added one, a diver who scans your code and signs up cannot be given you as their home shop, so new codes are closed until then.</p>
+                    <a class="dh-btn dh-btn-primary" href="{{ route('shop-portal.locations', ['operator' => $operator->id]) }}">Add your storefront</a>
+                </div>
+            </div>
+        @endunless
+    </section>
+
+    @if($codes->isNotEmpty() || $hasStorefront)
     <section class="dh-panel">
         <h2 class="dh-panel-title">Your codes</h2>
-        <p class="dh-shop-muted">One code per place you put it, so you can see which sign gets scanned. A diver who scans one lands on your page. If they then sign up, you become their home shop; if they already have an account, they are asked.</p>
+        <p class="dh-shop-muted">One code per place you put it, so you can see which sign gets scanned.</p>
+        @if($codes->isNotEmpty() && !$hasStorefront)
+            <p class="dh-shop-warn">These codes still open your page and count scans, but nobody who signs up through them becomes your home shop diver until you add a storefront.</p>
+        @endif
 
         @forelse($codes as $code)
             <div class="dh-shop-card {{ $code->is_active ? '' : 'is-off' }}">
@@ -69,7 +93,9 @@
             <p class="dh-shop-muted">No codes yet. Make one below.</p>
         @endforelse
     </section>
+    @endif
 
+    @if($hasStorefront)
     <section class="dh-panel dh-shop-noprint">
         <h2 class="dh-panel-title">New code</h2>
         <form method="POST" action="{{ route('shop-portal.codes.create', ['operator' => $operator->id]) }}">
@@ -98,6 +124,7 @@
             <div class="dh-shop-actions"><button type="submit" class="dh-btn dh-btn-primary">Create code</button></div>
         </form>
     </section>
+    @endif
 
     @if($qrReady)
     <script src="{{ asset($qrScript) }}?m={{ @filemtime(public_path($qrScript)) }}"></script>

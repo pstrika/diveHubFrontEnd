@@ -155,3 +155,27 @@
     body.dh-printing-sign .dh-shop-sign.is-printing { position: fixed; inset: 0; margin: auto; width: 7.2in; height: 9.6in; box-shadow: none; border-radius: 0; }
     body.dh-printing-sign .dh-shop-sign.is-printing .dh-shop-signpic { width: 7.2in; height: 9.6in; }
 }
+
+/* Setup checklist and the storefront-first rule (2026-11-19). */
+.dh-shop-steps { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }
+.dh-shop-step { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px solid var(--dh-line); border-radius: 14px; background: var(--dh-paper); }
+.dh-shop-step.is-next { border-color: var(--dh-sea); box-shadow: 0 0 0 2px color-mix(in srgb, var(--dh-sea) 22%, transparent); }
+.dh-shop-step.is-blocked { background: #f5f6f8; }
+.dh-shop-step-mark { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--dh-foam); color: var(--dh-muted); }
+.dh-shop-step-mark .material-icons-round { font-size: 18px; }
+.dh-shop-step.is-done .dh-shop-step-mark { background: #e8f6ee; color: #14633a; }
+.dh-shop-step-body { flex: 1 1 auto; min-width: 0; }
+.dh-shop-step-body b { font-size: .95rem; color: var(--dh-ink); }
+.dh-shop-step-body p { margin: 2px 0 0; font-size: .82rem; color: var(--dh-muted); }
+.dh-shop-step-tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: var(--dh-radius-pill); font-size: .68rem; font-weight: 800; background: #eceff1; color: var(--dh-muted); vertical-align: 1px; }
+.dh-shop-step-tag.is-done { background: #e8f6ee; color: #14633a; }
+.dh-shop-step-tag.is-next { background: var(--dh-sea); color: #fff; }
+.dh-shop-step .dh-btn { flex: 0 0 auto; align-self: center; }
+.dh-btn.is-disabled { opacity: .5; cursor: not-allowed; pointer-events: none; }
+.dh-shop-how { margin: 0 0 4px; padding-left: 20px; display: grid; gap: 4px; font-size: .9rem; color: var(--dh-ink); }
+.dh-shop-callout { display: flex; gap: 14px; align-items: flex-start; margin-top: 14px; padding: 16px; border-radius: 14px; background: #fff7e6; border: 1px solid #f1d38a; }
+.dh-shop-callout > .material-icons-round { font-size: 30px; color: #9a6a00; flex: 0 0 auto; }
+.dh-shop-callout b { font-size: 1rem; color: var(--dh-ink); }
+.dh-shop-callout p { margin: 4px 0 12px; font-size: .88rem; color: #5c4a1c; }
+.dh-shop-warn { padding: 10px 14px; border-radius: 12px; background: #fff7e6; border: 1px solid #f1d38a; color: #5c4a1c; font-size: .86rem; }
+@media (max-width: 575.98px) { .dh-shop-step { flex-wrap: wrap; } .dh-shop-step .dh-btn { margin-left: 42px; } }

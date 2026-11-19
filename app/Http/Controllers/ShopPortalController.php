@@ -71,7 +71,22 @@ class ShopPortalController extends Controller
             'codeCount' => $codeIds->count(),
             'scanCount' => ReferralScan::whereIn('referral_code_id', $codeIds)->where('is_bot', false)->count(),
             'homeDivers' => $locationIds->isEmpty() ? 0 : User::whereIn('home_operator_location_id', $locationIds)->count(),
+            // Setup checklist: what is done, so the next step is obvious.
+            'detailsDone' => OperatorProfile::where('operator_id', $op->id)->exists(),
+            'hasStorefront' => $this->hasStorefront($op),
         ]);
+    }
+
+    /**
+     * A shop can only be a diver's home shop once it has a live storefront
+     * (HomeShop::defaultLocationFor). QR codes exist to make a shop someone's
+     * home shop, so they wait on it too (Zach, 2026-11-19: he made a code
+     * for a shop with no storefront, signed up through it, and nothing
+     * visible happened).
+     */
+    private function hasStorefront(Operator $op): bool
+    {
+        return \App\Support\HomeShop::defaultLocationFor((int) $op->id) !== null;
     }
 
     public function profile(int $operator)
@@ -341,6 +356,14 @@ class ShopPortalController extends Controller
         $row->save();
         ShopAccess::audit((int) $op->id, (int) $request->user()->id, $created ? 'location.created' : 'location.updated', 'location', (int) $row->id, $changes);
 
+        // The first storefront is what switches on home shop and QR codes:
+        // say so, with the next step, instead of a bare "Saved".
+        if ($created && $row->is_home_eligible && $row->is_active
+            && OperatorLocation::where('operator_id', $op->id)->where('is_active', true)->where('is_home_eligible', true)->count() === 1) {
+            return redirect()->route('shop-portal.codes', ['operator' => $op->id])
+                ->with('shop_status', 'Storefront added. Divers can now pick you as their home shop, and you can make your first QR code below.');
+        }
+
         return redirect()->route('shop-portal.locations', ['operator' => $op->id])
             ->with('shop_status', $created ? 'Location added.' : 'Location saved.');
     }
@@ -419,6 +442,7 @@ class ShopPortalController extends Controller
             'codes' => $codes,
             'scans' => $scans,
             'locations' => OperatorLocation::where('operator_id', $op->id)->where('is_active', true)->get(['id', 'name']),
+            'hasStorefront' => $this->hasStorefront($op),
         ]);
     }
 
@@ -430,6 +454,11 @@ class ShopPortalController extends Controller
             'label' => 'nullable|string|max:80',
             'operator_location_id' => 'nullable|integer',
         ]));
+        if (!$this->hasStorefront($op)) {
+            return redirect()->route('shop-portal.locations', ['operator' => $op->id])
+                ->withErrors(['storefront' => 'Add your storefront first. A QR code makes you a diver\'s home shop, and that needs a storefront to point to.']);
+        }
+
         $locationId = null;
         if (!empty($data['operator_location_id'])) {
             $locationId = OperatorLocation::where('operator_id', $op->id)->findOrFail($data['operator_location_id'])->id;

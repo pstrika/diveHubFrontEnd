@@ -19,6 +19,12 @@
         'insights'  => ['Insights', 'insights', 'shop-portal.insights'],
     ];
     $locked = ['Promotions', 'Text sign-up offer', 'Competitions'];
+    // QR codes wait on a storefront. The tab still opens, and its page says why.
+    try {
+        $qrWaiting = \App\Support\HomeShop::defaultLocationFor((int) $operator->id) === null;
+    } catch (\Throwable $e) {
+        $qrWaiting = false;
+    }
 @endphp
 
 <div class="dh-shop-head">
@@ -33,7 +39,7 @@
 <nav class="dh-shop-tabs" aria-label="Shop portal sections">
     @foreach($tabs as $key => [$label, $icon, $routeName])
         <a class="dh-shop-tab {{ $tab === $key ? 'is-active' : '' }}" href="{{ route($routeName, ['operator' => $operator->id]) }}" @if($tab === $key) aria-current="page" @endif>
-            <span class="material-icons-round" aria-hidden="true">{{ $icon }}</span>{{ $label }}
+            <span class="material-icons-round" aria-hidden="true">{{ $key === 'codes' && $qrWaiting ? 'lock' : $icon }}</span>{{ $label }}
         </a>
     @endforeach
     @foreach($locked as $label)
