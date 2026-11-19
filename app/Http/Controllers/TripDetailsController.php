@@ -29,12 +29,19 @@ class TripDetailsController extends Controller
         
         #$tripDetails = Trip::where('id', $tripId)->get()[0];
         $tripDetails = Trip::findOrFail($tripId);
+        // For the shop's insights later: which of their trips divers open.
+        \App\Support\ShopEvents::record((int) $tripDetails->operatorId, \App\Support\ShopEvents::TRIP_VIEW, [
+            'trip_date' => $tripDetails->date,
+            'trip_time' => $tripDetails->departureTime,
+            'trip_name' => $tripDetails->tripName,
+            'site_id' => ((int) explode(',', (string) $tripDetails->siteId)[0]) ?: null,
+        ]);
 
         $operator = Operator::where('id', $tripDetails->operatorId)->get()[0];
 
         $location = Location::where('short', $operator->location)->get()[0];
 
-        $boatBulk = Boat::where('id', $tripDetails->boatId)->get();
+        $boatBulk = \App\Support\HomeShop::overlayBoats(Boat::where('id', $tripDetails->boatId)->get());
 
         
 

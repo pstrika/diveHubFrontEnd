@@ -120,6 +120,53 @@
     </div>
 @endif
 
+{{-- Home shop (Zach, 2026-11-19). Only for a diver who has one; nobody
+     else gets a byte of this. --}}
+@if(!empty($homeShop))
+    @php
+        $hsOp = $homeShop['operator'];
+        $hsLoc = $homeShop['location'];
+        $hsUrl = route('OperatorDetails', ['id' => $hsOp->slug ?: $hsOp->id]);
+    @endphp
+    <div class="row">
+        <div class="col-md-12">
+            <section class="dh-card dh-homecard">
+                <h2 class="dh-card-head"><span><span class="material-icons-round" aria-hidden="true" style="font-size:19px;vertical-align:-4px">storefront</span> My home shop</span>
+                    <a class="dh-dash-headlink" href="{{ route('home-shop') }}">Change</a></h2>
+                <div class="dh-card-body">
+                    <div class="dh-homecard-grid">
+                        <div class="dh-homecard-shop">
+                            @if($hsOp->logoUrl)<img class="dh-homecard-logo" src="{{ asset('assets') }}{{ $hsOp->logoUrl }}" alt="">@endif
+                            <div>
+                                <a class="dh-homecard-name" href="{{ $hsUrl }}">{{ $homeShop['name'] }}</a>
+                                @if($hsLoc->addressLine())<p>{{ $hsLoc->addressLine() }}</p>@endif
+                                @if($homeShop['today'])<p><b>Today</b> {{ $homeShop['today'] }}</p>@endif
+                                <div class="dh-homecard-actions">
+                                    @if($hsLoc->phone)<a class="dh-btn dh-btn-ghost-dark" href="tel:{{ preg_replace('/[^0-9+]/', '', $hsLoc->phone) }}"><span class="material-icons-round" aria-hidden="true">call</span>Call</a>@endif
+                                    @if($hsLoc->addressLine())<a class="dh-btn dh-btn-ghost-dark" href="https://www.google.com/maps/search/?api=1&query={{ urlencode($hsLoc->addressLine()) }}" target="_blank" rel="noopener"><span class="material-icons-round" aria-hidden="true">directions</span>Directions</a>@endif
+                                    <a class="dh-btn dh-btn-primary" href="{{ $hsUrl }}">Shop page</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dh-homecard-trips">
+                            <h3>Their next trips</h3>
+                            @forelse($homeShop['trips'] as $ht)
+                                <a class="dh-homecard-trip" href="{{ route('TripDetails', ['tripId' => $ht->id]) }}">
+                                    <span class="dh-homecard-when">{{ \Carbon\Carbon::parse($ht->date)->format('D M j') }}@if($ht->departureTime) · {{ \Carbon\Carbon::parse($ht->departureTime)->format('g:i A') }}@endif</span>
+                                    <span class="dh-homecard-what">{{ $ht->tripName }}</span>
+                                </a>
+                            @empty
+                                <p class="text-secondary text-sm mb-0">No upcoming trips listed right now.</p>
+                            @endforelse
+                            <a class="dh-dash-headlink d-inline-block mt-2" href="{{ $hsUrl }}">See all their trips</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+@endif
+
 <div class="row dh-dash-cards">
                 {{---Card My Upcoming trips--}}
                 <div class="col-md-5 mb-4">

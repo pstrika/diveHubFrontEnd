@@ -82,7 +82,19 @@
         @endif
         {!! $link('My Groups', route('MyGroups'), 'groups') !!}
         {!! $link('My Visited Sites', route('MyVisitedSites'), 'check_circle') !!}
+        {{-- Home shop (Zach, 2026-11-13): accounts on the home_shop list only. --}}
+        @if(\App\Support\HomeShop::allows(auth()->user()))
+            {!! $link('My home shop', route('home-shop'), 'storefront', false, 'Beta') !!}
+        @endif
     </div>
+    {{-- Shop portal: only for someone who manages a shop (or a platform
+         admin). Everyone else never sees the link, and the routes answer 404. --}}
+    @if(\App\Support\ShopAccess::hasPortal(auth()->user()))
+    <div class="dh-menu-group">
+        <h6>My shop</h6>
+        {!! $link('Shop portal', route('shop-portal'), 'storefront', false, 'Beta') !!}
+    </div>
+    @endif
 @endif
 
 {{-- Rule (Zach): tools and calendars are open to everyone; only personal data (dashboard, groups, saving) needs an account. --}}
@@ -152,6 +164,7 @@
         {!! $link('Platform health', route('PlatformHealth'), 'monitor_heart') !!}
         {!! $link('User management', route('users'), 'manage_accounts') !!}
         {!! $link('Message management', route('admin.messages.index'), 'forum') !!}
+        {!! $link('Shop management', route('shop-access.index'), 'storefront') !!}
         {!! $link('Article management', route('Blog.manage.index'), 'edit_note') !!}
         {!! $link('Site management', route('DiveSitesAdmin'), 'edit_location_alt') !!}
         {!! $link('Picture management', route('DiverPhotos.manage.index'), 'photo_camera') !!}

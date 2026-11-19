@@ -169,6 +169,15 @@
                         <i class="material-icons-round" style="font-size: 2.5rem; color: var(--dh-sea);">task_alt</i>
                         <h6 class="dh-panel-title" style="text-transform: none; font-size: 1.1rem; margin-top: 12px;">Thanks for sharing!</h6>
                         <p class="text-sm text-secondary">Your feedback helps other divers plan their trip.</p>
+                        {{-- The shop's Google review link (Zach, 2026-11-19), when the
+                             shop has set one. Shown to every diver who finishes,
+                             whatever they rated, and with nothing offered in return. --}}
+                        @if(!empty($googleReview))
+                            <div class="dh-wizard-google">
+                                <p class="text-sm mb-2"><b>One more, if you have a minute.</b> A Google review helps {{ $operator->operatorName }} get found by other divers.</p>
+                                <a class="dh-btn dh-btn-ghost-dark" href="{{ $googleReview }}" target="_blank" rel="noopener"><span class="material-icons-round" aria-hidden="true">rate_review</span>Review {{ $operator->operatorName }} on Google</a>
+                            </div>
+                        @endif
                         {{-- Opened from WhatsApp/SMS/email, not a tab this page
                              itself opened - window.close() is only reliably
                              honored by in-app browsers (WhatsApp's included)

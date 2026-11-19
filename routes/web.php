@@ -372,6 +372,67 @@ Route::get('ToggleFav/{id}', 'App\Http\Controllers\OperatorController@toggleFav'
 
 Route::get('OperatorDetails/{id}', 'App\Http\Controllers\OperatorController@show')->middleware('guest')->name('OperatorDetails');
 
+/*
+ * Shop portal, shop admins and home shop (Zach, 2026-11-13).
+ * Controllers: ShopPortalController, ShopAccessAdminController,
+ * OperatorInviteController, HomeShopController.
+ */
+// What a shop's QR code points at. Open to everyone, throttled.
+Route::get('go/{code}', 'App\Http\Controllers\HomeShopController@scan')->middleware(['guest', 'throttle:60,1'])->where('code', '[A-Za-z0-9]{6,12}')->name('go');
+
+// The invite link we send a shop. Opening it grants nothing; Accept does.
+Route::get('operator-invite/{token}', 'App\Http\Controllers\OperatorInviteController@show')->middleware(['guest', 'throttle:30,1'])->name('operator-invite.show');
+Route::post('operator-invite/{token}/accept', 'App\Http\Controllers\OperatorInviteController@accept')->middleware(['auth', 'not_guest', 'throttle:10,1'])->name('operator-invite.accept');
+Route::post('operator-invite-dismiss', 'App\Http\Controllers\OperatorInviteController@dismiss')->name('operator-invite.dismiss');
+
+// A scan waiting on a signed in member (PendingShopLinks sends them here).
+Route::get('home-shop/offer', 'App\Http\Controllers\HomeShopController@offer')->middleware(['auth', 'not_guest'])->name('home-shop.offer');
+
+Route::middleware(['auth', 'not_guest', 'early:home_shop'])->group(function () {
+    Route::get('home-shop', 'App\Http\Controllers\HomeShopController@index')->name('home-shop');
+    Route::post('home-shop/offer', 'App\Http\Controllers\HomeShopController@answer')->name('home-shop.answer');
+    Route::post('home-shop/set', 'App\Http\Controllers\HomeShopController@set')->name('home-shop.set');
+    Route::post('home-shop/remove', 'App\Http\Controllers\HomeShopController@remove')->name('home-shop.remove');
+});
+
+// "Is this your shop?" It files a request; a platform admin decides.
+Route::middleware(['auth', 'not_guest', 'early:operator_portal'])->group(function () {
+    Route::get('claim-shop/{operator}', 'App\Http\Controllers\HomeShopController@claimForm')->whereNumber('operator')->name('shop-claim.form');
+    Route::post('claim-shop/{operator}', 'App\Http\Controllers\HomeShopController@claim')->whereNumber('operator')->middleware('throttle:5,1')->name('shop-claim.store');
+});
+
+// The portal. operator.admin answers 404 to anyone without a grant.
+Route::middleware(['auth', 'not_guest', 'operator.admin'])->prefix('operator-admin')->group(function () {
+    Route::get('/', 'App\Http\Controllers\ShopPortalController@switcher')->name('shop-portal');
+    Route::get('{operator}', 'App\Http\Controllers\ShopPortalController@overview')->whereNumber('operator')->name('shop-portal.overview');
+    Route::get('{operator}/profile', 'App\Http\Controllers\ShopPortalController@profile')->whereNumber('operator')->name('shop-portal.profile');
+    Route::post('{operator}/profile', 'App\Http\Controllers\ShopPortalController@saveProfile')->whereNumber('operator')->name('shop-portal.profile.save');
+    Route::get('{operator}/locations', 'App\Http\Controllers\ShopPortalController@locations')->whereNumber('operator')->name('shop-portal.locations');
+    Route::post('{operator}/locations', 'App\Http\Controllers\ShopPortalController@saveLocation')->whereNumber('operator')->name('shop-portal.locations.create');
+    Route::post('{operator}/locations/{location}', 'App\Http\Controllers\ShopPortalController@saveLocation')->whereNumber(['operator', 'location'])->name('shop-portal.locations.update');
+    Route::post('{operator}/locations/{location}/offerings', 'App\Http\Controllers\ShopPortalController@saveOffering')->whereNumber(['operator', 'location'])->name('shop-portal.offerings.create');
+    Route::post('{operator}/locations/{location}/offerings/{offering}', 'App\Http\Controllers\ShopPortalController@saveOffering')->whereNumber(['operator', 'location', 'offering'])->name('shop-portal.offerings.update');
+    Route::post('{operator}/locations/{location}/offerings/{offering}/remove', 'App\Http\Controllers\ShopPortalController@removeOffering')->whereNumber(['operator', 'location', 'offering'])->name('shop-portal.offerings.remove');
+    Route::post('{operator}/prices/confirm', 'App\Http\Controllers\ShopPortalController@confirmPrices')->whereNumber('operator')->name('shop-portal.prices.confirm');
+    Route::get('{operator}/boats', 'App\Http\Controllers\ShopPortalController@boats')->whereNumber('operator')->name('shop-portal.boats');
+    Route::post('{operator}/boats/{boat}', 'App\Http\Controllers\ShopPortalController@saveBoat')->whereNumber(['operator', 'boat'])->name('shop-portal.boats.save');
+    Route::get('{operator}/insights', 'App\Http\Controllers\ShopPortalController@insights')->whereNumber('operator')->name('shop-portal.insights');
+    Route::get('{operator}/codes', 'App\Http\Controllers\ShopPortalController@codes')->whereNumber('operator')->name('shop-portal.codes');
+    Route::post('{operator}/codes', 'App\Http\Controllers\ShopPortalController@createCode')->whereNumber('operator')->name('shop-portal.codes.create');
+    Route::post('{operator}/codes/{code}/toggle', 'App\Http\Controllers\ShopPortalController@toggleCode')->whereNumber(['operator', 'code'])->name('shop-portal.codes.toggle');
+});
+
+// Ours only: who manages which shop, invite links, requests to decide.
+Route::middleware(['auth', 'admin'])->prefix('admin/shop-access')->group(function () {
+    Route::get('/', 'App\Http\Controllers\ShopAccessAdminController@index')->name('shop-access.index');
+    Route::get('users/search', 'App\Http\Controllers\ShopAccessAdminController@searchUsers')->name('shop-access.search');
+    Route::post('grant', 'App\Http\Controllers\ShopAccessAdminController@grant')->name('shop-access.grant');
+    Route::post('admins/{admin}/revoke', 'App\Http\Controllers\ShopAccessAdminController@revoke')->whereNumber('admin')->name('shop-access.revoke');
+    Route::post('invites', 'App\Http\Controllers\ShopAccessAdminController@createInvite')->name('shop-access.invite');
+    Route::post('invites/{invite}/revoke', 'App\Http\Controllers\ShopAccessAdminController@revokeInvite')->whereNumber('invite')->name('shop-access.invite.revoke');
+    Route::post('claims/{claim}', 'App\Http\Controllers\ShopAccessAdminController@decideClaim')->whereNumber('claim')->name('shop-access.claim');
+});
+
 
 Route::get('BeachDiving', 'App\Http\Controllers\SiteController@showBeach')->middleware('guest')->name('BeachDiving');
 
@@ -444,6 +505,7 @@ Route::post('dive-feedback/{token}/photos/remind-later', 'App\Http\Controllers\D
 Route::post('dive-feedback/{token}/site-rating', 'App\Http\Controllers\DiveFeedbackController@submitSiteRating')->name('DiveFeedback.siteRating');
 Route::post('dive-feedback/{token}/site-review', 'App\Http\Controllers\DiveFeedbackController@submitSiteReview')->name('DiveFeedback.siteReview');
 Route::post('dive-feedback/{token}/operator-rating', 'App\Http\Controllers\DiveFeedbackController@submitOperatorRating')->name('DiveFeedback.operatorRating');
+Route::get('dive-feedback/{token}/google-review', 'App\Http\Controllers\DiveFeedbackController@googleReview')->middleware('throttle:20,1')->name('DiveFeedback.googleReview');
 Route::post('dive-feedback/{token}/finish', 'App\Http\Controllers\DiveFeedbackController@finish')->name('DiveFeedback.finish');
 
 Route::get('DiveSites', 'App\Http\Controllers\SiteController@showTopRated')->middleware('guest')->name('DiveSites');

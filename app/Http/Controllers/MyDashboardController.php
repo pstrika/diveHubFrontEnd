@@ -369,7 +369,10 @@ class MyDashboardController extends Controller
         // the tag-based targeting Pablo described.
         $blogPosts = \App\Models\Post::forViewer($user->certLevel, 5);
 
-        return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers', 'wished', 'favOperators', 'favCalendars', 'weekendStart', 'myGroups', 'groupInvites', 'blogPosts'));
+        // Home shop card (Zach, 2026-11-19). Null unless this diver has one.
+        $homeShop = \App\Support\HomeShop::dashboardCard($user);
+
+        return view('pages.Dashboard', compact('trips', 'favTrips', 'weathers', 'wished', 'favOperators', 'favCalendars', 'weekendStart', 'myGroups', 'groupInvites', 'blogPosts', 'homeShop'));
     }
 
     private function cancelledDashboardTrip(Event $event): object

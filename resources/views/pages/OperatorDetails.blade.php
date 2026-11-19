@@ -164,6 +164,9 @@
                 $phoneHref = $operator->phone ? 'tel:' . preg_replace('/[^0-9+]/', '', $operator->phone) : null;
             @endphp
 
+            @if($shop['locations']->isNotEmpty() || $shop['canSetHome'] || $shop['claimOpen'] || $shop['canManage'])
+                <link rel="stylesheet" href="{{ asset('assets/css/shop-portal.css') }}?m={{ @filemtime(public_path('assets/css/shop-portal.css')) }}">
+            @endif
             <section class="dh-site-facts">
                 <div class="dh-op-head dh-site-facts-main">
                     <span class="dh-op-logo">
@@ -205,6 +208,17 @@
                         @else
                             <a class="dh-btn dh-btn-ghost-dark" href="#" onclick="event.preventDefault();showModalGuest();"><span class="material-icons-round">favorite_border</span>Favorite</a>
                         @endif
+                        {{-- Home shop (Zach, 2026-11-13, beta): only for accounts on the
+                             home_shop list, and only once the shop has a storefront. --}}
+                        @if($shop['isHome'])
+                            <a class="dh-btn dh-home-on" href="{{ route('home-shop') }}" title="This is your home shop. Tap to change it."><span class="material-icons-round">storefront</span>Your home shop</a>
+                        @elseif($shop['canSetHome'])
+                            <form method="POST" action="{{ route('home-shop.set') }}" class="d-inline">
+                                @csrf
+                                <input type="hidden" name="location_id" value="{{ $shop['homeLocationId'] }}">
+                                <button type="submit" class="dh-btn dh-btn-ghost-dark" title="Their trips will show first on your dive calendar"><span class="material-icons-round">storefront</span>Set as home shop</button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             </section>
@@ -216,6 +230,50 @@
                         <h2 class="dh-panel-title">Upcoming trips</h2>
                         <p class="dh-note">Click a day to open the trip board for that date. <span class="chip chip-static">Recreational</span> <span class="chip chip-static chip-yes">Technical</span></p>
                         <div class="calendar" data-bs-toggle="calendar" id="calendar"></div>
+                    </section>
+                    @endif
+
+                    {{-- Locations, services and prices the shop entered itself in the
+                         shop portal (Zach, 2026-11-13). Nothing renders until a shop
+                         has added a location. Each price says who confirmed it and
+                         when, because a stale fill price is worse than none. --}}
+                    @if($shop['locations']->isNotEmpty())
+                    <section class="dh-panel" id="locations">
+                        <h2 class="dh-panel-title">{{ $shop['locations']->count() > 1 ? 'Locations and services' : 'Location and services' }}</h2>
+                        @foreach($shop['locations'] as $loc)
+                            <article class="dh-loc">
+                                <div class="dh-loc-head">
+                                    <h3>{{ $loc->name }}</h3>
+                                    <span class="chip chip-static">{{ $loc->typeLabel() }}</span>
+                                </div>
+                                @if($loc->addressLine())<p class="dh-loc-addr">{{ $loc->addressLine() }}@if($loc->phone) · <a href="tel:{{ preg_replace('/[^0-9+]/', '', $loc->phone) }}">{{ $loc->phone }}</a>@endif</p>@endif
+                                @if($loc->hours)
+                                    <div class="dh-loc-hours">@foreach($loc->hours as $h)<span><b>{{ $h['day'] ?? '' }}</b> {{ $h['hours'] ?? '' }}</span>@endforeach</div>
+                                @endif
+                                @if($loc->description)<p class="dh-loc-addr">{{ $loc->description }}</p>@endif
+                                @if($loc->offerings->isNotEmpty())
+                                    <dl class="dh-price-list">
+                                        @foreach($loc->offerings as $o)
+                                            <div>
+                                                <dt>{{ $o->name }}@if($o->price_note) <span class="dh-loc-prov">{{ $o->price_note }}</span>@endif</dt>
+                                                <dd>@if($o->price_cents !== null)${{ rtrim(rtrim(number_format($o->price_cents / 100, 2), '0'), '.') }}@if($o->price_unit) <span class="dh-loc-prov">{{ $o->price_unit }}</span>@endif @else Ask @endif</dd>
+                                            </div>
+                                        @endforeach
+                                    </dl>
+                                    @php
+                                        $byShop = $loc->offerings->where('price_source', 'operator');
+                                        $oldest = $loc->offerings->min('price_confirmed_at');
+                                    @endphp
+                                    <p class="dh-loc-prov mb-0 mt-2">
+                                        @if($byShop->count() === $loc->offerings->count() && $oldest)
+                                            {{ $oldest->lt(now()->subDays(180)) ? 'Last confirmed by the shop' : 'Confirmed by the shop on' }} {{ $oldest->format('M j, Y') }}.
+                                        @else
+                                            Listed by Divers Hub, not confirmed by the shop.
+                                        @endif
+                                    </p>
+                                @endif
+                            </article>
+                        @endforeach
                     </section>
                     @endif
 
@@ -270,7 +328,7 @@
                         <h2 class="dh-panel-title">Contact</h2>
                         <div id="map" class="dh-map dh-map-small mb-3" role="application" aria-label="Map of the dive shop"></div>
                         <dl class="dh-facts-list dh-facts-list-stack">
-                            @if($operator->streetAddress)<div><dt>Shop</dt><dd>{{ $operator->streetAddress }}, {{ $operator->cityAddress }} {{ $operator->stateAddress }} {{ $operator->zipAddress }}</dd></div>@endif
+                            @if($operator->streetAddress && !$shop['hasStorefront'])<div><dt>Shop</dt><dd>{{ $operator->streetAddress }}, {{ $operator->cityAddress }} {{ $operator->stateAddress }} {{ $operator->zipAddress }}</dd></div>@endif
                             @if($operator->marinaAddress)<div><dt>Marina</dt><dd>{{ $operator->marinaAddress }}</dd></div>@endif
                             @if($operator->marinaAddressAlt)<div><dt>Second marina</dt><dd>{{ $operator->marinaAddressAlt }}</dd></div>@endif
                             @if($operator->phone)<div><dt>Phone</dt><dd><a href="{{ $phoneHref }}">{{ $operator->phone }}</a></dd></div>@endif
@@ -278,7 +336,7 @@
                             @if($operator->webSite)<div><dt>Website</dt><dd><a href="{{ $operator->webSite }}" target="_blank" rel="noopener">{{ parse_url($operator->webSite, PHP_URL_HOST) ?: $operator->webSite }}</a></dd></div>@endif
                             @if($operator->waiverLink)<div><dt>Waiver</dt><dd><a href="{{ $operator->waiverLink }}" target="_blank" rel="noopener">Sign online</a></dd></div>@endif
                         </dl>
-                        @if($hoursOfOperation)
+                        @if($hoursOfOperation && !$shop['hasStorefront'])
                             <h3 class="dh-panel-subtitle">Hours</h3>
                             <dl class="dh-hours">
                                 @foreach($hoursOfOperation as $h)
@@ -287,6 +345,15 @@
                             </dl>
                         @endif
                     </section>
+
+                    {{-- Shop portal ways in (Zach, 2026-11-13). "Manage" for whoever
+                         holds a grant; "Is this your shop?" for the accounts on the
+                         operator_portal list while it is being shown to shops. --}}
+                    @if($shop['canManage'])
+                        <p class="dh-claim-link"><a href="{{ route('shop-portal.overview', ['operator' => $operator->id]) }}"><span class="material-icons-round" style="font-size:15px;vertical-align:-3px">edit</span> Manage this shop's page</a></p>
+                    @elseif($shop['claimOpen'])
+                        <p class="dh-claim-link">Own or work here? <a href="{{ route('shop-claim.form', ['operator' => $operator->id]) }}">Is this your shop?</a></p>
+                    @endif<?php /* Platform admins only (Zach, 2026-11-19). Plain PHP on the end of the line above on purpose, so the page is byte for byte the same for everyone else. */ if ($shop['isPlatformAdmin']): ?><p class="dh-claim-link"><a href="{{ route('shop-access.index', ['operator' => $operator->id]) }}#grant"><span class="material-icons-round" style="font-size:15px;vertical-align:-3px">admin_panel_settings</span> Who manages this shop</a></p><?php endif; ?>
 
                     @if($tripPrices)
                     <section class="dh-panel">

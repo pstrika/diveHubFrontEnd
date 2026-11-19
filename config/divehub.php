@@ -14,10 +14,10 @@
 
 return [
 
-    'version' => '12.36.2',
+    'version' => '12.37.0',
 
     // Release date shown next to the version. Any human readable format.
-    'released' => '11/16/26',
+    'released' => '11/19/26',
 
     // App Store link for the companion app, "Logbook by Divers Hub". Null
     // while it's in TestFlight: the Logbook page then says "coming soon".
@@ -47,6 +47,15 @@ return [
         // UserPolicy::ccrChecklistAccess. Marked Beta in the menu and on
         // the page.
         'ccr_checklists' => ['*'],
+        // Home shop (Zach, 2026-11-13): a diver picks a shop, its trips show
+        // first on the dive calendar. Listed accounts only while it is
+        // being shown to shops; guests never, whatever this says
+        // (App\Support\HomeShop::allows).
+        'home_shop' => ['zach.patterson0591@gmail.com'],
+        // Who sees "Is this your shop?" on an operator page. The shop
+        // portal itself is not on this list: it opens to whoever holds a
+        // grant for a shop (App\Support\ShopAccess).
+        'operator_portal' => ['zach.patterson0591@gmail.com'],
     ],
 
 ];

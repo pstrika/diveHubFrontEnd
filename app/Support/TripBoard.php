@@ -78,8 +78,14 @@ final class TripBoard
      * @param ?Collection $siteCovers    siteId => Photo (App\Models\Photo::coversFor()), for
      *                                   each card's site hero thumbnail - optional, only the
      *                                   trip finder passes this (Pablo, 2026-10-09).
+     * @param ?int       $homeOperatorId The viewer's home shop (App\Support\HomeShop), or
+     *                                   null. Its trips are marked and listed first within
+     *                                   their region; nothing is hidden and no filter
+     *                                   changes (Zach, 2026-11-13). Only the member board
+     *                                   passes it. It must never reach the shared guest
+     *                                   cache, which is one board for every visitor.
      */
-    public static function build(Collection $trips, Collection $weathers, Collection $locations, array $filters, array $operators = [], array $favoriteCoasts = [], array $favoriteLocationShorts = [], array $wishedSiteIds = [], ?Collection $siteCovers = null): array
+    public static function build(Collection $trips, Collection $weathers, Collection $locations, array $filters, array $operators = [], array $favoriteCoasts = [], array $favoriteLocationShorts = [], array $wishedSiteIds = [], ?Collection $siteCovers = null, ?int $homeOperatorId = null): array
     {
         $now = Carbon::now();
         $shortToName = $locations->pluck('location', 'short')->map(fn ($n) => strtolower($n))->all();
@@ -115,6 +121,9 @@ final class TripBoard
         foreach ($trips as $trip) {
             $total++;
             $card = self::card($trip, $now, $operators, $wishedSiteIds, $siteCovers);
+            if ($homeOperatorId !== null && (int) $card['operatorId'] === $homeOperatorId) {
+                $card['homeShop'] = true;
+            }
             if (self::passes($card, $withoutType)) {
                 foreach (array_keys(self::TYPE_OPTIONS) as $type) {
                     if (self::passes($card, ['region' => null, 'level' => null, 'seats' => false, 'type' => $type])) {
@@ -171,7 +180,10 @@ final class TripBoard
         $ordered = [];
         foreach ($displayOrder as $key) {
             if (isset($groups[$key])) {
-                usort($groups[$key]['trips'], fn ($a, $b) => strcmp($a['sortKey'], $b['sortKey']));
+                // Home shop first, then by time. With no home shop every card
+                // compares equal on the first test and the order is by time
+                // alone, as it always was.
+                usort($groups[$key]['trips'], fn ($a, $b) => ($b['homeShop'] <=> $a['homeShop']) ?: strcmp($a['sortKey'], $b['sortKey']));
                 $groups[$key]['locations'] = array_values($groups[$key]['locations']);
                 $ordered[] = $groups[$key];
             }
@@ -351,6 +363,8 @@ final class TripBoard
             'isLobster'     => str_contains($tags, 'LOB'),
             'isNight'       => $hour >= 17,
             'fav'           => (bool) ($trip->fav ?? false),
+            // Set by build() for the viewer's home shop; false everywhere else.
+            'homeShop'      => false,
             'visited'       => (bool) ($trip->visited ?? false),
             'wished'        => (bool) array_intersect(array_map(fn ($s) => $s->id, $sites), $wishedSiteIds),
             'availability'  => self::availability($trip, $departed),

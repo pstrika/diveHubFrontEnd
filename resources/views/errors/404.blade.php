@@ -1,25 +1,10 @@
-<x-page-template bodyClass='error-page'>
-
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg position-absolute top-0 z-index-3 w-100 shadow-none my-3  navbar-transparent mt-4">
-    <x-auth.navbars.navs.guest p='' btn='btn-light' textColor='text-white' svgColor='white'></x-auth.navbars.navs.guest>
-  </nav>
-  <!-- End Navbar -->
-  <main class="main-content  mt-0">
-    <div class="page-header align-items-start min-vh-100" style="background-image: url('/assets/img/illustrations/error.jpeg');">
-      <span class="mask bg-gradient-dark opacity-6"></span>
-      <div class="container my-auto">
-        <div class="row">
-          <div class="col-lg-12 m-auto text-center">
-            <h1 class="display-1 text-bolder text-white">Error 404</h1>
-            <h2 class="text-white">Erm. Page not found</h2>
-            <p class="lead text-white">We suggest you to go to the homepage while we solve this issue.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-  <!-- -------- START FOOTER 3 w/ COMPANY DESCRIPTION WITH LINKS & SOCIAL ICONS & COPYRIGHT ------- -->
- <x-auth.footers.guest.social-icons-footer></x-auth.footers.guest.social-icons-footer>
-  <!-- -------- END FOOTER 3 w/ COMPANY DESCRIPTION WITH LINKS & SOCIAL ICONS & COPYRIGHT ------- -->
-</x-page-template>
+{{-- Error 404, in the current Divers Hub style. The frame is components/error-page.blade.php. --}}
+<x-error-page code="404" icon="explore_off" title="We can't find that page">
+    The link may be old, or the page may have moved. Everything else is where you left it.
+    <x-slot:actions>
+        <a class="dh-btn dh-btn-primary" href="{{ url('/Trips') }}"><span class="material-icons-round" aria-hidden="true">scuba_diving</span>Find a dive</a>
+        <a class="dh-btn dh-btn-ghost-dark" href="{{ url('/DiveSites') }}">Dive sites</a>
+        <a class="dh-btn dh-btn-ghost-dark" href="{{ url('/Operators') }}">Operators</a>
+        <a class="dh-btn dh-btn-ghost-dark" href="{{ url('/') }}">Home</a>
+    </x-slot:actions>
+</x-error-page>

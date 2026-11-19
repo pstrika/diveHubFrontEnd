@@ -37,11 +37,15 @@
             $trips = $limit ? array_slice($group['trips'], 0, $limit) : $group['trips'];
             $hidden = count($group['trips']) - count($trips);
             $collapsed = !$limit && count($group['trips']) > 6;
+            // Home shop (Zach, 2026-11-13): a member's home shop trips are listed
+            // first (TripBoard::build) under a heading of their own, so Morning is
+            // not printed twice. No card has homeShop set for a guest, so the
+            // guest board renders the same bytes as before.
         @endphp
         <div class="dh-region-trips {{ $collapsed ? 'is-collapsed' : '' }}">
             @foreach($trips as $i => $trip)
-                @if($i === 0 || $trip['period'] !== $trips[$i - 1]['period'])
-                    <div class="dh-period">{{ ['AM' => 'Morning', 'PM' => 'Afternoon and evening', 'TBD' => 'Time to be confirmed'][$trip['period']] }}</div>
+                @if($i === 0 || (!empty($trip['homeShop']) ? 'HOME' : $trip['period']) !== (!empty($trips[$i - 1]['homeShop']) ? 'HOME' : $trips[$i - 1]['period']))
+                    <div class="dh-period">{{ ['AM' => 'Morning', 'PM' => 'Afternoon and evening', 'TBD' => 'Time to be confirmed', 'HOME' => 'Your home shop'][!empty($trip['homeShop']) ? 'HOME' : $trip['period']] }}</div>
                 @endif
                 <x-trip-card :trip="$trip" :favMode="$favMode" :showPhoto="true" />
             @endforeach

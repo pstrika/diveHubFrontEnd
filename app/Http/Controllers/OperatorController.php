@@ -45,7 +45,7 @@ class OperatorController extends Controller
 
         $id = $operator->id;
 
-        $boats = Boat::where("operatorId", $id)->get();
+        $boats = \App\Support\HomeShop::overlayBoats(Boat::where("operatorId", $id)->get());
         $favOperators = explode(',', $user->favOperators);
         if(in_array($id, $favOperators)) {
             $fav = true;
@@ -152,7 +152,13 @@ class OperatorController extends Controller
         $area = $areaSlug ? ['slug' => $areaSlug] + \App\Http\Controllers\DiveTripsController::PAGES[$areaSlug] : null;
         $areaGroup = !empty($area['group']) ? \App\Models\Group::where('slug', $area['group'])->where('is_public', true)->first(['id', 'slug', 'name']) : null;
 
-        return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites', 'trips', 'ratedAlready', 'SEO', 'card', 'area', 'areaGroup'));
+        // Shop portal (Zach, 2026-11-13): the shop's own locations, services
+        // and contact details, and this viewer's home shop state. Done after
+        // $SEO on purpose, so the page title and canonical stay as they were.
+        $shop = \App\Support\HomeShop::pageData($operator, auth()->user());
+        \App\Support\ShopEvents::record((int) $operator->id, \App\Support\ShopEvents::PAGE_VIEW);
+
+        return view('pages.OperatorDetails', compact('operator', 'boats', 'fav', 'topSites', 'trips', 'ratedAlready', 'SEO', 'card', 'area', 'areaGroup', 'shop'));
     }
 
 
@@ -186,9 +192,11 @@ class OperatorController extends Controller
             Log::debug("found fav operator in index: " . str(array_search($id, $favOperators)));
             unset($favOperators[array_search($id, $favOperators)]);
             $user->favOperators = implode(', ', $favOperators);
+            \App\Support\ShopEvents::record((int) $id, \App\Support\ShopEvents::FAVORITE_OFF);
         } else {
             Log::debug("Operator not in favs");
             $user->favOperators .= ', ' . str($id);
+            \App\Support\ShopEvents::record((int) $id, \App\Support\ShopEvents::FAVORITE_ON);
         }
 
         $user->save();
@@ -225,9 +233,16 @@ class OperatorController extends Controller
     {
         $operator = Operator::find($operatorId);
 
+        // The shop's own waiver link, when it has set one in the shop portal.
+        $ownWaiver = $operator ? \App\Support\HomeShop::profileValue((int) $operator->id, 'waiver_link') : null;
+        if ($operator && $ownWaiver) {
+            $operator->waiverLink = $ownWaiver;
+        }
+
         if (!$operator || !$operator->waiverLink) {
             return redirect()->route('Waivers');
         }
+        \App\Support\ShopEvents::record((int) $operator->id, \App\Support\ShopEvents::WAIVER_CLICK);
 
         return redirect()->away($operator->waiverLink);
     }

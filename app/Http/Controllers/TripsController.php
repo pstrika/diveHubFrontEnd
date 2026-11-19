@@ -298,12 +298,16 @@ class TripsController extends Controller
         // depends on their own favorites/wishlist and must never be shared
         // across viewers.
         $isGuestViewer = auth()->user()->id == 5;
+        // Home shop (Zach, 2026-11-13): a member's home shop's trips are
+        // listed first. Null for the guest and for anyone off the home_shop
+        // list, and only ever passed to the uncached member build below.
+        $homeOperatorId = $isGuestViewer ? null : \App\Support\HomeShop::operatorIdFor(auth()->user());
         $byDate = $trips->groupBy('date');
         $days = [];
         for ($d = Carbon::parse($from); $d->lte(Carbon::parse($to)); $d->addDay()) {
             $key = $d->toDateString();
             if (!$isGuestViewer) {
-                $days[$key] = TripBoard::build($byDate->get($key, collect()), $allWeather->get($key, collect()), $locations, $filters, $operators, $favoriteCoasts, $favShorts, $wishedSiteIds, $siteCovers);
+                $days[$key] = TripBoard::build($byDate->get($key, collect()), $allWeather->get($key, collect()), $locations, $filters, $operators, $favoriteCoasts, $favShorts, $wishedSiteIds, $siteCovers, $homeOperatorId);
                 continue;
             }
             $boardCacheKey = 'board.' . $key . '.' . md5(json_encode($filters));

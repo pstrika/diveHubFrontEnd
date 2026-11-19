@@ -42,6 +42,9 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\UpdateLastSeen::class,
+            // Shop portal (2026-11-13): finishes a shop invite or QR scan
+            // after sign in. Does nothing unless one of its two cookies is set.
+            \App\Http\Middleware\PendingShopLinks::class,
         ],
 
         'api' => [
@@ -81,5 +84,6 @@ class Kernel extends HttpKernel
         'early' => \App\Http\Middleware\EarlyAccessGate::class,
         'guest' => \App\Http\Middleware\AuthenticateAsGuest::class,
         'not_guest' => \App\Http\Middleware\EnsureNotGuest::class,
+        'operator.admin' => \App\Http\Middleware\OperatorAdminGate::class,
     ];
 }

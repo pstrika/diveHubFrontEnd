@@ -1,25 +1,8 @@
-<x-page-template bodyClass='error-page'>
-
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg position-absolute top-0 z-index-3 w-100 shadow-none my-3  navbar-transparent mt-4">
-    <x-auth.navbars.navs.guest p='' btn='btn-light' textColor='text-white' svgColor='white'></x-auth.navbars.navs.guest>
-  </nav>
-  <!-- End Navbar -->
-  <main class="main-content  mt-0">
-    <div class="page-header align-items-start min-vh-100" style="background-image: url('/assets/img/illustrations/error.jpeg');">
-      <span class="mask bg-gradient-dark opacity-6"></span>
-      <div class="container my-auto">
-        <div class="row">
-          <div class="col-lg-12 m-auto text-center">
-            <h1 class="display-1 text-bolder text-white">Error 419</h1>
-            <h2 class="text-white">Page expired</h2>
-            <p class="lead text-white">Ooooups! Looks like your token has expired.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-  <!-- -------- START FOOTER 3 w/ COMPANY DESCRIPTION WITH LINKS & SOCIAL ICONS & COPYRIGHT ------- -->
- <x-auth.footers.guest.social-icons-footer></x-auth.footers.guest.social-icons-footer>
-  <!-- -------- END FOOTER 3 w/ COMPANY DESCRIPTION WITH LINKS & SOCIAL ICONS & COPYRIGHT ------- -->
-</x-page-template>
+{{-- Error 419, in the current Divers Hub style. The frame is components/error-page.blade.php. --}}
+<x-error-page code="419" icon="schedule" title="This page sat open too long">
+    For your security the form expired. Go back, reload the page and try again. Nothing was saved from the last attempt.
+    <x-slot:actions>
+        <button type="button" class="dh-btn dh-btn-primary" onclick="history.back()"><span class="material-icons-round" aria-hidden="true">arrow_back</span>Go back</button>
+        <a class="dh-btn dh-btn-ghost-dark" href="{{ url('/') }}">Home</a>
+    </x-slot:actions>
+</x-error-page>

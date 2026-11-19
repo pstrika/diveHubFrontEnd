@@ -94,7 +94,34 @@ class DiveFeedbackController extends Controller
             'photosUploaded' => $photosUploaded,
             'alreadyRatedSite' => $alreadyRatedSite,
             'alreadyRatedOperator' => $alreadyRatedOperator,
+            // The shop's own Google review link, when it has set one in the
+            // shop portal AND switched the ask on (Zach, 2026-11-19: off by
+            // default, "they may already be asking"). Then it is offered on
+            // the thank-you screen to EVERY diver who finishes, whatever
+            // they rated: it must never be shown only to the happy ones.
+            'googleReview' => $operator && \App\Support\HomeShop::profileValue((int) $operator->id, 'google_review_url', ['google_review_ask' => true])
+                ? route('DiveFeedback.googleReview', ['token' => $token]) : null,
         ]);
+    }
+
+    /**
+     * "Review on Google" from the thank-you screen: counts the tap for the
+     * shop's insights, then sends the diver to the shop's Google review
+     * page. Nothing is recorded about what they do there, and nothing is
+     * given in return.
+     */
+    public function googleReview($token)
+    {
+        $feedbackRequest = PostDiveFeedbackRequest::where('token', $token)->first();
+        $url = $feedbackRequest && $feedbackRequest->operator_id
+            ? \App\Support\HomeShop::profileValue((int) $feedbackRequest->operator_id, 'google_review_url', ['google_review_ask' => true])
+            : null;
+        if (!$url) {
+            return redirect('/');
+        }
+        \App\Support\ShopEvents::record((int) $feedbackRequest->operator_id, \App\Support\ShopEvents::GOOGLE_REVIEW_CLICK, ['user_id' => (int) $feedbackRequest->user_id]);
+
+        return redirect()->away($url);
     }
 
     public function submitConditions(Request $request, $token)

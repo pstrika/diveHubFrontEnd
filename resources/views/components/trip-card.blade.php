@@ -81,7 +81,7 @@
             @else
                 {{ $trip['operatorName'] }}
             @endif
-            @if($trip['fav'] && $favMode === 'operator')<span class="material-icons-round dh-trip-favicon" title="Matches your favorite operators">favorite</span>@endif
+            @if($trip['fav'] && $favMode === 'operator')<span class="material-icons-round dh-trip-favicon" title="Matches your favorite operators">favorite</span>@endif{{-- Home shop label (Zach, 2026-11-13). Plain PHP tags on the end of the line above, on purpose: Blade does not see an @if that touches the @endif before it, and a Blade echo would leave a newline behind. This way a card without the label renders the same bytes as before. --}}<?php if (!empty($trip['homeShop'])): ?><span class="dh-trip-home"><span class="material-icons-round" aria-hidden="true">storefront</span>Your home shop</span><?php endif; ?>
             @if($trip['siteNames'])
                 <span class="dh-dot">·</span>
                 @if($trip['siteUrl'])<a href="{{ $trip['siteUrl'] }}">{{ implode(', ', array_slice($trip['siteNames'], 0, 2)) }}</a>

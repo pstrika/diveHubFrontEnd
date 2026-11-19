@@ -105,6 +105,59 @@
                             </form>
                         </div>
                     </div>
+
+                    {{-- Shop admin (Zach, 2026-11-19): the same grant as More > Shop
+                         access, reachable from the user it is about. It does not
+                         change this user's role; it lets them manage one shop's page. --}}
+                    @php
+                        // Null when the shop tables are not there yet (code
+                        // deployed ahead of its migrations): the card is left out.
+                        try {
+                            $shopGrants = \App\Models\OperatorAdmin::where('user_id', $user->id)->whereNull('revoked_at')->get();
+                            $shopOperators = \App\Models\Operator::orderBy('operatorName')->get(['id', 'operatorName']);
+                            $shopNames = $shopOperators->pluck('operatorName', 'id');
+                        } catch (\Throwable $e) {
+                            $shopGrants = null;
+                        }
+                    @endphp
+                    @if($shopGrants !== null)
+                    <div class="card mt-4" id="shop-admin">
+                        <div class="card-header pb-0">
+                            <h5 class="mb-0">Shops this user manages</h5>
+                            <p class="text-sm mb-0">A shop admin can edit that shop's page, prices and QR codes in the shop portal.</p>
+                        </div>
+                        <div class="card-body">
+                            @if(session('shop_status'))<div class="alert alert-success text-white py-2">{{ session('shop_status') }}</div>@endif
+                            @forelse($shopGrants as $grant)
+                                <div class="d-flex align-items-center justify-content-between border-bottom py-2">
+                                    <span><b>{{ $shopNames[$grant->operator_id] ?? 'Shop ' . $grant->operator_id }}</b> <span class="text-sm text-secondary">since {{ optional($grant->created_at)->format('M j, Y') }}</span></span>
+                                    <span>
+                                        <a class="btn btn-sm btn-outline-dark mb-0" href="{{ route('shop-portal.overview', ['operator' => $grant->operator_id]) }}">Open portal</a>
+                                        <form class="d-inline" method="POST" action="{{ route('shop-access.revoke', ['admin' => $grant->id]) }}" onsubmit="return confirm('Remove this access?')">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-outline-danger mb-0">Remove</button>
+                                        </form>
+                                    </span>
+                                </div>
+                            @empty
+                                <p class="text-sm text-secondary">This user does not manage any shop.</p>
+                            @endforelse
+                            <form method="POST" action="{{ route('shop-access.grant') }}" class="d-flex flex-wrap align-items-end gap-2 mt-3">
+                                @csrf
+                                <input type="hidden" name="user_id" value="{{ $user->id }}">
+                                <input type="hidden" name="stay" value="1">
+                                <div class="flex-grow-1" style="min-width: 220px;">
+                                    <label class="form-label" for="shop-admin-operator">Add a shop</label>
+                                    <select class="form-control border border-2 p-2" id="shop-admin-operator" name="operator_id" required>
+                                        <option value="">Pick a shop</option>
+                                        @foreach($shopOperators as $op)<option value="{{ $op->id }}">{{ $op->operatorName }}</option>@endforeach
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-dark mb-0">Make shop admin</button>
+                            </form>
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
             <x-auth.footers.auth.footer></x-auth.footers.auth.footer>

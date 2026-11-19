@@ -1,0 +1,157 @@
+/*
+ * Shop portal, shop access and home shop screens (Zach, 2026-11-13).
+ *
+ * Linked from the pages that need it (components/shop/page.blade.php and
+ * the operator page), not from the site layout, with the file's modified
+ * time in the URL so a deploy is never stuck behind a cached copy. Builds
+ * on divershub.css: dh-panel, dh-btn, chip and the --dh-* variables.
+ */
+
+.dh-shop-wrap { max-width: 980px; margin: 0 auto; padding: var(--dh-space-3) 0 var(--dh-space-5, 48px); }
+
+.dh-shop-beta { display: flex; gap: 10px; align-items: flex-start; background: var(--dh-avg-bg); color: var(--dh-ink); border-radius: var(--dh-radius); padding: 10px 14px; font-size: .85rem; margin-bottom: var(--dh-space-3); }
+.dh-shop-pill { flex: none; background: var(--dh-sea); color: #fff; font-size: .6rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; border-radius: var(--dh-radius-pill); padding: 3px 9px; margin-top: 1px; }
+
+.dh-shop-status { background: #e8f6ee; color: #14633a; border-radius: var(--dh-radius); padding: 10px 14px; font-weight: 600; font-size: .9rem; margin-bottom: var(--dh-space-3); }
+.dh-shop-errors { background: #fdecec; color: #8a1f1f; border-radius: var(--dh-radius); padding: 10px 14px; font-size: .9rem; margin-bottom: var(--dh-space-3); }
+.dh-shop-errors ul { margin: 0; padding-left: 18px; }
+
+.dh-shop-head { display: flex; align-items: center; gap: 12px; margin-bottom: var(--dh-space-3); }
+.dh-shop-head img { width: 48px; height: 48px; object-fit: contain; border-radius: 10px; background: #fff; border: 1px solid var(--dh-line); }
+.dh-shop-head h2 { font-size: 1.25rem; font-weight: 800; color: var(--dh-ink); margin: 0; }
+.dh-shop-head p { margin: 0; font-size: .85rem; color: var(--dh-muted); }
+.dh-shop-head .dh-btn { margin-left: auto; }
+
+/* Tabs. Locked ones are real buttons that do nothing, so they read as "coming". */
+.dh-shop-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--dh-space-3); }
+.dh-shop-tab { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--dh-radius-pill); border: 1.5px solid var(--dh-line); background: #fff; color: var(--dh-ink); font-weight: 700; font-size: .85rem; text-decoration: none; }
+.dh-shop-tab:hover { border-color: var(--dh-ink); color: var(--dh-ink); }
+.dh-shop-tab.is-active { background: var(--dh-ink); border-color: var(--dh-ink); color: #fff; }
+.dh-shop-tab .material-icons-round { font-size: 17px; }
+.dh-shop-tab.is-locked { color: var(--dh-muted); background: #f5f6f8; border-style: dashed; cursor: not-allowed; }
+.dh-shop-tab.is-locked:hover { border-color: var(--dh-line); color: var(--dh-muted); }
+
+/* "Coming soon" tiles on the overview and the home shop page. */
+.dh-shop-soon { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.dh-shop-soon-tile { border: 1.5px dashed var(--dh-line); border-radius: 14px; padding: 14px; background: #f8f9fb; color: var(--dh-muted); }
+.dh-shop-soon-tile h3 { display: flex; align-items: center; gap: 6px; font-size: .92rem; font-weight: 800; margin: 0 0 4px; color: var(--dh-muted); }
+.dh-shop-soon-tile h3 .material-icons-round { font-size: 17px; }
+.dh-shop-soon-tile p { margin: 0; font-size: .8rem; }
+
+.dh-shop-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: var(--dh-space-3); }
+.dh-shop-stat { background: var(--dh-paper); border: 1px solid var(--dh-line); border-radius: 14px; padding: 14px; }
+.dh-shop-stat b { display: block; font-size: 1.6rem; font-weight: 800; color: var(--dh-ink); line-height: 1.1; }
+.dh-shop-stat span { font-size: .78rem; color: var(--dh-muted); font-weight: 600; }
+
+/* Forms. Plain inputs with a visible border: the theme's outline inputs need script. */
+.dh-shop-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.dh-shop-form .is-wide { grid-column: 1 / -1; }
+.dh-shop-field label { display: block; font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--dh-muted); margin: 0 0 4px; }
+.dh-shop-field input, .dh-shop-field select, .dh-shop-field textarea { width: 100%; border: 1.5px solid var(--dh-line); border-radius: 10px; padding: 8px 10px; font-size: .92rem; color: var(--dh-ink); background: #fff; }
+.dh-shop-field input:focus, .dh-shop-field select:focus, .dh-shop-field textarea:focus { outline: none; border-color: var(--dh-sea); }
+.dh-shop-field small { display: block; font-size: .76rem; color: var(--dh-muted); margin-top: 3px; }
+.dh-shop-hours { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.dh-shop-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+.dh-shop-actions button { cursor: pointer; }
+.dh-shop-inline { display: inline; }
+
+.dh-shop-card { border: 1px solid var(--dh-line); border-radius: 14px; padding: 14px; margin-bottom: 12px; background: #fff; }
+.dh-shop-card.is-off { opacity: .6; }
+.dh-shop-card-head { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+.dh-shop-card-head h3 { font-size: 1rem; font-weight: 800; color: var(--dh-ink); margin: 0; }
+.dh-shop-card-head p { margin: 2px 0 0; font-size: .85rem; color: var(--dh-muted); }
+.dh-shop-card-head .dh-shop-chips { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.dh-shop-card details { margin-top: 10px; }
+.dh-shop-card summary { cursor: pointer; font-weight: 700; font-size: .85rem; color: var(--dh-sea); }
+.dh-shop-card details[open] > summary { margin-bottom: 10px; }
+
+.dh-shop-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.dh-shop-table th { text-align: left; font-size: .7rem; letter-spacing: .05em; text-transform: uppercase; color: var(--dh-muted); padding: 6px 8px; border-bottom: 1px solid var(--dh-line); }
+.dh-shop-table td { padding: 8px; border-bottom: 1px solid var(--dh-line); vertical-align: middle; color: var(--dh-ink); }
+.dh-shop-table tr:last-child td { border-bottom: 0; }
+.dh-shop-table .is-num { text-align: right; white-space: nowrap; }
+.dh-shop-scroll { overflow-x: auto; }
+.dh-shop-muted { color: var(--dh-muted); font-size: .8rem; }
+
+.dh-shop-linkbox { display: flex; gap: 8px; align-items: center; background: #f5f6f8; border: 1.5px solid var(--dh-line); border-radius: 10px; padding: 8px 10px; }
+.dh-shop-linkbox input { flex: 1; min-width: 0; border: 0; background: transparent; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .82rem; color: var(--dh-ink); }
+.dh-shop-linkbox input:focus { outline: none; }
+
+.dh-shop-results { border: 1px solid var(--dh-line); border-radius: 10px; margin-top: 6px; overflow: hidden; }
+.dh-shop-results button { display: block; width: 100%; text-align: left; background: #fff; border: 0; border-bottom: 1px solid var(--dh-line); padding: 8px 10px; font-size: .88rem; cursor: pointer; }
+.dh-shop-results button:last-child { border-bottom: 0; }
+.dh-shop-results button:hover { background: #f5f6f8; }
+
+.dh-shop-code { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; letter-spacing: .06em; }
+
+/* A centred single card: invite, home shop offer, invalid link. */
+.dh-shop-center { max-width: 520px; margin: var(--dh-space-4) auto; text-align: center; }
+.dh-shop-center h2 { font-size: 1.3rem; font-weight: 800; color: var(--dh-ink); margin: 0 0 8px; }
+.dh-shop-center p { color: var(--dh-muted); }
+.dh-shop-center .dh-shop-actions { justify-content: center; }
+.dh-shop-center .dh-shop-logo { width: 72px; height: 72px; object-fit: contain; border-radius: 14px; border: 1px solid var(--dh-line); background: #fff; margin-bottom: 12px; }
+
+/* Operator page: locations and services, the home shop button. */
+.dh-loc { border: 1px solid var(--dh-line); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+.dh-loc:last-child { margin-bottom: 0; }
+.dh-loc-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+.dh-loc-head h3 { font-size: 1rem; font-weight: 800; color: var(--dh-ink); margin: 0; }
+.dh-loc-addr { margin: 0 0 8px; font-size: .9rem; color: var(--dh-ink); }
+.dh-loc-hours { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .82rem; color: var(--dh-muted); margin-bottom: 8px; }
+.dh-loc-hours b { color: var(--dh-ink); }
+.dh-loc-prov { font-size: .72rem; color: var(--dh-muted); }
+.dh-home-on { background: var(--dh-sea) !important; border-color: var(--dh-sea) !important; color: #fff !important; }
+.dh-claim-link { font-size: .8rem; color: var(--dh-muted); }
+
+/* Dive calendar: the "Your home shop" label on a pinned trip. */
+.dh-trip-home { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; background: var(--dh-sea); color: #fff; font-size: .62rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; border-radius: var(--dh-radius-pill); padding: 2px 8px; vertical-align: middle; white-space: nowrap; }
+.dh-trip-home .material-icons-round { font-size: 12px; }
+
+@media print {
+    .dh-shop-noprint, .dh-shop-tabs, .dh-shop-beta, nav, .dh-tabbar, .dh-pagehead { display: none !important; }
+}
+
+/* Second pass, 2026-11-19. */
+/* Card actions: real buttons that open the form under them. */
+.dh-shop-cardactions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.dh-shop-cardactions [aria-expanded="true"] { box-shadow: 0 0 0 2px var(--dh-sea); }
+.dh-shop-drawer { margin-top: 12px; padding: 14px; background: var(--dh-foam); border-radius: 14px; }
+.dh-shop-drawer h4 { font-size: .95rem; font-weight: 800; color: var(--dh-ink); margin: 0 0 10px; }
+.dh-shop-editrow > td { background: var(--dh-foam); padding: 14px !important; border-radius: 12px; }
+.dh-shop-table td.is-num .dh-btn { margin-left: 4px; }
+/* Shop details: fills and trip prices. */
+.dh-shop-subhead { font-size: .95rem; font-weight: 800; color: var(--dh-ink); margin: 22px 0 4px; }
+.dh-shop-checks { display: flex; flex-wrap: wrap; gap: 8px; }
+.dh-shop-check { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1px solid var(--dh-line); border-radius: var(--dh-radius-pill); background: var(--dh-paper); font-weight: 700; font-size: .88rem; color: var(--dh-ink); cursor: pointer; margin: 0; }
+.dh-shop-check input { width: 17px; height: 17px; accent-color: var(--dh-sea); }
+.dh-shop-check:has(input:checked) { border-color: var(--dh-sea); background: var(--dh-foam); }
+.dh-shop-prices { display: grid; gap: 8px; max-width: 520px; }
+.dh-shop-price-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 110px; gap: 8px; align-items: center; }
+.dh-shop-price-row input { width: 100%; border: 1px solid var(--dh-line); border-radius: 10px; padding: 9px 12px; font-size: .9rem; background: var(--dh-paper); color: var(--dh-ink); }
+.dh-shop-dollar { color: var(--dh-muted); font-weight: 700; }
+/* Insights: saved trips by weekday. */
+.dh-shop-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; align-items: end; height: 150px; max-width: 520px; }
+.dh-shop-bar { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.dh-shop-bar-fill { width: 100%; max-width: 44px; background: var(--dh-sea); border-radius: 8px 8px 3px 3px; }
+.dh-shop-bar-n { font-size: .74rem; font-weight: 800; color: var(--dh-ink); }
+.dh-shop-bar-label { font-size: .72rem; color: var(--dh-muted); font-weight: 700; }
+.dh-shop-stat b small { font-size: .8rem; font-weight: 700; color: var(--dh-muted); }
+/* Shop access: adoption table. */
+.dh-shop-filterrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 10px; }
+.dh-shop-filterrow input, .dh-shop-filterrow select { border: 1px solid var(--dh-line); border-radius: 10px; padding: 8px 12px; font-size: .88rem; background: var(--dh-paper); color: var(--dh-ink); }
+.dh-shop-filterrow input { flex: 1 1 200px; }
+.dh-shop-tall { max-height: 460px; overflow-y: auto; }
+.dh-shop-tall thead th { position: sticky; top: 0; background: var(--dh-paper); z-index: 1; }
+
+/* Boats tab. */
+.dh-shop-boathead { display: flex; gap: 14px; align-items: center; min-width: 0; }
+.dh-shop-boatpic { width: 92px; height: 64px; border-radius: 12px; background-size: cover; background-position: center; flex: 0 0 auto; border: 1px solid var(--dh-line); }
+/* QR codes: the sign is one picture (a canvas). A preview on screen, the page on paper. */
+.dh-shop-sign { display: inline-block; margin-top: 12px; border-radius: 16px; overflow: hidden; box-shadow: 0 6px 22px rgba(12, 39, 51, .16); line-height: 0; }
+.dh-shop-signpic { width: 270px; height: auto; display: block; }
+@media print {
+    body.dh-printing-sign * { visibility: hidden !important; }
+    body.dh-printing-sign .dh-shop-sign.is-printing, body.dh-printing-sign .dh-shop-sign.is-printing * { visibility: visible !important; }
+    body.dh-printing-sign .dh-shop-sign.is-printing { position: fixed; inset: 0; margin: auto; width: 7.2in; height: 9.6in; box-shadow: none; border-radius: 0; }
+    body.dh-printing-sign .dh-shop-sign.is-printing .dh-shop-signpic { width: 7.2in; height: 9.6in; }
+}
