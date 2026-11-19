@@ -413,6 +413,8 @@ Route::middleware(['auth', 'not_guest', 'operator.admin'])->prefix('operator-adm
     Route::post('{operator}/locations/{location}/offerings', 'App\Http\Controllers\ShopPortalController@saveOffering')->whereNumber(['operator', 'location'])->name('shop-portal.offerings.create');
     Route::post('{operator}/locations/{location}/offerings/{offering}', 'App\Http\Controllers\ShopPortalController@saveOffering')->whereNumber(['operator', 'location', 'offering'])->name('shop-portal.offerings.update');
     Route::post('{operator}/locations/{location}/offerings/{offering}/remove', 'App\Http\Controllers\ShopPortalController@removeOffering')->whereNumber(['operator', 'location', 'offering'])->name('shop-portal.offerings.remove');
+    Route::get('{operator}/prices', 'App\Http\Controllers\ShopPortalController@prices')->whereNumber('operator')->name('shop-portal.prices');
+    Route::post('{operator}/trip-prices', 'App\Http\Controllers\ShopPortalController@saveTripPrices')->whereNumber('operator')->name('shop-portal.trip-prices.save');
     Route::post('{operator}/prices/confirm', 'App\Http\Controllers\ShopPortalController@confirmPrices')->whereNumber('operator')->name('shop-portal.prices.confirm');
     Route::get('{operator}/boats', 'App\Http\Controllers\ShopPortalController@boats')->whereNumber('operator')->name('shop-portal.boats');
     Route::post('{operator}/boats/{boat}', 'App\Http\Controllers\ShopPortalController@saveBoat')->whereNumber(['operator', 'boat'])->name('shop-portal.boats.save');

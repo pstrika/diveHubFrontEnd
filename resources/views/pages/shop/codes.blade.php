@@ -29,9 +29,9 @@
             <div class="dh-shop-callout" role="alert">
                 <span class="material-icons-round" aria-hidden="true">storefront</span>
                 <div>
-                    <b>Add your storefront first.</b>
-                    <p>A home shop is a place: an address and hours. Until you have added one, a diver who scans your code and signs up cannot be given you as their home shop, so new codes are closed until then.</p>
-                    <a class="dh-btn dh-btn-primary" href="{{ route('shop-portal.locations', ['operator' => $operator->id]) }}">Add your storefront</a>
+                    <b>Add your shop or dock first.</b>
+                    <p>A home shop is a place: an address and hours. Until you have added your store, or your dock if you run a boat with no store, a diver who scans your code and signs up cannot be given you as their home shop, so new codes are closed until then.</p>
+                    <a class="dh-btn dh-btn-primary" href="{{ route('shop-portal.locations', ['operator' => $operator->id]) }}">Add your shop or dock</a>
                 </div>
             </div>
         @endunless
@@ -42,7 +42,7 @@
         <h2 class="dh-panel-title">Your codes</h2>
         <p class="dh-shop-muted">One code per place you put it, so you can see which sign gets scanned.</p>
         @if($codes->isNotEmpty() && !$hasStorefront)
-            <p class="dh-shop-warn">These codes still open your page and count scans, but nobody who signs up through them becomes your home shop diver until you add a storefront.</p>
+            <p class="dh-shop-warn">These codes still open your page and count scans, but nobody who signs up through them becomes your home shop diver until you add your shop or dock.</p>
         @endif
 
         @forelse($codes as $code)

@@ -60,18 +60,5 @@
         <p class="dh-shop-muted">A boat missing, sold, or showing the wrong photo? Tell us with the chat button in the corner. Photos and adding or removing a boat are still done by Divers Hub.</p>
     @endif
 
-    @push('js')
-    <script>
-        document.querySelectorAll('[data-shop-toggle]').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var target = document.getElementById(btn.getAttribute('data-shop-toggle'));
-                if (!target) return;
-                var open = target.hidden;
-                target.hidden = !open;
-                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-                if (open) { var first = target.querySelector('input'); if (first) first.focus(); }
-            });
-        });
-    </script>
-    @endpush
+    @include('pages.shop._toggle-script')
 </x-shop.page>

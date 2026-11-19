@@ -72,9 +72,82 @@ class ShopPortalController extends Controller
             'scanCount' => ReferralScan::whereIn('referral_code_id', $codeIds)->where('is_bot', false)->count(),
             'homeDivers' => $locationIds->isEmpty() ? 0 : User::whereIn('home_operator_location_id', $locationIds)->count(),
             // Setup checklist: what is done, so the next step is obvious.
-            'detailsDone' => OperatorProfile::where('operator_id', $op->id)->exists(),
-            'hasStorefront' => $this->hasStorefront($op),
+            'setup' => self::setupSteps($op),
         ]);
+    }
+
+    /**
+     * The setup steps, in the order a shop does them, with what is done.
+     * One list for the Overview checklist, the "what next" strip on every
+     * portal page, and where a save sends the shop afterwards, so the three
+     * can never disagree (Zach, 2026-11-19: "I would expect this to flow").
+     *
+     * @return array{steps: array<int, array>, next: ?int, done: int}
+     */
+    public static function setupSteps(Operator $op, bool $fresh = false): array
+    {
+        // Worked out once per request: the Overview, the strip in the tabs
+        // and an after-save redirect can all ask in the same request. A
+        // save passes $fresh so it sees its own change.
+        static $memo = [];
+        if (!$fresh && isset($memo[$op->id])) {
+            return $memo[$op->id];
+        }
+        return $memo[$op->id] = self::buildSetupSteps($op);
+    }
+
+    private static function buildSetupSteps(Operator $op): array
+    {
+        \App\Support\HomeShop::ensureHomeBase((int) $op->id);
+        $hasBase = \App\Support\HomeShop::defaultLocationFor((int) $op->id) !== null;
+        $locationIds = OperatorLocation::where('operator_id', $op->id)->pluck('id');
+
+        $steps = [
+            ['key' => 'location', 'tab' => 'locations', 'done' => $hasBase,
+                'title' => 'Add your shop or dock', 'label' => 'Add it',
+                'text' => 'The address and hours where divers find you: your store, or your dock if you run a boat with no store. Everything else waits on this.',
+                'href' => route('shop-portal.locations', ['operator' => $op->id])],
+            ['key' => 'details', 'tab' => 'profile', 'done' => OperatorProfile::where('operator_id', $op->id)->exists(),
+                'title' => 'Check your shop details', 'label' => 'Shop details',
+                'text' => 'Name, phone, website, fills and a short description, as divers see them. Press Save even if it is all correct.',
+                'href' => route('shop-portal.profile', ['operator' => $op->id])],
+            ['key' => 'prices', 'tab' => 'prices', 'done' => OperatorOffering::whereIn('operator_location_id', $locationIds)->where('is_active', true)->exists()
+                    || OperatorProfile::where('operator_id', $op->id)->whereNotNull('trip_prices')->exists(),
+                'title' => 'List your prices', 'label' => 'Add prices', 'needs' => true,
+                'text' => 'What a seat on the boat costs, and fills, rentals, classes and service, with prices you have confirmed.',
+                'href' => route('shop-portal.prices', ['operator' => $op->id])],
+            ['key' => 'codes', 'tab' => 'codes', 'done' => ReferralCode::where('operator_id', $op->id)->exists(),
+                'title' => 'Make a QR code', 'label' => 'QR codes', 'needs' => true,
+                'text' => 'A sign for the register or the boat. A diver who scans it lands on your page. If they sign up, you are their home shop.',
+                'href' => route('shop-portal.codes', ['operator' => $op->id])],
+        ];
+        foreach ($steps as $i => $step) {
+            $steps[$i]['blocked'] = !empty($step['needs']) && !$hasBase;
+        }
+        $next = null;
+        foreach ($steps as $i => $step) {
+            if (!$step['done']) { $next = $i; break; }
+        }
+
+        return ['steps' => $steps, 'next' => $next, 'done' => count(array_filter($steps, fn ($st) => $st['done']))];
+    }
+
+    /**
+     * After a save: carry on to the next unfinished step, saying what was
+     * saved and what comes next. Stays put when setup is finished or the
+     * next step is the page they are already on.
+     */
+    private function onward(Operator $op, string $saved, string $stayRoute, string $stayMessage)
+    {
+        $setup = self::setupSteps($op, true);
+        $next = $setup['next'] === null ? null : $setup['steps'][$setup['next']];
+        if ($next && !$next['blocked'] && $next['key'] !== $saved) {
+            return redirect($next['href'])->with('shop_status', $stayMessage . ' Next: ' . lcfirst($next['title']) . '.');
+        }
+        if (!$next) {
+            $stayMessage .= ' You are all set up.';
+        }
+        return redirect()->route($stayRoute, ['operator' => $op->id])->with('shop_status', $stayMessage);
     }
 
     /**
@@ -86,6 +159,7 @@ class ShopPortalController extends Controller
      */
     private function hasStorefront(Operator $op): bool
     {
+        \App\Support\HomeShop::ensureHomeBase((int) $op->id);
         return \App\Support\HomeShop::defaultLocationFor((int) $op->id) !== null;
     }
 
@@ -102,11 +176,7 @@ class ShopPortalController extends Controller
         foreach (['fill_air' => ['Air', 'onSiteFillAir'], 'fill_nitrox' => ['Nitrox', 'onSiteFillNitrox'], 'fill_trimix' => ['Trimix', 'onSiteFillTrimix'], 'fill_o2' => ['Oxygen', 'onSiteFillO2']] as $key => [$label, $column]) {
             $fills[$key] = ['label' => $label, 'on' => $profile->{$key} !== null ? (bool) $profile->{$key} : (bool) $op->{$column}];
         }
-        $prices = is_array($profile->trip_prices) && $profile->trip_prices
-            ? $profile->trip_prices
-            : (json_decode((string) $op->tripPrice, true) ?: []);
-
-        return view('pages.shop.profile', $shared + ['fills' => $fills, 'prices' => array_values($prices)]);
+        return view('pages.shop.profile', $shared + ['fills' => $fills]);
     }
 
     public function boats(int $operator)
@@ -248,10 +318,6 @@ class ShopPortalController extends Controller
             // Only a link to Google itself: this is shown to divers as
             // "Review on Google", so it must not be able to point anywhere else.
             'google_review_url' => ['nullable', 'url', 'max:500', 'regex:/^https:\/\/([a-z0-9-]+\.)*(google\.com|g\.page|goo\.gl)\//i'],
-            'price_type' => 'array|max:20',
-            'price_type.*' => 'nullable|string|max:80',
-            'price_amount' => 'array|max:20',
-            'price_amount.*' => 'nullable|numeric|min:0|max:100000',
         ]));
 
         // The four fills are always saved as yes or no. The form shows what
@@ -262,18 +328,8 @@ class ShopPortalController extends Controller
         // Off unless the shop ticks it, and never on without a link to send divers to.
         $data['google_review_ask'] = $request->boolean('google_review_ask') && !empty($data['google_review_url']);
 
-        // Trip prices: rows with both a name and an amount. No rows at all
-        // means "not set", which falls back to what Divers Hub lists.
-        $prices = [];
-        foreach ((array) ($data['price_type'] ?? []) as $i => $type) {
-            $type = trim(strip_tags((string) $type));
-            $amount = $data['price_amount'][$i] ?? null;
-            if ($type !== '' && $amount !== null && $amount !== '') {
-                $prices[] = ['type' => $type, 'price' => rtrim(rtrim(number_format((float) $amount, 2, '.', ''), '0'), '.')];
-            }
-        }
-        unset($data['price_type'], $data['price_amount']);
-        $data['trip_prices'] = $prices ?: null;
+        // Trip prices are not on this form any more. They are saved by
+        // saveTripPrices(), from the prices page, and are left alone here.
 
         $profile = OperatorProfile::firstOrNew(['operator_id' => $op->id]);
         $profile->fill($data + ['updated_by' => $request->user()->id]);
@@ -281,7 +337,7 @@ class ShopPortalController extends Controller
         $profile->save();
         ShopAccess::audit((int) $op->id, (int) $request->user()->id, 'profile.updated', 'profile', (int) $profile->id, $changes);
 
-        return back()->with('shop_status', 'Saved. This is what divers see on your page now.');
+        return $this->onward($op, 'details', 'shop-portal.profile', 'Shop details saved.');
     }
 
     public function locations(int $operator)
@@ -302,6 +358,64 @@ class ShopPortalController extends Controller
                 'hours' => collect(json_decode((string) $op->hourOfOperation, true) ?: [])->pluck('hours', 'day')->all(),
             ],
         ]);
+    }
+
+    /**
+     * Every price in one place: trip prices, and what is sold at each
+     * location (Zach, 2026-11-19). What divers see today for trip prices is
+     * the shop's own list once it has saved one, else what Divers Hub lists.
+     */
+    public function prices(int $operator)
+    {
+        $op = Operator::findOrFail($operator);
+        $profile = OperatorProfile::firstOrNew(['operator_id' => $op->id]);
+        $own = is_array($profile->trip_prices) && $profile->trip_prices;
+        $tripPrices = $own ? $profile->trip_prices : (json_decode((string) $op->tripPrice, true) ?: []);
+
+        return view('pages.shop.prices', $this->shared($op, 'prices') + [
+            'tripPrices' => array_values($tripPrices),
+            'tripPricesByShop' => $own,
+            'locations' => OperatorLocation::where('operator_id', $op->id)->with('offerings')->orderByDesc('is_active')->orderBy('id')->get(),
+        ]);
+    }
+
+    /**
+     * Trip prices: what a seat on the boat, or a private charter, costs.
+     * Saved on the shop's own profile and shown in place of what Divers
+     * Hub lists. Rows need both a name and an amount; saving with no rows
+     * goes back to our listing.
+     */
+    public function saveTripPrices(Request $request, int $operator)
+    {
+        $op = Operator::findOrFail($operator);
+        $data = $request->validate([
+            'price_type' => 'array|max:30',
+            'price_type.*' => 'nullable|string|max:80',
+            'price_amount' => 'array|max:30',
+            'price_amount.*' => 'nullable|numeric|min:0|max:100000',
+        ]);
+
+        $prices = [];
+        foreach ((array) ($data['price_type'] ?? []) as $i => $type) {
+            $type = trim(strip_tags((string) $type));
+            $amount = $data['price_amount'][$i] ?? null;
+            if ($type !== '' && $amount !== null && $amount !== '') {
+                $prices[] = ['type' => $type, 'price' => rtrim(rtrim(number_format((float) $amount, 2, '.', ''), '0'), '.')];
+            }
+        }
+
+        $profile = OperatorProfile::firstOrNew(['operator_id' => $op->id]);
+        $profile->trip_prices = $prices ?: null;
+        $profile->updated_by = $request->user()->id;
+        $changes = $profile->getDirty();
+        $profile->save();
+        ShopAccess::audit((int) $op->id, (int) $request->user()->id, 'trip_prices.updated', 'profile', (int) $profile->id, $changes);
+
+        if (!$prices) {
+            return redirect()->route('shop-portal.prices', ['operator' => $op->id])
+                ->with('shop_status', 'Trip prices cleared. Your page shows what Divers Hub lists.');
+        }
+        return $this->onward($op, 'prices', 'shop-portal.prices', 'Trip prices saved.');
     }
 
     public function saveLocation(Request $request, int $operator, ?int $location = null)
@@ -343,8 +457,9 @@ class ShopPortalController extends Controller
         ]);
         if (!$row->exists) {
             $row->slug = OperatorLocation::slugFor((int) $op->id, $row->name);
-            // A storefront can be a home shop; a dock or fill station cannot
-            // unless a platform admin says so.
+            // A storefront can be a home shop. A dock becomes one only when
+            // the operator has nothing else (HomeShop::ensureHomeBase, run
+            // after the save): a charter with no store.
             $row->is_home_eligible = $row->type === 'storefront';
         }
         if ($request->user()->isAdmin() && $request->has('is_home_eligible_present')) {
@@ -356,16 +471,8 @@ class ShopPortalController extends Controller
         $row->save();
         ShopAccess::audit((int) $op->id, (int) $request->user()->id, $created ? 'location.created' : 'location.updated', 'location', (int) $row->id, $changes);
 
-        // The first storefront is what switches on home shop and QR codes:
-        // say so, with the next step, instead of a bare "Saved".
-        if ($created && $row->is_home_eligible && $row->is_active
-            && OperatorLocation::where('operator_id', $op->id)->where('is_active', true)->where('is_home_eligible', true)->count() === 1) {
-            return redirect()->route('shop-portal.codes', ['operator' => $op->id])
-                ->with('shop_status', 'Storefront added. Divers can now pick you as their home shop, and you can make your first QR code below.');
-        }
-
-        return redirect()->route('shop-portal.locations', ['operator' => $op->id])
-            ->with('shop_status', $created ? 'Location added.' : 'Location saved.');
+        return $this->onward($op, 'location', 'shop-portal.locations',
+            $created ? 'Added. Divers can now find you' . (\App\Support\HomeShop::defaultLocationFor((int) $op->id) ? ' and pick you as their home shop.' : '.') : 'Location saved.');
     }
 
     public function saveOffering(Request $request, int $operator, int $location, ?int $offering = null)
@@ -402,7 +509,10 @@ class ShopPortalController extends Controller
         $row->save();
         ShopAccess::audit((int) $op->id, (int) $request->user()->id, $created ? 'offering.created' : 'offering.updated', 'offering', (int) $row->id, $changes);
 
-        return redirect()->route('shop-portal.locations', ['operator' => $op->id])->with('shop_status', 'Saved.');
+        // They usually add several, so this stays on the page. The strip
+        // at the top offers the next step when they are done.
+        return redirect()->to(route('shop-portal.prices', ['operator' => $op->id]) . '#services')
+            ->with('shop_status', $created ? 'Added. Add another, or carry on with the next step above.' : 'Saved.');
     }
 
     public function removeOffering(Request $request, int $operator, int $location, int $offering)
@@ -456,7 +566,7 @@ class ShopPortalController extends Controller
         ]));
         if (!$this->hasStorefront($op)) {
             return redirect()->route('shop-portal.locations', ['operator' => $op->id])
-                ->withErrors(['storefront' => 'Add your storefront first. A QR code makes you a diver\'s home shop, and that needs a storefront to point to.']);
+                ->withErrors(['storefront' => 'Add your shop or dock first. A QR code makes you a diver\'s home shop, and that needs a place to point to.']);
         }
 
         $locationId = null;
@@ -474,7 +584,9 @@ class ShopPortalController extends Controller
         ]);
         ShopAccess::audit((int) $op->id, (int) $request->user()->id, 'code.created', 'code', (int) $row->id, ['placement' => $row->placement]);
 
-        return back()->with('shop_status', 'Code created.');
+        $allDone = self::setupSteps($op, true)['next'] === null;
+        return redirect()->route('shop-portal.codes', ['operator' => $op->id])
+            ->with('shop_status', 'Code created. Print the sign below and put it where divers will see it.' . ($allDone ? ' You are all set up.' : ''));
     }
 
     public function toggleCode(Request $request, int $operator, int $code)
@@ -496,6 +608,10 @@ class ShopPortalController extends Controller
             'profile' => $profile,
             'shopName' => $profile->display_name ?: $op->operatorName,
             'tab' => $tab,
+            'setupNextKey' => (function () use ($op) {
+                $setup = self::setupSteps($op);
+                return $setup['next'] === null ? null : $setup['steps'][$setup['next']]['key'];
+            })(),
         ];
     }
 

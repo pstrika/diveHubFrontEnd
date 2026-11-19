@@ -4,34 +4,33 @@
 
     <div class="dh-shop-stats">
         <div class="dh-shop-stat"><b>{{ $locationCount }}</b><span>{{ Str::plural('location', $locationCount) }} on your page</span></div>
-        <div class="dh-shop-stat"><b>{{ $offeringCount }}</b><span>{{ Str::plural('service', $offeringCount) }} and prices listed</span></div>
+        <div class="dh-shop-stat"><b>{{ $offeringCount }}</b><span>{{ Str::plural('service', $offeringCount) }} listed with a price</span></div>
         <div class="dh-shop-stat"><b>{{ $homeDivers }}</b><span>{{ Str::plural('diver', $homeDivers) }} with you as home shop</span></div>
         <div class="dh-shop-stat"><b>{{ $scanCount }}</b><span>QR {{ Str::plural('scan', $scanCount) }} from {{ $codeCount }} {{ Str::plural('code', $codeCount) }}</span></div>
     </div>
 
-    {{-- Setup checklist (Zach, 2026-11-19): each step shows whether it is
-         done, the storefront is marked as the one everything else waits on,
-         and QR codes stay closed until it exists. --}}
+    {{-- Setup checklist (Zach, 2026-11-19). The steps come from
+         ShopPortalController::setupSteps(), the same list the strip on every
+         other portal page and the after-save redirects use. --}}
     @php
-        $steps = [
-            ['done' => $hasStorefront, 'title' => 'Add your storefront', 'text' => 'Address and hours. This is the step everything else waits on: divers can only pick you as their home shop, and you can only make QR codes, once you have one.', 'label' => 'Add storefront', 'href' => route('shop-portal.locations', ['operator' => $operator->id]), 'key' => true],
-            ['done' => $detailsDone, 'title' => 'Check your shop details', 'text' => 'Name, phone, website, fills and a short description, as divers see them.', 'label' => 'Shop details', 'href' => route('shop-portal.profile', ['operator' => $operator->id])],
-            ['done' => $offeringCount > 0, 'title' => 'List what you offer', 'text' => 'Fills, rentals, classes and service, with prices you have confirmed.', 'label' => 'Prices', 'href' => route('shop-portal.locations', ['operator' => $operator->id]), 'needs' => true],
-            ['done' => $codeCount > 0, 'title' => 'Put a QR code by the register', 'text' => 'A diver who scans it lands on your page. If they sign up, you are their home shop.', 'label' => 'QR codes', 'href' => route('shop-portal.codes', ['operator' => $operator->id]), 'needs' => true],
-        ];
-        $next = collect($steps)->search(fn ($s) => !$s['done']);
+        $steps = $setup['steps'];
+        $next = $setup['next'];
+        $hasStorefront = $steps[0]['done'];
     @endphp
     <section class="dh-panel">
-        <h2 class="dh-panel-title">Getting set up</h2>
+        <h2 class="dh-panel-title">{{ $next === null ? 'You are all set up' : 'Getting set up' }}</h2>
+        @if($next === null)
+            <p class="dh-shop-muted">All four steps are done. Keep your prices current, and check Insights to see how divers find you.</p>
+        @endif
         <ol class="dh-shop-steps">
             @foreach($steps as $i => $step)
-                @php $blocked = !empty($step['needs']) && !$hasStorefront; @endphp
+                @php $blocked = $step['blocked']; @endphp
                 <li class="dh-shop-step {{ $step['done'] ? 'is-done' : '' }} {{ $next === $i ? 'is-next' : '' }} {{ $blocked ? 'is-blocked' : '' }}">
                     <span class="dh-shop-step-mark" aria-hidden="true"><span class="material-icons-round">{{ $step['done'] ? 'check' : ($blocked ? 'lock' : 'radio_button_unchecked') }}</span></span>
                     <div class="dh-shop-step-body">
                         <b>{{ $i + 1 }}. {{ $step['title'] }}</b>
                         @if($step['done'])<span class="dh-shop-step-tag is-done">Done</span>
-                        @elseif($blocked)<span class="dh-shop-step-tag">Needs your storefront</span>
+                        @elseif($blocked)<span class="dh-shop-step-tag">Needs step 1</span>
                         @elseif($next === $i)<span class="dh-shop-step-tag is-next">Do this next</span>@endif
                         <p>{{ $step['text'] }}</p>
                     </div>

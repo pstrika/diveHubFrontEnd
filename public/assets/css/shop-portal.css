@@ -187,3 +187,23 @@
 .dh-shop-asadmin .material-icons-round { font-size: 20px; flex: 0 0 auto; }
 .dh-shop-asadmin span:nth-child(2) { flex: 1 1 260px; }
 .dh-shop-asadmin a { color: #fff; font-weight: 700; text-decoration: underline; white-space: nowrap; }
+
+/* "What next" strip on every portal page until setup is done (2026-11-19). */
+.dh-shop-setup { margin-bottom: var(--dh-space-3); padding: 14px 16px; border-radius: 16px; background: var(--dh-paper); border: 1px solid var(--dh-sea); box-shadow: 0 0 0 3px color-mix(in srgb, var(--dh-sea) 14%, transparent); }
+.dh-shop-setup-top { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.dh-shop-setup-top b { font-size: .95rem; color: var(--dh-ink); }
+.dh-shop-setup-top span { font-size: .78rem; font-weight: 700; color: var(--dh-muted); }
+.dh-shop-setup-steps { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.dh-shop-setup-steps li { display: inline-flex; align-items: center; gap: 5px; font-size: .84rem; color: var(--dh-muted); }
+.dh-shop-setup-steps li .material-icons-round { font-size: 17px; }
+.dh-shop-setup-steps li a { color: inherit; text-decoration: none; }
+.dh-shop-setup-steps li a:hover { text-decoration: underline; }
+.dh-shop-setup-steps li.is-done { color: #14633a; }
+.dh-shop-setup-steps li.is-next { color: var(--dh-ink); font-weight: 800; }
+.dh-shop-setup-steps li.is-next .material-icons-round { color: var(--dh-sea); }
+.dh-shop-setup-next { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding-top: 10px; border-top: 1px solid var(--dh-line); font-size: .88rem; color: var(--dh-ink); }
+.dh-shop-setup-next > span { flex: 1 1 260px; }
+.dh-shop-setup-next .dh-btn .material-icons-round { font-size: 18px; margin-left: 4px; }
+.dh-shop-sectionhead { font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--dh-muted); font-weight: 800; margin: var(--dh-space-4) 4px var(--dh-space-2); }
+.dh-shop-hoursline { display: flex; flex-wrap: wrap; gap: 2px 12px; margin: 4px 0 0 !important; font-size: .78rem; color: var(--dh-muted); }
+.dh-shop-hoursline b { color: var(--dh-ink); }

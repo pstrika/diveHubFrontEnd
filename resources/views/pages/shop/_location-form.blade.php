@@ -71,6 +71,6 @@
         @endif
     </div>
     <div class="dh-shop-actions">
-        <button type="submit" class="dh-btn dh-btn-primary">{{ $loc ? 'Save location' : 'Add location' }}</button>
+        <button type="submit" class="dh-btn dh-btn-primary">{{ $loc ? 'Save location' : (($setupNextKey ?? null) === 'location' ? 'Save and continue' : 'Add location') }}</button>
     </div>
 </form>

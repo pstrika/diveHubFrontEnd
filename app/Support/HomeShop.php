@@ -94,9 +94,36 @@ class HomeShop
     /** The location a diver gets when they pick this operator: its first live storefront. */
     public static function defaultLocationFor(int $operatorId): ?OperatorLocation
     {
+        // A storefront before a dock, then the oldest.
         return OperatorLocation::where('operator_id', $operatorId)
             ->where('is_active', true)->where('is_home_eligible', true)
-            ->orderBy('id')->first();
+            ->orderByRaw("type = 'storefront' desc")->orderBy('id')->first();
+    }
+
+    /**
+     * Makes sure an operator that has somewhere divers can find it also has
+     * a home base (Zach, 2026-11-19). A shop's storefront is its home base.
+     * A charter with no shop has only a dock, so when there is no
+     * storefront the first dock is the home base instead: otherwise a boat
+     * operator could never finish setting up or be anyone's home shop.
+     * Does nothing once the operator has one. Safe to call any time.
+     */
+    public static function ensureHomeBase(int $operatorId): void
+    {
+        try {
+            if (self::defaultLocationFor($operatorId)) {
+                return;
+            }
+            $pick = OperatorLocation::where('operator_id', $operatorId)->where('is_active', true)
+                ->whereIn('type', ['storefront', 'dock'])
+                ->orderByRaw("type = 'storefront' desc")->orderBy('id')->first();
+            if ($pick) {
+                $pick->is_home_eligible = true;
+                $pick->save();
+            }
+        } catch (\Throwable $e) {
+            // Code ahead of its migration: nothing to do.
+        }
     }
 
     /**

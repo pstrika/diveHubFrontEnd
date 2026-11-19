@@ -65,23 +65,11 @@
                 @endforeach
             </div>
 
-            <h3 class="dh-shop-subhead">Trip prices</h3>
-            <p class="dh-shop-muted">What a seat on the boat costs, in US dollars. Leave a row empty to remove it. Prices for fills, rentals and classes go under Locations and prices.</p>
-            <div class="dh-shop-prices">
-                @foreach(array_merge($prices, [[], [], []]) as $i => $row)
-                    <div class="dh-shop-price-row">
-                        <input name="price_type[]" maxlength="80" value="{{ old('price_type.' . $i, $row['type'] ?? '') }}" placeholder="{{ $i === 0 ? 'Recreational, 2 tank' : 'Trip type' }}" aria-label="Trip type">
-                        <span class="dh-shop-dollar">$</span>
-                        <input name="price_amount[]" type="number" step="0.01" min="0" value="{{ old('price_amount.' . $i, $row['price'] ?? '') }}" placeholder="95" aria-label="Price in dollars">
-                    </div>
-                @endforeach
-            </div>
-
             <div class="dh-shop-actions">
-                <button type="submit" class="dh-btn dh-btn-primary">Save</button>
+                <button type="submit" class="dh-btn dh-btn-primary">{{ ($setupNextKey ?? null) === 'details' ? 'Save and continue' : 'Save' }}</button>
                 <a class="dh-btn dh-btn-ghost-dark" href="{{ route('OperatorDetails', ['id' => $operator->slug ?: $operator->id]) }}" target="_blank" rel="noopener">See your page</a>
             </div>
-            <p class="dh-shop-muted mt-2 mb-0">Your address, hours and the services you sell are under <a href="{{ route('shop-portal.locations', ['operator' => $operator->id]) }}">Locations and prices</a>. Boats have their own tab. Your logo is still set by Divers Hub; tell us in the chat if it is wrong.</p>
+            <p class="dh-shop-muted mt-2 mb-0">Your address and hours are under <a href="{{ route('shop-portal.locations', ['operator' => $operator->id]) }}">Locations</a>. Trip prices and what you sell are under <a href="{{ route('shop-portal.prices', ['operator' => $operator->id]) }}">Prices</a>. Boats have their own tab. Your logo is still set by Divers Hub; tell us in the chat if it is wrong.</p>
         </form>
     </section>
 </x-shop.page>
