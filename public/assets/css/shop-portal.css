@@ -179,3 +179,11 @@
 .dh-shop-callout p { margin: 4px 0 12px; font-size: .88rem; color: #5c4a1c; }
 .dh-shop-warn { padding: 10px 14px; border-radius: 12px; background: #fff7e6; border: 1px solid #f1d38a; color: #5c4a1c; font-size: .86rem; }
 @media (max-width: 575.98px) { .dh-shop-step { flex-wrap: wrap; } .dh-shop-step .dh-btn { margin-left: 42px; } }
+
+/* Shop management: open any shop; the portal says when you are in as a Divers Hub admin. */
+.dh-shop-rowlink { color: var(--dh-ink); text-decoration: none; }
+.dh-shop-rowlink:hover { color: var(--dh-sea); text-decoration: underline; }
+.dh-shop-asadmin { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: var(--dh-space-3); padding: 10px 14px; border-radius: var(--dh-radius); background: var(--dh-ink); color: #fff; font-size: .86rem; }
+.dh-shop-asadmin .material-icons-round { font-size: 20px; flex: 0 0 auto; }
+.dh-shop-asadmin span:nth-child(2) { flex: 1 1 260px; }
+.dh-shop-asadmin a { color: #fff; font-weight: 700; text-decoration: underline; white-space: nowrap; }

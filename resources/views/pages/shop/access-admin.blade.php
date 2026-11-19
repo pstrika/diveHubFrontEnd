@@ -78,7 +78,7 @@
                 <tbody>
                     @foreach($adoption as $row)
                         <tr data-state="{{ $row['state'] }}" data-name="{{ strtolower($row['name'] . ' ' . $row['city']) }}">
-                            <td><b>{{ $row['name'] }}</b><br><span class="dh-shop-muted">{{ $row['city'] }}</span></td>
+                            <td><a class="dh-shop-rowlink" href="{{ route('shop-portal.overview', ['operator' => $row['id']]) }}"><b>{{ $row['name'] }}</b></a><br><span class="dh-shop-muted">{{ $row['city'] }}</span></td>
                             <td>
                                 @if($row['state'] === 'managed')<span class="chip chip-static chip-yes">{{ $row['admins'] }} {{ Str::plural('admin', $row['admins']) }}</span>
                                 @elseif($row['state'] === 'requested')<span class="chip chip-static">Asked to manage</span>
@@ -91,15 +91,18 @@
                             </td>
                             <td class="is-num">{{ $row['homeDivers'] ?: '' }}</td>
                             <td class="is-num">
+                                {{-- A platform admin can open any shop's portal and fill it
+                                     in for them (Zach, 2026-11-19), whether or not anyone
+                                     manages it yet. --}}
+                                <a class="dh-btn dh-btn-primary" href="{{ route('shop-portal.overview', ['operator' => $row['id']]) }}"><span class="material-icons-round" aria-hidden="true">edit</span>Manage shop</a>
                                 @if($row['state'] === 'managed')
                                     <a class="dh-btn dh-btn-ghost-dark" href="{{ route('shop-access.index', ['operator' => $row['id']]) }}#grant">Admins</a>
-                                    <a class="dh-btn dh-btn-ghost-dark" href="{{ route('shop-portal.overview', ['operator' => $row['id']]) }}">Open portal</a>
                                 @else
                                     <a class="dh-btn dh-btn-ghost-dark" href="{{ route('shop-access.index', ['operator' => $row['id']]) }}#grant">Admins</a>
                                     <form class="dh-shop-inline" method="POST" action="{{ route('shop-access.invite') }}">
                                         @csrf
                                         <input type="hidden" name="operator_id" value="{{ $row['id'] }}">
-                                        <button type="submit" class="dh-btn dh-btn-primary">{{ $row['state'] === 'invited' ? 'New invite link' : 'Invite link' }}</button>
+                                        <button type="submit" class="dh-btn dh-btn-ghost-dark">{{ $row['state'] === 'invited' ? 'New invite link' : 'Invite link' }}</button>
                                     </form>
                                 @endif
                             </td>
@@ -108,7 +111,7 @@
                 </tbody>
             </table>
         </div>
-        <p class="dh-shop-muted mb-0 mt-2">"Invite link" makes a one-time link for that shop and shows it at the top of this page to copy and send. "Admins" jumps to the forms below with that shop picked, to tie an invite to one email address or to make an existing user its admin.</p>
+        <p class="dh-shop-muted mb-0 mt-2">"Manage shop" opens that shop's portal so you can add its storefront, prices and codes yourself. "Invite link" makes a one-time link for that shop and shows it at the top of this page to copy and send. "Admins" jumps to the forms below with that shop picked, to tie an invite to one email address or to make an existing user its admin.</p>
     </section>
     @push('js')
     <script>

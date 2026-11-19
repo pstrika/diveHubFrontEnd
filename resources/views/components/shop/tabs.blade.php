@@ -27,6 +27,20 @@
     }
 @endphp
 
+@php
+    // A Divers Hub admin working on a shop they do not hold a grant for.
+    $dhUser = auth()->user();
+    $asPlatform = $dhUser && method_exists($dhUser, 'isAdmin') && $dhUser->isAdmin()
+        && !in_array((int) $operator->id, \App\Support\ShopAccess::operatorIdsFor($dhUser), true);
+@endphp
+@if($asPlatform)
+    <div class="dh-shop-asadmin dh-shop-noprint">
+        <span class="material-icons-round" aria-hidden="true">admin_panel_settings</span>
+        <span>You are managing <b>{{ $shopName }}</b> as a Divers Hub admin. Prices you enter show as "Listed by Divers Hub" until the shop confirms them.</span>
+        <a href="{{ route('shop-access.index') }}">Back to Shop management</a>
+    </div>
+@endif
+
 <div class="dh-shop-head">
     @if($operator->logoUrl)<img src="{{ asset('assets') }}{{ $operator->logoUrl }}" alt="">@endif
     <div>
