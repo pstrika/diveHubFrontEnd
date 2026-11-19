@@ -22,6 +22,9 @@ return new class extends Migration
 
     public function up()
     {
+        if (Schema::connection('mysql_trips')->hasTable('operator_boat_overrides')) {
+            return;   // already there: safe to run twice
+        }
         Schema::connection('mysql_trips')->create('operator_boat_overrides', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('operator_id')->index();

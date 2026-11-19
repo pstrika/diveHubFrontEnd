@@ -21,10 +21,14 @@ return new class extends Migration
 
     public function up()
     {
-        Schema::connection('mysql_trips')->table('operator_profiles', function (Blueprint $table) {
-            $table->string('google_review_url', 500)->nullable()->after('waiver_link');
-            $table->boolean('google_review_ask')->default(false)->after('google_review_url');
-        });
+        // Each column only if it is not there yet, so this is safe to run twice.
+        $schema = Schema::connection('mysql_trips');
+        if (!$schema->hasColumn('operator_profiles', 'google_review_url')) {
+            $schema->table('operator_profiles', fn (Blueprint $table) => $table->string('google_review_url', 500)->nullable());
+        }
+        if (!$schema->hasColumn('operator_profiles', 'google_review_ask')) {
+            $schema->table('operator_profiles', fn (Blueprint $table) => $table->boolean('google_review_ask')->default(false));
+        }
     }
 
     public function down()
