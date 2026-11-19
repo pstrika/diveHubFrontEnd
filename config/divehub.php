@@ -51,11 +51,11 @@ return [
         // first on the dive calendar. Listed accounts only while it is
         // being shown to shops; guests never, whatever this says
         // (App\Support\HomeShop::allows).
-        'home_shop' => ['zach.patterson0591@gmail.com'],
+        'home_shop' => ['zach.patterson0591@gmail.com', 'pstrika@gmail.com'],
         // Who sees "Is this your shop?" on an operator page. The shop
         // portal itself is not on this list: it opens to whoever holds a
         // grant for a shop (App\Support\ShopAccess).
-        'operator_portal' => ['zach.patterson0591@gmail.com'],
+        'operator_portal' => ['zach.patterson0591@gmail.com', 'pstrika@gmail.com'],
     ],
 
 ];
