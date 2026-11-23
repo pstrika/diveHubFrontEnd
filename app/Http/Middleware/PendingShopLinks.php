@@ -67,9 +67,23 @@ class PendingShopLinks
      */
     private function isPageLoad(Request $request): bool
     {
+        // A page load is "navigate". The destination alone is not enough:
+        // our own service worker (public/sw.js) re-sends every page load
+        // with fetch(), and the browser then labels it Sec-Fetch-Dest
+        // "empty" while keeping Sec-Fetch-Mode "navigate". Trusting only
+        // "document" meant nobody whose browser had the service worker was
+        // ever brought back to their invite (Zach's test, 2026-11-22).
         $dest = $request->header('Sec-Fetch-Dest');
-        if ($dest !== null && $dest !== 'document') {
+        $mode = $request->header('Sec-Fetch-Mode');
+        if ($mode !== null) {
+            if ($mode !== 'navigate') {
+                return false;
+            }
+        } elseif ($dest !== null && $dest !== 'document') {
             return false;
+        }
+        if ($dest !== null && !in_array($dest, ['document', 'empty'], true)) {
+            return false;   // an iframe, image, script and so on
         }
         if ($request->header('Purpose') === 'prefetch' || $request->header('Sec-Purpose') !== null) {
             return false;
