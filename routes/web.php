@@ -382,6 +382,7 @@ Route::get('go/{code}', 'App\Http\Controllers\HomeShopController@scan')->middlew
 
 // "No more emails like this", from the footer of a shop invite email. Signed
 // per shop, so it cannot be made up for another one.
+Route::get('shop-email/o/{invite}.gif', 'App\Http\Controllers\ShopOutreachController@opened')->whereNumber('invite')->middleware(['signed', 'throttle:120,1'])->name('shop-outreach.opened');
 Route::get('shop-email/stop/{operator}', 'App\Http\Controllers\ShopOutreachController@optOut')->whereNumber('operator')->middleware(['signed', 'throttle:20,1'])->name('shop-outreach.stop');
 
 // The invite link we send a shop. Opening it grants nothing; Accept does.

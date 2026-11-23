@@ -65,6 +65,14 @@
             <div class="dh-shop-stat"><b>{{ $adoptionTotals['invited'] + $adoptionTotals['requested'] }}</b><span>invited or asking, not finished</span></div>
             <div class="dh-shop-stat"><b>{{ $adoptionTotals['open'] }}</b><span>with nobody yet</span></div>
         </div>
+        {{-- Movement (Zach, 2026-11-22): from the first email to a finished page. --}}
+        <ol class="dh-shop-funnel" aria-label="How far shops have come">
+            <li><b>{{ $adoptionTotals['emailed'] }}</b><span>emailed</span></li>
+            <li><b>{{ $adoptionTotals['opened'] }}</b><span>opened it<small>a hint, not proof</small></span></li>
+            <li><b>{{ $adoptionTotals['clicked'] }}</b><span>opened their link</span></li>
+            <li><b>{{ $adoptionTotals['managed'] }}</b><span>claimed their shop</span></li>
+            <li><b>{{ $adoptionTotals['done'] }}</b><span>finished setting up</span></li>
+        </ol>
         <div class="dh-shop-filterrow">
             <input type="search" id="adoption-search" placeholder="Find a shop" aria-label="Find a shop">
             <select id="adoption-state" aria-label="Show">
@@ -73,24 +81,37 @@
                 <option value="invited">Invited</option>
                 <option value="requested">Asked to manage</option>
                 <option value="managed">Managed</option>
+                <option value="moved">Something happened this week ({{ $adoptionTotals['movedRecently'] }})</option>
             </select>
         </div>
         <div class="dh-shop-scroll dh-shop-tall">
             <table class="dh-shop-table" id="adoption-table">
-                <thead><tr><th>Shop</th><th>Status</th><th>Page set up</th><th class="is-num">Home divers</th><th></th></tr></thead>
+                <thead><tr><th>Shop</th><th>Progress</th><th class="is-num">Home divers</th><th></th></tr></thead>
                 <tbody>
                     @foreach($adoption as $row)
-                        <tr data-state="{{ $row['state'] }}" data-name="{{ strtolower($row['name'] . ' ' . $row['city']) }}">
+                        <tr data-state="{{ $row['state'] }}" data-moved="{{ $row['movedRecently'] ? '1' : '0' }}" data-name="{{ strtolower($row['name'] . ' ' . $row['city']) }}">
                             <td><a class="dh-shop-rowlink" href="{{ route('shop-portal.overview', ['operator' => $row['id']]) }}"><b>{{ $row['name'] }}</b></a><br><span class="dh-shop-muted">{{ $row['city'] }}</span></td>
                             <td>
-                                @if($row['state'] === 'managed')<span class="chip chip-static chip-yes">{{ $row['admins'] }} {{ Str::plural('admin', $row['admins']) }}</span>
-                                @elseif($row['state'] === 'requested')<span class="chip chip-static">Asked to manage</span>
-                                @elseif($row['state'] === 'invited')<span class="chip chip-static">Invite sent</span>
-                                @else<span class="dh-shop-muted">Nobody yet</span>@endif
-                            </td>
-                            <td class="dh-shop-muted">
-                                {{ $row['storefront'] ? 'Storefront' : 'No storefront' }}, {{ $row['prices'] }} {{ Str::plural('price', $row['prices']) }}
-                                @if($row['lastEdit'])<br>Edited {{ \Carbon\Carbon::parse($row['lastEdit'])->format('M j') }}@endif
+                                {{-- Four dots for what the shop has done, then how much of its
+                                     page is set up. Hover a dot for the date. --}}
+                                <span class="dh-shop-track" role="img" aria-label="{{ collect($row['steps'])->filter(fn ($st) => $st[1])->map(fn ($st) => $st[0] . ' ' . $st[1]->format('M j'))->implode(', ') ?: 'Nothing yet' }}">
+                                    @foreach($row['steps'] as $key => [$label, $at])
+                                        <span class="dh-shop-dot {{ $at ? 'is-on' : '' }} {{ $key === 'opened' ? 'is-soft' : '' }}" title="{{ $label }}{{ $at ? ' ' . $at->format('M j, g:i A') : ': not yet' }}"></span>
+                                    @endforeach
+                                    <span class="dh-shop-trackbar" title="{{ collect($row['setup'])->map(fn ($ok, $what) => $what . ($ok ? ': done' : ': not yet'))->implode(', ') }}"><span style="width: {{ $row['setupDone'] * 25 }}%"></span></span>
+                                </span>
+                                <span class="dh-shop-trackline">
+                                    @if($row['stage'] === 'done')<b>Finished setting up</b>
+                                    @elseif($row['stage'] === 'claimed')<b>Claimed</b>, page {{ $row['setupDone'] }} of 4 set up
+                                    @elseif($row['state'] === 'requested')<b>Asked to manage</b>
+                                    @elseif($row['stage'] === 'clicked')<b>Opened their link</b>, not accepted yet
+                                    @elseif($row['stage'] === 'opened')<b>Probably opened the email</b>
+                                    @elseif($row['stage'] === 'emailed')<b>Emailed</b>, no sign of it yet
+                                    @elseif($row['state'] === 'invited')<b>Invite link made</b>, not used yet
+                                    @else<span class="dh-shop-muted">Nothing yet</span>@endif
+                                    @if($row['movedAt'])<span class="dh-shop-muted"> · {{ $row['movedAt']->format('M j') }}</span>@endif
+                                    @if($row['admins'] > 1)<span class="dh-shop-muted"> · {{ $row['admins'] }} admins</span>@endif
+                                </span>
                             </td>
                             <td class="is-num">{{ $row['homeDivers'] ?: '' }}</td>
                             <td class="is-num">
@@ -123,7 +144,8 @@
             function apply() {
                 var text = q.value.trim().toLowerCase(), state = s.value;
                 document.querySelectorAll('#adoption-table tbody tr').forEach(function (tr) {
-                    tr.hidden = (state && tr.getAttribute('data-state') !== state) || (text && tr.getAttribute('data-name').indexOf(text) === -1);
+                    var wrongState = state === 'moved' ? tr.getAttribute('data-moved') !== '1' : (state && tr.getAttribute('data-state') !== state);
+                    tr.hidden = wrongState || (text && tr.getAttribute('data-name').indexOf(text) === -1);
                 });
             }
             q.addEventListener('input', apply); s.addEventListener('change', apply);
@@ -184,15 +206,22 @@
         @else
             <div class="dh-shop-scroll">
                 <table class="dh-shop-table">
-                    <thead><tr><th>Shop</th><th>Admin</th><th>How</th><th>Since</th><th></th></tr></thead>
+                    <thead><tr><th>Shop</th><th>Admin</th><th>How they got in</th><th>Page set up</th><th>Last change</th><th></th></tr></thead>
                     <tbody>
                     @foreach($admins as $a)
                         @php $u = $users[$a->user_id] ?? null; @endphp
                         <tr>
                             <td><a href="{{ route('shop-portal.overview', ['operator' => $a->operator_id]) }}"><b>{{ $names[$a->operator_id] ?? 'Operator ' . $a->operator_id }}</b></a></td>
                             <td>{{ $u->name ?? 'User ' . $a->user_id }}<br><span class="dh-shop-muted">{{ $u->email ?? '' }}</span></td>
-                            <td>{{ ['invite' => 'Invite link', 'promotion' => 'Added by us', 'claim' => 'Request approved'][$a->granted_via] ?? $a->granted_via }}</td>
-                            <td class="dh-shop-muted">{{ optional($a->updated_at)->format('M j, Y') }}</td>
+                            @php $prog = $adoptionById[$a->operator_id] ?? null; @endphp
+                            <td>{{ ['invite' => 'Accepted an invite link', 'promotion' => 'Added by us', 'claim' => 'Asked, and we approved'][$a->granted_via] ?? $a->granted_via }}<br><span class="dh-shop-muted">{{ optional($a->created_at)->format('M j, Y') }}</span></td>
+                            <td>
+                                @if($prog)
+                                    <span class="dh-shop-trackbar is-wide" title="{{ collect($prog['setup'])->map(fn ($ok, $what) => $what . ($ok ? ': done' : ': not yet'))->implode(', ') }}"><span style="width: {{ $prog['setupDone'] * 25 }}%"></span></span>
+                                    <span class="dh-shop-muted">{{ $prog['setupDone'] }} of 4{{ $prog['setupDone'] < 4 ? ', next: ' . strtolower(collect($prog['setup'])->filter(fn ($ok) => !$ok)->keys()->first()) : '' }}</span>
+                                @endif
+                            </td>
+                            <td class="dh-shop-muted">{{ $prog && $prog['movedAt'] ? $prog['movedAt']->format('M j, Y') : 'Nothing yet' }}</td>
                             <td class="is-num">
                                 <form class="dh-shop-inline" method="POST" action="{{ route('shop-access.revoke', ['admin' => $a->id]) }}" onsubmit="return confirm('Remove this access?');">
                                     @csrf

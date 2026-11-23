@@ -38,6 +38,20 @@ class OperatorInviteController extends Controller
         $shopName = HomeShop::shopName($operator);
         $user = $request->user();
 
+        // Movement for Shop management: the link was opened. Once per
+        // link, and not for the obvious crawlers and link previews. A mail
+        // scanner that follows links can still set this, so it is shown as
+        // "link opened", never as proof somebody read the page.
+        try {
+            $agent = (string) $request->userAgent();
+            if ($agent !== '' && !preg_match('/bot|crawl|spider|slurp|preview|facebookexternalhit|monitor|curl|wget|python|headless/i', $agent)
+                && !\App\Models\OperatorAudit::where('action', 'invite.viewed')->where('subject_type', 'invite')->where('subject_id', $invite->id)->exists()) {
+                ShopAccess::audit((int) $operator->id, ShopAccess::isMember($user) ? (int) $user->id : 0, 'invite.viewed', 'invite', (int) $invite->id);
+            }
+        } catch (\Throwable $e) {
+            // Never worth an error page.
+        }
+
         if (!ShopAccess::isMember($user)) {
             // Remember the link across sign in or sign up.
             Cookie::queue(PendingShopLinks::INVITE_COOKIE, $token, 30);

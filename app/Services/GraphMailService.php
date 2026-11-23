@@ -59,7 +59,12 @@ class GraphMailService
         });
     }
 
-    public static function send(string $to, string $subject, string $bodyText): bool
+    /**
+     * $bodyHtml (optional, 2026-11-22): send a formatted body instead of
+     * plain text. Used by the shop invite emails when opens are counted,
+     * which needs an image in the email. Everything else passes text only.
+     */
+    public static function send(string $to, string $subject, string $bodyText, ?string $bodyHtml = null): bool
     {
         $token = self::accessToken();
         $mailbox = self::mailbox();
@@ -73,7 +78,9 @@ class GraphMailService
                 [
                     'message' => [
                         'subject' => $subject,
-                        'body' => ['contentType' => 'Text', 'content' => $bodyText],
+                        'body' => $bodyHtml !== null
+                            ? ['contentType' => 'HTML', 'content' => $bodyHtml]
+                            : ['contentType' => 'Text', 'content' => $bodyText],
                         'toRecipients' => [['emailAddress' => ['address' => $to]]],
                     ],
                     'saveToSentItems' => true,

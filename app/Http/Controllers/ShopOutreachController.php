@@ -43,6 +43,15 @@ use Illuminate\Support\Str;
  * Nothing new in the database: a send and an opt-out are rows in
  * operator_admin_audit (actions outreach.sent, outreach.failed,
  * outreach.opt_out), and the link is an ordinary operator_invites row.
+ *
+ * Movement (Zach, 2026-11-22): what a shop did after being emailed is
+ * recorded the same way and shown in Shop management.
+ *   outreach.opened  the email's hidden image was loaded. A HINT, not
+ *                    proof: some mail apps load images before anyone
+ *                    looks, and others never load them at all.
+ *   invite.viewed    the invite link was opened (OperatorInviteController).
+ *                    Stronger, though a mail scanner can follow links too.
+ *   accepted         certain: an account now manages the shop.
  */
 class ShopOutreachController extends Controller
 {
@@ -95,7 +104,9 @@ TXT;
             'subject' => 'required|string|max:150',
             'body' => 'required|string|max:5000',
             'link_mode' => 'required|in:open,email',
+            'track' => 'nullable|boolean',
         ]);
+        $data['track'] = $request->boolean('track');
         if (!str_contains($data['body'], '{link}')) {
             return back()->withInput()->withErrors(['body' => 'The message needs {link} in it, or nobody gets their link.']);
         }
@@ -112,7 +123,8 @@ TXT;
         [$subject, $body] = $this->compose($draft, $this->previewShops($shops), fn ($shop) => url('/operator-invite/TEST-ONLY-NOT-A-REAL-LINK'));
 
         $to = (string) $request->user()->email;
-        if (!GraphMailService::send($to, '[TEST] ' . $subject, $body)) {
+        // Same format the shops will get, without the counting image.
+        if (!GraphMailService::send($to, '[TEST] ' . $subject, $body, $draft['track'] ? $this->html($body, []) : null)) {
             return back()->withErrors(['send' => 'The test did not send. The support mailbox may not be connected on this site; check the logs.']);
         }
         session(['shop_outreach.tested' => $this->fingerprint($draft)]);
@@ -175,7 +187,10 @@ TXT;
                 }
 
                 [$subject, $body] = $this->compose($draft, $shops, fn ($shop) => $links[$shop['id']]);
-                $ok = GraphMailService::send($email, $subject, $body);
+                $pixels = $draft['track']
+                    ? array_map(fn ($invite) => URL::signedRoute('shop-outreach.opened', ['invite' => $invite->id]), array_values($invites))
+                    : [];
+                $ok = GraphMailService::send($email, $subject, $body, $draft['track'] ? $this->html($body, $pixels) : null);
 
                 // In Message management too, so a reply has its thread. The
                 // links are left out of that copy: they are single use keys.
@@ -210,6 +225,28 @@ TXT;
         return redirect()->route('shop-outreach')->with('shop_status', $summary);
     }
 
+    /**
+     * The hidden image in a counted email. Loading it records that the
+     * email was (probably) opened, once per link, and answers with a
+     * one-pixel transparent GIF whatever happens.
+     */
+    public function opened(Request $request, int $invite)
+    {
+        try {
+            $row = OperatorInvite::find($invite);
+            if ($row && !OperatorAudit::where('action', 'outreach.opened')->where('subject_type', 'invite')->where('subject_id', $row->id)->exists()) {
+                ShopAccess::audit((int) $row->operator_id, 0, 'outreach.opened', 'invite', (int) $row->id);
+            }
+        } catch (\Throwable $e) {
+            // Counting is never worth a broken image.
+        }
+
+        return response(base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'), 200, [
+            'Content-Type' => 'image/gif',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
+    }
+
     /** The link in every email's footer. Signed, so it cannot be guessed for another shop. */
     public function optOut(Request $request, int $operator)
     {
@@ -234,12 +271,14 @@ TXT;
             // with their own address, so a link tied to the inbox's address
             // would refuse them.
             'link_mode' => 'open',
+            // Count opens: sends the email formatted, with a hidden image.
+            'track' => true,
         ];
     }
 
     private function fingerprint(array $draft): string
     {
-        return md5($draft['subject'] . '|' . $draft['body'] . '|' . $draft['link_mode']);
+        return md5($draft['subject'] . '|' . $draft['body'] . '|' . $draft['link_mode'] . '|' . (int) !empty($draft['track']));
     }
 
     private function tested(array $draft): bool
@@ -264,6 +303,8 @@ TXT;
         $optedOut = OperatorAudit::where('action', 'outreach.opt_out')->pluck('operator_id')->flip();
         $lastSent = OperatorAudit::where('action', 'outreach.sent')->orderBy('id')->get(['operator_id', 'subject_id', 'created_at'])->keyBy('operator_id');
         $invites = OperatorInvite::whereIn('id', $lastSent->pluck('subject_id'))->get()->keyBy('id');
+        $moved = OperatorAudit::whereIn('action', ['outreach.opened', 'invite.viewed'])->whereIn('subject_id', $lastSent->pluck('subject_id'))
+            ->where('subject_type', 'invite')->orderBy('id')->get(['subject_id', 'action', 'created_at'])->groupBy('subject_id');
 
         $out = [];
         foreach (Operator::orderBy('operatorName')->get(['id', 'operatorName', 'cityAddress', 'email']) as $op) {
@@ -283,7 +324,12 @@ TXT;
             } elseif ($invite && $invite->accepted_at) {
                 [$state, $note] = ['managed', 'Accepted ' . $invite->accepted_at->format('M j')];
             } elseif ($invite && !$invite->revoked_at && $invite->expires_at && $invite->expires_at->isFuture()) {
-                [$state, $note] = ['emailed', 'Emailed ' . $sent->created_at->format('M j') . ', link not used yet'];
+                $did = $moved->get($invite->id, collect());
+                $clicked = $did->firstWhere('action', 'invite.viewed');
+                $opened = $did->firstWhere('action', 'outreach.opened');
+                [$state, $note] = ['emailed', 'Emailed ' . $sent->created_at->format('M j')
+                    . ($clicked ? ', link opened ' . $clicked->created_at->format('M j') . ', not accepted yet'
+                        : ($opened ? ', probably opened ' . $opened->created_at->format('M j') . ', link not used yet' : ', link not used yet'))];
             } elseif ($sent) {
                 [$state, $note] = ['ready', 'Emailed ' . $sent->created_at->format('M j') . ', link expired or switched off'];
             } else {
@@ -325,6 +371,24 @@ TXT;
             }
         }
         return [['id' => 0, 'name' => 'Example Dive Shop', 'city' => null, 'email' => 'shop@example.com', 'state' => 'ready', 'note' => '', 'can_send' => true]];
+    }
+
+    /**
+     * The plain text body as a simple formatted email: same words, links
+     * made clickable, and one hidden image per link so an open can be
+     * counted. Nothing else is added: no logo, no styling beyond a font,
+     * so it still reads as a note from a person.
+     *
+     * @param string[] $pixels signed image addresses, one per invite
+     */
+    private function html(string $text, array $pixels): string
+    {
+        $safe = e($text);
+        $safe = preg_replace('#(https?://[^\s<]+)#', '<a href="$1">$1</a>', $safe);
+        $paragraphs = array_map(fn ($p) => '<p style="margin:0 0 14px;">' . nl2br(trim($p)) . '</p>', preg_split('/\n{2,}/', trim($safe)));
+        $images = implode('', array_map(fn ($src) => '<img src="' . e($src) . '" width="1" height="1" alt="" style="border:0;width:1px;height:1px;">', $pixels));
+
+        return '<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#1b1b1b;">' . implode('', $paragraphs) . $images . '</div>';
     }
 
     /**

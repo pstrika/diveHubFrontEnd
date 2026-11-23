@@ -50,6 +50,11 @@
                     <label class="dh-shop-check mt-1"><input type="radio" name="link_mode" value="email" @checked(old('link_mode', $draft['link_mode']) === 'email')> Only an account with that exact email address</label>
                     <small>Most addresses on file are shared inboxes like info@. An owner usually signs up with their own address, and "only that address" would turn them away. Either way a link works once, and you are told when one is accepted.</small>
                 </div>
+                <div class="dh-shop-field is-wide">
+                    <label>Counting opens</label>
+                    <label class="dh-shop-check"><input type="checkbox" name="track" value="1" @checked(old('track', $draft['track']))> Count when the email is opened</label>
+                    <small>Adds a hidden image, so the email goes out formatted and not as plain text. Treat an "opened" as a hint: some mail apps load images before anyone looks, and others never load them. Whether the link was opened and whether it was accepted are always recorded, with or without this.</small>
+                </div>
             </div>
             <div class="dh-shop-actions"><button type="submit" class="dh-btn dh-btn-primary">Save wording</button></div>
         </form>

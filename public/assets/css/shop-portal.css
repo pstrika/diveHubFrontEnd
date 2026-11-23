@@ -213,3 +213,19 @@
 .dh-shop-emailsubject { font-weight: 800; color: var(--dh-ink); margin: 0 0 10px; padding-bottom: 10px; border-bottom: 1px solid var(--dh-line); }
 .dh-shop-emailpreview pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-family: inherit; font-size: .9rem; line-height: 1.55; color: var(--dh-ink); }
 .dh-shop-field textarea { font-family: inherit; }
+
+/* Shop management: how far each shop has come (2026-11-22). */
+.dh-shop-funnel { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.dh-shop-funnel li { flex: 1 1 120px; display: flex; align-items: baseline; gap: 8px; padding: 10px 12px; background: var(--dh-foam); border-radius: 12px; position: relative; }
+.dh-shop-funnel li b { font-size: 1.25rem; font-weight: 800; color: var(--dh-ink); }
+.dh-shop-funnel li span { font-size: .78rem; font-weight: 700; color: var(--dh-ink); line-height: 1.2; }
+.dh-shop-funnel li small { display: block; font-weight: 600; color: var(--dh-muted); font-size: .68rem; }
+.dh-shop-track { display: inline-flex; align-items: center; gap: 5px; vertical-align: middle; }
+.dh-shop-dot { width: 11px; height: 11px; border-radius: 50%; border: 2px solid #c6ced3; background: transparent; }
+.dh-shop-dot.is-on { border-color: var(--dh-sea); background: var(--dh-sea); }
+.dh-shop-dot.is-soft.is-on { background: color-mix(in srgb, var(--dh-sea) 45%, #fff); }
+.dh-shop-trackbar { display: inline-block; width: 54px; height: 7px; border-radius: 99px; background: #e3e8eb; overflow: hidden; margin-left: 4px; vertical-align: middle; }
+.dh-shop-trackbar.is-wide { width: 90px; margin: 0 6px 0 0; }
+.dh-shop-trackbar > span { display: block; height: 100%; background: #1f8a4c; border-radius: 99px; }
+.dh-shop-trackline { display: block; margin-top: 3px; font-size: .8rem; color: var(--dh-ink); }
+.dh-shop-trackline b { font-weight: 700; }

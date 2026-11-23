@@ -51,6 +51,7 @@ class ShopAccessAdminController extends Controller
             'selected' => (int) $request->query('operator', 0),
             'adoption' => $adoption,
             'adoptionTotals' => $adoptionTotals,
+            'adoptionById' => $adoption->keyBy('id'),
         ]);
     }
 
@@ -71,9 +72,62 @@ class ShopAccessAdminController extends Controller
             ->groupBy(fn ($u) => $locationOperator[$u->home_operator_location_id] ?? 0)->map->count();
         $lastEdit = \App\Models\OperatorProfile::get(['operator_id', 'updated_at'])->pluck('updated_at', 'operator_id');
 
-        $adoption = $operators->map(function ($op) use ($adminCount, $inviteOpen, $claimOpen, $storefronts, $offerings, $homeDivers, $lastEdit) {
+        // Movement (Zach, 2026-11-22): how far each shop has come, from the
+        // first email to a finished page. Each step is the date it
+        // happened, or null. Read from what is already recorded: the audit
+        // rows the email tool and the invite page write, the grant, and the
+        // shop's own data.
+        $audit = \App\Models\OperatorAudit::whereIn('action', ['outreach.sent', 'outreach.opened', 'invite.viewed'])
+            ->orderBy('id')->get(['operator_id', 'action', 'created_at'])->groupBy('operator_id');
+        $claimedAt = $admins->groupBy('operator_id')->map(fn ($rows) => $rows->min('created_at'));
+        $profiles = \App\Models\OperatorProfile::get(['operator_id', 'trip_prices'])->keyBy('operator_id');
+        $homeBase = \App\Models\OperatorLocation::where('is_active', true)->where('is_home_eligible', true)->pluck('operator_id')->flip();
+        $codes = \App\Models\ReferralCode::pluck('operator_id')->countBy();
+        $lastChange = \App\Models\OperatorAudit::selectRaw('operator_id, max(created_at) as at')->groupBy('operator_id')->pluck('at', 'operator_id');
+
+        $adoption = $operators->map(function ($op) use ($adminCount, $inviteOpen, $claimOpen, $storefronts, $offerings, $homeDivers, $lastEdit, $audit, $claimedAt, $profiles, $homeBase, $codes, $lastChange) {
             $managed = (int) ($adminCount[$op->id] ?? 0);
+
+            $did = $audit->get($op->id, collect());
+            $emailed = optional($did->where('action', 'outreach.sent')->last())->created_at;
+            // Only what happened after the latest email counts for it.
+            $after = fn (string $action) => optional($did->where('action', $action)->filter(fn ($r) => !$emailed || $r->created_at >= $emailed)->first())->created_at;
+            $profile = $profiles->get($op->id);
+            $setup = [
+                'Shop or dock' => isset($homeBase[$op->id]),
+                'Shop details' => $profile !== null,
+                'Prices' => (($offerings[$op->id] ?? 0) > 0) || ($profile && !empty($profile->trip_prices)),
+                'QR code' => ($codes[$op->id] ?? 0) > 0,
+            ];
+            $setupDone = count(array_filter($setup));
+            $claimed = $claimedAt[$op->id] ?? null;
+            $steps = [
+                'emailed' => ['Emailed', $emailed],
+                'opened' => ['Opened (a hint)', $after('outreach.opened')],
+                'clicked' => ['Link opened', $after('invite.viewed')],
+                'claimed' => ['Claimed', $claimed ? \Carbon\Carbon::parse($claimed) : null],
+            ];
+            // The furthest step reached, and when anything last happened.
+            $stage = 'none';
+            foreach ($steps as $key => [$label, $at]) {
+                if ($at) { $stage = $key; }
+            }
+            if ($claimed && $setupDone === count($setup)) {
+                $stage = 'done';
+            }
+            $last = collect($steps)->pluck(1)->filter()->max();
+            $change = $claimed && isset($lastChange[$op->id]) ? \Carbon\Carbon::parse($lastChange[$op->id]) : null;
+            if ($change && (!$last || $change > $last)) {
+                $last = $change;
+            }
+
             return [
+                'steps' => $steps,
+                'setup' => $setup,
+                'setupDone' => $setupDone,
+                'stage' => $stage,
+                'movedAt' => $last,
+                'movedRecently' => $last && $last >= now()->subDays(7),
                 'id' => (int) $op->id,
                 'name' => $op->operatorName,
                 'city' => $op->cityAddress,
@@ -95,6 +149,12 @@ class ShopAccessAdminController extends Controller
             'invited' => $adoption->where('state', 'invited')->count(),
             'open' => $adoption->where('state', 'open')->count(),
             'storefront' => $adoption->where('storefront', true)->count(),
+            // The funnel, each one counted on its own.
+            'emailed' => $adoption->filter(fn ($r) => $r['steps']['emailed'][1])->count(),
+            'opened' => $adoption->filter(fn ($r) => $r['steps']['opened'][1])->count(),
+            'clicked' => $adoption->filter(fn ($r) => $r['steps']['clicked'][1])->count(),
+            'done' => $adoption->where('stage', 'done')->count(),
+            'movedRecently' => $adoption->where('movedRecently', true)->count(),
         ];
         // Unowned shops first within each state is the working order: who to chase next.
         $order = ['requested' => 0, 'invited' => 1, 'open' => 2, 'managed' => 3];
