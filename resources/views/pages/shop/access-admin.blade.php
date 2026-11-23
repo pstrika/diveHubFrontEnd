@@ -55,7 +55,10 @@
     {{-- Adoption (Zach, 2026-11-19): which shops are owned, which still need
          an owner, and one tap to make an invite link for any of them. --}}
     <section class="dh-panel" id="adoption">
-        <h2 class="dh-panel-title">Shop adoption</h2>
+        <div class="dh-panel-head-row">
+            <h2 class="dh-panel-title">Shop adoption</h2>
+            <a class="dh-btn dh-btn-ghost-dark" href="{{ route('shop-outreach') }}"><span class="material-icons-round" aria-hidden="true">mail</span>Email the shops</a>
+        </div>
         <div class="dh-shop-stats">
             <div class="dh-shop-stat"><b>{{ $adoptionTotals['managed'] }} <small>of {{ $adoptionTotals['all'] }}</small></b><span>shops have someone managing them</span></div>
             <div class="dh-shop-stat"><b>{{ $adoptionTotals['storefront'] }}</b><span>have added a storefront</span></div>

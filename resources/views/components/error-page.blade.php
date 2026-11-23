@@ -14,7 +14,7 @@
           <x-slot:actions> ...buttons... </x-slot:actions>
       </x-error-page>
 --}}
-@props(['code', 'icon' => 'error_outline', 'title'])
+@props(['code' => null, 'icon' => 'error_outline', 'title', 'label' => null])
 
 <x-page-template bodyClass='dh-shell bg-gray-200'>
     <header class="dh-topbar">
@@ -30,7 +30,8 @@
         <div class="container-fluid py-0 dh-board">
             <section class="dh-error">
                 <span class="dh-error-icon" aria-hidden="true"><span class="material-icons-round">{{ $icon }}</span></span>
-                <p class="dh-error-code">Error {{ $code }}</p>
+                {{-- $label swaps the "Error 404" line for plain words on pages that are not errors. --}}
+                <p class="dh-error-code">{{ $label ?? 'Error ' . $code }}</p>
                 <h1 class="dh-error-title">{{ $title }}</h1>
                 <p class="dh-error-text">{{ $slot }}</p>
                 <div class="dh-error-actions">

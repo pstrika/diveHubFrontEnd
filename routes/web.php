@@ -380,6 +380,10 @@ Route::get('OperatorDetails/{id}', 'App\Http\Controllers\OperatorController@show
 // What a shop's QR code points at. Open to everyone, throttled.
 Route::get('go/{code}', 'App\Http\Controllers\HomeShopController@scan')->middleware(['guest', 'throttle:60,1'])->where('code', '[A-Za-z0-9]{6,12}')->name('go');
 
+// "No more emails like this", from the footer of a shop invite email. Signed
+// per shop, so it cannot be made up for another one.
+Route::get('shop-email/stop/{operator}', 'App\Http\Controllers\ShopOutreachController@optOut')->whereNumber('operator')->middleware(['signed', 'throttle:20,1'])->name('shop-outreach.stop');
+
 // The invite link we send a shop. Opening it grants nothing; Accept does.
 Route::get('operator-invite/{token}', 'App\Http\Controllers\OperatorInviteController@show')->middleware(['guest', 'throttle:30,1'])->name('operator-invite.show');
 Route::post('operator-invite/{token}/accept', 'App\Http\Controllers\OperatorInviteController@accept')->middleware(['auth', 'not_guest', 'throttle:10,1'])->name('operator-invite.accept');
@@ -435,6 +439,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin/shop-access')->group(functio
     Route::post('invites', 'App\Http\Controllers\ShopAccessAdminController@createInvite')->name('shop-access.invite');
     Route::post('invites/{invite}/revoke', 'App\Http\Controllers\ShopAccessAdminController@revokeInvite')->whereNumber('invite')->name('shop-access.invite.revoke');
     Route::post('claims/{claim}', 'App\Http\Controllers\ShopAccessAdminController@decideClaim')->whereNumber('claim')->name('shop-access.claim');
+    // Email shops an invite to manage their page (ShopOutreachController).
+    Route::get('outreach', 'App\Http\Controllers\ShopOutreachController@index')->name('shop-outreach');
+    Route::post('outreach/draft', 'App\Http\Controllers\ShopOutreachController@saveDraft')->name('shop-outreach.draft');
+    Route::post('outreach/test', 'App\Http\Controllers\ShopOutreachController@sendTest')->middleware('throttle:6,1')->name('shop-outreach.test');
+    Route::post('outreach/send', 'App\Http\Controllers\ShopOutreachController@send')->middleware('throttle:3,1')->name('shop-outreach.send');
 });
 
 

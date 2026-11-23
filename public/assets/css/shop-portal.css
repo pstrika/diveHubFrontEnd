@@ -207,3 +207,9 @@
 .dh-shop-sectionhead { font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--dh-muted); font-weight: 800; margin: var(--dh-space-4) 4px var(--dh-space-2); }
 .dh-shop-hoursline { display: flex; flex-wrap: wrap; gap: 2px 12px; margin: 4px 0 0 !important; font-size: .78rem; color: var(--dh-muted); }
 .dh-shop-hoursline b { color: var(--dh-ink); }
+
+/* Email the shops: one email, written out. */
+.dh-shop-emailpreview { border: 1px solid var(--dh-line); border-radius: 14px; background: #fff; padding: 14px 16px; max-width: 720px; }
+.dh-shop-emailsubject { font-weight: 800; color: var(--dh-ink); margin: 0 0 10px; padding-bottom: 10px; border-bottom: 1px solid var(--dh-line); }
+.dh-shop-emailpreview pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-family: inherit; font-size: .9rem; line-height: 1.55; color: var(--dh-ink); }
+.dh-shop-field textarea { font-family: inherit; }
