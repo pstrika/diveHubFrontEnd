@@ -104,7 +104,8 @@
         <form method="POST" action="{{ route('shop-outreach.send') }}" id="so-send">
             @csrf
             <div class="dh-shop-filterrow">
-                <label class="dh-shop-check"><input type="checkbox" id="so-all" checked> All {{ $readyAddresses->count() }} ready addresses</label>
+                <label class="dh-shop-check"><input type="checkbox" id="so-all"> Tick all {{ $readyAddresses->count() }} ready addresses</label>
+                <span class="dh-shop-muted">Nothing is ticked to start with. Tick who should get it.</span>
             </div>
             <div class="dh-shop-scroll dh-shop-tall">
                 <table class="dh-shop-table">
@@ -113,7 +114,7 @@
                         @foreach($groups as $email => $group)
                             @php $ok = collect($group)->contains('can_send', true); @endphp
                             <tr>
-                                <td><input type="checkbox" name="emails[]" value="{{ $email }}" class="so-pick" {{ $ok ? 'checked' : '' }} aria-label="Send to {{ $email }}"></td>
+                                <td><input type="checkbox" name="emails[]" value="{{ $email }}" class="so-pick" data-ready="{{ $ok ? '1' : '0' }}" aria-label="Send to {{ $email }}"></td>
                                 <td><b>{{ $email }}</b></td>
                                 <td>@foreach($group as $shop){{ $shop['name'] }}@if(!$loop->last)<br>@endif @endforeach</td>
                                 <td class="dh-shop-muted">@foreach($group as $shop){{ $shop['note'] }}@if(!$loop->last)<br>@endif @endforeach</td>
@@ -127,7 +128,7 @@
                 <label class="dh-shop-check"><input type="checkbox" name="confirm" value="1" required> I have read the test email and want to send this to the ticked addresses</label>
             </div>
             <div class="dh-shop-actions">
-                <button type="submit" class="dh-btn dh-btn-primary {{ $canSend ? '' : 'is-disabled' }}" {{ $canSend ? '' : 'disabled' }} id="so-go"><span class="material-icons-round" aria-hidden="true">send</span>Send to <span id="so-count">{{ $readyAddresses->count() }}</span> addresses</button>
+                <button type="submit" class="dh-btn dh-btn-primary {{ $canSend ? '' : 'is-disabled' }}" {{ $canSend ? '' : 'disabled' }} id="so-go"><span class="material-icons-round" aria-hidden="true">send</span>Send to <span id="so-count">0</span> addresses</button>
             </div>
         </form>
     </section>
@@ -152,8 +153,16 @@
         (function () {
             var picks = Array.prototype.slice.call(document.querySelectorAll('.so-pick'));
             var all = document.getElementById('so-all'), count = document.getElementById('so-count');
-            function tally() { count.textContent = picks.filter(function (p) { return p.checked; }).length; }
-            all.addEventListener('change', function () { picks.forEach(function (p) { p.checked = all.checked; }); tally(); });
+            var go = document.getElementById('so-go'), allowed = {{ $canSend ? 'true' : 'false' }};
+            // Nothing ticked means nothing to send: the button stays closed.
+            function tally() {
+                var n = picks.filter(function (p) { return p.checked; }).length;
+                count.textContent = n;
+                var open = allowed && n > 0;
+                go.disabled = !open;
+                go.classList.toggle('is-disabled', !open);
+            }
+            all.addEventListener('change', function () { picks.forEach(function (p) { if (p.getAttribute('data-ready') === '1') p.checked = all.checked; }); tally(); });
             picks.forEach(function (p) { p.addEventListener('change', tally); });
             tally();
             // One submit only: a second tap while it is sending must do nothing.
