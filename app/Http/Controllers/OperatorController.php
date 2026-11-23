@@ -248,10 +248,8 @@ class OperatorController extends Controller
     }
 
     public function showHealth() {
-        // Deco Divers is a dead operator - excluded from the health page (table and
-        // summary alarms both) rather than left showing permanent, meaningless errors.
-        $operators = Operator::whereNotNull('_ver')->where('operatorName', '!=', 'Deco Divers')->get()->sortBy('operatorName');
-        $notScrapping = Operator::whereNull('_ver')->where('operatorName', '!=', 'Deco Divers')->get()->sortBy('operatorName');
+        $operators = Operator::whereNotNull('_ver')->get()->sortBy('operatorName');
+        $notScrapping = Operator::whereNull('_ver')->get()->sortBy('operatorName');
         // Argentina locations are out of scope for this platform for now.
         $weatherLocations = WeatherLocation::whereNotIn('short', \App\Support\Coast::all()['argentina']['codes'])->get();
 
