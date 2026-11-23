@@ -88,6 +88,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Divers Hub">
+  {{-- iPhone Safari offers to open or get "Logbook by Divers Hub" (App Store, live 2026-11-22). Ignored by everything else, and never shown inside the installed web app. --}}
+  @if (config('divehub.app_store_url') && preg_match('/id(\d+)/', config('divehub.app_store_url'), $dhAppId))
+  <meta name="apple-itunes-app" content="app-id={{ $dhAppId[1] }}">
+  @endif
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="application-name" content="Divers Hub">
   <meta name="msapplication-TileColor" content="{{ $dhFrozen ? \App\Support\EmbeddedPage::LEGACY_THEME_COLOR : '#0b2a3a' }}">

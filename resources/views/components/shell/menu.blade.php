@@ -60,6 +60,8 @@
         <span class="material-icons-round" aria-hidden="true">get_app</span>
         <span>Install as App</span>
     </a>
+    {{-- Logbook by Divers Hub is on the App Store (2026-11-22) and Google Play; /DiveLogApp has both buttons. --}}
+    {!! $link('Logbook app: iPhone and Android', route('DiveLogApp'), 'phone_iphone') !!}
 </div>
 
 @if($isGuest)

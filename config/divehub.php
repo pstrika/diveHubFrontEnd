@@ -19,9 +19,9 @@ return [
     // Release date shown next to the version. Any human readable format.
     'released' => '11/22/26',
 
-    // App Store link for the companion app, "Logbook by Divers Hub". Null
+    // App Store link for the companion app, "Logbook by Divers Hub" (live since 2026-11-22). Null
     // while it's in TestFlight: the Logbook page then says "coming soon".
-    'app_store_url' => null,
+    'app_store_url' => 'https://apps.apple.com/us/app/logbook-by-divers-hub/id6823839845',
 
     // Google Play link for the Android app. Null until it is published:
     // the public app page (/DiveLogApp) then says "coming soon".
