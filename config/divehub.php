@@ -14,7 +14,7 @@
 
 return [
 
-    'version' => '12.38.2',
+    'version' => '12.38.3',
 
     // Release date shown next to the version. Any human readable format.
     'released' => '11/22/26',
@@ -30,8 +30,9 @@ return [
     // Features open to a few accounts only (App\Support\EarlyAccess).
     // Lower-case emails; '*' opens a feature to every logbook user.
     // The postal address printed in the footer of emails we send to shops
-    // (ShopOutreachController). Sending to shops stays closed until this
-    // is set: a business email has to say where it comes from.
+    // (ShopOutreachController). Optional: when it is empty the footer goes
+    // out without one (Zach, 2026-11-22, knowing that US rules for
+    // business email expect an address; to be added soon).
     'postal_address' => env('DIVEHUB_POSTAL_ADDRESS'),
 
     'early_access' => [

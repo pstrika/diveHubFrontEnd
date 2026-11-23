@@ -2,14 +2,14 @@
     Platform admin: email shops an invite to manage their own page
     (ShopOutreachController). Three steps down the page, in order: the
     wording, a test to yourself, then the send. The send stays closed until
-    a test of the exact wording has gone out and a postal address is set.
+    a test of the exact wording has gone out.
 --}}
 @php
     $ready = collect($shops)->where('state', 'ready');
     $emailed = collect($shops)->where('state', 'emailed');
     $other = collect($shops)->whereNotIn('state', ['ready', 'emailed']);
     $readyAddresses = collect($groups)->filter(fn ($g) => collect($g)->contains('can_send', true));
-    $canSend = $tested && $postalAddress && !$onTestSite && $readyAddresses->isNotEmpty();
+    $canSend = $tested && !$onTestSite && $readyAddresses->isNotEmpty();
 @endphp
 <x-shop.page title="Email the shops" icon="mail" :beta="false">
 
@@ -95,7 +95,7 @@
             <p class="dh-shop-warn"><b>This is the test site.</b> You can write, preview and send yourself a test here, but sending to shops is closed: every link would point at this test address. Do the real send from divers-hub.com.</p>
         @endif
         @if(!$postalAddress)
-            <p class="dh-shop-warn">A postal address for the footer is not set yet, so sending is closed. Tell us the address to use and it goes in <code>config/divehub.php</code> as <code>postal_address</code>.</p>
+            <p class="dh-shop-muted">No postal address is set, so the footer goes out without one. To add it later, set <code>DIVEHUB_POSTAL_ADDRESS</code> on the server.</p>
         @endif
         @if(!$tested)
             <p class="dh-shop-warn">Send yourself a test of the saved wording first. Changing the wording means testing again.</p>

@@ -35,7 +35,8 @@ use Illuminate\Support\Str;
  *     and then the old link is switched off first. A failed send switches
  *     its link off.
  *   - A real send is only possible after a test of the exact same wording
- *     has gone to the admin's own inbox.
+ *     has gone to the admin's own inbox. (A postal address in the footer
+ *     is optional: printed when DIVEHUB_POSTAL_ADDRESS is set.)
  *   - Shops already managed, shops that asked not to be emailed, and
  *     shops with no address are never recipients.
  *   - Every email says who it is from and how to stop them.
@@ -156,9 +157,10 @@ TXT;
         if (!$this->tested($draft)) {
             return back()->withErrors(['send' => 'Send yourself a test of this exact wording first.']);
         }
-        if (!$this->postalAddress()) {
-            return back()->withErrors(['send' => 'Set a postal address for the footer first (config divehub.postal_address).']);
-        }
+        // A postal address in the footer is NOT required to send (Zach,
+        // 2026-11-22: there is no address yet, he knows the risk, and it
+        // will be added soon). When one is set it is printed; until then
+        // the footer goes out without it.
         if ($this->onTestSite($request)) {
             return back()->withErrors(['send' => 'This is the test site, so every link in these emails would point at its test address. Send from divers-hub.com.']);
         }
