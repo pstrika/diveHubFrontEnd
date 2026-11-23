@@ -19,9 +19,73 @@ use App\Models\User;
  */
 class HomeShop
 {
+    /**
+     * Who has home shop switched on (Zach, 2026-11-22). Three groups, and
+     * nobody else until it is opened to everyone:
+     *
+     *   1. accounts on the early_access.home_shop list
+     *   2. anyone who manages a shop, so every shop admin can see what
+     *      their divers will see
+     *   3. any diver credited to a shop's QR code: they scanned that
+     *      shop's sign, so the promise on the sign has to hold for them
+     *
+     * Groups 2 and 3 are read from the database, so opening it to a new
+     * shop's divers needs no deploy. Worked out once per request (the menu
+     * asks on every page). A missing table means "no".
+     */
     public static function allows(?object $user): bool
     {
-        return ShopAccess::isMember($user) && EarlyAccess::allows($user, 'home_shop');
+        static $memo = [];
+        if (!ShopAccess::isMember($user)) {
+            return false;
+        }
+        if (EarlyAccess::allows($user, 'home_shop')) {
+            return true;
+        }
+        if (isset($memo[$user->id])) {
+            return $memo[$user->id];
+        }
+        try {
+            $yes = ShopAccess::operatorIdsFor($user) !== []
+                || \App\Models\UserReferral::where('user_id', $user->id)->exists();
+        } catch (\Throwable $e) {
+            $yes = false;
+        }
+        // Only a "yes" is remembered: a diver who scans a code mid-request
+        // is credited and then asked again, and must get the new answer.
+        if ($yes) {
+            $memo[$user->id] = true;
+        }
+        return $yes;
+    }
+
+    /**
+     * Gives a diver the home shop they were credited to by a QR sign-up,
+     * once that shop has somewhere to be a home shop (Zach, 2026-11-22).
+     * A sign-up through a code made before the shop added its shop or dock
+     * used to be lost to the shop: the credit was kept but nothing ever
+     * applied it. Does nothing if the diver has a home shop, has ever
+     * removed one, or was credited as an existing user (they are asked,
+     * never set silently).
+     */
+    public static function applyCredit(?object $user): void
+    {
+        try {
+            if (!ShopAccess::isMember($user) || !empty($user->home_operator_location_id)
+                || ($user->home_shop_source ?? null) === 'removed') {
+                return;
+            }
+            $credit = \App\Models\UserReferral::where('user_id', $user->id)->where('attribution_source', 'signup')->first();
+            if (!$credit) {
+                return;
+            }
+            $location = self::defaultLocationFor((int) $credit->operator_id);
+            if ($location && $user instanceof User) {
+                self::set($user, $location, 'referral');
+            }
+        } catch (\Throwable $e) {
+            // Never worth an error page.
+        }
     }
 
     /**
@@ -32,7 +96,13 @@ class HomeShop
     public static function forUser(?object $user): ?array
     {
         static $cache = [];
-        if (!self::allows($user) || empty($user->home_operator_location_id)) {
+        if (!self::allows($user)) {
+            return null;
+        }
+        if (empty($user->home_operator_location_id)) {
+            self::applyCredit($user);   // a QR sign-up waiting on its shop
+        }
+        if (empty($user->home_operator_location_id)) {
             return null;
         }
         $key = $user->id . ':' . $user->home_operator_location_id;
@@ -83,12 +153,15 @@ class HomeShop
         if ($was) {
             ShopEvents::record((int) $was->operator_id, ShopEvents::HOME_REMOVED);
         }
+        // "removed" is remembered so a QR credit is never applied again
+        // over the diver's own choice (applyCredit).
         User::whereKey($user->id)->update([
             'home_operator_location_id' => null,
-            'home_shop_set_at' => null,
-            'home_shop_source' => null,
+            'home_shop_set_at' => now(),
+            'home_shop_source' => 'removed',
         ]);
         $user->home_operator_location_id = null;
+        $user->home_shop_source = 'removed';
     }
 
     /** The location a diver gets when they pick this operator: its first live storefront. */

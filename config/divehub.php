@@ -14,7 +14,7 @@
 
 return [
 
-    'version' => '12.37.0',
+    'version' => '12.37.1',
 
     // Release date shown next to the version. Any human readable format.
     'released' => '11/22/26',
@@ -48,9 +48,11 @@ return [
         // the page.
         'ccr_checklists' => ['*'],
         // Home shop (Zach, 2026-11-13): a diver picks a shop, its trips show
-        // first on the dive calendar. Listed accounts only while it is
-        // being shown to shops; guests never, whatever this says
-        // (App\Support\HomeShop::allows).
+        // first on the dive calendar. Guests never, whatever this says.
+        // Since 2026-11-22 this list is only ONE of three ways in: anyone
+        // who manages a shop, and any diver credited to a shop's QR code,
+        // also has it (App\Support\HomeShop::allows). Put '*' here to open
+        // it to every member.
         'home_shop' => ['zach.patterson0591@gmail.com', 'pstrika@gmail.com'],
         // Who sees "Is this your shop?" on an operator page. The shop
         // portal itself is not on this list: it opens to whoever holds a

@@ -85,5 +85,6 @@ class Kernel extends HttpKernel
         'guest' => \App\Http\Middleware\AuthenticateAsGuest::class,
         'not_guest' => \App\Http\Middleware\EnsureNotGuest::class,
         'operator.admin' => \App\Http\Middleware\OperatorAdminGate::class,
+        'home.shop' => \App\Http\Middleware\HomeShopGate::class,
     ];
 }

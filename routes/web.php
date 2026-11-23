@@ -388,7 +388,9 @@ Route::post('operator-invite-dismiss', 'App\Http\Controllers\OperatorInviteContr
 // A scan waiting on a signed in member (PendingShopLinks sends them here).
 Route::get('home-shop/offer', 'App\Http\Controllers\HomeShopController@offer')->middleware(['auth', 'not_guest'])->name('home-shop.offer');
 
-Route::middleware(['auth', 'not_guest', 'early:home_shop'])->group(function () {
+// home.shop is HomeShop::allows: the listed accounts, shop admins, and divers
+// credited to a shop's QR code.
+Route::middleware(['auth', 'not_guest', 'home.shop'])->group(function () {
     Route::get('home-shop', 'App\Http\Controllers\HomeShopController@index')->name('home-shop');
     Route::post('home-shop/offer', 'App\Http\Controllers\HomeShopController@answer')->name('home-shop.answer');
     Route::post('home-shop/set', 'App\Http\Controllers\HomeShopController@set')->name('home-shop.set');
