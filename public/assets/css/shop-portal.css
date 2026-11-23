@@ -229,3 +229,5 @@
 .dh-shop-trackbar > span { display: block; height: 100%; background: #1f8a4c; border-radius: 99px; }
 .dh-shop-trackline { display: block; margin-top: 3px; font-size: .8rem; color: var(--dh-ink); }
 .dh-shop-trackline b { font-weight: 700; }
+.dh-shop-emailframe { display: block; width: 100%; height: 640px; border: 0; border-radius: 10px; background: #eef3f5; }
+.dh-shop-filterrow .dh-shop-check { white-space: nowrap; }

@@ -9,7 +9,7 @@
     $emailed = collect($shops)->where('state', 'emailed');
     $other = collect($shops)->whereNotIn('state', ['ready', 'emailed']);
     $readyAddresses = collect($groups)->filter(fn ($g) => collect($g)->contains('can_send', true));
-    $canSend = $tested && $postalAddress && $readyAddresses->isNotEmpty();
+    $canSend = $tested && $postalAddress && !$onTestSite && $readyAddresses->isNotEmpty();
 @endphp
 <x-shop.page title="Email the shops" icon="mail" :beta="false">
 
@@ -32,7 +32,7 @@
     {{-- 1. The wording --}}
     <section class="dh-panel">
         <h2 class="dh-panel-title">1. The message</h2>
-        <p class="dh-shop-muted">Plain text. <code>{shop}</code> becomes the shop's name, <code>{link}</code> its invite link, <code>{expires}</code> the date the link stops working. A footer saying who it is from and how to stop these emails is added to every one.</p>
+        <p class="dh-shop-muted">Plain text. <code>{shop}</code> becomes the shop's name, <code>{link}</code> its invite link, <code>{page}</code> their public page, <code>{expires}</code> the date the link stops working. A footer saying who it is from and how to stop these emails is added to every one.</p>
         <form method="POST" action="{{ route('shop-outreach.draft') }}">
             @csrf
             <div class="dh-shop-form">
@@ -51,9 +51,15 @@
                     <small>Most addresses on file are shared inboxes like info@. An owner usually signs up with their own address, and "only that address" would turn them away. Either way a link works once, and you are told when one is accepted.</small>
                 </div>
                 <div class="dh-shop-field is-wide">
+                    <label>How it looks</label>
+                    <label class="dh-shop-check"><input type="radio" name="style" value="branded" @checked(old('style', $draft['style']) === 'branded')> Branded: Divers Hub header, a button, and the shop's own page to check (recommended)</label>
+                    <label class="dh-shop-check mt-1"><input type="radio" name="style" value="plain" @checked(old('style', $draft['style']) === 'plain')> Plain text only</label>
+                    <small>In the branded email, a line with only <code>{link}</code> becomes the button and a line with only <code>{page}</code> becomes a box with the shop's page. It is built to read fine in mail apps that block images.</small>
+                </div>
+                <div class="dh-shop-field is-wide">
                     <label>Counting opens</label>
-                    <label class="dh-shop-check"><input type="checkbox" name="track" value="1" @checked(old('track', $draft['track']))> Count when the email is opened</label>
-                    <small>Adds a hidden image, so the email goes out formatted and not as plain text. Treat an "opened" as a hint: some mail apps load images before anyone looks, and others never load them. Whether the link was opened and whether it was accepted are always recorded, with or without this.</small>
+                    <label class="dh-shop-check"><input type="checkbox" name="track" value="1" @checked(old('track', $draft['track']))> Count when the email is opened (branded only)</label>
+                    <small>Adds a hidden image. Treat an "opened" as a hint: some mail apps load images before anyone looks, and others never load them. Whether the link was opened and whether it was accepted are always recorded, with or without this.</small>
                 </div>
             </div>
             <div class="dh-shop-actions"><button type="submit" class="dh-btn dh-btn-primary">Save wording</button></div>
@@ -69,7 +75,12 @@
         <p class="dh-shop-muted">This is the saved wording, written out for one shop. The link here is a stand-in.</p>
         <div class="dh-shop-emailpreview">
             <p class="dh-shop-emailsubject">{{ $preview[0] }}</p>
-            <pre>{{ $preview[1] }}</pre>
+            @if($previewHtml)
+                {{-- Drawn in a sealed frame, the way a mail app would: no scripts, no page styles. --}}
+                <iframe class="dh-shop-emailframe" title="Email preview" sandbox srcdoc="{{ $previewHtml }}"></iframe>
+            @else
+                <pre>{{ $preview[1] }}</pre>
+            @endif
         </div>
         <form method="POST" action="{{ route('shop-outreach.test') }}" class="dh-shop-actions">
             @csrf
@@ -80,6 +91,9 @@
     {{-- 3. The send --}}
     <section class="dh-panel">
         <h2 class="dh-panel-title">3. Send to shops</h2>
+        @if($onTestSite)
+            <p class="dh-shop-warn"><b>This is the test site.</b> You can write, preview and send yourself a test here, but sending to shops is closed: every link would point at this test address. Do the real send from divers-hub.com.</p>
+        @endif
         @if(!$postalAddress)
             <p class="dh-shop-warn">A postal address for the footer is not set yet, so sending is closed. Tell us the address to use and it goes in <code>config/divehub.php</code> as <code>postal_address</code>.</p>
         @endif
